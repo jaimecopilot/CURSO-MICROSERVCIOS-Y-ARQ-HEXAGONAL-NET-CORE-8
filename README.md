@@ -30,5 +30,3 @@ Cada módulo se organiza en las carpetas `TEORIA/`, `PRACTICAS/` y `PROYECTO/`. 
 - Cada punto conserva `AceriaApp.sln`, `src/`, `tests/` y `docs/`.
 - Referencia de código: .NET 8, EF Core 8, SQL Server Express y xUnit.
 - Los retos de cada punto están identificados mediante comentarios para descomentarlos.
-
-La documentación teórica y práctica integral se publicará una vez cerrada su comparación literal con los cinco textos canónicos del módulo.
