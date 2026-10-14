@@ -1,42 +1,34 @@
-# AceriaApp — Curso de Microservicios con .NET 8
+# Curso Arquitectura Hexagonal y Microservicios Avanzados
 
-Repositorio del curso formativo de 30 horas sobre microservicios con .NET 8, organizado en 8 módulos y 34 puntos.
+Curso teórico-práctico de **30 horas** dirigido a desarrolladores .NET con conocimientos de C# y ASP.NET Core.
 
-## Estructura del repositorio
+## Objetivos
 
-- `modulo-1-introduccion-microservicios/`: 5 puntos (1.1 a 1.5).
-- `modulo-2-apis-rest-aspnet-core/`: 4 puntos (2.1 a 2.4).
-- `modulo-3-arquitectura-hexagonal/`: 4 puntos (3.1 a 3.4).
-- `modulo-4-patrones-arquitectura/`: 5 puntos (4.1 a 4.5).
-- `modulo-5-ddd-cqrs/`: 5 puntos (5.1 a 5.5).
-- `modulo-6-comunicacion-microservicios/`: 3 puntos (6.1 a 6.3).
-- `modulo-7-observabilidad-resiliencia/`: 4 puntos (7.1 a 7.4).
-- `modulo-8-api-gateway/`: 4 puntos (8.1 a 8.4).
+- Comprender los fundamentos de una arquitectura basada en microservicios y su aplicación en entornos empresariales.
+- Diseñar e implementar microservicios utilizando ASP.NET Core y Arquitectura Hexagonal.
+- Aplicar patrones de diseño y arquitectura como Repository, Unit of Work, Mediator y CQRS para desarrollar aplicaciones desacopladas y mantenibles.
+- Implementar mecanismos básicos de comunicación entre servicios, resiliencia y publicación mediante un API Gateway.
 
-Cada punto contiene:
+## Temario
 
-- `README.md`: objetivo del punto, estado del proyecto, cómo ejecutarlo y qué se ha añadido respecto al punto anterior.
-- `AceriaApp.sln`: solución completa con todos los proyectos generados hasta ese punto.
-- `src/`: código fuente de todos los proyectos.
-- `tests/`: tests generados hasta ese punto.
-- `docs/`: ADRs, diagramas UML y documentación generada.
+1. Introducción a los microservicios.
+2. Desarrollo de APIs REST con ASP.NET Core.
+3. Arquitectura Hexagonal.
+4. Patrones de arquitectura.
+5. Introducción a DDD y CQRS.
+6. Comunicación entre microservicios.
+7. Observabilidad y resiliencia.
+8. Publicación mediante API Gateway.
 
-## Requisitos
+## Organización del repositorio
 
-- .NET 8 SDK (LTS).
-- Visual Studio 2026 Community.
-- SQL Server Express.
-- Docker Desktop (para tests de integración con Testcontainers).
+Cada módulo se organiza en las carpetas `TEORIA/`, `PRACTICAS/` y `PROYECTO/`. Las carpetas docentes se incorporan con sus respectivos Markdown y PDF; los proyectos son estados reproducibles de AceriaApp por punto del temario.
 
-## Cadena de conexión
+### Módulo 1
 
-`Server=.\SQLEXPRESS;Database=AceriaDb;Trusted_Connection=True;TrustServerCertificate=True`
+- [Proyecto AceriaApp — puntos 1.1 a 1.5](M01_INTRODUCCION_MICROSERVICIOS/PROYECTO/)
+- Cada punto conserva `AceriaApp.sln`, `src/`, `tests/` y `docs/`.
+- Referencia de código: .NET 8, EF Core 8, SQL Server Express y xUnit.
+- Los retos de cada punto están identificados mediante comentarios para descomentarlos.
 
-## Cómo ejecutar cualquier punto
-
-1. Abrir la carpeta del punto en Visual Studio 2026.
-2. Abrir `AceriaApp.sln`.
-3. Verificar que SQL Server Express está arrancado.
-4. Ejecutar `dotnet ef database update` en el proyecto de API correspondiente.
-5. Ejecutar `dotnet run` en el proyecto de API.
-6. Navegar a la URL de Swagger que indique la salida de `dotnet run`.
+La documentación teórica y práctica integral se publicará una vez cerrada su comparación literal con los cinco textos canónicos del módulo.
