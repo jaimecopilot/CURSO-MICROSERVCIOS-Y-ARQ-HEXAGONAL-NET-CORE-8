@@ -22,3 +22,9 @@ Este es el primer punto del curso. No hay punto anterior.
 
 ## Documentación
 - [ADR-001](docs/ADR-001-monolito-vs-microservicios.md)
+
+## Código progresivo de este punto
+
+El proyecto incluye el esqueleto ASP.NET Core de `Program.cs`. En los pasos **1.1.11**, **1.1.12** y **1.1.13**, descomenta los bloques identificados en `Orden.cs`, `AceriaDbContext.cs` y `Program.cs`, por ese orden. En el paso **1.1.17**, descomenta la prueba `OrdenTests.cs`. Compila en los puntos indicados de la práctica. El bloque de **RETO 1.1** de `Program.cs` permanece comentado hasta el reto.
+
+Selecciona solo el bloque comentado de cada paso en Visual Studio y aplica `Ctrl+K, Ctrl+U`. Para `Program.cs`, no descomentes el bloque de reto al finalizar el paso 1.1.13.
