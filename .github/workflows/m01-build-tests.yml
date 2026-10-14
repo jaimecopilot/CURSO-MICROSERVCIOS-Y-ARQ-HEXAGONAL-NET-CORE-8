@@ -1,0 +1,31 @@
+name: M01 - compilación y tests de AceriaApp
+on:
+  push:
+    paths:
+      - 'M01_INTRODUCCION_MICROSERVICIOS/PROYECTO/**'
+      - '.github/workflows/m01-build-tests.yml'
+  workflow_dispatch:
+jobs:
+  puntos:
+    strategy:
+      fail-fast: false
+      matrix:
+        punto:
+          - 1.1-monolito-vs-microservicios
+          - 1.2-ventajas-inconvenientes
+          - 1.3-principios-diseno
+          - 1.4-organizacion-solucion
+          - 1.5-buenas-practicas
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: M01_INTRODUCCION_MICROSERVICIOS/PROYECTO/${{ matrix.punto }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Compilar solución
+        run: dotnet build AceriaApp.sln --configuration Release
+      - name: Ejecutar pruebas de punto acumulado
+        run: dotnet test AceriaApp.sln --configuration Release --no-build --logger 'console;verbosity=normal'
