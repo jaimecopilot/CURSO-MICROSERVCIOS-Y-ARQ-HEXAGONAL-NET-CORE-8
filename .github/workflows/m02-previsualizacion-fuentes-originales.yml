@@ -31,7 +31,7 @@ jobs:
           base=Path("m02_previsualizacion")
           info=json.loads((base/"INFORME.json").read_text(encoding="utf-8"))
           docs=info["fuentes_presentes"]
-          assert [d["point"] for d in docs]==["2.1","2.2","2.3"], docs
+          assert [d["point"] for d in docs]==["2.1","2.2","2.3","2.4"], docs
           assert all(d["blocks"]==10 and d["steps"]==24 for d in docs)
           for name in ("TEORIA","PRACTICAS"):
               text=next(base.glob("*_"+name+".md")).read_text(encoding="utf-8")
@@ -39,8 +39,8 @@ jobs:
               assert "Duración: " not in text
               assert "PARTE TEÓRICA (" not in text
               assert "PARTE PRÁCTICA (" not in text
-          print("PREVISUALIZACIÓN PARCIAL: 30 bloques y 72 pasos completos.")
-          print("No certifica M02: falta 2.4 completo.")
+          print("PREVISUALIZACIÓN PARCIAL: 40 bloques y 96 pasos completos.")
+          print("Las cuatro fuentes están presentes; pendiente aprobación pedagógica.")
           PY
       - name: Instalar motor para las previsualizaciones PDF
         run: python -m pip install --disable-pip-version-check --quiet markdown weasyprint pymupdf
@@ -50,6 +50,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: m02-originales-2-1-a-2-3-previsualizacion
+          name: m02-originales-2-1-a-2-4-previsualizacion
           path: m02_previsualizacion/
           if-no-files-found: error
