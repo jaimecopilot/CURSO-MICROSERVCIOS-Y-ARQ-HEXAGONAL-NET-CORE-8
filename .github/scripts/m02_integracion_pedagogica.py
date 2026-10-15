@@ -13,6 +13,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
+from m02_pasos_especificos import obtener as paso_especifico
 
 MODULE=Path("M02_APIS_REST_ASPNET_CORE")
 NAMES=["2.1-diseno-apis-rest","2.2-recursos-verbos-codigos",
@@ -307,59 +308,70 @@ despliegues productivos.
         out+="un endpoint realmente implementado.\n\n"
         for number,title in enumerate(titles,1):
             lesson=LESSONS[stage-1][min((number-1)//5,4)]
-            filename=FILE_BY_POINT[stage-1][min((number-1)*len(FILE_BY_POINT[stage-1])//24,len(FILE_BY_POINT[stage-1])-1)]
+            accion,comprobacion=paso_especifico(stage,number)
             out+=f"### PASO 2.{stage}.{number} — {title}\n\n"
-            out+="**Resultado que vas a construir.** "
-            out+=title[0].upper()+title[1:]+". "
-            out+=f"Este paso corresponde a la etapa §{NAMES[stage-1]}§ de la "
-            out+="solución. Identifica en el diseño qué recurso se consulta "
-            out+="o se modifica, cuál es el verbo HTTP y qué comportamiento "
-            out+="debe poder observar el cliente.\n\n"
-            out+="**Acciones en Visual Studio.** Abre la solución de la etapa en "
-            out+="Visual Studio, localiza el proyecto §AceriaApp.Api§, crea el "
-            out+="archivo necesario o modifica §Program.cs§ cuando corresponda. "
-            out+="Escribe cada declaración en su lugar: registra servicios antes "
-            out+="de §builder.Build()§ y declara los endpoints después. Guarda "
-            out+="los cambios y compila con Ctrl+Shift+B. "
-            out+="Compara el resultado con los archivos de referencia solo "
-            out+="después de intentar construirlo tú mismo.\n\n"
+            out+=f"**Objetivo del paso.** {title}. "
+            out+="Al terminar esta actividad habrás realizado una modificación "
+            out+="de código o comprobado una propiedad concreta del contrato REST.\n\n"
+            out+="**Acciones guiadas.** "+accion+" "
+            out+="Trabaja sobre la copia de tu solución de esta etapa y guarda "
+            out+="el archivo antes de ejecutar la aplicación. "
+            out+="Cuando el código usa `MapGet`, `MapPost`, `MapPut`, `MapPatch` "
+            out+="o `MapDelete`, consulta también la tabla de verbos del punto "
+            out+="para justificar la URI y la respuesta.\n\n"
             if number in CODE_STEPS[stage-1]:
                 idx=CODE_STEPS[stage-1][number]
                 file,source=code_excerpt(stage,idx)
-                out+=f"**Código real que debes escribir y estudiar: §{file}§**.\n"
+                out+=f"**Código real contrastado: `{file}`**. "
+                out+="Es el estado final del archivo en la solución verificada; "
+                out+="si ya has creado parte del mismo en pasos anteriores, incorpora "
+                out+="solo lo que corresponde a esta actividad y conserva lo demás.\n"
                 out+=fenced(source)
-                out+="**Lectura del código.** Examina su declaración, los argumentos "
-                out+="que ASP.NET Core enlaza, los servicios que resuelve mediante DI "
-                out+="y la decisión que produce el resultado HTTP. "
-                out+="Si aparece §SaveChangesAsync§, identifica cuándo se confirma "
-                out+="la operación; si aparece §Results.Ok§, §Results.NotFound§ "
-                out+="o §Results.Problem§, explica el código y el cuerpo enviados.\n\n"
+            elif stage==2 and number in (6,8,12,13,15,17,19,20):
+                out+="**Referencia de código:** `src/AceriaApp.Api/Program.cs`. "
+                out+="Busca el método HTTP correspondiente y su llamada a "
+                out+="`SaveChangesAsync`. Comprueba el comportamiento indicado "
+                out+="en la acción antes de continuar.\n\n"
+            elif stage==3 and number in (9,10,12,13,16,18,19,20):
+                out+="**Referencia de código:** `src/AceriaApp.Api/Validacion/ValidationFilter.cs` "
+                out+="y el endpoint de `Program.cs` sobre el que se instala el filtro. "
+                out+="Comprueba dónde se produce `ValidationProblem` y dónde se llama "
+                out+="a `next(context)`.\n\n"
+            elif stage==4 and number in (5,7,9,10,11,13,14,15,17,18,19,21,22,23):
+                out+="**Referencia de código:** `DocumentacionExtensions.cs`, "
+                out+="`Program.cs` o `ContratoOpenApiTests.cs` según el caso. "
+                out+="La prueba debe leer el documento generado, no un texto YAML "
+                out+="escrito a mano.\n\n"
             else:
-                out+=f"**Trazabilidad con código.** Abre §{filename}§ y localiza "
-                out+=f"el concepto §{lesson[2]}§. "
-                out+="No escribas una clase auxiliar para representar una operación "
-                out+="que ya ejecuta ASP.NET Core: modifica el endpoint o la "
-                out+="prueba indicada por el título de este paso.\n\n"
-            out+="**Por qué se hace.** "+lesson[3]+" "
-            out+="En esta actividad lo importante no es generar un documento "
-            out+="administrativo, sino relacionar un elemento del contrato con "
-            out+="la ejecución de la API de órdenes y comprender por qué "
-            out+="el servidor acepta, rechaza o transforma la petición.\n\n"
-            expected=RESPONSE_HINT[stage-1][(number-1)%len(RESPONSE_HINT[stage-1])]
-            out+=f"**Comprobación mediante HTTP.** Como referencia, observa: §{expected}§. "
-            out+="Si este paso prepara una clase o un servicio, verifica primero "
-            out+="que compila y realiza después la petición del paso que lo "
-            out+="utiliza. Si modifica un endpoint, envía la petición ahora, "
-            out+="inspecciona el código de respuesta y comprueba el JSON o "
-            out+="la persistencia de la orden. Al terminar cada punto ejecuta "
-            out+="§dotnet test§ sobre el proyecto de tests de esa etapa.\n\n"
-            out+="**Errores frecuentes y cómo resolverlos.** Si aparece 404 "
-            out+="comprueba la URI, el GUID y el verbo. Si aparece 400 revisa "
-            out+="el JSON de entrada y las reglas del contrato. Si recibes 500 "
-            out+="inspecciona la excepción en Visual Studio y la configuración "
-            out+="de LocalDB o DI. Si el resultado parece correcto pero la base "
-            out+="no cambia, localiza §SaveChangesAsync§ y verifica que se "
-            out+="ejecuta realmente. No avances con un error pendiente.\n\n"
+                out+="**Código relacionado:** consulta los archivos del proyecto "
+                out+=f"`PROYECTO/{NAMES[stage-1]}` para contrastar las declaraciones "
+                out+="que acabas de añadir, sin copiar anticipadamente etapas posteriores.\n\n"
+            out+="**Explicación conceptual.** "+lesson[3]+"\n\n"
+            out+="**Verificación concreta.** "+comprobacion+" "
+            if number in (23,24):
+                out+="Ejecuta además las pruebas xUnit del proyecto de esta etapa "
+                out+="para confirmar que el ejercicio no ha roto los endpoints anteriores.\n\n"
+            else:
+                out+="Usa la herramienta HTTP o el depurador solo si este paso "
+                out+="interactúa con una ruta; los cambios de configuración y modelo "
+                out+="se verifican primero con la compilación.\n\n"
+            if stage==1:
+                fix=("Si aparece un error de proveedor SQL Server, revisa NuGet, "
+                     "la cadena LocalDB y los servicios registrados; si el código "
+                     "de la respuesta no coincide, inspecciona el patrón MapGet.")
+            elif stage==2:
+                fix=("Si una escritura devuelve 200 pero no cambia datos, busca "
+                     "SaveChangesAsync; si CreatedAtRoute falla revisa el nombre "
+                     "ObtenerOrdenPorId; si devuelve 404, comprueba el GUID.")
+            elif stage==3:
+                fix=("Si el endpoint acepta datos inválidos, comprueba que se "
+                     "ha añadido AddEndpointFilter al verbo correcto; si aparece "
+                     "una excepción de DI, registra el validador antes de Build.")
+            else:
+                fix=("Si Swagger JSON devuelve 404 en Development revisa "
+                     "UseDocumentacion y la variable de entorno; si falta una "
+                     "operación, comprueba sus metadatos y el registro en Program.")
+            out+="**Si algo falla.** "+fix+"\n\n"
         out+="### Matriz de comprobación del punto\n\n"
         out+="| Comportamiento | Resultado esperado |\n|:---|:---|\n"
         for outcome in RESPONSE_HINT[stage-1]:
