@@ -402,3 +402,59 @@ public void EsEntornoDeProduccion_DistingueProductionDeDevelopment()
 
 **Verificación:** Production devuelve verdadero; Development devuelve falso, y el test lo demuestra.
 """
+
+def p24_practicas(text: str):
+    text=step(text,"2.4",9,P24_STEP_9)
+    text=step(text,"2.4",15,P24_STEP_15)
+    # Sustituir el reto entero, nunca concatenar dos retos incompatibles.
+    a=text.index("### Reto resuelto paso a paso")
+    b=text.index("### Resultado esperado",a)
+    text=text[:a]+P24_RETO.strip()+"\n\n"+text[b:]
+
+    # El literal ORIGINAL permanece en la fuente; solo el DOCENTE cambia.
+    text=replace(text,"equipo@acería.local","equipo@acerialocal")
+    text=replace(text,"Cuarenta y cuatro pruebas unitarias acumuladas en diez proyectos de tests.",
+                 "Cincuenta y una pruebas unitarias acumuladas en nueve proyectos de pruebas; diez proyectos en la solución.")
+    text=replace(text,"con once proyectos","con diez proyectos")
+    text=replace(text,"doce documentos","quince documentos")
+    text=insert_docs(text,"2.4",21,"2.3-validacion-peticiones","2.4-documentacion-openapi",15)
+
+    # README y resultado esperado: las extensiones sí están conectadas.
+    text=replace(text,"`MetadatosApi`, `ConfiguracionOpenApi` y `ConstructorDocumentoOpenApi`",
+                 "`MetadatosApi`, `ConfiguracionOpenApi` y `DocumentacionExtensions`")
+    text=replace(text,"Nueve tests nuevos en `tests/AceriaApp.Documentacion.Tests`.",
+                 "Nueve tests nuevos en `tests/AceriaApp.Documentacion.Tests`, incluidos tres tests HTTP del documento real.")
+    text=replace(text,"- No se ha modificado ningún archivo del punto 2.3.",
+                 "- La solución independiente 2.3 no se modifica; `Program.cs` de la copia 2.4 se adapta para conectar las extensiones OpenAPI.")
+    text=replace(text,"- Registro de validadores en `Program.cs` con `AddValidatorsFromAssemblyContaining`.",
+                 "- Registro de validadores en una extensión de servicios.") if "- Registro de validadores en `Program.cs` con `AddValidatorsFromAssemblyContaining`." in text else text
+    text=replace(text,"Se implementan clases de configuración y de construcción de la cabecera del documento para verificar la coherencia.",
+                 "Se implementa la extensión de Swagger real y se comprueba el contrato generado mediante peticiones HTTP.")
+    text=replace(text,"la clase ConstructorDocumentoOpenApi","la extensión DocumentacionExtensions") if "la clase ConstructorDocumentoOpenApi" in text else text
+    text=replace(text,"NullReferenceException en ConfiguracionOpenApi No se inicializa Metadatos con new() Inicializar con new()",
+                 "NullReferenceException en ConfiguracionOpenApi No se inicializa Metadatos con new() Inicializar con new()")
+    text=replace(text,"La cabecera no incluye la versión El método ConstruirCabecera no la incluye Revisar la interpolación de la cadena",
+                 "El JSON Swagger no incluye la versión No se registró SwaggerDoc con los metadatos Revisar DocumentacionExtensions")
+    text=replace(text,"La ruta no incluye la versión El método ConstruirRuta no la incluye Revisar la interpolación de la cadena",
+                 "El endpoint Swagger no aparece Falta la integración en Program.cs Comprobar AddDocumentacionOpenApi y UseDocumentacionOpenApi")
+    text=replace(text,"El proyecto tests/AceriaApp.Documentacion.Tests con nueve tests (diez tras el reto).",
+                 "El proyecto tests/AceriaApp.Documentacion.Tests con nueve tests, tres de integración HTTP (diez tras el reto).")
+    return text
+
+def aplicar(text: str, point: str, tipo: str) -> tuple[str,list[str]]:
+    """Corrige solamente la copia docente. Si cambia la fuente, FALLA."""
+    cambios=[]
+    if tipo!="PRACTICAS":
+        return text,cambios
+    if point=="2.3":
+        text=p23_practicas(text)
+        cambios=["2.3.5 DI moderno", "2.3.15 test record",
+                 "2.3.16 extensión", "2.3.22 comparación completa",
+                 "recuentos y README"]
+    elif point=="2.4":
+        text=p24_practicas(text)
+        cambios=["2.4.4 51 tests", "2.4.6 y 13 correo",
+                 "2.4.9 Swagger real", "2.4.15 HTTP",
+                 "2.4.21 comparación completa", "reto Production",
+                 "recuentos y README"]
+    return text,cambios
