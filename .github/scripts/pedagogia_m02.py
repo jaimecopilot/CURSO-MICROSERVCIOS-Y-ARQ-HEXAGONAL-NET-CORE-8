@@ -178,3 +178,227 @@ def p23_practicas(text: str):
                      "Program.cs de la copia 2.3 modificado solo con dos líneas aditivas: using AceriaApp.Monolito.Api.Validacion; y builder.Services.AddValidacion();.")
     return text
 
+
+P24_STEP_9 = """### PASO 2.4.9 — Crear DocumentacionExtensions e integrar Swagger real
+
+**Acción 1:** Crear `src/AceriaApp.Monolito.Api/Documentacion/DocumentacionExtensions.cs` en la copia 2.4. No crear `ConstructorDocumentoOpenApi`: fabricar una cadena YAML no es generar el contrato real.
+
+**Acción 2:** Escribir y explicar este código:
+
+```csharp
+using Microsoft.OpenApi.Models;
+
+namespace AceriaApp.Monolito.Api.Documentacion;
+
+public static class DocumentacionExtensions
+{
+    public static IServiceCollection AddDocumentacionOpenApi(
+        this IServiceCollection services, MetadatosApi metadatos)
+    {
+        services.AddEndpointsApiExplorer();
+        services.AddSwaggerGen(options =>
+        {
+            options.SwaggerDoc(metadatos.Version, new OpenApiInfo
+            {
+                Title = metadatos.Titulo,
+                Version = metadatos.Version,
+                Description = metadatos.Descripcion,
+                Contact = new OpenApiContact
+                {
+                    Name = metadatos.ContactoNombre,
+                    Email = metadatos.ContactoEmail
+                }
+            });
+        });
+        return services;
+    }
+
+    public static WebApplication UseDocumentacionOpenApi(
+        this WebApplication app, ConfiguracionOpenApi configuracion)
+    {
+        if (configuracion.EsEntornoDeDesarrollo(app.Environment.EnvironmentName))
+        {
+            app.UseSwagger();
+            if (configuracion.PublicarSwaggerUI)
+            {
+                app.UseSwaggerUI(options =>
+                {
+                    options.SwaggerEndpoint(
+                        configuracion.RutaDocumento,
+                        configuracion.NombreDocumento);
+                });
+            }
+        }
+        return app;
+    }
+}
+```
+
+**Acción 3:** Comprobar que la API tiene una referencia al paquete `Swashbuckle.AspNetCore`. En la solución de referencia, descomentar el bloque `INICIO PASO 2.4.9`.
+
+**Acción 4:** En el `Program.cs` de **la copia 2.4**, añadir `using AceriaApp.Monolito.Api.Documentacion;`.
+
+**Acción 5:** Sustituir las dos llamadas heredadas:
+
+```csharp
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+```
+
+por la única llamada real:
+
+```csharp
+builder.Services.AddDocumentacionOpenApi(new MetadatosApi());
+```
+
+**Acción 6:** Sustituir el bloque heredado que publica Swagger por:
+
+```csharp
+app.UseDocumentacionOpenApi(new ConfiguracionOpenApi());
+```
+
+**Acción 7:** Guardar, compilar e iniciar la aplicación en entorno `Development`.
+
+**Acción 8:** Solicitar `/swagger/v1/swagger.json` y comprobar que es JSON OpenAPI con `info.title`, `info.version` y `paths["/api/v1/ordenes"]`. En `Production`, verificar que ese endpoint no se sirve.
+
+**Por qué se hace:** estas extensiones registran y publican el documento **real** generado a partir de la API. No sirve crear código sin invocarlo en `Program.cs`. La solución 2.3 anterior no se modifica.
+
+**Errores comunes:**
+- Duplicar `AddSwaggerGen` en `Program.cs`.
+- Crear la extensión pero no llamarla.
+- Omitir `using Microsoft.OpenApi.Models;`.
+- No activar el bloque del paso antes de compilar.
+- Publicar el documento OpenAPI en producción.
+
+**Verificación:** un GET real al documento Swagger en `Development` devuelve estado 200 y las rutas de la API; en `Production` devuelve 404.
+"""
+
+P24_STEP_15 = """### PASO 2.4.15 — Crear DocumentacionExtensionsTests y probar el contrato HTTP
+
+**Acción 1:** Añadir al proyecto `AceriaApp.Documentacion.Tests` el paquete de integración compatible con .NET 8:
+
+```powershell
+dotnet add tests\\AceriaApp.Documentacion.Tests\\AceriaApp.Documentacion.Tests.csproj package Microsoft.AspNetCore.Mvc.Testing --version 8.0.0
+```
+
+**Acción 2:** Crear `src/AceriaApp.Monolito.Api/Program.Public.cs` dentro del proyecto de API para que las pruebas puedan arrancar la aplicación con `WebApplicationFactory<Program>`:
+
+```csharp
+public partial class Program { }
+```
+
+**Acción 3:** Crear el archivo `tests/AceriaApp.Documentacion.Tests/DocumentacionExtensionsTests.cs` y escribir estos tres tests de integración:
+
+```csharp
+using System.Net;
+using System.Text.Json;
+using FluentAssertions;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Xunit;
+
+namespace AceriaApp.Documentacion.Tests;
+
+public class DocumentacionExtensionsTests
+{
+    [Fact]
+    public async Task SwaggerJson_EnDevelopment_ContieneMetadatosV1()
+    {
+        using var factory = new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(b => b.UseEnvironment("Development"));
+        using var client = factory.CreateClient();
+        using var response = await client.GetAsync("/swagger/v1/swagger.json");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var info = json.RootElement.GetProperty("info");
+        info.GetProperty("title").GetString().Should().Be("AceriaApp.Monolito.Api");
+        info.GetProperty("version").GetString().Should().Be("v1");
+    }
+
+    [Fact]
+    public async Task SwaggerJson_EnDevelopment_DescribeLosEndpointsReales()
+    {
+        using var factory = new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(b => b.UseEnvironment("Development"));
+        using var client = factory.CreateClient();
+        using var response = await client.GetAsync("/swagger/v1/swagger.json");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var ordenes = json.RootElement.GetProperty("paths")
+            .GetProperty("/api/v1/ordenes");
+        ordenes.TryGetProperty("get", out _).Should().BeTrue();
+        ordenes.TryGetProperty("post", out _).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task SwaggerJson_EnProduction_NoEstaPublicado()
+    {
+        using var factory = new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(b => b.UseEnvironment("Production"));
+        using var client = factory.CreateClient();
+        using var response = await client.GetAsync("/swagger/v1/swagger.json");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+}
+```
+
+**Acción 4:** Guardar los archivos y descomentar los bloques `INICIO PASO 2.4.15` en la copia de referencia.
+
+**Acción 5:** Compilar y ejecutar los tres tests de integración, junto con los dos de `MetadatosApiTests` y los cuatro de `ConfiguracionOpenApiTests`.
+
+**Por qué se hace:** un test que compara dos cadenas YAML no demuestra que la API sirva un documento OpenAPI. Estas pruebas arrancan la aplicación real en memoria, descargan JSON y contrastan rutas y entorno.
+
+**Errores comunes:**
+- Olvidar `Microsoft.AspNetCore.Mvc.Testing` o `Program.Public.cs`.
+- No haber conectado las extensiones en `Program.cs`.
+- Comprobar solo valores del contenedor de DI, sin realizar una petición HTTP.
+- Olvidar configurar `Development` y `Production` en los tests.
+
+**Verificación:** pasan **tres** pruebas HTTP reales. El proyecto tiene **nueve** tests base en total; la solución acumula **51** tests base.
+"""
+
+P24_RETO = """### Reto resuelto paso a paso
+
+**Reto:** distinguir explícitamente producción de desarrollo con el método `ConfiguracionOpenApi.EsEntornoDeProduccion` y comprobar ambas opciones en una prueba.
+
+**Paso 1:** Abrir `ConfiguracionOpenApi.cs` de la copia 2.4 y localizar la clase.
+
+**Paso 2:** Añadir el método siguiente conservando los métodos anteriores:
+
+```csharp
+public bool EsEntornoDeProduccion(string entorno)
+{
+    return string.Equals(entorno, "Production", StringComparison.OrdinalIgnoreCase);
+}
+```
+
+**Paso 3:** Comprobar que `EsEntornoDeDesarrollo` no ha cambiado.
+
+**Paso 4:** Abrir `ConfiguracionOpenApiTests.cs` y añadir:
+
+```csharp
+[Fact]
+public void EsEntornoDeProduccion_DistingueProductionDeDevelopment()
+{
+    _configuracion.EsEntornoDeProduccion("Production").Should().BeTrue();
+    _configuracion.EsEntornoDeProduccion("Development").Should().BeFalse();
+}
+```
+
+**Paso 5:** Guardar y descomentar los bloques correspondientes al reto en la solución de referencia.
+
+**Paso 6:** Ejecutar `dotnet test tests\\AceriaApp.Documentacion.Tests\\AceriaApp.Documentacion.Tests.csproj`.
+
+**Paso 7:** Comprobar **10 tests** en el punto 2.4 tras realizar el reto, y **52** en total si no se han incorporado acumulativamente otros retos opcionales.
+
+**Paso 8:** Registrar el cambio cuando realmente se haya completado.
+
+**Por qué se hace:** distingue explícitamente los dos entornos sin recurrir a una clase que fabrique documentos ficticios.
+
+**Errores comunes:** no conservar el método de desarrollo, comparar con igualdad sensible a mayúsculas o no activar el nuevo test.
+
+**Verificación:** Production devuelve verdadero; Development devuelve falso, y el test lo demuestra.
+"""
