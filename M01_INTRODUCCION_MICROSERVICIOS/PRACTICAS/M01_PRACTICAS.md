@@ -3386,7 +3386,7 @@ Se adopta un monorepo con una carpeta por módulo y una carpeta por punto. Dentr
 
 ## Alternativas consideradas
 - Polyrepo por servicio: descartado por el tamaño del equipo y la fase de aprendizaje.
-- Estructura plana sin separación de carpetas: descartada por la pérdida de previsibilidad.
+- Estructura plana sin separación de carpetas: descartado por la pérdida de previsibilidad.
 
 ## Consecuencias
 - Positivas: previsibilidad, trazabilidad, preparación para la extracción de servicios.
