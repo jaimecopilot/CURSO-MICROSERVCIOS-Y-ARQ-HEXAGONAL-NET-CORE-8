@@ -42,6 +42,29 @@ def sections(raw):
     b=re.search(r"(?im)^\s*PARTE PR[ÁA]CTICA\b",raw)
     if a is None or b is None or b.start()<=a.start(): raise ValueError("falta separación teoría/práctica")
     return raw[a.end():b.start()],raw[b.end():]
+def activar_codigo_heredado(source):
+    """El estado siguiente DESCOMENTA el código del punto anterior.
+    Es una transición didáctica intencionada, no una mutación arbitraria."""
+    out=[]
+    inside=False
+    for line in source.splitlines():
+        if re.match(r"^// INICIO PASO \d+\.\d+",line):
+            inside=True
+            continue
+        if inside and re.match(r"^// FIN PASO \d+\.\d+",line):
+            inside=False
+            continue
+        if inside:
+            if line.startswith("// "):
+                line=line[3:]
+            elif line=="//":
+                line=""
+        out.append(line)
+    return "\n".join(out)
+
+def normalize_code(source):
+    return "\n".join(x.strip() for x in source.splitlines() if x.strip())
+
 def check_markers(root):
     errors=[]
     for i,slug in enumerate(SLUGS):
@@ -52,7 +75,13 @@ def check_markers(root):
         for cs in dest.rglob("*.cs"):
             if any(p in ("obj","bin",".vs") for p in cs.parts):continue
             rel=cs.relative_to(dest);old=previous/rel
-            if old.is_file() and old.read_bytes()==cs.read_bytes():continue
+            if old.is_file():
+                if old.read_bytes()==cs.read_bytes():
+                    continue
+                original=old.read_text(encoding="utf-8")
+                # Cada copia autónoma hereda el código ACTIVADO del estado anterior.
+                if normalize_code(activar_codigo_heredado(original)) == normalize_code(cs.read_text(encoding="utf-8")):
+                    continue
             s=cs.read_text(encoding="utf-8")
             starts=re.findall(r"(?m)^// INICIO PASO (2\.[1-4]\.\d+)",s)
             ends=re.findall(r"(?m)^// FIN PASO (2\.[1-4]\.\d+)",s)
