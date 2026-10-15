@@ -8,6 +8,7 @@ on:
       - '.github/workflows/m02-redisenio-materiales.yml'
       - '.github/scripts/m02_integracion_pedagogica.py'
       - '.github/scripts/m02_pasos_especificos.py'
+      - '.github/scripts/m02_casos_reales.py'
       - '.github/scripts/construir_m02_desde_fuentes.py'
       - '.github/scripts/pedagogia_m02.py'
       - '.github/scripts/maquetacion_m02.py'
@@ -49,6 +50,7 @@ jobs:
           assert not re.search(r"\bgit\s+(add|commit|status|log|push|checkout|branch)\b",practice,re.I)
           assert practice.count("**Código real contrastado:")>=20
           assert practice.count("**Acciones guiadas.**")==96
+          assert practice.count("#### Caso práctico completo")==8
           assert practice.count("**Verificación concreta.**")==96
           assert theory.count("#### Del concepto a ASP.NET Core 8") ==20
           for p in range(1,5):
