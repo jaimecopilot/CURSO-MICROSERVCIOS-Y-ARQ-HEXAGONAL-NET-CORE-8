@@ -791,12 +791,14 @@ Este es el primer punto del curso. No hay punto anterior.
 
 **Acción 3:** Confirmar la ruta, el nombre y los elementos declarados en `.gitignore`; conservar los archivos heredados sin modificación.
 
+```gitignore
 bin/
 obj/
 *.user
 *.suo
 .vs/
 TestResults/
+```
 
 
 **Acción 4:** Guardar únicamente si se ha realizado una corrección explícitamente indicada en esta práctica.
@@ -2061,12 +2063,14 @@ fc.exe /L "1.1-monolito-vs-microservicios\docs\ADR-001-monolito-vs-microservicio
 
 **Acción 3:** Confirmar la ruta, el nombre y los elementos declarados en `.gitignore`; conservar los archivos heredados sin modificación.
 
+```gitignore
 bin/
 obj/
 *.user
 *.suo
 .vs/
 TestResults/
+```
 
 
 **Acción 4:** Guardar únicamente si se ha realizado una corrección explícitamente indicada en esta práctica.
