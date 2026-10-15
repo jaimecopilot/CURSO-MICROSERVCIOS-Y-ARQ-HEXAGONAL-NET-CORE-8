@@ -131,6 +131,12 @@ def enmarcar_codigo(text: str, practicas: bool):
             if is_code and any("- **Línea 1:**" in t for t in lines[i+1:i+65]):
                 opener="json" if s=="{" else "csharp"
         if opener and not in_code:
+            # Si el ejemplo original ya comienza con un fence Markdown, no
+            # crear otro bloque vacío encima de él.
+            next_nonempty=next((z.strip() for z in lines[i+1:] if z.strip()),"")
+            if next_nonempty.startswith("```"):
+                out.append(line)
+                continue
             if practicas:
                 out.append(line)
                 out.append("")
