@@ -722,3 +722,559 @@ Verificación: el proyecto AceriaApp.DisenoRest.Tests aparece en la solución y 
 
 ---
 
+Paso 13 — Añadir la referencia del proyecto de tests a la API monolítica
+
+Acción 1: En la terminal, escribir dotnet add tests\AceriaApp.DisenoRest.Tests\AceriaApp.DisenoRest.Tests.csproj reference src\AceriaApp.Monolito.Api\AceriaApp.Monolito.Api.csproj y pulsar Enter.
+Acción 2: Verificar que la salida muestra Reference added successfully.
+Acción 3: Verificar que el archivo AceriaApp.DisenoRest.Tests.csproj contiene la referencia.
+
+Por qué se hace: la referencia permite que el proyecto de tests acceda a las clases de DisenoRest del proyecto monolítico.
+
+Errores comunes:
+
+· Añadir la referencia en dirección inversa: crea una dependencia circular.
+· Olvidar el nombre completo del archivo .csproj: el comando falla.
+· Ejecutar el comando desde la carpeta equivocada: la ruta relativa no se resuelve.
+
+Verificación: el archivo AceriaApp.DisenoRest.Tests.csproj contiene un ProjectReference al proyecto monolítico.
+
+
+---
+
+Paso 14 — Añadir el paquete FluentAssertions al proyecto de tests
+
+Acción 1: Escribir dotnet add tests\AceriaApp.DisenoRest.Tests\AceriaApp.DisenoRest.Tests.csproj package FluentAssertions y pulsar Enter.
+Acción 2: Escribir dotnet list tests\AceriaApp.DisenoRest.Tests\AceriaApp.DisenoRest.Tests.csproj package y pulsar Enter.
+Acción 3: Verificar que la salida muestra FluentAssertions con su versión.
+
+Por qué se hace: FluentAssertions proporciona la sintaxis de aserción usada en el curso. Se añade al nuevo proyecto de tests sin modificar los proyectos de tests existentes.
+
+Errores comunes:
+
+· Instalar una versión preliminar: el curso usa la última estable.
+· Olvidar el paquete: Should() no se resuelve en los tests.
+· Añadir el paquete al proyecto equivocado: los tests no compilan.
+
+Verificación: la salida de dotnet list package muestra FluentAssertions con una versión estable.
+
+
+---
+
+Paso 15 — Crear el archivo ValidadorUriRestTests.cs
+
+Acción 1: En el panel Solution Explorer, expandir tests → AceriaApp.DisenoRest.Tests.
+Acción 2: Hacer doble clic en UnitTest1.cs y renombrarlo a ValidadorUriRestTests.cs.
+Acción 3: Escribir exactamente el siguiente código:
+
+using AceriaApp.Monolito.Api.DisenoRest;  
+using FluentAssertions;  
+using Xunit;  
+  
+namespace AceriaApp.DisenoRest.Tests;  
+  
+public class ValidadorUriRestTests  
+{  
+    private readonly ValidadorUriRest _validador = new();  
+  
+    [Fact]  
+    public void Validar_UriCorrecta_DevuelveValida()  
+    {  
+        var resultado = _validador.Validar("/api/v1/ordenes");  
+  
+        resultado.EsValida.Should().BeTrue();  
+        resultado.Errores.Should().BeEmpty();  
+    }  
+  
+    [Fact]  
+    public void Validar_SinPrefijoApi_DevuelveError()  
+    {  
+        var resultado = _validador.Validar("/ordenes");  
+  
+        resultado.EsValida.Should().BeFalse();  
+        resultado.Errores.Should().Contain(e => e.Contains("no empieza por"));  
+    }  
+  
+    [Fact]  
+    public void Validar_SinVersion_DevuelveError()  
+    {  
+        var resultado = _validador.Validar("/api/ordenes");  
+  
+        resultado.EsValida.Should().BeFalse();  
+        resultado.Errores.Should().Contain(e => e.Contains("no incluye versión"));  
+    }  
+  
+    [Fact]  
+    public void Validar_ConVerbo_DevuelveError()  
+    {  
+        var resultado = _validador.Validar("/api/v1/crearOrden");  
+  
+        resultado.EsValida.Should().BeFalse();  
+        resultado.Errores.Should().Contain(e => e.Contains("verbo prohibido"));  
+    }  
+}
+
+Acción 4: Pulsar Ctrl+S para guardar el archivo.
+Acción 5: Verificar que la clase compila sin errores.
+
+Por qué se hace: los tests verifican que el validador acepta URIs correctas y rechaza URIs sin prefijo, sin versión y con verbos prohibidos.
+
+Errores comunes:
+
+· Olvidar el using AceriaApp.Monolito.Api.DisenoRest;: las clases no se resuelven.
+· Usar Assert.True en lugar de Should().BeTrue(): el curso usa FluentAssertions.
+· No cubrir el caso de URI correcta: el test solo verifica los errores.
+
+Verificación: el archivo ValidadorUriRestTests.cs compila y contiene cuatro métodos de test.
+
+
+---
+
+Paso 16 — Crear el archivo UriRestTests.cs
+
+Acción 1: En el panel Solution Explorer, hacer clic derecho sobre el proyecto AceriaApp.DisenoRest.Tests.
+Acción 2: Seleccionar Add → Class y nombrar la clase UriRestTests.cs.
+Acción 3: Escribir exactamente el siguiente código:
+
+using AceriaApp.Monolito.Api.DisenoRest;  
+using FluentAssertions;  
+using Xunit;  
+  
+namespace AceriaApp.DisenoRest.Tests;  
+  
+public class UriRestTests  
+{  
+    [Fact]  
+    public void Construir_SinIdentificadorNiSubRecurso_DevuelveUriBase()  
+    {  
+        var uri = new UriRest { Recurso = "ordenes" };  
+  
+        uri.Construir().Should().Be("/api/v1/ordenes");  
+    }  
+  
+    [Fact]  
+    public void Construir_ConIdentificador_DevuelveUriConId()  
+    {  
+        var uri = new UriRest { Recurso = "ordenes", Identificador = "123" };  
+  
+        uri.Construir().Should().Be("/api/v1/ordenes/123");  
+    }  
+  
+    [Fact]  
+    public void Construir_ConSubRecurso_DevuelveUriAnidada()  
+    {  
+        var uri = new UriRest  
+        {  
+            Recurso = "ordenes",  
+            Identificador = "123",  
+            SubRecurso = "lineas"  
+        };  
+  
+        uri.Construir().Should().Be("/api/v1/ordenes/123/lineas");  
+    }  
+}
+
+Acción 4: Pulsar Ctrl+S para guardar el archivo.
+Acción 5: Verificar que la clase compila sin errores.
+
+Por qué se hace: los tests verifican que la clase UriRest construye correctamente las URIs en los tres casos: sin identificador, con identificador y con sub-recurso.
+
+Errores comunes:
+
+· Olvidar el using AceriaApp.Monolito.Api.DisenoRest;: las clases no se resuelven.
+· Usar Assert.Equal en lugar de Should().Be(): el curso usa FluentAssertions.
+· No cubrir el caso de sub-recurso: la anidación no se verifica.
+
+Verificación: el archivo UriRestTests.cs compila y contiene tres métodos de test.
+
+
+---
+
+Paso 17 — Crear el archivo CatalogoUrisTests.cs
+
+Acción 1: En el panel Solution Explorer, hacer clic derecho sobre el proyecto AceriaApp.DisenoRest.Tests.
+Acción 2: Seleccionar Add → Class y nombrar la clase CatalogoUrisTests.cs.
+Acción 3: Escribir exactamente el siguiente código:
+
+using AceriaApp.Monolito.Api.DisenoRest;  
+using FluentAssertions;  
+using Xunit;  
+  
+namespace AceriaApp.DisenoRest.Tests;  
+  
+public class CatalogoUrisTests  
+{  
+    [Fact]  
+    public void UrisValidas_FiltraCorrectamente()  
+    {  
+        var uris = new List<string>  
+        {  
+            "/api/v1/ordenes",  
+            "/api/v1/ordenes/123",  
+            "/ordenes",  
+            "/api/v1/crearOrden"  
+        };  
+        var catalogo = new CatalogoUris(uris);  
+        var validador = new ValidadorUriRest();  
+  
+        var validas = catalogo.UrisValidas(validador).ToList();  
+        var invalidas = catalogo.UrisInvalidas(validador).ToList();  
+  
+        validas.Should().HaveCount(2);  
+        invalidas.Should().HaveCount(2);  
+    }  
+}
+
+Acción 4: Pulsar Ctrl+S para guardar el archivo.
+Acción 5: Verificar que la clase compila sin errores.
+
+Por qué se hace: el test verifica que el catálogo filtra correctamente las URIs válidas y las inválidas según el validador.
+
+Errores comunes:
+
+· Olvidar using System.Collections.Generic;: List<T> no se resuelve.
+· Olvidar using System.Linq;: ToList() no se resuelve.
+· No comprobar los recuentos: el test podría pasar por casualidad.
+
+Verificación: el archivo CatalogoUrisTests.cs compila y contiene un método de test.
+
+
+---
+
+Paso 18 — Compilar la solución completa
+
+Acción 1: Escribir dotnet build AceriaApp.sln y pulsar Enter.
+Acción 2: Verificar que la salida muestra Build succeeded. y 0 Warning(s), 0 Error(s).
+Acción 3: Verificar que el tiempo de compilación es inferior a 180 segundos.
+
+Por qué se hace: compilar la solución completa verifica que todos los proyectos, incluidos los nuevos, se resuelven correctamente.
+
+Errores comunes:
+
+· Tener la API en ejecución: el archivo .dll está bloqueado y la compilación falla.
+· No restaurar paquetes: dotnet build restaura por defecto, pero si hay un error de red, hay que ejecutar dotnet restore primero.
+· Usar una versión distinta del SDK: dotnet --version debe devolver 8.x.x.
+
+Verificación: la salida debe mostrar Build succeeded. con 0 Error(s).
+
+
+---
+
+Paso 19 — Ejecutar todos los tests del punto 2.1
+
+Acción 1: Escribir dotnet test tests\AceriaApp.DisenoRest.Tests\AceriaApp.DisenoRest.Tests.csproj y pulsar Enter.
+Acción 2: Verificar que la salida muestra Passed! - Failed: 0, Passed: 8, Skipped: 0.
+Acción 3: Verificar que el tiempo total es inferior a 30 segundos.
+
+Por qué se hace: ejecutar los tests del punto 2.1 verifica que las clases de diseño REST funcionan correctamente.
+
+Errores comunes:
+
+· Ejecutar dotnet test sin especificar el proyecto: ejecuta también los tests de los puntos anteriores, lo que alarga el tiempo.
+· No compilar antes: dotnet test compila por defecto, pero si hay errores, los tests no se ejecutan.
+· Tener la API en ejecución: el puerto puede estar ocupado.
+
+Verificación: la salida debe mostrar Passed! - Failed: 0, Passed: 8, Skipped: 0, Total: 8.
+
+
+---
+
+Paso 20 — Ejecutar todos los tests de la solución
+
+Acción 1: Escribir dotnet test AceriaApp.sln --no-build y pulsar Enter.
+Acción 2: Verificar que la salida muestra Passed! - Failed: 0, Passed: 31, Skipped: 0.
+Acción 3: Verificar que el tiempo total es inferior a 150 segundos.
+
+Por qué se hace: ejecutar todos los tests de la solución verifica que los tests de los puntos 1.1 a 1.5 y del punto 2.1 pasan conjuntamente.
+
+Errores comunes:
+
+· No haber compilado antes: --no-build falla si no hay artefactos.
+· Tener tests de otros módulos: la solución solo contiene los proyectos de este punto.
+· Modificar los tests de los puntos anteriores: viola la regla de no modificar archivos del punto anterior.
+
+Verificación: la salida debe mostrar Passed! - Failed: 0, Passed: 31, Skipped: 0, Total: 31.
+
+
+---
+
+Paso 21 — Crear el README del punto 2.1
+
+Acción 1: En la carpeta del punto 2.1-diseno-apis-rest, hacer clic derecho y seleccionar Add → New Item → Text File.
+Acción 2: Nombrar el archivo README.md.
+Acción 3: Escribir exactamente el siguiente contenido:
+
+# Punto 2.1 — Diseño de APIs REST  
+  
+## Objetivo  
+Comprender los principios del estilo arquitectónico REST y añadir al proyecto las clases de validación de URIs REST.  
+  
+## Estado del proyecto  
+- Solución `AceriaApp.sln` con ocho proyectos: `AceriaApp.Monolito.Api`, `AceriaApp.Monolito.Tests`, `AceriaApp.Metricas.Tests`, `AceriaApp.Diseno.Tests`, `AceriaApp.Organizacion.Tests`, `AceriaApp.BuenasPracticas.Tests`, `AceriaApp.DisenoRest.Tests` y los proyectos heredados.  
+- Documento `docs/diseno-apis-rest.md` con las restricciones de REST, las reglas de URIs, los métodos HTTP, los códigos de estado y la paginación.  
+- Clases `UriRest`, `ValidadorUriRest` y `CatalogoUris` en `src/AceriaApp.Monolito.Api/DisenoRest/`.  
+- Ocho tests nuevos en `tests/AceriaApp.DisenoRest.Tests`.  
+- Los tests de los puntos 1.1 a 1.5 y del punto 2.1 suman 31 pruebas unitarias.  
+  
+## Cómo ejecutarlo  
+1. Abrir `AceriaApp.sln` en Visual Studio 2026.  
+2. Verificar que SQL Server Express está arrancado.  
+3. Ejecutar `dotnet ef database update` en `src\AceriaApp.Monolito.Api`.  
+4. Ejecutar `dotnet run` en `src\AceriaApp.Monolito.Api`.  
+5. Navegar a `https://localhost:7xxx/swagger`.  
+6. Ejecutar `dotnet test AceriaApp.sln` para verificar los tests.  
+  
+## Qué se ha añadido respecto al punto anterior  
+- Documento `docs/diseno-apis-rest.md`.  
+- Carpeta `DisenoRest` en el proyecto monolítico con tres clases nuevas.  
+- Proyecto `tests/AceriaApp.DisenoRest.Tests` con ocho tests nuevos.  
+- No se ha modificado ningún archivo del punto 1.5.  
+  
+## Documentación  
+- [ADR-001](docs/ADR-001-monolito-vs-microservicios.md) (heredado del punto 1.1).  
+- [ADR-002](docs/ADR-002-metricas-acoplamiento.md) (heredado del punto 1.2).  
+- [ADR-003](docs/ADR-003-principios-diseno.md) (heredado del punto 1.3).  
+- [ADR-004](docs/ADR-004-organizacion-solucion.md) (heredado del punto 1.4).  
+- [ADR-005](docs/ADR-005-buenas-practicas.md) (heredado del punto 1.5).  
+- [Análisis de ventajas e inconvenientes](docs/analisis-ventajas-inconvenientes.md) (heredado del punto 1.2).  
+- [Principios de diseño](docs/principios-diseno.md) (heredado del punto 1.3).  
+- [Organización de la solución](docs/organizacion-solucion.md) (heredado del punto 1.4).  
+- [Buenas prácticas](docs/buenas-practicas.md) (heredado del punto 1.5).  
+- [Diseño de APIs REST](docs/diseno-apis-rest.md).
+
+Acción 4: Pulsar Ctrl+S para guardar el archivo.
+Acción 5: Verificar que el README del punto 1.5 no se ha modificado.
+
+Por qué se hace: el README del punto 2.1 explica el objetivo, el estado, la ejecución y los añadidos. No modifica el README del punto 1.5.
+
+Errores comunes:
+
+· Modificar el README del punto 1.5: viola la regla de no modificar archivos del punto anterior.
+· Omitir la sección Qué se ha añadido respecto al punto anterior: pierde la trazabilidad.
+· Escribir el README en la carpeta del punto 1.5: rompe la separación.
+
+Verificación: el archivo README.md existe en la carpeta del punto 2.1 con las cinco secciones.
+
+
+---
+
+Paso 22 — Crear el ADR-006 del punto 2.1
+
+Acción 1: En el panel Solution Explorer, hacer clic derecho sobre la carpeta docs.
+Acción 2: Seleccionar Add → New Item → Text File y nombrar el archivo ADR-006-diseno-apis-rest.md.
+Acción 3: Escribir exactamente el siguiente contenido:
+
+# ADR-006: Diseño de APIs REST  
+  
+## Estado  
+Aceptado  
+  
+## Contexto  
+El proyecto AceriaApp ha cerrado el módulo 1 con un monolito modular, métricas de acoplamiento, principios de diseño, organización y buenas prácticas. Es necesario adoptar un estilo de diseño para las APIs REST que se construirán en el módulo 2.  
+  
+## Decisión  
+Se adopta el estilo arquitectónico REST con las seis restricciones, las cinco reglas de diseño de URIs, la semántica de los métodos HTTP, los códigos de estado adecuados a cada situación y la paginación con parámetros de consulta. Se implementa un validador automático de URIs REST.  
+  
+## Alternativas consideradas  
+- Estilo RPC con URIs de acciones: descartado por falta de uniformidad.  
+- Estilo GraphQL: descartado por el alcance del curso.  
+  
+## Consecuencias  
+- Positivas: uniformidad, previsibilidad, documentación automática, facilidad de integración.  
+- Negativas: el validador puede requerir ajuste de reglas.  
+- Mitigación: revisar las reglas al final del módulo 2.
+
+Acción 4: Pulsar Ctrl+S para guardar el archivo.
+Acción 5: Verificar que los ADR-001 a ADR-005 no se han modificado.
+
+Por qué se hace: el ADR-006 documenta la decisión de adoptar el estilo REST y de validar automáticamente las URIs. Es un artefacto nuevo del punto 2.1 que no modifica los ADR existentes.
+
+Errores comunes:
+
+· Modificar los ADR anteriores: viola la regla de no modificar archivos del punto anterior.
+· Omitir la sección Alternativas consideradas: el ADR pierde valor.
+· Nombrar el archivo sin el prefijo ADR-006: rompe la convención.
+
+Verificación: el archivo docs\ADR-006-diseno-apis-rest.md existe con las cinco secciones.
+
+
+---
+
+Paso 23 — Verificar que no se ha modificado ningún archivo del punto 1.5
+
+Acción 1: En la terminal, escribir cd C:\cursos\AceriaApp y pulsar Enter.
+Acción 2: Escribir fc /L modulo-1-introduccion-microservicios\1.5-buenas-practicas\docs\ADR-005-buenas-practicas.md modulo-2-apis-rest-aspnet-core\2.1-diseno-apis-rest\docs\ADR-005-buenas-practicas.md y pulsar Enter.
+Acción 3: Verificar que la salida muestra FC: no differences encountered.
+Acción 4: Escribir fc /L modulo-1-introduccion-microservicios\1.5-buenas-practicas\docs\buenas-practicas.md modulo-2-apis-rest-aspnet-core\2.1-diseno-apis-rest\docs\buenas-practicas.md y pulsar Enter.
+Acción 5: Verificar que la salida muestra FC: no differences encountered.
+
+Por qué se hace: la comparación con fc verifica que los documentos del punto 1.5 no se han modificado.
+
+Errores comunes:
+
+· Usar comp en lugar de fc: comp compara binarios y no muestra diferencias de texto.
+· Olvidar el flag /L: fc compara en modo ASCII y muestra líneas largas sin ajuste.
+· Comparar archivos de carpetas equivocadas: la comparación no es válida.
+
+Verificación: los dos documentos del punto 1.5 no muestran diferencias.
+
+
+---
+
+Paso 24 — Hacer el commit del punto 2.1 y verificar el estado final
+
+Acción 1: Escribir git add . y pulsar Enter.
+Acción 2: Escribir git commit -m "Punto 2.1: diseño de APIs REST y validación de URIs" y pulsar Enter.
+Acción 3: Escribir git log --oneline y pulsar Enter para verificar los seis commits.
+Acción 4: Escribir git status y pulsar Enter para verificar que el árbol está limpio.
+Acción 5: Escribir tree /F modulo-2-apis-rest-aspnet-core\2.1-diseno-apis-rest y pulsar Enter para verificar la estructura final del punto.
+
+Por qué se hace: el commit del punto 2.1 registra el estado acumulado del proyecto. Los seis commits consecutivos permiten comparar el estado del proyecto entre puntos consecutivos y entre módulos completos.
+
+Errores comunes:
+
+· No tener configurado user.name y user.email: git commit falla.
+· Añadir la carpeta bin/ y obj/ al commit: el .gitignore lo evita.
+· Hacer commit antes de git add .: no hay cambios en el índice.
+
+Verificación: git log --oneline muestra seis commits: del punto 1.1 al 1.5 y del punto 2.1. git status muestra nothing to commit, working tree clean.
+
+
+---
+
+Errores comunes del ejercicio completo
+
+Error Causa Solución
+xcopy no copia subcarpetas Falta el flag /E Ejecutar xcopy origen destino /E /I /H /Y
+StringComparison no se resuelve Falta el using System; Añadir el using al principio del archivo
+IReadOnlyList<string> no se resuelve Falta el using System.Collections.Generic; Añadir el using al principio del archivo
+Where no se resuelve Falta el using System.Linq; Añadir el using al principio del archivo
+NullReferenceException en CatalogoUris No se inicializa _uris Inicializar en el constructor
+El validador no detecta URIs sin prefijo Falta la comprobación con StartsWith Revisar la primera comprobación de Validar
+El validador no detecta verbos en mayúsculas Falta StringComparison.OrdinalIgnoreCase Añadir el parámetro a Contains
+Should() no se resuelve Falta el paquete FluentAssertions Ejecutar dotnet add package FluentAssertions
+El proyecto de tests no compila Falta la referencia al proyecto monolítico Ejecutar dotnet add reference
+La compilación falla por el .dll bloqueado La API está en ejecución Detener la API con Ctrl+C
+
+
+---
+
+Reto resuelto paso a paso
+
+Reto: añadir un método Resumen a CatalogoUris que devuelva el número de URIs válidas, el número de inválidas y el porcentaje de validez, y un test que verifique el cálculo cuando hay tres válidas y dos inválidas.
+
+Paso 1: En CatalogoUris.cs, añadir el siguiente record al final del archivo:
+
+public record ResumenUris(int Validas, int Invalidas, double PorcentajeValidez);
+
+Paso 2: Explicar línea por línea:
+
+Línea 1: public record ResumenUris( → declara un contrato inmutable.
+Línea 2: int Validas, → número de URIs válidas.
+Línea 3: int Invalidas, → número de URIs inválidas.
+Línea 4: double PorcentajeValidez); → porcentaje de validez.
+
+Paso 3: En CatalogoUris.cs, añadir el siguiente método dentro de la clase:
+
+public ResumenUris Resumen(ValidadorUriRest validador)  
+{  
+    var validas = _uris.Count(u => validador.Validar(u).EsValida);  
+    var invalidas = _uris.Count - validas;  
+    var total = _uris.Count;  
+    var porcentaje = total == 0 ? 0 : (double)validas / total * 100;  
+    return new ResumenUris(validas, invalidas, porcentaje);  
+}
+
+Paso 4: Explicar línea por línea:
+
+Línea 1: public ResumenUris Resumen(ValidadorUriRest validador) → declara el método.
+Línea 2: { → abre el cuerpo.
+Línea 3: var validas = _uris.Count(u => validador.Validar(u).EsValida); → cuenta las válidas.
+Línea 4: var invalidas = _uris.Count - validas; → calcula las inválidas por diferencia.
+Línea 5: var total = _uris.Count; → obtiene el total.
+Línea 6: var porcentaje = total == 0 ? 0 : (double)validas / total * 100; → calcula el porcentaje con protección contra división por cero.
+Línea 7: return new ResumenUris(validas, invalidas, porcentaje); → devuelve el resumen.
+Línea 8: } → cierra el cuerpo.
+
+Paso 5: Guardar el archivo con Ctrl+S.
+
+Paso 6: En CatalogoUrisTests.cs, añadir el siguiente test:
+
+[Fact]  
+public void Resumen_ConTresValidasYDosInvalidas_CalculaPorcentaje()  
+{  
+    var uris = new List<string>  
+    {  
+        "/api/v1/ordenes",  
+        "/api/v1/ordenes/123",  
+        "/api/v1/materiales",  
+        "/ordenes",  
+        "/api/v1/crearOrden"  
+    };  
+    var catalogo = new CatalogoUris(uris);  
+    var validador = new ValidadorUriRest();  
+  
+    var resumen = catalogo.Resumen(validador);  
+  
+    resumen.Validas.Should().Be(3);  
+    resumen.Invalidas.Should().Be(2);  
+    resumen.PorcentajeValidez.Should().Be(60.0);  
+}
+
+Paso 7: Explicar línea por línea:
+
+Línea 1: [Fact] → marca el método como test de xUnit.
+Línea 2: public void Resumen_ConTresValidasYDosInvalidas_CalculaPorcentaje() → declara el test.
+Línea 3: { → abre el cuerpo.
+Línea 4: var uris = new List<string> → crea la lista.
+Línea 5: { → abre el inicializador.
+Línea 6: "/api/v1/ordenes", → primera URI válida.
+Línea 7: "/api/v1/ordenes/123", → segunda URI válida.
+Línea 8: "/api/v1/materiales", → tercera URI válida.
+Línea 9: "/ordenes", → primera URI inválida por falta de prefijo.
+Línea 10: "/api/v1/crearOrden" → segunda URI inválida por contener verbo.
+Línea 11: }; → cierra el inicializador.
+Línea 12: var catalogo = new CatalogoUris(uris); → instancia el catálogo.
+Línea 13: var validador = new ValidadorUriRest(); → instancia el validador.
+Línea 14: var resumen = catalogo.Resumen(validador); → invoca el método.
+Línea 15: resumen.Validas.Should().Be(3); → verifica las válidas.
+Línea 16: resumen.Invalidas.Should().Be(2); → verifica las inválidas.
+Línea 17: resumen.PorcentajeValidez.Should().Be(60.0); → verifica el porcentaje.
+Línea 18: } → cierra el cuerpo.
+
+Paso 8: Ejecutar dotnet test tests\AceriaApp.DisenoRest.Tests\AceriaApp.DisenoRest.Tests.csproj y verificar que pasan los nueve tests.
+
+Paso 9: Verificar que el método Resumen no modifica ningún archivo del punto 1.5.
+
+Paso 10: Hacer commit con git commit -m "Reto 2.1: método Resumen en CatalogoUris con cálculo de porcentaje".
+
+Verificación: la salida de dotnet test muestra Passed: 9.
+
+
+---
+
+Resultado esperado
+
+Al finalizar este punto, el alumno debe tener:
+
+· La carpeta modulo-2-apis-rest-aspnet-core/2.1-diseno-apis-rest/ con la solución AceriaApp.sln que contiene ocho proyectos.
+· El documento docs/diseno-apis-rest.md con las restricciones, reglas, métodos, códigos y paginación.
+· El documento docs/ADR-006-diseno-apis-rest.md con la decisión sobre el estilo REST.
+· Las clases UriRest, ValidadorUriRest y CatalogoUris en src/AceriaApp.Monolito.Api/DisenoRest/.
+· El proyecto tests/AceriaApp.DisenoRest.Tests con ocho tests (nueve tras el reto).
+· Los tests de los puntos 1.1 a 1.5 y del punto 2.1 pasando conjuntamente con dotnet test AceriaApp.sln, total 31 pruebas (32 tras el reto).
+· Los ADR-001 a ADR-005 del punto 1.5 sin modificar.
+· Seis commits en Git: del punto 1.1 al 1.5 y del punto 2.1.
+
+
+---
+
+Conclusión y enlace al siguiente punto
+
+El punto 2.1 ha establecido los fundamentos del diseño de APIs REST: las seis restricciones del estilo, la identificación de recursos con URIs, la negociación de representaciones, la semántica de los métodos HTTP, los códigos de estado, la paginación y el anidamiento de relaciones. El proyecto AceriaApp dispone ahora de un documento de diseño de APIs REST, un validador automático de URIs y ocho tests nuevos. Esta base permite avanzar hacia el punto 2.2, donde se estudiarán con detalle los recursos, los verbos HTTP y los códigos de respuesta, y se aplicarán al diseño de los endpoints del proyecto.
+
+
+---
+
+Fin del punto 2.1.
+
+Espero confirmación del usuario antes de continuar con el punto 2.2.
