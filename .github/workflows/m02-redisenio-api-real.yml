@@ -1,0 +1,71 @@
+name: M02 - rediseño Minimal API real .NET 8
+
+on:
+  push:
+    branches:
+      - redisenio/m02-minimal-api-real-20261015
+    paths:
+      - '.github/scripts/m02_rehacer_codigo.py'
+      - '.github/scripts/m02_guias_reales.py'
+      - '.github/scripts/m02_maquetar_reales.py'
+      - '.github/workflows/m02-redisenio-api-real.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: redisenio-m02-api
+  cancel-in-progress: true
+
+jobs:
+  generar-probar:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: redisenio/m02-minimal-api-real-20261015
+          persist-credentials: true
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Generar cuatro proyectos reales
+        run: python .github/scripts/m02_rehacer_codigo.py
+      - name: Compilar y probar todas las etapas con HTTP real
+        shell: bash
+        run: |
+          set -euo pipefail
+          for stage in 2.1-diseno-apis-rest 2.2-recursos-verbos-codigos 2.3-validacion-peticiones 2.4-documentacion-openapi; do
+            dir="M02_APIS_REST_ASPNET_CORE/PROYECTO/$stage"
+            echo "::group::TESTS $stage"
+            dotnet restore "$dir/tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj"
+            dotnet build "$dir/tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj" --no-restore -warnaserror
+            dotnet test "$dir/tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj" --no-build --logger "console;verbosity=normal"
+            echo "::endgroup::"
+          done
+      - name: Confirmar que no hay Git en los README del alumnado
+        run: |
+          if grep -Ein 'git (add|commit|log|status|push|checkout|branch)' \
+              M02_APIS_REST_ASPNET_CORE/PROYECTO/2.*/README.md; then
+            echo "El material del alumno contiene operaciones Git"; exit 1
+          fi
+      - name: Commit de proyectos SOLO en rama de rediseño
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add M02_APIS_REST_ASPNET_CORE/PROYECTO/
+          if ! git diff --cached --quiet; then
+            git commit -m "feat(m02): cuatro estados REST reales comprobados en .NET 8"
+            git push origin HEAD:redisenio/m02-minimal-api-real-20261015
+          fi
+      - name: Artefacto de respaldo
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: M02-API-real-cuatro-etapas
+          path: M02_APIS_REST_ASPNET_CORE/PROYECTO/
+          if-no-files-found: warn
