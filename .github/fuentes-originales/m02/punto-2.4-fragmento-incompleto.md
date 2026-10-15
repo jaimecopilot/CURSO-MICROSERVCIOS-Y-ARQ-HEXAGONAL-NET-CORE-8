@@ -203,3 +203,140 @@ La derivación de esquemas a partir de los tipos tiene dos consecuencias prácti
 
 ---
 
+Bloque 6 — Ejemplos en la documentación
+
+Los ejemplos en la documentación muestran al consumidor cómo usar la API. Los ejemplos se añaden con anotaciones o con configuración explícita. Un ejemplo puede ser de petición o de respuesta. Un ejemplo de petición muestra el JSON que el cliente debe enviar. Un ejemplo de respuesta muestra el JSON que el servidor devuelve. Los ejemplos facilitan la integración y reducen el tiempo de prueba. La adopción de ejemplos es una buena práctica de documentación.
+
+components:  
+  schemas:  
+    CrearOrdenRequest:  
+      type: object  
+      properties:  
+        cliente:  
+          type: string  
+          example: ACX-001  
+        material:  
+          type: string  
+          example: CHAPA-3MM  
+        cantidad:  
+          type: integer  
+          example: 10
+
+Línea 1: components: → sección de esquemas reutilizables.
+Línea 2: schemas: → esquemas de datos.
+Línea 3: CrearOrdenRequest: → esquema de petición.
+Línea 4: type: object → tipo del esquema.
+Línea 5: properties: → propiedades del esquema.
+Línea 6: cliente: → primera propiedad.
+Línea 7: type: string → tipo de la propiedad.
+Línea 8: example: ACX-001 → ejemplo del valor.
+Línea 9: material: → segunda propiedad.
+Línea 10: type: string → tipo de la propiedad.
+Línea 11: example: CHAPA-3MM → ejemplo del valor.
+Línea 12: cantidad: → tercera propiedad.
+Línea 13: type: integer → tipo de la propiedad.
+Línea 14: example: 10 → ejemplo del valor.
+
+Los ejemplos tienen dos consecuencias prácticas. La primera es que el consumidor ve cómo se usa la API sin necesidad de leer toda la documentación. La segunda es que las herramientas pueden generar clientes con ejemplos precargados. La adopción de ejemplos es especialmente útil en APIs con contratos complejos. El curso usa ejemplos en los esquemas de petición y de respuesta.
+
+
+---
+
+Bloque 7 — Versionado de la documentación
+
+La documentación se versiona junto con el contrato. Cada versión del contrato tiene su propio documento OpenAPI. Swagger UI permite seleccionar la versión que se quiere consultar. La selección se realiza con el método SwaggerDoc que registra cada versión. La versión de la documentación coincide con la versión del contrato en la URL. La coincidencia permite que el consumidor consulte la documentación de la versión que usa. El versionado de la documentación es una consecuencia del versionado del contrato.
+
+builder.Services.AddSwaggerGen(options =>  
+{  
+    options.SwaggerDoc("v1", new OpenApiInfo  
+    {  
+        Title = "AceriaApp.Monolito.Api",  
+        Version = "v1",  
+        Description = "API del monolito de referencia."  
+    });  
+});  
+  
+app.UseSwaggerUI(options =>  
+{  
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "AceriaApp.Monolito.Api v1");  
+});
+
+Línea 1: builder.Services.AddSwaggerGen(options => → registra el generador.
+Línea 2: { → abre el bloque.
+Línea 3: options.SwaggerDoc("v1", new OpenApiInfo → registra la versión v1.
+Línea 4: { → abre el bloque de metadatos.
+Línea 5: Title = "AceriaApp.Monolito.Api", → título de la API.
+Línea 6: Version = "v1", → versión del contrato.
+Línea 7: Description = "API del monolito de referencia." → descripción.
+Línea 8: }); → cierra el bloque.
+Línea 9: }); → cierra la configuración.
+Línea 10: app.UseSwaggerUI(options => → configura Swagger UI.
+Línea 11: { → abre el bloque.
+Línea 12: options.SwaggerEndpoint("/swagger/v1/swagger.json", "AceriaApp.Monolito.Api v1"); → registra el endpoint del documento.
+Línea 13: }); → cierra el bloque.
+
+El versionado de la documentación tiene dos consecuencias prácticas. La primera es que el consumidor puede consultar la versión que usa. La segunda es que la documentación de versiones antiguas sigue disponible mientras el contrato antiguo siga activo. La combinación de ambas permite la evolución sin romper a los consumidores. El curso usa el versionado en la URL y en la documentación de forma coherente.
+
+
+---
+
+Bloque 8 — Documentación de errores y problem details
+
+La documentación incluye los códigos de error y el formato problem details. El método ProducesProblem declara el tipo de error. El método ProducesValidationProblem declara el tipo de error de validación. La documentación muestra los códigos de error esperados para cada endpoint. La inclusión de los errores en la documentación permite al consumidor anticipar las respuestas. La anticipación reduce el tiempo de integración y mejora la experiencia del consumidor.
+
+app.MapPost("/api/v1/ordenes", async (CrearOrdenRequest request, AceriaDbContext db) =>  
+{  
+    // lógica del endpoint  
+})  
+.WithName("CrearOrden")  
+.WithSummary("Crea una orden")  
+.Produces<OrdenDto>(StatusCodes.Status201Created)  
+.ProducesValidationProblem(StatusCodes.Status400BadRequest)  
+.ProducesProblem(StatusCodes.Status500InternalServerError);
+
+Línea 1: app.MapPost("/api/v1/ordenes", async (CrearOrdenRequest request, AceriaDbContext db) => → declara el endpoint POST.
+Línea 2: { → abre el cuerpo del lambda.
+Línea 3: // lógica del endpoint → comentario del cuerpo.
+Línea 4: }) → cierra el lambda.
+Línea 5: .WithName("CrearOrden") → asigna un nombre único.
+Línea 6: .WithSummary("Crea una orden") → añade un resumen.
+Línea 7: .Produces<OrdenDto>(StatusCodes.Status201Created) → declara la respuesta exitosa.
+Línea 8: .ProducesValidationProblem(StatusCodes.Status400BadRequest) → declara el error de validación.
+Línea 9: .ProducesProblem(StatusCodes.Status500InternalServerError); → declara el error interno.
+
+La documentación de errores tiene dos consecuencias prácticas. La primera es que el consumidor ve los códigos de error esperados. La segunda es que las herramientas pueden generar clientes que manejen cada código de forma específica. La adopción de la documentación de errores es una buena práctica que se aplica de forma uniforme en todos los endpoints. El curso documenta los códigos 400, 404, 409, 422 y 500 según corresponda.
+
+
+---
+
+Bloque 9 — Herramientas que consumen OpenAPI
+
+El documento OpenAPI lo consumen varias herramientas. Swagger UI lo consume para generar la documentación interactiva. OpenAPI Generator lo consume para generar clientes en distintos lenguajes. Postman lo consume para importar la colección de endpoints. ReDoc lo consume para generar documentación de solo lectura. Las herramientas se integran con el documento sin modificar la API. La integración es posible porque el documento es un formato estándar. La estandarización es la que permite que la documentación se reutilice en múltiples herramientas.
+
+Herramientas que consumen OpenAPI:  
+  
+Swagger UI           → documentación interactiva.  
+OpenAPI Generator    → clientes en varios lenguajes.  
+Postman              → colección de endpoints.  
+ReDoc                → documentación de solo lectura.
+
+Línea 1: Swagger UI → documentación interactiva.
+Línea 2: OpenAPI Generator → clientes en varios lenguajes.
+Línea 3: Postman → colección de endpoints.
+Línea 4: ReDoc → documentación de solo lectura.
+
+La integración con herramientas tiene dos consecuencias prácticas. La primera es que la documentación se reutiliza en distintos contextos. La segunda es que el consumidor elige la herramienta que mejor se adapta a su flujo de trabajo. La combinación de ambas reduce el coste de integración y mejora la experiencia del consumidor. El curso usa Swagger UI como herramienta principal y menciona las demás como opciones.
+
+
+---
+
+Bloque 10 — Aplicación al proyecto del curso
+
+El proyecto del curso aplica la documentación OpenAPI en todos los endpoints. Los metadatos se añaden con las anotaciones de Minimal API. Los esquemas se derivan de los DTOs. Los ejemplos se añaden en los esquemas de petición. La versión del contrato coincide con la versión de la URL. Los códigos de error se documentan con ProducesProblem y ProducesValidationProblem. La documentación se publica con Swagger UI en el entorno de desarrollo. La documentación se cierra con un test que verifica la generación del documento.
+
+Aplicación al proyecto del curso:  
+  
+Metadatos        → WithName, WithSummary, WithDescription, WithTags.  
+Esquemas         → derivados de los DTOs.  
+Ejemplos         → añadidos en los esquemas de petición.  
+Versionado       → v1 en UR
