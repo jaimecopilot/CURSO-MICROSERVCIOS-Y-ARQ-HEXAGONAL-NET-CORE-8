@@ -7,6 +7,7 @@ on:
     paths:
       - '.github/fuentes-originales/m02/**'
       - '.github/scripts/construir_m02_desde_fuentes.py'
+      - '.github/scripts/pedagogia_m02.py'
       - '.github/scripts/pdf_m02_previsualizacion.py'
       - '.github/workflows/m02-previsualizacion-fuentes-originales.yml'
   workflow_dispatch:
@@ -39,8 +40,8 @@ jobs:
               assert "Duración: " not in text
               assert "PARTE TEÓRICA (" not in text
               assert "PARTE PRÁCTICA (" not in text
-          print("PREVISUALIZACIÓN PARCIAL: 40 bloques y 96 pasos completos.")
-          print("Las cuatro fuentes están presentes; pendiente aprobación pedagógica.")
+          print("REVISIÓN M02: 40 bloques y 96 pasos completos.")
+          print("Cuatro fuentes protegidas; maquetación pendiente de revisión pedagógica.")
           PY
       - name: Instalar motor para las previsualizaciones PDF
         run: python -m pip install --disable-pip-version-check --quiet markdown weasyprint pymupdf
