@@ -1,10 +1,28 @@
 # Punto 1.1 — Arquitectura monolítica vs. microservicios
 
-**Guía de trabajo:** los archivos, proyectos, referencias y documentos ya se entregan preparados en `PROYECTO/1.1-monolito-vs-microservicios/`. El alumnado trabaja sobre una solución independiente por punto, con código anterior activo y las incorporaciones actuales comentadas por pasos. **No debe volver a crear archivos o proyectos de igual nombre.** Al activar código, se seleccionan únicamente líneas entre `INICIO PASO` y `FIN PASO`, se pulsa `Ctrl+K, Ctrl+U` en Visual Studio y se guarda. Los bloques `RETO` permanecen comentados hasta el ejercicio de ampliación.
+## Qué problema resolvemos y qué aprenderás
 
-**Distribución del trabajo:** los 27 minutos presenciales corresponden a una demostración guiada y verificaciones esenciales. Los 24 pasos y los retos se conservan como itinerario autónomo reproducible; ejecutarlos todos, incluida la instalación del entorno y la base de datos, requiere tiempo adicional.
+**Situación profesional.** Una acería necesita registrar órdenes de producción y consultarlas. Antes de distribuir capacidades entre servicios, hay que disponer de una referencia sencilla que muestre cómo se concentran API, dominio, persistencia y pruebas en una misma unidad desplegable.
 
-## PARTE PRÁCTICA (27 minutos)
+**Objetivo del ejercicio.** Obtener una API mínima ejecutable que registre órdenes en SQL Server Express, las consulte mediante HTTP y permita identificar las ventajas y límites de un monolito modular.
+
+**Justificación técnica.** La decisión arquitectónica no puede justificarse únicamente con diagramas: una transacción, una conexión y una petición HTTP permiten observar qué se ejecuta conjuntamente y cómo se comprueba.
+
+**Recorrido de aprendizaje**
+
+- **Pasos 1–9:** Reconocer la solución, su composición y sus dependencias.
+- **Pasos 10–15:** Comprender entidad, contexto EF Core y migración hasta crear el esquema real.
+- **Pasos 16–18:** Ejecutar peticiones y un test que verifique el comportamiento de la entidad.
+- **Pasos 19–24:** Documentar la decisión, comprobar el estado del proyecto y registrar su evolución.
+
+**Evidencia observable al terminar.** La tabla `Ordenes` existe, el GET responde y el POST persiste; el test de `Orden` pasa y el ADR explica por qué este módulo comienza como monolito.
+
+**Qué demuestra y qué no demuestra.** Un test que consulta `FirstOrDefaultAsync` y obtiene `null` comprueba persistencia, pero no equivale a probar un HTTP 404. El contrato HTTP se comprueba aparte enviando una petición real al endpoint.
+
+
+**Preparación del entorno:** los archivos, proyectos, referencias y documentos ya se entregan preparados en `PROYECTO/1.1-monolito-vs-microservicios/`. El alumnado trabaja sobre una solución independiente por punto, con código anterior activo y las incorporaciones actuales comentadas por pasos. **No debe volver a crear archivos o proyectos de igual nombre.** Al activar código, se seleccionan únicamente líneas entre `INICIO PASO` y `FIN PASO`, se pulsa `Ctrl+K, Ctrl+U` en Visual Studio y se guarda. Los bloques `RETO` permanecen comentados hasta el ejercicio de ampliación.
+
+## Ejercicio práctico
 
 **Ejercicio:** Crear la estructura raíz del repositorio AceriaApp y la estructura inicial del punto 1.1 en la carpeta modulo-1-introduccion-microservicios/1.1-monolito-vs-microservicios/, con una solución, un proyecto de API monolítico de referencia, un proyecto de tests, la documentación de la decisión arquitectónica y el README del punto.
 
@@ -250,7 +268,6 @@
 **Archivo preparado en este punto:** `src/AceriaApp.Monolito.Api/Dominio/Orden.cs`. El bloque de código original figura a continuación como referencia de aprendizaje; la acción efectiva consiste en activar el bloque comentado correspondiente.
 
 
-
 **Acción 1:** Abrir `src/AceriaApp.Monolito.Api/Dominio/Orden.cs` dentro de la solución `AceriaApp.sln` del punto 1.1; no crear otro archivo.
 
 **Acción 2:** Localizar el marcador `INICIO PASO 1.1.11` y seleccionar solo las líneas de código comentadas del bloque, sin modificar los marcadores ni el código heredado.
@@ -272,6 +289,18 @@ public class Orden
 }
 ```
 
+**Explicación del código, línea por línea**
+
+- **Línea 1 —** `namespace AceriaApp.Monolito.Api.Dominio;`: Declara el espacio de nombres `AceriaApp.Monolito.Api.Dominio` coherente con la carpeta y el proyecto.
+- **Línea 2 —** `public class Orden`: Representa la orden de producción que crea y consulta la API monolítica.
+- **Línea 3 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 4 —** `public Guid Id { get; set; }`: Identificador único GUID que distingue cada orden durante persistencia y consulta.
+- **Línea 5 —** `public string Cliente { get; set; } = string.Empty;`: Cliente que solicita la orden de producción; es dato de negocio y se comprueba en el test.
+- **Línea 6 —** `public string Material { get; set; } = string.Empty;`: Código o denominación del material requerido por la orden de producción.
+- **Línea 7 —** `public int Cantidad { get; set; }`: Número de unidades solicitado; forma parte del dato persistido de la orden.
+- **Línea 8 —** `public DateTime FechaCreacion { get; set; }`: Instante en UTC en que se crea la orden; evita depender del huso horario del servidor.
+- **Línea 9 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+
 
 **Acción 5:** Pulsar Ctrl+S para guardar el archivo.
 
@@ -290,7 +319,6 @@ public class Orden
 ### Paso 12 — Activar el código de AceriaDbContext.cs por pasos
 
 **Archivo preparado en este punto:** `src/AceriaApp.Monolito.Api/Infraestructura/AceriaDbContext.cs`. El bloque de código original figura a continuación como referencia de aprendizaje; la acción efectiva consiste en activar el bloque comentado correspondiente.
-
 
 
 **Acción 1:** Abrir `src/AceriaApp.Monolito.Api/Infraestructura/AceriaDbContext.cs` dentro de la solución `AceriaApp.sln` del punto 1.1; no crear otro archivo.
@@ -325,6 +353,26 @@ public class AceriaDbContext : DbContext
 }
 ```
 
+**Explicación del código, línea por línea**
+
+- **Línea 1 —** `using AceriaApp.Monolito.Api.Dominio;`: Importa AceriaApp.Monolito.Api.Dominio para resolver los tipos usados en este archivo.
+- **Línea 2 —** `using Microsoft.EntityFrameworkCore;`: Importa Microsoft.EntityFrameworkCore para resolver los tipos usados en este archivo.
+- **Línea 3 —** `namespace AceriaApp.Monolito.Api.Infraestructura;`: Declara el espacio de nombres `AceriaApp.Monolito.Api.Infraestructura` coherente con la carpeta y el proyecto.
+- **Línea 4 —** `public class AceriaDbContext : DbContext`: Integra el modelo de órdenes con EF Core y SQL Server.
+- **Línea 5 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 6 —** `public AceriaDbContext(DbContextOptions<AceriaDbContext> options)`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 7 —** `: base(options)`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 8 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 9 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 10 —** `public DbSet<Orden> Ordenes => Set<Orden>();`: Asigna o calcula el valor de la expresión de la derecha para la operación actual.
+- **Línea 11 —** `protected override void OnModelCreating(ModelBuilder modelBuilder)`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 12 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 13 —** `modelBuilder.Entity<Orden>().HasKey(o => o.Id);`: Configura el esquema de EF Core antes de materializar las tablas.
+- **Línea 14 —** `modelBuilder.Entity<Orden>().Property(o => o.Cliente).HasMaxLength(100).IsRequired();`: Configura el esquema de EF Core antes de materializar las tablas.
+- **Línea 15 —** `modelBuilder.Entity<Orden>().Property(o => o.Material).HasMaxLength(100).IsRequired();`: Configura el esquema de EF Core antes de materializar las tablas.
+- **Línea 16 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 17 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+
 
 **Acción 5:** Pulsar Ctrl+S para guardar el archivo.
 
@@ -337,13 +385,13 @@ public class AceriaDbContext : DbContext
 - Usar DbSet<Orden> Ordenes { get; set; } sin => Set<Orden>(): el curso usa la forma con expresión para evitar setters.
 
 **Verificación:** la clase AceriaDbContext debe compilar sin errores y el proyecto debe reconocer Microsoft.EntityFrameworkCore.
+\n\n**Interpretación del resultado:** `AceriaDbContext` expone `Ordenes` como conjunto persistente. La clase del dominio no debe encargarse de abrir conexiones; esa responsabilidad corresponde a la infraestructura.
 
 ---
 
 ### Paso 13 — Activar el código de Program.cs por pasos
 
 **Archivo preparado en este punto:** `src/AceriaApp.Monolito.Api/Program.cs`. El bloque de código original figura a continuación como referencia de aprendizaje; la acción efectiva consiste en activar el bloque comentado correspondiente.
-
 
 
 **Acción 1:** Abrir `src/AceriaApp.Monolito.Api/Program.cs` dentro de la solución `AceriaApp.sln` del punto 1.1; no crear otro archivo.
@@ -384,6 +432,35 @@ app.MapPost("/api/v1/ordenes", async (AceriaDbContext db, Orden orden) =>
 app.Run();
 ```
 
+**Explicación del código, línea por línea**
+
+- **Línea 1 —** `using AceriaApp.Monolito.Api.Dominio;`: Importa AceriaApp.Monolito.Api.Dominio para resolver los tipos usados en este archivo.
+- **Línea 2 —** `using AceriaApp.Monolito.Api.Infraestructura;`: Importa AceriaApp.Monolito.Api.Infraestructura para resolver los tipos usados en este archivo.
+- **Línea 3 —** `using Microsoft.EntityFrameworkCore;`: Importa Microsoft.EntityFrameworkCore para resolver los tipos usados en este archivo.
+- **Línea 4 —** `var builder = WebApplication.CreateBuilder(args);`: Calcula `builder` a partir de `WebApplication.CreateBuilder(args)`; ese valor se utiliza en la verificación posterior.
+- **Línea 5 —** `builder.Services.AddDbContext<AceriaDbContext>(options =>`: Inicia una expresión lambda, cuya lógica continúa en las líneas siguientes.
+- **Línea 6 —** `options.UseSqlServer(builder.Configuration.GetConnectionString("AceriaDb")));`: Obtiene la cadena de conexión de la configuración del host.
+- **Línea 7 —** `builder.Services.AddEndpointsApiExplorer();`: Registra dependencias y capacidades en el contenedor de ASP.NET Core.
+- **Línea 8 —** `builder.Services.AddSwaggerGen();`: Registra dependencias y capacidades en el contenedor de ASP.NET Core.
+- **Línea 9 —** `var app = builder.Build();`: Calcula `app` a partir de `builder.Build()`; ese valor se utiliza en la verificación posterior.
+- **Línea 10 —** `if (app.Environment.IsDevelopment())`: Comprueba la condición `app.Environment.IsDevelopment()` antes de proseguir; protege un caso límite o una regla del negocio.
+- **Línea 11 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 12 —** `app.UseSwagger();`: Completa la instrucción descrita en este bloque.
+- **Línea 13 —** `app.UseSwaggerUI();`: Completa la instrucción descrita en este bloque.
+- **Línea 14 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 15 —** `app.MapGet("/api/v1/ordenes", async (AceriaDbContext db) =>`: Registra el endpoint HTTP GET como parte de la API.
+- **Línea 16 —** `await db.Ordenes.AsNoTracking().ToListAsync());`: Completa la instrucción descrita en este bloque.
+- **Línea 17 —** `app.MapPost("/api/v1/ordenes", async (AceriaDbContext db, Orden orden) =>`: Registra el endpoint HTTP POST como parte de la API.
+- **Línea 18 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 19 —** `orden.Id = Guid.NewGuid();`: Genera un identificador GUID nuevo para distinguir este registro o petición.
+- **Línea 20 —** `orden.FechaCreacion = DateTime.UtcNow;`: Guarda la fecha UTC, independiente de la zona horaria del servidor.
+- **Línea 21 —** `db.Ordenes.Add(orden);`: Prepara o persiste una operación sobre el contexto de datos.
+- **Línea 22 —** `await db.SaveChangesAsync();`: Completa la instrucción descrita en este bloque.
+- **Línea 23 —** `return Results.Created($"/api/v1/ordenes/{orden.Id}", orden);`: Devuelve el resultado `Results.Created($"/api/v1/ordenes/{orden.Id}", orden)` al llamador.
+- **Línea 24 —** `});`: Cierra la expresión lambda o la llamada de configuración.
+- **Línea 25 —** `app.Run();`: Completa la instrucción descrita en este bloque.
+
+
 **Acción 3:** Pulsar `Ctrl+K, Ctrl+U` para activar las líneas seleccionadas; contrastar el código resultante con el ejemplo explicado a continuación.
 
 **Acción 4:** Verificar que no hay subrayados rojos en las líneas añadidas.
@@ -397,6 +474,7 @@ app.Run();
 - Olvidar app.Run(); al final: el proceso termina inmediatamente y no escucha peticiones.
 
 **Verificación:** Program.cs debe compilar sin errores y mostrar las llamadas a AddDbContext, AddEndpointsApiExplorer, AddSwaggerGen, los dos MapGet/MapPost y la llamada a app.Run().
+\n\n**Interpretación del resultado:** Al ejecutar el host se resuelven dependencias por inyección. GET consulta órdenes existentes y POST crea una nueva; las respuestas HTTP dependen del resultado de EF Core.
 
 ---
 
@@ -415,6 +493,7 @@ app.Run();
 **Errores comunes:** ejecutar `migrations add Inicial` otra vez; cambiar la migración heredada; buscar una marca temporal arbitraria.
 
 **Verificación:** los dos archivos ahora tienen extensión `.cs`, la solución compila y `202610140001_Inicial` figura en la lista de migraciones.
+\n\n**Interpretación del resultado:** La migración versionada describe la tabla que EF Core aplicará al servidor. Una clase `DbContext` por sí sola no crea físicamente la base de datos.
 
 ---
 
@@ -463,13 +542,13 @@ app.Run();
 - Olvidar Ctrl+C antes de continuar: el proceso queda en segundo plano y bloquea el siguiente dotnet run.
 
 **Verificación:** Swagger UI debe mostrar los dos endpoints y permitir ejecutar el GET (que devuelve una lista vacía []).
+\n\n**Interpretación del resultado:** La respuesta `[]` de GET antes de crear órdenes confirma la ruta y consulta inicial. Tras POST, un nuevo GET debe devolver el registro almacenado; ese comportamiento es distinto de comprobar solo la compilación.
 
 ---
 
 ### Paso 17 — Activar el código de OrdenTests.cs por pasos
 
 **Archivo preparado en este punto:** `tests/AceriaApp.Monolito.Tests/OrdenTests.cs`. El bloque de código original figura a continuación como referencia de aprendizaje; la acción efectiva consiste en activar el bloque comentado correspondiente.
-
 
 
 **Acción 1:** Abrir `tests/AceriaApp.Monolito.Tests/OrdenTests.cs` dentro de la solución `AceriaApp.sln` del punto 1.1; no crear otro archivo.
@@ -505,6 +584,31 @@ public class OrdenTests
 }
 ```
 
+**Explicación del código, línea por línea**
+
+- **Línea 1 —** `using AceriaApp.Monolito.Api.Dominio;`: Importa AceriaApp.Monolito.Api.Dominio para resolver los tipos usados en este archivo.
+- **Línea 2 —** `using FluentAssertions;`: Importa FluentAssertions para resolver los tipos usados en este archivo.
+- **Línea 3 —** `using Xunit;`: Importa Xunit para resolver los tipos usados en este archivo.
+- **Línea 4 —** `namespace AceriaApp.Monolito.Tests;`: Declara el espacio de nombres `AceriaApp.Monolito.Tests` coherente con la carpeta y el proyecto.
+- **Línea 5 —** `public class OrdenTests`: Representa la orden de producción que crea y consulta la API monolítica.
+- **Línea 6 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 7 —** `[Fact]`: Indica a xUnit que el método siguiente es un caso de prueba.
+- **Línea 8 —** `public void Orden_ConDatosValidos_SeCreaCorrectamente()`: Define el método `Orden_ConDatosValidos_SeCreaCorrectamente`, cuya entrada y salida se verifican en esta práctica.
+- **Línea 9 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 10 —** `var orden = new Orden`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 11 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 12 —** `Id = Guid.NewGuid(),`: Genera un identificador GUID nuevo para distinguir este registro o petición.
+- **Línea 13 —** `Cliente = "ACX-001",`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 14 —** `Material = "CHAPA-3MM",`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 15 —** `Cantidad = 10,`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 16 —** `FechaCreacion = DateTime.UtcNow`: Guarda la fecha UTC, independiente de la zona horaria del servidor.
+- **Línea 17 —** `};`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 18 —** `orden.Cliente.Should().Be("ACX-001");`: Comprueba mediante FluentAssertions que `orden.Cliente` cumpla `Be("ACX-001")`.
+- **Línea 19 —** `orden.Cantidad.Should().Be(10);`: Comprueba mediante FluentAssertions que `orden.Cantidad` cumpla `Be(10)`.
+- **Línea 20 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 21 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+
+
 **Acción 4:** Pulsar Ctrl+S para guardar el archivo.
 
 **Acción 5:** En la terminal, escribir cd .... y pulsar Enter para volver a la carpeta del punto, y después escribir dotnet add tests\AceriaApp.Monolito.Tests\AceriaApp.Monolito.Tests.csproj package FluentAssertions y pulsar Enter.
@@ -518,6 +622,7 @@ public class OrdenTests
 - Olvidar el using AceriaApp.Monolito.Api.Dominio;: la clase Orden no se resuelve.
 
 **Verificación:** OrdenTests.cs debe compilar sin errores y mostrar el método Orden_ConDatosValidos_SeCreaCorrectamente.
+\n\n**Interpretación del resultado:** La prueba unitaria de `Orden` comprueba la creación y los valores de la entidad. No hace una petición HTTP ni comprueba SQL Server.
 
 ---
 
@@ -731,7 +836,6 @@ TestResults/
 **Verificación:** git log --oneline debe mostrar un commit con el mensaje Punto 1.1: estructura inicial del proyecto AceriaApp. git status debe mostrar nothing to commit, working tree clean.
 
 
-
 **Nota de trazabilidad:** en una descarga del repositorio puede no haber cambios nuevos que confirmar. Antes de ejecutar `git commit`, usar `git status` y confirmar únicamente los archivos efectivamente modificados durante el recorrido. No ejecutar `git init` dentro de cada punto: la raíz del repositorio ya contiene el historial.
 
 ---
@@ -753,29 +857,32 @@ El commit de Git falla user.name y user.email no configurados Ejecutar git confi
 
 ---
 
-## Reto resuelto paso a paso
+## Reto de ampliación: solución guiada
 
-Reto: añadir un endpoint GET /api/v1/ordenes/{id} que devuelva una orden concreta por su identificador, y un test unitario que verifique la ausencia de la orden en la capa de persistencia cuando el identificador no existe.
+**Problema a resolver:** añadir un endpoint GET /api/v1/ordenes/{id} que devuelva una orden concreta por su identificador, y un test unitario que verifique la ausencia de la orden en la capa de persistencia cuando el identificador no existe.
 
-Paso 1: En Program.cs, añadir después del MapGet existente:
+#### Etapa 1 — En Program.cs, añadir después del MapGet existente:
 
+```csharp
 app.MapGet("/api/v1/ordenes/{id:guid}", async (Guid id, AceriaDbContext db) =>
 {
     var orden = await db.Ordenes.AsNoTracking().FirstOrDefaultAsync(o => o.Id == id);
     return orden is not null ? Results.Ok(orden) : Results.NotFound();
 });
+```
 
-Paso 2: Explicar línea por línea:
+#### Etapa 2 — Explicar línea por línea:
 
-Línea 1: app.MapGet("/api/v1/ordenes/{id:guid}", ...) → define un endpoint GET con un parámetro de ruta id restringido a Guid.
-Línea 2: async (Guid id, AceriaDbContext db) => → el parámetro id se enlaza desde la ruta y db se inyecta desde el contenedor.
-Línea 3: var orden = await db.Ordenes.AsNoTracking().FirstOrDefaultAsync(o => o.Id == id); → consulta la primera orden cuyo Id coincide, sin tracking.
-Línea 4: return orden is not null ? Results.Ok(orden) : Results.NotFound(); → devuelve 200 con la orden o 404 si no existe.
+- **Línea 1:** `app.MapGet("/api/v1/ordenes/{id:guid}", ...)` — define un endpoint GET con un parámetro de ruta id restringido a Guid.
+- **Línea 2:** `async (Guid id, AceriaDbContext db) =>` — el parámetro id se enlaza desde la ruta y db se inyecta desde el contenedor.
+- **Línea 3:** `var orden = await db.Ordenes.AsNoTracking().FirstOrDefaultAsync(o => o.Id == id);` — consulta la primera orden cuyo Id coincide, sin tracking.
+- **Línea 4:** `return orden is not null ? Results.Ok(orden) : Results.NotFound();` — devuelve 200 con la orden o 404 si no existe.
 
-Paso 3: Guardar el archivo con Ctrl+S.
+#### Etapa 3 — Guardar el archivo con Ctrl+S.
 
-Paso 4: En tests\AceriaApp.Monolito.Tests, añadir un archivo OrdenEndpointsTests.cs con:
+#### Etapa 4 — En tests\AceriaApp.Monolito.Tests, añadir un archivo OrdenEndpointsTests.cs con:
 
+```csharp
 using AceriaApp.Monolito.Api.Dominio;
 using AceriaApp.Monolito.Api.Infraestructura;
 using FluentAssertions;
@@ -800,16 +907,17 @@ public class OrdenEndpointsTests
         orden.Should().BeNull();
     }
 }
+```
 
-Paso 5: Añadir el paquete Microsoft.EntityFrameworkCore.InMemory:
+#### Etapa 5 — Añadir el paquete Microsoft.EntityFrameworkCore.InMemory:
 
 dotnet add tests\AceriaApp.Monolito.Tests\AceriaApp.Monolito.Tests.csproj package Microsoft.EntityFrameworkCore.InMemory --version 8.0.0
 
-Paso 6: Ejecutar dotnet test AceriaApp.sln y verificar que pasan los dos tests.
+#### Etapa 6 — Ejecutar dotnet test AceriaApp.sln y verificar que pasan los dos tests.
 
-Paso 7: Verificar en Swagger que aparece el nuevo endpoint GET /api/v1/ordenes/{id}.
+#### Etapa 7 — Verificar en Swagger que aparece el nuevo endpoint GET /api/v1/ordenes/{id}.
 
-Paso 8: Hacer commit con git commit -m "Reto 1.1: endpoint GET por id y test de 404".
+#### Etapa 8 — Hacer commit con git commit -m "Reto 1.1: endpoint GET por id y test de 404".
 
 Verificación: Swagger debe mostrar tres endpoints y dotnet test debe mostrar Passed: 2.
 
@@ -840,17 +948,34 @@ El punto 1.1 ha establecido los fundamentos conceptuales de la comparación entr
 
 Fin del punto 1.1.
 
-Espero confirmación del usuario antes de continuar con el punto 1.2.
 
 ---
 
 # Punto 1.2 — Ventajas e inconvenientes
 
-**Guía de trabajo:** los archivos, proyectos, referencias y documentos ya se entregan preparados en `PROYECTO/1.2-ventajas-inconvenientes/`. El alumnado trabaja sobre una solución independiente por punto, con código anterior activo y las incorporaciones actuales comentadas por pasos. **No debe volver a crear archivos o proyectos de igual nombre.** Al activar código, se seleccionan únicamente líneas entre `INICIO PASO` y `FIN PASO`, se pulsa `Ctrl+K, Ctrl+U` en Visual Studio y se guarda. Los bloques `RETO` permanecen comentados hasta el ejercicio de ampliación.
+## Qué problema resolvemos y qué aprenderás
 
-**Distribución del trabajo:** los 27 minutos presenciales corresponden a una demostración guiada y verificaciones esenciales. Los 24 pasos y los retos se conservan como itinerario autónomo reproducible; ejecutarlos todos, incluida la instalación del entorno y la base de datos, requiere tiempo adicional.
+**Situación profesional.** El equipo debe decidir si compensa extraer una capacidad del monolito. Una impresión subjetiva sobre el acoplamiento no es suficiente para defender esa decisión.
 
-## PARTE PRÁCTICA (27 minutos)
+**Objetivo del ejercicio.** Documentar las ventajas e inconvenientes de cada arquitectura y ejecutar cálculos reproducibles sobre referencias, tablas y dependencias de capacidades.
+
+**Justificación técnica.** Las métricas son indicadores iniciales, no verdades universales. El ejercicio permite aprender a calcularlas, comprobar casos límite y contrastar su significado con la arquitectura observada.
+
+**Recorrido de aprendizaje**
+
+- **Pasos 1–4:** Situar el nuevo punto y contrastar la documentación heredada.
+- **Pasos 5–9:** Inspeccionar la fórmula del índice, las métricas por capacidad y el agregador.
+- **Pasos 10–15:** Relacionar cada caso de cálculo con las ocho pruebas automatizadas.
+- **Pasos 16–24:** Reunir evidencias, documentar la decisión y verificar la continuidad del punto.
+
+**Evidencia observable al terminar.** Los tests devuelven cocientes esperados, incluido el caso de ausencia de proyectos; la carpeta `docs` explica las dimensiones de comparación y la elección.
+
+**Qué demuestra y qué no demuestra.** `NumeroDeTablas` no identifica por sí mismo tablas compartidas. Por eso los números calculados son una simplificación didáctica y no miden acoplamiento real de un sistema distribuido.
+
+
+**Preparación del entorno:** los archivos, proyectos, referencias y documentos ya se entregan preparados en `PROYECTO/1.2-ventajas-inconvenientes/`. El alumnado trabaja sobre una solución independiente por punto, con código anterior activo y las incorporaciones actuales comentadas por pasos. **No debe volver a crear archivos o proyectos de igual nombre.** Al activar código, se seleccionan únicamente líneas entre `INICIO PASO` y `FIN PASO`, se pulsa `Ctrl+K, Ctrl+U` en Visual Studio y se guarda. Los bloques `RETO` permanecen comentados hasta el ejercicio de ampliación.
+
+## Ejercicio práctico
 
 **Ejercicio:** Añadir al punto 1.1 un documento de análisis comparativo de ventajas e inconvenientes en docs/, una clase de cálculo de métricas de acoplamiento en el proyecto monolítico y un test unitario que verifique las métricas. El punto 1.2 parte del contenido del punto 1.1 sin modificar ningún archivo existente: solo añade archivos nuevos.
 
@@ -1056,7 +1181,6 @@ El proyecto empieza como monolito modular. La evolución hacia microservicios se
 **Archivo preparado en este punto:** `src/AceriaApp.Monolito.Api/Metricas/MetricasAcoplamiento.cs`. El bloque de código original figura a continuación como referencia de aprendizaje; la acción efectiva consiste en activar el bloque comentado correspondiente.
 
 
-
 **Acción 1:** Abrir `src/AceriaApp.Monolito.Api/Metricas/MetricasAcoplamiento.cs` dentro de la solución `AceriaApp.sln` del punto 1.2; no crear otro archivo.
 
 **Acción 2:** Localizar el marcador `INICIO PASO 1.2.6` y seleccionar solo las líneas de código comentadas del bloque, sin modificar los marcadores ni el código heredado.
@@ -1094,6 +1218,33 @@ public class MetricasAcoplamiento
 }
 ```
 
+**Explicación del código, línea por línea**
+
+- **Línea 1 —** `namespace AceriaApp.Monolito.Api.Metricas;`: Declara el espacio de nombres `AceriaApp.Monolito.Api.Metricas` coherente con la carpeta y el proyecto.
+- **Línea 2 —** `public class MetricasAcoplamiento`: Reúne valores para calcular ratios de referencias y datos entre proyectos.
+- **Línea 3 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 4 —** `public int NumeroDeProyectos { get; init; }`: Cantidad de unidades contabilizadas en el denominador del índice de acoplamiento.
+- **Línea 5 —** `public int NumeroDeReferenciasEntreProyectos { get; init; }`: Número de dependencias contadas en el numerador del índice de acoplamiento.
+- **Línea 6 —** `public int NumeroDeTablasCompartidas { get; init; }`: Número declarado de tablas compartidas; cuidado: no se deduce automáticamente del modelo.
+- **Línea 7 —** `public double IndiceAcoplamiento()`: Define el método `IndiceAcoplamiento`, cuya entrada y salida se verifican en esta práctica.
+- **Línea 8 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 9 —** `if (NumeroDeProyectos == 0)`: Comprueba la condición `NumeroDeProyectos == 0` antes de proseguir; protege un caso límite o una regla del negocio.
+- **Línea 10 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 11 —** `return 0;`: Devuelve el resultado `0` al llamador.
+- **Línea 12 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 13 —** `return (double)NumeroDeReferenciasEntreProyectos / NumeroDeProyectos;`: Devuelve el resultado `(double)NumeroDeReferenciasEntreProyectos / NumeroDeProyectos` al llamador.
+- **Línea 14 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 15 —** `public double IndiceComparticionDeDatos()`: Define el método `IndiceComparticionDeDatos`, cuya entrada y salida se verifican en esta práctica.
+- **Línea 16 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 17 —** `if (NumeroDeProyectos == 0)`: Comprueba la condición `NumeroDeProyectos == 0` antes de proseguir; protege un caso límite o una regla del negocio.
+- **Línea 18 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 19 —** `return 0;`: Devuelve el resultado `0` al llamador.
+- **Línea 20 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 21 —** `return (double)NumeroDeTablasCompartidas / NumeroDeProyectos;`: Devuelve el resultado `(double)NumeroDeTablasCompartidas / NumeroDeProyectos` al llamador.
+- **Línea 22 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 23 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+
+
 **Acción 4:** Pulsar Ctrl+S para guardar el archivo.
 
 **Acción 5:** Verificar que la clase compila sin errores.
@@ -1107,13 +1258,13 @@ public class MetricasAcoplamiento
 - No comprobar la división por cero: el método lanza DivideByZeroException si el divisor es cero.
 
 **Verificación:** la clase MetricasAcoplamiento compila sin errores y expone cuatro propiedades y dos métodos.
+\n\n**Interpretación del resultado:** Un índice de acoplamiento compara referencias y número de proyectos. La ausencia de proyectos requiere tratamiento explícito para no dividir por cero.
 
 ---
 
 ### Paso 7 — Activar el código de MetricasServicio.cs por pasos
 
 **Archivo preparado en este punto:** `src/AceriaApp.Monolito.Api/Metricas/MetricasServicio.cs`. El bloque de código original figura a continuación como referencia de aprendizaje; la acción efectiva consiste en activar el bloque comentado correspondiente.
-
 
 
 **Acción 1:** Abrir `src/AceriaApp.Monolito.Api/Metricas/MetricasServicio.cs` dentro de la solución `AceriaApp.sln` del punto 1.2; no crear otro archivo.
@@ -1144,6 +1295,26 @@ public class MetricasServicio
 }
 ```
 
+**Explicación del código, línea por línea**
+
+- **Línea 1 —** `namespace AceriaApp.Monolito.Api.Metricas;`: Declara el espacio de nombres `AceriaApp.Monolito.Api.Metricas` coherente con la carpeta y el proyecto.
+- **Línea 2 —** `public class MetricasServicio`: Describe una capacidad mediante endpoints, tablas y dependencias declaradas.
+- **Línea 3 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 4 —** `public string Nombre { get; init; } = string.Empty;`: Identifica el servicio o proyecto dentro de la colección y permite reconocerlo en los tests.
+- **Línea 5 —** `public int NumeroDeEndpoints { get; init; }`: Cantidad de endpoints de la capacidad que interviene en el indicador de complejidad.
+- **Línea 6 —** `public int NumeroDeTablas { get; init; }`: Tablas asociadas a la capacidad; se usa también para decidir si se propone extracción.
+- **Línea 7 —** `public int NumeroDeDependenciasExternas { get; init; }`: Dependencias salientes declaradas, comparadas con el umbral didáctico de extracción.
+- **Línea 8 —** `public double IndiceDeComplejidad()`: Define el método `IndiceDeComplejidad`, cuya entrada y salida se verifican en esta práctica.
+- **Línea 9 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 10 —** `return NumeroDeEndpoints + NumeroDeTablas + NumeroDeDependenciasExternas;`: Devuelve el resultado `NumeroDeEndpoints + NumeroDeTablas + NumeroDeDependenciasExternas` al llamador.
+- **Línea 11 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 12 —** `public bool EsCandidatoAExtraccion()`: Define el método `EsCandidatoAExtraccion`, cuya entrada y salida se verifican en esta práctica.
+- **Línea 13 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 14 —** `return NumeroDeDependenciasExternas <= 1 && NumeroDeTablas <= 3;`: Devuelve el resultado `NumeroDeDependenciasExternas <= 1 && NumeroDeTablas <= 3` al llamador.
+- **Línea 15 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 16 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+
+
 **Acción 4:** Pulsar Ctrl+S para guardar el archivo.
 
 **Acción 5:** Verificar que la clase compila sin errores.
@@ -1157,13 +1328,13 @@ public class MetricasServicio
 - No documentar los umbrales de EsCandidatoAExtraccion: el método devuelve un bool sin explicar los criterios.
 
 **Verificación:** la clase MetricasServicio compila sin errores y expone cuatro propiedades y dos métodos.
+\n\n**Interpretación del resultado:** El método candidato combina dos umbrales. Un `true` muestra que el escenario cumple esta heurística, no que ya se pueda desplegar como microservicio.
 
 ---
 
 ### Paso 8 — Activar el código de AnalizadorMonolito.cs por pasos
 
 **Archivo preparado en este punto:** `src/AceriaApp.Monolito.Api/Metricas/AnalizadorMonolito.cs`. El bloque de código original figura a continuación como referencia de aprendizaje; la acción efectiva consiste en activar el bloque comentado correspondiente.
-
 
 
 **Acción 1:** Abrir `src/AceriaApp.Monolito.Api/Metricas/AnalizadorMonolito.cs` dentro de la solución `AceriaApp.sln` del punto 1.2; no crear otro archivo.
@@ -1205,6 +1376,35 @@ public class AnalizadorMonolito
 }
 ```
 
+**Explicación del código, línea por línea**
+
+- **Línea 1 —** `namespace AceriaApp.Monolito.Api.Metricas;`: Declara el espacio de nombres `AceriaApp.Monolito.Api.Metricas` coherente con la carpeta y el proyecto.
+- **Línea 2 —** `public class AnalizadorMonolito`: Agrega indicadores y localiza capacidades candidatas a extracción.
+- **Línea 3 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 4 —** `private readonly List<MetricasServicio> _servicios;`: Declara `_servicios` como estado de solo lectura asignado por el constructor.
+- **Línea 5 —** `public AnalizadorMonolito(List<MetricasServicio> servicios)`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 6 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 7 —** `_servicios = servicios;`: Asigna o calcula el valor de la expresión de la derecha para la operación actual.
+- **Línea 8 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 9 —** `public MetricasAcoplamiento CalcularAcoplamientoGlobal()`: Define el método `CalcularAcoplamientoGlobal`, cuya entrada y salida se verifican en esta práctica.
+- **Línea 10 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 11 —** `var numeroDeProyectos = _servicios.Count;`: Calcula `numeroDeProyectos` a partir de `_servicios.Count`; ese valor se utiliza en la verificación posterior.
+- **Línea 12 —** `var numeroDeReferencias = _servicios.Sum(s => s.NumeroDeDependenciasExternas);`: Calcula `numeroDeReferencias` a partir de `_servicios.Sum(s => s.NumeroDeDependenciasExternas)`; ese valor se utiliza en la verificación posterior.
+- **Línea 13 —** `var numeroDeTablasCompartidas = _servicios.Sum(s => s.NumeroDeTablas);`: Calcula `numeroDeTablasCompartidas` a partir de `_servicios.Sum(s => s.NumeroDeTablas)`; ese valor se utiliza en la verificación posterior.
+- **Línea 14 —** `return new MetricasAcoplamiento`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 15 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 16 —** `NumeroDeProyectos = numeroDeProyectos,`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 17 —** `NumeroDeReferenciasEntreProyectos = numeroDeReferencias,`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 18 —** `NumeroDeTablasCompartidas = numeroDeTablasCompartidas`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 19 —** `};`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 20 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 21 —** `public IEnumerable<MetricasServicio> ServiciosCandidatosAExtraccion()`: Define el método `ServiciosCandidatosAExtraccion`, cuya entrada y salida se verifican en esta práctica.
+- **Línea 22 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 23 —** `return _servicios.Where(s => s.EsCandidatoAExtraccion());`: Devuelve el resultado `_servicios.Where(s => s.EsCandidatoAExtraccion())` al llamador.
+- **Línea 24 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 25 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+
+
 **Acción 4:** Pulsar Ctrl+S para guardar el archivo.
 
 **Acción 5:** Verificar que la clase compila sin errores.
@@ -1218,6 +1418,7 @@ public class AnalizadorMonolito
 - Devolver IEnumerable sin using System.Linq: los métodos Sum y Where no se resuelven.
 
 **Verificación:** la clase AnalizadorMonolito compila sin errores y expone un constructor y dos métodos.
+\n\n**Interpretación del resultado:** El agregador calcula indicadores a partir de las capacidades declaradas; no descubre automáticamente dependencias reales en la solución .NET.
 
 ---
 
@@ -1310,7 +1511,6 @@ public class AnalizadorMonolito
 **Archivo preparado en este punto:** `tests/AceriaApp.Metricas.Tests/MetricasAcoplamientoTests.cs`. El bloque de código original figura a continuación como referencia de aprendizaje; la acción efectiva consiste en activar el bloque comentado correspondiente.
 
 
-
 **Acción 1:** Abrir `tests/AceriaApp.Metricas.Tests/MetricasAcoplamientoTests.cs` dentro de la solución `AceriaApp.sln` del punto 1.2; no crear otro archivo.
 
 **Acción 2:** Localizar el marcador `INICIO PASO 1.2.13` y seleccionar solo las líneas de código comentadas del bloque, sin modificar los marcadores ni el código heredado.
@@ -1356,6 +1556,39 @@ public class MetricasAcoplamientoTests
 }
 ```
 
+**Explicación del código, línea por línea**
+
+- **Línea 1 —** `using AceriaApp.Monolito.Api.Metricas;`: Importa AceriaApp.Monolito.Api.Metricas para resolver los tipos usados en este archivo.
+- **Línea 2 —** `using FluentAssertions;`: Importa FluentAssertions para resolver los tipos usados en este archivo.
+- **Línea 3 —** `using Xunit;`: Importa Xunit para resolver los tipos usados en este archivo.
+- **Línea 4 —** `namespace AceriaApp.Metricas.Tests;`: Declara el espacio de nombres `AceriaApp.Metricas.Tests` coherente con la carpeta y el proyecto.
+- **Línea 5 —** `public class MetricasAcoplamientoTests`: Reúne valores para calcular ratios de referencias y datos entre proyectos.
+- **Línea 6 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 7 —** `[Fact]`: Indica a xUnit que el método siguiente es un caso de prueba.
+- **Línea 8 —** `public void IndiceAcoplamiento_SinProyectos_DevuelveCero()`: Define el método `IndiceAcoplamiento_SinProyectos_DevuelveCero`, cuya entrada y salida se verifican en esta práctica.
+- **Línea 9 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 10 —** `var metricas = new MetricasAcoplamiento { NumeroDeProyectos = 0 };`: Calcula `metricas` a partir de `new MetricasAcoplamiento { NumeroDeProyectos = 0 }`; ese valor se utiliza en la verificación posterior.
+- **Línea 11 —** `metricas.IndiceAcoplamiento().Should().Be(0);`: Completa la instrucción descrita en este bloque.
+- **Línea 12 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 13 —** `[Fact]`: Indica a xUnit que el método siguiente es un caso de prueba.
+- **Línea 14 —** `public void IndiceAcoplamiento_ConProyectos_DevuelveRatio()`: Define el método `IndiceAcoplamiento_ConProyectos_DevuelveRatio`, cuya entrada y salida se verifican en esta práctica.
+- **Línea 15 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 16 —** `var metricas = new MetricasAcoplamiento`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 17 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 18 —** `NumeroDeProyectos = 4,`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 19 —** `NumeroDeReferenciasEntreProyectos = 8`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 20 —** `};`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 21 —** `metricas.IndiceAcoplamiento().Should().Be(2.0);`: Completa la instrucción descrita en este bloque.
+- **Línea 22 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 23 —** `[Fact]`: Indica a xUnit que el método siguiente es un caso de prueba.
+- **Línea 24 —** `public void IndiceComparticionDeDatos_SinProyectos_DevuelveCero()`: Define el método `IndiceComparticionDeDatos_SinProyectos_DevuelveCero`, cuya entrada y salida se verifican en esta práctica.
+- **Línea 25 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 26 —** `var metricas = new MetricasAcoplamiento { NumeroDeProyectos = 0, NumeroDeTablasCompartidas = 3 };`: Calcula `metricas` a partir de `new MetricasAcoplamiento { NumeroDeProyectos = 0, NumeroDeTablasCompartidas = 3 }`; ese valor se utiliza en la verificación posterior.
+- **Línea 27 —** `metricas.IndiceComparticionDeDatos().Should().Be(0);`: Completa la instrucción descrita en este bloque.
+- **Línea 28 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 29 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+
+
 **Acción 4:** Pulsar Ctrl+S para guardar el archivo.
 
 **Acción 5:** Verificar que la clase compila sin errores.
@@ -1375,7 +1608,6 @@ public class MetricasAcoplamientoTests
 ### Paso 14 — Activar el código de MetricasServicioTests.cs por pasos
 
 **Archivo preparado en este punto:** `tests/AceriaApp.Metricas.Tests/MetricasServicioTests.cs`. El bloque de código original figura a continuación como referencia de aprendizaje; la acción efectiva consiste en activar el bloque comentado correspondiente.
-
 
 
 **Acción 1:** Abrir `tests/AceriaApp.Metricas.Tests/MetricasServicioTests.cs` dentro de la solución `AceriaApp.sln` del punto 1.2; no crear otro archivo.
@@ -1436,6 +1668,52 @@ public class MetricasServicioTests
 }
 ```
 
+**Explicación del código, línea por línea**
+
+- **Línea 1 —** `using AceriaApp.Monolito.Api.Metricas;`: Importa AceriaApp.Monolito.Api.Metricas para resolver los tipos usados en este archivo.
+- **Línea 2 —** `using FluentAssertions;`: Importa FluentAssertions para resolver los tipos usados en este archivo.
+- **Línea 3 —** `using Xunit;`: Importa Xunit para resolver los tipos usados en este archivo.
+- **Línea 4 —** `namespace AceriaApp.Metricas.Tests;`: Declara el espacio de nombres `AceriaApp.Metricas.Tests` coherente con la carpeta y el proyecto.
+- **Línea 5 —** `public class MetricasServicioTests`: Describe una capacidad mediante endpoints, tablas y dependencias declaradas.
+- **Línea 6 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 7 —** `[Fact]`: Indica a xUnit que el método siguiente es un caso de prueba.
+- **Línea 8 —** `public void EsCandidatoAExtraccion_ConPocasDependencias_DevuelveTrue()`: Define el método `EsCandidatoAExtraccion_ConPocasDependencias_DevuelveTrue`, cuya entrada y salida se verifican en esta práctica.
+- **Línea 9 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 10 —** `var metricas = new MetricasServicio`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 11 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 12 —** `Nombre = "Inventario",`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 13 —** `NumeroDeEndpoints = 3,`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 14 —** `NumeroDeTablas = 2,`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 15 —** `NumeroDeDependenciasExternas = 1`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 16 —** `};`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 17 —** `metricas.EsCandidatoAExtraccion().Should().BeTrue();`: Completa la instrucción descrita en este bloque.
+- **Línea 18 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 19 —** `[Fact]`: Indica a xUnit que el método siguiente es un caso de prueba.
+- **Línea 20 —** `public void EsCandidatoAExtraccion_ConMuchasDependencias_DevuelveFalse()`: Define el método `EsCandidatoAExtraccion_ConMuchasDependencias_DevuelveFalse`, cuya entrada y salida se verifican en esta práctica.
+- **Línea 21 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 22 —** `var metricas = new MetricasServicio`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 23 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 24 —** `Nombre = "Ordenes",`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 25 —** `NumeroDeEndpoints = 5,`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 26 —** `NumeroDeTablas = 4,`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 27 —** `NumeroDeDependenciasExternas = 3`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 28 —** `};`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 29 —** `metricas.EsCandidatoAExtraccion().Should().BeFalse();`: Completa la instrucción descrita en este bloque.
+- **Línea 30 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 31 —** `[Fact]`: Indica a xUnit que el método siguiente es un caso de prueba.
+- **Línea 32 —** `public void IndiceDeComplejidad_SumaDePropiedades()`: Define el método `IndiceDeComplejidad_SumaDePropiedades`, cuya entrada y salida se verifican en esta práctica.
+- **Línea 33 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 34 —** `var metricas = new MetricasServicio`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 35 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 36 —** `NumeroDeEndpoints = 3,`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 37 —** `NumeroDeTablas = 2,`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 38 —** `NumeroDeDependenciasExternas = 1`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 39 —** `};`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 40 —** `metricas.IndiceDeComplejidad().Should().Be(6);`: Completa la instrucción descrita en este bloque.
+- **Línea 41 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 42 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+
+
 **Acción 4:** Pulsar Ctrl+S para guardar el archivo.
 
 **Acción 5:** Verificar que la clase compila sin errores.
@@ -1455,7 +1733,6 @@ public class MetricasServicioTests
 ### Paso 15 — Activar el código de AnalizadorMonolitoTests.cs por pasos
 
 **Archivo preparado en este punto:** `tests/AceriaApp.Metricas.Tests/AnalizadorMonolitoTests.cs`. El bloque de código original figura a continuación como referencia de aprendizaje; la acción efectiva consiste en activar el bloque comentado correspondiente.
-
 
 
 **Acción 1:** Abrir `tests/AceriaApp.Metricas.Tests/AnalizadorMonolitoTests.cs` dentro de la solución `AceriaApp.sln` del punto 1.2; no crear otro archivo.
@@ -1507,6 +1784,44 @@ public class AnalizadorMonolitoTests
     }
 }
 ```
+
+**Explicación del código, línea por línea**
+
+- **Línea 1 —** `using AceriaApp.Monolito.Api.Metricas;`: Importa AceriaApp.Monolito.Api.Metricas para resolver los tipos usados en este archivo.
+- **Línea 2 —** `using FluentAssertions;`: Importa FluentAssertions para resolver los tipos usados en este archivo.
+- **Línea 3 —** `using Xunit;`: Importa Xunit para resolver los tipos usados en este archivo.
+- **Línea 4 —** `namespace AceriaApp.Metricas.Tests;`: Declara el espacio de nombres `AceriaApp.Metricas.Tests` coherente con la carpeta y el proyecto.
+- **Línea 5 —** `public class AnalizadorMonolitoTests`: Agrega indicadores y localiza capacidades candidatas a extracción.
+- **Línea 6 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 7 —** `[Fact]`: Indica a xUnit que el método siguiente es un caso de prueba.
+- **Línea 8 —** `public void CalcularAcoplamientoGlobal_ConServicios_AgregaMetricas()`: Define el método `CalcularAcoplamientoGlobal_ConServicios_AgregaMetricas`, cuya entrada y salida se verifican en esta práctica.
+- **Línea 9 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 10 —** `var servicios = new List<MetricasServicio>`: Prepara una colección tipada con datos de ejemplo que después se procesarán.
+- **Línea 11 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 12 —** `new() { Nombre = "Ordenes", NumeroDeDependenciasExternas = 2, NumeroDeTablas = 3 },`: Crea un objeto y asigna propiedades de entrada para el escenario de prueba.
+- **Línea 13 —** `new() { Nombre = "Inventario", NumeroDeDependenciasExternas = 1, NumeroDeTablas = 2 }`: Crea un objeto y asigna propiedades de entrada para el escenario de prueba.
+- **Línea 14 —** `};`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 15 —** `var analizador = new AnalizadorMonolito(servicios);`: Calcula `analizador` a partir de `new AnalizadorMonolito(servicios)`; ese valor se utiliza en la verificación posterior.
+- **Línea 16 —** `var resultado = analizador.CalcularAcoplamientoGlobal();`: Calcula `resultado` a partir de `analizador.CalcularAcoplamientoGlobal()`; ese valor se utiliza en la verificación posterior.
+- **Línea 17 —** `resultado.NumeroDeProyectos.Should().Be(2);`: Comprueba mediante FluentAssertions que `resultado.NumeroDeProyectos` cumpla `Be(2)`.
+- **Línea 18 —** `resultado.NumeroDeReferenciasEntreProyectos.Should().Be(3);`: Comprueba mediante FluentAssertions que `resultado.NumeroDeReferenciasEntreProyectos` cumpla `Be(3)`.
+- **Línea 19 —** `resultado.NumeroDeTablasCompartidas.Should().Be(5);`: Comprueba mediante FluentAssertions que `resultado.NumeroDeTablasCompartidas` cumpla `Be(5)`.
+- **Línea 20 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 21 —** `[Fact]`: Indica a xUnit que el método siguiente es un caso de prueba.
+- **Línea 22 —** `public void ServiciosCandidatosAExtraccion_FiltraCorrectamente()`: Define el método `ServiciosCandidatosAExtraccion_FiltraCorrectamente`, cuya entrada y salida se verifican en esta práctica.
+- **Línea 23 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 24 —** `var servicios = new List<MetricasServicio>`: Prepara una colección tipada con datos de ejemplo que después se procesarán.
+- **Línea 25 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 26 —** `new() { Nombre = "Ordenes", NumeroDeDependenciasExternas = 3, NumeroDeTablas = 4 },`: Crea un objeto y asigna propiedades de entrada para el escenario de prueba.
+- **Línea 27 —** `new() { Nombre = "Inventario", NumeroDeDependenciasExternas = 1, NumeroDeTablas = 2 }`: Crea un objeto y asigna propiedades de entrada para el escenario de prueba.
+- **Línea 28 —** `};`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 29 —** `var analizador = new AnalizadorMonolito(servicios);`: Calcula `analizador` a partir de `new AnalizadorMonolito(servicios)`; ese valor se utiliza en la verificación posterior.
+- **Línea 30 —** `var candidatos = analizador.ServiciosCandidatosAExtraccion().ToList();`: Calcula `candidatos` a partir de `analizador.ServiciosCandidatosAExtraccion().ToList()`; ese valor se utiliza en la verificación posterior.
+- **Línea 31 —** `candidatos.Should().HaveCount(1);`: Comprueba mediante FluentAssertions que `candidatos` cumpla `HaveCount(1)`.
+- **Línea 32 —** `candidatos[0].Nombre.Should().Be("Inventario");`: Completa la instrucción descrita en este bloque.
+- **Línea 33 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 34 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+
 
 **Acción 4:** Pulsar Ctrl+S para guardar el archivo.
 
@@ -1786,7 +2101,6 @@ TestResults/
 **Verificación:** git log --oneline muestra dos commits: Punto 1.1: estructura inicial del proyecto AceriaApp y Punto 1.2: análisis de ventajas e inconvenientes y métricas de acoplamiento. git status muestra nothing to commit, working tree clean.
 
 
-
 **Nota de trazabilidad:** en una descarga del repositorio puede no haber cambios nuevos que confirmar. Antes de ejecutar `git commit`, usar `git status` y confirmar únicamente los archivos efectivamente modificados durante el recorrido. No ejecutar `git init` dentro de cada punto: la raíz del repositorio ya contiene el historial.
 
 ---
@@ -1808,12 +2122,13 @@ La compilación falla por el .dll bloqueado La API está en ejecución Detener l
 
 ---
 
-## Reto resuelto paso a paso
+## Reto de ampliación: solución guiada
 
-Reto: añadir un método ServicioMenosAcoplado a AnalizadorMonolito que devuelva el servicio con menor índice de complejidad, y un test que verifique que devuelve el servicio correcto cuando hay empate.
+**Problema a resolver:** añadir un método ServicioMenosAcoplado a AnalizadorMonolito que devuelva el servicio con menor índice de complejidad, y un test que verifique que devuelve el servicio correcto cuando hay empate.
 
-Paso 1: En AnalizadorMonolito.cs, añadir el siguiente método después de ServiciosCandidatosAExtraccion:
+#### Etapa 1 — En AnalizadorMonolito.cs, añadir el siguiente método después de ServiciosCandidatosAExtraccion:
 
+```csharp
 public MetricasServicio? ServicioMenosAcoplado()
 {
     if (_servicios.Count == 0)
@@ -1826,25 +2141,27 @@ public MetricasServicio? ServicioMenosAcoplado()
         .ThenBy(s => s.Nombre)
         .First();
 }
+```
 
-Paso 2: Explicar línea por línea:
+#### Etapa 2 — Explicar línea por línea:
 
-Línea 1: public MetricasServicio? ServicioMenosAcoplado() → declara el método con retorno anulable.
-Línea 2: { → abre el cuerpo del método.
-Línea 3: if (_servicios.Count == 0) → comprueba si la lista está vacía.
-Línea 4: { → abre el bloque del caso vacío.
-Línea 5: return null; → devuelve null si no hay servicios.
-Línea 6: } → cierra el bloque del caso vacío.
-Línea 7: return _servicios → comienza la consulta LINQ.
-Línea 8: .OrderBy(s => s.IndiceDeComplejidad()) → ordena por índice de complejidad ascendente.
-Línea 9: .ThenBy(s => s.Nombre) → desempata por nombre ascendente.
-Línea 10: .First(); → devuelve el primer elemento.
-Línea 11: } → cierra el cuerpo del método.
+- **Línea 1:** `public MetricasServicio? ServicioMenosAcoplado()` — declara el método con retorno anulable.
+- **Línea 2:** `{` — abre el cuerpo del método.
+- **Línea 3:** `if (_servicios.Count == 0)` — comprueba si la lista está vacía.
+- **Línea 4:** `{` — abre el bloque del caso vacío.
+- **Línea 5:** `return null;` — devuelve null si no hay servicios.
+- **Línea 6:** `}` — cierra el bloque del caso vacío.
+- **Línea 7:** `return _servicios` — comienza la consulta LINQ.
+- **Línea 8:** `.OrderBy(s => s.IndiceDeComplejidad())` — ordena por índice de complejidad ascendente.
+- **Línea 9:** `.ThenBy(s => s.Nombre)` — desempata por nombre ascendente.
+- **Línea 10:** `.First();` — devuelve el primer elemento.
+- **Línea 11:** `}` — cierra el cuerpo del método.
 
-Paso 3: Guardar el archivo con Ctrl+S.
+#### Etapa 3 — Guardar el archivo con Ctrl+S.
 
-Paso 4: En AnalizadorMonolitoTests.cs, añadir el siguiente test:
+#### Etapa 4 — En AnalizadorMonolitoTests.cs, añadir el siguiente test:
 
+```csharp
 [Fact]
 public void ServicioMenosAcoplado_ConEmpate_DesempataPorNombre()
 {
@@ -1860,28 +2177,29 @@ public void ServicioMenosAcoplado_ConEmpate_DesempataPorNombre()
     resultado.Should().NotBeNull();
     resultado!.Nombre.Should().Be("Inventario");
 }
+```
 
-Paso 5: Explicar línea por línea:
+#### Etapa 5 — Explicar línea por línea:
 
-Línea 1: [Fact] → marca el método como test de xUnit.
-Línea 2: public void ServicioMenosAcoplado_ConEmpate_DesempataPorNombre() → declara el test.
-Línea 3: { → abre el cuerpo del test.
-Línea 4: var servicios = new List<MetricasServicio> → crea la lista de servicios.
-Línea 5: { → abre el inicializador de la lista.
-Línea 6: new() { Nombre = "Ordenes", ... } → primer servicio con índice de complejidad 3.
-Línea 7: new() { Nombre = "Inventario", ... } → segundo servicio con el mismo índice.
-Línea 8: }; → cierra el inicializador.
-Línea 9: var analizador = new AnalizadorMonolito(servicios); → instancia el analizador.
-Línea 10: var resultado = analizador.ServicioMenosAcoplado(); → invoca el método.
-Línea 11: resultado.Should().NotBeNull(); → verifica que no es nulo.
-Línea 12: resultado!.Nombre.Should().Be("Inventario"); → verifica que el desempate es por nombre.
-Línea 13: } → cierra el cuerpo del test.
+- **Línea 1:** `[Fact]` — marca el método como test de xUnit.
+- **Línea 2:** `public void ServicioMenosAcoplado_ConEmpate_DesempataPorNombre()` — declara el test.
+- **Línea 3:** `{` — abre el cuerpo del test.
+- **Línea 4:** `var servicios = new List<MetricasServicio>` — crea la lista de servicios.
+- **Línea 5:** `{` — abre el inicializador de la lista.
+- **Línea 6:** `new() { Nombre = "Ordenes", ... }` — primer servicio con índice de complejidad 3.
+- **Línea 7:** `new() { Nombre = "Inventario", ... }` — segundo servicio con el mismo índice.
+- **Línea 8:** `};` — cierra el inicializador.
+- **Línea 9:** `var analizador = new AnalizadorMonolito(servicios);` — instancia el analizador.
+- **Línea 10:** `var resultado = analizador.ServicioMenosAcoplado();` — invoca el método.
+- **Línea 11:** `resultado.Should().NotBeNull();` — verifica que no es nulo.
+- **Línea 12:** `resultado!.Nombre.Should().Be("Inventario");` — verifica que el desempate es por nombre.
+- **Línea 13:** `}` — cierra el cuerpo del test.
 
-Paso 6: Ejecutar dotnet test tests\AceriaApp.Metricas.Tests\AceriaApp.Metricas.Tests.csproj y verificar que pasan los nueve tests.
+#### Etapa 6 — Ejecutar dotnet test tests\AceriaApp.Metricas.Tests\AceriaApp.Metricas.Tests.csproj y verificar que pasan los nueve tests.
 
-Paso 7: Verificar que el método ServicioMenosAcoplado no modifica ningún archivo del punto 1.1.
+#### Etapa 7 — Verificar que el método ServicioMenosAcoplado no modifica ningún archivo del punto 1.1.
 
-Paso 8: Hacer commit con git commit -m "Reto 1.2: método ServicioMenosAcoplado con desempate por nombre".
+#### Etapa 8 — Hacer commit con git commit -m "Reto 1.2: método ServicioMenosAcoplado con desempate por nombre".
 
 Verificación: la salida de dotnet test muestra Passed: 9.
 
@@ -1913,17 +2231,34 @@ El punto 1.2 ha completado el análisis de ventajas e inconvenientes con un marc
 
 Fin del punto 1.2.
 
-Espero confirmación del usuario antes de continuar con el punto 1.3.
 
 ---
 
 # Punto 1.3 — Principios de diseño
 
-**Guía de trabajo:** los archivos, proyectos, referencias y documentos ya se entregan preparados en `PROYECTO/1.3-principios-diseno/`. El alumnado trabaja sobre una solución independiente por punto, con código anterior activo y las incorporaciones actuales comentadas por pasos. **No debe volver a crear archivos o proyectos de igual nombre.** Al activar código, se seleccionan únicamente líneas entre `INICIO PASO` y `FIN PASO`, se pulsa `Ctrl+K, Ctrl+U` en Visual Studio y se guarda. Los bloques `RETO` permanecen comentados hasta el ejercicio de ampliación.
+## Qué problema resolvemos y qué aprenderás
 
-**Distribución del trabajo:** los 27 minutos presenciales corresponden a una demostración guiada y verificaciones esenciales. Los 24 pasos y los retos se conservan como itinerario autónomo reproducible; ejecutarlos todos, incluida la instalación del entorno y la base de datos, requiere tiempo adicional.
+**Situación profesional.** Un servicio mal delimitado puede mezclar responsabilidades o exponer información que debería ser privada. La acería necesita criterios que permitan detectar esos límites antes de dividir procesos.
 
-## PARTE PRÁCTICA (27 minutos)
+**Objetivo del ejercicio.** Modelar un límite de servicio, aplicar seis comprobaciones y clasificar límites válidos e inválidos mediante pruebas repetibles.
+
+**Justificación técnica.** El validador hace visible cómo un principio abstracto puede traducirse en una condición comprobable, pero exige reconocer que los umbrales propuestos son orientativos.
+
+**Recorrido de aprendizaje**
+
+- **Pasos 1–4:** Localizar los principios y comprobar los documentos heredados.
+- **Pasos 5–10:** Identificar propiedades, reglas y clasificación del catálogo de límites.
+- **Pasos 11–18:** Ejecutar tests y contrastar reglas, errores y agregación.
+- **Pasos 19–24:** Relacionar evidencias con el ADR y verificar que el punto anterior permanece intacto.
+
+**Evidencia observable al terminar.** El límite con una capacidad coherente resulta válido; los casos que carecen de capacidad o superan los umbrales producen mensajes verificables.
+
+**Qué demuestra y qué no demuestra.** Los valores límite `3 conceptos` y `3 dependencias` son heurísticos de la práctica, no reglas generales del diseño de microservicios.
+
+
+**Preparación del entorno:** los archivos, proyectos, referencias y documentos ya se entregan preparados en `PROYECTO/1.3-principios-diseno/`. El alumnado trabaja sobre una solución independiente por punto, con código anterior activo y las incorporaciones actuales comentadas por pasos. **No debe volver a crear archivos o proyectos de igual nombre.** Al activar código, se seleccionan únicamente líneas entre `INICIO PASO` y `FIN PASO`, se pulsa `Ctrl+K, Ctrl+U` en Visual Studio y se guarda. Los bloques `RETO` permanecen comentados hasta el ejercicio de ampliación.
+
+## Ejercicio práctico
 
 **Ejercicio:** Añadir al punto 1.2 un documento de principios de diseño en docs/, una clase de validación de límites de servicio en el proyecto monolítico y un test unitario que verifique la validación. El punto 1.3 parte del contenido del punto 1.2 sin modificar ningún archivo existente: solo añade archivos nuevos.
 
@@ -2090,7 +2425,6 @@ Un servicio debe poder evolucionar sin obligar a los demás a cambiar al mismo r
 **Archivo preparado en este punto:** `src/AceriaApp.Monolito.Api/Diseno/LimiteServicio.cs`. El bloque de código original figura a continuación como referencia de aprendizaje; la acción efectiva consiste en activar el bloque comentado correspondiente.
 
 
-
 **Acción 1:** Abrir `src/AceriaApp.Monolito.Api/Diseno/LimiteServicio.cs` dentro de la solución `AceriaApp.sln` del punto 1.3; no crear otro archivo.
 
 **Acción 2:** Localizar el marcador `INICIO PASO 1.3.6` y seleccionar solo las líneas de código comentadas del bloque, sin modificar los marcadores ni el código heredado.
@@ -2112,6 +2446,21 @@ public class LimiteServicio
 }
 ```
 
+**Explicación del código, línea por línea**
+
+- **Línea 1 —** `namespace AceriaApp.Monolito.Api.Diseno;`: Declara el espacio de nombres `AceriaApp.Monolito.Api.Diseno` coherente con la carpeta y el proyecto.
+- **Línea 2 —** `public class LimiteServicio`: Modela los datos necesarios para evaluar los principios de diseño de un límite.
+- **Línea 3 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 4 —** `public string Nombre { get; init; } = string.Empty;`: Identifica el servicio o proyecto dentro de la colección y permite reconocerlo en los tests.
+- **Línea 5 —** `public string CapacidadDeNegocio { get; init; } = string.Empty;`: Responsabilidad funcional del servicio; no debe quedar vacía para superar la validación.
+- **Línea 6 —** `public string ContextoDelimitado { get; init; } = string.Empty;`: Nombre del contexto de negocio donde los conceptos tienen significado consistente.
+- **Línea 7 —** `public int NumeroDeConceptos { get; init; }`: Indicador aproximado de cohesión; demasiados conceptos generan un error de diseño.
+- **Línea 8 —** `public int NumeroDeDependenciasSalientes { get; init; }`: Número de servicios externos de los que depende este límite de servicio.
+- **Línea 9 —** `public bool ExponeEntidadesDeDominio { get; init; }`: Señala si el contrato público revela entidades internas; de ser verdadero, se marca infracción.
+- **Línea 10 —** `public bool ComparteBaseDeDatos { get; init; }`: Indica si usa directamente datos persistidos por otro servicio; la validación lo rechaza.
+- **Línea 11 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+
+
 **Acción 4:** Pulsar Ctrl+S para guardar el archivo.
 
 **Acción 5:** Verificar que la clase compila sin errores.
@@ -2131,7 +2480,6 @@ public class LimiteServicio
 ### Paso 7 — Activar el código de ValidadorLimiteServicio.cs por pasos
 
 **Archivo preparado en este punto:** `src/AceriaApp.Monolito.Api/Diseno/ValidadorLimiteServicio.cs`. El bloque de código original figura a continuación como referencia de aprendizaje; la acción efectiva consiste en activar el bloque comentado correspondiente.
-
 
 
 **Acción 1:** Abrir `src/AceriaApp.Monolito.Api/Diseno/ValidadorLimiteServicio.cs` dentro de la solución `AceriaApp.sln` del punto 1.3; no crear otro archivo.
@@ -2186,6 +2534,44 @@ public class ValidadorLimiteServicio
 public record ResultadoValidacion(bool EsValido, IReadOnlyList<string> Errores);
 ```
 
+**Explicación del código, línea por línea**
+
+- **Línea 1 —** `namespace AceriaApp.Monolito.Api.Diseno;`: Declara el espacio de nombres `AceriaApp.Monolito.Api.Diseno` coherente con la carpeta y el proyecto.
+- **Línea 2 —** `public class ValidadorLimiteServicio`: Aplica las reglas sobre capacidad, cohesión, ocultación y autonomía.
+- **Línea 3 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 4 —** `public ResultadoValidacion Validar(LimiteServicio limite)`: Define el método `Validar`, cuya entrada y salida se verifican en esta práctica.
+- **Línea 5 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 6 —** `var errores = new List<string>();`: Calcula `errores` a partir de `new List<string>()`; ese valor se utiliza en la verificación posterior.
+- **Línea 7 —** `if (string.IsNullOrWhiteSpace(limite.CapacidadDeNegocio))`: Comprueba la condición `string.IsNullOrWhiteSpace(limite.CapacidadDeNegocio)` antes de proseguir; protege un caso límite o una regla del negocio.
+- **Línea 8 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 9 —** `errores.Add("El servicio no declara una capacidad de negocio.");`: Completa la instrucción descrita en este bloque.
+- **Línea 10 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 11 —** `if (string.IsNullOrWhiteSpace(limite.ContextoDelimitado))`: Comprueba la condición `string.IsNullOrWhiteSpace(limite.ContextoDelimitado)` antes de proseguir; protege un caso límite o una regla del negocio.
+- **Línea 12 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 13 —** `errores.Add("El servicio no declara un contexto delimitado.");`: Completa la instrucción descrita en este bloque.
+- **Línea 14 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 15 —** `if (limite.NumeroDeConceptos > 3)`: Comprueba la condición `limite.NumeroDeConceptos > 3` antes de proseguir; protege un caso límite o una regla del negocio.
+- **Línea 16 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 17 —** `errores.Add("El servicio maneja más de tres conceptos: cohesión baja.");`: Completa la instrucción descrita en este bloque.
+- **Línea 18 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 19 —** `if (limite.NumeroDeDependenciasSalientes > 3)`: Comprueba la condición `limite.NumeroDeDependenciasSalientes > 3` antes de proseguir; protege un caso límite o una regla del negocio.
+- **Línea 20 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 21 —** `errores.Add("El servicio depende de más de tres servicios: acoplamiento alto.");`: Completa la instrucción descrita en este bloque.
+- **Línea 22 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 23 —** `if (limite.ExponeEntidadesDeDominio)`: Comprueba la condición `limite.ExponeEntidadesDeDominio` antes de proseguir; protege un caso límite o una regla del negocio.
+- **Línea 24 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 25 —** `errores.Add("El servicio expone entidades de dominio: viola la ocultación.");`: Completa la instrucción descrita en este bloque.
+- **Línea 26 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 27 —** `if (limite.ComparteBaseDeDatos)`: Comprueba la condición `limite.ComparteBaseDeDatos` antes de proseguir; protege un caso límite o una regla del negocio.
+- **Línea 28 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 29 —** `errores.Add("El servicio comparte base de datos: viola la autonomía.");`: Completa la instrucción descrita en este bloque.
+- **Línea 30 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 31 —** `return new ResultadoValidacion(errores.Count == 0, errores);`: Devuelve el resultado `new ResultadoValidacion(errores.Count == 0, errores)` al llamador.
+- **Línea 32 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 33 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 34 —** `public record ResultadoValidacion(bool EsValido, IReadOnlyList<string> Errores);`: Declara el tipo `ResultadoValidacion` que encapsula esta responsabilidad.
+
+
 **Acción 4:** Pulsar Ctrl+S para guardar el archivo.
 
 **Acción 5:** Verificar que la clase compila sin errores.
@@ -2199,6 +2585,7 @@ public record ResultadoValidacion(bool EsValido, IReadOnlyList<string> Errores);
 - Usar bool en lugar de ResultadoValidacion: pierde la información de los errores.
 
 **Verificación:** la clase ValidadorLimiteServicio compila sin errores y expone un método Validar y un record auxiliar.
+\n\n**Interpretación del resultado:** Cada mensaje representa una infracción diferente. Al recibir un límite correcto, el resultado debe ser válido y no contener errores.
 
 ---
 
@@ -2227,7 +2614,6 @@ public record ResultadoValidacion(bool EsValido, IReadOnlyList<string> Errores);
 ### Paso 9 — Activar el código de CatalogoLimites.cs por pasos
 
 **Archivo preparado en este punto:** `src/AceriaApp.Monolito.Api/Diseno/CatalogoLimites.cs`. El bloque de código original figura a continuación como referencia de aprendizaje; la acción efectiva consiste en activar el bloque comentado correspondiente.
-
 
 
 **Acción 1:** Abrir `src/AceriaApp.Monolito.Api/Diseno/CatalogoLimites.cs` dentro de la solución `AceriaApp.sln` del punto 1.3; no crear otro archivo.
@@ -2260,6 +2646,27 @@ public class CatalogoLimites
 }
 ```
 
+**Explicación del código, línea por línea**
+
+- **Línea 1 —** `namespace AceriaApp.Monolito.Api.Diseno;`: Declara el espacio de nombres `AceriaApp.Monolito.Api.Diseno` coherente con la carpeta y el proyecto.
+- **Línea 2 —** `public class CatalogoLimites`: Clasifica los límites en válidos e inválidos mediante el validador.
+- **Línea 3 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 4 —** `private readonly List<LimiteServicio> _limites;`: Declara `_limites` como estado de solo lectura asignado por el constructor.
+- **Línea 5 —** `public CatalogoLimites(List<LimiteServicio> limites)`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 6 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 7 —** `_limites = limites;`: Asigna o calcula el valor de la expresión de la derecha para la operación actual.
+- **Línea 8 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 9 —** `public IEnumerable<LimiteServicio> LimitesValidos(ValidadorLimiteServicio validador)`: Define el método `LimitesValidos`, cuya entrada y salida se verifican en esta práctica.
+- **Línea 10 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 11 —** `return _limites.Where(l => validador.Validar(l).EsValido);`: Devuelve el resultado `_limites.Where(l => validador.Validar(l).EsValido)` al llamador.
+- **Línea 12 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 13 —** `public IEnumerable<LimiteServicio> LimitesInvalidos(ValidadorLimiteServicio validador)`: Define el método `LimitesInvalidos`, cuya entrada y salida se verifican en esta práctica.
+- **Línea 14 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 15 —** `return _limites.Where(l => !validador.Validar(l).EsValido);`: Devuelve el resultado `_limites.Where(l => !validador.Validar(l).EsValido)` al llamador.
+- **Línea 16 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 17 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+
+
 **Acción 4:** Pulsar Ctrl+S para guardar el archivo.
 
 **Acción 5:** Verificar que la clase compila sin errores.
@@ -2273,6 +2680,7 @@ public class CatalogoLimites
 - Devolver List<LimiteServicio> en lugar de IEnumerable<LimiteServicio>: expone la implementación interna.
 
 **Verificación:** la clase CatalogoLimites compila sin errores y expone un constructor y dos métodos.
+\n\n**Interpretación del resultado:** El catálogo no corrige límites inválidos: los clasifica a partir del resultado del validador para orientar una revisión de arquitectura.
 
 ---
 
@@ -2365,7 +2773,6 @@ public class CatalogoLimites
 **Archivo preparado en este punto:** `tests/AceriaApp.Diseno.Tests/ValidadorLimiteServicioTests.cs`. El bloque de código original figura a continuación como referencia de aprendizaje; la acción efectiva consiste en activar el bloque comentado correspondiente.
 
 
-
 **Acción 1:** Abrir `tests/AceriaApp.Diseno.Tests/ValidadorLimiteServicioTests.cs` dentro de la solución `AceriaApp.sln` del punto 1.3; no crear otro archivo.
 
 **Acción 2:** Localizar el marcador `INICIO PASO 1.3.14` y seleccionar solo las líneas de código comentadas del bloque, sin modificar los marcadores ni el código heredado.
@@ -2437,6 +2844,61 @@ public class ValidadorLimiteServicioTests
 }
 ```
 
+**Explicación del código, línea por línea**
+
+- **Línea 1 —** `using AceriaApp.Monolito.Api.Diseno;`: Importa AceriaApp.Monolito.Api.Diseno para resolver los tipos usados en este archivo.
+- **Línea 2 —** `using FluentAssertions;`: Importa FluentAssertions para resolver los tipos usados en este archivo.
+- **Línea 3 —** `using Xunit;`: Importa Xunit para resolver los tipos usados en este archivo.
+- **Línea 4 —** `namespace AceriaApp.Diseno.Tests;`: Declara el espacio de nombres `AceriaApp.Diseno.Tests` coherente con la carpeta y el proyecto.
+- **Línea 5 —** `public class ValidadorLimiteServicioTests`: Aplica las reglas sobre capacidad, cohesión, ocultación y autonomía.
+- **Línea 6 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 7 —** `private readonly ValidadorLimiteServicio _validador = new();`: Crea un objeto y asigna propiedades de entrada para el escenario de prueba.
+- **Línea 8 —** `[Fact]`: Indica a xUnit que el método siguiente es un caso de prueba.
+- **Línea 9 —** `public void Validar_LimiteCompleto_DevuelveValido()`: Define el método `Validar_LimiteCompleto_DevuelveValido`, cuya entrada y salida se verifican en esta práctica.
+- **Línea 10 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 11 —** `var limite = new LimiteServicio`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 12 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 13 —** `Nombre = "Ordenes",`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 14 —** `CapacidadDeNegocio = "Gestion de ordenes de produccion",`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 15 —** `ContextoDelimitado = "Produccion",`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 16 —** `NumeroDeConceptos = 2,`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 17 —** `NumeroDeDependenciasSalientes = 1,`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 18 —** `ExponeEntidadesDeDominio = false,`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 19 —** `ComparteBaseDeDatos = false`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 20 —** `};`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 21 —** `var resultado = _validador.Validar(limite);`: Calcula `resultado` a partir de `_validador.Validar(limite)`; ese valor se utiliza en la verificación posterior.
+- **Línea 22 —** `resultado.EsValido.Should().BeTrue();`: Comprueba mediante FluentAssertions que `resultado.EsValido` cumpla `BeTrue()`.
+- **Línea 23 —** `resultado.Errores.Should().BeEmpty();`: Comprueba mediante FluentAssertions que `resultado.Errores` cumpla `BeEmpty()`.
+- **Línea 24 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 25 —** `[Fact]`: Indica a xUnit que el método siguiente es un caso de prueba.
+- **Línea 26 —** `public void Validar_SinCapacidadDeNegocio_DevuelveError()`: Define el método `Validar_SinCapacidadDeNegocio_DevuelveError`, cuya entrada y salida se verifican en esta práctica.
+- **Línea 27 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 28 —** `var limite = new LimiteServicio`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 29 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 30 —** `Nombre = "Ordenes",`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 31 —** `CapacidadDeNegocio = string.Empty,`: Proporciona un valor inicial no nulo a una cadena para evitar advertencias de nulabilidad.
+- **Línea 32 —** `ContextoDelimitado = "Produccion"`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 33 —** `};`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 34 —** `var resultado = _validador.Validar(limite);`: Calcula `resultado` a partir de `_validador.Validar(limite)`; ese valor se utiliza en la verificación posterior.
+- **Línea 35 —** `resultado.EsValido.Should().BeFalse();`: Comprueba mediante FluentAssertions que `resultado.EsValido` cumpla `BeFalse()`.
+- **Línea 36 —** `resultado.Errores.Should().Contain(e => e.Contains("capacidad de negocio"));`: Comprueba mediante FluentAssertions que `resultado.Errores` cumpla `Contain(e => e.Contains("capacidad de negocio"))`.
+- **Línea 37 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 38 —** `[Fact]`: Indica a xUnit que el método siguiente es un caso de prueba.
+- **Línea 39 —** `public void Validar_ConMuchosConceptos_DevuelveErrorDeCohesion()`: Define el método `Validar_ConMuchosConceptos_DevuelveErrorDeCohesion`, cuya entrada y salida se verifican en esta práctica.
+- **Línea 40 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 41 —** `var limite = new LimiteServicio`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 42 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 43 —** `CapacidadDeNegocio = "Gestion multiple",`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 44 —** `ContextoDelimitado = "Produccion",`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 45 —** `NumeroDeConceptos = 5`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 46 —** `};`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 47 —** `var resultado = _validador.Validar(limite);`: Calcula `resultado` a partir de `_validador.Validar(limite)`; ese valor se utiliza en la verificación posterior.
+- **Línea 48 —** `resultado.EsValido.Should().BeFalse();`: Comprueba mediante FluentAssertions que `resultado.EsValido` cumpla `BeFalse()`.
+- **Línea 49 —** `resultado.Errores.Should().Contain(e => e.Contains("cohesión baja"));`: Comprueba mediante FluentAssertions que `resultado.Errores` cumpla `Contain(e => e.Contains("cohesión baja"))`.
+- **Línea 50 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 51 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+
+
 **Acción 4:** Pulsar Ctrl+S para guardar el archivo.
 
 **Acción 5:** Verificar que la clase compila sin errores.
@@ -2456,7 +2918,6 @@ public class ValidadorLimiteServicioTests
 ### Paso 15 — Activar el código de CatalogoLimitesTests.cs por pasos
 
 **Archivo preparado en este punto:** `tests/AceriaApp.Diseno.Tests/CatalogoLimitesTests.cs`. El bloque de código original figura a continuación como referencia de aprendizaje; la acción efectiva consiste en activar el bloque comentado correspondiente.
-
 
 
 **Acción 1:** Abrir `tests/AceriaApp.Diseno.Tests/CatalogoLimitesTests.cs` dentro de la solución `AceriaApp.sln` del punto 1.3; no crear otro archivo.
@@ -2509,6 +2970,48 @@ public class CatalogoLimitesTests
     }
 }
 ```
+
+**Explicación del código, línea por línea**
+
+- **Línea 1 —** `using AceriaApp.Monolito.Api.Diseno;`: Importa AceriaApp.Monolito.Api.Diseno para resolver los tipos usados en este archivo.
+- **Línea 2 —** `using FluentAssertions;`: Importa FluentAssertions para resolver los tipos usados en este archivo.
+- **Línea 3 —** `using Xunit;`: Importa Xunit para resolver los tipos usados en este archivo.
+- **Línea 4 —** `namespace AceriaApp.Diseno.Tests;`: Declara el espacio de nombres `AceriaApp.Diseno.Tests` coherente con la carpeta y el proyecto.
+- **Línea 5 —** `public class CatalogoLimitesTests`: Clasifica los límites en válidos e inválidos mediante el validador.
+- **Línea 6 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 7 —** `[Fact]`: Indica a xUnit que el método siguiente es un caso de prueba.
+- **Línea 8 —** `public void LimitesValidos_FiltraCorrectamente()`: Define el método `LimitesValidos_FiltraCorrectamente`, cuya entrada y salida se verifican en esta práctica.
+- **Línea 9 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 10 —** `var limites = new List<LimiteServicio>`: Prepara una colección tipada con datos de ejemplo que después se procesarán.
+- **Línea 11 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 12 —** `new()`: Crea un objeto y asigna propiedades de entrada para el escenario de prueba.
+- **Línea 13 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 14 —** `Nombre = "Ordenes",`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 15 —** `CapacidadDeNegocio = "Gestion de ordenes",`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 16 —** `ContextoDelimitado = "Produccion",`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 17 —** `NumeroDeConceptos = 2,`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 18 —** `NumeroDeDependenciasSalientes = 1`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 19 —** `},`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 20 —** `new()`: Crea un objeto y asigna propiedades de entrada para el escenario de prueba.
+- **Línea 21 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 22 —** `Nombre = "Cajon",`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 23 —** `CapacidadDeNegocio = "Multiples",`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 24 —** `ContextoDelimitado = "Mixto",`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 25 —** `NumeroDeConceptos = 5,`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 26 —** `NumeroDeDependenciasSalientes = 5`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 27 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 28 —** `};`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 29 —** `var catalogo = new CatalogoLimites(limites);`: Calcula `catalogo` a partir de `new CatalogoLimites(limites)`; ese valor se utiliza en la verificación posterior.
+- **Línea 30 —** `var validador = new ValidadorLimiteServicio();`: Calcula `validador` a partir de `new ValidadorLimiteServicio()`; ese valor se utiliza en la verificación posterior.
+- **Línea 31 —** `var validos = catalogo.LimitesValidos(validador).ToList();`: Calcula `validos` a partir de `catalogo.LimitesValidos(validador).ToList()`; ese valor se utiliza en la verificación posterior.
+- **Línea 32 —** `var invalidos = catalogo.LimitesInvalidos(validador).ToList();`: Calcula `invalidos` a partir de `catalogo.LimitesInvalidos(validador).ToList()`; ese valor se utiliza en la verificación posterior.
+- **Línea 33 —** `validos.Should().HaveCount(1);`: Comprueba mediante FluentAssertions que `validos` cumpla `HaveCount(1)`.
+- **Línea 34 —** `validos[0].Nombre.Should().Be("Ordenes");`: Completa la instrucción descrita en este bloque.
+- **Línea 35 —** `invalidos.Should().HaveCount(1);`: Comprueba mediante FluentAssertions que `invalidos` cumpla `HaveCount(1)`.
+- **Línea 36 —** `invalidos[0].Nombre.Should().Be("Cajon");`: Completa la instrucción descrita en este bloque.
+- **Línea 37 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 38 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+
 
 **Acción 4:** Pulsar Ctrl+S para guardar el archivo.
 
@@ -2782,7 +3285,6 @@ Se adoptan ocho principios: responsabilidad única, ocultación de información,
 **Verificación:** git log --oneline muestra tres commits: Punto 1.1, Punto 1.2 y Punto 1.3. git status muestra nothing to commit, working tree clean.
 
 
-
 **Nota de trazabilidad:** en una descarga del repositorio puede no haber cambios nuevos que confirmar. Antes de ejecutar `git commit`, usar `git status` y confirmar únicamente los archivos efectivamente modificados durante el recorrido. No ejecutar `git init` dentro de cada punto: la raíz del repositorio ya contiene el historial.
 
 ---
@@ -2804,23 +3306,26 @@ El commit incluye bin/ y obj/ Falta el .gitignore Verificar que el .gitignore es
 
 ---
 
-## Reto resuelto paso a paso
+## Reto de ampliación: solución guiada
 
-Reto: añadir un método Resumen a CatalogoLimites que devuelva el número de límites válidos, el número de límites inválidos y el porcentaje de validez, y un test que verifique el cálculo cuando hay tres límites válidos y uno inválido.
+**Problema a resolver:** añadir un método Resumen a CatalogoLimites que devuelva el número de límites válidos, el número de límites inválidos y el porcentaje de validez, y un test que verifique el cálculo cuando hay tres límites válidos y uno inválido.
 
-Paso 1: En CatalogoLimites.cs, añadir el siguiente record al final del archivo:
+#### Etapa 1 — En CatalogoLimites.cs, añadir el siguiente record al final del archivo:
 
+```csharp
 public record ResumenLimites(int Validos, int Invalidos, double PorcentajeValidez);
+```
 
-Paso 2: Explicar línea por línea:
+#### Etapa 2 — Explicar línea por línea:
 
-Línea 1: public record ResumenLimites( → declara un contrato inmutable para el resumen.
-Línea 2: int Validos, → número de límites válidos.
-Línea 3: int Invalidos, → número de límites inválidos.
-Línea 4: double PorcentajeValidez); → porcentaje de validez sobre el total.
+- **Línea 1:** `public record ResumenLimites(` — declara un contrato inmutable para el resumen.
+- **Línea 2:** `int Validos,` — número de límites válidos.
+- **Línea 3:** `int Invalidos,` — número de límites inválidos.
+- **Línea 4:** `double PorcentajeValidez);` — porcentaje de validez sobre el total.
 
-Paso 3: En CatalogoLimites.cs, añadir el siguiente método dentro de la clase:
+#### Etapa 3 — En CatalogoLimites.cs, añadir el siguiente método dentro de la clase:
 
+```csharp
 public ResumenLimites Resumen(ValidadorLimiteServicio validador)
 {
     var validos = _limites.Count(l => validador.Validar(l).EsValido);
@@ -2829,22 +3334,24 @@ public ResumenLimites Resumen(ValidadorLimiteServicio validador)
     var porcentaje = total == 0 ? 0 : (double)validos / total * 100;
     return new ResumenLimites(validos, invalidos, porcentaje);
 }
+```
 
-Paso 4: Explicar línea por línea:
+#### Etapa 4 — Explicar línea por línea:
 
-Línea 1: public ResumenLimites Resumen(ValidadorLimiteServicio validador) → declara el método.
-Línea 2: { → abre el cuerpo del método.
-Línea 3: var validos = _limites.Count(l => validador.Validar(l).EsValido); → cuenta los válidos.
-Línea 4: var invalidos = _limites.Count - validos; → calcula los inválidos por diferencia.
-Línea 5: var total = _limites.Count; → obtiene el total.
-Línea 6: var porcentaje = total == 0 ? 0 : (double)validos / total * 100; → calcula el porcentaje con protección contra división por cero.
-Línea 7: return new ResumenLimites(validos, invalidos, porcentaje); → devuelve el resumen.
-Línea 8: } → cierra el cuerpo del método.
+- **Línea 1:** `public ResumenLimites Resumen(ValidadorLimiteServicio validador)` — declara el método.
+- **Línea 2:** `{` — abre el cuerpo del método.
+- **Línea 3:** `var validos = _limites.Count(l => validador.Validar(l).EsValido);` — cuenta los válidos.
+- **Línea 4:** `var invalidos = _limites.Count - validos;` — calcula los inválidos por diferencia.
+- **Línea 5:** `var total = _limites.Count;` — obtiene el total.
+- **Línea 6:** `var porcentaje = total == 0 ? 0 : (double)validos / total * 100;` — calcula el porcentaje con protección contra división por cero.
+- **Línea 7:** `return new ResumenLimites(validos, invalidos, porcentaje);` — devuelve el resumen.
+- **Línea 8:** `}` — cierra el cuerpo del método.
 
-Paso 5: Guardar el archivo con Ctrl+S.
+#### Etapa 5 — Guardar el archivo con Ctrl+S.
 
-Paso 6: En CatalogoLimitesTests.cs, añadir el siguiente test:
+#### Etapa 6 — En CatalogoLimitesTests.cs, añadir el siguiente test:
 
+```csharp
 [Fact]
 public void Resumen_ConTresValidosYUnInvalido_CalculaPorcentaje()
 {
@@ -2864,32 +3371,33 @@ public void Resumen_ConTresValidosYUnInvalido_CalculaPorcentaje()
     resumen.Invalidos.Should().Be(1);
     resumen.PorcentajeValidez.Should().Be(75.0);
 }
+```
 
-Paso 7: Explicar línea por línea:
+#### Etapa 7 — Explicar línea por línea:
 
-Línea 1: [Fact] → marca el método como test de xUnit.
-Línea 2: public void Resumen_ConTresValidosYUnInvalido_CalculaPorcentaje() → declara el test.
-Línea 3: { → abre el cuerpo del test.
-Línea 4: var limites = new List<LimiteServicio> → crea la lista.
-Línea 5: { → abre el inicializador.
-Línea 6: new() { CapacidadDeNegocio = "A", ... } → primer límite válido.
-Línea 7: new() { CapacidadDeNegocio = "B", ... } → segundo límite válido.
-Línea 8: new() { CapacidadDeNegocio = "C", ... } → tercer límite válido.
-Línea 9: new() { CapacidadDeNegocio = string.Empty, ... } → límite inválido por falta de capacidad.
-Línea 10: }; → cierra el inicializador.
-Línea 11: var catalogo = new CatalogoLimites(limites); → instancia el catálogo.
-Línea 12: var validador = new ValidadorLimiteServicio(); → instancia el validador.
-Línea 13: var resumen = catalogo.Resumen(validador); → invoca el método.
-Línea 14: resumen.Validos.Should().Be(3); → verifica los válidos.
-Línea 15: resumen.Invalidos.Should().Be(1); → verifica los inválidos.
-Línea 16: resumen.PorcentajeValidez.Should().Be(75.0); → verifica el porcentaje.
-Línea 17: } → cierra el cuerpo del test.
+- **Línea 1:** `[Fact]` — marca el método como test de xUnit.
+- **Línea 2:** `public void Resumen_ConTresValidosYUnInvalido_CalculaPorcentaje()` — declara el test.
+- **Línea 3:** `{` — abre el cuerpo del test.
+- **Línea 4:** `var limites = new List<LimiteServicio>` — crea la lista.
+- **Línea 5:** `{` — abre el inicializador.
+- **Línea 6:** `new() { CapacidadDeNegocio = "A", ... }` — primer límite válido.
+- **Línea 7:** `new() { CapacidadDeNegocio = "B", ... }` — segundo límite válido.
+- **Línea 8:** `new() { CapacidadDeNegocio = "C", ... }` — tercer límite válido.
+- **Línea 9:** `new() { CapacidadDeNegocio = string.Empty, ... }` — límite inválido por falta de capacidad.
+- **Línea 10:** `};` — cierra el inicializador.
+- **Línea 11:** `var catalogo = new CatalogoLimites(limites);` — instancia el catálogo.
+- **Línea 12:** `var validador = new ValidadorLimiteServicio();` — instancia el validador.
+- **Línea 13:** `var resumen = catalogo.Resumen(validador);` — invoca el método.
+- **Línea 14:** `resumen.Validos.Should().Be(3);` — verifica los válidos.
+- **Línea 15:** `resumen.Invalidos.Should().Be(1);` — verifica los inválidos.
+- **Línea 16:** `resumen.PorcentajeValidez.Should().Be(75.0);` — verifica el porcentaje.
+- **Línea 17:** `}` — cierra el cuerpo del test.
 
-Paso 8: Ejecutar dotnet test tests\AceriaApp.Diseno.Tests\AceriaApp.Diseno.Tests.csproj y verificar que pasan los cinco tests.
+#### Etapa 8 — Ejecutar dotnet test tests\AceriaApp.Diseno.Tests\AceriaApp.Diseno.Tests.csproj y verificar que pasan los cinco tests.
 
-Paso 9: Verificar que el método Resumen no modifica ningún archivo del punto 1.2.
+#### Etapa 9 — Verificar que el método Resumen no modifica ningún archivo del punto 1.2.
 
-Paso 10: Hacer commit con git commit -m "Reto 1.3: método Resumen en CatalogoLimites con cálculo de porcentaje".
+#### Etapa 10 — Hacer commit con git commit -m "Reto 1.3: método Resumen en CatalogoLimites con cálculo de porcentaje".
 
 Verificación: la salida de dotnet test muestra Passed: 5.
 
@@ -2921,17 +3429,34 @@ El punto 1.3 ha completado el bloque de fundamentos con los principios de diseñ
 
 Fin del punto 1.3.
 
-Espero confirmación del usuario antes de continuar con el punto 1.4.
 
 ---
 
 # Punto 1.4 — Organización de una solución basada en microservicios
 
-**Guía de trabajo:** los archivos, proyectos, referencias y documentos ya se entregan preparados en `PROYECTO/1.4-organizacion-solucion/`. El alumnado trabaja sobre una solución independiente por punto, con código anterior activo y las incorporaciones actuales comentadas por pasos. **No debe volver a crear archivos o proyectos de igual nombre.** Al activar código, se seleccionan únicamente líneas entre `INICIO PASO` y `FIN PASO`, se pulsa `Ctrl+K, Ctrl+U` en Visual Studio y se guarda. Los bloques `RETO` permanecen comentados hasta el ejercicio de ampliación.
+## Qué problema resolvemos y qué aprenderás
 
-**Distribución del trabajo:** los 27 minutos presenciales corresponden a una demostración guiada y verificaciones esenciales. Los 24 pasos y los retos se conservan como itinerario autónomo reproducible; ejecutarlos todos, incluida la instalación del entorno y la base de datos, requiere tiempo adicional.
+**Situación profesional.** Cuando aumentan los módulos del sistema, las convenciones inconsistentes dificultan encontrar proyectos, ejecutar sus pruebas y preparar una futura extracción.
 
-## PARTE PRÁCTICA (27 minutos)
+**Objetivo del ejercicio.** Definir y validar el patrón de nombres `AceriaApp.Componente.Tipo`, relacionarlo con `src`, `tests` y `docs` y comprobar una clasificación de proyectos.
+
+**Justificación técnica.** Una convención documentada y una regla automatizada reducen las excepciones de nomenclatura; la práctica permite entender por qué una solución organizada facilita el trabajo colectivo.
+
+**Recorrido de aprendizaje**
+
+- **Pasos 1–4:** Revisar estructura y documentación recibidas.
+- **Pasos 5–10:** Comprender la construcción, validación y agrupación de nombres.
+- **Pasos 11–18:** Ejecutar pruebas positivas y negativas de las convenciones.
+- **Pasos 19–24:** Contrastar la decisión con el ADR y verificar la herencia documental.
+
+**Evidencia observable al terminar.** Nombres completos admisibles pasan; nombres sin prefijo, con partes incompletas o tipos no permitidos generan errores comprobables.
+
+**Qué demuestra y qué no demuestra.** La correspondencia entre proyecto y tests no exige siempre un proyecto de producción independiente: las clases de métricas y diseño viven dentro de la API monolítica.
+
+
+**Preparación del entorno:** los archivos, proyectos, referencias y documentos ya se entregan preparados en `PROYECTO/1.4-organizacion-solucion/`. El alumnado trabaja sobre una solución independiente por punto, con código anterior activo y las incorporaciones actuales comentadas por pasos. **No debe volver a crear archivos o proyectos de igual nombre.** Al activar código, se seleccionan únicamente líneas entre `INICIO PASO` y `FIN PASO`, se pulsa `Ctrl+K, Ctrl+U` en Visual Studio y se guarda. Los bloques `RETO` permanecen comentados hasta el ejercicio de ampliación.
+
+## Ejercicio práctico
 
 **Ejercicio:** Añadir al punto 1.3 un documento de organización de la solución en docs/, una clase de validación de convenciones de nombres en el proyecto monolítico y un test unitario que verifique la validación. El punto 1.4 parte del contenido del punto 1.3 sin modificar ningún archivo existente: solo añade archivos nuevos.
 
@@ -3095,7 +3620,6 @@ Cada servicio tiene su propio conjunto de proyectos y su propio conjunto de test
 **Archivo preparado en este punto:** `src/AceriaApp.Monolito.Api/Organizacion/ConvencionNombres.cs`. El bloque de código original figura a continuación como referencia de aprendizaje; la acción efectiva consiste en activar el bloque comentado correspondiente.
 
 
-
 **Acción 1:** Abrir `src/AceriaApp.Monolito.Api/Organizacion/ConvencionNombres.cs` dentro de la solución `AceriaApp.sln` del punto 1.4; no crear otro archivo.
 
 **Acción 2:** Localizar el marcador `INICIO PASO 1.4.6` y seleccionar solo las líneas de código comentadas del bloque, sin modificar los marcadores ni el código heredado.
@@ -3118,6 +3642,21 @@ public class ConvencionNombres
 }
 ```
 
+**Explicación del código, línea por línea**
+
+- **Línea 1 —** `namespace AceriaApp.Monolito.Api.Organizacion;`: Declara el espacio de nombres `AceriaApp.Monolito.Api.Organizacion` coherente con la carpeta y el proyecto.
+- **Línea 2 —** `public class ConvencionNombres`: Construye denominaciones uniformes para los proyectos de la solución.
+- **Línea 3 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 4 —** `public string Prefijo { get; init; } = "AceriaApp";`: Primera parte de la denominación estándar de AceriaApp.
+- **Línea 5 —** `public string Componente { get; init; } = string.Empty;`: Parte central del nombre, correspondiente a la capacidad de negocio.
+- **Línea 6 —** `public string Tipo { get; init; } = string.Empty;`: Sufijo del proyecto, que debe estar dentro del catálogo de tipos admitidos.
+- **Línea 7 —** `public string NombreCompleto()`: Define el método `NombreCompleto`, cuya entrada y salida se verifican en esta práctica.
+- **Línea 8 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 9 —** `return $"{Prefijo}.{Componente}.{Tipo}";`: Devuelve el resultado `$"{Prefijo}.{Componente}.{Tipo}"` al llamador.
+- **Línea 10 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 11 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+
+
 **Acción 4:** Pulsar Ctrl+S para guardar el archivo.
 
 **Acción 5:** Verificar que la clase compila sin errores.
@@ -3137,7 +3676,6 @@ public class ConvencionNombres
 ### Paso 7 — Activar el código de ValidadorConvencionNombres.cs por pasos
 
 **Archivo preparado en este punto:** `src/AceriaApp.Monolito.Api/Organizacion/ValidadorConvencionNombres.cs`. El bloque de código original figura a continuación como referencia de aprendizaje; la acción efectiva consiste en activar el bloque comentado correspondiente.
-
 
 
 **Acción 1:** Abrir `src/AceriaApp.Monolito.Api/Organizacion/ValidadorConvencionNombres.cs` dentro de la solución `AceriaApp.sln` del punto 1.4; no crear otro archivo.
@@ -3186,6 +3724,40 @@ public class ValidadorConvencionNombres
 public record ResultadoConvencion(bool EsValido, IReadOnlyList<string> Errores);
 ```
 
+**Explicación del código, línea por línea**
+
+- **Línea 1 —** `namespace AceriaApp.Monolito.Api.Organizacion;`: Declara el espacio de nombres `AceriaApp.Monolito.Api.Organizacion` coherente con la carpeta y el proyecto.
+- **Línea 2 —** `public class ValidadorConvencionNombres`: Detecta nombres que no cumplen el prefijo, la estructura o el sufijo permitido.
+- **Línea 3 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 4 —** `private readonly string _prefijo;`: Declara `_prefijo` como estado de solo lectura asignado por el constructor.
+- **Línea 5 —** `private readonly IReadOnlyList<string> _tiposPermitidos;`: Declara `_tiposPermitidos` como estado de solo lectura asignado por el constructor.
+- **Línea 6 —** `public ValidadorConvencionNombres(string prefijo, IReadOnlyList<string> tiposPermitidos)`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 7 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 8 —** `_prefijo = prefijo;`: Asigna o calcula el valor de la expresión de la derecha para la operación actual.
+- **Línea 9 —** `_tiposPermitidos = tiposPermitidos;`: Asigna o calcula el valor de la expresión de la derecha para la operación actual.
+- **Línea 10 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 11 —** `public ResultadoConvencion Validar(string nombreProyecto)`: Define el método `Validar`, cuya entrada y salida se verifican en esta práctica.
+- **Línea 12 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 13 —** `var errores = new List<string>();`: Calcula `errores` a partir de `new List<string>()`; ese valor se utiliza en la verificación posterior.
+- **Línea 14 —** `if (!nombreProyecto.StartsWith(_prefijo + ".", StringComparison.Ordinal))`: Comprueba la condición `!nombreProyecto.StartsWith(_prefijo + ".", StringComparison.Ordinal)` antes de proseguir; protege un caso límite o una regla del negocio.
+- **Línea 15 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 16 —** `errores.Add($"El proyecto no empieza por '{_prefijo}.'.");`: Completa la instrucción descrita en este bloque.
+- **Línea 17 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 18 —** `var partes = nombreProyecto.Split('.');`: Calcula `partes` a partir de `nombreProyecto.Split('.')`; ese valor se utiliza en la verificación posterior.
+- **Línea 19 —** `if (partes.Length != 3)`: Comprueba la condición `partes.Length != 3` antes de proseguir; protege un caso límite o una regla del negocio.
+- **Línea 20 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 21 —** `errores.Add("El nombre no tiene el formato 'Prefijo.Componente.Tipo'.");`: Completa la instrucción descrita en este bloque.
+- **Línea 22 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 23 —** `else if (!_tiposPermitidos.Contains(partes[2]))`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 24 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 25 —** `errores.Add($"El tipo '{partes[2]}' no está permitido.");`: Completa la instrucción descrita en este bloque.
+- **Línea 26 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 27 —** `return new ResultadoConvencion(errores.Count == 0, errores);`: Devuelve el resultado `new ResultadoConvencion(errores.Count == 0, errores)` al llamador.
+- **Línea 28 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 29 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 30 —** `public record ResultadoConvencion(bool EsValido, IReadOnlyList<string> Errores);`: Declara el tipo `ResultadoConvencion` que encapsula esta responsabilidad.
+
+
 **Acción 4:** Pulsar Ctrl+S para guardar el archivo.
 
 **Acción 5:** Verificar que la clase compila sin errores.
@@ -3199,6 +3771,7 @@ public record ResultadoConvencion(bool EsValido, IReadOnlyList<string> Errores);
 - No comprobar la longitud de las partes: el validador acepta nombres mal formados.
 
 **Verificación:** la clase ValidadorConvencionNombres compila sin errores y expone un constructor, un método y un record.
+\n\n**Interpretación del resultado:** El nombre tiene tres segmentos y el último pertenece a un conjunto permitido. El validador ilustra reglas de nomenclatura, no comprueba la estructura física del repositorio.
 
 ---
 
@@ -3227,7 +3800,6 @@ public record ResultadoConvencion(bool EsValido, IReadOnlyList<string> Errores);
 ### Paso 9 — Activar el código de CatalogoProyectos.cs por pasos
 
 **Archivo preparado en este punto:** `src/AceriaApp.Monolito.Api/Organizacion/CatalogoProyectos.cs`. El bloque de código original figura a continuación como referencia de aprendizaje; la acción efectiva consiste en activar el bloque comentado correspondiente.
-
 
 
 **Acción 1:** Abrir `src/AceriaApp.Monolito.Api/Organizacion/CatalogoProyectos.cs` dentro de la solución `AceriaApp.sln` del punto 1.4; no crear otro archivo.
@@ -3259,6 +3831,27 @@ public class CatalogoProyectos
     }
 }
 ```
+
+**Explicación del código, línea por línea**
+
+- **Línea 1 —** `namespace AceriaApp.Monolito.Api.Organizacion;`: Declara el espacio de nombres `AceriaApp.Monolito.Api.Organizacion` coherente con la carpeta y el proyecto.
+- **Línea 2 —** `public class CatalogoProyectos`: Organiza nombres de proyectos y los filtra con la convención acordada.
+- **Línea 3 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 4 —** `private readonly List<string> _nombres;`: Declara `_nombres` como estado de solo lectura asignado por el constructor.
+- **Línea 5 —** `public CatalogoProyectos(List<string> nombres)`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 6 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 7 —** `_nombres = nombres;`: Asigna o calcula el valor de la expresión de la derecha para la operación actual.
+- **Línea 8 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 9 —** `public IEnumerable<string> ProyectosValidos(ValidadorConvencionNombres validador)`: Define el método `ProyectosValidos`, cuya entrada y salida se verifican en esta práctica.
+- **Línea 10 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 11 —** `return _nombres.Where(n => validador.Validar(n).EsValido);`: Devuelve el resultado `_nombres.Where(n => validador.Validar(n).EsValido)` al llamador.
+- **Línea 12 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 13 —** `public IEnumerable<string> ProyectosInvalidos(ValidadorConvencionNombres validador)`: Define el método `ProyectosInvalidos`, cuya entrada y salida se verifican en esta práctica.
+- **Línea 14 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 15 —** `return _nombres.Where(n => !validador.Validar(n).EsValido);`: Devuelve el resultado `_nombres.Where(n => !validador.Validar(n).EsValido)` al llamador.
+- **Línea 16 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 17 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+
 
 **Acción 4:** Pulsar Ctrl+S para guardar el archivo.
 
@@ -3365,7 +3958,6 @@ public class CatalogoProyectos
 **Archivo preparado en este punto:** `tests/AceriaApp.Organizacion.Tests/ValidadorConvencionNombresTests.cs`. El bloque de código original figura a continuación como referencia de aprendizaje; la acción efectiva consiste en activar el bloque comentado correspondiente.
 
 
-
 **Acción 1:** Abrir `tests/AceriaApp.Organizacion.Tests/ValidadorConvencionNombresTests.cs` dentro de la solución `AceriaApp.sln` del punto 1.4; no crear otro archivo.
 
 **Acción 2:** Localizar el marcador `INICIO PASO 1.4.14` y seleccionar solo las líneas de código comentadas del bloque, sin modificar los marcadores ni el código heredado.
@@ -3423,6 +4015,48 @@ public class ValidadorConvencionNombresTests
 }
 ```
 
+**Explicación del código, línea por línea**
+
+- **Línea 1 —** `using AceriaApp.Monolito.Api.Organizacion;`: Importa AceriaApp.Monolito.Api.Organizacion para resolver los tipos usados en este archivo.
+- **Línea 2 —** `using FluentAssertions;`: Importa FluentAssertions para resolver los tipos usados en este archivo.
+- **Línea 3 —** `using Xunit;`: Importa Xunit para resolver los tipos usados en este archivo.
+- **Línea 4 —** `namespace AceriaApp.Organizacion.Tests;`: Declara el espacio de nombres `AceriaApp.Organizacion.Tests` coherente con la carpeta y el proyecto.
+- **Línea 5 —** `public class ValidadorConvencionNombresTests`: Detecta nombres que no cumplen el prefijo, la estructura o el sufijo permitido.
+- **Línea 6 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 7 —** `private readonly ValidadorConvencionNombres _validador = new(`: Abre una llamada o declaración cuyos parámetros aparecen en las líneas siguientes.
+- **Línea 8 —** `"AceriaApp",`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 9 —** `new[] { "Api", "Domain", "Infrastructure", "Application", "Tests" });`: Completa la instrucción descrita en este bloque.
+- **Línea 10 —** `[Fact]`: Indica a xUnit que el método siguiente es un caso de prueba.
+- **Línea 11 —** `public void Validar_NombreCorrecto_DevuelveValido()`: Define el método `Validar_NombreCorrecto_DevuelveValido`, cuya entrada y salida se verifican en esta práctica.
+- **Línea 12 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 13 —** `var resultado = _validador.Validar("AceriaApp.Ordenes.Api");`: Calcula `resultado` a partir de `_validador.Validar("AceriaApp.Ordenes.Api")`; ese valor se utiliza en la verificación posterior.
+- **Línea 14 —** `resultado.EsValido.Should().BeTrue();`: Comprueba mediante FluentAssertions que `resultado.EsValido` cumpla `BeTrue()`.
+- **Línea 15 —** `resultado.Errores.Should().BeEmpty();`: Comprueba mediante FluentAssertions que `resultado.Errores` cumpla `BeEmpty()`.
+- **Línea 16 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 17 —** `[Fact]`: Indica a xUnit que el método siguiente es un caso de prueba.
+- **Línea 18 —** `public void Validar_SinPrefijo_DevuelveError()`: Define el método `Validar_SinPrefijo_DevuelveError`, cuya entrada y salida se verifican en esta práctica.
+- **Línea 19 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 20 —** `var resultado = _validador.Validar("Ordenes.Api");`: Calcula `resultado` a partir de `_validador.Validar("Ordenes.Api")`; ese valor se utiliza en la verificación posterior.
+- **Línea 21 —** `resultado.EsValido.Should().BeFalse();`: Comprueba mediante FluentAssertions que `resultado.EsValido` cumpla `BeFalse()`.
+- **Línea 22 —** `resultado.Errores.Should().Contain(e => e.Contains("no empieza por"));`: Comprueba mediante FluentAssertions que `resultado.Errores` cumpla `Contain(e => e.Contains("no empieza por"))`.
+- **Línea 23 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 24 —** `[Fact]`: Indica a xUnit que el método siguiente es un caso de prueba.
+- **Línea 25 —** `public void Validar_TipoNoPermitido_DevuelveError()`: Define el método `Validar_TipoNoPermitido_DevuelveError`, cuya entrada y salida se verifican en esta práctica.
+- **Línea 26 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 27 —** `var resultado = _validador.Validar("AceriaApp.Ordenes.Controlador");`: Calcula `resultado` a partir de `_validador.Validar("AceriaApp.Ordenes.Controlador")`; ese valor se utiliza en la verificación posterior.
+- **Línea 28 —** `resultado.EsValido.Should().BeFalse();`: Comprueba mediante FluentAssertions que `resultado.EsValido` cumpla `BeFalse()`.
+- **Línea 29 —** `resultado.Errores.Should().Contain(e => e.Contains("no está permitido"));`: Comprueba mediante FluentAssertions que `resultado.Errores` cumpla `Contain(e => e.Contains("no está permitido"))`.
+- **Línea 30 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 31 —** `[Fact]`: Indica a xUnit que el método siguiente es un caso de prueba.
+- **Línea 32 —** `public void Validar_NumeroDePartesIncorrecto_DevuelveError()`: Define el método `Validar_NumeroDePartesIncorrecto_DevuelveError`, cuya entrada y salida se verifican en esta práctica.
+- **Línea 33 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 34 —** `var resultado = _validador.Validar("AceriaApp.Ordenes");`: Calcula `resultado` a partir de `_validador.Validar("AceriaApp.Ordenes")`; ese valor se utiliza en la verificación posterior.
+- **Línea 35 —** `resultado.EsValido.Should().BeFalse();`: Comprueba mediante FluentAssertions que `resultado.EsValido` cumpla `BeFalse()`.
+- **Línea 36 —** `resultado.Errores.Should().Contain(e => e.Contains("Prefijo.Componente.Tipo"));`: Comprueba mediante FluentAssertions que `resultado.Errores` cumpla `Contain(e => e.Contains("Prefijo.Componente.Tipo"))`.
+- **Línea 37 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 38 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+
+
 **Acción 4:** Pulsar Ctrl+S para guardar el archivo.
 
 **Acción 5:** Verificar que la clase compila sin errores.
@@ -3442,7 +4076,6 @@ public class ValidadorConvencionNombresTests
 ### Paso 15 — Activar el código de CatalogoProyectosTests.cs por pasos
 
 **Archivo preparado en este punto:** `tests/AceriaApp.Organizacion.Tests/CatalogoProyectosTests.cs`. El bloque de código original figura a continuación como referencia de aprendizaje; la acción efectiva consiste en activar el bloque comentado correspondiente.
-
 
 
 **Acción 1:** Abrir `tests/AceriaApp.Organizacion.Tests/CatalogoProyectosTests.cs` dentro de la solución `AceriaApp.sln` del punto 1.4; no crear otro archivo.
@@ -3487,6 +4120,40 @@ public class CatalogoProyectosTests
     }
 }
 ```
+
+**Explicación del código, línea por línea**
+
+- **Línea 1 —** `using AceriaApp.Monolito.Api.Organizacion;`: Importa AceriaApp.Monolito.Api.Organizacion para resolver los tipos usados en este archivo.
+- **Línea 2 —** `using FluentAssertions;`: Importa FluentAssertions para resolver los tipos usados en este archivo.
+- **Línea 3 —** `using Xunit;`: Importa Xunit para resolver los tipos usados en este archivo.
+- **Línea 4 —** `namespace AceriaApp.Organizacion.Tests;`: Declara el espacio de nombres `AceriaApp.Organizacion.Tests` coherente con la carpeta y el proyecto.
+- **Línea 5 —** `public class CatalogoProyectosTests`: Organiza nombres de proyectos y los filtra con la convención acordada.
+- **Línea 6 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 7 —** `[Fact]`: Indica a xUnit que el método siguiente es un caso de prueba.
+- **Línea 8 —** `public void ProyectosValidos_FiltraCorrectamente()`: Define el método `ProyectosValidos_FiltraCorrectamente`, cuya entrada y salida se verifican en esta práctica.
+- **Línea 9 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 10 —** `var nombres = new List<string>`: Prepara una colección tipada con datos de ejemplo que después se procesarán.
+- **Línea 11 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 12 —** `"AceriaApp.Ordenes.Api",`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 13 —** `"AceriaApp.Ordenes.Domain",`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 14 —** `"AceriaApp.Ordenes",`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 15 —** `"AceriaApp.Ordenes.Controlador"`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 16 —** `};`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 17 —** `var catalogo = new CatalogoProyectos(nombres);`: Calcula `catalogo` a partir de `new CatalogoProyectos(nombres)`; ese valor se utiliza en la verificación posterior.
+- **Línea 18 —** `var validador = new ValidadorConvencionNombres(`: Abre una llamada o declaración cuyos parámetros aparecen en las líneas siguientes.
+- **Línea 19 —** `"AceriaApp",`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 20 —** `new[] { "Api", "Domain", "Infrastructure", "Application", "Tests" });`: Completa la instrucción descrita en este bloque.
+- **Línea 21 —** `var validos = catalogo.ProyectosValidos(validador).ToList();`: Calcula `validos` a partir de `catalogo.ProyectosValidos(validador).ToList()`; ese valor se utiliza en la verificación posterior.
+- **Línea 22 —** `var invalidos = catalogo.ProyectosInvalidos(validador).ToList();`: Calcula `invalidos` a partir de `catalogo.ProyectosInvalidos(validador).ToList()`; ese valor se utiliza en la verificación posterior.
+- **Línea 23 —** `validos.Should().HaveCount(2);`: Comprueba mediante FluentAssertions que `validos` cumpla `HaveCount(2)`.
+- **Línea 24 —** `validos.Should().Contain("AceriaApp.Ordenes.Api");`: Comprueba mediante FluentAssertions que `validos` cumpla `Contain("AceriaApp.Ordenes.Api")`.
+- **Línea 25 —** `validos.Should().Contain("AceriaApp.Ordenes.Domain");`: Comprueba mediante FluentAssertions que `validos` cumpla `Contain("AceriaApp.Ordenes.Domain")`.
+- **Línea 26 —** `invalidos.Should().HaveCount(2);`: Comprueba mediante FluentAssertions que `invalidos` cumpla `HaveCount(2)`.
+- **Línea 27 —** `invalidos.Should().Contain("AceriaApp.Ordenes");`: Comprueba mediante FluentAssertions que `invalidos` cumpla `Contain("AceriaApp.Ordenes")`.
+- **Línea 28 —** `invalidos.Should().Contain("AceriaApp.Ordenes.Controlador");`: Comprueba mediante FluentAssertions que `invalidos` cumpla `Contain("AceriaApp.Ordenes.Controlador")`.
+- **Línea 29 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 30 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+
 
 **Acción 4:** Pulsar Ctrl+S para guardar el archivo.
 
@@ -3762,7 +4429,6 @@ Se adopta un monorepo con una carpeta por módulo y una carpeta por punto. Dentr
 **Verificación:** git log --oneline muestra cuatro commits: Punto 1.1, Punto 1.2, Punto 1.3 y Punto 1.4. git status muestra nothing to commit, working tree clean.
 
 
-
 **Nota de trazabilidad:** en una descarga del repositorio puede no haber cambios nuevos que confirmar. Antes de ejecutar `git commit`, usar `git status` y confirmar únicamente los archivos efectivamente modificados durante el recorrido. No ejecutar `git init` dentro de cada punto: la raíz del repositorio ya contiene el historial.
 
 ---
@@ -3784,23 +4450,26 @@ La compilación falla por el .dll bloqueado La API está en ejecución Detener l
 
 ---
 
-## Reto resuelto paso a paso
+## Reto de ampliación: solución guiada
 
-Reto: añadir un método Resumen a CatalogoProyectos que devuelva el número de proyectos válidos, el número de inválidos y el porcentaje de validez, y un test que verifique el cálculo cuando hay tres válidos y dos inválidos.
+**Problema a resolver:** añadir un método Resumen a CatalogoProyectos que devuelva el número de proyectos válidos, el número de inválidos y el porcentaje de validez, y un test que verifique el cálculo cuando hay tres válidos y dos inválidos.
 
-Paso 1: En CatalogoProyectos.cs, añadir el siguiente record al final del archivo:
+#### Etapa 1 — En CatalogoProyectos.cs, añadir el siguiente record al final del archivo:
 
+```csharp
 public record ResumenProyectos(int Validos, int Invalidos, double PorcentajeValidez);
+```
 
-Paso 2: Explicar línea por línea:
+#### Etapa 2 — Explicar línea por línea:
 
-Línea 1: public record ResumenProyectos( → declara un contrato inmutable.
-Línea 2: int Validos, → número de proyectos válidos.
-Línea 3: int Invalidos, → número de proyectos inválidos.
-Línea 4: double PorcentajeValidez); → porcentaje de validez.
+- **Línea 1:** `public record ResumenProyectos(` — declara un contrato inmutable.
+- **Línea 2:** `int Validos,` — número de proyectos válidos.
+- **Línea 3:** `int Invalidos,` — número de proyectos inválidos.
+- **Línea 4:** `double PorcentajeValidez);` — porcentaje de validez.
 
-Paso 3: En CatalogoProyectos.cs, añadir el siguiente método dentro de la clase:
+#### Etapa 3 — En CatalogoProyectos.cs, añadir el siguiente método dentro de la clase:
 
+```csharp
 public ResumenProyectos Resumen(ValidadorConvencionNombres validador)
 {
     var validos = _nombres.Count(n => validador.Validar(n).EsValido);
@@ -3809,22 +4478,24 @@ public ResumenProyectos Resumen(ValidadorConvencionNombres validador)
     var porcentaje = total == 0 ? 0 : (double)validos / total * 100;
     return new ResumenProyectos(validos, invalidos, porcentaje);
 }
+```
 
-Paso 4: Explicar línea por línea:
+#### Etapa 4 — Explicar línea por línea:
 
-Línea 1: public ResumenProyectos Resumen(ValidadorConvencionNombres validador) → declara el método.
-Línea 2: { → abre el cuerpo.
-Línea 3: var validos = _nombres.Count(n => validador.Validar(n).EsValido); → cuenta los válidos.
-Línea 4: var invalidos = _nombres.Count - validos; → calcula los inválidos por diferencia.
-Línea 5: var total = _nombres.Count; → obtiene el total.
-Línea 6: var porcentaje = total == 0 ? 0 : (double)validos / total * 100; → calcula el porcentaje con protección contra división por cero.
-Línea 7: return new ResumenProyectos(validos, invalidos, porcentaje); → devuelve el resumen.
-Línea 8: } → cierra el cuerpo.
+- **Línea 1:** `public ResumenProyectos Resumen(ValidadorConvencionNombres validador)` — declara el método.
+- **Línea 2:** `{` — abre el cuerpo.
+- **Línea 3:** `var validos = _nombres.Count(n => validador.Validar(n).EsValido);` — cuenta los válidos.
+- **Línea 4:** `var invalidos = _nombres.Count - validos;` — calcula los inválidos por diferencia.
+- **Línea 5:** `var total = _nombres.Count;` — obtiene el total.
+- **Línea 6:** `var porcentaje = total == 0 ? 0 : (double)validos / total * 100;` — calcula el porcentaje con protección contra división por cero.
+- **Línea 7:** `return new ResumenProyectos(validos, invalidos, porcentaje);` — devuelve el resumen.
+- **Línea 8:** `}` — cierra el cuerpo.
 
-Paso 5: Guardar el archivo con Ctrl+S.
+#### Etapa 5 — Guardar el archivo con Ctrl+S.
 
-Paso 6: En CatalogoProyectosTests.cs, añadir el siguiente test:
+#### Etapa 6 — En CatalogoProyectosTests.cs, añadir el siguiente test:
 
+```csharp
 [Fact]
 public void Resumen_ConTresValidosYDosInvalidos_CalculaPorcentaje()
 {
@@ -3847,33 +4518,34 @@ public void Resumen_ConTresValidosYDosInvalidos_CalculaPorcentaje()
     resumen.Invalidos.Should().Be(2);
     resumen.PorcentajeValidez.Should().Be(60.0);
 }
+```
 
-Paso 7: Explicar línea por línea:
+#### Etapa 7 — Explicar línea por línea:
 
-Línea 1: [Fact] → marca el método como test de xUnit.
-Línea 2: public void Resumen_ConTresValidosYDosInvalidos_CalculaPorcentaje() → declara el test.
-Línea 3: { → abre el cuerpo.
-Línea 4: var nombres = new List<string> → crea la lista.
-Línea 5: { → abre el inicializador.
-Línea 6: "AceriaApp.Ordenes.Api", → primer nombre válido.
-Línea 7: "AceriaApp.Ordenes.Domain", → segundo nombre válido.
-Línea 8: "AceriaApp.Inventario.Api", → tercer nombre válido.
-Línea 9: "AceriaApp.Ordenes", → primer nombre inválido por falta de tipo.
-Línea 10: "AceriaApp.Inventario.Controlador" → segundo nombre inválido por tipo no permitido.
-Línea 11: }; → cierra el inicializador.
-Línea 12: var catalogo = new CatalogoProyectos(nombres); → instancia el catálogo.
-Línea 13: var validador = new ValidadorConvencionNombres(...); → instancia el validador.
-Línea 14: var resumen = catalogo.Resumen(validador); → invoca el método.
-Línea 15: resumen.Validos.Should().Be(3); → verifica los válidos.
-Línea 16: resumen.Invalidos.Should().Be(2); → verifica los inválidos.
-Línea 17: resumen.PorcentajeValidez.Should().Be(60.0); → verifica el porcentaje.
-Línea 18: } → cierra el cuerpo.
+- **Línea 1:** `[Fact]` — marca el método como test de xUnit.
+- **Línea 2:** `public void Resumen_ConTresValidosYDosInvalidos_CalculaPorcentaje()` — declara el test.
+- **Línea 3:** `{` — abre el cuerpo.
+- **Línea 4:** `var nombres = new List<string>` — crea la lista.
+- **Línea 5:** `{` — abre el inicializador.
+- **Línea 6:** `"AceriaApp.Ordenes.Api",` — primer nombre válido.
+- **Línea 7:** `"AceriaApp.Ordenes.Domain",` — segundo nombre válido.
+- **Línea 8:** `"AceriaApp.Inventario.Api",` — tercer nombre válido.
+- **Línea 9:** `"AceriaApp.Ordenes",` — primer nombre inválido por falta de tipo.
+- **Línea 10:** `"AceriaApp.Inventario.Controlador"` — segundo nombre inválido por tipo no permitido.
+- **Línea 11:** `};` — cierra el inicializador.
+- **Línea 12:** `var catalogo = new CatalogoProyectos(nombres);` — instancia el catálogo.
+- **Línea 13:** `var validador = new ValidadorConvencionNombres(...);` — instancia el validador.
+- **Línea 14:** `var resumen = catalogo.Resumen(validador);` — invoca el método.
+- **Línea 15:** `resumen.Validos.Should().Be(3);` — verifica los válidos.
+- **Línea 16:** `resumen.Invalidos.Should().Be(2);` — verifica los inválidos.
+- **Línea 17:** `resumen.PorcentajeValidez.Should().Be(60.0);` — verifica el porcentaje.
+- **Línea 18:** `}` — cierra el cuerpo.
 
-Paso 8: Ejecutar dotnet test tests\AceriaApp.Organizacion.Tests\AceriaApp.Organizacion.Tests.csproj y verificar que pasan los seis tests.
+#### Etapa 8 — Ejecutar dotnet test tests\AceriaApp.Organizacion.Tests\AceriaApp.Organizacion.Tests.csproj y verificar que pasan los seis tests.
 
-Paso 9: Verificar que el método Resumen no modifica ningún archivo del punto 1.3.
+#### Etapa 9 — Verificar que el método Resumen no modifica ningún archivo del punto 1.3.
 
-Paso 10: Hacer commit con git commit -m "Reto 1.4: método Resumen en CatalogoProyectos con cálculo de porcentaje".
+#### Etapa 10 — Hacer commit con git commit -m "Reto 1.4: método Resumen en CatalogoProyectos con cálculo de porcentaje".
 
 Verificación: la salida de dotnet test muestra Passed: 6.
 
@@ -3905,17 +4577,34 @@ El punto 1.4 ha definido la organización de la solución con un monorepo, una s
 
 Fin del punto 1.4.
 
-Espero confirmación del usuario antes de continuar con el punto 1.5.
 
 ---
 
 # Punto 1.5 — Buenas prácticas
 
-**Guía de trabajo:** los archivos, proyectos, referencias y documentos ya se entregan preparados en `PROYECTO/1.5-buenas-practicas/`. El alumnado trabaja sobre una solución independiente por punto, con código anterior activo y las incorporaciones actuales comentadas por pasos. **No debe volver a crear archivos o proyectos de igual nombre.** Al activar código, se seleccionan únicamente líneas entre `INICIO PASO` y `FIN PASO`, se pulsa `Ctrl+K, Ctrl+U` en Visual Studio y se guarda. Los bloques `RETO` permanecen comentados hasta el ejercicio de ampliación.
+## Qué problema resolvemos y qué aprenderás
 
-**Distribución del trabajo:** los 27 minutos presenciales corresponden a una demostración guiada y verificaciones esenciales. Los 24 pasos y los retos se conservan como itinerario autónomo reproducible; ejecutarlos todos, incluida la instalación del entorno y la base de datos, requiere tiempo adicional.
+**Situación profesional.** La evolución de una API exige disciplina: contratos estables, errores interpretables y procedimientos de operación verificables. Sin esta disciplina, los cambios pueden introducir incompatibilidades.
 
-## PARTE PRÁCTICA (27 minutos)
+**Objetivo del ejercicio.** Registrar un catálogo de buenas prácticas, validar categorías y estados y obtener una fotografía comprobable de las prácticas pendientes y aplicadas al cierre del módulo.
+
+**Justificación técnica.** La auditoría de declaraciones es un primer ejercicio de control de calidad; obliga a distinguir el compromiso declarado de la evidencia técnica que demostraría cada práctica en ejecución.
+
+**Recorrido de aprendizaje**
+
+- **Pasos 1–4:** Situar el cierre del módulo y su documentación acumulada.
+- **Pasos 5–10:** Modelar prácticas, estados y las reglas de clasificación.
+- **Pasos 11–18:** Ejecutar pruebas sobre prácticas válidas, inválidas, pendientes y listas vacías.
+- **Pasos 19–24:** Documentar el cierre y contrastar los resultados con los puntos anteriores.
+
+**Evidencia observable al terminar.** El validador rechaza categorías desconocidas y prácticas pendientes, y acepta exclusivamente las entradas declaradas válidas; los tests y el resumen son reproducibles.
+
+**Qué demuestra y qué no demuestra.** El validador NO implementa automáticamente idempotencia, DTOs separados, Problem Details o circuit breakers en los endpoints. Esas capacidades requieren código y tests funcionales específicos.
+
+
+**Preparación del entorno:** los archivos, proyectos, referencias y documentos ya se entregan preparados en `PROYECTO/1.5-buenas-practicas/`. El alumnado trabaja sobre una solución independiente por punto, con código anterior activo y las incorporaciones actuales comentadas por pasos. **No debe volver a crear archivos o proyectos de igual nombre.** Al activar código, se seleccionan únicamente líneas entre `INICIO PASO` y `FIN PASO`, se pulsa `Ctrl+K, Ctrl+U` en Visual Studio y se guarda. Los bloques `RETO` permanecen comentados hasta el ejercicio de ampliación.
+
+## Ejercicio práctico
 
 **Ejercicio:** Añadir al punto 1.4 un documento de buenas prácticas en docs/, una clase de validación de buenas prácticas en el proyecto monolítico, un test unitario que verifique la validación y el resumen del estado del proyecto al final del módulo 1. El punto 1.5 parte del contenido del punto 1.4 sin modificar ningún archivo existente: solo añade archivos nuevos.
 
@@ -4088,7 +4777,6 @@ El proyecto AceriaApp dispone, al terminar el módulo 1, de los siguientes compo
 **Archivo preparado en este punto:** `src/AceriaApp.Monolito.Api/BuenasPracticas/Practica.cs`. El bloque de código original figura a continuación como referencia de aprendizaje; la acción efectiva consiste en activar el bloque comentado correspondiente.
 
 
-
 **Acción 1:** Abrir `src/AceriaApp.Monolito.Api/BuenasPracticas/Practica.cs` dentro de la solución `AceriaApp.sln` del punto 1.5; no crear otro archivo.
 
 **Acción 2:** Localizar el marcador `INICIO PASO 1.5.6` y seleccionar solo las líneas de código comentadas del bloque, sin modificar los marcadores ni el código heredado.
@@ -4106,6 +4794,18 @@ public class Practica
     public bool EstaAplicada { get; init; }
 }
 ```
+
+**Explicación del código, línea por línea**
+
+- **Línea 1 —** `namespace AceriaApp.Monolito.Api.BuenasPracticas;`: Declara el espacio de nombres `AceriaApp.Monolito.Api.BuenasPracticas` coherente con la carpeta y el proyecto.
+- **Línea 2 —** `public class Practica`: Representa una entrada declarada en el catálogo de buenas prácticas.
+- **Línea 3 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 4 —** `public string Codigo { get; init; } = string.Empty;`: Código de la buena práctica que permite localizar la entrada pendiente o aplicada.
+- **Línea 5 —** `public string Categoria { get; init; } = string.Empty;`: Familia de la práctica; debe corresponder a contrato, operación, comunicación o evolución.
+- **Línea 6 —** `public string Descripcion { get; init; } = string.Empty;`: Explicación legible de la práctica para interpretar qué compromiso representa.
+- **Línea 7 —** `public bool EstaAplicada { get; init; }`: Estado declarado por el catálogo; no constituye por sí solo evidencia de implementación real.
+- **Línea 8 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+
 
 **Acción 4:** Pulsar Ctrl+S para guardar el archivo.
 
@@ -4126,7 +4826,6 @@ public class Practica
 ### Paso 7 — Activar el código de ValidadorBuenasPracticas.cs por pasos
 
 **Archivo preparado en este punto:** `src/AceriaApp.Monolito.Api/BuenasPracticas/ValidadorBuenasPracticas.cs`. El bloque de código original figura a continuación como referencia de aprendizaje; la acción efectiva consiste en activar el bloque comentado correspondiente.
-
 
 
 **Acción 1:** Abrir `src/AceriaApp.Monolito.Api/BuenasPracticas/ValidadorBuenasPracticas.cs` dentro de la solución `AceriaApp.sln` del punto 1.5; no crear otro archivo.
@@ -4177,6 +4876,41 @@ public class ValidadorBuenasPracticas
 public record ResultadoPracticas(bool EsValido, IReadOnlyList<string> Errores);
 ```
 
+**Explicación del código, línea por línea**
+
+- **Línea 1 —** `namespace AceriaApp.Monolito.Api.BuenasPracticas;`: Declara el espacio de nombres `AceriaApp.Monolito.Api.BuenasPracticas` coherente con la carpeta y el proyecto.
+- **Línea 2 —** `public class ValidadorBuenasPracticas`: Comprueba que las prácticas declaradas tengan categoría admitida y estado aplicado.
+- **Línea 3 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 4 —** `private readonly IReadOnlyList<string> _categoriasPermitidas;`: Declara `_categoriasPermitidas` como estado de solo lectura asignado por el constructor.
+- **Línea 5 —** `public ValidadorBuenasPracticas(IReadOnlyList<string> categoriasPermitidas)`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 6 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 7 —** `_categoriasPermitidas = categoriasPermitidas;`: Asigna o calcula el valor de la expresión de la derecha para la operación actual.
+- **Línea 8 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 9 —** `public ResultadoPracticas Validar(IEnumerable<Practica> practicas)`: Define el método `Validar`, cuya entrada y salida se verifican en esta práctica.
+- **Línea 10 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 11 —** `var errores = new List<string>();`: Calcula `errores` a partir de `new List<string>()`; ese valor se utiliza en la verificación posterior.
+- **Línea 12 —** `var lista = practicas.ToList();`: Calcula `lista` a partir de `practicas.ToList()`; ese valor se utiliza en la verificación posterior.
+- **Línea 13 —** `if (lista.Count == 0)`: Comprueba la condición `lista.Count == 0` antes de proseguir; protege un caso límite o una regla del negocio.
+- **Línea 14 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 15 —** `errores.Add("No se ha declarado ninguna práctica.");`: Completa la instrucción descrita en este bloque.
+- **Línea 16 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 17 —** `foreach (var practica in lista)`: Recorre cada elemento `var practica in lista` para aplicar la misma regla.
+- **Línea 18 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 19 —** `if (!_categoriasPermitidas.Contains(practica.Categoria))`: Comprueba la condición `!_categoriasPermitidas.Contains(practica.Categoria)` antes de proseguir; protege un caso límite o una regla del negocio.
+- **Línea 20 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 21 —** `errores.Add($"Categoría no permitida: '{practica.Categoria}'.");`: Completa la instrucción descrita en este bloque.
+- **Línea 22 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 23 —** `if (!practica.EstaAplicada)`: Comprueba la condición `!practica.EstaAplicada` antes de proseguir; protege un caso límite o una regla del negocio.
+- **Línea 24 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 25 —** `errores.Add($"Práctica no aplicada: '{practica.Codigo}'.");`: Completa la instrucción descrita en este bloque.
+- **Línea 26 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 27 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 28 —** `return new ResultadoPracticas(errores.Count == 0, errores);`: Devuelve el resultado `new ResultadoPracticas(errores.Count == 0, errores)` al llamador.
+- **Línea 29 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 30 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 31 —** `public record ResultadoPracticas(bool EsValido, IReadOnlyList<string> Errores);`: Declara el tipo `ResultadoPracticas` que encapsula esta responsabilidad.
+
+
 **Acción 4:** Pulsar Ctrl+S para guardar el archivo.
 
 **Acción 5:** Verificar que la clase compila sin errores.
@@ -4190,6 +4924,7 @@ public record ResultadoPracticas(bool EsValido, IReadOnlyList<string> Errores);
 - No comprobar el caso de lista vacía: el validador devuelve válido sin prácticas.
 
 **Verificación:** la clase ValidadorBuenasPracticas compila sin errores y expone un constructor, un método y un record.
+\n\n**Interpretación del resultado:** El validador inspecciona declaraciones. Una práctica marcada como aplicada puede no estar implementada; para certificarla hace falta una prueba funcional del endpoint.
 
 ---
 
@@ -4218,7 +4953,6 @@ public record ResultadoPracticas(bool EsValido, IReadOnlyList<string> Errores);
 ### Paso 9 — Activar el código de CatalogoPracticas.cs por pasos
 
 **Archivo preparado en este punto:** `src/AceriaApp.Monolito.Api/BuenasPracticas/CatalogoPracticas.cs`. El bloque de código original figura a continuación como referencia de aprendizaje; la acción efectiva consiste en activar el bloque comentado correspondiente.
-
 
 
 **Acción 1:** Abrir `src/AceriaApp.Monolito.Api/BuenasPracticas/CatalogoPracticas.cs` dentro de la solución `AceriaApp.sln` del punto 1.5; no crear otro archivo.
@@ -4251,6 +4985,27 @@ public class CatalogoPracticas
 }
 ```
 
+**Explicación del código, línea por línea**
+
+- **Línea 1 —** `namespace AceriaApp.Monolito.Api.BuenasPracticas;`: Declara el espacio de nombres `AceriaApp.Monolito.Api.BuenasPracticas` coherente con la carpeta y el proyecto.
+- **Línea 2 —** `public class CatalogoPracticas`: Permite obtener separadamente las prácticas aplicadas y pendientes.
+- **Línea 3 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 4 —** `private readonly List<Practica> _practicas;`: Declara `_practicas` como estado de solo lectura asignado por el constructor.
+- **Línea 5 —** `public CatalogoPracticas(List<Practica> practicas)`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
+- **Línea 6 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 7 —** `_practicas = practicas;`: Asigna o calcula el valor de la expresión de la derecha para la operación actual.
+- **Línea 8 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 9 —** `public IEnumerable<Practica> PracticasAplicadas()`: Define el método `PracticasAplicadas`, cuya entrada y salida se verifican en esta práctica.
+- **Línea 10 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 11 —** `return _practicas.Where(p => p.EstaAplicada);`: Devuelve el resultado `_practicas.Where(p => p.EstaAplicada)` al llamador.
+- **Línea 12 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 13 —** `public IEnumerable<Practica> PracticasPendientes()`: Define el método `PracticasPendientes`, cuya entrada y salida se verifican en esta práctica.
+- **Línea 14 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 15 —** `return _practicas.Where(p => !p.EstaAplicada);`: Devuelve el resultado `_practicas.Where(p => !p.EstaAplicada)` al llamador.
+- **Línea 16 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 17 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+
+
 **Acción 4:** Pulsar Ctrl+S para guardar el archivo.
 
 **Acción 5:** Verificar que la clase compila sin errores.
@@ -4264,6 +5019,7 @@ public class CatalogoPracticas
 - Devolver List<Practica> en lugar de IEnumerable<Practica>: expone la implementación interna.
 
 **Verificación:** la clase CatalogoPracticas compila sin errores y expone un constructor y dos métodos.
+\n\n**Interpretación del resultado:** La separación entre aplicadas y pendientes depende exclusivamente del estado de los objetos `Practica` y puede verificarse con las pruebas del catálogo.
 
 ---
 
@@ -4356,7 +5112,6 @@ public class CatalogoPracticas
 **Archivo preparado en este punto:** `tests/AceriaApp.BuenasPracticas.Tests/ValidadorBuenasPracticasTests.cs`. El bloque de código original figura a continuación como referencia de aprendizaje; la acción efectiva consiste en activar el bloque comentado correspondiente.
 
 
-
 **Acción 1:** Abrir `tests/AceriaApp.BuenasPracticas.Tests/ValidadorBuenasPracticasTests.cs` dentro de la solución `AceriaApp.sln` del punto 1.5; no crear otro archivo.
 
 **Acción 2:** Localizar el marcador `INICIO PASO 1.5.14` y seleccionar solo las líneas de código comentadas del bloque, sin modificar los marcadores ni el código heredado.
@@ -4431,6 +5186,62 @@ public class ValidadorBuenasPracticasTests
 }
 ```
 
+**Explicación del código, línea por línea**
+
+- **Línea 1 —** `using AceriaApp.Monolito.Api.BuenasPracticas;`: Importa AceriaApp.Monolito.Api.BuenasPracticas para resolver los tipos usados en este archivo.
+- **Línea 2 —** `using FluentAssertions;`: Importa FluentAssertions para resolver los tipos usados en este archivo.
+- **Línea 3 —** `using Xunit;`: Importa Xunit para resolver los tipos usados en este archivo.
+- **Línea 4 —** `namespace AceriaApp.BuenasPracticas.Tests;`: Declara el espacio de nombres `AceriaApp.BuenasPracticas.Tests` coherente con la carpeta y el proyecto.
+- **Línea 5 —** `public class ValidadorBuenasPracticasTests`: Comprueba que las prácticas declaradas tengan categoría admitida y estado aplicado.
+- **Línea 6 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 7 —** `private readonly ValidadorBuenasPracticas _validador = new(`: Abre una llamada o declaración cuyos parámetros aparecen en las líneas siguientes.
+- **Línea 8 —** `new[] { "Contrato", "Operación", "Comunicación", "Evolución" });`: Completa la instrucción descrita en este bloque.
+- **Línea 9 —** `[Fact]`: Indica a xUnit que el método siguiente es un caso de prueba.
+- **Línea 10 —** `public void Validar_PracticasCompletas_DevuelveValido()`: Define el método `Validar_PracticasCompletas_DevuelveValido`, cuya entrada y salida se verifican en esta práctica.
+- **Línea 11 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 12 —** `var practicas = new List<Practica>`: Prepara una colección tipada con datos de ejemplo que después se procesarán.
+- **Línea 13 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 14 —** `new() { Codigo = "C-01", Categoria = "Contrato", EstaAplicada = true },`: Crea un objeto y asigna propiedades de entrada para el escenario de prueba.
+- **Línea 15 —** `new() { Codigo = "O-01", Categoria = "Operación", EstaAplicada = true },`: Crea un objeto y asigna propiedades de entrada para el escenario de prueba.
+- **Línea 16 —** `new() { Codigo = "M-01", Categoria = "Comunicación", EstaAplicada = true },`: Crea un objeto y asigna propiedades de entrada para el escenario de prueba.
+- **Línea 17 —** `new() { Codigo = "E-01", Categoria = "Evolución", EstaAplicada = true }`: Crea un objeto y asigna propiedades de entrada para el escenario de prueba.
+- **Línea 18 —** `};`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 19 —** `var resultado = _validador.Validar(practicas);`: Calcula `resultado` a partir de `_validador.Validar(practicas)`; ese valor se utiliza en la verificación posterior.
+- **Línea 20 —** `resultado.EsValido.Should().BeTrue();`: Comprueba mediante FluentAssertions que `resultado.EsValido` cumpla `BeTrue()`.
+- **Línea 21 —** `resultado.Errores.Should().BeEmpty();`: Comprueba mediante FluentAssertions que `resultado.Errores` cumpla `BeEmpty()`.
+- **Línea 22 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 23 —** `[Fact]`: Indica a xUnit que el método siguiente es un caso de prueba.
+- **Línea 24 —** `public void Validar_CategoriaNoPermitida_DevuelveError()`: Define el método `Validar_CategoriaNoPermitida_DevuelveError`, cuya entrada y salida se verifican en esta práctica.
+- **Línea 25 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 26 —** `var practicas = new List<Practica>`: Prepara una colección tipada con datos de ejemplo que después se procesarán.
+- **Línea 27 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 28 —** `new() { Codigo = "X-01", Categoria = "Inventada", EstaAplicada = true }`: Crea un objeto y asigna propiedades de entrada para el escenario de prueba.
+- **Línea 29 —** `};`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 30 —** `var resultado = _validador.Validar(practicas);`: Calcula `resultado` a partir de `_validador.Validar(practicas)`; ese valor se utiliza en la verificación posterior.
+- **Línea 31 —** `resultado.EsValido.Should().BeFalse();`: Comprueba mediante FluentAssertions que `resultado.EsValido` cumpla `BeFalse()`.
+- **Línea 32 —** `resultado.Errores.Should().Contain(e => e.Contains("no permitida"));`: Comprueba mediante FluentAssertions que `resultado.Errores` cumpla `Contain(e => e.Contains("no permitida"))`.
+- **Línea 33 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 34 —** `[Fact]`: Indica a xUnit que el método siguiente es un caso de prueba.
+- **Línea 35 —** `public void Validar_PracticaNoAplicada_DevuelveError()`: Define el método `Validar_PracticaNoAplicada_DevuelveError`, cuya entrada y salida se verifican en esta práctica.
+- **Línea 36 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 37 —** `var practicas = new List<Practica>`: Prepara una colección tipada con datos de ejemplo que después se procesarán.
+- **Línea 38 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 39 —** `new() { Codigo = "C-01", Categoria = "Contrato", EstaAplicada = false }`: Crea un objeto y asigna propiedades de entrada para el escenario de prueba.
+- **Línea 40 —** `};`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 41 —** `var resultado = _validador.Validar(practicas);`: Calcula `resultado` a partir de `_validador.Validar(practicas)`; ese valor se utiliza en la verificación posterior.
+- **Línea 42 —** `resultado.EsValido.Should().BeFalse();`: Comprueba mediante FluentAssertions que `resultado.EsValido` cumpla `BeFalse()`.
+- **Línea 43 —** `resultado.Errores.Should().Contain(e => e.Contains("no aplicada"));`: Comprueba mediante FluentAssertions que `resultado.Errores` cumpla `Contain(e => e.Contains("no aplicada"))`.
+- **Línea 44 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 45 —** `[Fact]`: Indica a xUnit que el método siguiente es un caso de prueba.
+- **Línea 46 —** `public void Validar_SinPracticas_DevuelveError()`: Define el método `Validar_SinPracticas_DevuelveError`, cuya entrada y salida se verifican en esta práctica.
+- **Línea 47 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 48 —** `var resultado = _validador.Validar(new List<Practica>());`: Calcula `resultado` a partir de `_validador.Validar(new List<Practica>())`; ese valor se utiliza en la verificación posterior.
+- **Línea 49 —** `resultado.EsValido.Should().BeFalse();`: Comprueba mediante FluentAssertions que `resultado.EsValido` cumpla `BeFalse()`.
+- **Línea 50 —** `resultado.Errores.Should().Contain(e => e.Contains("ninguna práctica"));`: Comprueba mediante FluentAssertions que `resultado.Errores` cumpla `Contain(e => e.Contains("ninguna práctica"))`.
+- **Línea 51 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 52 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+
+
 **Acción 4:** Pulsar Ctrl+S para guardar el archivo.
 
 **Acción 5:** Verificar que la clase compila sin errores.
@@ -4450,7 +5261,6 @@ public class ValidadorBuenasPracticasTests
 ### Paso 15 — Activar el código de CatalogoPracticasTests.cs por pasos
 
 **Archivo preparado en este punto:** `tests/AceriaApp.BuenasPracticas.Tests/CatalogoPracticasTests.cs`. El bloque de código original figura a continuación como referencia de aprendizaje; la acción efectiva consiste en activar el bloque comentado correspondiente.
-
 
 
 **Acción 1:** Abrir `tests/AceriaApp.BuenasPracticas.Tests/CatalogoPracticasTests.cs` dentro de la solución `AceriaApp.sln` del punto 1.5; no crear otro archivo.
@@ -4488,6 +5298,33 @@ public class CatalogoPracticasTests
     }
 }
 ```
+
+**Explicación del código, línea por línea**
+
+- **Línea 1 —** `using AceriaApp.Monolito.Api.BuenasPracticas;`: Importa AceriaApp.Monolito.Api.BuenasPracticas para resolver los tipos usados en este archivo.
+- **Línea 2 —** `using FluentAssertions;`: Importa FluentAssertions para resolver los tipos usados en este archivo.
+- **Línea 3 —** `using Xunit;`: Importa Xunit para resolver los tipos usados en este archivo.
+- **Línea 4 —** `namespace AceriaApp.BuenasPracticas.Tests;`: Declara el espacio de nombres `AceriaApp.BuenasPracticas.Tests` coherente con la carpeta y el proyecto.
+- **Línea 5 —** `public class CatalogoPracticasTests`: Permite obtener separadamente las prácticas aplicadas y pendientes.
+- **Línea 6 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 7 —** `[Fact]`: Indica a xUnit que el método siguiente es un caso de prueba.
+- **Línea 8 —** `public void PracticasAplicadas_FiltraCorrectamente()`: Define el método `PracticasAplicadas_FiltraCorrectamente`, cuya entrada y salida se verifican en esta práctica.
+- **Línea 9 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 10 —** `var practicas = new List<Practica>`: Prepara una colección tipada con datos de ejemplo que después se procesarán.
+- **Línea 11 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
+- **Línea 12 —** `new() { Codigo = "C-01", Categoria = "Contrato", EstaAplicada = true },`: Crea un objeto y asigna propiedades de entrada para el escenario de prueba.
+- **Línea 13 —** `new() { Codigo = "O-01", Categoria = "Operación", EstaAplicada = false },`: Crea un objeto y asigna propiedades de entrada para el escenario de prueba.
+- **Línea 14 —** `new() { Codigo = "M-01", Categoria = "Comunicación", EstaAplicada = true }`: Crea un objeto y asigna propiedades de entrada para el escenario de prueba.
+- **Línea 15 —** `};`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 16 —** `var catalogo = new CatalogoPracticas(practicas);`: Calcula `catalogo` a partir de `new CatalogoPracticas(practicas)`; ese valor se utiliza en la verificación posterior.
+- **Línea 17 —** `var aplicadas = catalogo.PracticasAplicadas().ToList();`: Calcula `aplicadas` a partir de `catalogo.PracticasAplicadas().ToList()`; ese valor se utiliza en la verificación posterior.
+- **Línea 18 —** `var pendientes = catalogo.PracticasPendientes().ToList();`: Calcula `pendientes` a partir de `catalogo.PracticasPendientes().ToList()`; ese valor se utiliza en la verificación posterior.
+- **Línea 19 —** `aplicadas.Should().HaveCount(2);`: Comprueba mediante FluentAssertions que `aplicadas` cumpla `HaveCount(2)`.
+- **Línea 20 —** `pendientes.Should().HaveCount(1);`: Comprueba mediante FluentAssertions que `pendientes` cumpla `HaveCount(1)`.
+- **Línea 21 —** `pendientes[0].Codigo.Should().Be("O-01");`: Completa la instrucción descrita en este bloque.
+- **Línea 22 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+- **Línea 23 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
+
 
 **Acción 4:** Pulsar Ctrl+S para guardar el archivo.
 
@@ -4766,7 +5603,6 @@ Se adoptan las buenas prácticas de contrato, operación, comunicación y evoluc
 **Verificación:** git log --oneline muestra cinco commits: Punto 1.1, Punto 1.2, Punto 1.3, Punto 1.4 y Punto 1.5. git status muestra nothing to commit, working tree clean.
 
 
-
 **Nota de trazabilidad:** en una descarga del repositorio puede no haber cambios nuevos que confirmar. Antes de ejecutar `git commit`, usar `git status` y confirmar únicamente los archivos efectivamente modificados durante el recorrido. No ejecutar `git init` dentro de cada punto: la raíz del repositorio ya contiene el historial.
 
 ---
@@ -4788,23 +5624,26 @@ El proyecto de tests no compila Falta la referencia al proyecto monolítico Ejec
 
 ---
 
-## Reto resuelto paso a paso
+## Reto de ampliación: solución guiada
 
-Reto: añadir un método Resumen a CatalogoPracticas que devuelva el número de prácticas aplicadas, el número de pendientes y el porcentaje de aplicación, y un test que verifique el cálculo cuando hay tres aplicadas y dos pendientes.
+**Problema a resolver:** añadir un método Resumen a CatalogoPracticas que devuelva el número de prácticas aplicadas, el número de pendientes y el porcentaje de aplicación, y un test que verifique el cálculo cuando hay tres aplicadas y dos pendientes.
 
-Paso 1: En CatalogoPracticas.cs, añadir el siguiente record al final del archivo:
+#### Etapa 1 — En CatalogoPracticas.cs, añadir el siguiente record al final del archivo:
 
+```csharp
 public record ResumenPracticas(int Aplicadas, int Pendientes, double PorcentajeAplicacion);
+```
 
-Paso 2: Explicar línea por línea:
+#### Etapa 2 — Explicar línea por línea:
 
-Línea 1: public record ResumenPracticas( → declara un contrato inmutable.
-Línea 2: int Aplicadas, → número de prácticas aplicadas.
-Línea 3: int Pendientes, → número de prácticas pendientes.
-Línea 4: double PorcentajeAplicacion); → porcentaje de aplicación.
+- **Línea 1:** `public record ResumenPracticas(` — declara un contrato inmutable.
+- **Línea 2:** `int Aplicadas,` — número de prácticas aplicadas.
+- **Línea 3:** `int Pendientes,` — número de prácticas pendientes.
+- **Línea 4:** `double PorcentajeAplicacion);` — porcentaje de aplicación.
 
-Paso 3: En CatalogoPracticas.cs, añadir el siguiente método dentro de la clase:
+#### Etapa 3 — En CatalogoPracticas.cs, añadir el siguiente método dentro de la clase:
 
+```csharp
 public ResumenPracticas Resumen()
 {
     var aplicadas = _practicas.Count(p => p.EstaAplicada);
@@ -4813,22 +5652,24 @@ public ResumenPracticas Resumen()
     var porcentaje = total == 0 ? 0 : (double)aplicadas / total * 100;
     return new ResumenPracticas(aplicadas, pendientes, porcentaje);
 }
+```
 
-Paso 4: Explicar línea por línea:
+#### Etapa 4 — Explicar línea por línea:
 
-Línea 1: public ResumenPracticas Resumen() → declara el método.
-Línea 2: { → abre el cuerpo.
-Línea 3: var aplicadas = _practicas.Count(p => p.EstaAplicada); → cuenta las aplicadas.
-Línea 4: var pendientes = _practicas.Count - aplicadas; → calcula las pendientes por diferencia.
-Línea 5: var total = _practicas.Count; → obtiene el total.
-Línea 6: var porcentaje = total == 0 ? 0 : (double)aplicadas / total * 100; → calcula el porcentaje con protección contra división por cero.
-Línea 7: return new ResumenPracticas(aplicadas, pendientes, porcentaje); → devuelve el resumen.
-Línea 8: } → cierra el cuerpo.
+- **Línea 1:** `public ResumenPracticas Resumen()` — declara el método.
+- **Línea 2:** `{` — abre el cuerpo.
+- **Línea 3:** `var aplicadas = _practicas.Count(p => p.EstaAplicada);` — cuenta las aplicadas.
+- **Línea 4:** `var pendientes = _practicas.Count - aplicadas;` — calcula las pendientes por diferencia.
+- **Línea 5:** `var total = _practicas.Count;` — obtiene el total.
+- **Línea 6:** `var porcentaje = total == 0 ? 0 : (double)aplicadas / total * 100;` — calcula el porcentaje con protección contra división por cero.
+- **Línea 7:** `return new ResumenPracticas(aplicadas, pendientes, porcentaje);` — devuelve el resumen.
+- **Línea 8:** `}` — cierra el cuerpo.
 
-Paso 5: Guardar el archivo con Ctrl+S.
+#### Etapa 5 — Guardar el archivo con Ctrl+S.
 
-Paso 6: En CatalogoPracticasTests.cs, añadir el siguiente test:
+#### Etapa 6 — En CatalogoPracticasTests.cs, añadir el siguiente test:
 
+```csharp
 [Fact]
 public void Resumen_ConTresAplicadasYDosPendientes_CalculaPorcentaje()
 {
@@ -4848,32 +5689,33 @@ public void Resumen_ConTresAplicadasYDosPendientes_CalculaPorcentaje()
     resumen.Pendientes.Should().Be(2);
     resumen.PorcentajeAplicacion.Should().Be(60.0);
 }
+```
 
-Paso 7: Explicar línea por línea:
+#### Etapa 7 — Explicar línea por línea:
 
-Línea 1: [Fact] → marca el método como test de xUnit.
-Línea 2: public void Resumen_ConTresAplicadasYDosPendientes_CalculaPorcentaje() → declara el test.
-Línea 3: { → abre el cuerpo.
-Línea 4: var practicas = new List<Practica> → crea la lista.
-Línea 5: { → abre el inicializador.
-Línea 6: new() { Codigo = "C-01", ..., EstaAplicada = true }, → primera práctica aplicada.
-Línea 7: new() { Codigo = "C-02", ..., EstaAplicada = true }, → segunda práctica aplicada.
-Línea 8: new() { Codigo = "O-01", ..., EstaAplicada = true }, → tercera práctica aplicada.
-Línea 9: new() { Codigo = "M-01", ..., EstaAplicada = false }, → primera práctica pendiente.
-Línea 10: new() { Codigo = "E-01", ..., EstaAplicada = false } → segunda práctica pendiente.
-Línea 11: }; → cierra el inicializador.
-Línea 12: var catalogo = new CatalogoPracticas(practicas); → instancia el catálogo.
-Línea 13: var resumen = catalogo.Resumen(); → invoca el método.
-Línea 14: resumen.Aplicadas.Should().Be(3); → verifica las aplicadas.
-Línea 15: resumen.Pendientes.Should().Be(2); → verifica las pendientes.
-Línea 16: resumen.PorcentajeAplicacion.Should().Be(60.0); → verifica el porcentaje.
-Línea 17: } → cierra el cuerpo.
+- **Línea 1:** `[Fact]` — marca el método como test de xUnit.
+- **Línea 2:** `public void Resumen_ConTresAplicadasYDosPendientes_CalculaPorcentaje()` — declara el test.
+- **Línea 3:** `{` — abre el cuerpo.
+- **Línea 4:** `var practicas = new List<Practica>` — crea la lista.
+- **Línea 5:** `{` — abre el inicializador.
+- **Línea 6:** `new() { Codigo = "C-01", ..., EstaAplicada = true },` — primera práctica aplicada.
+- **Línea 7:** `new() { Codigo = "C-02", ..., EstaAplicada = true },` — segunda práctica aplicada.
+- **Línea 8:** `new() { Codigo = "O-01", ..., EstaAplicada = true },` — tercera práctica aplicada.
+- **Línea 9:** `new() { Codigo = "M-01", ..., EstaAplicada = false },` — primera práctica pendiente.
+- **Línea 10:** `new() { Codigo = "E-01", ..., EstaAplicada = false }` — segunda práctica pendiente.
+- **Línea 11:** `};` — cierra el inicializador.
+- **Línea 12:** `var catalogo = new CatalogoPracticas(practicas);` — instancia el catálogo.
+- **Línea 13:** `var resumen = catalogo.Resumen();` — invoca el método.
+- **Línea 14:** `resumen.Aplicadas.Should().Be(3);` — verifica las aplicadas.
+- **Línea 15:** `resumen.Pendientes.Should().Be(2);` — verifica las pendientes.
+- **Línea 16:** `resumen.PorcentajeAplicacion.Should().Be(60.0);` — verifica el porcentaje.
+- **Línea 17:** `}` — cierra el cuerpo.
 
-Paso 8: Ejecutar dotnet test tests\AceriaApp.BuenasPracticas.Tests\AceriaApp.BuenasPracticas.Tests.csproj y verificar que pasan los seis tests.
+#### Etapa 8 — Ejecutar dotnet test tests\AceriaApp.BuenasPracticas.Tests\AceriaApp.BuenasPracticas.Tests.csproj y verificar que pasan los seis tests.
 
-Paso 9: Verificar que el método Resumen no modifica ningún archivo del punto 1.4.
+#### Etapa 9 — Verificar que el método Resumen no modifica ningún archivo del punto 1.4.
 
-Paso 10: Hacer commit con git commit -m "Reto 1.5: método Resumen en CatalogoPracticas con cálculo de porcentaje".
+#### Etapa 10 — Hacer commit con git commit -m "Reto 1.5: método Resumen en CatalogoPracticas con cálculo de porcentaje".
 
 Verificación: la salida de dotnet test muestra Passed: 6.
 
@@ -4906,4 +5748,3 @@ El punto 1.5 ha cerrado el módulo 1 con la adopción explícita de buenas prác
 
 Fin del punto 1.5 y del módulo 1.
 
-Espero confirmación del usuario antes de continuar con el módulo 2, punto 2.1 (Diseño de APIs REST).
