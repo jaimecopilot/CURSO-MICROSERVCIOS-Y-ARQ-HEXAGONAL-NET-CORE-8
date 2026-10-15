@@ -704,3 +704,383 @@ Verificación: el archivo AceriaApp.Validacion.Tests.csproj contiene un ProjectR
 
 ---
 
+Paso 13 — Añadir el paquete FluentAssertions al proyecto de tests
+
+Acción 1: Escribir dotnet add tests\AceriaApp.Validacion.Tests\AceriaApp.Validacion.Tests.csproj package FluentAssertions y pulsar Enter.
+Acción 2: Escribir dotnet list tests\AceriaApp.Validacion.Tests\AceriaApp.Validacion.Tests.csproj package y pulsar Enter.
+Acción 3: Verificar que la salida muestra FluentAssertions con su versión.
+
+Por qué se hace: FluentAssertions proporciona la sintaxis de aserción usada en el curso. Se añade al nuevo proyecto de tests sin modificar los proyectos de tests existentes.
+
+Errores comunes:
+
+· Instalar una versión preliminar: el curso usa la última estable.
+· Olvidar el paquete: Should() no se resuelve en los tests.
+· Añadir el paquete al proyecto equivocado: los tests no compilan.
+
+Verificación: la salida de dotnet list package muestra FluentAssertions con una versión estable.
+
+
+---
+
+Paso 14 — Crear el archivo CrearOrdenRequestValidatorTests.cs
+
+Acción 1: En el panel Solution Explorer, expandir tests → AceriaApp.Validacion.Tests.
+Acción 2: Hacer doble clic en UnitTest1.cs y renombrarlo a CrearOrdenRequestValidatorTests.cs.
+Acción 3: Escribir exactamente el siguiente código:
+
+using AceriaApp.Monolito.Api.Validacion;  
+using FluentAssertions;  
+using Xunit;  
+  
+namespace AceriaApp.Validacion.Tests;  
+  
+public class CrearOrdenRequestValidatorTests  
+{  
+    private readonly CrearOrdenRequestValidator _validador = new();  
+  
+    [Fact]  
+    public void Validar_PeticionCorrecta_DevuelveValida()  
+    {  
+        var peticion = new CrearOrdenRequest("ACX-001", "CHAPA-3MM", 10);  
+  
+        var resultado = _validador.Validate(peticion);  
+  
+        resultado.IsValid.Should().BeTrue();  
+    }  
+  
+    [Fact]  
+    public void Validar_ClienteVacio_DevuelveError()  
+    {  
+        var peticion = new CrearOrdenRequest(string.Empty, "CHAPA-3MM", 10);  
+  
+        var resultado = _validador.Validate(peticion);  
+  
+        resultado.IsValid.Should().BeFalse();  
+        resultado.Errors.Should().Contain(e => e.PropertyName == "Cliente");  
+    }  
+  
+    [Fact]  
+    public void Validar_CantidadNegativa_DevuelveError()  
+    {  
+        var peticion = new CrearOrdenRequest("ACX-001", "CHAPA-3MM", -5);  
+  
+        var resultado = _validador.Validate(peticion);  
+  
+        resultado.IsValid.Should().BeFalse();  
+        resultado.Errors.Should().Contain(e => e.PropertyName == "Cantidad");  
+    }  
+  
+    [Fact]  
+    public void Validar_CantidadExcesiva_DevuelveError()  
+    {  
+        var peticion = new CrearOrdenRequest("ACX-001", "CHAPA-3MM", 20000);  
+  
+        var resultado = _validador.Validate(peticion);  
+  
+        resultado.IsValid.Should().BeFalse();  
+        resultado.Errors.Should().Contain(e => e.PropertyName == "Cantidad");  
+    }  
+}
+
+Acción 4: Pulsar Ctrl+S para guardar el archivo.
+Acción 5: Verificar que la clase compila sin errores.
+
+Por qué se hace: los tests verifican que el validador acepta peticiones correctas y rechaza peticiones con cliente vacío, cantidad negativa y cantidad excesiva.
+
+Errores comunes:
+
+· Olvidar el using AceriaApp.Monolito.Api.Validacion;: las clases no se resuelven.
+· Usar Assert.True en lugar de Should().BeTrue(): el curso usa FluentAssertions.
+· No cubrir el caso de petición correcta: el test solo verifica los errores.
+
+Verificación: el archivo CrearOrdenRequestValidatorTests.cs compila y contiene cuatro métodos de test.
+
+
+---
+
+Paso 15 — Crear el archivo ValidationFilterTests.cs
+
+Acción 1: En el panel Solution Explorer, hacer clic derecho sobre el proyecto AceriaApp.Validacion.Tests.
+Acción 2: Seleccionar Add → Class y nombrar la clase ValidationFilterTests.cs.
+Acción 3: Escribir exactamente el siguiente código:
+
+using AceriaApp.Monolito.Api.Validacion;  
+using FluentAssertions;  
+using Xunit;  
+  
+namespace AceriaApp.Validacion.Tests;  
+  
+public class ValidationFilterTests  
+{  
+    [Fact]  
+    public void CrearOrdenRequest_ConDatosValidos_NoLanzaExcepcion()  
+    {  
+        var peticion = new CrearOrdenRequest("ACX-001", "CHAPA-3MM", 10);  
+  
+        var accion = () => peticion.Cliente.Should().Be("ACX-001");  
+  
+        accion.Should().NotThrow();  
+    }  
+  
+    [Fact]  
+    public void CrearOrdenRequest_ConClienteVacio_EsDetectable()  
+    {  
+        var peticion = new CrearOrdenRequest(string.Empty, "CHAPA-3MM", 10);  
+  
+        peticion.Cliente.Should().BeEmpty();  
+    }  
+}
+
+Acción 4: Pulsar Ctrl+S para guardar el archivo.
+Acción 5: Verificar que la clase compila sin errores.
+
+Por qué se hace: los tests verifican que el record CrearOrdenRequest se instancia correctamente y que los valores se asignan sin transformación.
+
+Errores comunes:
+
+· Olvidar el using AceriaApp.Monolito.Api.Validacion;: el record no se resuelve.
+· Usar Assert.Equal en lugar de Should().Be(): el curso usa FluentAssertions.
+· No comprobar el caso de cliente vacío: la validación sintáctica no se verifica.
+
+Verificación: el archivo ValidationFilterTests.cs compila y contiene dos métodos de test.
+
+
+---
+
+Paso 16 — Registrar los validadores en Program.cs
+
+Acción 1: En el panel Solution Explorer, hacer doble clic en Program.cs del proyecto AceriaApp.Monolito.Api.
+Acción 2: Añadir al principio del archivo la línea using FluentValidation;.
+Acción 3: Añadir la línea using AceriaApp.Monolito.Api.Validacion;.
+Acción 4: Añadir la línea builder.Services.AddValidatorsFromAssemblyContaining<CrearOrdenRequestValidator>(); después de builder.Services.AddSwaggerGen();.
+Acción 5: Pulsar Ctrl+S para guardar el archivo.
+
+Por qué se hace: el registro de los validadores en el contenedor de dependencias permite que el filtro genérico los reciba por inyección. El método AddValidatorsFromAssemblyContaining registra todos los validadores del ensamblado que contiene CrearOrdenRequestValidator.
+
+Errores comunes:
+
+· Olvidar el using FluentValidation;: AddValidatorsFromAssemblyContaining no se resuelve.
+· Olvidar el using AceriaApp.Monolito.Api.Validacion;: CrearOrdenRequestValidator no se resuelve.
+· Registrar los validadores antes de builder.Build(): los validadores no se registran.
+
+Verificación: Program.cs compila sin errores y muestra la línea builder.Services.AddValidatorsFromAssemblyContaining<CrearOrdenRequestValidator>();.
+
+
+---
+
+Paso 17 — Compilar la solución completa
+
+Acción 1: Escribir dotnet build AceriaApp.sln y pulsar Enter.
+Acción 2: Verificar que la salida muestra Build succeeded. y 0 Warning(s), 0 Error(s).
+Acción 3: Verificar que el tiempo de compilación es inferior a 210 segundos.
+
+Por qué se hace: compilar la solución completa verifica que todos los proyectos, incluidos los nuevos, se resuelven correctamente.
+
+Errores comunes:
+
+· Tener la API en ejecución: el archivo .dll está bloqueado y la compilación falla.
+· No restaurar paquetes: dotnet build restaura por defecto, pero si hay un error de red, hay que ejecutar dotnet restore primero.
+· Usar una versión distinta del SDK: dotnet --version debe devolver 8.x.x.
+
+Verificación: la salida debe mostrar Build succeeded. con 0 Error(s).
+
+
+---
+
+Paso 18 — Ejecutar todos los tests del punto 2.3
+
+Acción 1: Escribir dotnet test tests\AceriaApp.Validacion.Tests\AceriaApp.Validacion.Tests.csproj y pulsar Enter.
+Acción 2: Verificar que la salida muestra Passed! - Failed: 0, Passed: 6, Skipped: 0.
+Acción 3: Verificar que el tiempo total es inferior a 30 segundos.
+
+Por qué se hace: ejecutar los tests del punto 2.3 verifica que el validador y el record funcionan correctamente.
+
+Errores comunes:
+
+· Ejecutar dotnet test sin especificar el proyecto: ejecuta también los tests de los puntos anteriores, lo que alarga el tiempo.
+· No compilar antes: dotnet test compila por defecto, pero si hay errores, los tests no se ejecutan.
+· Tener la API en ejecución: el puerto puede estar ocupado.
+
+Verificación: la salida debe mostrar Passed! - Failed: 0, Passed: 6, Skipped: 0, Total: 6.
+
+
+---
+
+Paso 19 — Ejecutar todos los tests de la solución
+
+Acción 1: Escribir dotnet test AceriaApp.sln --no-build y pulsar Enter.
+Acción 2: Verificar que la salida muestra Passed! - Failed: 0, Passed: 42, Skipped: 0.
+Acción 3: Verificar que el tiempo total es inferior a 210 segundos.
+
+Por qué se hace: ejecutar todos los tests de la solución verifica que los tests de los puntos anteriores y del punto 2.3 pasan conjuntamente.
+
+Errores comunes:
+
+· No haber compilado antes: --no-build falla si no hay artefactos.
+· Tener tests de otros módulos: la solución solo contiene los proyectos de este punto.
+· Modificar los tests de los puntos anteriores: viola la regla de no modificar archivos del punto anterior.
+
+Verificación: la salida debe mostrar Passed! - Failed: 0, Passed: 42, Skipped: 0, Total: 42.
+
+
+---
+
+Paso 20 — Crear el README del punto 2.3
+
+Acción 1: En la carpeta del punto 2.3-validacion-peticiones, hacer clic derecho y seleccionar Add → New Item → Text File.
+Acción 2: Nombrar el archivo README.md.
+Acción 3: Escribir exactamente el siguiente contenido:
+
+# Punto 2.3 — Validación de peticiones  
+  
+## Objetivo  
+Comprender la validación de peticiones en tres niveles y añadir al proyecto los validadores con FluentValidation y el filtro genérico para Minimal API.  
+  
+## Estado del proyecto  
+- Solución `AceriaApp.sln` con diez proyectos.  
+- Documento `docs/validacion-peticiones.md` con los tres niveles de validación y los códigos de respuesta.  
+- `record` `CrearOrdenRequest`, validador `CrearOrdenRequestValidator` y filtro `ValidationFilter<T>` en `src/AceriaApp.Monolito.Api/Validacion/`.  
+- Seis tests nuevos en `tests/AceriaApp.Validacion.Tests`.  
+- Los tests acumulados suman 42 pruebas unitarias.  
+  
+## Cómo ejecutarlo  
+1. Abrir `AceriaApp.sln` en Visual Studio 2026.  
+2. Verificar que SQL Server Express está arrancado.  
+3. Ejecutar `dotnet ef database update` en `srcAceriaApp.Monolito.Api`.  
+4. Ejecutar `dotnet run` en `srcAceriaApp.Monolito.Api`.  
+5. Navegar a `https://localhost:7xxx/swagger`.  
+6. Ejecutar `dotnet test AceriaApp.sln` para verificar los tests.  
+  
+## Qué se ha añadido respecto al punto anterior  
+- Documento `docs/validacion-peticiones.md`.  
+- Carpeta `Validacion` en el proyecto monolítico con tres clases nuevas.  
+- Proyecto `tests/AceriaApp.Validacion.Tests` con seis tests nuevos.  
+- Registro de validadores en `Program.cs` con `AddValidatorsFromAssemblyContaining`.  
+- No se ha modificado ningún archivo del punto 2.2 excepto `Program.cs`, que añade líneas nuevas sin eliminar las existentes.  
+  
+## Documentación  
+- [ADR-001](docs/ADR-001-monolito-vs-microservicios.md) a [ADR-007](docs/ADR-007-catalogo-recursos.md) (heredados).  
+- [Validación de peticiones](docs/validacion-peticiones.md).
+
+Acción 4: Pulsar Ctrl+S para guardar el archivo.
+Acción 5: Verificar que el README del punto 2.2 no se ha modificado.
+
+Por qué se hace: el README del punto 2.3 explica el objetivo, el estado, la ejecución y los añadidos. No modifica el README del punto 2.2.
+
+Errores comunes:
+
+· Modificar el README del punto 2.2: viola la regla de no modificar archivos del punto anterior.
+· Omitir la sección Qué se ha añadido respecto al punto anterior: pierde la trazabilidad.
+· Escribir el README en la carpeta del punto 2.2: rompe la separación.
+
+Verificación: el archivo README.md existe en la carpeta del punto 2.3 con las cinco secciones.
+
+
+---
+
+Paso 21 — Crear el ADR-008 del punto 2.3
+
+Acción 1: En el panel Solution Explorer, hacer clic derecho sobre la carpeta docs.
+Acción 2: Seleccionar Add → New Item → Text File y nombrar el archivo ADR-008-validacion-peticiones.md.
+Acción 3: Escribir exactamente el siguiente contenido:
+
+# ADR-008: Validación de peticiones con FluentValidation  
+  
+## Estado  
+Aceptado  
+  
+## Contexto  
+El proyecto AceriaApp ha adoptado el estilo REST y el catálogo de recursos. Es necesario definir el contrato de entrada de cada endpoint y validarlo antes de procesar la petición.  
+  
+## Decisión  
+Se adopta la validación en tres niveles: sintáctica con tipos no anulables, semántica con FluentValidation y de negocio en la capa de aplicación. La integración con Minimal API se realiza con un filtro genérico. La respuesta de validación fallida usa problem details con código 400 o 422 según el nivel.  
+  
+## Alternativas consideradas  
+- Validación manual con condicionales: descartado por falta de uniformidad.  
+- Validación solo en el dominio: descartado por mezclar responsabilidades.  
+- DataAnnotations: descartado por menor expresividad que FluentValidation.  
+  
+## Consecuencias  
+- Positivas: contrato de entrada explícito, mensajes de error específicos, uniformidad entre endpoints.  
+- Negativas: la validación de negocio requiere acceso a datos externos.  
+- Mitigación: implementar la validación de negocio en la capa de aplicación.
+
+Acción 4: Pulsar Ctrl+S para guardar el archivo.
+Acción 5: Verificar que los ADR-001 a ADR-007 no se han modificado.
+
+Por qué se hace: el ADR-008 documenta la decisión de adoptar la validación en tres niveles con FluentValidation. Es un artefacto nuevo del punto 2.3 que no modifica los ADR existentes.
+
+Errores comunes:
+
+· Modificar los ADR anteriores: viola la regla de no modificar archivos del punto anterior.
+· Omitir la sección Alternativas consideradas: el ADR pierde valor.
+· Nombrar el archivo sin el prefijo ADR-008: rompe la convención.
+
+Verificación: el archivo docs\ADR-008-validacion-peticiones.md existe con las cinco secciones.
+
+
+---
+
+Paso 22 — Verificar que no se ha modificado ningún archivo del punto 2.2
+
+Acción 1: En la terminal, escribir cd C:\cursos\AceriaApp y pulsar Enter.
+Acción 2: Escribir fc /L modulo-2-apis-rest-aspnet-core\2.2-recursos-verbos-codigos\docs\ADR-007-catalogo-recursos.md modulo-2-apis-rest-aspnet-core\2.3-validacion-peticiones\docs\ADR-007-catalogo-recursos.md y pulsar Enter.
+Acción 3: Verificar que la salida muestra FC: no differences encountered.
+Acción 4: Escribir fc /L modulo-2-apis-rest-aspnet-core\2.2-recursos-verbos-codigos\docs\catalogo-recursos.md modulo-2-apis-rest-aspnet-core\2.3-validacion-peticiones\docs\catalogo-recursos.md y pulsar Enter.
+Acción 5: Verificar que la salida muestra FC: no differences encountered.
+
+Por qué se hace: la comparación con fc verifica que los documentos del punto 2.2 no se han modificado.
+
+Errores comunes:
+
+· Usar comp en lugar de fc: comp compara binarios y no muestra diferencias de texto.
+· Olvidar el flag /L: fc compara en modo ASCII y muestra líneas largas sin ajuste.
+· Comparar archivos de carpetas equivocadas: la comparación no es válida.
+
+Verificación: los dos documentos del punto 2.2 no muestran diferencias.
+
+
+---
+
+Paso 23 — Verificar la estructura del punto 2.3
+
+Acción 1: Escribir tree /F modulo-2-apis-rest-aspnet-core\2.3-validacion-peticiones y pulsar Enter.
+Acción 2: Verificar que la salida muestra AceriaApp.sln, README.md, src\AceriaApp.Monolito.Api\Validacion con las tres clases nuevas, tests\AceriaApp.Validacion.Tests con los dos archivos de tests y docs con el documento de validación y el ADR-008.
+Acción 3: Verificar que las carpetas existentes del punto 2.2 permanecen intactas.
+Acción 4: Verificar que no existe ninguna carpeta labs ni ningún archivo metaprompt.md ni verificacion.md.
+
+Por qué se hace: la verificación estructural confirma que el punto 2.3 añade archivos nuevos sin modificar los existentes.
+
+Errores comunes:
+
+· Crear carpetas auxiliares que no pertenecen a la estructura: rompe la convención.
+· Modificar las carpetas del punto 2.2: viola la regla de no modificar.
+· Omitir la carpeta Validacion: los tests no encuentran las clases.
+
+Verificación: la estructura contiene los archivos nuevos y conserva los del punto 2.2.
+
+
+---
+
+Paso 24 — Hacer el commit del punto 2.3 y verificar el estado final
+
+Acción 1: Escribir cd C:\cursos\AceriaApp y pulsar Enter.
+Acción 2: Escribir git add . y pulsar Enter.
+Acción 3: Escribir git commit -m "Punto 2.3: validación de peticiones con FluentValidation" y pulsar Enter.
+Acción 4: Escribir git log --oneline y pulsar Enter para verificar los ocho commits.
+Acción 5: Escribir git status y pulsar Enter para verificar que el árbol está limpio.
+
+Por qué se hace: el commit del punto 2.3 registra el estado acumulado del proyecto. Los ocho commits consecutivos permiten comparar el estado del proyecto entre puntos consecutivos y entre módulos completos.
+
+Errores comunes:
+
+· No tener configurado user.name y user.email: git commit falla.
+· Añadir la carpeta bin/ y obj/ al commit: el .gitignore lo evita.
+· Hacer commit antes de git add .: no hay cambios en el índice.
+
+Verificación: git log --oneline muestra ocho commits: del punto 1.1 al 1.5, del punto 2.1 al 2.3. git status muestra nothing to commit, working tree clean.
+
+
+---
+
