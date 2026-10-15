@@ -14,6 +14,7 @@ import subprocess
 import sys
 from pathlib import Path
 from m02_pasos_especificos import obtener as paso_especifico, explicacion_especifica, error_especifico
+from m02_casos_reales import caso as caso_real
 
 MODULE=Path("M02_APIS_REST_ASPNET_CORE")
 NAMES=["2.1-diseno-apis-rest","2.2-recursos-verbos-codigos",
@@ -380,6 +381,8 @@ despliegues productivos.
                 out+="se verifican primero con la compilación.\n\n"
             fix=error_especifico(stage,number)
             out+="**Si algo falla.** "+fix+"\n\n"
+            if number in (12,24):
+                out+=caso_real(stage,number)
         out+="### Matriz de comprobación del punto\n\n"
         out+="| Comportamiento | Resultado esperado |\n|:---|:---|\n"
         for outcome in RESPONSE_HINT[stage-1]:
