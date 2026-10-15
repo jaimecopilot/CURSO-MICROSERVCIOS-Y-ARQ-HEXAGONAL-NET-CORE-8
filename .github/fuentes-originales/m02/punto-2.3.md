@@ -1084,3 +1084,206 @@ Verificación: git log --oneline muestra ocho commits: del punto 1.1 al 1.5, del
 
 ---
 
+Errores comunes del ejercicio completo
+
+Error Causa Solución
+xcopy no copia subcarpetas Falta el flag /E Ejecutar xcopy origen destino /E /I /H /Y
+AddValidatorsFromAssemblyContaining no se resuelve Falta el using FluentValidation; Añadir el using al principio del archivo
+CrearOrdenRequestValidator no se resuelve Falta el using AceriaApp.Monolito.Api.Validacion; Añadir el using al principio de Program.cs
+OfType, FirstOrDefault, GroupBy no se resuelven Falta el using System.Linq; Añadir el using al principio del archivo
+AbstractValidator no se resuelve Falta el paquete FluentValidation.AspNetCore Ejecutar dotnet add package FluentValidation.AspNetCore
+El validador no se ejecuta No está registrado en el contenedor Añadir AddValidatorsFromAssemblyContaining
+Should() no se resuelve Falta el paquete FluentAssertions Ejecutar dotnet add package FluentAssertions
+El proyecto de tests no compila Falta la referencia al proyecto monolítico Ejecutar dotnet add reference
+La compilación falla por el .dll bloqueado La API está en ejecución Detener la API con Ctrl+C
+El commit incluye bin/ y obj/ Falta el .gitignore Verificar que el .gitignore está presente
+
+
+---
+
+Reto resuelto paso a paso
+
+Reto: añadir un validador ActualizarOrdenRequestValidator con reglas para un record ActualizarOrdenRequest que incluya Id como Guid y Cantidad como entero, y un test que verifique que el validador rechaza un Id vacío.
+
+Paso 1: Crear el archivo ActualizarOrdenRequest.cs en la carpeta Validacion con el siguiente contenido:
+
+namespace AceriaApp.Monolito.Api.Validacion;  
+  
+public record ActualizarOrdenRequest(  
+    Guid Id,  
+    string Cliente,  
+    string Material,  
+    int Cantidad);
+
+Paso 2: Explicar línea por línea:
+
+Línea 1: namespace AceriaApp.Monolito.Api.Validacion; → espacio de nombres de la carpeta Validacion.
+Línea 2: public record ActualizarOrdenRequest( → declara el contrato de entrada.
+Línea 3: Guid Id, → identificador de la orden a actualizar.
+Línea 4: string Cliente, → nombre del cliente.
+Línea 5: string Material, → material solicitado.
+Línea 6: int Cantidad); → cantidad solicitada.
+
+Paso 3: Crear el archivo ActualizarOrdenRequestValidator.cs con el siguiente contenido:
+
+using FluentValidation;  
+  
+namespace AceriaApp.Monolito.Api.Validacion;  
+  
+public class ActualizarOrdenRequestValidator : AbstractValidator<ActualizarOrdenRequest>  
+{  
+    public ActualizarOrdenRequestValidator()  
+    {  
+        RuleFor(x => x.Id)  
+            .NotEmpty().WithMessage("El identificador es obligatorio.");  
+  
+        RuleFor(x => x.Cliente)  
+            .NotEmpty().WithMessage("El cliente es obligatorio.")  
+            .MaximumLength(100).WithMessage("El cliente no puede superar 100 caracteres.");  
+  
+        RuleFor(x => x.Material)  
+            .NotEmpty().WithMessage("El material es obligatorio.")  
+            .MaximumLength(100).WithMessage("El material no puede superar 100 caracteres.");  
+  
+        RuleFor(x => x.Cantidad)  
+            .GreaterThan(0).WithMessage("La cantidad debe ser mayor que cero.")  
+            .LessThanOrEqualTo(10000).WithMessage("La cantidad no puede superar 10000.");  
+    }  
+}
+
+Paso 4: Explicar línea por línea:
+
+Línea 1: using FluentValidation; → importa la biblioteca.
+Línea 2: namespace AceriaApp.Monolito.Api.Validacion; → espacio de nombres.
+Línea 3: public class ActualizarOrdenRequestValidator : AbstractValidator<ActualizarOrdenRequest> → declara el validador.
+Línea 4: { → abre el cuerpo.
+Línea 5: public ActualizarOrdenRequestValidator() → constructor.
+Línea 6: { → abre el cuerpo del constructor.
+Línea 7: RuleFor(x => x.Id) → regla para el campo Id.
+Línea 8: .NotEmpty().WithMessage("El identificador es obligatorio."); → no puede estar vacío.
+Línea 9: RuleFor(x => x.Cliente) → regla para el campo Cliente.
+Línea 10: .NotEmpty().WithMessage("El cliente es obligatorio.") → no puede estar vacío.
+Línea 11: .MaximumLength(100).WithMessage("El cliente no puede superar 100 caracteres."); → longitud máxima.
+Línea 12: RuleFor(x => x.Material) → regla para el campo Material.
+Línea 13: .NotEmpty().WithMessage("El material es obligatorio.") → no puede estar vacío.
+Línea 14: .MaximumLength(100).WithMessage("El material no puede superar 100 caracteres."); → longitud máxima.
+Línea 15: RuleFor(x => x.Cantidad) → regla para el campo Cantidad.
+Línea 16: .GreaterThan(0).WithMessage("La cantidad debe ser mayor que cero.") → mayor que cero.
+Línea 17: .LessThanOrEqualTo(10000).WithMessage("La cantidad no puede superar 10000."); → límite superior.
+Línea 18: } → cierra el constructor.
+Línea 19: } → cierra la clase.
+
+Paso 5: Crear el archivo ActualizarOrdenRequestValidatorTests.cs en el proyecto de tests con el siguiente contenido:
+
+using AceriaApp.Monolito.Api.Validacion;  
+using FluentAssertions;  
+using Xunit;  
+  
+namespace AceriaApp.Validacion.Tests;  
+  
+public class ActualizarOrdenRequestValidatorTests  
+{  
+    private readonly ActualizarOrdenRequestValidator _validador = new();  
+  
+    [Fact]  
+    public void Validar_IdVacio_DevuelveError()  
+    {  
+        var peticion = new ActualizarOrdenRequest(  
+            Guid.Empty,  
+            "ACX-001",  
+            "CHAPA-3MM",  
+            10);  
+  
+        var resultado = _validador.Validate(peticion);  
+  
+        resultado.IsValid.Should().BeFalse();  
+        resultado.Errors.Should().Contain(e => e.PropertyName == "Id");  
+    }  
+  
+    [Fact]  
+    public void Validar_PeticionCorrecta_DevuelveValida()  
+    {  
+        var peticion = new ActualizarOrdenRequest(  
+            Guid.NewGuid(),  
+            "ACX-001",  
+            "CHAPA-3MM",  
+            10);  
+  
+        var resultado = _validador.Validate(peticion);  
+  
+        resultado.IsValid.Should().BeTrue();  
+    }  
+}
+
+Paso 6: Explicar línea por línea:
+
+Línea 1: using AceriaApp.Monolito.Api.Validacion; → importa el espacio de nombres.
+Línea 2: using FluentAssertions; → importa la biblioteca de aserciones.
+Línea 3: using Xunit; → importa el framework de tests.
+Línea 4: namespace AceriaApp.Validacion.Tests; → espacio de nombres del proyecto de tests.
+Línea 5: public class ActualizarOrdenRequestValidatorTests → declara la clase de tests.
+Línea 6: { → abre el cuerpo.
+Línea 7: private readonly ActualizarOrdenRequestValidator _validador = new(); → instancia el validador.
+Línea 8: [Fact] → marca el primer test.
+Línea 9: public void Validar_IdVacio_DevuelveError() → declara el test.
+Línea 10: { → abre el cuerpo.
+Línea 11: var peticion = new ActualizarOrdenRequest( → instancia la petición con Guid.Empty.
+Línea 12: Guid.Empty, → identificador vacío.
+Línea 13: "ACX-001", → cliente válido.
+Línea 14: "CHAPA-3MM", → material válido.
+Línea 15: 10); → cantidad válida.
+Línea 16: var resultado = _validador.Validate(peticion); → ejecuta la validación.
+Línea 17: resultado.IsValid.Should().BeFalse(); → verifica que es inválido.
+Línea 18: resultado.Errors.Should().Contain(e => e.PropertyName == "Id"); → verifica el campo del error.
+Línea 19: } → cierra el primer test.
+Línea 20: [Fact] → marca el segundo test.
+Línea 21: public void Validar_PeticionCorrecta_DevuelveValida() → declara el segundo test.
+Línea 22: { → abre el cuerpo.
+Línea 23: var peticion = new ActualizarOrdenRequest( → instancia la petición con Guid.NewGuid().
+Línea 24: Guid.NewGuid(), → identificador válido.
+Línea 25: "ACX-001", → cliente válido.
+Línea 26: "CHAPA-3MM", → material válido.
+Línea 27: 10); → cantidad válida.
+Línea 28: var resultado = _validador.Validate(peticion); → ejecuta la validación.
+Línea 29: resultado.IsValid.Should().BeTrue(); → verifica que es válido.
+Línea 30: } → cierra el segundo test.
+Línea 31: } → cierra la clase.
+
+Paso 7: Ejecutar dotnet test tests\AceriaApp.Validacion.Tests\AceriaApp.Validacion.Tests.csproj y verificar que pasan los ocho tests.
+
+Paso 8: Verificar que los archivos nuevos no modifican ningún archivo del punto 2.2.
+
+Paso 9: Hacer commit con git commit -m "Reto 2.3: validador ActualizarOrdenRequestValidator con regla de Id".
+
+Verificación: la salida de dotnet test muestra Passed: 8.
+
+
+---
+
+Resultado esperado
+
+Al finalizar este punto, el alumno debe tener:
+
+· La carpeta modulo-2-apis-rest-aspnet-core/2.3-validacion-peticiones/ con la solución AceriaApp.sln que contiene diez proyectos.
+· El documento docs/validacion-peticiones.md con los tres niveles y los códigos de respuesta.
+· El documento docs/ADR-008-validacion-peticiones.md con la decisión sobre validación.
+· El record CrearOrdenRequest, el validador CrearOrdenRequestValidator y el filtro ValidationFilter<T> en src/AceriaApp.Monolito.Api/Validacion/.
+· El proyecto tests/AceriaApp.Validacion.Tests con seis tests (ocho tras el reto).
+· Los tests de los puntos 1.1 a 1.5 y 2.1 a 2.3 pasando conjuntamente con dotnet test AceriaApp.sln, total 42 pruebas (44 tras el reto).
+· Los ADR-001 a ADR-007 del punto 2.2 sin modificar.
+· Ocho commits en Git: del punto 1.1 al 1.5 y del punto 2.1 al 2.3.
+· Program.cs modificado solo con líneas añadidas: using FluentValidation;, using AceriaApp.Monolito.Api.Validacion; y builder.Services.AddValidatorsFromAssemblyContaining<CrearOrdenRequestValidator>();.
+
+
+---
+
+Conclusión y enlace al siguiente punto
+
+El punto 2.3 ha completado la validación de peticiones con los tres niveles: sintáctica, semántica y de negocio. El proyecto AceriaApp dispone ahora de un contrato de entrada explícito, un validador con FluentValidation, un filtro genérico para Minimal API y seis tests nuevos. Esta base permite avanzar hacia el punto 2.4, donde se estudiará la documentación de la API con OpenAPI, se generarán los esquemas a partir de los validadores y se publicará la documentación con Swagger UI. El punto 2.4 cierra el módulo 2 y prepara el terreno para el módulo 3, donde se estudiará la arquitectura hexagonal.
+
+
+---
+
+Fin del punto 2.3.
+
+Espero confirmación del usuario antes de continuar con el punto 2.4.
