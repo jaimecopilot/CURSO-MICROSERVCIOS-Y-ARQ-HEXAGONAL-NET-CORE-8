@@ -36,7 +36,7 @@ Comprender las buenas prácticas aplicables al desarrollo de microservicios y a�
 
 ## Código progresivo del punto 1.5
 
-Esta solución hereda **completado** el código del punto anterior. Los archivos nuevos del punto 1.5 están comentados inicialmente para que los actives según los pasos de las prácticas. No se altera el código heredado.
+Esta solución contiene **activo** el código del punto anterior. Los archivos nuevos del punto 1.5 están comentados inicialmente para que los actives según los pasos de las prácticas. No se altera el código heredado.
 
 - **Paso 1.5.9:** `src/AceriaApp.Monolito.Api/BuenasPracticas/CatalogoPracticas.cs`
 - **Paso 1.5.6:** `src/AceriaApp.Monolito.Api/BuenasPracticas/Practica.cs`
@@ -44,4 +44,8 @@ Esta solución hereda **completado** el código del punto anterior. Los archivos
 - **Paso 1.5.15:** `tests/AceriaApp.BuenasPracticas.Tests/CatalogoPracticasTests.cs`
 - **Paso 1.5.14:** `tests/AceriaApp.BuenasPracticas.Tests/ValidadorBuenasPracticasTests.cs`
 
-En Visual Studio, abre cada archivo cuando lo indique la práctica, selecciona **exclusivamente las líneas del bloque comentado** entre `INICIO PASO` y `FIN PASO`, y pulsa `Ctrl+K, Ctrl+U`. Primero se activan las clases de producción y después sus pruebas. El código que se obtiene coincide con la solución completa utilizada en las verificaciones.
+En Visual Studio, abre cada archivo cuando lo indique la práctica, selecciona **exclusivamente las líneas del bloque comentado** entre `INICIO PASO` y `FIN PASO`, y pulsa `Ctrl+K, Ctrl+U`. Primero se activan las clases de producción y después sus pruebas. Después de activar un paso, guarda el archivo y compila cuando lo indique la práctica. Evita descomentar bloques posteriores antes de llegar a ellos.
+
+## Alcance de las buenas prácticas
+
+Los objetos `Practica`, `ValidadorBuenasPracticas` y `CatalogoPracticas` permiten registrar y revisar **declaraciones** de aplicación de prácticas. No inspeccionan automáticamente los endpoints ni demuestran por sí solos que existan idempotencia HTTP, DTOs, Polly o respuestas Problem Details. Estas capacidades se desarrollan en puntos y módulos posteriores.

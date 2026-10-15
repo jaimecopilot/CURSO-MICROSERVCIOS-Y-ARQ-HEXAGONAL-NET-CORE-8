@@ -31,7 +31,7 @@ Comprender los principios de diseño que guían la descomposición de un sistema
 
 ## Código progresivo del punto 1.3
 
-Esta solución hereda **completado** el código del punto anterior. Los archivos nuevos del punto 1.3 están comentados inicialmente para que los actives según los pasos de las prácticas. No se altera el código heredado.
+Esta solución contiene **activo** el código del punto anterior. Los archivos nuevos del punto 1.3 están comentados inicialmente para que los actives según los pasos de las prácticas. No se altera el código heredado.
 
 - **Paso 1.3.9:** `src/AceriaApp.Monolito.Api/Diseno/CatalogoLimites.cs`
 - **Paso 1.3.6:** `src/AceriaApp.Monolito.Api/Diseno/LimiteServicio.cs`
@@ -39,4 +39,4 @@ Esta solución hereda **completado** el código del punto anterior. Los archivos
 - **Paso 1.3.15:** `tests/AceriaApp.Diseno.Tests/CatalogoLimitesTests.cs`
 - **Paso 1.3.14:** `tests/AceriaApp.Diseno.Tests/ValidadorLimiteServicioTests.cs`
 
-En Visual Studio, abre cada archivo cuando lo indique la práctica, selecciona **exclusivamente las líneas del bloque comentado** entre `INICIO PASO` y `FIN PASO`, y pulsa `Ctrl+K, Ctrl+U`. Primero se activan las clases de producción y después sus pruebas. El código que se obtiene coincide con la solución completa utilizada en las verificaciones.
+En Visual Studio, abre cada archivo cuando lo indique la práctica, selecciona **exclusivamente las líneas del bloque comentado** entre `INICIO PASO` y `FIN PASO`, y pulsa `Ctrl+K, Ctrl+U`. Primero se activan las clases de producción y después sus pruebas. Después de activar un paso, guarda el archivo y compila cuando lo indique la práctica. Evita descomentar bloques posteriores antes de llegar a ellos.

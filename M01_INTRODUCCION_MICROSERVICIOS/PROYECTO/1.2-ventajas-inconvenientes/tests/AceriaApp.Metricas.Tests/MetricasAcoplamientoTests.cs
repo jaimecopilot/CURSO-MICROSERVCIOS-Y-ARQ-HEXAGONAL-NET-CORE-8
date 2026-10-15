@@ -21,9 +21,9 @@
 //         metricas.IndiceAcoplamiento().Should().Be(2.0);
 //     }
 //     [Fact]
-//     public void IndiceComparticionDeDatos_SinTablas_DevuelveCero()
+//     public void IndiceComparticionDeDatos_SinProyectos_DevuelveCero()
 //     {
-//         var metricas = new MetricasAcoplamiento { NumeroDeTablasCompartidas = 0 };
+//         var metricas = new MetricasAcoplamiento { NumeroDeProyectos = 0, NumeroDeTablasCompartidas = 3 };
 //         metricas.IndiceComparticionDeDatos().Should().Be(0);
 //     }
 // }

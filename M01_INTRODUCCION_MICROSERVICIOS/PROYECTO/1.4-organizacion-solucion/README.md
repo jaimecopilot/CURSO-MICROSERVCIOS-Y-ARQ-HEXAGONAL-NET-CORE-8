@@ -33,7 +33,7 @@ Comprender cómo se organiza una solución basada en microservicios y añadir al
 
 ## Código progresivo del punto 1.4
 
-Esta solución hereda **completado** el código del punto anterior. Los archivos nuevos del punto 1.4 están comentados inicialmente para que los actives según los pasos de las prácticas. No se altera el código heredado.
+Esta solución contiene **activo** el código del punto anterior. Los archivos nuevos del punto 1.4 están comentados inicialmente para que los actives según los pasos de las prácticas. No se altera el código heredado.
 
 - **Paso 1.4.9:** `src/AceriaApp.Monolito.Api/Organizacion/CatalogoProyectos.cs`
 - **Paso 1.4.6:** `src/AceriaApp.Monolito.Api/Organizacion/ConvencionNombres.cs`
@@ -41,4 +41,4 @@ Esta solución hereda **completado** el código del punto anterior. Los archivos
 - **Paso 1.4.15:** `tests/AceriaApp.Organizacion.Tests/CatalogoProyectosTests.cs`
 - **Paso 1.4.14:** `tests/AceriaApp.Organizacion.Tests/ValidadorConvencionNombresTests.cs`
 
-En Visual Studio, abre cada archivo cuando lo indique la práctica, selecciona **exclusivamente las líneas del bloque comentado** entre `INICIO PASO` y `FIN PASO`, y pulsa `Ctrl+K, Ctrl+U`. Primero se activan las clases de producción y después sus pruebas. El código que se obtiene coincide con la solución completa utilizada en las verificaciones.
+En Visual Studio, abre cada archivo cuando lo indique la práctica, selecciona **exclusivamente las líneas del bloque comentado** entre `INICIO PASO` y `FIN PASO`, y pulsa `Ctrl+K, Ctrl+U`. Primero se activan las clases de producción y después sus pruebas. Después de activar un paso, guarda el archivo y compila cuando lo indique la práctica. Evita descomentar bloques posteriores antes de llegar a ellos.

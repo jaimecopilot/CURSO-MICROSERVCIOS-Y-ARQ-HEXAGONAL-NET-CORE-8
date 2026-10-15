@@ -28,3 +28,7 @@ Este es el primer punto del curso. No hay punto anterior.
 El proyecto incluye el esqueleto ASP.NET Core de `Program.cs`. En los pasos **1.1.11**, **1.1.12** y **1.1.13**, descomenta los bloques identificados en `Orden.cs`, `AceriaDbContext.cs` y `Program.cs`, por ese orden. En el paso **1.1.17**, descomenta la prueba `OrdenTests.cs`. Compila en los puntos indicados de la práctica. El bloque de **RETO 1.1** de `Program.cs` permanece comentado hasta el reto.
 
 Selecciona solo el bloque comentado de cada paso en Visual Studio y aplica `Ctrl+K, Ctrl+U`. Para `Program.cs`, no descomentes el bloque de reto al finalizar el paso 1.1.13.
+
+## Migración inicial
+
+La migración `Inicial` está incluida en `src/AceriaApp.Monolito.Api/Infraestructura/Migraciones/`. En el paso 1.1.14 se inspecciona el esquema preparado y en el paso 1.1.15 se aplica a SQL Server Express mediante `dotnet ef database update`. La ejecución requiere SQL Server Express disponible localmente.

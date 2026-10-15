@@ -15,7 +15,7 @@ public class MetricasAcoplamiento
 
     public double IndiceComparticionDeDatos()
     {
-        if (NumeroDeTablasCompartidas == 0) return 0;
+        if (NumeroDeProyectos == 0) return 0;
         return (double)NumeroDeTablasCompartidas / NumeroDeProyectos;
     }
 }

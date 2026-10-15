@@ -29,7 +29,7 @@ Analizar las ventajas e inconvenientes de monolito y microservicios con un marco
 
 ## Código progresivo del punto 1.2
 
-Esta solución hereda **completado** el código del punto anterior. Los archivos nuevos del punto 1.2 están comentados inicialmente para que los actives según los pasos de las prácticas. No se altera el código heredado.
+Esta solución contiene **activo** el código del punto anterior. Los archivos nuevos del punto 1.2 están comentados inicialmente para que los actives según los pasos de las prácticas. No se altera el código heredado.
 
 - **Paso 1.2.8:** `src/AceriaApp.Monolito.Api/Metricas/AnalizadorMonolito.cs`
 - **Paso 1.2.6:** `src/AceriaApp.Monolito.Api/Metricas/MetricasAcoplamiento.cs`
@@ -38,4 +38,4 @@ Esta solución hereda **completado** el código del punto anterior. Los archivos
 - **Paso 1.2.13:** `tests/AceriaApp.Metricas.Tests/MetricasAcoplamientoTests.cs`
 - **Paso 1.2.14:** `tests/AceriaApp.Metricas.Tests/MetricasServicioTests.cs`
 
-En Visual Studio, abre cada archivo cuando lo indique la práctica, selecciona **exclusivamente las líneas del bloque comentado** entre `INICIO PASO` y `FIN PASO`, y pulsa `Ctrl+K, Ctrl+U`. Primero se activan las clases de producción y después sus pruebas. El código que se obtiene coincide con la solución completa utilizada en las verificaciones.
+En Visual Studio, abre cada archivo cuando lo indique la práctica, selecciona **exclusivamente las líneas del bloque comentado** entre `INICIO PASO` y `FIN PASO`, y pulsa `Ctrl+K, Ctrl+U`. Primero se activan las clases de producción y después sus pruebas. Después de activar un paso, guarda el archivo y compila cuando lo indique la práctica. Evita descomentar bloques posteriores antes de llegar a ellos.
