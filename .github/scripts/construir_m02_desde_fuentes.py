@@ -11,6 +11,7 @@ import json
 import re
 from pathlib import Path
 from pedagogia_m02 import aplicar as aplicar_pedagogia
+from maquetacion_m02 import ejecutar as maquetacion_docente
 
 SRC = Path(".github/fuentes-originales/m02")
 WORDS_RE = re.compile(r"\b[\wÁÉÍÓÚÜÑáéíóúüñ]+\b", re.UNICODE)
@@ -215,6 +216,10 @@ def main():
         })
     theory_text="\n\n---\n\n".join(theory)
     practice_text="\n\n---\n\n".join(practice)
+    # Solo DESPUÉS de reproducir la fuente y aplicar correcciones autorizadas:
+    # gráficos pedagógicos, listas y tablas; nunca modificar textos originales.
+    theory_text=maquetacion_docente(theory_text,"TEORIA")
+    practice_text=maquetacion_docente(practice_text,"PRACTICAS")
     expected_blocks=10*len(ready)
     expected_steps=24*len(ready)
     actual_blocks=len(re.findall(r"(?m)^### Bloque \d+ —",theory_text))
