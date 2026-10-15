@@ -1,10 +1,36 @@
 using AceriaApp.Monolito.Api.Documentacion;
+using FluentAssertions;
 using Xunit;
+
 namespace AceriaApp.Documentacion.Tests;
+
 public class ConfiguracionOpenApiTests
 {
-    private readonly ConfiguracionOpenApi _c=new();
-    [Fact] public void ValoresPorDefecto() => Assert.Equal("/swagger/v1/swagger.json",_c.RutaDocumento);
-    [Fact] public void Desarrollo_IgnoraMayusculas() => Assert.True(_c.EsEntornoDeDesarrollo("development"));
-    [Fact] public void Produccion_NoEsDesarrollo() => Assert.False(_c.EsEntornoDeDesarrollo("Production"));
+    private readonly ConfiguracionOpenApi _configuracion = new();
+
+    [Fact]
+    public void ConfiguracionOpenApi_ConValoresPorDefecto_DevuelveValoresEsperados()
+    {
+        _configuracion.PublicarSwaggerUI.Should().BeTrue();
+        _configuracion.RutaDocumento.Should().Be("/swagger/v1/swagger.json");
+        _configuracion.NombreDocumento.Should().Be("AceriaApp.Monolito.Api v1");
+    }
+
+    [Fact]
+    public void EsEntornoDeDesarrollo_ConDevelopment_DevuelveTrue()
+    {
+        _configuracion.EsEntornoDeDesarrollo("Development").Should().BeTrue();
+    }
+
+    [Fact]
+    public void EsEntornoDeDesarrollo_ConProduction_DevuelveFalse()
+    {
+        _configuracion.EsEntornoDeDesarrollo("Production").Should().BeFalse();
+    }
+
+    [Fact]
+    public void EsEntornoDeDesarrollo_IgnoraMayusculas()
+    {
+        _configuracion.EsEntornoDeDesarrollo("development").Should().BeTrue();
+    }
 }
