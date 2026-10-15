@@ -978,3 +978,180 @@ Verificación: la salida debe mostrar Passed! - Failed: 0, Passed: 51, Skipped: 
 
 ---
 
+Paso 19 — Crear el README del punto 2.4
+
+Acción 1: En la carpeta del punto 2.4-documentacion-openapi, hacer clic derecho y seleccionar Add → New Item → Text File.
+Acción 2: Nombrar el archivo README.md.
+Acción 3: Escribir exactamente el siguiente contenido:
+
+```markdown
+# Punto 2.4 — Documentación mediante OpenAPI (Swagger)
+
+## Objetivo
+Comprender el estándar OpenAPI, la generación automática de documentación y las anotaciones de metadatos en Minimal API. Añadir al proyecto las clases de configuración de OpenAPI. Cerrar el módulo 2 con el resumen del estado del proyecto.
+
+## Estado del proyecto
+- Solución `AceriaApp.sln` con once proyectos.
+- Documento `docs/documentacion-openapi.md` con el estándar, las secciones, las anotaciones y el cierre del módulo 2.
+- Clases `MetadatosApi`, `ConfiguracionOpenApi` y `ConstructorDocumentoOpenApi` en `src/AceriaApp.Monolito.Api/Documentacion/`.
+- Nueve tests nuevos en `tests/AceriaApp.Documentacion.Tests`.
+- Los tests acumulados suman 51 pruebas unitarias.
+
+## Cómo ejecutarlo
+1. Abrir `AceriaApp.sln` en Visual Studio 2026.
+2. Verificar que SQL Server Express está arrancado.
+3. Ejecutar `dotnet ef database update` en `src\AceriaApp.Monolito.Api`.
+4. Ejecutar `dotnet run` en `src\AceriaApp.Monolito.Api`.
+5. Navegar a `https://localhost:7xxx/swagger`.
+6. Ejecutar `dotnet test AceriaApp.sln` para verificar los tests.
+
+## Qué se ha añadido respecto al punto anterior
+- Documento `docs/documentacion-openapi.md`.
+- Carpeta `Documentacion` en el proyecto monolítico con tres clases nuevas.
+- Proyecto `tests/AceriaApp.Documentacion.Tests` con nueve tests nuevos.
+- Cierre del módulo 2 con el resumen del estado del proyecto.
+- No se ha modificado ningún archivo del punto 2.3.
+
+## Documentación
+- [ADR-001](docs/ADR-001-monolito-vs-microservicios.md) a [ADR-008](docs/ADR-008-validacion-peticiones.md) (heredados).
+- [Documentación OpenAPI](docs/documentacion-openapi.md).
+```
+
+Acción 4: Pulsar Ctrl+S para guardar el archivo.
+Acción 5: Verificar que el README del punto 2.3 no se ha modificado.
+
+Por qué se hace: el README del punto 2.4 explica el objetivo, el estado, la ejecución y los añadidos. No modifica el README del punto 2.3.
+
+Errores comunes:
+
+· Modificar el README del punto 2.3: viola la regla de no modificar archivos del punto anterior.
+· Omitir la sección Qué se ha añadido respecto al punto anterior: pierde la trazabilidad.
+· Escribir el README en la carpeta del punto 2.3: rompe la separación.
+
+Verificación: el archivo README.md existe en la carpeta del punto 2.4 con las cinco secciones.
+
+---
+
+Paso 20 — Crear el ADR-009 del punto 2.4
+
+Acción 1: En el panel Solution Explorer, hacer clic derecho sobre la carpeta docs.
+Acción 2: Seleccionar Add → New Item → Text File y nombrar el archivo ADR-009-documentacion-openapi.md.
+Acción 3: Escribir exactamente el siguiente contenido:
+
+```markdown
+# ADR-009: Documentación OpenAPI y cierre del módulo 2
+
+## Estado
+Aceptado
+
+## Contexto
+El proyecto AceriaApp ha adoptado el estilo REST, el catálogo de recursos y la validación de peticiones. Es necesario documentar la API de forma automática y cerrar el módulo 2.
+
+## Decisión
+Se adopta el estándar OpenAPI 3.0.3. Los metadatos se añaden con anotaciones de Minimal API. Los esquemas se derivan de los DTOs. La versión de la documentación coincide con la versión del contrato en la URL. La documentación se publica con Swagger UI en el entorno de desarrollo. Se implementan clases de configuración y de construcción de la cabecera del documento para verificar la coherencia.
+
+## Alternativas consideradas
+- Documentación manual en Markdown: descartado por quedar obsoleta.
+- Uso de Swagger 2.0: descartado por ser una versión antigua.
+- Publicación de Swagger UI en producción: descartado por seguridad.
+
+## Consecuencias
+- Positivas: documentación viva, generación automática, integración con herramientas.
+- Negativas: la configuración de metadatos puede requerir ajuste.
+- Mitigación: revisar la configuración al final del módulo 2.
+```
+
+Acción 4: Pulsar Ctrl+S para guardar el archivo.
+Acción 5: Verificar que los ADR-001 a ADR-008 no se han modificado.
+
+Por qué se hace: el ADR-009 documenta la decisión de adoptar OpenAPI y de cerrar el módulo 2. Es un artefacto nuevo del punto 2.4 que no modifica los ADR existentes.
+
+Errores comunes:
+
+· Modificar los ADR anteriores: viola la regla de no modificar archivos del punto anterior.
+· Omitir la sección Alternativas consideradas: el ADR pierde valor.
+· Nombrar el archivo sin el prefijo ADR-009: rompe la convención.
+
+Verificación: el archivo docs\ADR-009-documentacion-openapi.md existe con las cinco secciones.
+
+---
+
+Paso 21 — Verificar que no se ha modificado ningún archivo del punto 2.3
+
+Acción 1: En la terminal, escribir cd C:\cursos\AceriaApp y pulsar Enter.
+Acción 2: Escribir fc /L modulo-2-apis-rest-aspnet-core\2.3-validacion-peticiones\docs\ADR-008-validacion-peticiones.md modulo-2-apis-rest-aspnet-core\2.4-documentacion-openapi\docs\ADR-008-validacion-peticiones.md y pulsar Enter.
+Acción 3: Verificar que la salida muestra FC: no differences encountered.
+Acción 4: Escribir fc /L modulo-2-apis-rest-aspnet-core\2.3-validacion-peticiones\docs\validacion-peticiones.md modulo-2-apis-rest-aspnet-core\2.4-documentacion-openapi\docs\validacion-peticiones.md y pulsar Enter.
+Acción 5: Verificar que la salida muestra FC: no differences encountered.
+
+Por qué se hace: la comparación con fc verifica que los documentos del punto 2.3 no se han modificado.
+
+Errores comunes:
+
+· Usar comp en lugar de fc: comp compara binarios y no muestra diferencias de texto.
+· Olvidar el flag /L: fc compara en modo ASCII y muestra líneas largas sin ajuste.
+· Comparar archivos de carpetas equivocadas: la comparación no es válida.
+
+Verificación: los dos documentos del punto 2.3 no muestran diferencias.
+
+---
+
+Paso 22 — Verificar la estructura del punto 2.4
+
+Acción 1: Escribir tree /F modulo-2-apis-rest-aspnet-core\2.4-documentacion-openapi y pulsar Enter.
+Acción 2: Verificar que la salida muestra AceriaApp.sln, README.md, src\AceriaApp.Monolito.Api\Documentacion con las tres clases nuevas, tests\AceriaApp.Documentacion.Tests con los tres archivos de tests y docs con el documento de documentación y el ADR-009.
+Acción 3: Verificar que las carpetas existentes del punto 2.3 permanecen intactas.
+Acción 4: Verificar que no existe ninguna carpeta labs ni ningún archivo metaprompt.md ni verificacion.md.
+
+Por qué se hace: la verificación estructural confirma que el punto 2.4 añade archivos nuevos sin modificar los existentes.
+
+Errores comunes:
+
+· Crear carpetas auxiliares que no pertenecen a la estructura: rompe la convención.
+· Modificar las carpetas del punto 2.3: viola la regla de no modificar.
+· Omitir la carpeta Documentacion: los tests no encuentran las clases.
+
+Verificación: la estructura contiene los archivos nuevos y conserva los del punto 2.3.
+
+---
+
+Paso 23 — Verificar el .gitignore del punto 2.4
+
+Acción 1: Verificar que el archivo .gitignore existe en la carpeta del punto 2.4 (copiado del punto 2.3).
+Acción 2: Abrir el archivo .gitignore con Visual Studio 2026.
+Acción 3: Verificar que contiene las líneas bin/, obj/, *.user, *.suo, .vs/ y TestResults/.
+Acción 4: Verificar que no se ha modificado respecto al punto 2.3.
+Acción 5: Pulsar Ctrl+S si no hay cambios y cerrar el archivo.
+
+Por qué se hace: el .gitignore se hereda del punto 2.3 sin modificaciones. La verificación confirma que no se ha tocado.
+
+Errores comunes:
+
+· Modificar el .gitignore copiado del punto 2.3: viola la regla de no modificar archivos del punto anterior.
+· Eliminar alguna línea: el repositorio se llena de artefactos.
+· Crear el .gitignore con otro nombre: el archivo no se reconoce.
+
+Verificación: el .gitignore existe y contiene las seis líneas sin modificaciones.
+
+---
+
+Paso 24 — Hacer el commit del punto 2.4 y verificar el estado final del módulo 2
+
+Acción 1: Escribir cd C:\cursos\AceriaApp y pulsar Enter.
+Acción 2: Escribir git add . y pulsar Enter.
+Acción 3: Escribir git commit -m "Punto 2.4: documentación OpenAPI y cierre del módulo 2" y pulsar Enter.
+Acción 4: Escribir git log --oneline y pulsar Enter para verificar los nueve commits.
+Acción 5: Escribir git status y pulsar Enter para verificar que el árbol está limpio.
+
+Por qué se hace: el commit del punto 2.4 cierra el módulo 2. Los nueve commits consecutivos permiten comparar el estado del proyecto entre puntos consecutivos y entre módulos completos.
+
+Errores comunes:
+
+· No tener configurado user.name y user.email: git commit falla.
+· Añadir la carpeta bin/ y obj/ al commit: el .gitignore lo evita.
+· Hacer commit antes de git add .: no hay cambios en el índice.
+
+Verificación: git log --oneline muestra nueve commits: del punto 1.1 al 1.5 y del punto 2.1 al 2.4. git status muestra nothing to commit, working tree clean.
+
+---
+
