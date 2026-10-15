@@ -507,8 +507,8 @@ WebApplicationFactory inicia la aplicación, solicita el JSON, comprueba openapi
                 "app.UseDocumentacionOpenApi(new ConfiguracionOpenApi());")
     s=s.replace('await db.Ordenes.AsNoTracking().ToListAsync());',
                 'await db.Ordenes.AsNoTracking().ToListAsync())\n    .WithName("ListarOrdenes").WithSummary("Lista las órdenes").WithTags("Ordenes")\n    .Produces<List<Orden>>(StatusCodes.Status200OK);')
-    s=s.replace('app.MapPost("/api/v1/ordenes", async (AceriaDbContext db, Orden orden) =>\\n{\\n    orden.Id = Guid.NewGuid();\\n    orden.FechaCreacion = DateTime.UtcNow;',
-                'app.MapPost("/api/v1/ordenes", async (AceriaDbContext db, CrearOrdenRequest request) =>\\n{\\n    var orden = new Orden { Id = Guid.NewGuid(), FechaCreacion = DateTime.UtcNow, Cliente = request.Cliente, Material = request.Material, Cantidad = request.Cantidad };')
+    s=s.replace('app.MapPost("/api/v1/ordenes", async (AceriaDbContext db, Orden orden) =>\n{\n    orden.Id = Guid.NewGuid();\n    orden.FechaCreacion = DateTime.UtcNow;',
+                'app.MapPost("/api/v1/ordenes", async (AceriaDbContext db, CrearOrdenRequest request) =>\n{\n    var orden = new Orden { Id = Guid.NewGuid(), FechaCreacion = DateTime.UtcNow, Cliente = request.Cliente, Material = request.Material, Cantidad = request.Cantidad };')
     s=s.replace('    return Results.Created($"/api/v1/ordenes/{orden.Id}", orden);\n});',
                 '    return Results.Created($"/api/v1/ordenes/{orden.Id}", orden);\n})\n    .WithName("CrearOrden").WithSummary("Crea una orden").WithTags("Ordenes")\n    .Produces<Orden>(StatusCodes.Status201Created)\n    .AddEndpointFilter<ValidationFilter<CrearOrdenRequest>>()\n    .ProducesValidationProblem(StatusCodes.Status400BadRequest);')
     s+="\n// Permite las pruebas reales de integración con WebApplicationFactory.\npublic partial class Program { }\n"
