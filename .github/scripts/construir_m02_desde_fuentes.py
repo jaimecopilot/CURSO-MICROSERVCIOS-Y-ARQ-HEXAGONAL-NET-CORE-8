@@ -125,8 +125,10 @@ def enmarcar_codigo(text: str, practicas: bool):
                 opener="csharp"
         elif not in_code:
             # Ejemplos concretos seguidos de una explicación 'Línea 1'.
-            is_code=(s.startswith("public record ") or s.startswith("var builder ") or
-                     s.startswith("app.Map") or s.startswith("// El cliente envía:") or
+            is_code=(s.startswith("public record ") or s.startswith("public class ") or
+                     s.startswith("var builder ") or s.startswith("builder.Services.") or
+                     s.startswith("RuleFor(") or s.startswith("app.Map") or
+                     s.startswith("// El cliente envía:") or
                      (s=="{" and i+1<len(lines) and
                       re.match(r'^\s*"(?:type|items|id)"',lines[i+1])))
             if is_code and any("- **Línea 1:**" in t for t in lines[i+1:i+65]):
