@@ -2,7 +2,7 @@
 """Construye vista docente SIN abreviar la fuente; originales inmutables.
 
 No modifica fuentes ni produce material final sin los cuatro puntos.
---parcial genera previsualizaciones 2.1/2.2 únicamente como artefactos CI.
+--parcial genera únicamente vistas parciales, explícitamente identificadas.
 """
 from __future__ import annotations
 import argparse
@@ -92,8 +92,20 @@ def enmarcar_codigo(text: str, practicas: bool):
     lines=text.splitlines()
     out=[]
     in_code=False
+    in_existing_fence=False
     for i,line in enumerate(lines):
         s=line.strip()
+        if s.startswith("```"):
+            # Respeta fences aportados literalmente por el usuario, especialmente 2.4.
+            if in_code:
+                out.append("```")
+                in_code=False
+            in_existing_fence=not in_existing_fence
+            out.append(line)
+            continue
+        if in_existing_fence:
+            out.append(line)
+            continue
         is_action=bool(re.match(r"^- \*\*Acción \d+:\*\*",s))
         is_reto=bool(re.match(r"^Paso \d+:",s))
         if in_code and (is_action or is_reto or (not practicas and s.startswith("- **Línea 1:**"))):
@@ -219,7 +231,7 @@ def main():
     actual_steps=len(re.findall(r"(?m)^### PASO 2\.[1-4]\.\d+ —",practice_text))
     if actual_blocks!=expected_blocks or actual_steps!=expected_steps:
         raise ValueError(f"Salida incompleta: {actual_blocks}/{expected_blocks} bloques; {actual_steps}/{expected_steps} pasos")
-    label="M02" if not missing else "M02_PREVISUALIZACION_2_1_A_2_3"
+    label="M02" if not missing else "M02_PREVISUALIZACION_INCOMPLETA"
     for name,contents in [("TEORIA",theory_text),("PRACTICAS",practice_text)]:
         (a.salida/f"{label}_{name}.md").write_text(contents,encoding="utf-8")
     (a.salida/"INFORME.json").write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding="utf-8")
