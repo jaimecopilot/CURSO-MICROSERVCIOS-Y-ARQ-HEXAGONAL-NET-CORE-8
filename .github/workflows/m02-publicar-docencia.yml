@@ -1,0 +1,69 @@
+name: M02 - publicar docencia desde fuentes originales
+
+on:
+  push:
+    branches:
+      - desarrollo/m02-apis-rest-20261015
+    paths:
+      - '.github/scripts/publicar_m02.py'
+      - '.github/workflows/m02-publicar-docencia.yml'
+      - '.github/scripts/construir_m02_desde_fuentes.py'
+      - '.github/scripts/pedagogia_m02.py'
+      - '.github/scripts/pdf_m02_previsualizacion.py'
+      - '.github/fuentes-originales/m02/**'
+
+permissions:
+  contents: write
+
+jobs:
+  publicar:
+    runs-on: ubuntu-24.04
+    concurrency:
+      group: m02-publicacion-docente
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: desarrollo/m02-apis-rest-20261015
+          persist-credentials: true
+      - name: Instalar dependencias de maquetación y verificación
+        run: python -m pip install --disable-pip-version-check --quiet markdown weasyprint pymupdf
+      - name: Regenerar y comprobar texto integral, correcciones y PDF
+        run: python .github/scripts/publicar_m02.py
+      - name: Asegurar que no han cambiado fuentes, M01 o main
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --name-only | grep -E '(^\.github/fuentes-originales/m02/|^M01_)'; then
+            echo 'ERROR: intentó modificar fuente original o M01' >&2
+            exit 1
+          fi
+          git diff --stat
+          test -s M02_APIS_REST_ASPNET_CORE/TEORIA/M02_TEORIA.md
+          test -s M02_APIS_REST_ASPNET_CORE/TEORIA/M02_TEORIA.pdf
+          test -s M02_APIS_REST_ASPNET_CORE/PRACTICAS/M02_PRACTICAS.md
+          test -s M02_APIS_REST_ASPNET_CORE/PRACTICAS/M02_PRACTICAS.pdf
+      - name: Publicar exclusivamente los cuatro documentos en rama M02
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "JAIME GALLO"
+          git config user.email "jaime.gallo@users.noreply.github.com"
+          git add \
+            M02_APIS_REST_ASPNET_CORE/TEORIA/M02_TEORIA.md \
+            M02_APIS_REST_ASPNET_CORE/TEORIA/M02_TEORIA.pdf \
+            M02_APIS_REST_ASPNET_CORE/PRACTICAS/M02_PRACTICAS.md \
+            M02_APIS_REST_ASPNET_CORE/PRACTICAS/M02_PRACTICAS.pdf
+          git diff --cached --check
+          if ! git diff --cached --quiet; then
+            git commit -m "docs(m02): teoría y prácticas íntegras con PDF desde originales"
+            git push origin HEAD:desarrollo/m02-apis-rest-20261015
+          fi
+          git status --short
+      - name: Descargar archivos revisables e informe de generación
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: M02-materiales-docentes-teoria-practicas
+          path: m02_publicacion/
+          if-no-files-found: error
