@@ -26,6 +26,15 @@ h1 { font-size: 17pt; color: #17304b; margin: 0 0 12pt; border-bottom: 2px solid
 h2 { font-size: 13pt; color: #203d58; margin-top: 17pt; border-bottom: 1px solid #d7e2eb; padding-bottom: 3pt; }
 h3 { font-size: 10.4pt; color: #234a62; margin-top: 11pt; margin-bottom: 4pt; }
 h1, h2, h3, h4 { page-break-after: avoid; break-after: avoid; }
+img { display: block; width: 97%; max-width: 100%; height: auto;
+      margin: 9pt auto 5pt; page-break-inside: avoid; break-inside: avoid; }
+p:has(> img) { margin-top: 8pt; margin-bottom: 3pt; text-align: center; }
+p:has(> img) + p { margin-top: 2pt; font-size: 8pt; color: #48697e; text-align: center; }
+table { table-layout: fixed; }
+th:first-child, td:first-child { width: 31%; }
+th:nth-child(2), td:nth-child(2) { width: 32%; }
+th:nth-child(3), td:nth-child(3) { width: 37%; }
+tr { break-inside: avoid; page-break-inside: avoid; }
 p { margin: 5pt 0 6pt; orphans: 3; widows: 3; text-align: justify; }
 ul, ol { margin: 4pt 0 6pt 15pt; padding-left: 8pt; }
 li { padding-left: 1pt; margin-bottom: 2pt; }
