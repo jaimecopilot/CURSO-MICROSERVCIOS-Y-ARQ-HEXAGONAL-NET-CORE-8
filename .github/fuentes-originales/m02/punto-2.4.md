@@ -1155,3 +1155,95 @@ Verificación: git log --oneline muestra nueve commits: del punto 1.1 al 1.5 y d
 
 ---
 
+Errores comunes del ejercicio completo
+
+Error Causa Solución
+xcopy no copia subcarpetas Falta el flag /E Ejecutar xcopy origen destino /E /I /H /Y
+StringComparison no se resuelve Falta el using System; Añadir el using al principio del archivo
+Should() no se resuelve Falta el paquete FluentAssertions Ejecutar dotnet add package FluentAssertions
+El proyecto de tests no compila Falta la referencia al proyecto monolítico Ejecutar dotnet add reference
+NullReferenceException en ConfiguracionOpenApi No se inicializa Metadatos con new() Inicializar con new()
+La cabecera no incluye la versión El método ConstruirCabecera no la incluye Revisar la interpolación de la cadena
+La ruta no incluye la versión El método ConstruirRuta no la incluye Revisar la interpolación de la cadena
+La compilación falla por el .dll bloqueado La API está en ejecución Detener la API con Ctrl+C
+El commit incluye bin/ y obj/ Falta el .gitignore Verificar que el .gitignore está presente
+El commit no incluye los archivos nuevos No se ha ejecutado git add . Ejecutar git add . antes del commit
+
+---
+
+Reto resuelto paso a paso
+
+Reto: añadir un método ConstruirUrlCompleta a ConstructorDocumentoOpenApi que combine la URL base y la ruta de un recurso, y un test que verifique la construcción con una URL base y un recurso.
+
+Paso 1: En ConstructorDocumentoOpenApi.cs, añadir el siguiente método dentro de la clase:
+
+```csharp
+public string ConstruirUrlCompleta(string urlBase, string recurso, string version)
+{
+    return $"{urlBase}{ConstruirRuta(recurso, version)}";
+}
+```
+
+Paso 2: Explicar línea por línea:
+
+Línea 1: public string ConstruirUrlCompleta(string urlBase, string recurso, string version) → declara el método.
+Línea 2: { → abre el cuerpo.
+Línea 3: return $"{urlBase}{ConstruirRuta(recurso, version)}"; → concatena la URL base y la ruta.
+Línea 4: } → cierra el cuerpo.
+
+Paso 3: Guardar el archivo con Ctrl+S.
+
+Paso 4: En ConstructorDocumentoOpenApiTests.cs, añadir el siguiente test:
+
+```csharp
+[Fact]
+public void ConstruirUrlCompleta_ConUrlBaseYRecurso_DevuelveUrlEsperada()
+{
+    var url = _constructor.ConstruirUrlCompleta("https://localhost:7000", "ordenes", "v1");
+
+    url.Should().Be("https://localhost:7000/api/v1/ordenes");
+}
+```
+
+Paso 5: Explicar línea por línea:
+
+Línea 1: [Fact] → marca el método como test de xUnit.
+Línea 2: public void ConstruirUrlCompleta_ConUrlBaseYRecurso_DevuelveUrlEsperada() → declara el test.
+Línea 3: { → abre el cuerpo.
+Línea 4: var url = _constructor.ConstruirUrlCompleta("https://localhost:7000", "ordenes", "v1"); → invoca el método.
+Línea 5: url.Should().Be("https://localhost:7000/api/v1/ordenes"); → verifica el resultado.
+Línea 6: } → cierra el cuerpo.
+
+Paso 6: Ejecutar dotnet test tests\AceriaApp.Documentacion.Tests\AceriaApp.Documentacion.Tests.csproj y verificar que pasan los diez tests.
+
+Paso 7: Verificar que el método ConstruirUrlCompleta no modifica ningún archivo del punto 2.3.
+
+Paso 8: Hacer commit con git commit -m "Reto 2.4: método ConstruirUrlCompleta en ConstructorDocumentoOpenApi".
+
+Verificación: la salida de dotnet test muestra Passed: 10.
+
+---
+
+Resultado esperado
+
+Al finalizar este punto, el alumno debe tener:
+
+· La carpeta modulo-2-apis-rest-aspnet-core/2.4-documentacion-openapi/ con la solución AceriaApp.sln que contiene once proyectos.
+· El documento docs/documentacion-openapi.md con el estándar, las secciones, las anotaciones y el cierre del módulo 2.
+· El documento docs/ADR-009-documentacion-openapi.md con la decisión sobre OpenAPI.
+· Las clases MetadatosApi, ConfiguracionOpenApi y ConstructorDocumentoOpenApi en src/AceriaApp.Monolito.Api/Documentacion/.
+· El proyecto tests/AceriaApp.Documentacion.Tests con nueve tests (diez tras el reto).
+· Los tests de los puntos 1.1 a 1.5 y 2.1 a 2.4 pasando conjuntamente con dotnet test AceriaApp.sln, total 51 pruebas (52 tras el reto).
+· Los ADR-001 a ADR-008 del punto 2.3 sin modificar.
+· Nueve commits en Git: del punto 1.1 al 1.5 y del punto 2.1 al 2.4.
+· El módulo 2 cerrado con el resumen del estado del proyecto en docs/documentacion-openapi.md.
+
+---
+
+Conclusión y enlace al siguiente punto
+
+El punto 2.4 ha cerrado el módulo 2 con la adopción del estándar OpenAPI, la generación automática de documentación y las anotaciones de metadatos en Minimal API. El proyecto AceriaApp dispone ahora de una API REST completa con recursos, verbos, códigos de respuesta, validación en tres niveles y documentación viva con Swagger UI. El módulo 2 queda cerrado con el resumen del estado del proyecto en docs/documentacion-openapi.md. Esta base permite avanzar hacia el módulo 3, donde se estudiará la arquitectura hexagonal: capas de la aplicación, puertos y adaptadores, separación entre dominio, aplicación e infraestructura e implementación en ASP.NET Core.
+
+---
+
+Fin del punto 2.4 y del módulo 2.
