@@ -7,6 +7,7 @@ on:
     paths:
       - '.github/fuentes-originales/m02/**'
       - '.github/scripts/construir_m02_desde_fuentes.py'
+      - '.github/scripts/pdf_m02_previsualizacion.py'
       - '.github/workflows/m02-previsualizacion-fuentes-originales.yml'
   workflow_dispatch:
 
@@ -41,6 +42,10 @@ jobs:
           print("PREVISUALIZACIÓN PARCIAL: 20 bloques y 48 pasos completos.")
           print("No certifica M02: faltan 2.3 y 2.4.")
           PY
+      - name: Instalar motor para las previsualizaciones PDF
+        run: python -m pip install --disable-pip-version-check --quiet markdown weasyprint pymupdf
+      - name: Generar y revisar PDFs provisionales
+        run: python .github/scripts/pdf_m02_previsualizacion.py --directorio m02_previsualizacion
       - name: Conservar previsualización y huellas de procedencia
         if: always()
         uses: actions/upload-artifact@v4
