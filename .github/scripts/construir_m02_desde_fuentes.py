@@ -86,6 +86,51 @@ def heading_and_items(text: str, point: str, is_practice: bool):
     return "\n".join(out).strip()+"\n"
 
 
+
+def enmarcar_codigo(text: str, practicas: bool):
+    """Marcado de ejemplos literales como bloques, sin modificar líneas fuente."""
+    lines=text.splitlines()
+    out=[]
+    in_code=False
+    for i,line in enumerate(lines):
+        s=line.strip()
+        is_action=bool(re.match(r"^- \*\*Acción \d+:\*\*",s))
+        is_reto=bool(re.match(r"^Paso \d+:",s))
+        if in_code and (is_action or is_reto or (not practicas and s.startswith("- **Línea 1:**"))):
+            out.append("```")
+            out.append("")
+            in_code=False
+        opener=None
+        if practicas:
+            if (is_action and
+                    ("Escribir exactamente el siguiente código:" in s or
+                     "Escribir exactamente el siguiente contenido:" in s)):
+                opener="markdown" if "contenido:" in s else "csharp"
+            elif is_reto and any(k in s for k in (
+                  "siguiente record", "siguiente método", "siguiente test", "siguiente código")):
+                opener="csharp"
+        elif not in_code:
+            # Ejemplos concretos seguidos de una explicación 'Línea 1'.
+            is_code=(s.startswith("public record ") or s.startswith("var builder ") or
+                     s.startswith("app.Map") or s.startswith("// El cliente envía:") or
+                     (s=="{" and i+1<len(lines) and
+                      re.match(r'^\s*"(?:type|items|id)"',lines[i+1])))
+            if is_code and any("- **Línea 1:**" in t for t in lines[i+1:i+65]):
+                opener="json" if s=="{" else "csharp"
+        if opener and not in_code:
+            if practicas:
+                out.append(line)
+                out.append("")
+                out.append("```"+opener)
+            else:
+                out.append("```"+opener)
+                out.append(line)
+            in_code=True
+        else:
+            out.append(line)
+    if in_code:out.append("```")
+    return "\n".join(out)+"\n"
+
 def aplicar_erratas(text: str, point: str, tipo: str):
     """Solo erratas aprobadas para la vista docente; no toca fuentes."""
     applied = []
@@ -156,8 +201,8 @@ def main():
     report={"es_material_final":not missing,"fuentes_presentes":[],"faltan":missing}
     for doc in ready:
         p=doc["point"]
-        theory_fragment=heading_and_items(doc["theory"],p,False)
-        practice_fragment="## Punto "+p+" — "+HEAD[p]+"\n\n"+heading_and_items(doc["practice"],p,True)
+        theory_fragment=enmarcar_codigo(heading_and_items(doc["theory"],p,False),False)
+        practice_fragment="## Punto "+p+" — "+HEAD[p]+"\n\n"+enmarcar_codigo(heading_and_items(doc["practice"],p,True),True)
         theory_fragment, ct = aplicar_erratas(theory_fragment,p,"TEORIA")
         practice_fragment, cp = aplicar_erratas(practice_fragment,p,"PRACTICAS")
         doc["correcciones_aplicadas"]=ct+cp
