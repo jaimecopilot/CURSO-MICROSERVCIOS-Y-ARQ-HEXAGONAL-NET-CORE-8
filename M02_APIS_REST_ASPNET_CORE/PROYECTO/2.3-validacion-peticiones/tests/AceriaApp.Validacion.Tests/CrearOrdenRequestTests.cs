@@ -1,16 +1,27 @@
 using AceriaApp.Monolito.Api.Validacion;
+using FluentAssertions;
 using Xunit;
+
 namespace AceriaApp.Validacion.Tests;
+
 public class CrearOrdenRequestTests
 {
-    [Fact] public void Contrato_AsignaValores()
+    // PASO 2.3.15 — Verifica el record; no son pruebas del filtro HTTP.
+    [Fact]
+    public void CrearOrdenRequest_ConDatosValidos_AsignaValores()
     {
-        var p=new CrearOrdenRequest("ACX-001","CHAPA-3MM",10);
-        Assert.Equal("ACX-001",p.Cliente); Assert.Equal("CHAPA-3MM",p.Material); Assert.Equal(10,p.Cantidad);
+        var peticion = new CrearOrdenRequest("ACX-001", "CHAPA-3MM", 10);
+
+        peticion.Cliente.Should().Be("ACX-001");
+        peticion.Material.Should().Be("CHAPA-3MM");
+        peticion.Cantidad.Should().Be(10);
     }
-    [Fact] public void Contrato_PermiteRepresentarCadenaVacia()
+
+    [Fact]
+    public void CrearOrdenRequest_ConClienteVacio_AsignaCadenaVacia()
     {
-        var p=new CrearOrdenRequest("","CHAPA-3MM",10);
-        Assert.Equal("",p.Cliente);
+        var peticion = new CrearOrdenRequest(string.Empty, "CHAPA-3MM", 10);
+
+        peticion.Cliente.Should().BeEmpty();
     }
 }
