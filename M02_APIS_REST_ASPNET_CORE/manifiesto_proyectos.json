@@ -1,0 +1,42 @@
+[
+  {
+    "punto": "2.1-diseno-apis-rest",
+    "solucion": "M02_APIS_REST_ASPNET_CORE/PROYECTO/2.1-diseno-apis-rest/AceriaApp.sln",
+    "proyectos": 7,
+    "pruebas_esperadas": 31,
+    "excepciones_documentadas": [
+      "tests/AceriaApp.BuenasPracticas.Tests/CatalogoPracticasTests.cs",
+      "tests/AceriaApp.BuenasPracticas.Tests/ValidadorBuenasPracticasTests.cs",
+      "src/AceriaApp.Monolito.Api/BuenasPracticas/ValidadorBuenasPracticas.cs",
+      "src/AceriaApp.Monolito.Api/BuenasPracticas/Practica.cs",
+      "src/AceriaApp.Monolito.Api/BuenasPracticas/CatalogoPracticas.cs"
+    ]
+  },
+  {
+    "punto": "2.2-recursos-verbos-codigos",
+    "solucion": "M02_APIS_REST_ASPNET_CORE/PROYECTO/2.2-recursos-verbos-codigos/AceriaApp.sln",
+    "proyectos": 8,
+    "pruebas_esperadas": 36,
+    "excepciones_documentadas": []
+  },
+  {
+    "punto": "2.3-validacion-peticiones",
+    "solucion": "M02_APIS_REST_ASPNET_CORE/PROYECTO/2.3-validacion-peticiones/AceriaApp.sln",
+    "proyectos": 9,
+    "pruebas_esperadas": 42,
+    "excepciones_documentadas": [
+      "src/AceriaApp.Monolito.Api/Program.cs",
+      "src/AceriaApp.Monolito.Api/AceriaApp.Monolito.Api.csproj"
+    ]
+  },
+  {
+    "punto": "2.4-documentacion-openapi",
+    "solucion": "M02_APIS_REST_ASPNET_CORE/PROYECTO/2.4-documentacion-openapi/AceriaApp.sln",
+    "proyectos": 10,
+    "pruebas_esperadas": 51,
+    "excepciones_documentadas": [
+      "src/AceriaApp.Monolito.Api/Program.cs",
+      "src/AceriaApp.Monolito.Api/AceriaApp.Monolito.Api.csproj"
+    ]
+  }
+]

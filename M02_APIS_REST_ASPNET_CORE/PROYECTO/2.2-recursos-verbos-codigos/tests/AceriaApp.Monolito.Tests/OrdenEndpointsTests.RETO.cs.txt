@@ -1,0 +1,23 @@
+// RETO 1.1 — Para realizar el reto, descomentar el endpoint en Program.cs,
+// añadir el paquete Microsoft.EntityFrameworkCore.InMemory al proyecto de tests,
+// renombrar este archivo a OrdenEndpointsTests.cs y descomentar lo siguiente.
+// Nota didáctica: esta prueba comprueba una consulta que devuelve null; NO verifica una respuesta HTTP 404.
+// using AceriaApp.Monolito.Api.Dominio;
+// using AceriaApp.Monolito.Api.Infraestructura;
+// using FluentAssertions;
+// using Microsoft.EntityFrameworkCore;
+// using Xunit;
+// namespace AceriaApp.Monolito.Tests;
+// public class OrdenEndpointsTests
+// {
+//     [Fact]
+//     public async Task GetOrdenPorId_Inexistente_DevuelveNull()
+//     {
+//         var options = new DbContextOptionsBuilder<AceriaDbContext>()
+//             .UseInMemoryDatabase("TestDb").Options;
+//         await using var db = new AceriaDbContext(options);
+//         var id = Guid.NewGuid();
+//         var orden = await db.Ordenes.AsNoTracking().FirstOrDefaultAsync(o => o.Id == id);
+//         orden.Should().BeNull();
+//     }
+// }
