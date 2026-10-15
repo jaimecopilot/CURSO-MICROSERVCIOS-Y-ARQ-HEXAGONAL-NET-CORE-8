@@ -1,0 +1,36 @@
+name: M01 - Previsualizacion PDF docente
+
+on:
+  push:
+    branches:
+      - 'revision/m01-correccion-pedagogica-20261015'
+    paths:
+      - '.github/scripts/generar_pdf_m01.py'
+      - '.github/workflows/m01-preview-pdf.yml'
+      - 'M01_INTRODUCCION_MICROSERVICIOS/TEORIA/**'
+      - 'M01_INTRODUCCION_MICROSERVICIOS/PRACTICAS/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  previsualizacion:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Instalar motor PDF y validadores
+        run: python -m pip install --disable-pip-version-check Markdown beautifulsoup4 WeasyPrint PyMuPDF
+      - name: Convertir los Markdown y validar paginas y tablas
+        run: python .github/scripts/generar_pdf_m01.py
+      - name: Guardar PDFs y reporte de revision
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m01-pdf-previsualizacion
+          path: _revision_m01_pdf/
+          retention-days: 14
+          if-no-files-found: warn
