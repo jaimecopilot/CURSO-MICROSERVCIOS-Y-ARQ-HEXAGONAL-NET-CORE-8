@@ -31,7 +31,7 @@ jobs:
         with:
           dotnet-version: 8.0.x
       - name: Restaurar y compilar la solución independiente
-        if: contains(matrix.punto, '2.4')
+        if: false
         shell: bash
         run: |
           set -euo pipefail
@@ -80,8 +80,8 @@ jobs:
           print('ESTO NO CERTIFICA LA FIDELIDAD DE LOS TEXTOS NI LOS 96 PASOS.')
           PY
       - name: Ejecutar 24 estados progresivos por punto
-        if: ${{ !contains(matrix.punto, '2.4') }}
-        run: python .github/scripts/e2e_m02_stages.py --root . --point "${{ matrix.punto == '2.1-diseno-apis-rest' && '2.1' || (matrix.punto == '2.2-recursos-verbos-codigos' && '2.2' || '2.3') }}"
+        if: always()
+        run: python .github/scripts/e2e_m02_stages.py --root . --point "${{ matrix.punto == '2.1-diseno-apis-rest' && '2.1' || (matrix.punto == '2.2-recursos-verbos-codigos' && '2.2' || (matrix.punto == '2.3-validacion-peticiones' && '2.3' || '2.4')) }}"
       - name: Conservar resultados por punto
         if: always()
         uses: actions/upload-artifact@v4
