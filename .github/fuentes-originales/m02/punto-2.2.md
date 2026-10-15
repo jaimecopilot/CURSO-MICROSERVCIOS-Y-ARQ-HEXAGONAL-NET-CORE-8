@@ -276,3 +276,371 @@ Resumen rápido de la teoría
 
 ---
 
+PARTE PRÁCTICA (27 minutos)
+
+Ejercicio: Añadir al punto 2.1 un documento de catálogo de recursos en docs/, una clase de validación de combinaciones verbo-código en el proyecto monolítico y un test unitario que verifique la validación. El punto 2.2 parte del contenido del punto 2.1 sin modificar ningún archivo existente: solo añade archivos nuevos.
+
+Ubicación de trabajo: C:\cursos\AceriaApp\modulo-2-apis-rest-aspnet-core\
+
+
+---
+
+Paso 1 — Crear la carpeta del punto 2.2 a partir del punto 2.1
+
+Acción 1: Abrir la terminal integrada de Visual Studio 2026 con Ctrl+ñ (o Ctrl+``  en teclados no españoles).
+Acción 2: Escribir cd C:\cursos\AceriaApp\modulo-2-apis-rest-aspnet-core y pulsar Enter.
+Acción 3: Escribir mkdir 2.2-recursos-verbos-codigos y pulsar Enter.
+Acción 4: Escribir xcopy 2.1-diseno-apis-rest 2.2-recursos-verbos-codigos /E /I /H /Y y pulsar Enter.
+Acción 5: Escribir dir 2.2-recursos-verbos-codigos y pulsar Enter para verificar que se ha copiado el contenido.
+
+Por qué se hace: cada punto del curso parte del contenido del punto anterior. El punto 2.2 se construye sobre el punto 2.1 copiando su contenido y añadiendo archivos nuevos sin modificar los existentes.
+
+Errores comunes:
+
+· Usar copy en lugar de xcopy: copy no copia carpetas de forma recursiva.
+· Olvidar el flag /E: no se copian las subcarpetas vacías.
+· Olvidar el flag /I: xcopy pregunta si el destino es un directorio cuando no existe.
+· Olvidar el flag /Y: xcopy pide confirmación para sobrescribir.
+
+Verificación: al ejecutar dir 2.2-recursos-verbos-codigos, deben aparecer AceriaApp.sln, README.md, src, tests y docs.
+
+
+---
+
+Paso 2 — Abrir la solución copiada en Visual Studio 2026
+
+Acción 1: Escribir cd 2.2-recursos-verbos-codigos y pulsar Enter.
+Acción 2: Escribir start AceriaApp.sln y pulsar Enter.
+Acción 3: Verificar que Visual Studio 2026 abre la solución y muestra los proyectos heredados del punto 2.1: AceriaApp.Monolito.Api, AceriaApp.Monolito.Tests, AceriaApp.Metricas.Tests, AceriaApp.Diseno.Tests, AceriaApp.Organizacion.Tests, AceriaApp.BuenasPracticas.Tests y AceriaApp.DisenoRest.Tests.
+Acción 4: Verificar que la solución compila con Ctrl+Shift+B y que la salida muestra Build succeeded..
+
+Por qué se hace: abrir la solución copiada permite trabajar en el punto 2.2 sobre la base del punto 2.1. La compilación verifica que la copia es correcta.
+
+Errores comunes:
+
+· Abrir la solución del punto 2.1 en lugar de la del punto 2.2: los cambios se aplican al punto equivocado.
+· No compilar antes de empezar: si la copia tiene errores, los cambios posteriores fallan.
+· Tener la API del punto 2.1 en ejecución: el puerto queda ocupado y la compilación falla.
+
+Verificación: Visual Studio 2026 muestra la solución AceriaApp con los siete proyectos heredados del punto 2.1 y la compilación es correcta.
+
+
+---
+
+Paso 3 — Verificar que la carpeta docs contiene los documentos del punto 2.1
+
+Acción 1: En el panel Solution Explorer, expandir la carpeta docs del punto 2.2.
+Acción 2: Verificar que contiene ADR-001 a ADR-006, analisis-ventajas-inconvenientes.md, principios-diseno.md, organizacion-solucion.md, buenas-practicas.md y diseno-apis-rest.md.
+Acción 3: Verificar que ninguno de los diez documentos se ha modificado.
+Acción 4: Verificar que la carpeta docs no contiene ningún archivo nuevo del punto 2.2 todavía.
+
+Por qué se hace: el punto 2.2 parte del contenido del punto 2.1, que ya incluye la carpeta docs con diez documentos. No se modifica ningún documento existente.
+
+Errores comunes:
+
+· Modificar alguno de los ADR o documentos existentes: viola la regla de no modificar archivos del punto anterior.
+· Eliminar algún documento existente: pierde la trazabilidad del punto 2.1.
+· Crear la carpeta docs si ya existe: mkdir falla.
+
+Verificación: la carpeta docs contiene los diez documentos del punto 2.1 sin modificaciones.
+
+
+---
+
+Paso 4 — Crear el documento de catálogo de recursos en docs
+
+Acción 1: En el panel Solution Explorer, hacer clic derecho sobre la carpeta docs.
+Acción 2: Seleccionar Add → New Item → Text File y nombrar el archivo catalogo-recursos.md.
+Acción 3: Escribir exactamente el siguiente contenido:
+
+# Catálogo de recursos — Punto 2.2  
+  
+## Recursos del dominio  
+  
+- Orden.  
+- LineaOrden.  
+- Material.  
+- Cliente.  
+- Movimiento.  
+  
+## Catálogo de combinaciones verbo-URI  
+  
+| Recurso | URI base | Verbos permitidos |  
+|---------|----------|-------------------|  
+| Orden | /api/v1/ordenes | GET, POST |  
+| Orden | /api/v1/ordenes/{id} | GET, PUT, PATCH, DELETE |  
+| LineaOrden | /api/v1/ordenes/{id}/lineas | GET, POST |  
+| LineaOrden | /api/v1/ordenes/{id}/lineas/{lid} | GET, PUT, DELETE |  
+| Material | /api/v1/materiales | GET, POST |  
+| Material | /api/v1/materiales/{id} | GET, PUT, PATCH, DELETE |  
+| Cliente | /api/v1/clientes | GET, POST |  
+| Cliente | /api/v1/clientes/{id} | GET, PUT, DELETE |  
+  
+## Códigos de respuesta por verbo  
+  
+| Verbo | Códigos esperados |  
+|-------|-------------------|  
+| GET | 200, 404 |  
+| POST | 201, 400, 409, 422 |  
+| PUT | 200, 204, 400, 404, 409, 422 |  
+| PATCH | 200, 204, 400, 404, 409, 422 |  
+| DELETE | 204, 404 |  
+  
+## Formato de error  
+  
+Problem details según RFC 7807.  
+  
+## Aplicación al proyecto del curso  
+  
+| Elemento | Aplicación |  
+|----------|------------|  
+| Recursos | Orden, LineaOrden, Material, Cliente, Movimiento |  
+| Verbos | GET, POST, PUT, PATCH, DELETE |  
+| Códigos | 200, 201, 204, 400, 404, 409, 422, 500 |  
+| Formato de error | Problem details |
+
+Acción 4: Pulsar Ctrl+S para guardar el archivo.
+Acción 5: Verificar que el archivo aparece en la carpeta docs sin subrayados rojos.
+
+Por qué se hace: el documento de catálogo de recursos es el artefacto de docs específico del punto 2.2. No modifica los diez documentos existentes del punto 2.1.
+
+Errores comunes:
+
+· Nombrar el archivo con otro nombre: rompe la trazabilidad del punto.
+· Modificar los ADR existentes: viola la regla de no modificar archivos del punto anterior.
+· Guardar el archivo en la raíz del punto en lugar de docs: rompe la estructura del repositorio.
+
+Verificación: el archivo docs\catalogo-recursos.md existe con las seis secciones.
+
+
+---
+
+Paso 5 — Crear la carpeta CatalogoRecursos en el proyecto monolítico
+
+Acción 1: En el panel Solution Explorer, hacer clic derecho sobre el proyecto AceriaApp.Monolito.Api.
+Acción 2: Seleccionar Add → New Folder y nombrar la carpeta CatalogoRecursos.
+Acción 3: Verificar que la carpeta CatalogoRecursos aparece dentro de AceriaApp.Monolito.Api sin afectar a las carpetas Dominio, Infraestructura, Metricas, Diseno, Organizacion, BuenasPracticas y DisenoRest.
+Acción 4: Verificar que no se ha modificado ningún archivo existente del punto 2.1.
+
+Por qué se hace: la carpeta CatalogoRecursos albergará las clases de catálogo y validación de combinaciones verbo-código. Se crea como carpeta nueva sin tocar las carpetas existentes.
+
+Errores comunes:
+
+· Crear la carpeta dentro de alguna de las carpetas existentes: rompe la separación de responsabilidades.
+· Modificar las carpetas existentes: viola la regla de no modificar archivos del punto anterior.
+· Crear la carpeta con otro nombre: rompe la convención del curso.
+
+Verificación: la carpeta CatalogoRecursos existe dentro de AceriaApp.Monolito.Api y las carpetas existentes permanecen intactas.
+
+
+---
+
+Paso 6 — Crear la clase CombinacionVerboCodigo
+
+Acción 1: En el panel Solution Explorer, hacer clic derecho sobre la carpeta CatalogoRecursos.
+Acción 2: Seleccionar Add → Class y nombrar la clase CombinacionVerboCodigo.cs.
+Acción 3: Escribir exactamente el siguiente código:
+
+namespace AceriaApp.Monolito.Api.CatalogoRecursos;  
+  
+public class CombinacionVerboCodigo  
+{  
+    public string Verbo { get; init; } = string.Empty;  
+    public int Codigo { get; init; }  
+}
+
+Acción 4: Pulsar Ctrl+S para guardar el archivo.
+Acción 5: Verificar que la clase compila sin errores.
+
+Por qué se hace: la clase CombinacionVerboCodigo modela la pareja de verbo y código de respuesta que el validador comprobará. Es la unidad mínima de validación.
+
+Errores comunes:
+
+· Olvidar el namespace: la clase no se resuelve desde otros archivos.
+· No inicializar Verbo con string.Empty: el compilador emite advertencia de nulabilidad.
+· Usar set en lugar de init: permite modificar la instancia después de crearla.
+
+Verificación: la clase CombinacionVerboCodigo compila sin errores y expone dos propiedades.
+
+
+---
+
+Paso 7 — Crear la clase ValidadorCombinacionVerboCodigo
+
+Acción 1: En el panel Solution Explorer, hacer clic derecho sobre la carpeta CatalogoRecursos.
+Acción 2: Seleccionar Add → Class y nombrar la clase ValidadorCombinacionVerboCodigo.cs.
+Acción 3: Escribir exactamente el siguiente código:
+
+namespace AceriaApp.Monolito.Api.CatalogoRecursos;  
+  
+public class ValidadorCombinacionVerboCodigo  
+{  
+    private static readonly Dictionary<string, int[]> CodigosPorVerbo = new()  
+    {  
+        { "GET", new[] { 200, 404 } },  
+        { "POST", new[] { 201, 400, 409, 422 } },  
+        { "PUT", new[] { 200, 204, 400, 404, 409, 422 } },  
+        { "PATCH", new[] { 200, 204, 400, 404, 409, 422 } },  
+        { "DELETE", new[] { 204, 404 } }  
+    };  
+  
+    public ResultadoCombinacion Validar(CombinacionVerboCodigo combinacion)  
+    {  
+        var errores = new List<string>();  
+  
+        if (!CodigosPorVerbo.ContainsKey(combinacion.Verbo))  
+        {  
+            errores.Add($"Verbo no permitido: '{combinacion.Verbo}'.");  
+            return new ResultadoCombinacion(false, errores);  
+        }  
+  
+        if (!CodigosPorVerbo[combinacion.Verbo].Contains(combinacion.Codigo))  
+        {  
+            errores.Add($"Código '{combinacion.Codigo}' no permitido para el verbo '{combinacion.Verbo}'.");  
+        }  
+  
+        return new ResultadoCombinacion(errores.Count == 0, errores);  
+    }  
+}  
+  
+public record ResultadoCombinacion(bool EsValida, IReadOnlyList<string> Errores);
+
+Acción 4: Pulsar Ctrl+S para guardar el archivo.
+Acción 5: Verificar que la clase compila sin errores.
+
+Por qué se hace: la clase ValidadorCombinacionVerboCodigo comprueba que un verbo está permitido y que el código de respuesta es coherente con el verbo. La tabla de códigos por verbo está definida como un diccionario estático.
+
+Errores comunes:
+
+· Olvidar el using System.Collections.Generic;: Dictionary<string, int[]> y List<string> no se resuelven.
+· Olvidar el using System.Linq;: Contains no se resuelve.
+· No comprobar si el verbo existe antes de acceder al diccionario: lanza KeyNotFoundException.
+
+Verificación: la clase ValidadorCombinacionVerboCodigo compila sin errores y expone un método y un record.
+
+
+---
+
+Paso 8 — Añadir los using necesarios en ValidadorCombinacionVerboCodigo
+
+Acción 1: En el panel Solution Explorer, hacer doble clic en ValidadorCombinacionVerboCodigo.cs.
+Acción 2: Añadir las líneas using System.Collections.Generic; y using System.Linq; al principio del archivo si no están presentes.
+Acción 3: Verificar que no hay subrayados rojos en Dictionary, List<string> ni en Contains.
+Acción 4: Pulsar Ctrl+S para guardar el archivo.
+
+Por qué se hace: los tipos Dictionary<string, int[]> y List<string> pertenecen a System.Collections.Generic. El método Contains pertenece a System.Linq. En proyectos con ImplicitUsings desactivado, hay que añadir los usings explícitos.
+
+Errores comunes:
+
+· Añadir solo System.Collections.Generic y olvidar System.Linq: Contains no se resuelve.
+· Añadir los usings después del namespace: el compilador no los reconoce.
+· Olvidar los usings y confiar en ImplicitUsings: el proyecto puede tenerlo desactivado.
+
+Verificación: ValidadorCombinacionVerboCodigo.cs compila sin errores y no muestra subrayados rojos.
+
+
+---
+
+Paso 9 — Crear la clase CatalogoCombinaciones
+
+Acción 1: En el panel Solution Explorer, hacer clic derecho sobre la carpeta CatalogoRecursos.
+Acción 2: Seleccionar Add → Class y nombrar la clase CatalogoCombinaciones.cs.
+Acción 3: Escribir exactamente el siguiente código:
+
+namespace AceriaApp.Monolito.Api.CatalogoRecursos;  
+  
+public class CatalogoCombinaciones  
+{  
+    private readonly List<CombinacionVerboCodigo> _combinaciones;  
+  
+    public CatalogoCombinaciones(List<CombinacionVerboCodigo> combinaciones)  
+    {  
+        _combinaciones = combinaciones;  
+    }  
+  
+    public IEnumerable<CombinacionVerboCodigo> CombinacionesValidas(ValidadorCombinacionVerboCodigo validador)  
+    {  
+        return _combinaciones.Where(c => validador.Validar(c).EsValida);  
+    }  
+  
+    public IEnumerable<CombinacionVerboCodigo> CombinacionesInvalidas(ValidadorCombinacionVerboCodigo validador)  
+    {  
+        return _combinaciones.Where(c => !validador.Validar(c).EsValida);  
+    }  
+}
+
+Acción 4: Pulsar Ctrl+S para guardar el archivo.
+Acción 5: Verificar que la clase compila sin errores.
+
+Por qué se hace: la clase CatalogoCombinaciones agrupa las combinaciones verbo-código del proyecto y permite filtrarlas por validez.
+
+Errores comunes:
+
+· No inicializar _combinaciones en el constructor: la clase lanza NullReferenceException.
+· Olvidar using System.Linq;: Where no se resuelve.
+· Devolver List<CombinacionVerboCodigo> en lugar de IEnumerable<CombinacionVerboCodigo>: expone la implementación interna.
+
+Verificación: la clase CatalogoCombinaciones compila sin errores y expone un constructor y dos métodos.
+
+
+---
+
+Paso 10 — Añadir el using necesario en CatalogoCombinaciones
+
+Acción 1: En el panel Solution Explorer, hacer doble clic en CatalogoCombinaciones.cs.
+Acción 2: Añadir la línea using System.Linq; al principio del archivo si no está presente.
+Acción 3: Verificar que no hay subrayados rojos en Where.
+Acción 4: Pulsar Ctrl+S para guardar el archivo.
+
+Por qué se hace: el método Where pertenece a System.Linq. En proyectos con ImplicitUsings desactivado, hay que añadir el using explícito.
+
+Errores comunes:
+
+· Añadir using System.Collections.Generic; en lugar de System.Linq: no resuelve Where.
+· Añadir el using después del namespace: el compilador no lo reconoce.
+· Olvidar el using y confiar en ImplicitUsings: el proyecto puede tenerlo desactivado.
+
+Verificación: CatalogoCombinaciones.cs compila sin errores y no muestra subrayados rojos.
+
+
+---
+
+Paso 11 — Crear el proyecto de tests del punto 2.2
+
+Acción 1: En el panel Solution Explorer, hacer clic derecho sobre la carpeta tests.
+Acción 2: Seleccionar Add → New Project.
+Acción 3: Seleccionar la plantilla xUnit Test Project, nombrar el proyecto AceriaApp.CatalogoRecursos.Tests y pulsar Create.
+Acción 4: Verificar que el proyecto aparece en la solución y que se ha creado la carpeta tests\AceriaApp.CatalogoRecursos.Tests.
+
+Por qué se hace: el punto 2.2 añade un proyecto de tests específico para las clases de catálogo de recursos. Se crea como proyecto nuevo sin modificar los proyectos de tests existentes.
+
+Errores comunes:
+
+· Crear el proyecto dentro de src en lugar de tests: rompe la estructura.
+· Modificar los proyectos de tests del punto 2.1: viola la regla de no modificar archivos del punto anterior.
+· Usar dotnet new mstest: el curso usa xUnit.
+
+Verificación: el proyecto AceriaApp.CatalogoRecursos.Tests aparece en la solución y su carpeta existe en tests\AceriaApp.CatalogoRecursos.Tests.
+
+
+---
+
+Paso 12 — Añadir la referencia del proyecto de tests a la API monolítica
+
+Acción 1: En la terminal, escribir dotnet add tests\AceriaApp.CatalogoRecursos.Tests\AceriaApp.CatalogoRecursos.Tests.csproj reference src\AceriaApp.Monolito.Api\AceriaApp.Monolito.Api.csproj y pulsar Enter.
+Acción 2: Verificar que la salida muestra Reference added successfully.
+Acción 3: Verificar que el archivo AceriaApp.CatalogoRecursos.Tests.csproj contiene la referencia.
+
+Por qué se hace: la referencia permite que el proyecto de tests acceda a las clases de CatalogoRecursos del proyecto monolítico.
+
+Errores comunes:
+
+· Añadir la referencia en dirección inversa: crea una dependencia circular.
+· Olvidar el nombre completo del archivo .csproj: el comando falla.
+· Ejecutar el comando desde la carpeta equivocada: la ruta relativa no se resuelve.
+
+Verificación: el archivo AceriaApp.CatalogoRecursos.Tests.csproj contiene un ProjectReference al proyecto monolítico.
+
+
+---
+
