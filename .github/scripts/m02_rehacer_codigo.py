@@ -313,6 +313,7 @@ namespace AceriaApp.Api.Tests;
 // INICIO PASO 2.1.12: HTTP real; base en memoria SOLO en tests automatizados.
 public sealed class ApiFactory:WebApplicationFactory<Program>
 {
+    private readonly string _databaseName="Tests-"+Guid.NewGuid();
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development");
@@ -321,7 +322,7 @@ public sealed class ApiFactory:WebApplicationFactory<Program>
         {
             services.RemoveAll<DbContextOptions<AceriaDbContext>>();
             services.AddDbContext<AceriaDbContext>(opt=>
-                opt.UseInMemoryDatabase("Tests-"+Guid.NewGuid()));
+                opt.UseInMemoryDatabase(_databaseName));
         });
     }
 }
