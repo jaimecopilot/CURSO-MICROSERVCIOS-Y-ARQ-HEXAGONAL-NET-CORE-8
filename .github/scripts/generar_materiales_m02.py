@@ -127,6 +127,8 @@ def practice():
   f"El punto 2.{i+1} vincula {LABEL[i].lower()} con clases y comprobaciones concretas. El alumnado puede inspeccionar el proyecto y explicar los resultados observados antes de abordar el siguiente punto.","","---"]
  put(BASE/"PRACTICAS/M02_PRACTICAS.md","\n".join(o)+"\n")
 def run():
+ raise SystemExit("BLOQUEADO: este generador sintético recorta los textos originales del usuario. Sustituir por un procedimiento que use copias literales verificables de los puntos 2.1 a 2.4, aplique exclusivamente correcciones trazadas y produzca prácticas respaldadas por código activable paso a paso. No sobrescribir los Markdown de M02.")
+def run_ANTIGUO_DESHABILITADO():
  if not (BASE/"PROYECTO"/NAMES[-1]).exists():raise SystemExit("Falta generar proyectos M02")
  for d in (BASE/"TEORIA",BASE/"PRACTICAS"):
   for i in range(4):make_svg(i,d/"figuras")
