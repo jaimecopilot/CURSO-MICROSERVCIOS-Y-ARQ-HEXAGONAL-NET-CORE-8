@@ -8,6 +8,8 @@ on:
       - '.github/workflows/m02-publicar-docentes-fuentes.yml'
       - '.github/scripts/construir_m02_desde_fuentes.py'
       - '.github/scripts/pedagogia_m02.py'
+      - '.github/scripts/maquetacion_m02.py'
+      - 'M02_APIS_REST_ASPNET_CORE/TEORIA/IMAGENES/*.svg'
       - '.github/scripts/pdf_m02_previsualizacion.py'
       - '.github/fuentes-originales/m02/punto-2.*.md'
   workflow_dispatch:
@@ -36,6 +38,11 @@ jobs:
       - name: Construir los DOS Markdown desde cuatro fuentes
         run: |
           python .github/scripts/construir_m02_desde_fuentes.py --salida m02_publicacion
+      - name: Copiar figuras vectoriales reproducibles antes del PDF
+        run: |
+          mkdir -p m02_publicacion/IMAGENES
+          cp M02_APIS_REST_ASPNET_CORE/TEORIA/IMAGENES/*.svg m02_publicacion/IMAGENES/
+          test "$(find m02_publicacion/IMAGENES -maxdepth 1 -name '*.svg' | wc -l)" -eq 8
       - name: Comprobar recuentos, correcciones y ausencia de cortes
         run: |
           python - <<'PY'
@@ -49,6 +56,11 @@ jobs:
           practicas=(root/"M02_PRACTICAS.md").read_text(encoding="utf-8")
           assert len(re.findall(r"(?m)^### Bloque \d+ —",teoria)) == 40
           assert len(re.findall(r"(?m)^### PASO 2\.[1-4]\.\d+ —",practicas)) == 96
+          assert teoria.count("](IMAGENES/")==8, "Faltan gráficos en teoría"
+          assert practicas.count("| Error observado | Causa | Solución guiada |")==4, "No hay cuatro tablas de errores"
+          assert len(re.findall(r"(?m)^\| [^|]+ \| [^|]+ \| [^|]+ \|$",practicas))>=44, "Faltan filas de tablas"
+          assert "Error Causa Solución" not in practicas, "Persiste una tabla sin maquetación"
+          assert len(list((root/"IMAGENES").glob("*.svg")))==8
           assert len(re.findall(r"(?m)^for %f in",practicas)) == 3
           assert "Cincuenta y una pruebas" in practicas
           assert "equipo@acerialocal" in practicas
@@ -72,6 +84,7 @@ jobs:
           set -euo pipefail
           cp m02_publicacion/M02_TEORIA.md M02_APIS_REST_ASPNET_CORE/TEORIA/M02_TEORIA.md
           cp m02_publicacion/M02_TEORIA.pdf M02_APIS_REST_ASPNET_CORE/TEORIA/M02_TEORIA.pdf
+          cp m02_publicacion/IMAGENES/*.svg M02_APIS_REST_ASPNET_CORE/TEORIA/IMAGENES/
           cp m02_publicacion/M02_PRACTICAS.md M02_APIS_REST_ASPNET_CORE/PRACTICAS/M02_PRACTICAS.md
           cp m02_publicacion/M02_PRACTICAS.pdf M02_APIS_REST_ASPNET_CORE/PRACTICAS/M02_PRACTICAS.pdf
       - name: Commit SOLO materiales de la rama M02
@@ -84,6 +97,7 @@ jobs:
           git add \
             M02_APIS_REST_ASPNET_CORE/TEORIA/M02_TEORIA.md \
             M02_APIS_REST_ASPNET_CORE/TEORIA/M02_TEORIA.pdf \
+            M02_APIS_REST_ASPNET_CORE/TEORIA/IMAGENES/*.svg \
             M02_APIS_REST_ASPNET_CORE/PRACTICAS/M02_PRACTICAS.md \
             M02_APIS_REST_ASPNET_CORE/PRACTICAS/M02_PRACTICAS.pdf
           if ! git diff --cached --quiet; then
