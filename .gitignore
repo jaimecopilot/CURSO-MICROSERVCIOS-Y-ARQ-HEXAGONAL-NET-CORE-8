@@ -1,0 +1,9 @@
+# Archivos locales de Visual Studio y compilación .NET
+**/bin/
+**/obj/
+**/.vs/
+**/TestResults/
+*.user
+*.suo
+*.cache
+# No ignorar código, archivos .sln, .csproj, ni documentos docentes.
