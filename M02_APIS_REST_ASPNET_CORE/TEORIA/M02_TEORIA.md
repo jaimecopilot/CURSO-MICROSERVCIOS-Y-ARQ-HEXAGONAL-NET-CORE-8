@@ -689,6 +689,7 @@ La validación sintáctica se apoya en el sistema de tipos del lenguaje. Un reco
 
 La validación semántica comprueba que los valores de la petición tienen sentido en el contexto del recurso. Se aplica después de la validación sintáctica. En una API REST, la validación semántica incluye la comprobación de rangos, la comprobación de formatos específicos, la comprobación de longitudes máximas y mínimas y la comprobación de coherencia entre campos. Un campo Cantidad con valor negativo falla la validación semántica. Un campo Email con formato incorrecto falla la validación semántica. Un campo FechaFin anterior a FechaInicio falla la validación semántica. La validación semántica se implementa con reglas específicas para cada campo.
 
+```csharp
 public class CrearOrdenRequestValidator : AbstractValidator<CrearOrdenRequest>  
 {  
     public CrearOrdenRequestValidator()  
@@ -706,6 +707,8 @@ public class CrearOrdenRequestValidator : AbstractValidator<CrearOrdenRequest>
             .LessThanOrEqualTo(10000).WithMessage("La cantidad no puede superar 10000.");  
     }  
 }
+
+```
 
 - **Línea 1:** public class CrearOrdenRequestValidator : AbstractValidator<CrearOrdenRequest> → declara el validador.
 - **Línea 2:** { → abre el cuerpo de la clase.
@@ -732,6 +735,7 @@ La validación semántica tiene dos consecuencias prácticas. La primera es que 
 
 La validación de negocio comprueba que los datos cumplen las reglas del dominio. Se aplica después de la validación semántica. En una API REST, la validación de negocio incluye la comprobación de unicidad, la comprobación de existencia de referencias y la comprobación de reglas específicas del dominio. Un Cliente que no existe falla la validación de negocio. Un Material que está bloqueado falla la validación de negocio. Una Orden con más líneas de las permitidas falla la validación de negocio. La validación de negocio se implementa en la capa de aplicación o en el dominio, no en el validador de la petición.
 
+```csharp
 public class OrdenServicio  
 {  
     private readonly AceriaDbContext _db;  
@@ -755,6 +759,8 @@ public class OrdenServicio
         return stock >= cantidad;  
     }  
 }
+
+```
 
 - **Línea 1:** public class OrdenServicio → declara el servicio de aplicación.
 - **Línea 2:** { → abre el cuerpo de la clase.
@@ -786,7 +792,10 @@ La validación de negocio tiene dos consecuencias prácticas. La primera es que 
 
 FluentValidation es una biblioteca para definir reglas de validación de forma fluida y testeable. Se integra con ASP.NET Core mediante la clase AbstractValidator<T> y el método RuleFor. Cada regla se compone de una expresión lambda que selecciona el campo, un método de validación y un mensaje de error. La biblioteca ofrece más de treinta métodos de validación entre los que se incluyen NotEmpty, MaximumLength, GreaterThan, EmailAddress, RegularExpression, Must y Custom. La combinación de métodos permite expresar reglas complejas de forma legible.
 
+```csharp
 builder.Services.AddValidatorsFromAssemblyContaining<CrearOrdenRequestValidator>();
+
+```
 
 - **Línea 1:** builder.Services.AddValidatorsFromAssemblyContaining<CrearOrdenRequestValidator>(); → registra todos los validadores del ensamblado.
 
@@ -803,6 +812,7 @@ En Minimal API, la validación se integra con un filtro de endpoint o con un man
 
 *Figura M02.2.3.6 — Ejecución del filtro antes del manejador Minimal API.*
 
+```csharp
 public class ValidationFilter<T> : IEndpointFilter where T : class  
 {  
     private readonly IValidator<T> _validator;  
@@ -835,6 +845,8 @@ public class ValidationFilter<T> : IEndpointFilter where T : class
         return await next(context);  
     }  
 }
+
+```
 
 - **Línea 1:** public class ValidationFilter<T> : IEndpointFilter where T : class → declara el filtro genérico.
 - **Línea 2:** { → abre el cuerpo de la clase.
@@ -873,9 +885,12 @@ El filtro genérico se aplica a los endpoints que lo necesitan. La aplicación s
 
 Los mensajes de error de la validación deben ser claros y útiles para el cliente. Un mensaje como "Valor inválido" no aporta información. Un mensaje como "La cantidad debe ser mayor que cero" aporta información concreta. Los mensajes se definen en el validador con el método WithMessage. La localización de los mensajes permite que la API devuelva mensajes en el idioma del cliente. La localización se implementa con recursos o con un proveedor de mensajes. La adopción de mensajes específicos y localizados mejora la experiencia del consumidor y reduce el tiempo de integración.
 
+```csharp
 RuleFor(x => x.Cantidad)  
     .GreaterThan(0).WithMessage("La cantidad debe ser mayor que cero.")  
     .LessThanOrEqualTo(10000).WithMessage("La cantidad no puede superar 10000.");
+
+```
 
 - **Línea 1:** RuleFor(x => x.Cantidad) → comienza la regla para el campo Cantidad.
 - **Línea 2:** .GreaterThan(0).WithMessage("La cantidad debe ser mayor que cero.") → regla y mensaje.
