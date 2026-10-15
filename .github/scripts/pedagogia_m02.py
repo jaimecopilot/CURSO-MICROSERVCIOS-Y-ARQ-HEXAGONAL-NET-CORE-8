@@ -173,7 +173,7 @@ def p23_practicas(text: str):
     text=replace(text,"- No se ha modificado ningún archivo del punto 2.2 excepto `Program.cs`, que añade líneas nuevas sin eliminar las existentes.",
                      "- La solución independiente del punto 2.2 no se modifica; solo cambia `Program.cs` de la copia 2.3.")
     text=replace(text,"con tres clases nuevas","con cuatro clases nuevas")
-    text=replace(text,"tres clases nuevas","cuatro clases nuevas")
+    text=text.replace("tres clases nuevas","cuatro clases nuevas")
     text=replace(text,"Program.cs modificado solo con líneas añadidas: using FluentValidation;, using AceriaApp.Monolito.Api.Validacion; y builder.Services.AddValidatorsFromAssemblyContaining<CrearOrdenRequestValidator>();.",
                      "Program.cs de la copia 2.3 modificado solo con dos líneas aditivas: using AceriaApp.Monolito.Api.Validacion; y builder.Services.AddValidacion();.")
     return text
@@ -422,6 +422,8 @@ def p24_practicas(text: str):
     # README y resultado esperado: las extensiones sí están conectadas.
     text=replace(text,"`MetadatosApi`, `ConfiguracionOpenApi` y `ConstructorDocumentoOpenApi`",
                  "`MetadatosApi`, `ConfiguracionOpenApi` y `DocumentacionExtensions`")
+    text=replace(text,"Las clases MetadatosApi, ConfiguracionOpenApi y ConstructorDocumentoOpenApi",
+                 "Las clases MetadatosApi, ConfiguracionOpenApi y DocumentacionExtensions")
     text=replace(text,"Nueve tests nuevos en `tests/AceriaApp.Documentacion.Tests`.",
                  "Nueve tests nuevos en `tests/AceriaApp.Documentacion.Tests`, incluidos tres tests HTTP del documento real.")
     text=replace(text,"- No se ha modificado ningún archivo del punto 2.3.",
@@ -446,7 +448,10 @@ def aplicar(text: str, point: str, tipo: str) -> tuple[str,list[str]]:
     cambios=[]
     if tipo!="PRACTICAS":
         return text,cambios
-    if point=="2.3":
+    if point=="2.2":
+        text=insert_docs(text,"2.2",21,"2.1-diseno-apis-rest","2.2-recursos-verbos-codigos",11)
+        cambios=["2.2.21 comparar 11 documentos heredados"]
+    elif point=="2.3":
         text=p23_practicas(text)
         cambios=["2.3.5 DI moderno", "2.3.15 test record",
                  "2.3.16 extensión", "2.3.22 comparación completa",
