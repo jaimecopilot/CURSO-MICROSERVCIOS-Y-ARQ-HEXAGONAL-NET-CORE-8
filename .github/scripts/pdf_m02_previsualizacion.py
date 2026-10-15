@@ -33,7 +33,7 @@ li p { text-align: left; }
 strong { color: #1e354a; }
 pre, code { font-family: 'DejaVu Sans Mono', monospace; font-size: 7.9pt; }
 pre { white-space: pre-wrap; overflow-wrap: anywhere; background: #f4f7f9;
-      border: 1px solid #e0e5ea; padding: 7pt; page-break-inside: avoid; }
+      border: 1px solid #e0e5ea; padding: 7pt; page-break-inside: auto; break-inside: auto; box-decoration-break: clone; }
 code { overflow-wrap: anywhere; }
 table { border-collapse: collapse; width: 100%; font-size: 8pt; margin: 7pt 0 10pt; }
 th, td { border: 1px solid #d5dee5; padding: 4pt 5pt; vertical-align: top; overflow-wrap: anywhere; }
