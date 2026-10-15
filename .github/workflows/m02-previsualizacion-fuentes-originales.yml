@@ -1,0 +1,50 @@
+name: M02 - previsualizar fuentes reales sin síntesis
+
+on:
+  push:
+    branches:
+      - desarrollo/m02-apis-rest-20261015
+    paths:
+      - '.github/fuentes-originales/m02/**'
+      - '.github/scripts/construir_m02_desde_fuentes.py'
+      - '.github/workflows/m02-previsualizacion-fuentes-originales.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  previsualizacion:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Construir vista Markdown sólo con originales completos
+        run: |
+          python .github/scripts/construir_m02_desde_fuentes.py \
+            --parcial --salida m02_previsualizacion
+      - name: Validar recuentos y origen exacto
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          base=Path("m02_previsualizacion")
+          info=json.loads((base/"INFORME.json").read_text(encoding="utf-8"))
+          docs=info["fuentes_presentes"]
+          assert [d["point"] for d in docs]==["2.1","2.2"], docs
+          assert all(d["blocks"]==10 and d["steps"]==24 for d in docs)
+          for name in ("TEORIA","PRACTICAS"):
+              text=next(base.glob("*_"+name+".md")).read_text(encoding="utf-8")
+              assert "JAIME GALLO" in text
+              assert "Duración: " not in text
+              assert "PARTE TEÓRICA (" not in text
+              assert "PARTE PRÁCTICA (" not in text
+          print("PREVISUALIZACIÓN PARCIAL: 20 bloques y 48 pasos completos.")
+          print("No certifica M02: faltan 2.3 y 2.4.")
+          PY
+      - name: Conservar previsualización y huellas de procedencia
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m02-originales-2-1-2-2-previsualizacion
+          path: m02_previsualizacion/
+          if-no-files-found: error
