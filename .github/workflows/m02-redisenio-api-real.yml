@@ -9,6 +9,7 @@ on:
       - '.github/scripts/m02_guias_reales.py'
       - '.github/scripts/m02_maquetar_reales.py'
       - '.github/workflows/m02-redisenio-api-real.yml'
+      - '.gitignore'
   workflow_dispatch:
 
 permissions:
@@ -51,6 +52,14 @@ jobs:
           if grep -Ein 'git (add|commit|log|status|push|checkout|branch)' \
               M02_APIS_REST_ASPNET_CORE/PROYECTO/2.*/README.md; then
             echo "El material del alumno contiene operaciones Git"; exit 1
+          fi
+      - name: Exigir ausencia de artefactos compilados versionados
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git ls-files 'M02_APIS_REST_ASPNET_CORE/PROYECTO/**' | grep -E '/(bin|obj|TestResults)/'; then
+            echo 'Error: hay artefactos de compilación versionados' >&2
+            exit 1
           fi
       - name: Commit de proyectos SOLO en rama de rediseño
         run: |
