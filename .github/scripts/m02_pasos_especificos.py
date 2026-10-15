@@ -107,3 +107,77 @@ SPECS={
 ]
 }
 def obtener(n,k):return SPECS[n][k-1]
+
+# Los motivos se seleccionan por el comportamiento real que se programa
+# (no por una numeración arbitraria de cinco en cinco).
+REASON_GROUPS={
+1:[
+(3,"El programa aún se está preparando: comprobar SDK, arranque y URI antes de introducir persistencia permite aislar errores de herramienta frente a errores de API."),
+(7,"La entidad y el DTO cumplen funciones diferentes. La primera modela los datos persistidos y el segundo limita el contrato JSON que puede ver el consumidor."),
+(13,"El acceso a datos se configura en infraestructura mediante EF Core y DI. LocalDB es la base efectiva de la API; EnsureCreated se usa solo durante el aprendizaje."),
+(20,"El verbo GET no modifica recursos. MapGet recibe dependencias y parámetros, consulta la orden y traduce el resultado a 200 o 404 con DTOs."),
+(23,"WebApplicationFactory prueba la aplicación como servidor HTTP: permite distinguir compilación C# de comportamiento observable del enrutamiento y la serialización."),
+(24,"El filtrado de la colección conserva la idea de recurso y añade una consulta con parámetros, sin transformar el endpoint en una operación RPC.")
+],
+2:[
+(4,"El diseño de las rutas y los contratos evita recibir propiedades de servidor desde JSON. El resultado público se devuelve mediante OrdenDto, no directamente desde la entidad."),
+(8,"El POST crea un recurso y debe confirmar la inserción mediante SaveChangesAsync. CreatedAtRoute devuelve 201 y un enlace Location utilizable mediante GET."),
+(10,"Un cuerpo incorrecto es distinto de una regla del negocio. En 2.2 el 400 es provisional; 501 unidades reciben 422 por la capacidad limitada del taller."),
+(13,"PUT sustituye los campos editables de una orden existente. Si el Guid no identifica un recurso debe devolver 404, no crear silenciosamente otro."),
+(15,"PATCH realiza un cambio parcial de Cantidad y conserva los demás datos. Su resultado debe verificarse con una lectura posterior."),
+(17,"DELETE quita un recurso persistido. La consulta posterior puede devolver 404; esa diferencia no impide que la eliminación sea idempotente."),
+(20,"La transición Finalizada cambia el estado de negocio. PUT, PATCH y DELETE deben respetarlo y producir 409 si se intenta una operación incompatible."),
+(23,"Los tests deben confirmar los efectos de POST, PUT, PATCH, DELETE, la capacidad del taller y el conflicto de estado a través de peticiones HTTP reales."),
+(24,"La idempotencia habla del efecto final: repetir PUT no multiplica los recursos, y repetir DELETE no restaura lo eliminado. Las respuestas HTTP pueden diferir.")
+],
+3:[
+(3,"La deserialización de un cuerpo JSON y la validación semántica no son lo mismo. Primero el framework interpreta el mensaje y después se comprueban las reglas de datos."),
+(7,"FluentValidation expresa reglas sobre los contratos de entrada y devuelve errores por campo; no debe confundirse un record con el validador que lo inspecciona."),
+(13,"El filtro ejecuta ValidateAsync antes del manejador y utiliza Results.ValidationProblem si falla; solo invoca next(context) cuando la petición es válida."),
+(17,"El registro de validadores en DI no ejecuta la validación. AddEndpointFilter debe asociarse a cada POST, PUT o PATCH que acepte ese contrato."),
+(21,"Un 400 por datos fuera del rango, un 422 por la capacidad y un 409 por el estado de una orden pertenecen a causas diferentes que el cliente debe distinguir."),
+(24,"Las pruebas HTTP recorren el pipeline completo y comprueban que los fallos se comunican como Problem Details sin alterar los datos.")
+],
+4:[
+(5,"Swashbuckle descubre la API real desde ASP.NET Core: registrar AddSwaggerGen y definir SwaggerDoc produce un documento estándar a partir de rutas y tipos."),
+(10,"La publicación de Swagger UI y JSON ocurre después de construir la aplicación y se restringe a Development; la documentación no debe inventarse manualmente."),
+(15,"Los metadatos de una operación declaran rutas, respuestas y esquemas; son documentación de un comportamiento que ya fue implementado y probado."),
+(19,"Un ejemplo JSON ilustra el contrato de entrada. Swagger UI permite usarlo para enviar una petición real, pero no crea datos hasta ejecutar el endpoint."),
+(23,"Descargar el JSON OpenAPI con WebApplicationFactory y comprobar info, paths y schemas es una prueba contractual real; en Production debe respetarse el 404."),
+(24,"Cambiar un WithSummary y ver reflejada la modificación en el JSON demuestra la vinculación de la documentación con el código ejecutado.")
+]
+}
+ERROR_GROUPS={
+1:["Si falla el inicio, revisa que hayas seleccionado ASP.NET Core Empty y net8.0; no es necesario instalar controladores.",
+   "Si no compilan Orden u OrdenDto, comprueba namespaces y tipos. No conviertas la entidad en el contrato JSON.",
+   "Si falla UseSqlServer, revisa la dependencia NuGet. Si LocalDB no responde, verifica la instancia MSSQLLocalDB.",
+   "Si aparece 404, revisa Guid, la plantilla {id:guid} y la existencia de la orden; en colección vacía corresponde 200.",
+   "Si falla ApiFactory, comprueba Program partial y el registro de DbContext con InMemory solo para tests.",
+   "Si el filtro no cambia el resultado, revisa el nombre cliente en la query y la condición Where."],
+2:["Si el JSON puede cambiar el ID o Estado, el contrato de entrada está exponiendo datos internos; utiliza CrearOrdenRequest.",
+   "Si el POST no persiste, verifica SaveChangesAsync; si Location falta, revisa CreatedAtRoute y el nombre de GET.",
+   "Si un 501 da 400, la condición provisional está mezclada con la política de capacidad; distingue ambos casos.",
+   "Si el PUT no actualiza, revisa FindAsync(id) y SaveChangesAsync. El GUID no debe cambiar.",
+   "Si PATCH cambia otros campos, no reasignes Cliente ni Material desde ActualizarCantidadRequest.",
+   "Si DELETE devuelve éxito pero GET encuentra la orden, revisa Remove y SaveChangesAsync.",
+   "Si una orden finalizada cambia de estado o desaparece, comprueba la condición Estado antes de escribir.",
+   "Si una prueba de escritura pasa sin volver a consultar la orden, no ha demostrado persistencia; añade el GET posterior.",
+   "Si se crean órdenes duplicadas al repetir PUT, se está usando Add en lugar de actualizar la entidad encontrada."],
+3:["Si JSON roto produce un error inesperado, revisa Content-Type y la estructura del cuerpo antes del validador.",
+   "Si RuleFor no compila, revisa FluentValidation y el using. Comprueba la diferencia entre NotEmpty y límites numéricos.",
+   "Si una petición inválida llega al endpoint, revisa el orden de ejecución y la condición IsValid antes de next(context).",
+   "Si se acepta una petición inválida, puede faltar AddEndpointFilter aunque los validadores estén registrados en DI.",
+   "Si aparece 500 en vez de 400/422/409, revisa qué capa lanza la excepción y transforma el error de forma adecuada.",
+   "Si el test solo instancia un record, no prueba HTTP; usa WebApplicationFactory y examina errors del JSON."],
+4:["Si SwaggerGen no se resuelve, revisa la versión de Swashbuckle compatible con .NET 8.",
+   "Si /swagger devuelve 404 en Development, comprueba AddDocumentacion y UseDocumentacion y el entorno.",
+   "Si falta un código de respuesta, añade Produces/ProducesProblem al endpoint correspondiente sin inventar comportamientos.",
+   "Si no aparece example, comprueba SchemaFilter y el tipo CrearOrdenRequest usado en el esquema.",
+   "Si el JSON no incluye rutas, comprueba MapGet/MapPost y que las pruebas apuntan al servidor correcto.",
+   "Si el summary no cambia, modifica WithSummary en el endpoint real y vuelve a solicitar el documento."]
+}
+def explicacion_especifica(n,k):
+    return next(reason for limit,reason in REASON_GROUPS[n] if k<=limit)
+def error_especifico(n,k):
+    grupo=next(i for i,(limit,_) in enumerate(REASON_GROUPS[n]) if k<=limit)
+    return ERROR_GROUPS[n][grupo]
