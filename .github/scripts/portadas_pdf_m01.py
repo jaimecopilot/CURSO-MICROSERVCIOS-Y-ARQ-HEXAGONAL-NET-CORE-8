@@ -68,8 +68,7 @@ def stamp(page, category):
     page.insert_text((49, 30),MODULE,
                      fontname="DVREG",fontsize=7.2,color=MUTED)
     label = category.upper()
-    label_width = fitz.get_text_length(label,fontsize=9,fontname="DVBOLD",
-                                       fontfile=BOLD)
+    label_width = fitz.Font(fontfile=BOLD).text_length(label,fontsize=9)
     page.insert_text((w - 48 - label_width, 30),label,
                      fontname="DVBOLD",fontsize=9,color=NAVY)
     page.draw_line((49, 37),(w-49,37),color=(.76,.81,.85),width=.6)
