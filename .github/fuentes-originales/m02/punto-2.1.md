@@ -303,3 +303,422 @@ Resumen rápido de la teoría
 
 ---
 
+PARTE PRÁCTICA (27 minutos)
+
+Ejercicio: Añadir al punto 1.5 un documento de diseño de APIs REST en docs/, una clase de validación de URIs REST en el proyecto monolítico y un test unitario que verifique la validación. El punto 2.1 parte del contenido del punto 1.5 sin modificar ningún archivo existente: solo añade archivos nuevos. El punto 2.1 es el primer punto del módulo 2 y se crea en la carpeta modulo-2-apis-rest-aspnet-core.
+
+Ubicación de trabajo: C:\cursos\AceriaApp\
+
+
+---
+
+Paso 1 — Crear la estructura del módulo 2 y del punto 2.1
+
+Acción 1: Abrir la terminal integrada de Visual Studio 2026 con Ctrl+ñ (o Ctrl+``  en teclados no españoles).
+Acción 2: Escribir cd C:\cursos\AceriaApp y pulsar Enter.
+Acción 3: Escribir mkdir modulo-2-apis-rest-aspnet-core y pulsar Enter.
+Acción 4: Escribir mkdir modulo-2-apis-rest-aspnet-core\2.1-diseno-apis-rest y pulsar Enter.
+Acción 5: Escribir xcopy modulo-1-introduccion-microservicios\1.5-buenas-practicas modulo-2-apis-rest-aspnet-core\2.1-diseno-apis-rest /E /I /H /Y y pulsar Enter.
+Acción 6: Escribir dir modulo-2-apis-rest-aspnet-core\2.1-diseno-apis-rest y pulsar Enter para verificar que se ha copiado el contenido.
+
+Por qué se hace: cada punto del curso parte del contenido del punto anterior. El punto 2.1 es el primer punto del módulo 2 y parte del punto 1.5, que es el último punto del módulo 1. La copia se hace en la carpeta del módulo 2.
+
+Errores comunes:
+
+· Usar copy en lugar de xcopy: copy no copia carpetas de forma recursiva.
+· Olvidar el flag /E: no se copian las subcarpetas vacías.
+· Olvidar el flag /I: xcopy pregunta si el destino es un directorio cuando no existe.
+· Olvidar el flag /Y: xcopy pide confirmación para sobrescribir.
+· Copiar desde el punto 1.4 en lugar del 1.5: se pierde el contenido del último punto del módulo 1.
+
+Verificación: al ejecutar dir modulo-2-apis-rest-aspnet-core\2.1-diseno-apis-rest, deben aparecer AceriaApp.sln, README.md, src, tests y docs.
+
+
+---
+
+Paso 2 — Abrir la solución copiada en Visual Studio 2026
+
+Acción 1: Escribir cd modulo-2-apis-rest-aspnet-core\2.1-diseno-apis-rest y pulsar Enter.
+Acción 2: Escribir start AceriaApp.sln y pulsar Enter.
+Acción 3: Verificar que Visual Studio 2026 abre la solución y muestra los proyectos heredados del punto 1.5: AceriaApp.Monolito.Api, AceriaApp.Monolito.Tests, AceriaApp.Metricas.Tests, AceriaApp.Diseno.Tests, AceriaApp.Organizacion.Tests y AceriaApp.BuenasPracticas.Tests.
+Acción 4: Verificar que la solución compila con Ctrl+Shift+B y que la salida muestra Build succeeded..
+
+Por qué se hace: abrir la solución copiada permite trabajar en el punto 2.1 sobre la base del punto 1.5. La compilación verifica que la copia es correcta.
+
+Errores comunes:
+
+· Abrir la solución del punto 1.5 en lugar de la del punto 2.1: los cambios se aplican al punto equivocado.
+· No compilar antes de empezar: si la copia tiene errores, los cambios posteriores fallan.
+· Tener la API del punto 1.5 en ejecución: el puerto queda ocupado y la compilación falla.
+
+Verificación: Visual Studio 2026 muestra la solución AceriaApp con los seis proyectos heredados del punto 1.5 y la compilación es correcta.
+
+
+---
+
+Paso 3 — Verificar que la carpeta docs contiene los documentos del punto 1.5
+
+Acción 1: En el panel Solution Explorer, expandir la carpeta docs del punto 2.1.
+Acción 2: Verificar que contiene ADR-001 a ADR-005, analisis-ventajas-inconvenientes.md, principios-diseno.md, organizacion-solucion.md y buenas-practicas.md.
+Acción 3: Verificar que ninguno de los nueve documentos se ha modificado.
+Acción 4: Verificar que la carpeta docs no contiene ningún archivo nuevo del punto 2.1 todavía.
+
+Por qué se hace: el punto 2.1 parte del contenido del punto 1.5, que ya incluye la carpeta docs con nueve documentos. No se modifica ningún documento existente.
+
+Errores comunes:
+
+· Modificar alguno de los ADR o documentos existentes: viola la regla de no modificar archivos del punto anterior.
+· Eliminar algún documento existente: pierde la trazabilidad del punto 1.5.
+· Crear la carpeta docs si ya existe: mkdir falla.
+
+Verificación: la carpeta docs contiene los nueve documentos del punto 1.5 sin modificaciones.
+
+
+---
+
+Paso 4 — Crear el documento de diseño de APIs REST en docs
+
+Acción 1: En el panel Solution Explorer, hacer clic derecho sobre la carpeta docs.
+Acción 2: Seleccionar Add → New Item → Text File y nombrar el archivo diseno-apis-rest.md.
+Acción 3: Escribir exactamente el siguiente contenido:
+
+# Diseño de APIs REST — Punto 2.1  
+  
+## Restricciones de REST  
+  
+1. Cliente-servidor.  
+2. Sin estado.  
+3. Cacheable.  
+4. Interfaz uniforme.  
+5. Sistema en capas.  
+6. Código bajo demanda (opcional).  
+  
+## Recursos  
+  
+Un recurso es cualquier entidad identificable. Se identifica con una URI única.  
+  
+## URIs del proyecto  
+  
+- `/api/v1/ordenes` → colección de órdenes.  
+- `/api/v1/ordenes/{id}` → orden concreta.  
+- `/api/v1/ordenes/{id}/lineas` → líneas de una orden.  
+- `/api/v1/materiales` → colección de materiales.  
+- `/api/v1/clientes` → colección de clientes.  
+  
+## Reglas de diseño de URIs  
+  
+1. Sustantivos en plural.  
+2. Identificador tras la colección.  
+3. Anidamiento de relaciones con sub-rutas.  
+4. Sin verbos en las URIs.  
+5. Versionado en la URI.  
+  
+## Métodos HTTP  
+  
+| Método | Semántica | Seguro | Idempotente |  
+|--------|-----------|--------|-------------|  
+| GET | Recuperar | Sí | Sí |  
+| POST | Crear | No | No |  
+| PUT | Reemplazar | No | Sí |  
+| PATCH | Modificar | No | No |  
+| DELETE | Eliminar | No | Sí |  
+  
+## Códigos de estado  
+  
+| Código | Significado |  
+|--------|-------------|  
+| 200 | Operación exitosa con cuerpo |  
+| 201 | Recurso creado |  
+| 204 | Operación exitosa sin cuerpo |  
+| 400 | Error de validación |  
+| 401 | Falta autenticación |  
+| 403 | Sin permisos |  
+| 404 | Recurso no encontrado |  
+| 409 | Conflicto de estado |  
+| 422 | Entidad no procesable |  
+| 500 | Error del servidor |  
+  
+## Paginación, filtrado y ordenación  
+  
+- `?page=1&pageSize=20` → paginación.  
+- `?filter=cliente:ACX-001` → filtrado.  
+- `?sort=fechaCreacion:desc` → ordenación.  
+  
+## Aplicación al proyecto del curso  
+  
+| Elemento | Aplicación |  
+|----------|------------|  
+| Recursos | URIs con sustantivos en plural |  
+| Métodos | GET, POST, PUT, PATCH, DELETE |  
+| Códigos | 200, 201, 204, 400, 404, 409, 422, 500 |  
+| Representaciones | JSON |  
+| Paginación | `page`, `pageSize` |  
+| Relaciones | Sub-rutas anidadas |
+
+Acción 4: Pulsar Ctrl+S para guardar el archivo.
+Acción 5: Verificar que el archivo aparece en la carpeta docs sin subrayados rojos.
+
+Por qué se hace: el documento de diseño de APIs REST es el artefacto de docs específico del punto 2.1. No modifica los nueve documentos existentes del punto 1.5.
+
+Errores comunes:
+
+· Nombrar el archivo con otro nombre: rompe la trazabilidad del punto.
+· Modificar los ADR existentes: viola la regla de no modificar archivos del punto anterior.
+· Guardar el archivo en la raíz del punto en lugar de docs: rompe la estructura del repositorio.
+
+Verificación: el archivo docs\diseno-apis-rest.md existe con las nueve secciones.
+
+
+---
+
+Paso 5 — Crear la carpeta DisenoRest en el proyecto monolítico
+
+Acción 1: En el panel Solution Explorer, hacer clic derecho sobre el proyecto AceriaApp.Monolito.Api.
+Acción 2: Seleccionar Add → New Folder y nombrar la carpeta DisenoRest.
+Acción 3: Verificar que la carpeta DisenoRest aparece dentro de AceriaApp.Monolito.Api sin afectar a las carpetas Dominio, Infraestructura, Metricas, Diseno, Organizacion y BuenasPracticas.
+Acción 4: Verificar que no se ha modificado ningún archivo existente del punto 1.5.
+
+Por qué se hace: la carpeta DisenoRest albergará las clases de validación de URIs REST. Se crea como carpeta nueva sin tocar las carpetas existentes.
+
+Errores comunes:
+
+· Crear la carpeta dentro de alguna de las carpetas existentes: rompe la separación de responsabilidades.
+· Modificar las carpetas existentes: viola la regla de no modificar archivos del punto anterior.
+· Crear la carpeta con otro nombre: rompe la convención del curso.
+
+Verificación: la carpeta DisenoRest existe dentro de AceriaApp.Monolito.Api y las carpetas existentes permanecen intactas.
+
+
+---
+
+Paso 6 — Crear la clase UriRest
+
+Acción 1: En el panel Solution Explorer, hacer clic derecho sobre la carpeta DisenoRest.
+Acción 2: Seleccionar Add → Class y nombrar la clase UriRest.cs.
+Acción 3: Escribir exactamente el siguiente código:
+
+namespace AceriaApp.Monolito.Api.DisenoRest;  
+  
+public class UriRest  
+{  
+    public string Version { get; init; } = "v1";  
+    public string Recurso { get; init; } = string.Empty;  
+    public string? Identificador { get; init; }  
+    public string? SubRecurso { get; init; }  
+  
+    public string Construir()  
+    {  
+        var partes = new List<string> { "api", Version, Recurso };  
+        if (!string.IsNullOrEmpty(Identificador))  
+        {  
+            partes.Add(Identificador);  
+        }  
+        if (!string.IsNullOrEmpty(SubRecurso))  
+        {  
+            partes.Add(SubRecurso);  
+        }  
+        return "/" + string.Join("/", partes);  
+    }  
+}
+
+Acción 4: Pulsar Ctrl+S para guardar el archivo.
+Acción 5: Verificar que la clase compila sin errores.
+
+Por qué se hace: la clase UriRest modela la construcción de una URI REST a partir de sus partes: versión, recurso, identificador y sub-recurso. Es la base para validar que las URIs del proyecto siguen las reglas de diseño.
+
+Errores comunes:
+
+· Olvidar el namespace: la clase no se resuelve desde otros archivos.
+· No inicializar Version con "v1": la versión no se aplica por defecto.
+· Usar string en lugar de string? para las propiedades opcionales: el compilador emite advertencias.
+
+Verificación: la clase UriRest compila sin errores y expone cuatro propiedades y un método.
+
+
+---
+
+Paso 7 — Añadir el using necesario en UriRest
+
+Acción 1: En el panel Solution Explorer, hacer doble clic en UriRest.cs.
+Acción 2: Añadir la línea using System.Collections.Generic; al principio del archivo si no está presente.
+Acción 3: Verificar que no hay subrayados rojos en List<string>.
+Acción 4: Pulsar Ctrl+S para guardar el archivo.
+
+Por qué se hace: el tipo List<string> pertenece a System.Collections.Generic. En proyectos con ImplicitUsings desactivado, hay que añadir el using explícito.
+
+Errores comunes:
+
+· Añadir using System.Linq; en lugar de System.Collections.Generic: no resuelve List<string>.
+· Añadir el using después del namespace: el compilador no lo reconoce.
+· Olvidar el using y confiar en ImplicitUsings: el proyecto puede tenerlo desactivado.
+
+Verificación: UriRest.cs compila sin errores y no muestra subrayados rojos.
+
+
+---
+
+Paso 8 — Crear la clase ValidadorUriRest
+
+Acción 1: En el panel Solution Explorer, hacer clic derecho sobre la carpeta DisenoRest.
+Acción 2: Seleccionar Add → Class y nombrar la clase ValidadorUriRest.cs.
+Acción 3: Escribir exactamente el siguiente código:
+
+namespace AceriaApp.Monolito.Api.DisenoRest;  
+  
+public class ValidadorUriRest  
+{  
+    private static readonly string[] VerbosProhibidos =  
+    {  
+        "crear", "obtener", "listar", "actualizar", "eliminar",  
+        "get", "post", "put", "patch", "delete"  
+    };  
+  
+    public ResultadoUri Validar(string uri)  
+    {  
+        var errores = new List<string>();  
+  
+        if (!uri.StartsWith("/api/", StringComparison.Ordinal))  
+        {  
+            errores.Add("La URI no empieza por '/api/'.");  
+        }  
+  
+        var partes = uri.Trim('/').Split('/');  
+        if (partes.Length >= 3 && !partes[1].StartsWith("v", StringComparison.Ordinal))  
+        {  
+            errores.Add("La URI no incluye versión después de 'api'.");  
+        }  
+  
+        foreach (var verbo in VerbosProhibidos)  
+        {  
+            if (uri.Contains(verbo, StringComparison.OrdinalIgnoreCase))  
+            {  
+                errores.Add($"La URI contiene un verbo prohibido: '{verbo}'.");  
+            }  
+        }  
+  
+        return new ResultadoUri(errores.Count == 0, errores);  
+    }  
+}  
+  
+public record ResultadoUri(bool EsValida, IReadOnlyList<string> Errores);
+
+Acción 4: Pulsar Ctrl+S para guardar el archivo.
+Acción 5: Verificar que la clase compila sin errores.
+
+Por qué se hace: la clase ValidadorUriRest comprueba que una URI sigue las reglas de diseño: empieza por /api/, incluye versión y no contiene verbos prohibidos.
+
+Errores comunes:
+
+· Olvidar el using System.Collections.Generic;: IReadOnlyList<string> y List<string> no se resuelven.
+· Olvidar el using System;: StringComparison no se resuelve.
+· No usar StringComparison.OrdinalIgnoreCase en la comprobación de verbos: las mayúsculas no se detectan.
+
+Verificación: la clase ValidadorUriRest compila sin errores y expone un método y un record.
+
+
+---
+
+Paso 9 — Añadir los using necesarios en ValidadorUriRest
+
+Acción 1: En el panel Solution Explorer, hacer doble clic en ValidadorUriRest.cs.
+Acción 2: Añadir las líneas using System; y using System.Collections.Generic; al principio del archivo si no están presentes.
+Acción 3: Verificar que no hay subrayados rojos en StringComparison ni en IReadOnlyList<string>.
+Acción 4: Pulsar Ctrl+S para guardar el archivo.
+
+Por qué se hace: el tipo StringComparison pertenece a System. El tipo IReadOnlyList<string> pertenece a System.Collections.Generic. En proyectos con ImplicitUsings desactivado, hay que añadir los usings explícitos.
+
+Errores comunes:
+
+· Añadir solo uno de los dos usings: los tipos del otro no se resuelven.
+· Añadir los usings después del namespace: el compilador no los reconoce.
+· Olvidar los usings y confiar en ImplicitUsings: el proyecto puede tenerlo desactivado.
+
+Verificación: ValidadorUriRest.cs compila sin errores y no muestra subrayados rojos.
+
+
+---
+
+Paso 10 — Crear la clase CatalogoUris
+
+Acción 1: En el panel Solution Explorer, hacer clic derecho sobre la carpeta DisenoRest.
+Acción 2: Seleccionar Add → Class y nombrar la clase CatalogoUris.cs.
+Acción 3: Escribir exactamente el siguiente código:
+
+namespace AceriaApp.Monolito.Api.DisenoRest;  
+  
+public class CatalogoUris  
+{  
+    private readonly List<string> _uris;  
+  
+    public CatalogoUris(List<string> uris)  
+    {  
+        _uris = uris;  
+    }  
+  
+    public IEnumerable<string> UrisValidas(ValidadorUriRest validador)  
+    {  
+        return _uris.Where(u => validador.Validar(u).EsValida);  
+    }  
+  
+    public IEnumerable<string> UrisInvalidas(ValidadorUriRest validador)  
+    {  
+        return _uris.Where(u => !validador.Validar(u).EsValida);  
+    }  
+}
+
+Acción 4: Pulsar Ctrl+S para guardar el archivo.
+Acción 5: Verificar que la clase compila sin errores.
+
+Por qué se hace: la clase CatalogoUris agrupa las URIs del proyecto y permite filtrarlas por validez según el validador.
+
+Errores comunes:
+
+· No inicializar _uris en el constructor: la clase lanza NullReferenceException.
+· Olvidar using System.Linq;: Where no se resuelve.
+· Devolver List<string> en lugar de IEnumerable<string>: expone la implementación interna.
+
+Verificación: la clase CatalogoUris compila sin errores y expone un constructor y dos métodos.
+
+
+---
+
+Paso 11 — Añadir el using necesario en CatalogoUris
+
+Acción 1: En el panel Solution Explorer, hacer doble clic en CatalogoUris.cs.
+Acción 2: Añadir la línea using System.Linq; al principio del archivo si no está presente.
+Acción 3: Verificar que no hay subrayados rojos en Where.
+Acción 4: Pulsar Ctrl+S para guardar el archivo.
+
+Por qué se hace: el método Where pertenece a System.Linq. En proyectos con ImplicitUsings desactivado, hay que añadir el using explícito.
+
+Errores comunes:
+
+· Añadir using System.Collections.Generic; en lugar de System.Linq: no resuelve Where.
+· Añadir el using después del namespace: el compilador no lo reconoce.
+· Olvidar el using y confiar en ImplicitUsings: el proyecto puede tenerlo desactivado.
+
+Verificación: CatalogoUris.cs compila sin errores y no muestra subrayados rojos.
+
+
+---
+
+Paso 12 — Crear el proyecto de tests del punto 2.1
+
+Acción 1: En el panel Solution Explorer, hacer clic derecho sobre la carpeta tests.
+Acción 2: Seleccionar Add → New Project.
+Acción 3: Seleccionar la plantilla xUnit Test Project, nombrar el proyecto AceriaApp.DisenoRest.Tests y pulsar Create.
+Acción 4: Verificar que el proyecto aparece en la solución y que se ha creado la carpeta tests\AceriaApp.DisenoRest.Tests.
+
+Por qué se hace: el punto 2.1 añade un proyecto de tests específico para las clases de diseño REST. Se crea como proyecto nuevo sin modificar los proyectos de tests existentes.
+
+Errores comunes:
+
+· Crear el proyecto dentro de src en lugar de tests: rompe la estructura.
+· Modificar los proyectos de tests del punto 1.5: viola la regla de no modificar archivos del punto anterior.
+· Usar dotnet new mstest: el curso usa xUnit.
+
+Verificación: el proyecto AceriaApp.DisenoRest.Tests aparece en la solución y su carpeta existe en tests\AceriaApp.DisenoRest.Tests.
+
+
+---
+
