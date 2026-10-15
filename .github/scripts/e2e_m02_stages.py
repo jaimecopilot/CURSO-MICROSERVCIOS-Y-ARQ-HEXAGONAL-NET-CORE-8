@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Ejecución pedagógica M02 2.1-2.2: 24 estados por punto, en copias temporales.
+"""Ejecución pedagógica M02 2.1-2.3: 24 estados por punto, en copias temporales.
 No altera los proyectos del alumno ni certifica la fidelidad de los Markdown.
 """
 from __future__ import annotations
@@ -14,9 +14,9 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 ROOT = Path("M02_APIS_REST_ASPNET_CORE/PROYECTO")
-SLUGS = {"2.1": "2.1-diseno-apis-rest", "2.2": "2.2-recursos-verbos-codigos"}
-TOTAL = {"2.1": 31, "2.2": 36}
-STEPS = {"2.1": {6, 8, 10, 15, 16, 17}, "2.2": {6, 7, 9, 14, 15}}
+SLUGS = {"2.1": "2.1-diseno-apis-rest", "2.2": "2.2-recursos-verbos-codigos", "2.3": "2.3-validacion-peticiones"}
+TOTAL = {"2.1": 31, "2.2": 36, "2.3": 42}
+STEPS = {"2.1": {6, 8, 10, 15, 16, 17}, "2.2": {6, 7, 9, 14, 15}, "2.3": {7, 8, 9, 14, 15, 16}}
 
 
 def shell(args, cwd, timeout=400):
@@ -101,7 +101,7 @@ def main():
     with tempfile.TemporaryDirectory(prefix="aceria-m02-stages-") as tmp:
         folder = Path(tmp)/SLUGS[point]
         shutil.copytree(source, folder, ignore=shutil.ignore_patterns("bin","obj",".vs","TestResults"))
-        tests_before = TOTAL[point]-(8 if point=="2.1" else 5)
+        tests_before = TOTAL[point] - {"2.1":8,"2.2":5,"2.3":6}[point]
         report = {"point":point,"steps":[],"expected_initial_tests":tests_before,
                   "expected_final_tests":TOTAL[point]}
         shell(["dotnet","restore","AceriaApp.sln"],folder)
@@ -117,7 +117,7 @@ def main():
             # cuando el paso es documental y no cambia ningún archivo C#.
             build=shell(["dotnet","build","AceriaApp.sln","-c","Release","--no-restore"],folder)
             row={"step":step,"changed":changed,"build_seconds":build["seconds"]}
-            if step==(20 if point=="2.1" else 18):
+            if step=={"2.1":20,"2.2":18,"2.3":19}[point]:
                 row["tests"]=run_tests(folder,TOTAL[point])
             report["steps"].append(row)
         assert activated == STEPS[point], (activated,STEPS[point])

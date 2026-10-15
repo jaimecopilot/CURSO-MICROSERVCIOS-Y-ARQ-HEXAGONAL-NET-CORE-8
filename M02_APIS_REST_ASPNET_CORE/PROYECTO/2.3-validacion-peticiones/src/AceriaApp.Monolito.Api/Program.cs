@@ -1,4 +1,6 @@
-using AceriaApp.Monolito.Api.Validacion;
+// INICIO PASO 2.3.16 — Habilitar espacio de nombres Validacion.
+// using AceriaApp.Monolito.Api.Validacion;
+// FIN PASO 2.3.16
 using AceriaApp.Monolito.Api.Dominio;
 using AceriaApp.Monolito.Api.Infraestructura;
 using Microsoft.EntityFrameworkCore;
@@ -9,7 +11,9 @@ builder.Services.AddDbContext<AceriaDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("AceriaDb")));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddValidacion();
+// INICIO PASO 2.3.16 — Registrar validadores desde la extensión.
+// builder.Services.AddValidacion();
+// FIN PASO 2.3.16
 
 var app = builder.Build();
 
