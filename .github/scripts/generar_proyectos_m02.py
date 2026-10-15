@@ -97,7 +97,7 @@ def generate():
             if not file.is_file():continue
             rel=file.relative_to(old)
             if any(x in ("bin","obj",".vs","TestResults") for x in rel.parts): continue
-            if str(rel).replace("\\","/")=="README.md":continue
+            if str(rel).replace("\\","/") in ("README.md","AceriaApp.sln"):continue
             if str(rel).replace("\\","/") in ("src/AceriaApp.Monolito.Api/Program.cs","src/AceriaApp.Monolito.Api/AceriaApp.Monolito.Api.csproj"): 
                 if i>=2: deviations.append(str(rel));continue
             target=root/rel
