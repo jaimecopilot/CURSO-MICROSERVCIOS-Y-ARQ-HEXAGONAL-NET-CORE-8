@@ -144,22 +144,19 @@ El record OrdenDto representa el JSON de salida. El método Desde transforma exp
 
 **Aplicación en el proyecto real.** Este comportamiento está materializado en `Modelo/OrdenDto.cs` del estado `2.1-diseno-apis-rest`. Busca la instrucción `OrdenDto` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
 
-**Código de referencia probado:** `src/AceriaApp.Api/Modelo/Orden.cs`
+**Código de referencia probado:** `src/AceriaApp.Api/Modelo/OrdenDto.cs`
 
 
 ```csharp
 namespace AceriaApp.Api.Modelo;
-// INICIO PASO 2.1.4
-public sealed class Orden
+// INICIO PASO 2.1.5
+public sealed record OrdenDto(Guid Id, string Cliente, string Material,
+    int Cantidad, string Estado, DateTime FechaCreacion)
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
-    public string Cliente { get; set; } = string.Empty;
-    public string Material { get; set; } = string.Empty;
-    public int Cantidad { get; set; }
-    public string Estado { get; set; } = "Pendiente";
-    public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
+    public static OrdenDto Desde(Orden x) =>
+        new(x.Id,x.Cliente,x.Material,x.Cantidad,x.Estado,x.FechaCreacion);
 }
-// FIN PASO 2.1.4
+// FIN PASO 2.1.5
 ```
 
 **Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
@@ -306,27 +303,19 @@ El manejador obtiene AceriaDbContext, usa AsNoTracking para consultar sin seguim
 
 **Aplicación en el proyecto real.** Este comportamiento está materializado en `Program.cs` del estado `2.1-diseno-apis-rest`. Busca la instrucción `MapGet` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
 
-**Código de referencia probado:** `src/AceriaApp.Api/Datos/AceriaDbContext.cs`
+**Código de referencia probado:** `src/AceriaApp.Api/Program.cs`
 
 
 ```csharp
-using AceriaApp.Api.Modelo;
-using Microsoft.EntityFrameworkCore;
-namespace AceriaApp.Api.Datos;
-// INICIO PASO 2.1.6
-public sealed class AceriaDbContext(DbContextOptions<AceriaDbContext> options) : DbContext(options)
+// INICIO PASO 2.1.8: colección de recursos, consulta real con EF Core.
+app.MapGet("/api/v1/ordenes",async (AceriaDbContext db,CancellationToken ct)=>
 {
-    public DbSet<Orden> Ordenes => Set<Orden>();
-    protected override void OnModelCreating(ModelBuilder b)
-    {
-        var e=b.Entity<Orden>();
-        e.HasKey(x=>x.Id);
-        e.Property(x=>x.Cliente).HasMaxLength(100).IsRequired();
-        e.Property(x=>x.Material).HasMaxLength(100).IsRequired();
-        e.Property(x=>x.Estado).HasMaxLength(24).IsRequired();
-    }
-}
-// FIN PASO 2.1.6
+    var ordenes=await db.Ordenes.AsNoTracking().OrderBy(x=>x.FechaCreacion).ToListAsync(ct);
+    return Results.Ok(ordenes.Select(OrdenDto.Desde));
+})
+.WithName("ListarOrdenes").WithTags("Ordenes")
+
+;
 ```
 
 **Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
@@ -707,70 +696,29 @@ El endpoint PATCH de este curso cambia exclusivamente Cantidad. La elección de 
 
 **Aplicación en el proyecto real.** Este comportamiento está materializado en `Program.cs` del estado `2.2-recursos-verbos-codigos`. Busca la instrucción `MapPatch` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
 
-**Código de referencia probado:** `tests/AceriaApp.Api.Tests/EscrituraTests.cs`
+**Código de referencia probado:** `src/AceriaApp.Api/Program.cs`
 
 
 ```csharp
-using System.Net;
-using System.Net.Http.Json;
-using AceriaApp.Api.Contratos;
-using AceriaApp.Api.Modelo;
-using Xunit;
-namespace AceriaApp.Api.Tests;
-// INICIO PASO 2.2.11: probar POST/GET/PUT/PATCH/DELETE con HTTP.
-public class EscrituraTests
+// INICIO PASO 2.2.8: cambiar SOLO la cantidad.
+app.MapPatch("/api/v1/ordenes/{id:guid}/cantidad",
+    async (Guid id,ActualizarCantidadRequest request,AceriaDbContext db)=>
 {
-    [Fact] public async Task CrearYConsultar_Es201Y200()
-    {
-        using var f=new ApiFactory();using var client=f.CreateClient();
-        var created=await client.PostAsJsonAsync("/api/v1/ordenes",
-            new CrearOrdenRequest("ACX","CHAPA",10));
-        Assert.Equal(HttpStatusCode.Created,created.StatusCode);
-        Assert.NotNull(created.Headers.Location);
-        var get=await client.GetAsync(created.Headers.Location);
-        Assert.Equal(HttpStatusCode.OK,get.StatusCode);
-    }
-    [Fact] public async Task EditarYEliminar_CambiaPersistencia()
-    {
-        using var f=new ApiFactory();using var c=f.CreateClient();
-        var made=await c.PostAsJsonAsync("/api/v1/ordenes",
-            new CrearOrdenRequest("ACX","CHAPA",10));
-        var dto=await made.Content.ReadFromJsonAsync<OrdenDto>();
-        Assert.NotNull(dto);
-        var put=await c.PutAsJsonAsync("/api/v1/ordenes/"+dto.Id,
-            new CrearOrdenRequest("ACX2","CHAPA",11));
-        Assert.Equal(HttpStatusCode.NoContent,put.StatusCode);
-        var patch=await c.PatchAsJsonAsync("/api/v1/ordenes/"+dto.Id+"/cantidad",
-            new ActualizarCantidadRequest(12));
-        Assert.Equal(HttpStatusCode.OK,patch.StatusCode);
-        var changed=await patch.Content.ReadFromJsonAsync<OrdenDto>();
-        Assert.Equal(12,changed?.Cantidad);
-        var del=await c.DeleteAsync("/api/v1/ordenes/"+dto.Id);
-        Assert.Equal(HttpStatusCode.NoContent,del.StatusCode);
-        var gone=await c.GetAsync("/api/v1/ordenes/"+dto.Id);
-        Assert.Equal(HttpStatusCode.NotFound,gone.StatusCode);
-    }
-    [Fact] public async Task ReglaCapacidad_Es422()
-    {
-        using var f=new ApiFactory();
-        var r=await f.CreateClient().PostAsJsonAsync("/api/v1/ordenes",
-            new CrearOrdenRequest("ACX","CHAPA",501));
-        Assert.Equal(HttpStatusCode.UnprocessableEntity,r.StatusCode);
-    }
-    [Fact] public async Task OrdenFinalizada_NoSeEdita409()
-    {
-        using var f=new ApiFactory();using var c=f.CreateClient();
-        var made=await c.PostAsJsonAsync("/api/v1/ordenes",
-            new CrearOrdenRequest("ACX","CHAPA",2));
-        var dto=await made.Content.ReadFromJsonAsync<OrdenDto>();
-        Assert.NotNull(dto);
-        var done=await c.PostAsync("/api/v1/ordenes/"+dto.Id+"/finalizar",null);
-        Assert.Equal(HttpStatusCode.OK,done.StatusCode);
-        var put=await c.PutAsJsonAsync("/api/v1/ordenes/"+dto.Id,
-            new CrearOrdenRequest("ACX","CHAPA",3));
-        Assert.Equal(HttpStatusCode.Conflict,put.StatusCode);
-    }
-}
+    if(request.Cantidad<=0) return Results.BadRequest(new {error="Cantidad debe ser positiva."});
+    var orden=await db.Ordenes.FindAsync(id);
+    if(orden is null) return Results.NotFound();
+    if(orden.Estado=="Finalizada") return Results.Problem(
+        title:"No se puede modificar una orden finalizada.",statusCode:409);
+    if(request.Cantidad>500) return Results.Problem(
+        title:"El taller solo admite lotes de hasta 500.",statusCode:422);
+    orden.Cantidad=request.Cantidad;
+    await db.SaveChangesAsync();
+    return Results.Ok(OrdenDto.Desde(orden));
+})
+.WithName("CambiarCantidad").WithTags("Ordenes")
+
+
+;
 ```
 
 **Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
@@ -1036,32 +984,28 @@ CrearOrdenValidator deriva de AbstractValidator y declara reglas NotEmpty, Maxim
 
 **Aplicación en el proyecto real.** Este comportamiento está materializado en `Validacion/Validadores.cs` del estado `2.3-validacion-peticiones`. Busca la instrucción `CrearOrdenValidator` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
 
-**Código de referencia probado:** `src/AceriaApp.Api/Validacion/ValidationFilter.cs`
+**Código de referencia probado:** `src/AceriaApp.Api/Validacion/Validadores.cs`
 
 
 ```csharp
+using AceriaApp.Api.Contratos;
 using FluentValidation;
 namespace AceriaApp.Api.Validacion;
-// INICIO PASO 2.3.4
-public sealed class ValidationFilter<T>(IValidator<T> validator): IEndpointFilter where T:class
+// INICIO PASO 2.3.3
+public sealed class CrearOrdenValidator : AbstractValidator<CrearOrdenRequest>
 {
-    public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context,
-        EndpointFilterDelegate next)
+    public CrearOrdenValidator()
     {
-        var request=context.Arguments.OfType<T>().FirstOrDefault();
-        if(request is null) return Results.ValidationProblem(
-            new Dictionary<string,string[]> { ["body"]=new[]{"Falta el cuerpo."} });
-        var result=await validator.ValidateAsync(request,context.HttpContext.RequestAborted);
-        if(!result.IsValid)
-        {
-            var errors=result.Errors.GroupBy(x=>x.PropertyName)
-                .ToDictionary(x=>x.Key,x=>x.Select(e=>e.ErrorMessage).ToArray());
-            return Results.ValidationProblem(errors);
-        }
-        return await next(context);
+        RuleFor(x=>x.Cliente).NotEmpty().MaximumLength(100);
+        RuleFor(x=>x.Material).NotEmpty().MaximumLength(100);
+        RuleFor(x=>x.Cantidad).InclusiveBetween(1,10000);
     }
 }
-// FIN PASO 2.3.4
+public sealed class ActualizarCantidadValidator : AbstractValidator<ActualizarCantidadRequest>
+{
+    public ActualizarCantidadValidator() => RuleFor(x=>x.Cantidad).InclusiveBetween(1,10000);
+}
+// FIN PASO 2.3.3
 ```
 
 **Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
@@ -1216,18 +1160,32 @@ AddValidatorsFromAssemblyContaining registra servicios en el contenedor, pero no
 
 **Aplicación en el proyecto real.** Este comportamiento está materializado en `Program.cs` del estado `2.3-validacion-peticiones`. Busca la instrucción `AddEndpointFilter` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
 
-**Código de referencia probado:** `src/AceriaApp.Api/Program.cs`
+**Código de referencia probado:** `src/AceriaApp.Api/Validacion/ValidationFilter.cs`
 
 
 ```csharp
-using AceriaApp.Api.Datos;
-using AceriaApp.Api.Modelo;
-using Microsoft.EntityFrameworkCore;
-using AceriaApp.Api.Contratos;
-using AceriaApp.Api.Validacion;
 using FluentValidation;
-
-var builder=WebApplication.CreateBuilder(args);
+namespace AceriaApp.Api.Validacion;
+// INICIO PASO 2.3.4
+public sealed class ValidationFilter<T>(IValidator<T> validator): IEndpointFilter where T:class
+{
+    public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context,
+        EndpointFilterDelegate next)
+    {
+        var request=context.Arguments.OfType<T>().FirstOrDefault();
+        if(request is null) return Results.ValidationProblem(
+            new Dictionary<string,string[]> { ["body"]=new[]{"Falta el cuerpo."} });
+        var result=await validator.ValidateAsync(request,context.HttpContext.RequestAborted);
+        if(!result.IsValid)
+        {
+            var errors=result.Errors.GroupBy(x=>x.PropertyName)
+                .ToDictionary(x=>x.Key,x=>x.Select(e=>e.ErrorMessage).ToArray());
+            return Results.ValidationProblem(errors);
+        }
+        return await next(context);
+    }
+}
+// FIN PASO 2.3.4
 ```
 
 **Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
@@ -1512,19 +1470,57 @@ La aplicación debe ejecutar AddDocumentacion antes de builder.Build y UseDocume
 
 **Aplicación en el proyecto real.** Este comportamiento está materializado en `Program.cs` del estado `2.4-documentacion-openapi`. Busca la instrucción `AddDocumentacion` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
 
-**Código de referencia probado:** `src/AceriaApp.Api/Program.cs`
+**Código de referencia probado:** `src/AceriaApp.Api/Documentacion/DocumentacionExtensions.cs`
 
 
 ```csharp
-using AceriaApp.Api.Datos;
-using AceriaApp.Api.Modelo;
-using Microsoft.EntityFrameworkCore;
 using AceriaApp.Api.Contratos;
-using AceriaApp.Api.Validacion;
-using FluentValidation;
-using AceriaApp.Api.Documentacion;
-
-var builder=WebApplication.CreateBuilder(args);
+using Microsoft.OpenApi.Any;
+using Microsoft.OpenApi.Models;
+using Swashbuckle.AspNetCore.SwaggerGen;
+namespace AceriaApp.Api.Documentacion;
+// INICIO PASO 2.4.3
+public static class DocumentacionExtensions
+{
+    public static IServiceCollection AddDocumentacion(this IServiceCollection services)
+    {
+        services.AddEndpointsApiExplorer();
+        services.AddSwaggerGen(options=>
+        {
+            options.SwaggerDoc("v1",new OpenApiInfo{
+                Title="AceriaApp — Órdenes de producción",Version="v1",
+                Description="API REST educativa creada con ASP.NET Core 8.",
+                Contact=new OpenApiContact{Name="Equipo AceriaApp",Email="equipo@acerialocal"}
+            });
+            options.SchemaFilter<EjemploCrearOrden>();
+        });
+        return services;
+    }
+    public static WebApplication UseDocumentacion(this WebApplication app)
+    {
+        if(app.Environment.IsDevelopment())
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI(o=>o.SwaggerEndpoint("/swagger/v1/swagger.json","AceriaApp v1"));
+        }
+        return app;
+    }
+}
+// FIN PASO 2.4.3
+// INICIO PASO 2.4.5
+public sealed class EjemploCrearOrden : ISchemaFilter
+{
+    public void Apply(OpenApiSchema schema,SchemaFilterContext context)
+    {
+        if(context.Type!=typeof(CrearOrdenRequest)) return;
+        schema.Example=new OpenApiObject{
+            ["cliente"]=new OpenApiString("ACX-001"),
+            ["material"]=new OpenApiString("CHAPA-3MM"),
+            ["cantidad"]=new OpenApiInteger(10)
+        };
+    }
+}
+// FIN PASO 2.4.5
 ```
 
 **Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
@@ -1691,47 +1687,13 @@ SchemaFilter permite mostrar en components.schemas un ejemplo de CrearOrdenReque
 
 **Aplicación en el proyecto real.** Este comportamiento está materializado en `Documentacion/DocumentacionExtensions.cs` del estado `2.4-documentacion-openapi`. Busca la instrucción `EjemploCrearOrden` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
 
-**Código de referencia probado:** `tests/AceriaApp.Api.Tests/ContratoOpenApiTests.cs`
+**Código de referencia probado:** `src/AceriaApp.Api/Program.cs`
 
 
 ```csharp
-using System.Net;
-using System.Text.Json;
-using Microsoft.AspNetCore.Hosting;
-using Xunit;
-namespace AceriaApp.Api.Tests;
-// INICIO PASO 2.4.8: abrir OpenAPI JSON REAL mediante HTTP.
-public class ContratoOpenApiTests
-{
-    [Fact] public async Task OpenApi_ContieneRutasYVersion()
-    {
-        using var f=new ApiFactory();
-        var r=await f.CreateClient().GetAsync("/swagger/v1/swagger.json");
-        Assert.Equal(HttpStatusCode.OK,r.StatusCode);
-        using var json=JsonDocument.Parse(await r.Content.ReadAsStringAsync());
-        Assert.Equal("v1",json.RootElement.GetProperty("info").GetProperty("version").GetString());
-        var paths=json.RootElement.GetProperty("paths");
-        Assert.True(paths.TryGetProperty("/api/v1/ordenes",out var resource));
-        Assert.True(resource.TryGetProperty("get",out _));
-        Assert.True(resource.TryGetProperty("post",out _));
-    }
-    [Fact] public async Task OpenApi_IncluyeEjemplo()
-    {
-        using var f=new ApiFactory();
-        var r=await f.CreateClient().GetAsync("/swagger/v1/swagger.json");
-        using var json=JsonDocument.Parse(await r.Content.ReadAsStringAsync());
-        var schemas=json.RootElement.GetProperty("components").GetProperty("schemas");
-        Assert.True(schemas.TryGetProperty("CrearOrdenRequest",out var schema));
-        Assert.True(schema.TryGetProperty("example",out _));
-    }
-    [Fact] public async Task Produccion_NoExponeSwagger()
-    {
-        using var f=new ApiFactory();
-        using var other=f.WithWebHostBuilder(b=>b.UseEnvironment("Production"));
-        var r=await other.CreateClient().GetAsync("/swagger/v1/swagger.json");
-        Assert.Equal(HttpStatusCode.NotFound,r.StatusCode);
-    }
-}
+.WithName("ListarOrdenes").WithTags("Ordenes")
+.WithSummary("Lista las órdenes de producción").Produces<IEnumerable<OrdenDto>>(200)
+;
 ```
 
 **Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
