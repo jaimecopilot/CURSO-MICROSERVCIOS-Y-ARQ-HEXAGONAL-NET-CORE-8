@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - 'revision/e2e-m01-20261015'
+      - 'revision/m01-correccion-pedagogica-20261015'
     paths:
       - '.github/scripts/e2e_m01.py'
       - '.github/workflows/m01-e2e-revision.yml'
