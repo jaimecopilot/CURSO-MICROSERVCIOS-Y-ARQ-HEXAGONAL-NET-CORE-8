@@ -88,7 +88,7 @@ def validate_sections(originals: list[dict], docs: dict[str,str]):
     text_original = originals[3]["theory"]
     snippets = [
         "La aplicación de la documentación cierra el módulo 2",
-        "Línea 26: type: string → tipo de la propiedad.",
+        "La estructura jerárquica del documento refleja la estructura de la API",
         "Swagger UI lee el documento OpenAPI generado por el servidor",
         "Versionado       → v1 en URL y en documentación.",
     ]
