@@ -219,7 +219,7 @@ def main():
     actual_steps=len(re.findall(r"(?m)^### PASO 2\.[1-4]\.\d+ —",practice_text))
     if actual_blocks!=expected_blocks or actual_steps!=expected_steps:
         raise ValueError(f"Salida incompleta: {actual_blocks}/{expected_blocks} bloques; {actual_steps}/{expected_steps} pasos")
-    label="M02" if not missing else "M02_PREVISUALIZACION_SOLO_2_1_Y_2_2"
+    label="M02" if not missing else "M02_PREVISUALIZACION_2_1_A_2_3"
     for name,contents in [("TEORIA",theory_text),("PRACTICAS",practice_text)]:
         (a.salida/f"{label}_{name}.md").write_text(contents,encoding="utf-8")
     (a.salida/"INFORME.json").write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding="utf-8")
