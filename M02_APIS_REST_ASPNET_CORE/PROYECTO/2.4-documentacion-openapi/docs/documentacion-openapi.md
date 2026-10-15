@@ -10,6 +10,6 @@ Los DTOs generarán esquemas cuando se usen como parámetros o respuestas declar
 ## Verificación de integración
 WebApplicationFactory inicia la aplicación, solicita el JSON, comprueba openapi, info.version y paths; también verifica que la ruta no se publique en Production.
 ## Cierre del módulo
-- Cincuenta y una pruebas previstas en nueve proyectos de pruebas; diez proyectos en la solución.
+- Cincuenta y una pruebas acumuladas en nueve proyectos de pruebas; diez proyectos en total (una API y nueve proyectos de pruebas).
 - Nueve puntos acumulados (1.1 a 1.5 y 2.1 a 2.4).
 - SQL Server Express sigue siendo el proveedor EF Core del curso.
