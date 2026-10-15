@@ -35,7 +35,7 @@ def replace_in_step(text: str, point: str, number: int, old: str, new: str):
     return text[:start]+chunk+text[end:]
 
 def comprobacion_docs(point: str, previous: str, actual: str, count: int):
-    return (f"**Acción adicional:** Comparar **todos** los {count} documentos Markdown heredados "
+    return (f"- **Acción 6:** Comparar **todos** los {count} documentos Markdown heredados "
             "en lugar de limitarse a los dos ejemplos anteriores. Desde "
             "`C:\\cursos\\AceriaApp`, en la consola **cmd.exe** de Windows, ejecutar:\n\n"
             "```bat\n"
@@ -56,6 +56,7 @@ def insert_docs(text: str,point: str,number: int,previous: str,actual: str,count
     if point=="2.2" and "- **Acción 6:** Comparar también **todos**" in chunk:
         chunk=re.sub(r"- \*\*Acción 6:\*\* Comparar también \*\*todos\*\*.*?(?=\*\*Por qué se hace:\*\*)","",chunk,flags=re.S)
     chunk=chunk.replace(target,comprobacion_docs(point,previous,actual,count)+target,1)
+    chunk=chunk.replace("**Verificación:** los dos documentos",f"**Verificación:** los {count} documentos")
     return text[:start]+chunk+text[end:]
 
 P23_STEP_15 = """### PASO 2.3.15 — Crear CrearOrdenRequestTests.cs
@@ -166,6 +167,8 @@ def p23_practicas(text: str):
     text=replace(text,"Falta el paquete FluentValidation.AspNetCore","Falta el paquete FluentValidation.DependencyInjectionExtensions")
     text=replace(text,"dotnet add package FluentValidation.AspNetCore","dotnet add package FluentValidation.DependencyInjectionExtensions")
     text=replace(text,"con diez proyectos","con nueve proyectos")
+    text=replace(text,"El punto 2.3 parte del contenido del punto 2.2 sin modificar ningún archivo existente: solo añade archivos nuevos.",
+                 "El punto 2.3 parte de una copia completa del punto 2.2, añade archivos y modifica únicamente Program.cs de la copia 2.3 con dos líneas nuevas para registrar los validadores; la solución independiente 2.2 permanece intacta.")
     text=replace(text,"once documentos","trece documentos")
     text=insert_docs(text,"2.3",22,"2.2-recursos-verbos-codigos","2.3-validacion-peticiones",13)
     text=replace(text,"- Registro de validadores en `Program.cs` con `AddValidatorsFromAssemblyContaining`.",
@@ -416,6 +419,8 @@ def p24_practicas(text: str):
     text=replace(text,"Cuarenta y cuatro pruebas unitarias acumuladas en diez proyectos de tests.",
                  "Cincuenta y una pruebas unitarias acumuladas en nueve proyectos de pruebas; diez proyectos en la solución.")
     text=replace(text,"con once proyectos","con diez proyectos")
+    text=replace(text,"El punto 2.4 parte del contenido del punto 2.3 sin modificar ningún archivo existente: solo añade archivos nuevos.",
+                 "El punto 2.4 copia íntegramente el estado 2.3 y añade archivos nuevos; como integración necesaria, modifica solo Program.cs de la copia 2.4 para invocar las extensiones OpenAPI. La solución 2.3 permanece intacta.")
     text=replace(text,"doce documentos","quince documentos")
     text=insert_docs(text,"2.4",21,"2.3-validacion-peticiones","2.4-documentacion-openapi",15)
 
