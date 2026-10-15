@@ -58,10 +58,10 @@ def heading_and_items(text: str, point: str, is_practice: bool):
         # Eliminar umbrales de tiempo arbitrarios de compilación y tests.
         # No cambian la comprobación técnica ni los resultados esperados.
         if is_practice and re.match(
-            r"^Acción \\d+: Verificar que el tiempo (?:de compilación|total) es inferior a \\d+ segundos\\.$",
+            r"^Acción \d+: Verificar que el tiempo (?:de compilación|total) es inferior a \d+ segundos\.$",
             s,
         ):
-            num=re.match(r"^Acción (\\d+):",s).group(1)
+            num=re.match(r"^Acción (\d+):",s).group(1)
             out.append(f"- **Acción {num}:** Comprobar que el comando termina sin errores y que el resultado coincide con la verificación del ejercicio.")
             continue
         if s == f"Punto {point} — {HEAD[point]}":
