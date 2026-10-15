@@ -2692,7 +2692,7 @@ public class CatalogoLimites
 
 ---
 
-### Paso 10 — Añadir el using necesario en CatalogoLimites
+### Paso 10 — Comprobar las directivas using en CatalogoLimites
 
 **Acción 1:** Abrir `src/AceriaApp.Monolito.Api/Diseno/CatalogoLimites.cs` en la solución del punto 1.3 y localizar `INICIO PASO 1.3.9`.
 
@@ -3313,7 +3313,7 @@ git status --short
 | Error | Causa | Solución |
 |---|---|---|
 | xcopy no copia subcarpetas | Falta el flag /E | Ejecutar xcopy origen destino /E /I /H /Y |
-| List<string> no se resuelve | Falta el using System.Collections.Generic; | Añadir el using al principio del archivo |
+| List&lt;string&gt; no se resuelve | Falta el using System.Collections.Generic; | Añadir el using al principio del archivo |
 | Where no se resuelve | Falta el using System.Linq; | Añadir el using al principio del archivo |
 | NullReferenceException en CatalogoLimites | No se inicializa _limites | Inicializar en el constructor |
 | El validador no detecta errores | Falta alguna comprobación | Revisar las seis comprobaciones del método Validar |
@@ -3888,7 +3888,7 @@ public class CatalogoProyectos
 
 ---
 
-### Paso 10 — Añadir el using necesario en CatalogoProyectos
+### Paso 10 — Comprobar las directivas using en CatalogoProyectos
 
 **Acción 1:** Abrir `src/AceriaApp.Monolito.Api/Organizacion/CatalogoProyectos.cs` en la solución del punto 1.4 y localizar `INICIO PASO 1.4.9`.
 
@@ -4468,7 +4468,7 @@ git status --short
 | Error | Causa | Solución |
 |---|---|---|
 | xcopy no copia subcarpetas | Falta el flag /E | Ejecutar xcopy origen destino /E /I /H /Y |
-| IReadOnlyList<string> no se resuelve | Falta el using System.Collections.Generic; | Añadir el using al principio del archivo |
+| IReadOnlyList&lt;string&gt; no se resuelve | Falta el using System.Collections.Generic; | Añadir el using al principio del archivo |
 | Contains no se resuelve | Falta el using System.Linq; | Añadir el using al principio del archivo |
 | Where no se resuelve | Falta el using System.Linq; | Añadir el using al principio del archivo |
 | NullReferenceException en CatalogoProyectos | No se inicializa _nombres | Inicializar en el constructor |
@@ -5053,7 +5053,7 @@ public class CatalogoPracticas
 
 ---
 
-### Paso 10 — Añadir el using necesario en CatalogoPracticas
+### Paso 10 — Comprobar las directivas using en CatalogoPracticas
 
 **Acción 1:** Abrir `src/AceriaApp.Monolito.Api/BuenasPracticas/CatalogoPracticas.cs` en la solución del punto 1.5 y localizar `INICIO PASO 1.5.9`.
 
@@ -5653,7 +5653,7 @@ git status --short
 | Error | Causa | Solución |
 |---|---|---|
 | xcopy no copia subcarpetas | Falta el flag /E | Ejecutar xcopy origen destino /E /I /H /Y |
-| IReadOnlyList<string> no se resuelve | Falta el using System.Collections.Generic; | Añadir el using al principio del archivo |
+| IReadOnlyList&lt;string&gt; no se resuelve | Falta el using System.Collections.Generic; | Añadir el using al principio del archivo |
 | ToList no se resuelve | Falta el using System.Linq; | Añadir el using al principio del archivo |
 | Contains no se resuelve | Falta el using System.Linq; | Añadir el using al principio del archivo |
 | Where no se resuelve | Falta el using System.Linq; | Añadir el using al principio del archivo |
