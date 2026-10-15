@@ -507,8 +507,10 @@ WebApplicationFactory inicia la aplicación, solicita el JSON, comprueba openapi
                 "app.UseDocumentacionOpenApi(new ConfiguracionOpenApi());")
     s=s.replace('await db.Ordenes.AsNoTracking().ToListAsync());',
                 'await db.Ordenes.AsNoTracking().ToListAsync())\n    .WithName("ListarOrdenes").WithSummary("Lista las órdenes").WithTags("Ordenes")\n    .Produces<List<Orden>>(StatusCodes.Status200OK);')
+    s=s.replace('app.MapPost("/api/v1/ordenes", async (AceriaDbContext db, Orden orden) =>\\n{\\n    orden.Id = Guid.NewGuid();\\n    orden.FechaCreacion = DateTime.UtcNow;',
+                'app.MapPost("/api/v1/ordenes", async (AceriaDbContext db, CrearOrdenRequest request) =>\\n{\\n    var orden = new Orden { Id = Guid.NewGuid(), FechaCreacion = DateTime.UtcNow, Cliente = request.Cliente, Material = request.Material, Cantidad = request.Cantidad };')
     s=s.replace('    return Results.Created($"/api/v1/ordenes/{orden.Id}", orden);\n});',
-                '    return Results.Created($"/api/v1/ordenes/{orden.Id}", orden);\n})\n    .WithName("CrearOrden").WithSummary("Crea una orden").WithTags("Ordenes")\n    .Produces<Orden>(StatusCodes.Status201Created);')
+                '    return Results.Created($"/api/v1/ordenes/{orden.Id}", orden);\n})\n    .WithName("CrearOrden").WithSummary("Crea una orden").WithTags("Ordenes")\n    .Produces<Orden>(StatusCodes.Status201Created)\n    .AddEndpointFilter<ValidationFilter<CrearOrdenRequest>>()\n    .ProducesValidationProblem(StatusCodes.Status400BadRequest);')
     s+="\n// Permite las pruebas reales de integración con WebApplicationFactory.\npublic partial class Program { }\n"
     put(p,s)
     testcase(root,"Documentacion","MetadatosApiTests",r"""
@@ -546,6 +548,7 @@ WebApplicationFactory inicia la aplicación, solicita el JSON, comprueba openapi
     using Microsoft.AspNetCore.Mvc.Testing;
     using Microsoft.AspNetCore.Hosting;
     using System.Text.Json;
+    using System.Net.Http.Json;
     using Xunit;
     namespace AceriaApp.Documentacion.Tests;
     public class DocumentacionExtensionsTests
@@ -570,6 +573,8 @@ WebApplicationFactory inicia la aplicación, solicita el JSON, comprueba openapi
             using var f=new WebApplicationFactory<Program>().WithWebHostBuilder(b=>b.UseEnvironment("Development"));
             using var json=JsonDocument.Parse(await f.CreateClient().GetStringAsync("/swagger/v1/swagger.json"));
             Assert.True(json.RootElement.GetProperty("paths").TryGetProperty("/api/v1/ordenes",out _));
+            var invalid = await f.CreateClient().PostAsJsonAsync("/api/v1/ordenes", new { cliente="", material="CHAPA-3MM", cantidad=-1 });
+            Assert.Equal(System.Net.HttpStatusCode.BadRequest, invalid.StatusCode);
         }
         [Fact] public async Task Swagger_NoSePublicaEnProduccion()
         {
