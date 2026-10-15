@@ -6,6 +6,7 @@ on:
       - desarrollo/m02-apis-rest-20261015
     paths:
       - 'M02_APIS_REST_ASPNET_CORE/PROYECTO/**'
+      - '.github/scripts/e2e_m02_stages.py'
       - '.github/workflows/m02-regresion-codigo-provisional.yml'
   workflow_dispatch:
 
@@ -30,6 +31,7 @@ jobs:
         with:
           dotnet-version: 8.0.x
       - name: Restaurar y compilar la solución independiente
+        if: contains(matrix.punto, '2.3') || contains(matrix.punto, '2.4')
         shell: bash
         run: |
           set -euo pipefail
@@ -39,6 +41,7 @@ jobs:
           dotnet restore "$base/AceriaApp.sln"
           dotnet build "$base/AceriaApp.sln" -c Release --no-restore
       - name: Ejecutar cada proyecto xUnit y registrar resultados TRX
+        if: contains(matrix.punto, '2.3') || contains(matrix.punto, '2.4')
         shell: bash
         run: |
           set -euo pipefail
@@ -50,6 +53,7 @@ jobs:
               --logger "trx;LogFileName=$name.trx" --results-directory "$GITHUB_WORKSPACE/m02-trx"
           done
       - name: Comprobar recuento real de pruebas y ausencia de fallos
+        if: contains(matrix.punto, '2.3') || contains(matrix.punto, '2.4')
         env:
           EXPECTED_TESTS: "${{ matrix.tests }}"
           EXPECTED_TEST_PROJECTS: "${{ matrix.proyectos }}"
@@ -75,10 +79,15 @@ jobs:
           print(f'REGRESION DE CODIGO: {passed} pruebas pasadas en {len(files)} proyectos.')
           print('ESTO NO CERTIFICA LA FIDELIDAD DE LOS TEXTOS NI LOS 96 PASOS.')
           PY
+      - name: Ejecutar 24 estados progresivos de 2.1 y 2.2
+        if: contains(matrix.punto, '2.1') || contains(matrix.punto, '2.2')
+        run: python .github/scripts/e2e_m02_stages.py --root . --point "${{ matrix.punto == '2.1-diseno-apis-rest' && '2.1' || '2.2' }}"
       - name: Conservar resultados por punto
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: "m02-regresion-${{ matrix.punto }}"
-          path: m02-trx/*.trx
+          path: |
+            m02-trx/*.trx
+            m02-stages-*.json
           if-no-files-found: warn
