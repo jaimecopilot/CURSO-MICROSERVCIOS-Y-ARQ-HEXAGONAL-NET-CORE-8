@@ -339,3 +339,368 @@ Resumen rápido de la teoría
 
 ---
 
+PARTE PRÁCTICA (27 minutos)
+
+Ejercicio: Añadir al punto 2.2 un documento de validación de peticiones en docs/, una clase de validación con FluentValidation en el proyecto monolítico, un filtro genérico de validación para Minimal API y un test unitario que verifique la validación. El punto 2.3 parte del contenido del punto 2.2 sin modificar ningún archivo existente: solo añade archivos nuevos.
+
+Ubicación de trabajo: C:\cursos\AceriaApp\modulo-2-apis-rest-aspnet-core\
+
+
+---
+
+Paso 1 — Crear la carpeta del punto 2.3 a partir del punto 2.2
+
+Acción 1: Abrir la terminal integrada de Visual Studio 2026 con Ctrl+ñ (o Ctrl+``  en teclados no españoles).
+Acción 2: Escribir cd C:\cursos\AceriaApp\modulo-2-apis-rest-aspnet-core y pulsar Enter.
+Acción 3: Escribir mkdir 2.3-validacion-peticiones y pulsar Enter.
+Acción 4: Escribir xcopy 2.2-recursos-verbos-codigos 2.3-validacion-peticiones /E /I /H /Y y pulsar Enter.
+Acción 5: Escribir dir 2.3-validacion-peticiones y pulsar Enter para verificar que se ha copiado el contenido.
+
+Por qué se hace: cada punto del curso parte del contenido del punto anterior. El punto 2.3 se construye sobre el punto 2.2 copiando su contenido y añadiendo archivos nuevos sin modificar los existentes.
+
+Errores comunes:
+
+· Usar copy en lugar de xcopy: copy no copia carpetas de forma recursiva.
+· Olvidar el flag /E: no se copian las subcarpetas vacías.
+· Olvidar el flag /I: xcopy pregunta si el destino es un directorio cuando no existe.
+· Olvidar el flag /Y: xcopy pide confirmación para sobrescribir.
+
+Verificación: al ejecutar dir 2.3-validacion-peticiones, deben aparecer AceriaApp.sln, README.md, src, tests y docs.
+
+
+---
+
+Paso 2 — Abrir la solución copiada en Visual Studio 2026
+
+Acción 1: Escribir cd 2.3-validacion-peticiones y pulsar Enter.
+Acción 2: Escribir start AceriaApp.sln y pulsar Enter.
+Acción 3: Verificar que Visual Studio 2026 abre la solución y muestra los proyectos heredados del punto 2.2: AceriaApp.Monolito.Api, AceriaApp.Monolito.Tests, AceriaApp.Metricas.Tests, AceriaApp.Diseno.Tests, AceriaApp.Organizacion.Tests, AceriaApp.BuenasPracticas.Tests, AceriaApp.DisenoRest.Tests y AceriaApp.CatalogoRecursos.Tests.
+Acción 4: Verificar que la solución compila con Ctrl+Shift+B y que la salida muestra Build succeeded..
+
+Por qué se hace: abrir la solución copiada permite trabajar en el punto 2.3 sobre la base del punto 2.2. La compilación verifica que la copia es correcta.
+
+Errores comunes:
+
+· Abrir la solución del punto 2.2 en lugar de la del punto 2.3: los cambios se aplican al punto equivocado.
+· No compilar antes de empezar: si la copia tiene errores, los cambios posteriores fallan.
+· Tener la API del punto 2.2 en ejecución: el puerto queda ocupado y la compilación falla.
+
+Verificación: Visual Studio 2026 muestra la solución AceriaApp con los ocho proyectos heredados del punto 2.2 y la compilación es correcta.
+
+
+---
+
+Paso 3 — Verificar que la carpeta docs contiene los documentos del punto 2.2
+
+Acción 1: En el panel Solution Explorer, expandir la carpeta docs del punto 2.3.
+Acción 2: Verificar que contiene ADR-001 a ADR-007, analisis-ventajas-inconvenientes.md, principios-diseno.md, organizacion-solucion.md, buenas-practicas.md, diseno-apis-rest.md y catalogo-recursos.md.
+Acción 3: Verificar que ninguno de los once documentos se ha modificado.
+Acción 4: Verificar que la carpeta docs no contiene ningún archivo nuevo del punto 2.3 todavía.
+
+Por qué se hace: el punto 2.3 parte del contenido del punto 2.2, que ya incluye la carpeta docs con once documentos. No se modifica ningún documento existente.
+
+Errores comunes:
+
+· Modificar alguno de los ADR o documentos existentes: viola la regla de no modificar archivos del punto anterior.
+· Eliminar algún documento existente: pierde la trazabilidad del punto 2.2.
+· Crear la carpeta docs si ya existe: mkdir falla.
+
+Verificación: la carpeta docs contiene los once documentos del punto 2.2 sin modificaciones.
+
+
+---
+
+Paso 4 — Crear el documento de validación de peticiones en docs
+
+Acción 1: En el panel Solution Explorer, hacer clic derecho sobre la carpeta docs.
+Acción 2: Seleccionar Add → New Item → Text File y nombrar el archivo validacion-peticiones.md.
+Acción 3: Escribir exactamente el siguiente contenido:
+
+# Validación de peticiones — Punto 2.3  
+  
+## Niveles de validación  
+  
+1. Sintáctica.  
+2. Semántica.  
+3. De negocio.  
+  
+## Validación sintáctica  
+  
+Comprueba el formato y los tipos de datos. Se implementa con tipos no anulables en los `record` de petición.  
+  
+## Validación semántica  
+  
+Comprueba los valores y las longitudes. Se implementa con FluentValidation.  
+  
+## Validación de negocio  
+  
+Comprueba las reglas del dominio. Se implementa en la capa de aplicación con acceso a la base de datos.  
+  
+## Códigos de respuesta  
+  
+| Nivel fallido | Código |  
+|---------------|--------|  
+| Sintáctica | 400 Bad Request |  
+| Semántica | 400 Bad Request |  
+| Negocio | 422 Unprocessable Entity |  
+  
+## Formato de error  
+  
+Problem details con campo `errors`.  
+  
+## Aplicación al proyecto del curso  
+  
+| Elemento | Aplicación |  
+|----------|------------|  
+| Sintáctica | Records con tipos no anulables |  
+| Semántica | FluentValidation |  
+| Negocio | Capa de aplicación |  
+| Integración | Filtro genérico |  
+| Respuesta | Problem details 400 o 422 |
+
+Acción 4: Pulsar Ctrl+S para guardar el archivo.
+Acción 5: Verificar que el archivo aparece en la carpeta docs sin subrayados rojos.
+
+Por qué se hace: el documento de validación de peticiones es el artefacto de docs específico del punto 2.3. No modifica los once documentos existentes del punto 2.2.
+
+Errores comunes:
+
+· Nombrar el archivo con otro nombre: rompe la trazabilidad del punto.
+· Modificar los ADR existentes: viola la regla de no modificar archivos del punto anterior.
+· Guardar el archivo en la raíz del punto en lugar de docs: rompe la estructura del repositorio.
+
+Verificación: el archivo docs\validacion-peticiones.md existe con las siete secciones.
+
+
+---
+
+Paso 5 — Añadir el paquete FluentValidation.AspNetCore al proyecto monolítico
+
+Acción 1: En la terminal, escribir dotnet add src\AceriaApp.Monolito.Api\AceriaApp.Monolito.Api.csproj package FluentValidation.AspNetCore y pulsar Enter.
+Acción 2: Escribir dotnet list src\AceriaApp.Monolito.Api\AceriaApp.Monolito.Api.csproj package y pulsar Enter.
+Acción 3: Verificar que la salida muestra FluentValidation.AspNetCore con su versión.
+
+Por qué se hace: FluentValidation.AspNetCore proporciona la integración de FluentValidation con el contenedor de dependencias de ASP.NET Core. Es necesario para registrar los validadores y para inyectarlos en los endpoints.
+
+Errores comunes:
+
+· Instalar FluentValidation sin AspNetCore: falta la integración con el contenedor.
+· Instalar una versión preliminar: el curso usa la última estable.
+· Añadir el paquete al proyecto de tests: los validadores no se resuelven en producción.
+
+Verificación: la salida de dotnet list package muestra FluentValidation.AspNetCore con una versión estable.
+
+
+---
+
+Paso 6 — Crear la carpeta Validacion en el proyecto monolítico
+
+Acción 1: En el panel Solution Explorer, hacer clic derecho sobre el proyecto AceriaApp.Monolito.Api.
+Acción 2: Seleccionar Add → New Folder y nombrar la carpeta Validacion.
+Acción 3: Verificar que la carpeta Validacion aparece dentro de AceriaApp.Monolito.Api sin afectar a las carpetas existentes.
+Acción 4: Verificar que no se ha modificado ningún archivo existente del punto 2.2.
+
+Por qué se hace: la carpeta Validacion albergará los validadores y el filtro genérico. Se crea como carpeta nueva sin tocar las carpetas existentes.
+
+Errores comunes:
+
+· Crear la carpeta dentro de alguna de las carpetas existentes: rompe la separación de responsabilidades.
+· Modificar las carpetas existentes: viola la regla de no modificar archivos del punto anterior.
+· Crear la carpeta con otro nombre: rompe la convención del curso.
+
+Verificación: la carpeta Validacion existe dentro de AceriaApp.Monolito.Api y las carpetas existentes permanecen intactas.
+
+
+---
+
+Paso 7 — Crear el record CrearOrdenRequest
+
+Acción 1: En el panel Solution Explorer, hacer clic derecho sobre la carpeta Validacion.
+Acción 2: Seleccionar Add → Class y nombrar la clase CrearOrdenRequest.cs.
+Acción 3: Escribir exactamente el siguiente código:
+
+namespace AceriaApp.Monolito.Api.Validacion;  
+  
+public record CrearOrdenRequest(  
+    string Cliente,  
+    string Material,  
+    int Cantidad);
+
+Acción 4: Pulsar Ctrl+S para guardar el archivo.
+Acción 5: Verificar que la clase compila sin errores.
+
+Por qué se hace: el record CrearOrdenRequest modela el contrato de entrada del endpoint de creación de órdenes. Los tipos no anulables aplican la validación sintáctica.
+
+Errores comunes:
+
+· Olvidar el namespace: la clase no se resuelve desde otros archivos.
+· Usar string? en lugar de string: los campos serían opcionales y la validación sintáctica no se aplicaría.
+· Usar int? en lugar de int: la cantidad sería opcional.
+
+Verificación: el record CrearOrdenRequest compila sin errores y expone tres propiedades.
+
+
+---
+
+Paso 8 — Crear el validador CrearOrdenRequestValidator
+
+Acción 1: En el panel Solution Explorer, hacer clic derecho sobre la carpeta Validacion.
+Acción 2: Seleccionar Add → Class y nombrar la clase CrearOrdenRequestValidator.cs.
+Acción 3: Escribir exactamente el siguiente código:
+
+using FluentValidation;  
+  
+namespace AceriaApp.Monolito.Api.Validacion;  
+  
+public class CrearOrdenRequestValidator : AbstractValidator<CrearOrdenRequest>  
+{  
+    public CrearOrdenRequestValidator()  
+    {  
+        RuleFor(x => x.Cliente)  
+            .NotEmpty().WithMessage("El cliente es obligatorio.")  
+            .MaximumLength(100).WithMessage("El cliente no puede superar 100 caracteres.");  
+  
+        RuleFor(x => x.Material)  
+            .NotEmpty().WithMessage("El material es obligatorio.")  
+            .MaximumLength(100).WithMessage("El material no puede superar 100 caracteres.");  
+  
+        RuleFor(x => x.Cantidad)  
+            .GreaterThan(0).WithMessage("La cantidad debe ser mayor que cero.")  
+            .LessThanOrEqualTo(10000).WithMessage("La cantidad no puede superar 10000.");  
+    }  
+}
+
+Acción 4: Pulsar Ctrl+S para guardar el archivo.
+Acción 5: Verificar que la clase compila sin errores.
+
+Por qué se hace: el validador CrearOrdenRequestValidator define las reglas semánticas del contrato de entrada. Cada regla tiene un mensaje de error específico.
+
+Errores comunes:
+
+· Olvidar el using FluentValidation;: AbstractValidator no se resuelve.
+· Usar RuleFor con una expresión incorrecta: el validador no se ejecuta.
+· No usar WithMessage: los mensajes de error son genéricos.
+
+Verificación: el validador CrearOrdenRequestValidator compila sin errores y expone tres reglas.
+
+
+---
+
+Paso 9 — Crear el filtro genérico ValidationFilter
+
+Acción 1: En el panel Solution Explorer, hacer clic derecho sobre la carpeta Validacion.
+Acción 2: Seleccionar Add → Class y nombrar la clase ValidationFilter.cs.
+Acción 3: Escribir exactamente el siguiente código:
+
+using FluentValidation;  
+  
+namespace AceriaApp.Monolito.Api.Validacion;  
+  
+public class ValidationFilter<T> : IEndpointFilter where T : class  
+{  
+    private readonly IValidator<T> _validator;  
+  
+    public ValidationFilter(IValidator<T> validator)  
+    {  
+        _validator = validator;  
+    }  
+  
+    public async ValueTask<object?> InvokeAsync(  
+        EndpointFilterInvocationContext context,  
+        EndpointFilterDelegate next)  
+    {  
+        var request = context.Arguments.OfType<T>().FirstOrDefault();  
+        if (request is null)  
+        {  
+            return Results.BadRequest();  
+        }  
+  
+        var result = await _validator.ValidateAsync(request);  
+        if (!result.IsValid)  
+        {  
+            var errores = result.Errors  
+                .GroupBy(e => e.PropertyName)  
+                .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());  
+  
+            return Results.ValidationProblem(errores);  
+        }  
+  
+        return await next(context);  
+    }  
+}
+
+Acción 4: Pulsar Ctrl+S para guardar el archivo.
+Acción 5: Verificar que la clase compila sin errores.
+
+Por qué se hace: el filtro genérico ValidationFilter<T> integra FluentValidation con Minimal API. Obtiene el validador del contenedor de dependencias, ejecuta la validación y devuelve problem details si falla.
+
+Errores comunes:
+
+· Olvidar el using FluentValidation;: IValidator no se resuelve.
+· Olvidar el using System.Linq;: OfType, FirstOrDefault, GroupBy, ToDictionary y Select no se resuelven.
+· No comprobar si la petición es nula: el filtro lanza NullReferenceException.
+
+Verificación: el filtro ValidationFilter<T> compila sin errores y expone un constructor y un método.
+
+
+---
+
+Paso 10 — Añadir los using necesarios en ValidationFilter
+
+Acción 1: En el panel Solution Explorer, hacer doble clic en ValidationFilter.cs.
+Acción 2: Añadir la línea using System.Linq; al principio del archivo si no está presente.
+Acción 3: Verificar que no hay subrayados rojos en OfType, FirstOrDefault, GroupBy, ToDictionary ni Select.
+Acción 4: Pulsar Ctrl+S para guardar el archivo.
+
+Por qué se hace: los métodos OfType, FirstOrDefault, GroupBy, ToDictionary y Select pertenecen a System.Linq. En proyectos con ImplicitUsings desactivado, hay que añadir el using explícito.
+
+Errores comunes:
+
+· Añadir using System.Collections.Generic; en lugar de System.Linq: no resuelve los métodos.
+· Añadir el using después del namespace: el compilador no lo reconoce.
+· Olvidar el using y confiar en ImplicitUsings: el proyecto puede tenerlo desactivado.
+
+Verificación: ValidationFilter.cs compila sin errores y no muestra subrayados rojos.
+
+
+---
+
+Paso 11 — Crear el proyecto de tests del punto 2.3
+
+Acción 1: En el panel Solution Explorer, hacer clic derecho sobre la carpeta tests.
+Acción 2: Seleccionar Add → New Project.
+Acción 3: Seleccionar la plantilla xUnit Test Project, nombrar el proyecto AceriaApp.Validacion.Tests y pulsar Create.
+Acción 4: Verificar que el proyecto aparece en la solución y que se ha creado la carpeta tests\AceriaApp.Validacion.Tests.
+
+Por qué se hace: el punto 2.3 añade un proyecto de tests específico para los validadores. Se crea como proyecto nuevo sin modificar los proyectos de tests existentes.
+
+Errores comunes:
+
+· Crear el proyecto dentro de src en lugar de tests: rompe la estructura.
+· Modificar los proyectos de tests del punto 2.2: viola la regla de no modificar archivos del punto anterior.
+· Usar dotnet new mstest: el curso usa xUnit.
+
+Verificación: el proyecto AceriaApp.Validacion.Tests aparece en la solución y su carpeta existe en tests\AceriaApp.Validacion.Tests.
+
+
+---
+
+Paso 12 — Añadir la referencia del proyecto de tests a la API monolítica
+
+Acción 1: En la terminal, escribir dotnet add tests\AceriaApp.Validacion.Tests\AceriaApp.Validacion.Tests.csproj reference src\AceriaApp.Monolito.Api\AceriaApp.Monolito.Api.csproj y pulsar Enter.
+Acción 2: Verificar que la salida muestra Reference added successfully.
+Acción 3: Verificar que el archivo AceriaApp.Validacion.Tests.csproj contiene la referencia.
+
+Por qué se hace: la referencia permite que el proyecto de tests acceda a los validadores del proyecto monolítico.
+
+Errores comunes:
+
+· Añadir la referencia en dirección inversa: crea una dependencia circular.
+· Olvidar el nombre completo del archivo .csproj: el comando falla.
+· Ejecutar el comando desde la carpeta equivocada: la ruta relativa no se resuelve.
+
+Verificación: el archivo AceriaApp.Validacion.Tests.csproj contiene un ProjectReference al proyecto monolítico.
+
+
+---
+
