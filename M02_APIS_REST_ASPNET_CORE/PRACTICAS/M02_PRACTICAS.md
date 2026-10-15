@@ -36,11 +36,11 @@ despliegues productivos.
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Explicación conceptual.** REST identifica órdenes mediante una URI estable. ASP.NET Core no pide implementar un validador de cadenas para disponer de enrutamiento: la llamada MapGet asocia un verbo y una plantilla de ruta al manejador real. Hay que distinguir la entidad Orden, que EF Core persiste, de la representación pública que recibe el consumidor. Conocer los atributos Id, Cliente, Material, Cantidad, Estado y FechaCreacion permite justificar después por qué no todos se aceptan como entrada.
+**Por qué funciona así.** El programa aún se está preparando: comprobar SDK, arranque y URI antes de introducir persistencia permite aislar errores de herramienta frente a errores de API.
 
 **Verificación concreta.** Verifica el TargetFramework net8.0 y arranca el proyecto vacío. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si aparece un error de proveedor SQL Server, revisa NuGet, la cadena LocalDB y los servicios registrados; si el código de la respuesta no coincide, inspecciona el patrón MapGet.
+**Si algo falla.** Si falla el inicio, revisa que hayas seleccionado ASP.NET Core Empty y net8.0; no es necesario instalar controladores.
 
 ### PASO 2.1.2 — Explorar Program.cs, Kestrel y el perfil de arranque
 
@@ -50,11 +50,11 @@ despliegues productivos.
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Explicación conceptual.** REST identifica órdenes mediante una URI estable. ASP.NET Core no pide implementar un validador de cadenas para disponer de enrutamiento: la llamada MapGet asocia un verbo y una plantilla de ruta al manejador real. Hay que distinguir la entidad Orden, que EF Core persiste, de la representación pública que recibe el consumidor. Conocer los atributos Id, Cliente, Material, Cantidad, Estado y FechaCreacion permite justificar después por qué no todos se aceptan como entrada.
+**Por qué funciona así.** El programa aún se está preparando: comprobar SDK, arranque y URI antes de introducir persistencia permite aislar errores de herramienta frente a errores de API.
 
 **Verificación concreta.** Kestrel escucha en el puerto anunciado; no es una prueba de base de datos. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si aparece un error de proveedor SQL Server, revisa NuGet, la cadena LocalDB y los servicios registrados; si el código de la respuesta no coincide, inspecciona el patrón MapGet.
+**Si algo falla.** Si falla el inicio, revisa que hayas seleccionado ASP.NET Core Empty y net8.0; no es necesario instalar controladores.
 
 ### PASO 2.1.3 — Dibujar los recursos y decidir las dos URIs GET
 
@@ -64,11 +64,11 @@ despliegues productivos.
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Explicación conceptual.** REST identifica órdenes mediante una URI estable. ASP.NET Core no pide implementar un validador de cadenas para disponer de enrutamiento: la llamada MapGet asocia un verbo y una plantilla de ruta al manejador real. Hay que distinguir la entidad Orden, que EF Core persiste, de la representación pública que recibe el consumidor. Conocer los atributos Id, Cliente, Material, Cantidad, Estado y FechaCreacion permite justificar después por qué no todos se aceptan como entrada.
+**Por qué funciona así.** El programa aún se está preparando: comprobar SDK, arranque y URI antes de introducir persistencia permite aislar errores de herramienta frente a errores de API.
 
 **Verificación concreta.** Las dos rutas usan sustantivos en plural, y el detalle tiene un Guid. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si aparece un error de proveedor SQL Server, revisa NuGet, la cadena LocalDB y los servicios registrados; si el código de la respuesta no coincide, inspecciona el patrón MapGet.
+**Si algo falla.** Si falla el inicio, revisa que hayas seleccionado ASP.NET Core Empty y net8.0; no es necesario instalar controladores.
 
 ### PASO 2.1.4 — Crear carpeta Modelo y entidad Orden
 
@@ -94,11 +94,11 @@ public sealed class Orden
 // FIN PASO 2.1.4
 ```
 
-**Explicación conceptual.** REST identifica órdenes mediante una URI estable. ASP.NET Core no pide implementar un validador de cadenas para disponer de enrutamiento: la llamada MapGet asocia un verbo y una plantilla de ruta al manejador real. Hay que distinguir la entidad Orden, que EF Core persiste, de la representación pública que recibe el consumidor. Conocer los atributos Id, Cliente, Material, Cantidad, Estado y FechaCreacion permite justificar después por qué no todos se aceptan como entrada.
+**Por qué funciona así.** La entidad y el DTO cumplen funciones diferentes. La primera modela los datos persistidos y el segundo limita el contrato JSON que puede ver el consumidor.
 
 **Verificación concreta.** La clase Orden compila, y el estado inicial es Pendiente. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si aparece un error de proveedor SQL Server, revisa NuGet, la cadena LocalDB y los servicios registrados; si el código de la respuesta no coincide, inspecciona el patrón MapGet.
+**Si algo falla.** Si no compilan Orden u OrdenDto, comprueba namespaces y tipos. No conviertas la entidad en el contrato JSON.
 
 ### PASO 2.1.5 — Explicar ID Guid, Estado y FechaCreacion de la entidad
 
@@ -108,11 +108,11 @@ public sealed class Orden
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Explicación conceptual.** REST identifica órdenes mediante una URI estable. ASP.NET Core no pide implementar un validador de cadenas para disponer de enrutamiento: la llamada MapGet asocia un verbo y una plantilla de ruta al manejador real. Hay que distinguir la entidad Orden, que EF Core persiste, de la representación pública que recibe el consumidor. Conocer los atributos Id, Cliente, Material, Cantidad, Estado y FechaCreacion permite justificar después por qué no todos se aceptan como entrada.
+**Por qué funciona así.** La entidad y el DTO cumplen funciones diferentes. La primera modela los datos persistidos y el segundo limita el contrato JSON que puede ver el consumidor.
 
 **Verificación concreta.** No se reciben el Id ni la fecha desde una petición de creación. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si aparece un error de proveedor SQL Server, revisa NuGet, la cadena LocalDB y los servicios registrados; si el código de la respuesta no coincide, inspecciona el patrón MapGet.
+**Si algo falla.** Si no compilan Orden u OrdenDto, comprueba namespaces y tipos. No conviertas la entidad en el contrato JSON.
 
 ### PASO 2.1.6 — Crear OrdenDto como contrato de salida
 
@@ -135,11 +135,11 @@ public sealed record OrdenDto(Guid Id, string Cliente, string Material,
 // FIN PASO 2.1.5
 ```
 
-**Explicación conceptual.** El record OrdenDto representa el JSON de salida. El método Desde transforma explícitamente la entidad a una representación. Esta distinción reduce el acoplamiento entre el esquema de la tabla y el contrato HTTP. Si se cambiara una propiedad interna de Orden no tendría por qué aparecer automáticamente en la respuesta; el método de conversión es precisamente el lugar donde decidir qué se publica.
+**Por qué funciona así.** La entidad y el DTO cumplen funciones diferentes. La primera modela los datos persistidos y el segundo limita el contrato JSON que puede ver el consumidor.
 
 **Verificación concreta.** El compilador distingue Orden de OrdenDto. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si aparece un error de proveedor SQL Server, revisa NuGet, la cadena LocalDB y los servicios registrados; si el código de la respuesta no coincide, inspecciona el patrón MapGet.
+**Si algo falla.** Si no compilan Orden u OrdenDto, comprueba namespaces y tipos. No conviertas la entidad en el contrato JSON.
 
 ### PASO 2.1.7 — Programar la conversión OrdenDto.Desde
 
@@ -162,11 +162,11 @@ public sealed record OrdenDto(Guid Id, string Cliente, string Material,
 // FIN PASO 2.1.5
 ```
 
-**Explicación conceptual.** El record OrdenDto representa el JSON de salida. El método Desde transforma explícitamente la entidad a una representación. Esta distinción reduce el acoplamiento entre el esquema de la tabla y el contrato HTTP. Si se cambiara una propiedad interna de Orden no tendría por qué aparecer automáticamente en la respuesta; el método de conversión es precisamente el lugar donde decidir qué se publica.
+**Por qué funciona así.** La entidad y el DTO cumplen funciones diferentes. La primera modela los datos persistidos y el segundo limita el contrato JSON que puede ver el consumidor.
 
 **Verificación concreta.** El DTO contiene el mismo Id y datos públicos que la entidad. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si aparece un error de proveedor SQL Server, revisa NuGet, la cadena LocalDB y los servicios registrados; si el código de la respuesta no coincide, inspecciona el patrón MapGet.
+**Si algo falla.** Si no compilan Orden u OrdenDto, comprueba namespaces y tipos. No conviertas la entidad en el contrato JSON.
 
 ### PASO 2.1.8 — Instalar EF Core 8 para SQL Server
 
@@ -176,11 +176,11 @@ public sealed record OrdenDto(Guid Id, string Cliente, string Material,
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Explicación conceptual.** El record OrdenDto representa el JSON de salida. El método Desde transforma explícitamente la entidad a una representación. Esta distinción reduce el acoplamiento entre el esquema de la tabla y el contrato HTTP. Si se cambiara una propiedad interna de Orden no tendría por qué aparecer automáticamente en la respuesta; el método de conversión es precisamente el lugar donde decidir qué se publica.
+**Por qué funciona así.** El acceso a datos se configura en infraestructura mediante EF Core y DI. LocalDB es la base efectiva de la API; EnsureCreated se usa solo durante el aprendizaje.
 
 **Verificación concreta.** La compilación reconoce UseSqlServer. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si aparece un error de proveedor SQL Server, revisa NuGet, la cadena LocalDB y los servicios registrados; si el código de la respuesta no coincide, inspecciona el patrón MapGet.
+**Si algo falla.** Si falla UseSqlServer, revisa la dependencia NuGet. Si LocalDB no responde, verifica la instancia MSSQLLocalDB.
 
 ### PASO 2.1.9 — Crear AceriaDbContext y DbSet<Orden>
 
@@ -211,11 +211,11 @@ public sealed class AceriaDbContext(DbContextOptions<AceriaDbContext> options) :
 // FIN PASO 2.1.6
 ```
 
-**Explicación conceptual.** El record OrdenDto representa el JSON de salida. El método Desde transforma explícitamente la entidad a una representación. Esta distinción reduce el acoplamiento entre el esquema de la tabla y el contrato HTTP. Si se cambiara una propiedad interna de Orden no tendría por qué aparecer automáticamente en la respuesta; el método de conversión es precisamente el lugar donde decidir qué se publica.
+**Por qué funciona así.** El acceso a datos se configura en infraestructura mediante EF Core y DI. LocalDB es la base efectiva de la API; EnsureCreated se usa solo durante el aprendizaje.
 
 **Verificación concreta.** Al compilar, el contexto conoce Orden y puede consultarla. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si aparece un error de proveedor SQL Server, revisa NuGet, la cadena LocalDB y los servicios registrados; si el código de la respuesta no coincide, inspecciona el patrón MapGet.
+**Si algo falla.** Si falla UseSqlServer, revisa la dependencia NuGet. Si LocalDB no responde, verifica la instancia MSSQLLocalDB.
 
 ### PASO 2.1.10 — Configurar OnModelCreating, clave y longitudes
 
@@ -225,11 +225,11 @@ public sealed class AceriaDbContext(DbContextOptions<AceriaDbContext> options) :
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Explicación conceptual.** El record OrdenDto representa el JSON de salida. El método Desde transforma explícitamente la entidad a una representación. Esta distinción reduce el acoplamiento entre el esquema de la tabla y el contrato HTTP. Si se cambiara una propiedad interna de Orden no tendría por qué aparecer automáticamente en la respuesta; el método de conversión es precisamente el lugar donde decidir qué se publica.
+**Por qué funciona así.** El acceso a datos se configura en infraestructura mediante EF Core y DI. LocalDB es la base efectiva de la API; EnsureCreated se usa solo durante el aprendizaje.
 
 **Verificación concreta.** El modelo restringe tamaños de columna y reconoce la clave. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si aparece un error de proveedor SQL Server, revisa NuGet, la cadena LocalDB y los servicios registrados; si el código de la respuesta no coincide, inspecciona el patrón MapGet.
+**Si algo falla.** Si falla UseSqlServer, revisa la dependencia NuGet. Si LocalDB no responde, verifica la instancia MSSQLLocalDB.
 
 ### PASO 2.1.11 — Configurar la cadena de conexión a LocalDB
 
@@ -239,11 +239,11 @@ public sealed class AceriaDbContext(DbContextOptions<AceriaDbContext> options) :
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Explicación conceptual.** El contexto contiene DbSet<Orden> y las restricciones de las columnas. La API se ejecuta sobre SQL Server Express LocalDB en el ordenador del alumno. Registrar AddDbContext permite que los endpoints reciban el contexto mediante inyección de dependencias: no hay que crear el contexto con new dentro de cada manejador. En tests se sustituye solamente el proveedor por InMemory para evitar depender de Windows.
+**Por qué funciona así.** El acceso a datos se configura en infraestructura mediante EF Core y DI. LocalDB es la base efectiva de la API; EnsureCreated se usa solo durante el aprendizaje.
 
 **Verificación concreta.** La cadena se lee desde Configuration y apunta al servidor local. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si aparece un error de proveedor SQL Server, revisa NuGet, la cadena LocalDB y los servicios registrados; si el código de la respuesta no coincide, inspecciona el patrón MapGet.
+**Si algo falla.** Si falla UseSqlServer, revisa la dependencia NuGet. Si LocalDB no responde, verifica la instancia MSSQLLocalDB.
 
 ### PASO 2.1.12 — Registrar AceriaDbContext mediante AddDbContext
 
@@ -269,11 +269,11 @@ if(app.Environment.IsDevelopment()&&!app.Configuration.GetValue<bool>("SkipDatab
 }
 ```
 
-**Explicación conceptual.** El contexto contiene DbSet<Orden> y las restricciones de las columnas. La API se ejecuta sobre SQL Server Express LocalDB en el ordenador del alumno. Registrar AddDbContext permite que los endpoints reciban el contexto mediante inyección de dependencias: no hay que crear el contexto con new dentro de cada manejador. En tests se sustituye solamente el proveedor por InMemory para evitar depender de Windows.
+**Por qué funciona así.** El acceso a datos se configura en infraestructura mediante EF Core y DI. LocalDB es la base efectiva de la API; EnsureCreated se usa solo durante el aprendizaje.
 
 **Verificación concreta.** El manejador HTTP podrá recibir AceriaDbContext por inyección. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si aparece un error de proveedor SQL Server, revisa NuGet, la cadena LocalDB y los servicios registrados; si el código de la respuesta no coincide, inspecciona el patrón MapGet.
+**Si algo falla.** Si falla UseSqlServer, revisa la dependencia NuGet. Si LocalDB no responde, verifica la instancia MSSQLLocalDB.
 
 ### PASO 2.1.13 — Crear la base didáctica solo en Development
 
@@ -283,11 +283,11 @@ if(app.Environment.IsDevelopment()&&!app.Configuration.GetValue<bool>("SkipDatab
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Explicación conceptual.** El contexto contiene DbSet<Orden> y las restricciones de las columnas. La API se ejecuta sobre SQL Server Express LocalDB en el ordenador del alumno. Registrar AddDbContext permite que los endpoints reciban el contexto mediante inyección de dependencias: no hay que crear el contexto con new dentro de cada manejador. En tests se sustituye solamente el proveedor por InMemory para evitar depender de Windows.
+**Por qué funciona así.** El acceso a datos se configura en infraestructura mediante EF Core y DI. LocalDB es la base efectiva de la API; EnsureCreated se usa solo durante el aprendizaje.
 
 **Verificación concreta.** Al arrancar en Windows aparece la base AceriaAppM02 si LocalDB está instalado. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si aparece un error de proveedor SQL Server, revisa NuGet, la cadena LocalDB y los servicios registrados; si el código de la respuesta no coincide, inspecciona el patrón MapGet.
+**Si algo falla.** Si falla UseSqlServer, revisa la dependencia NuGet. Si LocalDB no responde, verifica la instancia MSSQLLocalDB.
 
 ### PASO 2.1.14 — Escribir el endpoint GET de colección
 
@@ -310,11 +310,11 @@ app.MapGet("/api/v1/ordenes",async (AceriaDbContext db,CancellationToken ct)=>
 ;
 ```
 
-**Explicación conceptual.** El contexto contiene DbSet<Orden> y las restricciones de las columnas. La API se ejecuta sobre SQL Server Express LocalDB en el ordenador del alumno. Registrar AddDbContext permite que los endpoints reciban el contexto mediante inyección de dependencias: no hay que crear el contexto con new dentro de cada manejador. En tests se sustituye solamente el proveedor por InMemory para evitar depender de Windows.
+**Por qué funciona así.** El verbo GET no modifica recursos. MapGet recibe dependencias y parámetros, consulta la orden y traduce el resultado a 200 o 404 con DTOs.
 
 **Verificación concreta.** El endpoint queda registrado y responde a GET. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si aparece un error de proveedor SQL Server, revisa NuGet, la cadena LocalDB y los servicios registrados; si el código de la respuesta no coincide, inspecciona el patrón MapGet.
+**Si algo falla.** Si aparece 404, revisa Guid, la plantilla {id:guid} y la existencia de la orden; en colección vacía corresponde 200.
 
 ### PASO 2.1.15 — Utilizar AsNoTracking y proyectar a DTO
 
@@ -324,11 +324,11 @@ app.MapGet("/api/v1/ordenes",async (AceriaDbContext db,CancellationToken ct)=>
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Explicación conceptual.** El contexto contiene DbSet<Orden> y las restricciones de las columnas. La API se ejecuta sobre SQL Server Express LocalDB en el ordenador del alumno. Registrar AddDbContext permite que los endpoints reciban el contexto mediante inyección de dependencias: no hay que crear el contexto con new dentro de cada manejador. En tests se sustituye solamente el proveedor por InMemory para evitar depender de Windows.
+**Por qué funciona así.** El verbo GET no modifica recursos. MapGet recibe dependencias y parámetros, consulta la orden y traduce el resultado a 200 o 404 con DTOs.
 
 **Verificación concreta.** La salida expone DTOs y no instancias de la entidad EF Core. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si aparece un error de proveedor SQL Server, revisa NuGet, la cadena LocalDB y los servicios registrados; si el código de la respuesta no coincide, inspecciona el patrón MapGet.
+**Si algo falla.** Si aparece 404, revisa Guid, la plantilla {id:guid} y la existencia de la orden; en colección vacía corresponde 200.
 
 ### PASO 2.1.16 — Ejecutar GET y verificar 200 con lista vacía
 
@@ -338,11 +338,11 @@ app.MapGet("/api/v1/ordenes",async (AceriaDbContext db,CancellationToken ct)=>
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Explicación conceptual.** El manejador obtiene AceriaDbContext, usa AsNoTracking para consultar sin seguimiento y devuelve Results.Ok con una secuencia de DTOs. En una colección vacía se responde 200 y una lista JSON vacía, pues la colección como recurso existe aunque no contenga elementos. La respuesta debe inspeccionarse desde AceriaApp.http, no deducirse de que el código compile.
+**Por qué funciona así.** El verbo GET no modifica recursos. MapGet recibe dependencias y parámetros, consulta la orden y traduce el resultado a 200 o 404 con DTOs.
 
 **Verificación concreta.** La respuesta es 200 y un arreglo JSON; no 404. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si aparece un error de proveedor SQL Server, revisa NuGet, la cadena LocalDB y los servicios registrados; si el código de la respuesta no coincide, inspecciona el patrón MapGet.
+**Si algo falla.** Si aparece 404, revisa Guid, la plantilla {id:guid} y la existencia de la orden; en colección vacía corresponde 200.
 
 ### PASO 2.1.17 — Escribir el GET individual con {id:guid}
 
@@ -369,11 +369,11 @@ app.Run();
 public partial class Program {} // permite WebApplicationFactory en tests
 ```
 
-**Explicación conceptual.** El manejador obtiene AceriaDbContext, usa AsNoTracking para consultar sin seguimiento y devuelve Results.Ok con una secuencia de DTOs. En una colección vacía se responde 200 y una lista JSON vacía, pues la colección como recurso existe aunque no contenga elementos. La respuesta debe inspeccionarse desde AceriaApp.http, no deducirse de que el código compile.
+**Por qué funciona así.** El verbo GET no modifica recursos. MapGet recibe dependencias y parámetros, consulta la orden y traduce el resultado a 200 o 404 con DTOs.
 
 **Verificación concreta.** La ruta coincide con un identificador Guid válido. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si aparece un error de proveedor SQL Server, revisa NuGet, la cadena LocalDB y los servicios registrados; si el código de la respuesta no coincide, inspecciona el patrón MapGet.
+**Si algo falla.** Si aparece 404, revisa Guid, la plantilla {id:guid} y la existencia de la orden; en colección vacía corresponde 200.
 
 ### PASO 2.1.18 — Devolver NotFound cuando no existe la orden
 
@@ -383,11 +383,11 @@ public partial class Program {} // permite WebApplicationFactory en tests
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Explicación conceptual.** El manejador obtiene AceriaDbContext, usa AsNoTracking para consultar sin seguimiento y devuelve Results.Ok con una secuencia de DTOs. En una colección vacía se responde 200 y una lista JSON vacía, pues la colección como recurso existe aunque no contenga elementos. La respuesta debe inspeccionarse desde AceriaApp.http, no deducirse de que el código compile.
+**Por qué funciona así.** El verbo GET no modifica recursos. MapGet recibe dependencias y parámetros, consulta la orden y traduce el resultado a 200 o 404 con DTOs.
 
 **Verificación concreta.** Un GUID nuevo devuelve 404 sin excepción 500. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si aparece un error de proveedor SQL Server, revisa NuGet, la cadena LocalDB y los servicios registrados; si el código de la respuesta no coincide, inspecciona el patrón MapGet.
+**Si algo falla.** Si aparece 404, revisa Guid, la plantilla {id:guid} y la existencia de la orden; en colección vacía corresponde 200.
 
 ### PASO 2.1.19 — Comprobar diferencias entre ruta incorrecta y recurso ausente
 
@@ -397,11 +397,11 @@ public partial class Program {} // permite WebApplicationFactory en tests
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Explicación conceptual.** El manejador obtiene AceriaDbContext, usa AsNoTracking para consultar sin seguimiento y devuelve Results.Ok con una secuencia de DTOs. En una colección vacía se responde 200 y una lista JSON vacía, pues la colección como recurso existe aunque no contenga elementos. La respuesta debe inspeccionarse desde AceriaApp.http, no deducirse de que el código compile.
+**Por qué funciona así.** El verbo GET no modifica recursos. MapGet recibe dependencias y parámetros, consulta la orden y traduce el resultado a 200 o 404 con DTOs.
 
 **Verificación concreta.** Comprendes la diferencia entre plantilla que no coincide y recurso ausente. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si aparece un error de proveedor SQL Server, revisa NuGet, la cadena LocalDB y los servicios registrados; si el código de la respuesta no coincide, inspecciona el patrón MapGet.
+**Si algo falla.** Si aparece 404, revisa Guid, la plantilla {id:guid} y la existencia de la orden; en colección vacía corresponde 200.
 
 ### PASO 2.1.20 — Crear AceriaApp.http y enviar peticiones desde Visual Studio
 
@@ -411,11 +411,11 @@ public partial class Program {} // permite WebApplicationFactory en tests
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Explicación conceptual.** El manejador obtiene AceriaDbContext, usa AsNoTracking para consultar sin seguimiento y devuelve Results.Ok con una secuencia de DTOs. En una colección vacía se responde 200 y una lista JSON vacía, pues la colección como recurso existe aunque no contenga elementos. La respuesta debe inspeccionarse desde AceriaApp.http, no deducirse de que el código compile.
+**Por qué funciona así.** El verbo GET no modifica recursos. MapGet recibe dependencias y parámetros, consulta la orden y traduce el resultado a 200 o 404 con DTOs.
 
 **Verificación concreta.** Puedes ejecutar ambos GET sin copiar URLs del navegador. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si aparece un error de proveedor SQL Server, revisa NuGet, la cadena LocalDB y los servicios registrados; si el código de la respuesta no coincide, inspecciona el patrón MapGet.
+**Si algo falla.** Si aparece 404, revisa Guid, la plantilla {id:guid} y la existencia de la orden; en colección vacía corresponde 200.
 
 ### PASO 2.1.21 — Crear el proyecto xUnit de pruebas HTTP
 
@@ -453,11 +453,11 @@ public sealed class ApiFactory:WebApplicationFactory<Program>
 }
 ```
 
-**Explicación conceptual.** La plantilla {id:guid} restringe el parámetro de ruta a GUID válidos. El manejador consulta una orden específica y decide entre Results.Ok y Results.NotFound. Una petición a un GUID inexistente no debería convertirse en 500 ni en una respuesta 200 con contenido vacío. WebApplicationFactory inicia la aplicación en memoria y permite comprobar 200 y 404 sobre los endpoints auténticos.
+**Por qué funciona así.** WebApplicationFactory prueba la aplicación como servidor HTTP: permite distinguir compilación C# de comportamiento observable del enrutamiento y la serialización.
 
 **Verificación concreta.** Las clases de tests referencian Program de la API. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si aparece un error de proveedor SQL Server, revisa NuGet, la cadena LocalDB y los servicios registrados; si el código de la respuesta no coincide, inspecciona el patrón MapGet.
+**Si algo falla.** Si falla ApiFactory, comprueba Program partial y el registro de DbContext con InMemory solo para tests.
 
 ### PASO 2.1.22 — Configurar WebApplicationFactory y base aislada para tests
 
@@ -495,11 +495,11 @@ public sealed class ApiFactory:WebApplicationFactory<Program>
 }
 ```
 
-**Explicación conceptual.** La plantilla {id:guid} restringe el parámetro de ruta a GUID válidos. El manejador consulta una orden específica y decide entre Results.Ok y Results.NotFound. Una petición a un GUID inexistente no debería convertirse en 500 ni en una respuesta 200 con contenido vacío. WebApplicationFactory inicia la aplicación en memoria y permite comprobar 200 y 404 sobre los endpoints auténticos.
+**Por qué funciona así.** WebApplicationFactory prueba la aplicación como servidor HTTP: permite distinguir compilación C# de comportamiento observable del enrutamiento y la serialización.
 
 **Verificación concreta.** Las pruebas arrancan ASP.NET Core en memoria; la aplicación real conserva LocalDB. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si aparece un error de proveedor SQL Server, revisa NuGet, la cadena LocalDB y los servicios registrados; si el código de la respuesta no coincide, inspecciona el patrón MapGet.
+**Si algo falla.** Si falla ApiFactory, comprueba Program partial y el registro de DbContext con InMemory solo para tests.
 
 ### PASO 2.1.23 — Probar 200, 404 y DTO mediante GetTests
 
@@ -551,11 +551,11 @@ public class GetTests
 }
 ```
 
-**Explicación conceptual.** La plantilla {id:guid} restringe el parámetro de ruta a GUID válidos. El manejador consulta una orden específica y decide entre Results.Ok y Results.NotFound. Una petición a un GUID inexistente no debería convertirse en 500 ni en una respuesta 200 con contenido vacío. WebApplicationFactory inicia la aplicación en memoria y permite comprobar 200 y 404 sobre los endpoints auténticos.
+**Por qué funciona así.** WebApplicationFactory prueba la aplicación como servidor HTTP: permite distinguir compilación C# de comportamiento observable del enrutamiento y la serialización.
 
 **Verificación concreta.** dotnet test ejecuta los tres casos con resultado satisfactorio. Ejecuta además las pruebas xUnit del proyecto de esta etapa para confirmar que el ejercicio no ha roto los endpoints anteriores.
 
-**Si algo falla.** Si aparece un error de proveedor SQL Server, revisa NuGet, la cadena LocalDB y los servicios registrados; si el código de la respuesta no coincide, inspecciona el patrón MapGet.
+**Si algo falla.** Si falla ApiFactory, comprueba Program partial y el registro de DbContext con InMemory solo para tests.
 
 ### PASO 2.1.24 — Reto: incorporar consulta por cliente y explicar su URI
 
@@ -565,11 +565,11 @@ public class GetTests
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Explicación conceptual.** La plantilla {id:guid} restringe el parámetro de ruta a GUID válidos. El manejador consulta una orden específica y decide entre Results.Ok y Results.NotFound. Una petición a un GUID inexistente no debería convertirse en 500 ni en una respuesta 200 con contenido vacío. WebApplicationFactory inicia la aplicación en memoria y permite comprobar 200 y 404 sobre los endpoints auténticos.
+**Por qué funciona así.** El filtrado de la colección conserva la idea de recurso y añade una consulta con parámetros, sin transformar el endpoint en una operación RPC.
 
 **Verificación concreta.** La colección devuelve únicamente órdenes del cliente indicado. Ejecuta además las pruebas xUnit del proyecto de esta etapa para confirmar que el ejercicio no ha roto los endpoints anteriores.
 
-**Si algo falla.** Si aparece un error de proveedor SQL Server, revisa NuGet, la cadena LocalDB y los servicios registrados; si el código de la respuesta no coincide, inspecciona el patrón MapGet.
+**Si algo falla.** Si el filtro no cambia el resultado, revisa el nombre cliente en la query y la condición Where.
 
 ### Matriz de comprobación del punto
 
@@ -594,11 +594,11 @@ public class GetTests
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.2-recursos-verbos-codigos` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Explicación conceptual.** El servidor debe recibir solamente Cliente, Material y Cantidad en CrearOrdenRequest. El ID, el Estado y la FechaCreacion pertenecen al control interno del servicio. Por eso no reutilizamos Orden como cuerpo de entrada. Este diseño protege el contrato público y delimita claramente los datos que el cliente puede modificar.
+**Por qué funciona así.** El diseño de las rutas y los contratos evita recibir propiedades de servidor desde JSON. El resultado público se devuelve mediante OrdenDto, no directamente desde la entidad.
 
 **Verificación concreta.** La lista sigue devolviendo 200 y el detalle inexistente 404. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si una escritura devuelve 200 pero no cambia datos, busca SaveChangesAsync; si CreatedAtRoute falla revisa el nombre ObtenerOrdenPorId; si devuelve 404, comprueba el GUID.
+**Si algo falla.** Si el JSON puede cambiar el ID o Estado, el contrato de entrada está exponiendo datos internos; utiliza CrearOrdenRequest.
 
 ### PASO 2.2.2 — Diseñar la tabla verbo, URI, petición y respuesta
 
@@ -608,11 +608,11 @@ public class GetTests
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.2-recursos-verbos-codigos` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Explicación conceptual.** El servidor debe recibir solamente Cliente, Material y Cantidad en CrearOrdenRequest. El ID, el Estado y la FechaCreacion pertenecen al control interno del servicio. Por eso no reutilizamos Orden como cuerpo de entrada. Este diseño protege el contrato público y delimita claramente los datos que el cliente puede modificar.
+**Por qué funciona así.** El diseño de las rutas y los contratos evita recibir propiedades de servidor desde JSON. El resultado público se devuelve mediante OrdenDto, no directamente desde la entidad.
 
 **Verificación concreta.** La tabla coincide con las rutas que programarás, sin acciones Git. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si una escritura devuelve 200 pero no cambia datos, busca SaveChangesAsync; si CreatedAtRoute falla revisa el nombre ObtenerOrdenPorId; si devuelve 404, comprueba el GUID.
+**Si algo falla.** Si el JSON puede cambiar el ID o Estado, el contrato de entrada está exponiendo datos internos; utiliza CrearOrdenRequest.
 
 ### PASO 2.2.3 — Separar contrato de entrada y DTO de salida
 
@@ -622,11 +622,11 @@ public class GetTests
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.2-recursos-verbos-codigos` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Explicación conceptual.** El servidor debe recibir solamente Cliente, Material y Cantidad en CrearOrdenRequest. El ID, el Estado y la FechaCreacion pertenecen al control interno del servicio. Por eso no reutilizamos Orden como cuerpo de entrada. Este diseño protege el contrato público y delimita claramente los datos que el cliente puede modificar.
+**Por qué funciona así.** El diseño de las rutas y los contratos evita recibir propiedades de servidor desde JSON. El resultado público se devuelve mediante OrdenDto, no directamente desde la entidad.
 
 **Verificación concreta.** Id, Estado y FechaCreacion quedan fuera del contrato de creación. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si una escritura devuelve 200 pero no cambia datos, busca SaveChangesAsync; si CreatedAtRoute falla revisa el nombre ObtenerOrdenPorId; si devuelve 404, comprueba el GUID.
+**Si algo falla.** Si el JSON puede cambiar el ID o Estado, el contrato de entrada está exponiendo datos internos; utiliza CrearOrdenRequest.
 
 ### PASO 2.2.4 — Crear CrearOrdenRequest y ActualizarCantidadRequest
 
@@ -645,11 +645,11 @@ public sealed record ActualizarCantidadRequest(int Cantidad);
 // FIN PASO 2.2.4
 ```
 
-**Explicación conceptual.** El servidor debe recibir solamente Cliente, Material y Cantidad en CrearOrdenRequest. El ID, el Estado y la FechaCreacion pertenecen al control interno del servicio. Por eso no reutilizamos Orden como cuerpo de entrada. Este diseño protege el contrato público y delimita claramente los datos que el cliente puede modificar.
+**Por qué funciona así.** El diseño de las rutas y los contratos evita recibir propiedades de servidor desde JSON. El resultado público se devuelve mediante OrdenDto, no directamente desde la entidad.
 
 **Verificación concreta.** Los dos records compilan y se distinguen del OrdenDto de salida. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si una escritura devuelve 200 pero no cambia datos, busca SaveChangesAsync; si CreatedAtRoute falla revisa el nombre ObtenerOrdenPorId; si devuelve 404, comprueba el GUID.
+**Si algo falla.** Si el JSON puede cambiar el ID o Estado, el contrato de entrada está exponiendo datos internos; utiliza CrearOrdenRequest.
 
 ### PASO 2.2.5 — Programar MapPost y recibir JSON de una orden
 
@@ -680,11 +680,11 @@ app.MapPost("/api/v1/ordenes",async (CrearOrdenRequest request,AceriaDbContext d
 ;
 ```
 
-**Explicación conceptual.** El servidor debe recibir solamente Cliente, Material y Cantidad en CrearOrdenRequest. El ID, el Estado y la FechaCreacion pertenecen al control interno del servicio. Por eso no reutilizamos Orden como cuerpo de entrada. Este diseño protege el contrato público y delimita claramente los datos que el cliente puede modificar.
+**Por qué funciona así.** El POST crea un recurso y debe confirmar la inserción mediante SaveChangesAsync. CreatedAtRoute devuelve 201 y un enlace Location utilizable mediante GET.
 
 **Verificación concreta.** La URL acepta POST con Content-Type application/json. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si una escritura devuelve 200 pero no cambia datos, busca SaveChangesAsync; si CreatedAtRoute falla revisa el nombre ObtenerOrdenPorId; si devuelve 404, comprueba el GUID.
+**Si algo falla.** Si el POST no persiste, verifica SaveChangesAsync; si Location falta, revisa CreatedAtRoute y el nombre de GET.
 
 ### PASO 2.2.6 — Persistir la orden con Add y SaveChangesAsync
 
@@ -694,11 +694,11 @@ app.MapPost("/api/v1/ordenes",async (CrearOrdenRequest request,AceriaDbContext d
 
 **Referencia de código:** `src/AceriaApp.Api/Program.cs`. Busca el método HTTP correspondiente y su llamada a `SaveChangesAsync`. Comprueba el comportamiento indicado en la acción antes de continuar.
 
-**Explicación conceptual.** MapPost convierte un cuerpo JSON en CrearOrdenRequest. Al construir Orden y añadirla al DbContext todavía no se ha confirmado una inserción; SaveChangesAsync ejecuta la escritura. CreatedAtRoute utiliza el nombre ObtenerOrdenPorId para incluir un vínculo al recurso y devolver 201 Created. En prácticas se enviará POST y se seguirá Location con GET para demostrar persistencia real.
+**Por qué funciona así.** El POST crea un recurso y debe confirmar la inserción mediante SaveChangesAsync. CreatedAtRoute devuelve 201 y un enlace Location utilizable mediante GET.
 
 **Verificación concreta.** Una nueva fila queda persistida en LocalDB. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si una escritura devuelve 200 pero no cambia datos, busca SaveChangesAsync; si CreatedAtRoute falla revisa el nombre ObtenerOrdenPorId; si devuelve 404, comprueba el GUID.
+**Si algo falla.** Si el POST no persiste, verifica SaveChangesAsync; si Location falta, revisa CreatedAtRoute y el nombre de GET.
 
 ### PASO 2.2.7 — Devolver 201 y Location con CreatedAtRoute
 
@@ -729,11 +729,11 @@ app.MapPost("/api/v1/ordenes",async (CrearOrdenRequest request,AceriaDbContext d
 ;
 ```
 
-**Explicación conceptual.** MapPost convierte un cuerpo JSON en CrearOrdenRequest. Al construir Orden y añadirla al DbContext todavía no se ha confirmado una inserción; SaveChangesAsync ejecuta la escritura. CreatedAtRoute utiliza el nombre ObtenerOrdenPorId para incluir un vínculo al recurso y devolver 201 Created. En prácticas se enviará POST y se seguirá Location con GET para demostrar persistencia real.
+**Por qué funciona así.** El POST crea un recurso y debe confirmar la inserción mediante SaveChangesAsync. CreatedAtRoute devuelve 201 y un enlace Location utilizable mediante GET.
 
 **Verificación concreta.** El resultado es 201 con cabecera Location. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si una escritura devuelve 200 pero no cambia datos, busca SaveChangesAsync; si CreatedAtRoute falla revisa el nombre ObtenerOrdenPorId; si devuelve 404, comprueba el GUID.
+**Si algo falla.** Si el POST no persiste, verifica SaveChangesAsync; si Location falta, revisa CreatedAtRoute y el nombre de GET.
 
 ### PASO 2.2.8 — Enviar POST y consultar por GET la orden creada
 
@@ -743,11 +743,11 @@ app.MapPost("/api/v1/ordenes",async (CrearOrdenRequest request,AceriaDbContext d
 
 **Referencia de código:** `src/AceriaApp.Api/Program.cs`. Busca el método HTTP correspondiente y su llamada a `SaveChangesAsync`. Comprueba el comportamiento indicado en la acción antes de continuar.
 
-**Explicación conceptual.** MapPost convierte un cuerpo JSON en CrearOrdenRequest. Al construir Orden y añadirla al DbContext todavía no se ha confirmado una inserción; SaveChangesAsync ejecuta la escritura. CreatedAtRoute utiliza el nombre ObtenerOrdenPorId para incluir un vínculo al recurso y devolver 201 Created. En prácticas se enviará POST y se seguirá Location con GET para demostrar persistencia real.
+**Por qué funciona así.** El POST crea un recurso y debe confirmar la inserción mediante SaveChangesAsync. CreatedAtRoute devuelve 201 y un enlace Location utilizable mediante GET.
 
 **Verificación concreta.** GET muestra los mismos valores guardados por POST. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si una escritura devuelve 200 pero no cambia datos, busca SaveChangesAsync; si CreatedAtRoute falla revisa el nombre ObtenerOrdenPorId; si devuelve 404, comprueba el GUID.
+**Si algo falla.** Si el POST no persiste, verifica SaveChangesAsync; si Location falta, revisa CreatedAtRoute y el nombre de GET.
 
 ### PASO 2.2.9 — Rechazar provisionalmente peticiones sin datos
 
@@ -757,11 +757,11 @@ app.MapPost("/api/v1/ordenes",async (CrearOrdenRequest request,AceriaDbContext d
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.2-recursos-verbos-codigos` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Explicación conceptual.** MapPost convierte un cuerpo JSON en CrearOrdenRequest. Al construir Orden y añadirla al DbContext todavía no se ha confirmado una inserción; SaveChangesAsync ejecuta la escritura. CreatedAtRoute utiliza el nombre ObtenerOrdenPorId para incluir un vínculo al recurso y devolver 201 Created. En prácticas se enviará POST y se seguirá Location con GET para demostrar persistencia real.
+**Por qué funciona así.** Un cuerpo incorrecto es distinto de una regla del negocio. En 2.2 el 400 es provisional; 501 unidades reciben 422 por la capacidad limitada del taller.
 
 **Verificación concreta.** La petición inválida produce 400 y no crea una orden. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si una escritura devuelve 200 pero no cambia datos, busca SaveChangesAsync; si CreatedAtRoute falla revisa el nombre ObtenerOrdenPorId; si devuelve 404, comprueba el GUID.
+**Si algo falla.** Si un 501 da 400, la condición provisional está mezclada con la política de capacidad; distingue ambos casos.
 
 ### PASO 2.2.10 — Comprobar la política del taller y respuesta 422
 
@@ -771,11 +771,11 @@ app.MapPost("/api/v1/ordenes",async (CrearOrdenRequest request,AceriaDbContext d
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.2-recursos-verbos-codigos` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Explicación conceptual.** MapPost convierte un cuerpo JSON en CrearOrdenRequest. Al construir Orden y añadirla al DbContext todavía no se ha confirmado una inserción; SaveChangesAsync ejecuta la escritura. CreatedAtRoute utiliza el nombre ObtenerOrdenPorId para incluir un vínculo al recurso y devolver 201 Created. En prácticas se enviará POST y se seguirá Location con GET para demostrar persistencia real.
+**Por qué funciona así.** Un cuerpo incorrecto es distinto de una regla del negocio. En 2.2 el 400 es provisional; 501 unidades reciben 422 por la capacidad limitada del taller.
 
 **Verificación concreta.** El JSON de capacidad 501 produce 422; se distingue de 400. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si una escritura devuelve 200 pero no cambia datos, busca SaveChangesAsync; si CreatedAtRoute falla revisa el nombre ObtenerOrdenPorId; si devuelve 404, comprueba el GUID.
+**Si algo falla.** Si un 501 da 400, la condición provisional está mezclada con la política de capacidad; distingue ambos casos.
 
 ### PASO 2.2.11 — Programar MapPut con identificador Guid
 
@@ -809,11 +809,11 @@ app.MapPut("/api/v1/ordenes/{id:guid}",async (Guid id,CrearOrdenRequest request,
 ;
 ```
 
-**Explicación conceptual.** El ejemplo PUT reemplaza los campos editables de una orden ya existente, conservando los valores que controla el servidor. No debe inventar una nueva orden cuando el identificador no existe: en nuestro contrato responde 404. Cuando una orden ya está finalizada la regla del dominio impide editarla y se comunica un conflicto 409.
+**Por qué funciona así.** PUT sustituye los campos editables de una orden existente. Si el Guid no identifica un recurso debe devolver 404, no crear silenciosamente otro.
 
 **Verificación concreta.** PUT puede buscar un recurso por identificador. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si una escritura devuelve 200 pero no cambia datos, busca SaveChangesAsync; si CreatedAtRoute falla revisa el nombre ObtenerOrdenPorId; si devuelve 404, comprueba el GUID.
+**Si algo falla.** Si el PUT no actualiza, revisa FindAsync(id) y SaveChangesAsync. El GUID no debe cambiar.
 
 ### PASO 2.2.12 — Modificar Cliente, Material y Cantidad con PUT
 
@@ -823,11 +823,11 @@ app.MapPut("/api/v1/ordenes/{id:guid}",async (Guid id,CrearOrdenRequest request,
 
 **Referencia de código:** `src/AceriaApp.Api/Program.cs`. Busca el método HTTP correspondiente y su llamada a `SaveChangesAsync`. Comprueba el comportamiento indicado en la acción antes de continuar.
 
-**Explicación conceptual.** El ejemplo PUT reemplaza los campos editables de una orden ya existente, conservando los valores que controla el servidor. No debe inventar una nueva orden cuando el identificador no existe: en nuestro contrato responde 404. Cuando una orden ya está finalizada la regla del dominio impide editarla y se comunica un conflicto 409.
+**Por qué funciona así.** PUT sustituye los campos editables de una orden existente. Si el Guid no identifica un recurso debe devolver 404, no crear silenciosamente otro.
 
 **Verificación concreta.** PUT válido responde 204 y mantiene el mismo Guid. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si una escritura devuelve 200 pero no cambia datos, busca SaveChangesAsync; si CreatedAtRoute falla revisa el nombre ObtenerOrdenPorId; si devuelve 404, comprueba el GUID.
+**Si algo falla.** Si el PUT no actualiza, revisa FindAsync(id) y SaveChangesAsync. El GUID no debe cambiar.
 
 ### PASO 2.2.13 — Comprobar 204 y consultar por GET los cambios
 
@@ -837,11 +837,11 @@ app.MapPut("/api/v1/ordenes/{id:guid}",async (Guid id,CrearOrdenRequest request,
 
 **Referencia de código:** `src/AceriaApp.Api/Program.cs`. Busca el método HTTP correspondiente y su llamada a `SaveChangesAsync`. Comprueba el comportamiento indicado en la acción antes de continuar.
 
-**Explicación conceptual.** El ejemplo PUT reemplaza los campos editables de una orden ya existente, conservando los valores que controla el servidor. No debe inventar una nueva orden cuando el identificador no existe: en nuestro contrato responde 404. Cuando una orden ya está finalizada la regla del dominio impide editarla y se comunica un conflicto 409.
+**Por qué funciona así.** PUT sustituye los campos editables de una orden existente. Si el Guid no identifica un recurso debe devolver 404, no crear silenciosamente otro.
 
 **Verificación concreta.** La consulta evidencia que el cambio se persistió. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si una escritura devuelve 200 pero no cambia datos, busca SaveChangesAsync; si CreatedAtRoute falla revisa el nombre ObtenerOrdenPorId; si devuelve 404, comprueba el GUID.
+**Si algo falla.** Si el PUT no actualiza, revisa FindAsync(id) y SaveChangesAsync. El GUID no debe cambiar.
 
 ### PASO 2.2.14 — Programar MapPatch para cambiar solo Cantidad
 
@@ -874,11 +874,11 @@ app.MapPatch("/api/v1/ordenes/{id:guid}/cantidad",
 ;
 ```
 
-**Explicación conceptual.** El ejemplo PUT reemplaza los campos editables de una orden ya existente, conservando los valores que controla el servidor. No debe inventar una nueva orden cuando el identificador no existe: en nuestro contrato responde 404. Cuando una orden ya está finalizada la regla del dominio impide editarla y se comunica un conflicto 409.
+**Por qué funciona así.** PATCH realiza un cambio parcial de Cantidad y conserva los demás datos. Su resultado debe verificarse con una lectura posterior.
 
 **Verificación concreta.** PATCH admite un cuerpo que contiene solo Cantidad. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si una escritura devuelve 200 pero no cambia datos, busca SaveChangesAsync; si CreatedAtRoute falla revisa el nombre ObtenerOrdenPorId; si devuelve 404, comprueba el GUID.
+**Si algo falla.** Si PATCH cambia otros campos, no reasignes Cliente ni Material desde ActualizarCantidadRequest.
 
 ### PASO 2.2.15 — Comprobar que PATCH no modifica los demás campos
 
@@ -888,11 +888,11 @@ app.MapPatch("/api/v1/ordenes/{id:guid}/cantidad",
 
 **Referencia de código:** `src/AceriaApp.Api/Program.cs`. Busca el método HTTP correspondiente y su llamada a `SaveChangesAsync`. Comprueba el comportamiento indicado en la acción antes de continuar.
 
-**Explicación conceptual.** El ejemplo PUT reemplaza los campos editables de una orden ya existente, conservando los valores que controla el servidor. No debe inventar una nueva orden cuando el identificador no existe: en nuestro contrato responde 404. Cuando una orden ya está finalizada la regla del dominio impide editarla y se comunica un conflicto 409.
+**Por qué funciona así.** PATCH realiza un cambio parcial de Cantidad y conserva los demás datos. Su resultado debe verificarse con una lectura posterior.
 
 **Verificación concreta.** Se obtiene 200 y no cambian datos no incluidos en el parche. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si una escritura devuelve 200 pero no cambia datos, busca SaveChangesAsync; si CreatedAtRoute falla revisa el nombre ObtenerOrdenPorId; si devuelve 404, comprueba el GUID.
+**Si algo falla.** Si PATCH cambia otros campos, no reasignes Cliente ni Material desde ActualizarCantidadRequest.
 
 ### PASO 2.2.16 — Programar MapDelete para eliminar una orden
 
@@ -920,11 +920,11 @@ app.MapDelete("/api/v1/ordenes/{id:guid}",async (Guid id,AceriaDbContext db)=>
 ;
 ```
 
-**Explicación conceptual.** El endpoint PATCH de este curso cambia exclusivamente Cantidad. La elección de una ruta especializada para ese campo evita introducir JSON Patch en un módulo introductorio. El alumno comprobará que Cliente y Material no cambian después de aplicar la modificación parcial.
+**Por qué funciona así.** DELETE quita un recurso persistido. La consulta posterior puede devolver 404; esa diferencia no impide que la eliminación sea idempotente.
 
 **Verificación concreta.** DELETE existente devuelve 204. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si una escritura devuelve 200 pero no cambia datos, busca SaveChangesAsync; si CreatedAtRoute falla revisa el nombre ObtenerOrdenPorId; si devuelve 404, comprueba el GUID.
+**Si algo falla.** Si DELETE devuelve éxito pero GET encuentra la orden, revisa Remove y SaveChangesAsync.
 
 ### PASO 2.2.17 — Verificar 204 seguido de GET 404
 
@@ -934,11 +934,11 @@ app.MapDelete("/api/v1/ordenes/{id:guid}",async (Guid id,AceriaDbContext db)=>
 
 **Referencia de código:** `src/AceriaApp.Api/Program.cs`. Busca el método HTTP correspondiente y su llamada a `SaveChangesAsync`. Comprueba el comportamiento indicado en la acción antes de continuar.
 
-**Explicación conceptual.** El endpoint PATCH de este curso cambia exclusivamente Cantidad. La elección de una ruta especializada para ese campo evita introducir JSON Patch en un módulo introductorio. El alumno comprobará que Cliente y Material no cambian después de aplicar la modificación parcial.
+**Por qué funciona así.** DELETE quita un recurso persistido. La consulta posterior puede devolver 404; esa diferencia no impide que la eliminación sea idempotente.
 
 **Verificación concreta.** El GET devuelve 404 y el recurso sigue ausente. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si una escritura devuelve 200 pero no cambia datos, busca SaveChangesAsync; si CreatedAtRoute falla revisa el nombre ObtenerOrdenPorId; si devuelve 404, comprueba el GUID.
+**Si algo falla.** Si DELETE devuelve éxito pero GET encuentra la orden, revisa Remove y SaveChangesAsync.
 
 ### PASO 2.2.18 — Programar la transición de estado finalizar
 
@@ -969,11 +969,11 @@ app.Run();
 public partial class Program {} // permite WebApplicationFactory en tests
 ```
 
-**Explicación conceptual.** El endpoint PATCH de este curso cambia exclusivamente Cantidad. La elección de una ruta especializada para ese campo evita introducir JSON Patch en un módulo introductorio. El alumno comprobará que Cliente y Material no cambian después de aplicar la modificación parcial.
+**Por qué funciona así.** La transición Finalizada cambia el estado de negocio. PUT, PATCH y DELETE deben respetarlo y producir 409 si se intenta una operación incompatible.
 
 **Verificación concreta.** La transición devuelve 200 y el DTO indica Finalizada. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si una escritura devuelve 200 pero no cambia datos, busca SaveChangesAsync; si CreatedAtRoute falla revisa el nombre ObtenerOrdenPorId; si devuelve 404, comprueba el GUID.
+**Si algo falla.** Si una orden finalizada cambia de estado o desaparece, comprueba la condición Estado antes de escribir.
 
 ### PASO 2.2.19 — Bloquear PUT y PATCH para órdenes finalizadas
 
@@ -983,11 +983,11 @@ public partial class Program {} // permite WebApplicationFactory en tests
 
 **Referencia de código:** `src/AceriaApp.Api/Program.cs`. Busca el método HTTP correspondiente y su llamada a `SaveChangesAsync`. Comprueba el comportamiento indicado en la acción antes de continuar.
 
-**Explicación conceptual.** El endpoint PATCH de este curso cambia exclusivamente Cantidad. La elección de una ruta especializada para ese campo evita introducir JSON Patch en un módulo introductorio. El alumno comprobará que Cliente y Material no cambian después de aplicar la modificación parcial.
+**Por qué funciona así.** La transición Finalizada cambia el estado de negocio. PUT, PATCH y DELETE deben respetarlo y producir 409 si se intenta una operación incompatible.
 
 **Verificación concreta.** Ninguna modificación se guarda sobre una orden finalizada. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si una escritura devuelve 200 pero no cambia datos, busca SaveChangesAsync; si CreatedAtRoute falla revisa el nombre ObtenerOrdenPorId; si devuelve 404, comprueba el GUID.
+**Si algo falla.** Si una orden finalizada cambia de estado o desaparece, comprueba la condición Estado antes de escribir.
 
 ### PASO 2.2.20 — Bloquear DELETE y devolver conflicto 409
 
@@ -997,11 +997,11 @@ public partial class Program {} // permite WebApplicationFactory en tests
 
 **Referencia de código:** `src/AceriaApp.Api/Program.cs`. Busca el método HTTP correspondiente y su llamada a `SaveChangesAsync`. Comprueba el comportamiento indicado en la acción antes de continuar.
 
-**Explicación conceptual.** El endpoint PATCH de este curso cambia exclusivamente Cantidad. La elección de una ruta especializada para ese campo evita introducir JSON Patch en un módulo introductorio. El alumno comprobará que Cliente y Material no cambian después de aplicar la modificación parcial.
+**Por qué funciona así.** La transición Finalizada cambia el estado de negocio. PUT, PATCH y DELETE deben respetarlo y producir 409 si se intenta una operación incompatible.
 
 **Verificación concreta.** Un recurso finalizado permanece en la base tras DELETE fallido. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si una escritura devuelve 200 pero no cambia datos, busca SaveChangesAsync; si CreatedAtRoute falla revisa el nombre ObtenerOrdenPorId; si devuelve 404, comprueba el GUID.
+**Si algo falla.** Si una orden finalizada cambia de estado o desaparece, comprueba la condición Estado antes de escribir.
 
 ### PASO 2.2.21 — Escribir pruebas HTTP POST y Location
 
@@ -1075,11 +1075,11 @@ public class EscrituraTests
 }
 ```
 
-**Explicación conceptual.** DELETE busca el recurso y ejecuta Remove y SaveChangesAsync. La primera eliminación devuelve 204; la consulta posterior devuelve 404. La idempotencia describe el estado final del sistema, no la obligación de devolver exactamente el mismo código en peticiones repetidas. Para reproducir 409 se añade la transición POST finalizar y se intenta editar una orden cuyo estado ya no permite modificaciones.
+**Por qué funciona así.** Los tests deben confirmar los efectos de POST, PUT, PATCH, DELETE, la capacidad del taller y el conflicto de estado a través de peticiones HTTP reales.
 
 **Verificación concreta.** El test confirma creación y posterior consulta por HTTP. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si una escritura devuelve 200 pero no cambia datos, busca SaveChangesAsync; si CreatedAtRoute falla revisa el nombre ObtenerOrdenPorId; si devuelve 404, comprueba el GUID.
+**Si algo falla.** Si una prueba de escritura pasa sin volver a consultar la orden, no ha demostrado persistencia; añade el GET posterior.
 
 ### PASO 2.2.22 — Escribir pruebas HTTP PUT, PATCH y DELETE
 
@@ -1153,11 +1153,11 @@ public class EscrituraTests
 }
 ```
 
-**Explicación conceptual.** DELETE busca el recurso y ejecuta Remove y SaveChangesAsync. La primera eliminación devuelve 204; la consulta posterior devuelve 404. La idempotencia describe el estado final del sistema, no la obligación de devolver exactamente el mismo código en peticiones repetidas. Para reproducir 409 se añade la transición POST finalizar y se intenta editar una orden cuyo estado ya no permite modificaciones.
+**Por qué funciona así.** Los tests deben confirmar los efectos de POST, PUT, PATCH, DELETE, la capacidad del taller y el conflicto de estado a través de peticiones HTTP reales.
 
 **Verificación concreta.** Se comprueban 204, 200, 204 y después 404. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si una escritura devuelve 200 pero no cambia datos, busca SaveChangesAsync; si CreatedAtRoute falla revisa el nombre ObtenerOrdenPorId; si devuelve 404, comprueba el GUID.
+**Si algo falla.** Si una prueba de escritura pasa sin volver a consultar la orden, no ha demostrado persistencia; añade el GET posterior.
 
 ### PASO 2.2.23 — Probar automáticamente 422 y 409
 
@@ -1167,11 +1167,11 @@ public class EscrituraTests
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.2-recursos-verbos-codigos` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Explicación conceptual.** DELETE busca el recurso y ejecuta Remove y SaveChangesAsync. La primera eliminación devuelve 204; la consulta posterior devuelve 404. La idempotencia describe el estado final del sistema, no la obligación de devolver exactamente el mismo código en peticiones repetidas. Para reproducir 409 se añade la transición POST finalizar y se intenta editar una orden cuyo estado ya no permite modificaciones.
+**Por qué funciona así.** Los tests deben confirmar los efectos de POST, PUT, PATCH, DELETE, la capacidad del taller y el conflicto de estado a través de peticiones HTTP reales.
 
 **Verificación concreta.** La batería comprueba las respuestas 422 y 409. Ejecuta además las pruebas xUnit del proyecto de esta etapa para confirmar que el ejercicio no ha roto los endpoints anteriores.
 
-**Si algo falla.** Si una escritura devuelve 200 pero no cambia datos, busca SaveChangesAsync; si CreatedAtRoute falla revisa el nombre ObtenerOrdenPorId; si devuelve 404, comprueba el GUID.
+**Si algo falla.** Si una prueba de escritura pasa sin volver a consultar la orden, no ha demostrado persistencia; añade el GET posterior.
 
 ### PASO 2.2.24 — Reto: comprobar idempotencia y efecto persistente
 
@@ -1181,11 +1181,11 @@ public class EscrituraTests
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.2-recursos-verbos-codigos` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Explicación conceptual.** DELETE busca el recurso y ejecuta Remove y SaveChangesAsync. La primera eliminación devuelve 204; la consulta posterior devuelve 404. La idempotencia describe el estado final del sistema, no la obligación de devolver exactamente el mismo código en peticiones repetidas. Para reproducir 409 se añade la transición POST finalizar y se intenta editar una orden cuyo estado ya no permite modificaciones.
+**Por qué funciona así.** La idempotencia habla del efecto final: repetir PUT no multiplica los recursos, y repetir DELETE no restaura lo eliminado. Las respuestas HTTP pueden diferir.
 
 **Verificación concreta.** El estado del recurso no se duplica y el segundo DELETE no lo restaura. Ejecuta además las pruebas xUnit del proyecto de esta etapa para confirmar que el ejercicio no ha roto los endpoints anteriores.
 
-**Si algo falla.** Si una escritura devuelve 200 pero no cambia datos, busca SaveChangesAsync; si CreatedAtRoute falla revisa el nombre ObtenerOrdenPorId; si devuelve 404, comprueba el GUID.
+**Si algo falla.** Si se crean órdenes duplicadas al repetir PUT, se está usando Add en lugar de actualizar la entidad encontrada.
 
 ### Matriz de comprobación del punto
 
@@ -1214,11 +1214,11 @@ public class EscrituraTests
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.3-validacion-peticiones` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Explicación conceptual.** ASP.NET Core comprueba aspectos de la deserialización del JSON, FluentValidation aplica reglas semánticas y el manejador aplica decisiones del dominio. Un cuerpo con cantidad 0 falla la semántica; cantidad 501 satisface el rango del contrato pero supera el límite de negocio de 500. El objetivo es demostrar por qué el primer caso produce 400 y el segundo 422.
+**Por qué funciona así.** La deserialización de un cuerpo JSON y la validación semántica no son lo mismo. Primero el framework interpreta el mensaje y después se comprueban las reglas de datos.
 
 **Verificación concreta.** Los tests de escritura siguen pasando. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si el endpoint acepta datos inválidos, comprueba que se ha añadido AddEndpointFilter al verbo correcto; si aparece una excepción de DI, registra el validador antes de Build.
+**Si algo falla.** Si JSON roto produce un error inesperado, revisa Content-Type y la estructura del cuerpo antes del validador.
 
 ### PASO 2.3.2 — Distinguir JSON incorrecto, semántica y negocio
 
@@ -1228,11 +1228,11 @@ public class EscrituraTests
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.3-validacion-peticiones` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Explicación conceptual.** ASP.NET Core comprueba aspectos de la deserialización del JSON, FluentValidation aplica reglas semánticas y el manejador aplica decisiones del dominio. Un cuerpo con cantidad 0 falla la semántica; cantidad 501 satisface el rango del contrato pero supera el límite de negocio de 500. El objetivo es demostrar por qué el primer caso produce 400 y el segundo 422.
+**Por qué funciona así.** La deserialización de un cuerpo JSON y la validación semántica no son lo mismo. Primero el framework interpreta el mensaje y después se comprueban las reglas de datos.
 
 **Verificación concreta.** Distingues sintaxis, semántica y regla de capacidad. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si el endpoint acepta datos inválidos, comprueba que se ha añadido AddEndpointFilter al verbo correcto; si aparece una excepción de DI, registra el validador antes de Build.
+**Si algo falla.** Si JSON roto produce un error inesperado, revisa Content-Type y la estructura del cuerpo antes del validador.
 
 ### PASO 2.3.3 — Instalar FluentValidation.DependencyInjectionExtensions
 
@@ -1242,11 +1242,11 @@ public class EscrituraTests
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.3-validacion-peticiones` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Explicación conceptual.** ASP.NET Core comprueba aspectos de la deserialización del JSON, FluentValidation aplica reglas semánticas y el manejador aplica decisiones del dominio. Un cuerpo con cantidad 0 falla la semántica; cantidad 501 satisface el rango del contrato pero supera el límite de negocio de 500. El objetivo es demostrar por qué el primer caso produce 400 y el segundo 422.
+**Por qué funciona así.** La deserialización de un cuerpo JSON y la validación semántica no son lo mismo. Primero el framework interpreta el mensaje y después se comprueban las reglas de datos.
 
 **Verificación concreta.** AbstractValidator y AddValidatorsFromAssemblyContaining se resuelven. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si el endpoint acepta datos inválidos, comprueba que se ha añadido AddEndpointFilter al verbo correcto; si aparece una excepción de DI, registra el validador antes de Build.
+**Si algo falla.** Si JSON roto produce un error inesperado, revisa Content-Type y la estructura del cuerpo antes del validador.
 
 ### PASO 2.3.4 — Crear CrearOrdenValidator y reglas de Cliente
 
@@ -1278,11 +1278,11 @@ public sealed class ActualizarCantidadValidator : AbstractValidator<ActualizarCa
 // FIN PASO 2.3.3
 ```
 
-**Explicación conceptual.** ASP.NET Core comprueba aspectos de la deserialización del JSON, FluentValidation aplica reglas semánticas y el manejador aplica decisiones del dominio. Un cuerpo con cantidad 0 falla la semántica; cantidad 501 satisface el rango del contrato pero supera el límite de negocio de 500. El objetivo es demostrar por qué el primer caso produce 400 y el segundo 422.
+**Por qué funciona así.** FluentValidation expresa reglas sobre los contratos de entrada y devuelve errores por campo; no debe confundirse un record con el validador que lo inspecciona.
 
 **Verificación concreta.** Un cliente vacío infringe una regla semántica. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si el endpoint acepta datos inválidos, comprueba que se ha añadido AddEndpointFilter al verbo correcto; si aparece una excepción de DI, registra el validador antes de Build.
+**Si algo falla.** Si RuleFor no compila, revisa FluentValidation y el using. Comprueba la diferencia entre NotEmpty y límites numéricos.
 
 ### PASO 2.3.5 — Definir Material y rango válido de Cantidad
 
@@ -1292,11 +1292,11 @@ public sealed class ActualizarCantidadValidator : AbstractValidator<ActualizarCa
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.3-validacion-peticiones` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Explicación conceptual.** ASP.NET Core comprueba aspectos de la deserialización del JSON, FluentValidation aplica reglas semánticas y el manejador aplica decisiones del dominio. Un cuerpo con cantidad 0 falla la semántica; cantidad 501 satisface el rango del contrato pero supera el límite de negocio de 500. El objetivo es demostrar por qué el primer caso produce 400 y el segundo 422.
+**Por qué funciona así.** FluentValidation expresa reglas sobre los contratos de entrada y devuelve errores por campo; no debe confundirse un record con el validador que lo inspecciona.
 
 **Verificación concreta.** La cantidad 0 o 10001 es inválida; 501 cumple el rango. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si el endpoint acepta datos inválidos, comprueba que se ha añadido AddEndpointFilter al verbo correcto; si aparece una excepción de DI, registra el validador antes de Build.
+**Si algo falla.** Si RuleFor no compila, revisa FluentValidation y el using. Comprueba la diferencia entre NotEmpty y límites numéricos.
 
 ### PASO 2.3.6 — Crear ActualizarCantidadValidator para PATCH
 
@@ -1328,11 +1328,11 @@ public sealed class ActualizarCantidadValidator : AbstractValidator<ActualizarCa
 // FIN PASO 2.3.3
 ```
 
-**Explicación conceptual.** CrearOrdenValidator deriva de AbstractValidator y declara reglas NotEmpty, MaximumLength e InclusiveBetween. El validador es código C# ejecutable, no una anotación narrativa. Permite reutilizar reglas en POST y PUT y establecer pruebas de frontera cuando la cantidad es 0, 1, 500, 501 y 10001.
+**Por qué funciona así.** FluentValidation expresa reglas sobre los contratos de entrada y devuelve errores por campo; no debe confundirse un record con el validador que lo inspecciona.
 
 **Verificación concreta.** PATCH comparte el criterio semántico del campo Cantidad. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si el endpoint acepta datos inválidos, comprueba que se ha añadido AddEndpointFilter al verbo correcto; si aparece una excepción de DI, registra el validador antes de Build.
+**Si algo falla.** Si RuleFor no compila, revisa FluentValidation y el using. Comprueba la diferencia entre NotEmpty y límites numéricos.
 
 ### PASO 2.3.7 — Ejecutar validadores y estudiar ValidationResult
 
@@ -1342,11 +1342,11 @@ public sealed class ActualizarCantidadValidator : AbstractValidator<ActualizarCa
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.3-validacion-peticiones` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Explicación conceptual.** CrearOrdenValidator deriva de AbstractValidator y declara reglas NotEmpty, MaximumLength e InclusiveBetween. El validador es código C# ejecutable, no una anotación narrativa. Permite reutilizar reglas en POST y PUT y establecer pruebas de frontera cuando la cantidad es 0, 1, 500, 501 y 10001.
+**Por qué funciona así.** FluentValidation expresa reglas sobre los contratos de entrada y devuelve errores por campo; no debe confundirse un record con el validador que lo inspecciona.
 
 **Verificación concreta.** Comprendes ValidationResult antes de conectar HTTP. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si el endpoint acepta datos inválidos, comprueba que se ha añadido AddEndpointFilter al verbo correcto; si aparece una excepción de DI, registra el validador antes de Build.
+**Si algo falla.** Si RuleFor no compila, revisa FluentValidation y el using. Comprueba la diferencia entre NotEmpty y límites numéricos.
 
 ### PASO 2.3.8 — Crear ValidationFilter genérico de Minimal API
 
@@ -1382,11 +1382,11 @@ public sealed class ValidationFilter<T>(IValidator<T> validator): IEndpointFilte
 // FIN PASO 2.3.4
 ```
 
-**Explicación conceptual.** CrearOrdenValidator deriva de AbstractValidator y declara reglas NotEmpty, MaximumLength e InclusiveBetween. El validador es código C# ejecutable, no una anotación narrativa. Permite reutilizar reglas en POST y PUT y establecer pruebas de frontera cuando la cantidad es 0, 1, 500, 501 y 10001.
+**Por qué funciona así.** El filtro ejecuta ValidateAsync antes del manejador y utiliza Results.ValidationProblem si falla; solo invoca next(context) cuando la petición es válida.
 
 **Verificación concreta.** El filtro recibe EndpointFilterInvocationContext y EndpointFilterDelegate. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si el endpoint acepta datos inválidos, comprueba que se ha añadido AddEndpointFilter al verbo correcto; si aparece una excepción de DI, registra el validador antes de Build.
+**Si algo falla.** Si una petición inválida llega al endpoint, revisa el orden de ejecución y la condición IsValid antes de next(context).
 
 ### PASO 2.3.9 — Obtener la petición de EndpointFilterInvocationContext
 
@@ -1396,11 +1396,11 @@ public sealed class ValidationFilter<T>(IValidator<T> validator): IEndpointFilte
 
 **Referencia de código:** `src/AceriaApp.Api/Validacion/ValidationFilter.cs` y el endpoint de `Program.cs` sobre el que se instala el filtro. Comprueba dónde se produce `ValidationProblem` y dónde se llama a `next(context)`.
 
-**Explicación conceptual.** CrearOrdenValidator deriva de AbstractValidator y declara reglas NotEmpty, MaximumLength e InclusiveBetween. El validador es código C# ejecutable, no una anotación narrativa. Permite reutilizar reglas en POST y PUT y establecer pruebas de frontera cuando la cantidad es 0, 1, 500, 501 y 10001.
+**Por qué funciona así.** El filtro ejecuta ValidateAsync antes del manejador y utiliza Results.ValidationProblem si falla; solo invoca next(context) cuando la petición es válida.
 
 **Verificación concreta.** Un request ausente no provoca NullReferenceException. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si el endpoint acepta datos inválidos, comprueba que se ha añadido AddEndpointFilter al verbo correcto; si aparece una excepción de DI, registra el validador antes de Build.
+**Si algo falla.** Si una petición inválida llega al endpoint, revisa el orden de ejecución y la condición IsValid antes de next(context).
 
 ### PASO 2.3.10 — Ejecutar ValidateAsync y respetar RequestAborted
 
@@ -1410,11 +1410,11 @@ public sealed class ValidationFilter<T>(IValidator<T> validator): IEndpointFilte
 
 **Referencia de código:** `src/AceriaApp.Api/Validacion/ValidationFilter.cs` y el endpoint de `Program.cs` sobre el que se instala el filtro. Comprueba dónde se produce `ValidationProblem` y dónde se llama a `next(context)`.
 
-**Explicación conceptual.** CrearOrdenValidator deriva de AbstractValidator y declara reglas NotEmpty, MaximumLength e InclusiveBetween. El validador es código C# ejecutable, no una anotación narrativa. Permite reutilizar reglas en POST y PUT y establecer pruebas de frontera cuando la cantidad es 0, 1, 500, 501 y 10001.
+**Por qué funciona así.** El filtro ejecuta ValidateAsync antes del manejador y utiliza Results.ValidationProblem si falla; solo invoca next(context) cuando la petición es válida.
 
 **Verificación concreta.** No continúa una operación que el cliente ha cancelado. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si el endpoint acepta datos inválidos, comprueba que se ha añadido AddEndpointFilter al verbo correcto; si aparece una excepción de DI, registra el validador antes de Build.
+**Si algo falla.** Si una petición inválida llega al endpoint, revisa el orden de ejecución y la condición IsValid antes de next(context).
 
 ### PASO 2.3.11 — Agrupar errores por campo con LINQ
 
@@ -1450,11 +1450,11 @@ public sealed class ValidationFilter<T>(IValidator<T> validator): IEndpointFilte
 // FIN PASO 2.3.4
 ```
 
-**Explicación conceptual.** ValidationFilter recibe el argumento de la petición, ejecuta ValidateAsync y agrupa errores por propiedad. Si hay fallos devuelve Results.ValidationProblem con el campo errors; solo cuando IsValid es verdadero continúa mediante next(context). Omitir esa condición permitiría procesar datos rechazados.
+**Por qué funciona así.** El filtro ejecuta ValidateAsync antes del manejador y utiliza Results.ValidationProblem si falla; solo invoca next(context) cuando la petición es válida.
 
 **Verificación concreta.** Cada propiedad tiene su colección de errores. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si el endpoint acepta datos inválidos, comprueba que se ha añadido AddEndpointFilter al verbo correcto; si aparece una excepción de DI, registra el validador antes de Build.
+**Si algo falla.** Si una petición inválida llega al endpoint, revisa el orden de ejecución y la condición IsValid antes de next(context).
 
 ### PASO 2.3.12 — Responder mediante Results.ValidationProblem
 
@@ -1464,11 +1464,11 @@ public sealed class ValidationFilter<T>(IValidator<T> validator): IEndpointFilte
 
 **Referencia de código:** `src/AceriaApp.Api/Validacion/ValidationFilter.cs` y el endpoint de `Program.cs` sobre el que se instala el filtro. Comprueba dónde se produce `ValidationProblem` y dónde se llama a `next(context)`.
 
-**Explicación conceptual.** ValidationFilter recibe el argumento de la petición, ejecuta ValidateAsync y agrupa errores por propiedad. Si hay fallos devuelve Results.ValidationProblem con el campo errors; solo cuando IsValid es verdadero continúa mediante next(context). Omitir esa condición permitiría procesar datos rechazados.
+**Por qué funciona así.** El filtro ejecuta ValidateAsync antes del manejador y utiliza Results.ValidationProblem si falla; solo invoca next(context) cuando la petición es válida.
 
 **Verificación concreta.** La respuesta incluye status 400 y el campo errors. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si el endpoint acepta datos inválidos, comprueba que se ha añadido AddEndpointFilter al verbo correcto; si aparece una excepción de DI, registra el validador antes de Build.
+**Si algo falla.** Si una petición inválida llega al endpoint, revisa el orden de ejecución y la condición IsValid antes de next(context).
 
 ### PASO 2.3.13 — Permitir next(context) solo cuando IsValid
 
@@ -1478,11 +1478,11 @@ public sealed class ValidationFilter<T>(IValidator<T> validator): IEndpointFilte
 
 **Referencia de código:** `src/AceriaApp.Api/Validacion/ValidationFilter.cs` y el endpoint de `Program.cs` sobre el que se instala el filtro. Comprueba dónde se produce `ValidationProblem` y dónde se llama a `next(context)`.
 
-**Explicación conceptual.** ValidationFilter recibe el argumento de la petición, ejecuta ValidateAsync y agrupa errores por propiedad. Si hay fallos devuelve Results.ValidationProblem con el campo errors; solo cuando IsValid es verdadero continúa mediante next(context). Omitir esa condición permitiría procesar datos rechazados.
+**Por qué funciona así.** El filtro ejecuta ValidateAsync antes del manejador y utiliza Results.ValidationProblem si falla; solo invoca next(context) cuando la petición es válida.
 
 **Verificación concreta.** El endpoint se ejecuta solo cuando la validación pasa. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si el endpoint acepta datos inválidos, comprueba que se ha añadido AddEndpointFilter al verbo correcto; si aparece una excepción de DI, registra el validador antes de Build.
+**Si algo falla.** Si una petición inválida llega al endpoint, revisa el orden de ejecución y la condición IsValid antes de next(context).
 
 ### PASO 2.3.14 — Registrar validadores en el contenedor DI
 
@@ -1498,11 +1498,11 @@ using FluentValidation;
 builder.Services.AddValidatorsFromAssemblyContaining<CrearOrdenValidator>(); // PASO 2.3.5
 ```
 
-**Explicación conceptual.** ValidationFilter recibe el argumento de la petición, ejecuta ValidateAsync y agrupa errores por propiedad. Si hay fallos devuelve Results.ValidationProblem con el campo errors; solo cuando IsValid es verdadero continúa mediante next(context). Omitir esa condición permitiría procesar datos rechazados.
+**Por qué funciona así.** El registro de validadores en DI no ejecuta la validación. AddEndpointFilter debe asociarse a cada POST, PUT o PATCH que acepte ese contrato.
 
 **Verificación concreta.** El filtro puede resolver IValidator<CrearOrdenRequest>. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si el endpoint acepta datos inválidos, comprueba que se ha añadido AddEndpointFilter al verbo correcto; si aparece una excepción de DI, registra el validador antes de Build.
+**Si algo falla.** Si se acepta una petición inválida, puede faltar AddEndpointFilter aunque los validadores estén registrados en DI.
 
 ### PASO 2.3.15 — Conectar filtro de CrearOrdenRequest al POST
 
@@ -1520,11 +1520,11 @@ builder.Services.AddValidatorsFromAssemblyContaining<CrearOrdenValidator>(); // 
 ;
 ```
 
-**Explicación conceptual.** ValidationFilter recibe el argumento de la petición, ejecuta ValidateAsync y agrupa errores por propiedad. Si hay fallos devuelve Results.ValidationProblem con el campo errors; solo cuando IsValid es verdadero continúa mediante next(context). Omitir esa condición permitiría procesar datos rechazados.
+**Por qué funciona así.** El registro de validadores en DI no ejecuta la validación. AddEndpointFilter debe asociarse a cada POST, PUT o PATCH que acepte ese contrato.
 
 **Verificación concreta.** POST con Cliente vacío devuelve 400 en vez de guardar una fila. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si el endpoint acepta datos inválidos, comprueba que se ha añadido AddEndpointFilter al verbo correcto; si aparece una excepción de DI, registra el validador antes de Build.
+**Si algo falla.** Si se acepta una petición inválida, puede faltar AddEndpointFilter aunque los validadores estén registrados en DI.
 
 ### PASO 2.3.16 — Conectar filtro de CrearOrdenRequest al PUT
 
@@ -1534,11 +1534,11 @@ builder.Services.AddValidatorsFromAssemblyContaining<CrearOrdenValidator>(); // 
 
 **Referencia de código:** `src/AceriaApp.Api/Validacion/ValidationFilter.cs` y el endpoint de `Program.cs` sobre el que se instala el filtro. Comprueba dónde se produce `ValidationProblem` y dónde se llama a `next(context)`.
 
-**Explicación conceptual.** AddValidatorsFromAssemblyContaining registra servicios en el contenedor, pero no aplica reglas de manera automática a un endpoint. Para ejecutar la validación se utiliza AddEndpointFilter en POST, PUT y PATCH con el contrato correspondiente. Los tests deben comprobar el comportamiento HTTP, no limitarse a instanciar un validador.
+**Por qué funciona así.** El registro de validadores en DI no ejecuta la validación. AddEndpointFilter debe asociarse a cada POST, PUT o PATCH que acepte ese contrato.
 
 **Verificación concreta.** PUT inválido no modifica la orden almacenada. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si el endpoint acepta datos inválidos, comprueba que se ha añadido AddEndpointFilter al verbo correcto; si aparece una excepción de DI, registra el validador antes de Build.
+**Si algo falla.** Si se acepta una petición inválida, puede faltar AddEndpointFilter aunque los validadores estén registrados en DI.
 
 ### PASO 2.3.17 — Conectar filtro de ActualizarCantidadRequest al PATCH
 
@@ -1556,11 +1556,11 @@ builder.Services.AddValidatorsFromAssemblyContaining<CrearOrdenValidator>(); // 
 ;
 ```
 
-**Explicación conceptual.** AddValidatorsFromAssemblyContaining registra servicios en el contenedor, pero no aplica reglas de manera automática a un endpoint. Para ejecutar la validación se utiliza AddEndpointFilter en POST, PUT y PATCH con el contrato correspondiente. Los tests deben comprobar el comportamiento HTTP, no limitarse a instanciar un validador.
+**Por qué funciona así.** El registro de validadores en DI no ejecuta la validación. AddEndpointFilter debe asociarse a cada POST, PUT o PATCH que acepte ese contrato.
 
 **Verificación concreta.** PATCH con Cantidad=0 devuelve 400. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si el endpoint acepta datos inválidos, comprueba que se ha añadido AddEndpointFilter al verbo correcto; si aparece una excepción de DI, registra el validador antes de Build.
+**Si algo falla.** Si se acepta una petición inválida, puede faltar AddEndpointFilter aunque los validadores estén registrados en DI.
 
 ### PASO 2.3.18 — Enviar POST incorrecto y comprobar status 400
 
@@ -1570,11 +1570,11 @@ builder.Services.AddValidatorsFromAssemblyContaining<CrearOrdenValidator>(); // 
 
 **Referencia de código:** `src/AceriaApp.Api/Validacion/ValidationFilter.cs` y el endpoint de `Program.cs` sobre el que se instala el filtro. Comprueba dónde se produce `ValidationProblem` y dónde se llama a `next(context)`.
 
-**Explicación conceptual.** AddValidatorsFromAssemblyContaining registra servicios en el contenedor, pero no aplica reglas de manera automática a un endpoint. Para ejecutar la validación se utiliza AddEndpointFilter en POST, PUT y PATCH con el contrato correspondiente. Los tests deben comprobar el comportamiento HTTP, no limitarse a instanciar un validador.
+**Por qué funciona así.** Un 400 por datos fuera del rango, un 422 por la capacidad y un 409 por el estado de una orden pertenecen a causas diferentes que el cliente debe distinguir.
 
 **Verificación concreta.** El código es 400 y la base permanece sin cambios. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si el endpoint acepta datos inválidos, comprueba que se ha añadido AddEndpointFilter al verbo correcto; si aparece una excepción de DI, registra el validador antes de Build.
+**Si algo falla.** Si aparece 500 en vez de 400/422/409, revisa qué capa lanza la excepción y transforma el error de forma adecuada.
 
 ### PASO 2.3.19 — Inspeccionar la propiedad errors del Problem Details
 
@@ -1584,11 +1584,11 @@ builder.Services.AddValidatorsFromAssemblyContaining<CrearOrdenValidator>(); // 
 
 **Referencia de código:** `src/AceriaApp.Api/Validacion/ValidationFilter.cs` y el endpoint de `Program.cs` sobre el que se instala el filtro. Comprueba dónde se produce `ValidationProblem` y dónde se llama a `next(context)`.
 
-**Explicación conceptual.** AddValidatorsFromAssemblyContaining registra servicios en el contenedor, pero no aplica reglas de manera automática a un endpoint. Para ejecutar la validación se utiliza AddEndpointFilter en POST, PUT y PATCH con el contrato correspondiente. Los tests deben comprobar el comportamiento HTTP, no limitarse a instanciar un validador.
+**Por qué funciona así.** Un 400 por datos fuera del rango, un 422 por la capacidad y un 409 por el estado de una orden pertenecen a causas diferentes que el cliente debe distinguir.
 
 **Verificación concreta.** El cliente puede mostrar el mensaje bajo el campo correcto. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si el endpoint acepta datos inválidos, comprueba que se ha añadido AddEndpointFilter al verbo correcto; si aparece una excepción de DI, registra el validador antes de Build.
+**Si algo falla.** Si aparece 500 en vez de 400/422/409, revisa qué capa lanza la excepción y transforma el error de forma adecuada.
 
 ### PASO 2.3.20 — Probar límite 10001 frente a la capacidad 501
 
@@ -1598,11 +1598,11 @@ builder.Services.AddValidatorsFromAssemblyContaining<CrearOrdenValidator>(); // 
 
 **Referencia de código:** `src/AceriaApp.Api/Validacion/ValidationFilter.cs` y el endpoint de `Program.cs` sobre el que se instala el filtro. Comprueba dónde se produce `ValidationProblem` y dónde se llama a `next(context)`.
 
-**Explicación conceptual.** AddValidatorsFromAssemblyContaining registra servicios en el contenedor, pero no aplica reglas de manera automática a un endpoint. Para ejecutar la validación se utiliza AddEndpointFilter en POST, PUT y PATCH con el contrato correspondiente. Los tests deben comprobar el comportamiento HTTP, no limitarse a instanciar un validador.
+**Por qué funciona así.** Un 400 por datos fuera del rango, un 422 por la capacidad y un 409 por el estado de una orden pertenecen a causas diferentes que el cliente debe distinguir.
 
 **Verificación concreta.** El primero devuelve 400, el segundo 422. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si el endpoint acepta datos inválidos, comprueba que se ha añadido AddEndpointFilter al verbo correcto; si aparece una excepción de DI, registra el validador antes de Build.
+**Si algo falla.** Si aparece 500 en vez de 400/422/409, revisa qué capa lanza la excepción y transforma el error de forma adecuada.
 
 ### PASO 2.3.21 — Reproducir 409 con orden ya finalizada
 
@@ -1612,11 +1612,11 @@ builder.Services.AddValidatorsFromAssemblyContaining<CrearOrdenValidator>(); // 
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.3-validacion-peticiones` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Explicación conceptual.** Un error de validación 400 debe ofrecer mensajes por propiedad. Una capacidad de taller incumplida se documenta en el contrato como 422. Intentar modificar una orden finalizada genera un 409 porque depende del estado persistido. La diferencia permite a los clientes automatizar el tratamiento de errores.
+**Por qué funciona así.** Un 400 por datos fuera del rango, un 422 por la capacidad y un 409 por el estado de una orden pertenecen a causas diferentes que el cliente debe distinguir.
 
 **Verificación concreta.** Se recibe 409 y los datos no cambian. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si el endpoint acepta datos inválidos, comprueba que se ha añadido AddEndpointFilter al verbo correcto; si aparece una excepción de DI, registra el validador antes de Build.
+**Si algo falla.** Si aparece 500 en vez de 400/422/409, revisa qué capa lanza la excepción y transforma el error de forma adecuada.
 
 ### PASO 2.3.22 — Crear pruebas de validación mediante HTTP
 
@@ -1667,11 +1667,11 @@ public class ValidacionHttpTests
 }
 ```
 
-**Explicación conceptual.** Un error de validación 400 debe ofrecer mensajes por propiedad. Una capacidad de taller incumplida se documenta en el contrato como 422. Intentar modificar una orden finalizada genera un 409 porque depende del estado persistido. La diferencia permite a los clientes automatizar el tratamiento de errores.
+**Por qué funciona así.** Las pruebas HTTP recorren el pipeline completo y comprueban que los fallos se comunican como Problem Details sin alterar los datos.
 
 **Verificación concreta.** Las respuestas se prueban a través del pipeline completo. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si el endpoint acepta datos inválidos, comprueba que se ha añadido AddEndpointFilter al verbo correcto; si aparece una excepción de DI, registra el validador antes de Build.
+**Si algo falla.** Si el test solo instancia un record, no prueba HTTP; usa WebApplicationFactory y examina errors del JSON.
 
 ### PASO 2.3.23 — Verificar que los GET siguen sin regresiones
 
@@ -1681,11 +1681,11 @@ public class ValidacionHttpTests
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.3-validacion-peticiones` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Explicación conceptual.** Un error de validación 400 debe ofrecer mensajes por propiedad. Una capacidad de taller incumplida se documenta en el contrato como 422. Intentar modificar una orden finalizada genera un 409 porque depende del estado persistido. La diferencia permite a los clientes automatizar el tratamiento de errores.
+**Por qué funciona así.** Las pruebas HTTP recorren el pipeline completo y comprueban que los fallos se comunican como Problem Details sin alterar los datos.
 
 **Verificación concreta.** El filtrado no rompe las rutas que ya funcionaban. Ejecuta además las pruebas xUnit del proyecto de esta etapa para confirmar que el ejercicio no ha roto los endpoints anteriores.
 
-**Si algo falla.** Si el endpoint acepta datos inválidos, comprueba que se ha añadido AddEndpointFilter al verbo correcto; si aparece una excepción de DI, registra el validador antes de Build.
+**Si algo falla.** Si el test solo instancia un record, no prueba HTTP; usa WebApplicationFactory y examina errors del JSON.
 
 ### PASO 2.3.24 — Reto: personalizar mensajes y comprobar errores
 
@@ -1695,11 +1695,11 @@ public class ValidacionHttpTests
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.3-validacion-peticiones` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Explicación conceptual.** Un error de validación 400 debe ofrecer mensajes por propiedad. Una capacidad de taller incumplida se documenta en el contrato como 422. Intentar modificar una orden finalizada genera un 409 porque depende del estado persistido. La diferencia permite a los clientes automatizar el tratamiento de errores.
+**Por qué funciona así.** Las pruebas HTTP recorren el pipeline completo y comprueban que los fallos se comunican como Problem Details sin alterar los datos.
 
 **Verificación concreta.** El mensaje devuelto es específico y mantiene status 400. Ejecuta además las pruebas xUnit del proyecto de esta etapa para confirmar que el ejercicio no ha roto los endpoints anteriores.
 
-**Si algo falla.** Si el endpoint acepta datos inválidos, comprueba que se ha añadido AddEndpointFilter al verbo correcto; si aparece una excepción de DI, registra el validador antes de Build.
+**Si algo falla.** Si el test solo instancia un record, no prueba HTTP; usa WebApplicationFactory y examina errors del JSON.
 
 ### Matriz de comprobación del punto
 
@@ -1726,11 +1726,11 @@ public class ValidacionHttpTests
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.4-documentacion-openapi` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Explicación conceptual.** OpenAPI no es una cadena YAML fabricada para satisfacer un test superficial. Swashbuckle descubre los endpoints realmente declarados en ASP.NET Core y genera el documento JSON. AddEndpointsApiExplorer registra la exploración de rutas y SwaggerDoc aporta metadatos de la versión v1.
+**Por qué funciona así.** Swashbuckle descubre la API real desde ASP.NET Core: registrar AddSwaggerGen y definir SwaggerDoc produce un documento estándar a partir de rutas y tipos.
 
 **Verificación concreta.** La futura documentación reflejará endpoints ya comprobados. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si Swagger JSON devuelve 404 en Development revisa UseDocumentacion y la variable de entorno; si falta una operación, comprueba sus metadatos y el registro en Program.
+**Si algo falla.** Si SwaggerGen no se resuelve, revisa la versión de Swashbuckle compatible con .NET 8.
 
 ### PASO 2.4.2 — Instalar Swashbuckle.AspNetCore compatible con .NET 8
 
@@ -1740,11 +1740,11 @@ public class ValidacionHttpTests
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.4-documentacion-openapi` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Explicación conceptual.** OpenAPI no es una cadena YAML fabricada para satisfacer un test superficial. Swashbuckle descubre los endpoints realmente declarados en ASP.NET Core y genera el documento JSON. AddEndpointsApiExplorer registra la exploración de rutas y SwaggerDoc aporta metadatos de la versión v1.
+**Por qué funciona así.** Swashbuckle descubre la API real desde ASP.NET Core: registrar AddSwaggerGen y definir SwaggerDoc produce un documento estándar a partir de rutas y tipos.
 
 **Verificación concreta.** AddSwaggerGen y UseSwagger están disponibles. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si Swagger JSON devuelve 404 en Development revisa UseDocumentacion y la variable de entorno; si falta una operación, comprueba sus metadatos y el registro en Program.
+**Si algo falla.** Si SwaggerGen no se resuelve, revisa la versión de Swashbuckle compatible con .NET 8.
 
 ### PASO 2.4.3 — Crear carpeta Documentacion y extensiones de configuración
 
@@ -1805,11 +1805,11 @@ public sealed class EjemploCrearOrden : ISchemaFilter
 // FIN PASO 2.4.5
 ```
 
-**Explicación conceptual.** OpenAPI no es una cadena YAML fabricada para satisfacer un test superficial. Swashbuckle descubre los endpoints realmente declarados en ASP.NET Core y genera el documento JSON. AddEndpointsApiExplorer registra la exploración de rutas y SwaggerDoc aporta metadatos de la versión v1.
+**Por qué funciona así.** Swashbuckle descubre la API real desde ASP.NET Core: registrar AddSwaggerGen y definir SwaggerDoc produce un documento estándar a partir de rutas y tipos.
 
 **Verificación concreta.** La configuración OpenAPI queda separada de Program.cs. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si Swagger JSON devuelve 404 en Development revisa UseDocumentacion y la variable de entorno; si falta una operación, comprueba sus metadatos y el registro en Program.
+**Si algo falla.** Si SwaggerGen no se resuelve, revisa la versión de Swashbuckle compatible con .NET 8.
 
 ### PASO 2.4.4 — Registrar AddEndpointsApiExplorer y AddSwaggerGen
 
@@ -1870,11 +1870,11 @@ public sealed class EjemploCrearOrden : ISchemaFilter
 // FIN PASO 2.4.5
 ```
 
-**Explicación conceptual.** OpenAPI no es una cadena YAML fabricada para satisfacer un test superficial. Swashbuckle descubre los endpoints realmente declarados en ASP.NET Core y genera el documento JSON. AddEndpointsApiExplorer registra la exploración de rutas y SwaggerDoc aporta metadatos de la versión v1.
+**Por qué funciona así.** Swashbuckle descubre la API real desde ASP.NET Core: registrar AddSwaggerGen y definir SwaggerDoc produce un documento estándar a partir de rutas y tipos.
 
 **Verificación concreta.** Los servicios descubren los endpoints Minimal API. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si Swagger JSON devuelve 404 en Development revisa UseDocumentacion y la variable de entorno; si falta una operación, comprueba sus metadatos y el registro en Program.
+**Si algo falla.** Si SwaggerGen no se resuelve, revisa la versión de Swashbuckle compatible con .NET 8.
 
 ### PASO 2.4.5 — Configurar SwaggerDoc con información y versión v1
 
@@ -1884,11 +1884,11 @@ public sealed class EjemploCrearOrden : ISchemaFilter
 
 **Referencia de código:** `DocumentacionExtensions.cs`, `Program.cs` o `ContratoOpenApiTests.cs` según el caso. La prueba debe leer el documento generado, no un texto YAML escrito a mano.
 
-**Explicación conceptual.** OpenAPI no es una cadena YAML fabricada para satisfacer un test superficial. Swashbuckle descubre los endpoints realmente declarados en ASP.NET Core y genera el documento JSON. AddEndpointsApiExplorer registra la exploración de rutas y SwaggerDoc aporta metadatos de la versión v1.
+**Por qué funciona así.** Swashbuckle descubre la API real desde ASP.NET Core: registrar AddSwaggerGen y definir SwaggerDoc produce un documento estándar a partir de rutas y tipos.
 
 **Verificación concreta.** La sección info del JSON muestra esos valores. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si Swagger JSON devuelve 404 en Development revisa UseDocumentacion y la variable de entorno; si falta una operación, comprueba sus metadatos y el registro en Program.
+**Si algo falla.** Si SwaggerGen no se resuelve, revisa la versión de Swashbuckle compatible con .NET 8.
 
 ### PASO 2.4.6 — Conectar AddDocumentacion en Program.cs
 
@@ -1903,11 +1903,11 @@ public sealed class EjemploCrearOrden : ISchemaFilter
 builder.Services.AddDocumentacion(); // PASO 2.4.3
 ```
 
-**Explicación conceptual.** La aplicación debe ejecutar AddDocumentacion antes de builder.Build y UseDocumentacion después. El primer método registra servicios y el segundo habilita el middleware. Definir una clase de extensión que nunca se invoca en Program.cs no documenta nada.
+**Por qué funciona así.** La publicación de Swagger UI y JSON ocurre después de construir la aplicación y se restringe a Development; la documentación no debe inventarse manualmente.
 
 **Verificación concreta.** Se registra el generador en el contenedor. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si Swagger JSON devuelve 404 en Development revisa UseDocumentacion y la variable de entorno; si falta una operación, comprueba sus metadatos y el registro en Program.
+**Si algo falla.** Si /swagger devuelve 404 en Development, comprueba AddDocumentacion y UseDocumentacion y el entorno.
 
 ### PASO 2.4.7 — Configurar UseSwagger y Swagger UI en Development
 
@@ -1917,11 +1917,11 @@ builder.Services.AddDocumentacion(); // PASO 2.4.3
 
 **Referencia de código:** `DocumentacionExtensions.cs`, `Program.cs` o `ContratoOpenApiTests.cs` según el caso. La prueba debe leer el documento generado, no un texto YAML escrito a mano.
 
-**Explicación conceptual.** La aplicación debe ejecutar AddDocumentacion antes de builder.Build y UseDocumentacion después. El primer método registra servicios y el segundo habilita el middleware. Definir una clase de extensión que nunca se invoca en Program.cs no documenta nada.
+**Por qué funciona así.** La publicación de Swagger UI y JSON ocurre después de construir la aplicación y se restringe a Development; la documentación no debe inventarse manualmente.
 
 **Verificación concreta.** Swagger no se publica automáticamente en Production. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si Swagger JSON devuelve 404 en Development revisa UseDocumentacion y la variable de entorno; si falta una operación, comprueba sus metadatos y el registro en Program.
+**Si algo falla.** Si /swagger devuelve 404 en Development, comprueba AddDocumentacion y UseDocumentacion y el entorno.
 
 ### PASO 2.4.8 — Conectar UseDocumentacion y abrir /swagger
 
@@ -1936,11 +1936,11 @@ builder.Services.AddDocumentacion(); // PASO 2.4.3
 app.UseDocumentacion(); // PASO 2.4.4
 ```
 
-**Explicación conceptual.** La aplicación debe ejecutar AddDocumentacion antes de builder.Build y UseDocumentacion después. El primer método registra servicios y el segundo habilita el middleware. Definir una clase de extensión que nunca se invoca en Program.cs no documenta nada.
+**Por qué funciona así.** La publicación de Swagger UI y JSON ocurre después de construir la aplicación y se restringe a Development; la documentación no debe inventarse manualmente.
 
 **Verificación concreta.** La interfaz presenta los endpoints del proyecto. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si Swagger JSON devuelve 404 en Development revisa UseDocumentacion y la variable de entorno; si falta una operación, comprueba sus metadatos y el registro en Program.
+**Si algo falla.** Si /swagger devuelve 404 en Development, comprueba AddDocumentacion y UseDocumentacion y el entorno.
 
 ### PASO 2.4.9 — Descargar el JSON real /swagger/v1/swagger.json
 
@@ -1950,11 +1950,11 @@ app.UseDocumentacion(); // PASO 2.4.4
 
 **Referencia de código:** `DocumentacionExtensions.cs`, `Program.cs` o `ContratoOpenApiTests.cs` según el caso. La prueba debe leer el documento generado, no un texto YAML escrito a mano.
 
-**Explicación conceptual.** La aplicación debe ejecutar AddDocumentacion antes de builder.Build y UseDocumentacion después. El primer método registra servicios y el segundo habilita el middleware. Definir una clase de extensión que nunca se invoca en Program.cs no documenta nada.
+**Por qué funciona así.** La publicación de Swagger UI y JSON ocurre después de construir la aplicación y se restringe a Development; la documentación no debe inventarse manualmente.
 
 **Verificación concreta.** La petición devuelve 200 y el documento empieza por openapi. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si Swagger JSON devuelve 404 en Development revisa UseDocumentacion y la variable de entorno; si falta una operación, comprueba sus metadatos y el registro en Program.
+**Si algo falla.** Si /swagger devuelve 404 en Development, comprueba AddDocumentacion y UseDocumentacion y el entorno.
 
 ### PASO 2.4.10 — Identificar info, paths, components y schemas
 
@@ -1964,11 +1964,11 @@ app.UseDocumentacion(); // PASO 2.4.4
 
 **Referencia de código:** `DocumentacionExtensions.cs`, `Program.cs` o `ContratoOpenApiTests.cs` según el caso. La prueba debe leer el documento generado, no un texto YAML escrito a mano.
 
-**Explicación conceptual.** La aplicación debe ejecutar AddDocumentacion antes de builder.Build y UseDocumentacion después. El primer método registra servicios y el segundo habilita el middleware. Definir una clase de extensión que nunca se invoca en Program.cs no documenta nada.
+**Por qué funciona así.** La publicación de Swagger UI y JSON ocurre después de construir la aplicación y se restringe a Development; la documentación no debe inventarse manualmente.
 
 **Verificación concreta.** GET, POST, PUT, PATCH y DELETE figuran donde corresponde. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si Swagger JSON devuelve 404 en Development revisa UseDocumentacion y la variable de entorno; si falta una operación, comprueba sus metadatos y el registro en Program.
+**Si algo falla.** Si /swagger devuelve 404 en Development, comprueba AddDocumentacion y UseDocumentacion y el entorno.
 
 ### PASO 2.4.11 — Aplicar WithName y WithTags a los endpoints
 
@@ -1978,11 +1978,11 @@ app.UseDocumentacion(); // PASO 2.4.4
 
 **Referencia de código:** `DocumentacionExtensions.cs`, `Program.cs` o `ContratoOpenApiTests.cs` según el caso. La prueba debe leer el documento generado, no un texto YAML escrito a mano.
 
-**Explicación conceptual.** WithName, WithSummary, WithTags, Produces, ProducesProblem y ProducesValidationProblem describen operaciones reales. Declarar que un endpoint puede devolver 400 no hace que valide: la validación efectiva ya se incorporó en 2.3. La documentación debe corresponder a lo que el runtime responde.
+**Por qué funciona así.** Los metadatos de una operación declaran rutas, respuestas y esquemas; son documentación de un comportamiento que ya fue implementado y probado.
 
 **Verificación concreta.** Los nombres se utilizan también en CreatedAtRoute. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si Swagger JSON devuelve 404 en Development revisa UseDocumentacion y la variable de entorno; si falta una operación, comprueba sus metadatos y el registro en Program.
+**Si algo falla.** Si falta un código de respuesta, añade Produces/ProducesProblem al endpoint correspondiente sin inventar comportamientos.
 
 ### PASO 2.4.12 — Documentar GET con WithSummary y Produces
 
@@ -1999,11 +1999,11 @@ app.UseDocumentacion(); // PASO 2.4.4
 ;
 ```
 
-**Explicación conceptual.** WithName, WithSummary, WithTags, Produces, ProducesProblem y ProducesValidationProblem describen operaciones reales. Declarar que un endpoint puede devolver 400 no hace que valide: la validación efectiva ya se incorporó en 2.3. La documentación debe corresponder a lo que el runtime responde.
+**Por qué funciona así.** Los metadatos de una operación declaran rutas, respuestas y esquemas; son documentación de un comportamiento que ya fue implementado y probado.
 
 **Verificación concreta.** El documento describe la lectura y la ausencia del recurso. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si Swagger JSON devuelve 404 en Development revisa UseDocumentacion y la variable de entorno; si falta una operación, comprueba sus metadatos y el registro en Program.
+**Si algo falla.** Si falta un código de respuesta, añade Produces/ProducesProblem al endpoint correspondiente sin inventar comportamientos.
 
 ### PASO 2.4.13 — Documentar POST con 201 y ValidationProblem 400
 
@@ -2013,11 +2013,11 @@ app.UseDocumentacion(); // PASO 2.4.4
 
 **Referencia de código:** `DocumentacionExtensions.cs`, `Program.cs` o `ContratoOpenApiTests.cs` según el caso. La prueba debe leer el documento generado, no un texto YAML escrito a mano.
 
-**Explicación conceptual.** WithName, WithSummary, WithTags, Produces, ProducesProblem y ProducesValidationProblem describen operaciones reales. Declarar que un endpoint puede devolver 400 no hace que valide: la validación efectiva ya se incorporó en 2.3. La documentación debe corresponder a lo que el runtime responde.
+**Por qué funciona así.** Los metadatos de una operación declaran rutas, respuestas y esquemas; son documentación de un comportamiento que ya fue implementado y probado.
 
 **Verificación concreta.** Swagger enumera creación y error de contrato. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si Swagger JSON devuelve 404 en Development revisa UseDocumentacion y la variable de entorno; si falta una operación, comprueba sus metadatos y el registro en Program.
+**Si algo falla.** Si falta un código de respuesta, añade Produces/ProducesProblem al endpoint correspondiente sin inventar comportamientos.
 
 ### PASO 2.4.14 — Documentar PUT y PATCH con códigos alternativos
 
@@ -2027,11 +2027,11 @@ app.UseDocumentacion(); // PASO 2.4.4
 
 **Referencia de código:** `DocumentacionExtensions.cs`, `Program.cs` o `ContratoOpenApiTests.cs` según el caso. La prueba debe leer el documento generado, no un texto YAML escrito a mano.
 
-**Explicación conceptual.** WithName, WithSummary, WithTags, Produces, ProducesProblem y ProducesValidationProblem describen operaciones reales. Declarar que un endpoint puede devolver 400 no hace que valide: la validación efectiva ya se incorporó en 2.3. La documentación debe corresponder a lo que el runtime responde.
+**Por qué funciona así.** Los metadatos de una operación declaran rutas, respuestas y esquemas; son documentación de un comportamiento que ya fue implementado y probado.
 
 **Verificación concreta.** La documentación debe coincidir con los Results usados. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si Swagger JSON devuelve 404 en Development revisa UseDocumentacion y la variable de entorno; si falta una operación, comprueba sus metadatos y el registro en Program.
+**Si algo falla.** Si falta un código de respuesta, añade Produces/ProducesProblem al endpoint correspondiente sin inventar comportamientos.
 
 ### PASO 2.4.15 — Documentar DELETE y el conflicto 409
 
@@ -2041,11 +2041,11 @@ app.UseDocumentacion(); // PASO 2.4.4
 
 **Referencia de código:** `DocumentacionExtensions.cs`, `Program.cs` o `ContratoOpenApiTests.cs` según el caso. La prueba debe leer el documento generado, no un texto YAML escrito a mano.
 
-**Explicación conceptual.** WithName, WithSummary, WithTags, Produces, ProducesProblem y ProducesValidationProblem describen operaciones reales. Declarar que un endpoint puede devolver 400 no hace que valide: la validación efectiva ya se incorporó en 2.3. La documentación debe corresponder a lo que el runtime responde.
+**Por qué funciona así.** Los metadatos de una operación declaran rutas, respuestas y esquemas; son documentación de un comportamiento que ya fue implementado y probado.
 
 **Verificación concreta.** El consumidor puede anticipar una eliminación rechazada. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si Swagger JSON devuelve 404 en Development revisa UseDocumentacion y la variable de entorno; si falta una operación, comprueba sus metadatos y el registro en Program.
+**Si algo falla.** Si falta un código de respuesta, añade Produces/ProducesProblem al endpoint correspondiente sin inventar comportamientos.
 
 ### PASO 2.4.16 — Crear SchemaFilter EjemploCrearOrden
 
@@ -2106,11 +2106,11 @@ public sealed class EjemploCrearOrden : ISchemaFilter
 // FIN PASO 2.4.5
 ```
 
-**Explicación conceptual.** SchemaFilter permite mostrar en components.schemas un ejemplo de CrearOrdenRequest con cliente, material y cantidad. El ejemplo no crea una fila en SQL Server; explica el cuerpo que puede enviar el consumidor. El DTO de salida, en cambio, describe la representación de una orden ya existente.
+**Por qué funciona así.** Un ejemplo JSON ilustra el contrato de entrada. Swagger UI permite usarlo para enviar una petición real, pero no crea datos hasta ejecutar el endpoint.
 
 **Verificación concreta.** El esquema contiene cliente, material y cantidad ilustrativos. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si Swagger JSON devuelve 404 en Development revisa UseDocumentacion y la variable de entorno; si falta una operación, comprueba sus metadatos y el registro en Program.
+**Si algo falla.** Si no aparece example, comprueba SchemaFilter y el tipo CrearOrdenRequest usado en el esquema.
 
 ### PASO 2.4.17 — Inspeccionar example de CrearOrdenRequest en Swagger
 
@@ -2120,11 +2120,11 @@ public sealed class EjemploCrearOrden : ISchemaFilter
 
 **Referencia de código:** `DocumentacionExtensions.cs`, `Program.cs` o `ContratoOpenApiTests.cs` según el caso. La prueba debe leer el documento generado, no un texto YAML escrito a mano.
 
-**Explicación conceptual.** SchemaFilter permite mostrar en components.schemas un ejemplo de CrearOrdenRequest con cliente, material y cantidad. El ejemplo no crea una fila en SQL Server; explica el cuerpo que puede enviar el consumidor. El DTO de salida, en cambio, describe la representación de una orden ya existente.
+**Por qué funciona así.** Un ejemplo JSON ilustra el contrato de entrada. Swagger UI permite usarlo para enviar una petición real, pero no crea datos hasta ejecutar el endpoint.
 
 **Verificación concreta.** El ejemplo aparece en la sección reusable de esquemas. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si Swagger JSON devuelve 404 en Development revisa UseDocumentacion y la variable de entorno; si falta una operación, comprueba sus metadatos y el registro en Program.
+**Si algo falla.** Si no aparece example, comprueba SchemaFilter y el tipo CrearOrdenRequest usado en el esquema.
 
 ### PASO 2.4.18 — Ejecutar un POST desde Swagger UI
 
@@ -2134,11 +2134,11 @@ public sealed class EjemploCrearOrden : ISchemaFilter
 
 **Referencia de código:** `DocumentacionExtensions.cs`, `Program.cs` o `ContratoOpenApiTests.cs` según el caso. La prueba debe leer el documento generado, no un texto YAML escrito a mano.
 
-**Explicación conceptual.** SchemaFilter permite mostrar en components.schemas un ejemplo de CrearOrdenRequest con cliente, material y cantidad. El ejemplo no crea una fila en SQL Server; explica el cuerpo que puede enviar el consumidor. El DTO de salida, en cambio, describe la representación de una orden ya existente.
+**Por qué funciona así.** Un ejemplo JSON ilustra el contrato de entrada. Swagger UI permite usarlo para enviar una petición real, pero no crea datos hasta ejecutar el endpoint.
 
 **Verificación concreta.** Se crea un recurso de verdad desde el explorador HTTP. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si Swagger JSON devuelve 404 en Development revisa UseDocumentacion y la variable de entorno; si falta una operación, comprueba sus metadatos y el registro en Program.
+**Si algo falla.** Si no aparece example, comprueba SchemaFilter y el tipo CrearOrdenRequest usado en el esquema.
 
 ### PASO 2.4.19 — Consultar la orden creada desde la propia UI
 
@@ -2148,11 +2148,11 @@ public sealed class EjemploCrearOrden : ISchemaFilter
 
 **Referencia de código:** `DocumentacionExtensions.cs`, `Program.cs` o `ContratoOpenApiTests.cs` según el caso. La prueba debe leer el documento generado, no un texto YAML escrito a mano.
 
-**Explicación conceptual.** SchemaFilter permite mostrar en components.schemas un ejemplo de CrearOrdenRequest con cliente, material y cantidad. El ejemplo no crea una fila en SQL Server; explica el cuerpo que puede enviar el consumidor. El DTO de salida, en cambio, describe la representación de una orden ya existente.
+**Por qué funciona así.** Un ejemplo JSON ilustra el contrato de entrada. Swagger UI permite usarlo para enviar una petición real, pero no crea datos hasta ejecutar el endpoint.
 
 **Verificación concreta.** GET responde 200 con el DTO de la misma orden. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si Swagger JSON devuelve 404 en Development revisa UseDocumentacion y la variable de entorno; si falta una operación, comprueba sus metadatos y el registro en Program.
+**Si algo falla.** Si no aparece example, comprueba SchemaFilter y el tipo CrearOrdenRequest usado en el esquema.
 
 ### PASO 2.4.20 — Crear tests HTTP del documento OpenAPI real
 
@@ -2203,11 +2203,11 @@ public class ContratoOpenApiTests
 }
 ```
 
-**Explicación conceptual.** SchemaFilter permite mostrar en components.schemas un ejemplo de CrearOrdenRequest con cliente, material y cantidad. El ejemplo no crea una fila en SQL Server; explica el cuerpo que puede enviar el consumidor. El DTO de salida, en cambio, describe la representación de una orden ya existente.
+**Por qué funciona así.** Descargar el JSON OpenAPI con WebApplicationFactory y comprobar info, paths y schemas es una prueba contractual real; en Production debe respetarse el 404.
 
 **Verificación concreta.** El test descarga la respuesta del servidor y la analiza. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si Swagger JSON devuelve 404 en Development revisa UseDocumentacion y la variable de entorno; si falta una operación, comprueba sus metadatos y el registro en Program.
+**Si algo falla.** Si el JSON no incluye rutas, comprueba MapGet/MapPost y que las pruebas apuntan al servidor correcto.
 
 ### PASO 2.4.21 — Comprobar rutas GET y POST en paths
 
@@ -2217,11 +2217,11 @@ public class ContratoOpenApiTests
 
 **Referencia de código:** `DocumentacionExtensions.cs`, `Program.cs` o `ContratoOpenApiTests.cs` según el caso. La prueba debe leer el documento generado, no un texto YAML escrito a mano.
 
-**Explicación conceptual.** Swagger UI facilita explorar las operaciones y ejecutarlas desde el navegador. WebApplicationFactory descarga /swagger/v1/swagger.json y contrasta versión, paths y schemas. Otra prueba establece Production y exige que el endpoint de documentación no se publique. Así se comprueba el documento generado y no una cadena aislada del servidor.
+**Por qué funciona así.** Descargar el JSON OpenAPI con WebApplicationFactory y comprobar info, paths y schemas es una prueba contractual real; en Production debe respetarse el 404.
 
 **Verificación concreta.** Un cambio de ruta erróneo hace fallar el contrato. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si Swagger JSON devuelve 404 en Development revisa UseDocumentacion y la variable de entorno; si falta una operación, comprueba sus metadatos y el registro en Program.
+**Si algo falla.** Si el JSON no incluye rutas, comprueba MapGet/MapPost y que las pruebas apuntan al servidor correcto.
 
 ### PASO 2.4.22 — Comprobar schema y ejemplo de petición
 
@@ -2231,11 +2231,11 @@ public class ContratoOpenApiTests
 
 **Referencia de código:** `DocumentacionExtensions.cs`, `Program.cs` o `ContratoOpenApiTests.cs` según el caso. La prueba debe leer el documento generado, no un texto YAML escrito a mano.
 
-**Explicación conceptual.** Swagger UI facilita explorar las operaciones y ejecutarlas desde el navegador. WebApplicationFactory descarga /swagger/v1/swagger.json y contrasta versión, paths y schemas. Otra prueba establece Production y exige que el endpoint de documentación no se publique. Así se comprueba el documento generado y no una cadena aislada del servidor.
+**Por qué funciona así.** Descargar el JSON OpenAPI con WebApplicationFactory y comprobar info, paths y schemas es una prueba contractual real; en Production debe respetarse el 404.
 
 **Verificación concreta.** El esquema se genera a partir del contrato público. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
 
-**Si algo falla.** Si Swagger JSON devuelve 404 en Development revisa UseDocumentacion y la variable de entorno; si falta una operación, comprueba sus metadatos y el registro en Program.
+**Si algo falla.** Si el JSON no incluye rutas, comprueba MapGet/MapPost y que las pruebas apuntan al servidor correcto.
 
 ### PASO 2.4.23 — Comprobar que Production responde 404 para Swagger
 
@@ -2245,11 +2245,11 @@ public class ContratoOpenApiTests
 
 **Referencia de código:** `DocumentacionExtensions.cs`, `Program.cs` o `ContratoOpenApiTests.cs` según el caso. La prueba debe leer el documento generado, no un texto YAML escrito a mano.
 
-**Explicación conceptual.** Swagger UI facilita explorar las operaciones y ejecutarlas desde el navegador. WebApplicationFactory descarga /swagger/v1/swagger.json y contrasta versión, paths y schemas. Otra prueba establece Production y exige que el endpoint de documentación no se publique. Así se comprueba el documento generado y no una cadena aislada del servidor.
+**Por qué funciona así.** Descargar el JSON OpenAPI con WebApplicationFactory y comprobar info, paths y schemas es una prueba contractual real; en Production debe respetarse el 404.
 
 **Verificación concreta.** El endpoint no se publica y responde 404. Ejecuta además las pruebas xUnit del proyecto de esta etapa para confirmar que el ejercicio no ha roto los endpoints anteriores.
 
-**Si algo falla.** Si Swagger JSON devuelve 404 en Development revisa UseDocumentacion y la variable de entorno; si falta una operación, comprueba sus metadatos y el registro en Program.
+**Si algo falla.** Si el JSON no incluye rutas, comprueba MapGet/MapPost y que las pruebas apuntan al servidor correcto.
 
 ### PASO 2.4.24 — Reto: documentar PATCH y verificar su summary en JSON
 
@@ -2259,11 +2259,11 @@ public class ContratoOpenApiTests
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.4-documentacion-openapi` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Explicación conceptual.** Swagger UI facilita explorar las operaciones y ejecutarlas desde el navegador. WebApplicationFactory descarga /swagger/v1/swagger.json y contrasta versión, paths y schemas. Otra prueba establece Production y exige que el endpoint de documentación no se publique. Así se comprueba el documento generado y no una cadena aislada del servidor.
+**Por qué funciona así.** Cambiar un WithSummary y ver reflejada la modificación en el JSON demuestra la vinculación de la documentación con el código ejecutado.
 
 **Verificación concreta.** Se verifica que el documento evoluciona al modificar el código. Ejecuta además las pruebas xUnit del proyecto de esta etapa para confirmar que el ejercicio no ha roto los endpoints anteriores.
 
-**Si algo falla.** Si Swagger JSON devuelve 404 en Development revisa UseDocumentacion y la variable de entorno; si falta una operación, comprueba sus metadatos y el registro en Program.
+**Si algo falla.** Si el summary no cambia, modifica WithSummary en el endpoint real y vuelve a solicitar el documento.
 
 ### Matriz de comprobación del punto
 
