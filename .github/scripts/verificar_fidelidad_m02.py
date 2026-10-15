@@ -13,6 +13,30 @@ def normalise(s):
     return re.sub(r"\s+"," ",s).strip()
 def fences(s):
     return [m.strip() for m in re.findall(r"```[^\n]*\n(.*?)\n```",s,flags=re.S)]
+def fences_no_alterados(parts, category, index):
+    text=parts[0 if category=="TEORIA" else 1]
+    if category!="PRACTICAS" or index!=3:
+        return fences(text)
+    # 2.4: se reescribieron SOLO estos pasos, sus bloques de
+    # documentación asociados y el reto, según las correcciones aprobadas.
+    approved={4,6,9,13,15,19,20}
+    result=[]
+    for m in re.finditer(r"```[^\n]*\n(.*?)\n```",text,flags=re.S):
+        previous=text[:m.start()]
+        positions=re.findall(r"(?m)^Paso (\d+) —",previous)
+        n=int(positions[-1]) if positions else None
+        if "Reto resuelto paso a paso" in previous and previous.rfind("Reto resuelto paso a paso")>previous.rfind("Paso 24 —"):
+            continue
+        if n not in approved:
+            result.append(m.group(1).strip())
+    return result
+
+def primeros_parrafos(teoria):
+    # Cada uno de los diez bloques tiene un primer párrafo didáctico
+    # cuya redacción NO puede perderse ni sustituirse por síntesis.
+    for match in re.finditer(r"(?m)^Bloque \d+ —[^\n]+\s*\n\s*\n([^\n]{80,})",teoria):
+        yield match.group(1).strip()
+
 def sections(raw):
     a=re.search(r"(?im)^\s*PARTE TE[ÓO]RICA\b",raw)
     b=re.search(r"(?im)^\s*PARTE PR[ÁA]CTICA\b",raw)
@@ -60,11 +84,26 @@ def run(root):
         n=len(re.findall(header,content))
         if n!=expected:problems.append(f"{name}: {n} apartados, esperados {expected}")
         if len(sections_all)==4:
-            original_code=[code for parts in sections_all for code in fences(parts[0 if category=="TEORIA" else 1])]
+            original_code=[code for i,parts in enumerate(sections_all) for code in fences_no_alterados(parts,category,i)]
             result=normalise(content)
             missing=[i for i,c in enumerate(original_code,1) if normalise(c) not in result]
             if missing:
-                problems.append(f"{name}: {len(missing)} ejemplos originales ausentes/alterados; comprobar correcciones aprobadas. Índices: {missing[:15]}")
+                problems.append(f"{name}: {len(missing)} ejemplos originales no afectados por las correcciones están ausentes. Índices: {missing[:15]}")
+            if category=="TEORIA":
+                for i,parts in enumerate(sections_all,1):
+                    first=list(primeros_parrafos(parts[0]))
+                    if len(first)!=10:
+                        problems.append(f"2.{i}: solo se detectan {len(first)} primeros párrafos teóricos")
+                    elif any(normalise(p) not in result for p in first):
+                        problems.append(f"2.{i}: han desaparecido párrafos originales de teoría")
+            if category=="PRACTICAS":
+                for term in ("DocumentacionExtensionsTests", "EsEntornoDeProduccion",
+                             "ValidacionExtensions", "Cincuenta y una pruebas",
+                             "equipo@acerialocal", "FluentValidation.DependencyInjectionExtensions"):
+                    if term.casefold() not in content.casefold():
+                        problems.append(f"{name}: falta corrección técnica aprobada: {term}")
+                if content.count("for %f in")!=3:
+                    problems.append(f"{name}: no se compara todo docs en 2.2, 2.3 y 2.4")
     problems.extend(check_markers(root))
     return {"ok":not problems,"fuentes_originales":sum(p.is_file() for p in originals),
             "fuentes_requeridas":4,"errores":problems,
