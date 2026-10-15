@@ -186,6 +186,7 @@ PRACTICE_TITLES=[
 FILE_BY_POINT=[
 ["src/AceriaApp.Api/Modelo/Orden.cs","src/AceriaApp.Api/Modelo/OrdenDto.cs",
  "src/AceriaApp.Api/Datos/AceriaDbContext.cs","src/AceriaApp.Api/Program.cs",
+ "tests/AceriaApp.Api.Tests/ApiFactory.cs",
  "tests/AceriaApp.Api.Tests/GetTests.cs"],
 ["src/AceriaApp.Api/Contratos/ContratosOrden.cs","src/AceriaApp.Api/Program.cs",
  "tests/AceriaApp.Api.Tests/EscrituraTests.cs"],
@@ -196,7 +197,7 @@ FILE_BY_POINT=[
  "src/AceriaApp.Api/Program.cs","tests/AceriaApp.Api.Tests/ContratoOpenApiTests.cs"]
 ]
 CODE_STEPS=[
-{4:0,6:1,9:2,14:3,17:3,21:4,23:4},
+{4:0,6:1,7:1,9:2,12:3,14:3,17:3,21:4,22:4,23:5},
 {4:0,5:1,7:1,11:1,14:1,16:1,18:1,21:2,22:2},
 {4:0,6:0,8:1,11:1,14:2,15:2,17:2,22:3},
 {3:0,4:0,6:1,8:1,12:1,16:0,20:2}
@@ -216,23 +217,39 @@ def read(stage:int,relative:str):
     return (MODULE/"PROYECTO"/NAMES[stage-1]/relative).read_text(encoding="utf-8").strip()
 def fenced(value:str,lang="csharp"):
     return "\n\n"+chr(96)*3+lang+"\n"+value.rstrip()+"\n"+chr(96)*3+"\n\n"
-def code_excerpt(stage:int,index:int):
+def code_excerpt(stage:int,index:int,step:int|None=None):
     p=FILE_BY_POINT[stage-1][index]
     v=read(stage,p)
-    if p.endswith("Program.cs") and len(v)>2100:
-        # Mostrar solo el código REAL pertinente a ese paso; el fichero
-        # completo permanece en PROYECTO para comparación.
+    if p.endswith("Program.cs"):
         lines=v.splitlines()
-        # El primer GET (punto 2.1) y los demás endpoints conservan
-        # sus marcas INICIO PASO; seccionamos por marcadores.
-        matches=[i for i,line in enumerate(lines) if "INICIO PASO" in line]
-        if stage==1: wanted="2.1.8"
-        elif stage==2: wanted="2.2.5"
-        elif stage==3: wanted="2.3.5"
-        else: wanted="2.4.3"
-        start=next((i for i in matches if wanted in lines[i]),0)
-        end=next((i for i in matches if i>start),min(start+38,len(lines)))
-        v="\n".join(lines[start:end]).strip()
+        targets={
+            1:{12:"2.1.7",14:"2.1.8",17:"2.1.9"},
+            2:{5:"2.2.5",7:"2.2.5",11:"2.2.7",14:"2.2.8",
+               16:"2.2.9",18:"2.2.10"},
+            3:{14:"REGISTRO_VALIDACION",15:"FILTRO_POST",17:"FILTRO_PATCH"},
+            4:{6:"REGISTRO_OPENAPI",8:"PUBLICACION_OPENAPI",12:"ANOTACIONES_GET"},
+        }
+        key=targets.get(stage,{}).get(step,"2.1.8")
+        if key=="REGISTRO_VALIDACION":
+            return p,"using FluentValidation;\n"+next(l for l in lines if "AddValidatorsFromAssemblyContaining" in l).strip()
+        if key=="FILTRO_POST":
+            at=next(i for i,l in enumerate(lines) if 'WithName("CrearOrden")' in l)
+            return p,"\n".join(lines[at:at+4])
+        if key=="FILTRO_PATCH":
+            at=next(i for i,l in enumerate(lines) if 'WithName("CambiarCantidad")' in l)
+            return p,"\n".join(lines[at:at+4])
+        if key=="REGISTRO_OPENAPI":
+            return p,next(l.strip() for l in lines if "builder.Services.AddDocumentacion()" in l)
+        if key=="PUBLICACION_OPENAPI":
+            return p,next(l.strip() for l in lines if "app.UseDocumentacion()" in l)
+        if key=="ANOTACIONES_GET":
+            at=next(i for i,l in enumerate(lines) if 'WithName("ListarOrdenes")' in l)
+            return p,"\n".join(lines[at:at+3])
+        starts=[i for i,l in enumerate(lines) if "INICIO PASO "+key in l]
+        if starts:
+            a=starts[0]
+            b=next((i for i in range(a+1,len(lines)) if "INICIO PASO" in lines[i]),len(lines))
+            return p,"\n".join(lines[a:b]).strip()
     return p,v
 def enrich_theory(base:str):
     sections=re.split(r"(?=^## Punto 2\.[1-4] —)",base,flags=re.M)
@@ -321,7 +338,7 @@ despliegues productivos.
             out+="para justificar la URI y la respuesta.\n\n"
             if number in CODE_STEPS[stage-1]:
                 idx=CODE_STEPS[stage-1][number]
-                file,source=code_excerpt(stage,idx)
+                file,source=code_excerpt(stage,idx,number)
                 out+=f"**Código real contrastado: `{file}`**. "
                 out+="Es el estado final del archivo en la solución verificada; "
                 out+="si ya has creado parte del mismo en pasos anteriores, incorpora "
