@@ -1,4 +1,4 @@
-# M02 — Teoría de desarrollo de APIs REST
+# M02 — Teoría completa: diseño REST e implementación con ASP.NET Core 8
 
 **Autor: JAIME GALLO**
 
@@ -78,6 +78,16 @@ La identificación de recursos con URIs tiene tres consecuencias prácticas. La 
 
 ---
 
+
+
+#### Del concepto a ASP.NET Core 8: Recurso y representación
+
+REST identifica órdenes mediante una URI estable. ASP.NET Core no pide implementar un validador de cadenas para disponer de enrutamiento: la llamada MapGet asocia un verbo y una plantilla de ruta al manejador real. Hay que distinguir la entidad Orden, que EF Core persiste, de la representación pública que recibe el consumidor. Conocer los atributos Id, Cliente, Material, Cantidad, Estado y FechaCreacion permite justificar después por qué no todos se aceptan como entrada.
+
+**Aplicación en el proyecto real.** Este comportamiento está materializado en `Modelo/Orden.cs` del estado `2.1-diseno-apis-rest`. Busca la instrucción `Orden` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
+
+**Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
+
 ### Bloque 3 — Representaciones y negociación de contenido
 
 Un recurso es un concepto abstracto. Su representación es la forma concreta en la que se transmite. Un mismo recurso puede tener varias representaciones: JSON, XML, texto plano. La representación se selecciona mediante negociación de contenido. El cliente envía la cabecera Accept con los formatos que acepta. El servidor responde con el formato que puede generar. La negociación evita que el cliente tenga que especificar el formato en la URI. La representación JSON es la más común en APIs REST modernas. El curso usa JSON como representación por defecto.
@@ -125,6 +135,34 @@ La semántica de los métodos tiene dos consecuencias prácticas. La primera es 
 
 
 ---
+
+
+
+#### Del concepto a ASP.NET Core 8: DTO público
+
+El record OrdenDto representa el JSON de salida. El método Desde transforma explícitamente la entidad a una representación. Esta distinción reduce el acoplamiento entre el esquema de la tabla y el contrato HTTP. Si se cambiara una propiedad interna de Orden no tendría por qué aparecer automáticamente en la respuesta; el método de conversión es precisamente el lugar donde decidir qué se publica.
+
+**Aplicación en el proyecto real.** Este comportamiento está materializado en `Modelo/OrdenDto.cs` del estado `2.1-diseno-apis-rest`. Busca la instrucción `OrdenDto` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
+
+**Código de referencia probado:** `src/AceriaApp.Api/Modelo/Orden.cs`
+
+
+```csharp
+namespace AceriaApp.Api.Modelo;
+// INICIO PASO 2.1.4
+public sealed class Orden
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public string Cliente { get; set; } = string.Empty;
+    public string Material { get; set; } = string.Empty;
+    public int Cantidad { get; set; }
+    public string Estado { get; set; } = "Pendiente";
+    public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
+}
+// FIN PASO 2.1.4
+```
+
+**Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
 
 ### Bloque 5 — Códigos de estado HTTP
 
@@ -181,6 +219,16 @@ Las cinco reglas se aplican de forma uniforme en toda la API. La uniformidad es 
 
 
 ---
+
+
+
+#### Del concepto a ASP.NET Core 8: Persistencia mediante EF Core
+
+El contexto contiene DbSet<Orden> y las restricciones de las columnas. La API se ejecuta sobre SQL Server Express LocalDB en el ordenador del alumno. Registrar AddDbContext permite que los endpoints reciban el contexto mediante inyección de dependencias: no hay que crear el contexto con new dentro de cada manejador. En tests se sustituye solamente el proveedor por InMemory para evitar depender de Windows.
+
+**Aplicación en el proyecto real.** Este comportamiento está materializado en `Datos/AceriaDbContext.cs` del estado `2.1-diseno-apis-rest`. Busca la instrucción `AceriaDbContext` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
+
+**Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
 
 ### Bloque 7 — Interfaz uniforme en ASP.NET Core
 
@@ -249,6 +297,39 @@ El anidamiento tiene dos consecuencias prácticas. La primera es que las relacio
 
 
 ---
+
+
+
+#### Del concepto a ASP.NET Core 8: Endpoint GET de colección
+
+El manejador obtiene AceriaDbContext, usa AsNoTracking para consultar sin seguimiento y devuelve Results.Ok con una secuencia de DTOs. En una colección vacía se responde 200 y una lista JSON vacía, pues la colección como recurso existe aunque no contenga elementos. La respuesta debe inspeccionarse desde AceriaApp.http, no deducirse de que el código compile.
+
+**Aplicación en el proyecto real.** Este comportamiento está materializado en `Program.cs` del estado `2.1-diseno-apis-rest`. Busca la instrucción `MapGet` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
+
+**Código de referencia probado:** `src/AceriaApp.Api/Datos/AceriaDbContext.cs`
+
+
+```csharp
+using AceriaApp.Api.Modelo;
+using Microsoft.EntityFrameworkCore;
+namespace AceriaApp.Api.Datos;
+// INICIO PASO 2.1.6
+public sealed class AceriaDbContext(DbContextOptions<AceriaDbContext> options) : DbContext(options)
+{
+    public DbSet<Orden> Ordenes => Set<Orden>();
+    protected override void OnModelCreating(ModelBuilder b)
+    {
+        var e=b.Entity<Orden>();
+        e.HasKey(x=>x.Id);
+        e.Property(x=>x.Cliente).HasMaxLength(100).IsRequired();
+        e.Property(x=>x.Material).HasMaxLength(100).IsRequired();
+        e.Property(x=>x.Estado).HasMaxLength(24).IsRequired();
+    }
+}
+// FIN PASO 2.1.6
+```
+
+**Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
 
 ### Bloque 9 — Paginación, filtrado y ordenación
 
@@ -328,6 +409,16 @@ La aplicación del diseño REST prepara el proyecto para los puntos posteriores 
 
 ---
 
+
+
+#### Del concepto a ASP.NET Core 8: GET individual y pruebas HTTP
+
+La plantilla {id:guid} restringe el parámetro de ruta a GUID válidos. El manejador consulta una orden específica y decide entre Results.Ok y Results.NotFound. Una petición a un GUID inexistente no debería convertirse en 500 ni en una respuesta 200 con contenido vacío. WebApplicationFactory inicia la aplicación en memoria y permite comprobar 200 y 404 sobre los endpoints auténticos.
+
+**Aplicación en el proyecto real.** Este comportamiento está materializado en `Program.cs` del estado `2.1-diseno-apis-rest`. Busca la instrucción `ObtenerOrdenPorId` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
+
+**Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
+
 ## Punto 2.2 — Recursos, verbos HTTP y códigos de respuesta
 
 Módulo 2: Desarrollo de APIs REST con ASP.NET Core
@@ -394,6 +485,16 @@ La representación no contiene toda la información del recurso: contiene solo l
 
 ---
 
+
+
+#### Del concepto a ASP.NET Core 8: Contrato de entrada
+
+El servidor debe recibir solamente Cliente, Material y Cantidad en CrearOrdenRequest. El ID, el Estado y la FechaCreacion pertenecen al control interno del servicio. Por eso no reutilizamos Orden como cuerpo de entrada. Este diseño protege el contrato público y delimita claramente los datos que el cliente puede modificar.
+
+**Aplicación en el proyecto real.** Este comportamiento está materializado en `Contratos/ContratosOrden.cs` del estado `2.2-recursos-verbos-codigos`. Busca la instrucción `CrearOrdenRequest` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
+
+**Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
+
 ### Bloque 3 — Verbos HTTP y su semántica completa
 
 Los verbos HTTP tienen una semántica definida por el estándar y por las convenciones del ecosistema REST. El verbo GET recupera una representación del recurso. El verbo POST crea un recurso nuevo. El verbo PUT reemplaza un recurso existente. El verbo PATCH modifica parcialmente un recurso existente. El verbo DELETE elimina un recurso existente. Cada verbo tiene tres propiedades: seguridad, idempotencia y cacheabilidad. La seguridad indica si el verbo modifica el estado del servidor. La idempotencia indica si ejecutar el verbo varias veces produce el mismo resultado que ejecutarlo una vez. La cacheabilidad indica si la respuesta puede almacenarse en caché.
@@ -448,6 +549,39 @@ La combinación de verbo y URI también determina el código de respuesta adecua
 
 ---
 
+
+
+#### Del concepto a ASP.NET Core 8: POST y creación
+
+MapPost convierte un cuerpo JSON en CrearOrdenRequest. Al construir Orden y añadirla al DbContext todavía no se ha confirmado una inserción; SaveChangesAsync ejecuta la escritura. CreatedAtRoute utiliza el nombre ObtenerOrdenPorId para incluir un vínculo al recurso y devolver 201 Created. En prácticas se enviará POST y se seguirá Location con GET para demostrar persistencia real.
+
+**Aplicación en el proyecto real.** Este comportamiento está materializado en `Program.cs` del estado `2.2-recursos-verbos-codigos`. Busca la instrucción `MapPost` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
+
+**Código de referencia probado:** `src/AceriaApp.Api/Program.cs`
+
+
+```csharp
+// INICIO PASO 2.2.5: crear una orden, persistirla, devolver 201 + Location.
+app.MapPost("/api/v1/ordenes",async (CrearOrdenRequest request,AceriaDbContext db)=>
+{
+    if(string.IsNullOrWhiteSpace(request.Cliente)||string.IsNullOrWhiteSpace(request.Material)||request.Cantidad<=0)
+        return Results.BadRequest(new {error="Cliente, material y cantidad son obligatorios."});
+    if(request.Cantidad>500)
+        return Results.Problem(title:"El taller solo admite lotes de hasta 500.",
+            statusCode:StatusCodes.Status422UnprocessableEntity);
+    var orden=new Orden{Cliente=request.Cliente,Material=request.Material,Cantidad=request.Cantidad};
+    db.Ordenes.Add(orden);
+    await db.SaveChangesAsync();
+    return Results.CreatedAtRoute("ObtenerOrdenPorId",new{id=orden.Id},OrdenDto.Desde(orden));
+})
+.WithName("CrearOrden").WithTags("Ordenes")
+
+
+;
+```
+
+**Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
+
 ### Bloque 5 — Códigos de respuesta y su relación con el verbo
 
 Los códigos de respuesta expresan el resultado de la operación. La relación entre verbo y código de respuesta es sistemática. GET devuelve 200 si encuentra el recurso y 404 si no lo encuentra. POST devuelve 201 si crea el recurso y 400 si la petición es inválida. PUT devuelve 200 o 204 si reemplaza el recurso y 404 si no existe. PATCH devuelve 200 o 204 si modifica el recurso y 404 si no existe. DELETE devuelve 204 si elimina el recurso y 404 si no existe. La sistematicidad de la relación permite al cliente anticipar el código de respuesta.
@@ -499,6 +633,16 @@ La distinción entre 400 y 422 es una de las más sutiles. El código 400 se usa
 
 
 ---
+
+
+
+#### Del concepto a ASP.NET Core 8: PUT y sustitución
+
+El ejemplo PUT reemplaza los campos editables de una orden ya existente, conservando los valores que controla el servidor. No debe inventar una nueva orden cuando el identificador no existe: en nuestro contrato responde 404. Cuando una orden ya está finalizada la regla del dominio impide editarla y se comunica un conflicto 409.
+
+**Aplicación en el proyecto real.** Este comportamiento está materializado en `Program.cs` del estado `2.2-recursos-verbos-codigos`. Busca la instrucción `MapPut` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
+
+**Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
 
 ### Bloque 7 — Códigos de error del servidor
 
@@ -554,6 +698,82 @@ El formato problem details se implementa en ASP.NET Core con la clase Results.Pr
 
 
 ---
+
+
+
+#### Del concepto a ASP.NET Core 8: PATCH especializado
+
+El endpoint PATCH de este curso cambia exclusivamente Cantidad. La elección de una ruta especializada para ese campo evita introducir JSON Patch en un módulo introductorio. El alumno comprobará que Cliente y Material no cambian después de aplicar la modificación parcial.
+
+**Aplicación en el proyecto real.** Este comportamiento está materializado en `Program.cs` del estado `2.2-recursos-verbos-codigos`. Busca la instrucción `MapPatch` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
+
+**Código de referencia probado:** `tests/AceriaApp.Api.Tests/EscrituraTests.cs`
+
+
+```csharp
+using System.Net;
+using System.Net.Http.Json;
+using AceriaApp.Api.Contratos;
+using AceriaApp.Api.Modelo;
+using Xunit;
+namespace AceriaApp.Api.Tests;
+// INICIO PASO 2.2.11: probar POST/GET/PUT/PATCH/DELETE con HTTP.
+public class EscrituraTests
+{
+    [Fact] public async Task CrearYConsultar_Es201Y200()
+    {
+        using var f=new ApiFactory();using var client=f.CreateClient();
+        var created=await client.PostAsJsonAsync("/api/v1/ordenes",
+            new CrearOrdenRequest("ACX","CHAPA",10));
+        Assert.Equal(HttpStatusCode.Created,created.StatusCode);
+        Assert.NotNull(created.Headers.Location);
+        var get=await client.GetAsync(created.Headers.Location);
+        Assert.Equal(HttpStatusCode.OK,get.StatusCode);
+    }
+    [Fact] public async Task EditarYEliminar_CambiaPersistencia()
+    {
+        using var f=new ApiFactory();using var c=f.CreateClient();
+        var made=await c.PostAsJsonAsync("/api/v1/ordenes",
+            new CrearOrdenRequest("ACX","CHAPA",10));
+        var dto=await made.Content.ReadFromJsonAsync<OrdenDto>();
+        Assert.NotNull(dto);
+        var put=await c.PutAsJsonAsync("/api/v1/ordenes/"+dto.Id,
+            new CrearOrdenRequest("ACX2","CHAPA",11));
+        Assert.Equal(HttpStatusCode.NoContent,put.StatusCode);
+        var patch=await c.PatchAsJsonAsync("/api/v1/ordenes/"+dto.Id+"/cantidad",
+            new ActualizarCantidadRequest(12));
+        Assert.Equal(HttpStatusCode.OK,patch.StatusCode);
+        var changed=await patch.Content.ReadFromJsonAsync<OrdenDto>();
+        Assert.Equal(12,changed?.Cantidad);
+        var del=await c.DeleteAsync("/api/v1/ordenes/"+dto.Id);
+        Assert.Equal(HttpStatusCode.NoContent,del.StatusCode);
+        var gone=await c.GetAsync("/api/v1/ordenes/"+dto.Id);
+        Assert.Equal(HttpStatusCode.NotFound,gone.StatusCode);
+    }
+    [Fact] public async Task ReglaCapacidad_Es422()
+    {
+        using var f=new ApiFactory();
+        var r=await f.CreateClient().PostAsJsonAsync("/api/v1/ordenes",
+            new CrearOrdenRequest("ACX","CHAPA",501));
+        Assert.Equal(HttpStatusCode.UnprocessableEntity,r.StatusCode);
+    }
+    [Fact] public async Task OrdenFinalizada_NoSeEdita409()
+    {
+        using var f=new ApiFactory();using var c=f.CreateClient();
+        var made=await c.PostAsJsonAsync("/api/v1/ordenes",
+            new CrearOrdenRequest("ACX","CHAPA",2));
+        var dto=await made.Content.ReadFromJsonAsync<OrdenDto>();
+        Assert.NotNull(dto);
+        var done=await c.PostAsync("/api/v1/ordenes/"+dto.Id+"/finalizar",null);
+        Assert.Equal(HttpStatusCode.OK,done.StatusCode);
+        var put=await c.PutAsJsonAsync("/api/v1/ordenes/"+dto.Id,
+            new CrearOrdenRequest("ACX","CHAPA",3));
+        Assert.Equal(HttpStatusCode.Conflict,put.StatusCode);
+    }
+}
+```
+
+**Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
 
 ### Bloque 9 — Catálogo de recursos y combinaciones válidas
 
@@ -621,6 +841,16 @@ La aplicación de estos conceptos prepara el proyecto para el punto 2.3, donde s
 
 ---
 
+
+
+#### Del concepto a ASP.NET Core 8: DELETE, estado e idempotencia
+
+DELETE busca el recurso y ejecuta Remove y SaveChangesAsync. La primera eliminación devuelve 204; la consulta posterior devuelve 404. La idempotencia describe el estado final del sistema, no la obligación de devolver exactamente el mismo código en peticiones repetidas. Para reproducir 409 se añade la transición POST finalizar y se intenta editar una orden cuyo estado ya no permite modificaciones.
+
+**Aplicación en el proyecto real.** Este comportamiento está materializado en `Program.cs` del estado `2.2-recursos-verbos-codigos`. Busca la instrucción `MapDelete` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
+
+**Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
+
 ## Punto 2.3 — Validación de peticiones
 
 Módulo 2: Desarrollo de APIs REST con ASP.NET Core
@@ -684,6 +914,16 @@ La validación sintáctica se apoya en el sistema de tipos del lenguaje. Un reco
 
 
 ---
+
+
+
+#### Del concepto a ASP.NET Core 8: Niveles de validación
+
+ASP.NET Core comprueba aspectos de la deserialización del JSON, FluentValidation aplica reglas semánticas y el manejador aplica decisiones del dominio. Un cuerpo con cantidad 0 falla la semántica; cantidad 501 satisface el rango del contrato pero supera el límite de negocio de 500. El objetivo es demostrar por qué el primer caso produce 400 y el segundo 422.
+
+**Aplicación en el proyecto real.** Este comportamiento está materializado en `Validacion/Validadores.cs` del estado `2.3-validacion-peticiones`. Busca la instrucción `RuleFor` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
+
+**Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
 
 ### Bloque 3 — Validación semántica
 
@@ -788,6 +1028,44 @@ La validación de negocio tiene dos consecuencias prácticas. La primera es que 
 
 ---
 
+
+
+#### Del concepto a ASP.NET Core 8: Validador semántico
+
+CrearOrdenValidator deriva de AbstractValidator y declara reglas NotEmpty, MaximumLength e InclusiveBetween. El validador es código C# ejecutable, no una anotación narrativa. Permite reutilizar reglas en POST y PUT y establecer pruebas de frontera cuando la cantidad es 0, 1, 500, 501 y 10001.
+
+**Aplicación en el proyecto real.** Este comportamiento está materializado en `Validacion/Validadores.cs` del estado `2.3-validacion-peticiones`. Busca la instrucción `CrearOrdenValidator` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
+
+**Código de referencia probado:** `src/AceriaApp.Api/Validacion/ValidationFilter.cs`
+
+
+```csharp
+using FluentValidation;
+namespace AceriaApp.Api.Validacion;
+// INICIO PASO 2.3.4
+public sealed class ValidationFilter<T>(IValidator<T> validator): IEndpointFilter where T:class
+{
+    public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context,
+        EndpointFilterDelegate next)
+    {
+        var request=context.Arguments.OfType<T>().FirstOrDefault();
+        if(request is null) return Results.ValidationProblem(
+            new Dictionary<string,string[]> { ["body"]=new[]{"Falta el cuerpo."} });
+        var result=await validator.ValidateAsync(request,context.HttpContext.RequestAborted);
+        if(!result.IsValid)
+        {
+            var errors=result.Errors.GroupBy(x=>x.PropertyName)
+                .ToDictionary(x=>x.Key,x=>x.Select(e=>e.ErrorMessage).ToArray());
+            return Results.ValidationProblem(errors);
+        }
+        return await next(context);
+    }
+}
+// FIN PASO 2.3.4
+```
+
+**Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
+
 ### Bloque 5 — FluentValidation en ASP.NET Core
 
 FluentValidation es una biblioteca para definir reglas de validación de forma fluida y testeable. Se integra con ASP.NET Core mediante la clase AbstractValidator<T> y el método RuleFor. Cada regla se compone de una expresión lambda que selecciona el campo, un método de validación y un mensaje de error. La biblioteca ofrece más de treinta métodos de validación entre los que se incluyen NotEmpty, MaximumLength, GreaterThan, EmailAddress, RegularExpression, Must y Custom. La combinación de métodos permite expresar reglas complejas de forma legible.
@@ -881,6 +1159,16 @@ El filtro genérico se aplica a los endpoints que lo necesitan. La aplicación s
 
 ---
 
+
+
+#### Del concepto a ASP.NET Core 8: Filtro de endpoint
+
+ValidationFilter recibe el argumento de la petición, ejecuta ValidateAsync y agrupa errores por propiedad. Si hay fallos devuelve Results.ValidationProblem con el campo errors; solo cuando IsValid es verdadero continúa mediante next(context). Omitir esa condición permitiría procesar datos rechazados.
+
+**Aplicación en el proyecto real.** Este comportamiento está materializado en `Validacion/ValidationFilter.cs` del estado `2.3-validacion-peticiones`. Busca la instrucción `InvokeAsync` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
+
+**Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
+
 ### Bloque 7 — Mensajes de error y localización
 
 Los mensajes de error de la validación deben ser claros y útiles para el cliente. Un mensaje como "Valor inválido" no aporta información. Un mensaje como "La cantidad debe ser mayor que cero" aporta información concreta. Los mensajes se definen en el validador con el método WithMessage. La localización de los mensajes permite que la API devuelva mensajes en el idioma del cliente. La localización se implementa con recursos o con un proveedor de mensajes. La adopción de mensajes específicos y localizados mejora la experiencia del consumidor y reduce el tiempo de integración.
@@ -919,6 +1207,30 @@ La distinción entre 400 y 422 tiene dos consecuencias prácticas. La primera es
 
 
 ---
+
+
+
+#### Del concepto a ASP.NET Core 8: Registrar no es ejecutar
+
+AddValidatorsFromAssemblyContaining registra servicios en el contenedor, pero no aplica reglas de manera automática a un endpoint. Para ejecutar la validación se utiliza AddEndpointFilter en POST, PUT y PATCH con el contrato correspondiente. Los tests deben comprobar el comportamiento HTTP, no limitarse a instanciar un validador.
+
+**Aplicación en el proyecto real.** Este comportamiento está materializado en `Program.cs` del estado `2.3-validacion-peticiones`. Busca la instrucción `AddEndpointFilter` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
+
+**Código de referencia probado:** `src/AceriaApp.Api/Program.cs`
+
+
+```csharp
+using AceriaApp.Api.Datos;
+using AceriaApp.Api.Modelo;
+using Microsoft.EntityFrameworkCore;
+using AceriaApp.Api.Contratos;
+using AceriaApp.Api.Validacion;
+using FluentValidation;
+
+var builder=WebApplication.CreateBuilder(args);
+```
+
+**Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
 
 ### Bloque 9 — Validación y problem details
 
@@ -991,6 +1303,16 @@ La aplicación de la validación prepara el proyecto para el punto 2.4, donde se
 
 
 ---
+
+
+
+#### Del concepto a ASP.NET Core 8: Problem Details y conflictos
+
+Un error de validación 400 debe ofrecer mensajes por propiedad. Una capacidad de taller incumplida se documenta en el contrato como 422. Intentar modificar una orden finalizada genera un 409 porque depende del estado persistido. La diferencia permite a los clientes automatizar el tratamiento de errores.
+
+**Aplicación en el proyecto real.** Este comportamiento está materializado en `Program.cs` del estado `2.3-validacion-peticiones`. Busca la instrucción `Results.Problem` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
+
+**Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
 
 ## Punto 2.4 — Documentación mediante OpenAPI (Swagger)
 
@@ -1075,6 +1397,16 @@ if (app.Environment.IsDevelopment())
 La configuración de Swagger en ASP.NET Core se realiza en dos fases. La primera fase registra los servicios con AddEndpointsApiExplorer y AddSwaggerGen. La segunda fase habilita los middleware con UseSwagger y UseSwaggerUI. La primera fase se ejecuta antes de builder.Build(). La segunda fase se ejecuta después. La separación entre las dos fases es una consecuencia del modelo de arranque de ASP.NET Core. El curso configura Swagger solo en el entorno de desarrollo para no exponer la documentación en producción.
 
 ---
+
+
+
+#### Del concepto a ASP.NET Core 8: Generación real
+
+OpenAPI no es una cadena YAML fabricada para satisfacer un test superficial. Swashbuckle descubre los endpoints realmente declarados en ASP.NET Core y genera el documento JSON. AddEndpointsApiExplorer registra la exploración de rutas y SwaggerDoc aporta metadatos de la versión v1.
+
+**Aplicación en el proyecto real.** Este comportamiento está materializado en `Documentacion/DocumentacionExtensions.cs` del estado `2.4-documentacion-openapi`. Busca la instrucción `AddSwaggerGen` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
+
+**Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
 
 ### Bloque 3 — Estructura de un documento OpenAPI
 
@@ -1172,6 +1504,31 @@ Las anotaciones tienen dos consecuencias prácticas. La primera es que el docume
 
 ---
 
+
+
+#### Del concepto a ASP.NET Core 8: Conexión en Program.cs
+
+La aplicación debe ejecutar AddDocumentacion antes de builder.Build y UseDocumentacion después. El primer método registra servicios y el segundo habilita el middleware. Definir una clase de extensión que nunca se invoca en Program.cs no documenta nada.
+
+**Aplicación en el proyecto real.** Este comportamiento está materializado en `Program.cs` del estado `2.4-documentacion-openapi`. Busca la instrucción `AddDocumentacion` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
+
+**Código de referencia probado:** `src/AceriaApp.Api/Program.cs`
+
+
+```csharp
+using AceriaApp.Api.Datos;
+using AceriaApp.Api.Modelo;
+using Microsoft.EntityFrameworkCore;
+using AceriaApp.Api.Contratos;
+using AceriaApp.Api.Validacion;
+using FluentValidation;
+using AceriaApp.Api.Documentacion;
+
+var builder=WebApplication.CreateBuilder(args);
+```
+
+**Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
+
 ### Bloque 5 — Esquemas de datos y DTOs
 
 Los esquemas de datos se derivan de los tipos usados en los endpoints. Un record de respuesta produce un esquema con sus propiedades. Un record de petición produce un esquema con sus propiedades. Los esquemas se incluyen en la sección components del documento OpenAPI. Los endpoints referencian los esquemas con $ref. La referencia evita la duplicación de definiciones. La derivación de esquemas a partir de los tipos requiere que los tipos sean públicos y que sus propiedades sean accesibles. Los tipos anidados se incluyen como esquemas separados.
@@ -1247,6 +1604,16 @@ Los ejemplos tienen dos consecuencias prácticas. La primera es que el consumido
 
 ---
 
+
+
+#### Del concepto a ASP.NET Core 8: Metadatos y códigos
+
+WithName, WithSummary, WithTags, Produces, ProducesProblem y ProducesValidationProblem describen operaciones reales. Declarar que un endpoint puede devolver 400 no hace que valide: la validación efectiva ya se incorporó en 2.3. La documentación debe corresponder a lo que el runtime responde.
+
+**Aplicación en el proyecto real.** Este comportamiento está materializado en `Program.cs` del estado `2.4-documentacion-openapi`. Busca la instrucción `Produces` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
+
+**Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
+
 ### Bloque 7 — Versionado de la documentación
 
 La documentación se versiona junto con el contrato. Cada versión del contrato tiene su propio documento OpenAPI. Swagger UI permite seleccionar la versión que se quiere consultar. La selección se realiza con el método SwaggerDoc que registra cada versión. La versión de la documentación coincide con la versión del contrato en la URL. La coincidencia permite que el consumidor consulte la documentación de la versión que usa. El versionado de la documentación es una consecuencia del versionado del contrato.
@@ -1316,6 +1683,59 @@ La documentación de errores tiene dos consecuencias prácticas. La primera es q
 
 ---
 
+
+
+#### Del concepto a ASP.NET Core 8: Ejemplos y contratos
+
+SchemaFilter permite mostrar en components.schemas un ejemplo de CrearOrdenRequest con cliente, material y cantidad. El ejemplo no crea una fila en SQL Server; explica el cuerpo que puede enviar el consumidor. El DTO de salida, en cambio, describe la representación de una orden ya existente.
+
+**Aplicación en el proyecto real.** Este comportamiento está materializado en `Documentacion/DocumentacionExtensions.cs` del estado `2.4-documentacion-openapi`. Busca la instrucción `EjemploCrearOrden` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
+
+**Código de referencia probado:** `tests/AceriaApp.Api.Tests/ContratoOpenApiTests.cs`
+
+
+```csharp
+using System.Net;
+using System.Text.Json;
+using Microsoft.AspNetCore.Hosting;
+using Xunit;
+namespace AceriaApp.Api.Tests;
+// INICIO PASO 2.4.8: abrir OpenAPI JSON REAL mediante HTTP.
+public class ContratoOpenApiTests
+{
+    [Fact] public async Task OpenApi_ContieneRutasYVersion()
+    {
+        using var f=new ApiFactory();
+        var r=await f.CreateClient().GetAsync("/swagger/v1/swagger.json");
+        Assert.Equal(HttpStatusCode.OK,r.StatusCode);
+        using var json=JsonDocument.Parse(await r.Content.ReadAsStringAsync());
+        Assert.Equal("v1",json.RootElement.GetProperty("info").GetProperty("version").GetString());
+        var paths=json.RootElement.GetProperty("paths");
+        Assert.True(paths.TryGetProperty("/api/v1/ordenes",out var resource));
+        Assert.True(resource.TryGetProperty("get",out _));
+        Assert.True(resource.TryGetProperty("post",out _));
+    }
+    [Fact] public async Task OpenApi_IncluyeEjemplo()
+    {
+        using var f=new ApiFactory();
+        var r=await f.CreateClient().GetAsync("/swagger/v1/swagger.json");
+        using var json=JsonDocument.Parse(await r.Content.ReadAsStringAsync());
+        var schemas=json.RootElement.GetProperty("components").GetProperty("schemas");
+        Assert.True(schemas.TryGetProperty("CrearOrdenRequest",out var schema));
+        Assert.True(schema.TryGetProperty("example",out _));
+    }
+    [Fact] public async Task Produccion_NoExponeSwagger()
+    {
+        using var f=new ApiFactory();
+        using var other=f.WithWebHostBuilder(b=>b.UseEnvironment("Production"));
+        var r=await other.CreateClient().GetAsync("/swagger/v1/swagger.json");
+        Assert.Equal(HttpStatusCode.NotFound,r.StatusCode);
+    }
+}
+```
+
+**Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
+
 ### Bloque 9 — Herramientas que consumen OpenAPI
 
 El documento OpenAPI lo consumen varias herramientas. Swagger UI lo consume para generar la documentación interactiva. OpenAPI Generator lo consume para generar clientes en distintos lenguajes. Postman lo consume para importar la colección de endpoints. ReDoc lo consume para generar documentación de solo lectura. Las herramientas se integran con el documento sin modificar la API. La integración es posible porque el documento es un formato estándar. La estandarización es la que permite que la documentación se reutilice en múltiples herramientas.
@@ -1378,3 +1798,12 @@ La aplicación de la documentación cierra el módulo 2 y prepara el terreno par
 - Los errores se documentan con ProducesProblem y ProducesValidationProblem.
 
 ---
+
+#### Del concepto a ASP.NET Core 8: Comprobar OpenAPI por HTTP
+
+Swagger UI facilita explorar las operaciones y ejecutarlas desde el navegador. WebApplicationFactory descarga /swagger/v1/swagger.json y contrasta versión, paths y schemas. Otra prueba establece Production y exige que el endpoint de documentación no se publique. Así se comprueba el documento generado y no una cadena aislada del servidor.
+
+**Aplicación en el proyecto real.** Este comportamiento está materializado en `Program.cs` del estado `2.4-documentacion-openapi`. Busca la instrucción `UseDocumentacion` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
+
+**Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
+
