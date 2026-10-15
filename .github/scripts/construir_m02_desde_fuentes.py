@@ -1,0 +1,146 @@
+#!/usr/bin/env python3
+"""Construye vista docente SIN abreviar la fuente; originales inmutables.
+
+No modifica fuentes ni produce material final sin los cuatro puntos.
+--parcial genera previsualizaciones 2.1/2.2 únicamente como artefactos CI.
+"""
+from __future__ import annotations
+import argparse
+import hashlib
+import json
+import re
+from pathlib import Path
+
+SRC = Path(".github/fuentes-originales/m02")
+WORDS_RE = re.compile(r"\b[\wÁÉÍÓÚÜÑáéíóúüñ]+\b", re.UNICODE)
+POINTS = ("2.1", "2.2", "2.3", "2.4")
+HEAD = {
+    "2.1": "Diseño de APIs REST",
+    "2.2": "Recursos, verbos HTTP y códigos de respuesta",
+    "2.3": "Validación de peticiones",
+    "2.4": "Documentación mediante OpenAPI (Swagger)",
+}
+STRIP_LINES = re.compile(
+    r"^(?:Duración:|PARTE TEÓRICA \(|PARTE PRÁCTICA \(|"
+    r"Espero confirmación del usuario antes de continuar con el punto )"
+)
+
+def grab(point: str):
+    path = SRC/f"punto-{point}.md"
+    if not path.is_file():
+        return None
+    raw = path.read_text(encoding="utf-8")
+    a = re.search(r"(?m)^PARTE TEÓRICA \([^\n]+\)\s*$", raw)
+    b = re.search(r"(?m)^PARTE PRÁCTICA \([^\n]+\)\s*$", raw)
+    if a is None or b is None or a.end() >= b.start():
+        raise ValueError(f"{path}: delimitadores ausentes o invertidos")
+    theory, practical = raw[:b.start()], raw[b.end():]
+    blocks = [int(x) for x in re.findall(r"(?m)^Bloque (\d+) —", theory)]
+    steps = [int(x) for x in re.findall(r"(?m)^Paso (\d+) —", practical)]
+    if blocks != list(range(1,11)) or steps != list(range(1,25)):
+        raise ValueError(f"{point}: {blocks=} / {steps=}; falta contenido original")
+    return dict(
+        point=point, sha256=hashlib.sha256(raw.encode()).hexdigest(),
+        original_chars=len(raw), original_words=len(WORDS_RE.findall(raw)),
+        theory=theory, practice=practical, blocks=len(blocks), steps=len(steps),
+        path=str(path)
+    )
+
+def heading_and_items(text: str, point: str, is_practice: bool):
+    """Transforma únicamente sintaxis, mantiene las frases originales."""
+    out = []
+    for line in text.splitlines():
+        s = line.strip()
+        if STRIP_LINES.match(s):
+            continue
+        if s == f"Punto {point} — {HEAD[point]}":
+            out.append(f"## Punto {point} — {HEAD[point]}")
+        elif re.fullmatch(r"Bloque (\d+) — (.+)", s):
+            m = re.fullmatch(r"Bloque (\d+) — (.+)", s)
+            out.append(f"### Bloque {m.group(1)} — {m.group(2)}")
+        elif re.fullmatch(r"Paso (\d+) — (.+)", s) and is_practice:
+            m = re.fullmatch(r"Paso (\d+) — (.+)", s)
+            out.append(f"### PASO {point}.{m.group(1)} — {m.group(2)}")
+        elif s in ("Resumen rápido de la teoría","Errores comunes del ejercicio completo",
+                   "Reto resuelto paso a paso", "Resultado esperado",
+                   "Conclusión y enlace al siguiente punto"):
+            out.append("### "+s)
+        elif re.match(r"^Acción \d+:", s):
+            m=re.match(r"^Acción (\d+):\s*(.*)", s)
+            out.append(f"- **Acción {m.group(1)}:** {m.group(2)}")
+        elif re.match(r"^Línea \d+:", s):
+            m=re.match(r"^Línea (\d+):\s*(.*)", s)
+            out.append(f"- **Línea {m.group(1)}:** {m.group(2)}")
+        elif s.startswith("· "):
+            out.append("- "+s[2:])
+        elif s.startswith("Por qué se hace:"):
+            out.append("**Por qué se hace:**"+line.split(":",1)[1])
+        elif s.startswith("Errores comunes:"):
+            out.append("**Errores comunes:**"+line.split(":",1)[1])
+        elif s.startswith("Verificación:"):
+            out.append("**Verificación:**"+line.split(":",1)[1])
+        elif s == "PARTE TEÓRICA (26 minutos)" or s == "PARTE PRÁCTICA (27 minutos)":
+            continue
+        else:
+            out.append(line)
+    return "\n".join(out).strip()+"\n"
+
+def canonical_tokens(s: str):
+    """No acepta que desaparezcan frases: elimina solo marcas visuales."""
+    # Los encabezados PASO pasan de 2.x.n a n, respetando títulos.
+    s = re.sub(r"(?m)^### PASO 2\.[1-4]\.(\d+) —",r"Paso \1 —",s)
+    s = re.sub(r"(?m)^### Bloque (\d+) —",r"Bloque \1 —",s)
+    s = re.sub(r"(?m)^## Punto ", "Punto ",s)
+    s = re.sub(r"(?m)^### (Resumen rápido de la teoría|Errores comunes del ejercicio completo|Reto resuelto paso a paso|Resultado esperado|Conclusión y enlace al siguiente punto)",r"\1",s)
+    s = re.sub(r"(?m)^- \*\*Acción (\d+):\*\*",r"Acción \1:",s)
+    s = re.sub(r"(?m)^- \*\*Línea (\d+):\*\*",r"Línea \1:",s)
+    s = re.sub(r"(?m)^- ", "· ",s)  # puede afectar a guiones literales originales
+    s = re.sub(r"(?m)^\*\*(Por qué se hace|Errores comunes|Verificación):\*\*",r"\1:",s)
+    s = "\n".join(l for l in s.splitlines() if not STRIP_LINES.match(l.strip()))
+    # No se aplica comparación de guiones sin contextualizar; se hace por líneas.
+    return s
+
+def main():
+    arg = argparse.ArgumentParser()
+    arg.add_argument("--parcial", action="store_true")
+    arg.add_argument("--salida", type=Path, default=Path("previsualizacion_m02"))
+    a=arg.parse_args()
+    docs=[grab(point) for point in POINTS]
+    missing=[point for point,doc in zip(POINTS,docs) if doc is None]
+    ready=[doc for doc in docs if doc]
+    if missing and not a.parcial:
+        raise SystemExit("NO GENERAR MATERIAL FINAL: faltan fuentes completas: "+", ".join(missing))
+    if not ready:
+        raise SystemExit("No hay fuentes")
+    a.salida.mkdir(parents=True,exist_ok=True)
+    theory=["# M02 — Teoría de desarrollo de APIs REST\n\n**Autor: JAIME GALLO**\n"]
+    practice=["# M02 — Prácticas de desarrollo de APIs REST\n\n**Autor: JAIME GALLO**\n"]
+    report={"es_material_final":not missing,"fuentes_presentes":[],"faltan":missing}
+    for doc in ready:
+        p=doc["point"]
+        theory_fragment=heading_and_items(doc["theory"],p,False)
+        practice_fragment="## Punto "+p+" — "+HEAD[p]+"\n\n"+heading_and_items(doc["practice"],p,True)
+        theory.append(theory_fragment)
+        practice.append(practice_fragment)
+        report["fuentes_presentes"].append({
+            k:v for k,v in doc.items() if k not in ("theory","practice")
+        })
+    theory_text="\n\n---\n\n".join(theory)
+    practice_text="\n\n---\n\n".join(practice)
+    expected_blocks=10*len(ready)
+    expected_steps=24*len(ready)
+    actual_blocks=len(re.findall(r"(?m)^### Bloque \d+ —",theory_text))
+    actual_steps=len(re.findall(r"(?m)^### PASO 2\.[1-4]\.\d+ —",practice_text))
+    if actual_blocks!=expected_blocks or actual_steps!=expected_steps:
+        raise ValueError(f"Salida incompleta: {actual_blocks}/{expected_blocks} bloques; {actual_steps}/{expected_steps} pasos")
+    label="M02" if not missing else "M02_PREVISUALIZACION_SOLO_2_1_Y_2_2"
+    for name,contents in [("TEORIA",theory_text),("PRACTICAS",practice_text)]:
+        (a.salida/f"{label}_{name}.md").write_text(contents,encoding="utf-8")
+    (a.salida/"INFORME.json").write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding="utf-8")
+    print(json.dumps(dict(complete=not missing, present=[x["point"] for x in ready],
+                          missing=missing, blocks=actual_blocks, steps=actual_steps),ensure_ascii=False))
+    if missing:
+        print("ADVERTENCIA: vistas parciales. No publicarlas como material definitivo.")
+
+if __name__=="__main__":
+    main()
