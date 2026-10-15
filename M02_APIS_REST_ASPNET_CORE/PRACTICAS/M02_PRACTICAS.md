@@ -674,7 +674,7 @@ public class CatalogoUrisTests
 
 - **Acción 1:** Escribir dotnet build AceriaApp.sln y pulsar Enter.
 - **Acción 2:** Verificar que la salida muestra Build succeeded. y 0 Warning(s), 0 Error(s).
-- **Acción 3:** Verificar que el tiempo de compilación es inferior a 180 segundos.
+- **Acción 3:** Comprobar que el comando termina sin errores y que el resultado coincide con la verificación del ejercicio.
 
 **Por qué se hace:** compilar la solución completa verifica que todos los proyectos, incluidos los nuevos, se resuelven correctamente.
 
@@ -693,7 +693,7 @@ public class CatalogoUrisTests
 
 - **Acción 1:** Escribir dotnet test tests\AceriaApp.DisenoRest.Tests\AceriaApp.DisenoRest.Tests.csproj y pulsar Enter.
 - **Acción 2:** Verificar que la salida muestra Passed! - Failed: 0, Passed: 8, Skipped: 0.
-- **Acción 3:** Verificar que el tiempo total es inferior a 30 segundos.
+- **Acción 3:** Comprobar que el comando termina sin errores y que el resultado coincide con la verificación del ejercicio.
 
 **Por qué se hace:** ejecutar los tests del punto 2.1 verifica que las clases de diseño REST funcionan correctamente.
 
@@ -712,7 +712,7 @@ public class CatalogoUrisTests
 
 - **Acción 1:** Escribir dotnet test AceriaApp.sln --no-build y pulsar Enter.
 - **Acción 2:** Verificar que la salida muestra Passed! - Failed: 0, Passed: 31, Skipped: 0.
-- **Acción 3:** Verificar que el tiempo total es inferior a 150 segundos.
+- **Acción 3:** Comprobar que el comando termina sin errores y que el resultado coincide con la verificación del ejercicio.
 
 **Por qué se hace:** ejecutar todos los tests de la solución verifica que los tests de los puntos 1.1 a 1.5 y del punto 2.1 pasan conjuntamente.
 
@@ -1573,7 +1573,7 @@ public class CatalogoCombinacionesTests
 
 - **Acción 1:** Escribir dotnet build AceriaApp.sln y pulsar Enter.
 - **Acción 2:** Verificar que la salida muestra Build succeeded. y 0 Warning(s), 0 Error(s).
-- **Acción 3:** Verificar que el tiempo de compilación es inferior a 180 segundos.
+- **Acción 3:** Comprobar que el comando termina sin errores y que el resultado coincide con la verificación del ejercicio.
 
 **Por qué se hace:** compilar la solución completa verifica que todos los proyectos, incluidos los nuevos, se resuelven correctamente.
 
@@ -1592,7 +1592,7 @@ public class CatalogoCombinacionesTests
 
 - **Acción 1:** Escribir dotnet test tests\AceriaApp.CatalogoRecursos.Tests\AceriaApp.CatalogoRecursos.Tests.csproj y pulsar Enter.
 - **Acción 2:** Verificar que la salida muestra Passed! - Failed: 0, Passed: 5, Skipped: 0.
-- **Acción 3:** Verificar que el tiempo total es inferior a 30 segundos.
+- **Acción 3:** Comprobar que el comando termina sin errores y que el resultado coincide con la verificación del ejercicio.
 
 **Por qué se hace:** ejecutar los tests del punto 2.2 verifica que las clases de catálogo de recursos funcionan correctamente.
 
@@ -1611,7 +1611,7 @@ public class CatalogoCombinacionesTests
 
 - **Acción 1:** Escribir dotnet test AceriaApp.sln --no-build y pulsar Enter.
 - **Acción 2:** Verificar que la salida muestra Passed! - Failed: 0, Passed: 36, Skipped: 0.
-- **Acción 3:** Verificar que el tiempo total es inferior a 180 segundos.
+- **Acción 3:** Comprobar que el comando termina sin errores y que el resultado coincide con la verificación del ejercicio.
 
 **Por qué se hace:** ejecutar todos los tests de la solución verifica que los tests de los puntos 1.1 a 1.5 y de los puntos 2.1 y 2.2 pasan conjuntamente.
 
@@ -2554,7 +2554,7 @@ builder.Services.AddValidacion();
 
 - **Acción 1:** Escribir dotnet build AceriaApp.sln y pulsar Enter.
 - **Acción 2:** Verificar que la salida muestra Build succeeded. y 0 Warning(s), 0 Error(s).
-- **Acción 3:** Verificar que el tiempo de compilación es inferior a 210 segundos.
+- **Acción 3:** Comprobar que el comando termina sin errores y que el resultado coincide con la verificación del ejercicio.
 
 **Por qué se hace:** compilar la solución completa verifica que todos los proyectos, incluidos los nuevos, se resuelven correctamente.
 
@@ -2573,7 +2573,7 @@ builder.Services.AddValidacion();
 
 - **Acción 1:** Escribir dotnet test tests\AceriaApp.Validacion.Tests\AceriaApp.Validacion.Tests.csproj y pulsar Enter.
 - **Acción 2:** Verificar que la salida muestra Passed! - Failed: 0, Passed: 6, Skipped: 0.
-- **Acción 3:** Verificar que el tiempo total es inferior a 30 segundos.
+- **Acción 3:** Comprobar que el comando termina sin errores y que el resultado coincide con la verificación del ejercicio.
 
 **Por qué se hace:** ejecutar los tests del punto 2.3 verifica que el validador y el record funcionan correctamente.
 
@@ -2592,7 +2592,7 @@ builder.Services.AddValidacion();
 
 - **Acción 1:** Escribir dotnet test AceriaApp.sln --no-build y pulsar Enter.
 - **Acción 2:** Verificar que la salida muestra Passed! - Failed: 0, Passed: 42, Skipped: 0.
-- **Acción 3:** Verificar que el tiempo total es inferior a 210 segundos.
+- **Acción 3:** Comprobar que el comando termina sin errores y que el resultado coincide con la verificación del ejercicio.
 
 **Por qué se hace:** ejecutar todos los tests de la solución verifica que los tests de los puntos anteriores y del punto 2.3 pasan conjuntamente.
 
@@ -3616,7 +3616,7 @@ public class DocumentacionExtensionsTests
 
 - **Acción 1:** Escribir dotnet build AceriaApp.sln y pulsar Enter.
 - **Acción 2:** Verificar que la salida muestra Build succeeded. y 0 Warning(s), 0 Error(s).
-- **Acción 3:** Verificar que el tiempo de compilación es inferior a 240 segundos.
+- **Acción 3:** Comprobar que el comando termina sin errores y que el resultado coincide con la verificación del ejercicio.
 
 **Por qué se hace:** compilar la solución completa verifica que todos los proyectos, incluidos los nuevos, se resuelven correctamente.
 
@@ -3634,7 +3634,7 @@ public class DocumentacionExtensionsTests
 
 - **Acción 1:** Escribir dotnet test tests\AceriaApp.Documentacion.Tests\AceriaApp.Documentacion.Tests.csproj y pulsar Enter.
 - **Acción 2:** Verificar que la salida muestra Passed! - Failed: 0, Passed: 9, Skipped: 0.
-- **Acción 3:** Verificar que el tiempo total es inferior a 30 segundos.
+- **Acción 3:** Comprobar que el comando termina sin errores y que el resultado coincide con la verificación del ejercicio.
 
 **Por qué se hace:** ejecutar los tests del punto 2.4 verifica que las clases de documentación funcionan correctamente.
 
@@ -3652,7 +3652,7 @@ public class DocumentacionExtensionsTests
 
 - **Acción 1:** Escribir dotnet test AceriaApp.sln --no-build y pulsar Enter.
 - **Acción 2:** Verificar que la salida muestra Passed! - Failed: 0, Passed: 51, Skipped: 0.
-- **Acción 3:** Verificar que el tiempo total es inferior a 240 segundos.
+- **Acción 3:** Comprobar que el comando termina sin errores y que el resultado coincide con la verificación del ejercicio.
 
 **Por qué se hace:** ejecutar todos los tests de la solución verifica que los tests de los puntos anteriores y del punto 2.4 pasan conjuntamente.
 
