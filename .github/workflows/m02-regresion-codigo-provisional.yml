@@ -79,8 +79,8 @@ jobs:
           print(f'REGRESION DE CODIGO: {passed} pruebas pasadas en {len(files)} proyectos.')
           print('ESTO NO CERTIFICA LA FIDELIDAD DE LOS TEXTOS NI LOS 96 PASOS.')
           PY
-      - name: Ejecutar 24 estados progresivos de 2.1 y 2.2
-        if: !contains(matrix.punto, '2.4')
+      - name: Ejecutar 24 estados progresivos por punto
+        if: ${{ !contains(matrix.punto, '2.4') }}
         run: python .github/scripts/e2e_m02_stages.py --root . --point "${{ matrix.punto == '2.1-diseno-apis-rest' && '2.1' || (matrix.punto == '2.2-recursos-verbos-codigos' && '2.2' || '2.3') }}"
       - name: Conservar resultados por punto
         if: always()
