@@ -73,6 +73,24 @@ jobs:
           assert "```markdown\n\n```" not in practicas
           assert all("Duración:" not in content for content in (teoria,practicas))
           assert "JAIME GALLO" in teoria and "JAIME GALLO" in practicas
+          # Puerta pedagógica: los 96 pasos deben poder seguirse.
+          steps=list(re.finditer(r"(?m)^### PASO 2\.[1-4]\.\d+ —",practicas))
+          assert len(steps)==96
+          for i,match in enumerate(steps):
+              end=steps[i+1].start() if i+1<len(steps) else len(practicas)
+              section=practicas[match.start():end]
+              for key in ("**Por qué se hace:**","**Errores comunes:**","**Verificación:**"):
+                  assert key in section, f"{match.group()}: falta {key}"
+          # Puerta editorial: ningún ejemplo C# de teoría puede quedar como prosa.
+          in_fence=False
+          for n,line in enumerate(teoria.splitlines(),1):
+              if line.strip().startswith("```"):
+                  in_fence=not in_fence
+                  continue
+              if not in_fence:
+                  assert not re.match(r"^(public (record|class)|namespace |builder\.Services\.|app\.Map|var builder =|RuleFor\()",line), f"Código sin maquetación, línea {n}: {line}"
+          assert not in_fence
+
           for text in (teoria,practicas):
               assert text.count("\n```")%2 == 0, "Hay una delimitación de código abierta"
           print("VALIDADO: cuatro fuentes, 40 bloques, 96 pasos y correcciones.")
