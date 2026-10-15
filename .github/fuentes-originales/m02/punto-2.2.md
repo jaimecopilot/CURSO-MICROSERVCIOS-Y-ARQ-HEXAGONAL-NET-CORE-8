@@ -644,3 +644,520 @@ Verificación: el archivo AceriaApp.CatalogoRecursos.Tests.csproj contiene un Pr
 
 ---
 
+Paso 13 — Añadir el paquete FluentAssertions al proyecto de tests
+
+Acción 1: Escribir dotnet add tests\AceriaApp.CatalogoRecursos.Tests\AceriaApp.CatalogoRecursos.Tests.csproj package FluentAssertions y pulsar Enter.
+Acción 2: Escribir dotnet list tests\AceriaApp.CatalogoRecursos.Tests\AceriaApp.CatalogoRecursos.Tests.csproj package y pulsar Enter.
+Acción 3: Verificar que la salida muestra FluentAssertions con su versión.
+
+Por qué se hace: FluentAssertions proporciona la sintaxis de aserción usada en el curso. Se añade al nuevo proyecto de tests sin modificar los proyectos de tests existentes.
+
+Errores comunes:
+
+· Instalar una versión preliminar: el curso usa la última estable.
+· Olvidar el paquete: Should() no se resuelve en los tests.
+· Añadir el paquete al proyecto equivocado: los tests no compilan.
+
+Verificación: la salida de dotnet list package muestra FluentAssertions con una versión estable.
+
+
+---
+
+Paso 14 — Crear el archivo ValidadorCombinacionVerboCodigoTests.cs
+
+Acción 1: En el panel Solution Explorer, expandir tests → AceriaApp.CatalogoRecursos.Tests.
+Acción 2: Hacer doble clic en UnitTest1.cs y renombrarlo a ValidadorCombinacionVerboCodigoTests.cs.
+Acción 3: Escribir exactamente el siguiente código:
+
+using AceriaApp.Monolito.Api.CatalogoRecursos;  
+using FluentAssertions;  
+using Xunit;  
+  
+namespace AceriaApp.CatalogoRecursos.Tests;  
+  
+public class ValidadorCombinacionVerboCodigoTests  
+{  
+    private readonly ValidadorCombinacionVerboCodigo _validador = new();  
+  
+    [Fact]  
+    public void Validar_GetCon200_DevuelveValida()  
+    {  
+        var combinacion = new CombinacionVerboCodigo { Verbo = "GET", Codigo = 200 };  
+  
+        var resultado = _validador.Validar(combinacion);  
+  
+        resultado.EsValida.Should().BeTrue();  
+        resultado.Errores.Should().BeEmpty();  
+    }  
+  
+    [Fact]  
+    public void Validar_PostCon201_DevuelveValida()  
+    {  
+        var combinacion = new CombinacionVerboCodigo { Verbo = "POST", Codigo = 201 };  
+  
+        var resultado = _validador.Validar(combinacion);  
+  
+        resultado.EsValida.Should().BeTrue();  
+    }  
+  
+    [Fact]  
+    public void Validar_GetCon201_DevuelveError()  
+    {  
+        var combinacion = new CombinacionVerboCodigo { Verbo = "GET", Codigo = 201 };  
+  
+        var resultado = _validador.Validar(combinacion);  
+  
+        resultado.EsValida.Should().BeFalse();  
+        resultado.Errores.Should().Contain(e => e.Contains("no permitido"));  
+    }  
+  
+    [Fact]  
+    public void Validar_VerboDesconocido_DevuelveError()  
+    {  
+        var combinacion = new CombinacionVerboCodigo { Verbo = "OPTIONS", Codigo = 200 };  
+  
+        var resultado = _validador.Validar(combinacion);  
+  
+        resultado.EsValida.Should().BeFalse();  
+        resultado.Errores.Should().Contain(e => e.Contains("Verbo no permitido"));  
+    }  
+}
+
+Acción 4: Pulsar Ctrl+S para guardar el archivo.
+Acción 5: Verificar que la clase compila sin errores.
+
+Por qué se hace: los tests verifican que el validador acepta combinaciones correctas y rechaza combinaciones con código no permitido para el verbo y con verbo desconocido.
+
+Errores comunes:
+
+· Olvidar el using AceriaApp.Monolito.Api.CatalogoRecursos;: las clases no se resuelven.
+· Usar Assert.True en lugar de Should().BeTrue(): el curso usa FluentAssertions.
+· No cubrir el caso de verbo desconocido: el test no verifica el mensaje de error.
+
+Verificación: el archivo ValidadorCombinacionVerboCodigoTests.cs compila y contiene cuatro métodos de test.
+
+
+---
+
+Paso 15 — Crear el archivo CatalogoCombinacionesTests.cs
+
+Acción 1: En el panel Solution Explorer, hacer clic derecho sobre el proyecto AceriaApp.CatalogoRecursos.Tests.
+Acción 2: Seleccionar Add → Class y nombrar la clase CatalogoCombinacionesTests.cs.
+Acción 3: Escribir exactamente el siguiente código:
+
+using AceriaApp.Monolito.Api.CatalogoRecursos;  
+using FluentAssertions;  
+using Xunit;  
+  
+namespace AceriaApp.CatalogoRecursos.Tests;  
+  
+public class CatalogoCombinacionesTests  
+{  
+    [Fact]  
+    public void CombinacionesValidas_FiltraCorrectamente()  
+    {  
+        var combinaciones = new List<CombinacionVerboCodigo>  
+        {  
+            new() { Verbo = "GET", Codigo = 200 },  
+            new() { Verbo = "POST", Codigo = 201 },  
+            new() { Verbo = "GET", Codigo = 201 },  
+            new() { Verbo = "OPTIONS", Codigo = 200 }  
+        };  
+        var catalogo = new CatalogoCombinaciones(combinaciones);  
+        var validador = new ValidadorCombinacionVerboCodigo();  
+  
+        var validas = catalogo.CombinacionesValidas(validador).ToList();  
+        var invalidas = catalogo.CombinacionesInvalidas(validador).ToList();  
+  
+        validas.Should().HaveCount(2);  
+        invalidas.Should().HaveCount(2);  
+    }  
+}
+
+Acción 4: Pulsar Ctrl+S para guardar el archivo.
+Acción 5: Verificar que la clase compila sin errores.
+
+Por qué se hace: el test verifica que el catálogo filtra correctamente las combinaciones válidas y las inválidas.
+
+Errores comunes:
+
+· Olvidar using System.Collections.Generic;: List<T> no se resuelve.
+· Olvidar using System.Linq;: ToList() no se resuelve.
+· No comprobar los recuentos: el test podría pasar por casualidad.
+
+Verificación: el archivo CatalogoCombinacionesTests.cs compila y contiene un método de test.
+
+
+---
+
+Paso 16 — Compilar la solución completa
+
+Acción 1: Escribir dotnet build AceriaApp.sln y pulsar Enter.
+Acción 2: Verificar que la salida muestra Build succeeded. y 0 Warning(s), 0 Error(s).
+Acción 3: Verificar que el tiempo de compilación es inferior a 180 segundos.
+
+Por qué se hace: compilar la solución completa verifica que todos los proyectos, incluidos los nuevos, se resuelven correctamente.
+
+Errores comunes:
+
+· Tener la API en ejecución: el archivo .dll está bloqueado y la compilación falla.
+· No restaurar paquetes: dotnet build restaura por defecto, pero si hay un error de red, hay que ejecutar dotnet restore primero.
+· Usar una versión distinta del SDK: dotnet --version debe devolver 8.x.x.
+
+Verificación: la salida debe mostrar Build succeeded. con 0 Error(s).
+
+
+---
+
+Paso 17 — Ejecutar todos los tests del punto 2.2
+
+Acción 1: Escribir dotnet test tests\AceriaApp.CatalogoRecursos.Tests\AceriaApp.CatalogoRecursos.Tests.csproj y pulsar Enter.
+Acción 2: Verificar que la salida muestra Passed! - Failed: 0, Passed: 5, Skipped: 0.
+Acción 3: Verificar que el tiempo total es inferior a 30 segundos.
+
+Por qué se hace: ejecutar los tests del punto 2.2 verifica que las clases de catálogo de recursos funcionan correctamente.
+
+Errores comunes:
+
+· Ejecutar dotnet test sin especificar el proyecto: ejecuta también los tests de los puntos anteriores, lo que alarga el tiempo.
+· No compilar antes: dotnet test compila por defecto, pero si hay errores, los tests no se ejecutan.
+· Tener la API en ejecución: el puerto puede estar ocupado.
+
+Verificación: la salida debe mostrar Passed! - Failed: 0, Passed: 5, Skipped: 0, Total: 5.
+
+
+---
+
+Paso 18 — Ejecutar todos los tests de la solución
+
+Acción 1: Escribir dotnet test AceriaApp.sln --no-build y pulsar Enter.
+Acción 2: Verificar que la salida muestra Passed! - Failed: 0, Passed: 36, Skipped: 0.
+Acción 3: Verificar que el tiempo total es inferior a 180 segundos.
+
+Por qué se hace: ejecutar todos los tests de la solución verifica que los tests de los puntos 1.1 a 1.5 y de los puntos 2.1 y 2.2 pasan conjuntamente.
+
+Errores comunes:
+
+· No haber compilado antes: --no-build falla si no hay artefactos.
+· Tener tests de otros módulos: la solución solo contiene los proyectos de este punto.
+· Modificar los tests de los puntos anteriores: viola la regla de no modificar archivos del punto anterior.
+
+Verificación: la salida debe mostrar Passed! - Failed: 0, Passed: 36, Skipped: 0, Total: 36.
+
+
+---
+
+Paso 19 — Crear el README del punto 2.2
+
+Acción 1: En la carpeta del punto 2.2-recursos-verbos-codigos, hacer clic derecho y seleccionar Add → New Item → Text File.
+Acción 2: Nombrar el archivo README.md.
+Acción 3: Escribir exactamente el siguiente contenido:
+
+# Punto 2.2 — Recursos, verbos HTTP y códigos de respuesta  
+  
+## Objetivo  
+Comprender el concepto de recurso, aplicar los verbos HTTP con su semántica correcta y seleccionar el código de respuesta adecuado. Añadir al proyecto las clases de catálogo y validación de combinaciones verbo-código.  
+  
+## Estado del proyecto  
+- Solución `AceriaApp.sln` con nueve proyectos.  
+- Documento `docs/catalogo-recursos.md` con el catálogo de recursos, verbos y códigos.  
+- Clases `CombinacionVerboCodigo`, `ValidadorCombinacionVerboCodigo` y `CatalogoCombinaciones` en `src/AceriaApp.Monolito.Api/CatalogoRecursos/`.  
+- Cinco tests nuevos en `tests/AceriaApp.CatalogoRecursos.Tests`.  
+- Los tests acumulados suman 36 pruebas unitarias.  
+  
+## Cómo ejecutarlo  
+1. Abrir `AceriaApp.sln` en Visual Studio 2026.  
+2. Verificar que SQL Server Express está arrancado.  
+3. Ejecutar `dotnet ef database update` en `src\AceriaApp.Monolito.Api`.  
+4. Ejecutar `dotnet run` en `src\AceriaApp.Monolito.Api`.  
+5. Navegar a `https://localhost:7xxx/swagger`.  
+6. Ejecutar `dotnet test AceriaApp.sln` para verificar los tests.  
+  
+## Qué se ha añadido respecto al punto anterior  
+- Documento `docs/catalogo-recursos.md`.  
+- Carpeta `CatalogoRecursos` en el proyecto monolítico con tres clases nuevas.  
+- Proyecto `tests/AceriaApp.CatalogoRecursos.Tests` con cinco tests nuevos.  
+- No se ha modificado ningún archivo del punto 2.1.  
+  
+## Documentación  
+- [ADR-001](docs/ADR-001-monolito-vs-microservicios.md) a [ADR-006](docs/ADR-006-diseno-apis-rest.md) (heredados).  
+- [Catálogo de recursos](docs/catalogo-recursos.md).
+
+Acción 4: Pulsar Ctrl+S para guardar el archivo.
+Acción 5: Verificar que el README del punto 2.1 no se ha modificado.
+
+Por qué se hace: el README del punto 2.2 explica el objetivo, el estado, la ejecución y los añadidos. No modifica el README del punto 2.1.
+
+Errores comunes:
+
+· Modificar el README del punto 2.1: viola la regla de no modificar archivos del punto anterior.
+· Omitir la sección Qué se ha añadido respecto al punto anterior: pierde la trazabilidad.
+· Escribir el README en la carpeta del punto 2.1: rompe la separación.
+
+Verificación: el archivo README.md existe en la carpeta del punto 2.2 con las cinco secciones.
+
+
+---
+
+Paso 20 — Crear el ADR-007 del punto 2.2
+
+Acción 1: En el panel Solution Explorer, hacer clic derecho sobre la carpeta docs.
+Acción 2: Seleccionar Add → New Item → Text File y nombrar el archivo ADR-007-catalogo-recursos.md.
+Acción 3: Escribir exactamente el siguiente contenido:
+
+# ADR-007: Catálogo de recursos y validación de combinaciones verbo-código  
+  
+## Estado  
+Aceptado  
+  
+## Contexto  
+El proyecto AceriaApp ha adoptado el estilo REST en el punto 2.1. Es necesario definir el catálogo de recursos del dominio, los verbos permitidos sobre cada recurso y los códigos de respuesta esperados, y validar automáticamente la coherencia de las combinaciones.  
+  
+## Decisión  
+Se adopta un catálogo de recursos con cinco recursos del dominio (Orden, LineaOrden, Material, Cliente, Movimiento) y sus combinaciones verbo-URI. Se definen los códigos de respuesta esperados por verbo. Se implementa un validador automático que comprueba la coherencia de cada combinación verbo-código.  
+  
+## Alternativas consideradas  
+- Validación manual de las combinaciones: descartado por falta de trazabilidad.  
+- Uso de códigos no estándar: descartado por romper la uniformidad de la API.  
+  
+## Consecuencias  
+- Positivas: catálogo trazable, validación automática, coherencia de la API.  
+- Negativas: la tabla de códigos por verbo puede requerir ajuste.  
+- Mitigación: revisar la tabla al final del módulo 2.
+
+Acción 4: Pulsar Ctrl+S para guardar el archivo.
+Acción 5: Verificar que los ADR-001 a ADR-006 no se han modificado.
+
+Por qué se hace: el ADR-007 documenta la decisión de adoptar el catálogo de recursos y la validación automática. Es un artefacto nuevo del punto 2.2 que no modifica los ADR existentes.
+
+Errores comunes:
+
+· Modificar los ADR anteriores: viola la regla de no modificar archivos del punto anterior.
+· Omitir la sección Alternativas consideradas: el ADR pierde valor.
+· Nombrar el archivo sin el prefijo ADR-007: rompe la convención.
+
+Verificación: el archivo docs\ADR-007-catalogo-recursos.md existe con las cinco secciones.
+
+
+---
+
+Paso 21 — Verificar que no se ha modificado ningún archivo del punto 2.1
+
+Acción 1: En la terminal, escribir cd C:\cursos\AceriaApp y pulsar Enter.
+Acción 2: Escribir fc /L modulo-2-apis-rest-aspnet-core\2.1-diseno-apis-rest\docs\ADR-006-diseno-apis-rest.md modulo-2-apis-rest-aspnet-core\2.2-recursos-verbos-codigos\docs\ADR-006-diseno-apis-rest.md y pulsar Enter.
+Acción 3: Verificar que la salida muestra FC: no differences encountered.
+Acción 4: Escribir fc /L modulo-2-apis-rest-aspnet-core\2.1-diseno-apis-rest\docs\diseno-apis-rest.md modulo-2-apis-rest-aspnet-core\2.2-recursos-verbos-codigos\docs\diseno-apis-rest.md y pulsar Enter.
+Acción 5: Verificar que la salida muestra FC: no differences encountered.
+
+Por qué se hace: la comparación con fc verifica que los documentos del punto 2.1 no se han modificado.
+
+Errores comunes:
+
+· Usar comp en lugar de fc: comp compara binarios y no muestra diferencias de texto.
+· Olvidar el flag /L: fc compara en modo ASCII y muestra líneas largas sin ajuste.
+· Comparar archivos de carpetas equivocadas: la comparación no es válida.
+
+Verificación: los dos documentos del punto 2.1 no muestran diferencias.
+
+
+---
+
+Paso 22 — Verificar la estructura del punto 2.2
+
+Acción 1: Escribir tree /F modulo-2-apis-rest-aspnet-core\2.2-recursos-verbos-codigos y pulsar Enter.
+Acción 2: Verificar que la salida muestra AceriaApp.sln, README.md, src\AceriaApp.Monolito.Api\CatalogoRecursos con las tres clases nuevas, tests\AceriaApp.CatalogoRecursos.Tests con los dos archivos de tests y docs con el catálogo de recursos y el ADR-007.
+Acción 3: Verificar que las carpetas Dominio, Infraestructura, Metricas, Diseno, Organizacion, BuenasPracticas y DisenoRest del punto 2.1 permanecen intactas.
+Acción 4: Verificar que no existe ninguna carpeta labs ni ningún archivo metaprompt.md ni verificacion.md.
+
+Por qué se hace: la verificación estructural confirma que el punto 2.2 añade archivos nuevos sin modificar los existentes.
+
+Errores comunes:
+
+· Crear carpetas auxiliares que no pertenecen a la estructura: rompe la convención.
+· Modificar las carpetas del punto 2.1: viola la regla de no modificar.
+· Omitir la carpeta CatalogoRecursos: los tests no encuentran las clases.
+
+Verificación: la estructura contiene los archivos nuevos y conserva los del punto 2.1.
+
+
+---
+
+Paso 23 — Verificar el .gitignore del punto 2.2
+
+Acción 1: Verificar que el archivo .gitignore existe en la carpeta del punto 2.2 (copiado del punto 2.1).
+Acción 2: Abrir el archivo .gitignore con Visual Studio 2026.
+Acción 3: Verificar que contiene las líneas bin/, obj/, *.user, *.suo, .vs/ y TestResults/.
+Acción 4: Verificar que no se ha modificado respecto al punto 2.1.
+Acción 5: Pulsar Ctrl+S si no hay cambios y cerrar el archivo.
+
+Por qué se hace: el .gitignore se hereda del punto 2.1 sin modificaciones. La verificación confirma que no se ha tocado.
+
+Errores comunes:
+
+· Modificar el .gitignore copiado del punto 2.1: viola la regla de no modificar archivos del punto anterior.
+· Eliminar alguna línea: el repositorio se llena de artefactos.
+· Crear el .gitignore con otro nombre: el archivo no se reconoce.
+
+Verificación: el .gitignore existe y contiene las seis líneas sin modificaciones.
+
+
+---
+
+Paso 24 — Hacer el commit del punto 2.2 y verificar el estado final
+
+Acción 1: Escribir cd C:\cursos\AceriaApp y pulsar Enter.
+Acción 2: Escribir git add . y pulsar Enter.
+Acción 3: Escribir git commit -m "Punto 2.2: recursos, verbos HTTP y códigos de respuesta" y pulsar Enter.
+Acción 4: Escribir git log --oneline y pulsar Enter para verificar los siete commits.
+Acción 5: Escribir git status y pulsar Enter para verificar que el árbol está limpio.
+
+Por qué se hace: el commit del punto 2.2 registra el estado acumulado del proyecto. Los siete commits consecutivos permiten comparar el estado del proyecto entre puntos consecutivos y entre módulos completos.
+
+Errores comunes:
+
+· No tener configurado user.name y user.email: git commit falla.
+· Añadir la carpeta bin/ y obj/ al commit: el .gitignore lo evita.
+· Hacer commit antes de git add .: no hay cambios en el índice.
+
+Verificación: git log --oneline muestra siete commits: del punto 1.1 al 1.5, del punto 2.1 y del punto 2.2. git status muestra nothing to commit, working tree clean.
+
+
+---
+
+Errores comunes del ejercicio completo
+
+Error Causa Solución
+xcopy no copia subcarpetas Falta el flag /E Ejecutar xcopy origen destino /E /I /H /Y
+Dictionary<string, int[]> no se resuelve Falta el using System.Collections.Generic; Añadir el using al principio del archivo
+Contains no se resuelve Falta el using System.Linq; Añadir el using al principio del archivo
+Where no se resuelve Falta el using System.Linq; Añadir el using al principio del archivo
+NullReferenceException en CatalogoCombinaciones No se inicializa _combinaciones Inicializar en el constructor
+KeyNotFoundException en el validador No se comprueba si el verbo existe Comprobar ContainsKey antes de acceder
+El validador acepta códigos no permitidos Falta la comprobación con Contains Revisar la segunda comprobación del método
+Should() no se resuelve Falta el paquete FluentAssertions Ejecutar dotnet add package FluentAssertions
+El proyecto de tests no compila Falta la referencia al proyecto monolítico Ejecutar dotnet add reference
+La compilación falla por el .dll bloqueado La API está en ejecución Detener la API con Ctrl+C
+
+
+---
+
+Reto resuelto paso a paso
+
+Reto: añadir un método Resumen a CatalogoCombinaciones que devuelva el número de combinaciones válidas, el número de inválidas y el porcentaje de validez, y un test que verifique el cálculo cuando hay tres válidas y dos inválidas.
+
+Paso 1: En CatalogoCombinaciones.cs, añadir el siguiente record al final del archivo:
+
+public record ResumenCombinaciones(int Validas, int Invalidas, double PorcentajeValidez);
+
+Paso 2: Explicar línea por línea:
+
+Línea 1: public record ResumenCombinaciones( → declara un contrato inmutable.
+Línea 2: int Validas, → número de combinaciones válidas.
+Línea 3: int Invalidas, → número de combinaciones inválidas.
+Línea 4: double PorcentajeValidez); → porcentaje de validez.
+
+Paso 3: En CatalogoCombinaciones.cs, añadir el siguiente método dentro de la clase:
+
+public ResumenCombinaciones Resumen(ValidadorCombinacionVerboCodigo validador)  
+{  
+    var validas = _combinaciones.Count(c => validador.Validar(c).EsValida);  
+    var invalidas = _combinaciones.Count - validas;  
+    var total = _combinaciones.Count;  
+    var porcentaje = total == 0 ? 0 : (double)validas / total * 100;  
+    return new ResumenCombinaciones(validas, invalidas, porcentaje);  
+}
+
+Paso 4: Explicar línea por línea:
+
+Línea 1: public ResumenCombinaciones Resumen(ValidadorCombinacionVerboCodigo validador) → declara el método.
+Línea 2: { → abre el cuerpo.
+Línea 3: var validas = _combinaciones.Count(c => validador.Validar(c).EsValida); → cuenta las válidas.
+Línea 4: var invalidas = _combinaciones.Count - validas; → calcula las inválidas por diferencia.
+Línea 5: var total = _combinaciones.Count; → obtiene el total.
+Línea 6: var porcentaje = total == 0 ? 0 : (double)validas / total * 100; → calcula el porcentaje con protección contra división por cero.
+Línea 7: return new ResumenCombinaciones(validas, invalidas, porcentaje); → devuelve el resumen.
+Línea 8: } → cierra el cuerpo.
+
+Paso 5: Guardar el archivo con Ctrl+S.
+
+Paso 6: En CatalogoCombinacionesTests.cs, añadir el siguiente test:
+
+[Fact]  
+public void Resumen_ConTresValidasYDosInvalidas_CalculaPorcentaje()  
+{  
+    var combinaciones = new List<CombinacionVerboCodigo>  
+    {  
+        new() { Verbo = "GET", Codigo = 200 },  
+        new() { Verbo = "POST", Codigo = 201 },  
+        new() { Verbo = "DELETE", Codigo = 204 },  
+        new() { Verbo = "GET", Codigo = 201 },  
+        new() { Verbo = "POST", Codigo = 200 }  
+    };  
+    var catalogo = new CatalogoCombinaciones(combinaciones);  
+    var validador = new ValidadorCombinacionVerboCodigo();  
+  
+    var resumen = catalogo.Resumen(validador);  
+  
+    resumen.Validas.Should().Be(3);  
+    resumen.Invalidas.Should().Be(2);  
+    resumen.PorcentajeValidez.Should().Be(60.0);  
+}
+
+Paso 7: Explicar línea por línea:
+
+Línea 1: [Fact] → marca el método como test de xUnit.
+Línea 2: public void Resumen_ConTresValidasYDosInvalidas_CalculaPorcentaje() → declara el test.
+Línea 3: { → abre el cuerpo.
+Línea 4: var combinaciones = new List<CombinacionVerboCodigo> → crea la lista.
+Línea 5: { → abre el inicializador.
+Línea 6: new() { Verbo = "GET", Codigo = 200 }, → primera válida.
+Línea 7: new() { Verbo = "POST", Codigo = 201 }, → segunda válida.
+Línea 8: new() { Verbo = "DELETE", Codigo = 204 }, → tercera válida.
+Línea 9: new() { Verbo = "GET", Codigo = 201 }, → primera inválida.
+Línea 10: new() { Verbo = "POST", Codigo = 200 } → segunda inválida.
+Línea 11: }; → cierra el inicializador.
+Línea 12: var catalogo = new CatalogoCombinaciones(combinaciones); → instancia el catálogo.
+Línea 13: var validador = new ValidadorCombinacionVerboCodigo(); → instancia el validador.
+Línea 14: var resumen = catalogo.Resumen(validador); → invoca el método.
+Línea 15: resumen.Validas.Should().Be(3); → verifica las válidas.
+Línea 16: resumen.Invalidas.Should().Be(2); → verifica las inválidas.
+Línea 17: resumen.PorcentajeValidez.Should().Be(60.0); → verifica el porcentaje.
+Línea 18: } → cierra el cuerpo.
+
+Paso 8: Ejecutar dotnet test tests\AceriaApp.CatalogoRecursos.Tests\AceriaApp.CatalogoRecursos.Tests.csproj y verificar que pasan los seis tests.
+
+Paso 9: Verificar que el método Resumen no modifica ningún archivo del punto 2.1.
+
+Paso 10: Hacer commit con git commit -m "Reto 2.2: método Resumen en CatalogoCombinaciones con cálculo de porcentaje".
+
+Verificación: la salida de dotnet test muestra Passed: 6.
+
+
+---
+
+Resultado esperado
+
+Al finalizar este punto, el alumno debe tener:
+
+· La carpeta modulo-2-apis-rest-aspnet-core/2.2-recursos-verbos-codigos/ con la solución AceriaApp.sln que contiene nueve proyectos.
+· El documento docs/catalogo-recursos.md con los recursos, verbos y códigos del proyecto.
+· El documento docs/ADR-007-catalogo-recursos.md con la decisión sobre el catálogo y la validación.
+· Las clases CombinacionVerboCodigo, ValidadorCombinacionVerboCodigo y CatalogoCombinaciones en src/AceriaApp.Monolito.Api/CatalogoRecursos/.
+· El proyecto tests/AceriaApp.CatalogoRecursos.Tests con cinco tests (seis tras el reto).
+· Los tests de los puntos 1.1 a 1.5 y 2.1 y 2.2 pasando conjuntamente con dotnet test AceriaApp.sln, total 36 pruebas (37 tras el reto).
+· Los ADR-001 a ADR-006 del punto 2.1 sin modificar.
+· Siete commits en Git: del punto 1.1 al 1.5, del punto 2.1 y del punto 2.2.
+
+
+---
+
+Conclusión y enlace al siguiente punto
+
+El punto 2.2 ha completado el diseño de la API REST con el catálogo de recursos, la semántica de los verbos HTTP y la relación sistemática entre verbo y código de respuesta. El proyecto AceriaApp dispone ahora de un catálogo documentado de recursos, un validador automático de combinaciones verbo-código y cinco tests nuevos. Esta base permite avanzar hacia el punto 2.3, donde se estudiará la validación de peticiones con FluentValidation, se aplicarán las reglas de validación a los recursos del catálogo y se devolverán errores en formato problem details.
+
+
+---
+
+Fin del punto 2.2.
+
+Espero confirmación del usuario antes de continuar con el punto 2.3.
