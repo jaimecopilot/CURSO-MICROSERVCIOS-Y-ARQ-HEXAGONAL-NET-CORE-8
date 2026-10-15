@@ -1,0 +1,137 @@
+name: M01 - E2E progresivo teoria practicas codigo
+
+on:
+  push:
+    branches:
+      - 'revision/e2e-m01-20261015'
+    paths:
+      - '.github/scripts/e2e_m01.py'
+      - '.github/workflows/m01-e2e-revision.yml'
+      - 'M01_INTRODUCCION_MICROSERVICIOS/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  estructura:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validar los 120 pasos, codigo preparado y documentacion heredada
+        run: python3 .github/scripts/e2e_m01.py --root . --mode static --out e2e-static.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-m01-matriz-120-pasos
+          path: e2e-static.json
+
+  progresion:
+    needs: estructura
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        punto: ['1.1', '1.2', '1.3', '1.4', '1.5']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Restaurar soluciones y dependencias NuGet
+        shell: bash
+        run: |
+          for sln in M01_INTRODUCCION_MICROSERVICIOS/PROYECTO/*/AceriaApp.sln; do
+            dotnet restore "$sln"
+          done
+      - name: Activar cada paso, compilar y probar codigo basico y reto
+        run: python3 .github/scripts/e2e_m01.py --root . --point ${{ matrix.punto }} --mode stage --reto --out e2e-stage-${{ matrix.punto }}.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-m01-progresivo-${{ matrix.punto }}
+          path: |
+            e2e-stage-${{ matrix.punto }}.json
+            e2e-trx-${{ matrix.punto }}/
+
+  sql_server_real:
+    # Configurar la clave secreta M01_E2E_SA_PASSWORD en el repositorio.
+    needs: estructura
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        include:
+          - { punto: '1.1', database: 'Aceria_E2E_11' }
+          - { punto: '1.2', database: 'Aceria_E2E_12' }
+          - { punto: '1.3', database: 'Aceria_E2E_13' }
+          - { punto: '1.4', database: 'Aceria_E2E_14' }
+          - { punto: '1.5', database: 'Aceria_E2E_15' }
+    services:
+      sql:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: 'Y'
+          MSSQL_PID: 'Express'
+          MSSQL_SA_PASSWORD: '${{ secrets.M01_E2E_SA_PASSWORD }}'
+        ports:
+          - 1433:1433
+    env:
+      M01_SQL_CONNECTION_STRING: 'Server=127.0.0.1,1433;Database=${{ matrix.database }};User Id=sa;Password=${{ secrets.M01_E2E_SA_PASSWORD }};Encrypt=False;TrustServerCertificate=True'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - run: dotnet tool install --global dotnet-ef --version 8.0.0
+      - name: Migracion EF Core, HTTP, OpenAPI, acumulacion tests y reto
+        run: python3 .github/scripts/e2e_m01.py --root . --point ${{ matrix.punto }} --mode sql --reto --out e2e-sql-${{ matrix.punto }}.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-m01-sql-${{ matrix.punto }}
+          path: |
+            e2e-sql-${{ matrix.punto }}.json
+            e2e-trx-${{ matrix.punto }}/
+
+  sql_express_localdb_windows:
+    needs: estructura
+    runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { punto: '1.1', database: 'Aceria_E2E_Express_11' }
+          - { punto: '1.5', database: 'Aceria_E2E_Express_15' }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Exigir SQL Server Express LocalDB funcional
+        shell: pwsh
+        run: |
+          $exe = Get-Command sqllocaldb.exe -ErrorAction SilentlyContinue
+          if (-not $exe) {
+            $found = Get-ChildItem 'C:\Program Files\Microsoft SQL Server' -Filter sqllocaldb.exe -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+            if ($found) { $env:PATH += ';' + $found.DirectoryName; Add-Content $env:GITHUB_PATH $found.DirectoryName }
+            else { throw 'SQL Server Express LocalDB no esta instalado: esta verificacion no puede aprobarse sin Express' }
+          }
+          sqllocaldb info MSSQLLocalDB
+          if ($LASTEXITCODE -ne 0) { sqllocaldb create MSSQLLocalDB }
+          sqllocaldb start MSSQLLocalDB
+          if ($LASTEXITCODE -ne 0) { throw 'No se pudo iniciar MSSQLLocalDB' }
+      - run: dotnet tool install --global dotnet-ef --version 8.0.0
+      - name: Comprobar realmente LocalDB con migracion y endpoints
+        shell: pwsh
+        env:
+          M01_SQL_CONNECTION_STRING: 'Server=(localdb)\MSSQLLocalDB;Database=${{ matrix.database }}_${{ github.run_id }};Trusted_Connection=True;TrustServerCertificate=True'
+        run: python .github/scripts/e2e_m01.py --root . --point ${{ matrix.punto }} --mode sql --reto --out e2e-express-${{ matrix.punto }}.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-m01-express-${{ matrix.punto }}
+          path: |
+            e2e-express-${{ matrix.punto }}.json
+            e2e-trx-${{ matrix.punto }}/
