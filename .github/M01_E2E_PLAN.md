@@ -1,6 +1,6 @@
 # Cobertura E2E del módulo 1 · procedimiento interno de validación
 
-El curso presenta cinco soluciones independientes. Las pruebas **nunca alteran** `PROYECTO` directamente: primero copian cada solución, luego activan secuencialmente los bloques `INICIO PASO`/`FIN PASO`, como haría el alumnado. El inventario cubre los 120 pasos, pero no presenta como automatizadas las acciones que dependen del IDE o de hacer un commit manual.
+El curso presenta cinco soluciones independientes. La CI genera una contraseña SQL de un solo uso y ejecuta SQL Server Express en un contenedor aislado, sin publicar ni versionar credenciales. Las pruebas **nunca alteran** `PROYECTO` directamente: primero copian cada solución, luego activan secuencialmente los bloques `INICIO PASO`/`FIN PASO`, como haría el alumnado. El inventario cubre los 120 pasos, pero no presenta como automatizadas las acciones que dependen del IDE o de hacer un commit manual.
 
 | Etapa | Escenario automático | Condición de éxito |
 | --- | --- | --- |
@@ -19,7 +19,7 @@ El curso presenta cinco soluciones independientes. Las pruebas **nunca alteran**
 | 1.1–1.5 | SQL Server real en contenedor y API por etapa | Cada punto crea su BD nueva, migra, expone OpenAPI y persiste una orden |
 | 1.1 y 1.5 | SQL Server **Express LocalDB** en Windows | Prueba SQL y HTTP sin sustituir Express por SQLite o InMemory |
 
-La CI Linux usa **SQL Server 2022 Developer en contenedor**, que prueba el proveedor `UseSqlServer` y el esquema relacional, pero **no sustituye la prueba de Express LocalDB**. Esta última está en un trabajo separado de Windows. Si Express no está instalado, la prueba debe fallar explícitamente, nunca aparecer como superada por una simulación.
+La CI Linux usa **SQL Server 2022 Express en contenedor**, que prueba el proveedor `UseSqlServer` y el esquema relacional, pero **no sustituye la prueba de Express LocalDB**. Esta última está en un trabajo separado de Windows. Si Express no está instalado, la prueba debe fallar explícitamente, nunca aparecer como superada por una simulación.
 
 Las acciones manuales que no pueden certificarse por CI incluyen abrir Visual Studio 2026, usar `Ctrl+K, Ctrl+U`, observar el explorador de objetos de SQL Server y crear commits personales. Se contrastan sus equivalentes observables (compilación, cambios de código activado y comportamiento de la API), pero siguen marcadas como comprobaciones manuales.
 
