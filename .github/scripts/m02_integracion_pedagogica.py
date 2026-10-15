@@ -13,7 +13,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
-from m02_pasos_especificos import obtener as paso_especifico
+from m02_pasos_especificos import obtener as paso_especifico, explicacion_especifica, error_especifico
 
 MODULE=Path("M02_APIS_REST_ASPNET_CORE")
 NAMES=["2.1-diseno-apis-rest","2.2-recursos-verbos-codigos",
@@ -369,7 +369,7 @@ despliegues productivos.
                 out+="**Código relacionado:** consulta los archivos del proyecto "
                 out+=f"`PROYECTO/{NAMES[stage-1]}` para contrastar las declaraciones "
                 out+="que acabas de añadir, sin copiar anticipadamente etapas posteriores.\n\n"
-            out+="**Explicación conceptual.** "+lesson[3]+"\n\n"
+            out+="**Por qué funciona así.** "+explicacion_especifica(stage,number)+"\n\n"
             out+="**Verificación concreta.** "+comprobacion+" "
             if number in (23,24):
                 out+="Ejecuta además las pruebas xUnit del proyecto de esta etapa "
@@ -378,22 +378,7 @@ despliegues productivos.
                 out+="Usa la herramienta HTTP o el depurador solo si este paso "
                 out+="interactúa con una ruta; los cambios de configuración y modelo "
                 out+="se verifican primero con la compilación.\n\n"
-            if stage==1:
-                fix=("Si aparece un error de proveedor SQL Server, revisa NuGet, "
-                     "la cadena LocalDB y los servicios registrados; si el código "
-                     "de la respuesta no coincide, inspecciona el patrón MapGet.")
-            elif stage==2:
-                fix=("Si una escritura devuelve 200 pero no cambia datos, busca "
-                     "SaveChangesAsync; si CreatedAtRoute falla revisa el nombre "
-                     "ObtenerOrdenPorId; si devuelve 404, comprueba el GUID.")
-            elif stage==3:
-                fix=("Si el endpoint acepta datos inválidos, comprueba que se "
-                     "ha añadido AddEndpointFilter al verbo correcto; si aparece "
-                     "una excepción de DI, registra el validador antes de Build.")
-            else:
-                fix=("Si Swagger JSON devuelve 404 en Development revisa "
-                     "UseDocumentacion y la variable de entorno; si falta una "
-                     "operación, comprueba sus metadatos y el registro en Program.")
+            fix=error_especifico(stage,number)
             out+="**Si algo falla.** "+fix+"\n\n"
         out+="### Matriz de comprobación del punto\n\n"
         out+="| Comportamiento | Resultado esperado |\n|:---|:---|\n"
