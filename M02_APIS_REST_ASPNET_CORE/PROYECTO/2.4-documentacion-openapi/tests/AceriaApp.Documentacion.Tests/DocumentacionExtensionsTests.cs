@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.Hosting;
 using System.Text.Json;
+using System.Net.Http.Json;
 using Xunit;
 namespace AceriaApp.Documentacion.Tests;
 public class DocumentacionExtensionsTests
@@ -25,6 +26,8 @@ public class DocumentacionExtensionsTests
         using var f=new WebApplicationFactory<Program>().WithWebHostBuilder(b=>b.UseEnvironment("Development"));
         using var json=JsonDocument.Parse(await f.CreateClient().GetStringAsync("/swagger/v1/swagger.json"));
         Assert.True(json.RootElement.GetProperty("paths").TryGetProperty("/api/v1/ordenes",out _));
+        var invalid = await f.CreateClient().PostAsJsonAsync("/api/v1/ordenes", new { cliente="", material="CHAPA-3MM", cantidad=-1 });
+        Assert.Equal(System.Net.HttpStatusCode.BadRequest, invalid.StatusCode);
     }
     [Fact] public async Task Swagger_NoSePublicaEnProduccion()
     {

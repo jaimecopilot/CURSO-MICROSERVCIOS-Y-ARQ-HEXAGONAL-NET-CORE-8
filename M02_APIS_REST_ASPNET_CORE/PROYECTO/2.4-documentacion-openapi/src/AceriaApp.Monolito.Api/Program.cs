@@ -22,16 +22,17 @@ app.MapGet("/api/v1/ordenes", async (AceriaDbContext db) =>
     .Produces<List<Orden>>(StatusCodes.Status200OK);
 
 // PASO 1.1.13 — Crear una orden.
-app.MapPost("/api/v1/ordenes", async (AceriaDbContext db, Orden orden) =>
+app.MapPost("/api/v1/ordenes", async (AceriaDbContext db, CrearOrdenRequest request) =>
 {
-    orden.Id = Guid.NewGuid();
-    orden.FechaCreacion = DateTime.UtcNow;
+    var orden = new Orden { Id = Guid.NewGuid(), FechaCreacion = DateTime.UtcNow, Cliente = request.Cliente, Material = request.Material, Cantidad = request.Cantidad };
     db.Ordenes.Add(orden);
     await db.SaveChangesAsync();
     return Results.Created($"/api/v1/ordenes/{orden.Id}", orden);
 })
     .WithName("CrearOrden").WithSummary("Crea una orden").WithTags("Ordenes")
-    .Produces<Orden>(StatusCodes.Status201Created);
+    .Produces<Orden>(StatusCodes.Status201Created)
+    .AddEndpointFilter<ValidationFilter<CrearOrdenRequest>>()
+    .ProducesValidationProblem(StatusCodes.Status400BadRequest);
 
 // RETO 1.1: descomentar este bloque completo para activar GET por id.
 // app.MapGet("/api/v1/ordenes/{id:guid}", async (Guid id, AceriaDbContext db) =>
