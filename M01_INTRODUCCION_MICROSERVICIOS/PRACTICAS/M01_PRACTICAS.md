@@ -67,7 +67,7 @@
 
 ---
 
-### Paso 3 — Crear la estructura de carpetas del módulo y del punto
+### Paso 3 — Inspeccionar la estructura de carpetas ya preparada
 
 **Acción 1:** Abrir o localizar `src/` en la carpeta del punto 1.1; el recurso ya está incluido en la solución preparada.
 
@@ -91,7 +91,7 @@
 
 ---
 
-### Paso 4 — Crear la solución AceriaApp.sln dentro del punto
+### Paso 4 — Localizar y examinar la solución AceriaApp.sln
 
 **Acción 1:** Abrir o localizar `AceriaApp.sln` en la carpeta del punto 1.1; el recurso ya está incluido en la solución preparada.
 
@@ -111,7 +111,7 @@
 
 ---
 
-### Paso 5 — Crear el proyecto de API monolítico de referencia
+### Paso 5 — Examinar el proyecto de API monolítico incluido
 
 **Acción 1:** Abrir o localizar `src/AceriaApp.Monolito.Api/AceriaApp.Monolito.Api.csproj` en la carpeta del punto 1.1; el recurso ya está incluido en la solución preparada.
 
@@ -135,7 +135,7 @@
 
 ---
 
-### Paso 6 — Añadir el proyecto monolítico a la solución
+### Paso 6 — Verificar la incorporación del proyecto monolítico a la solución
 
 **Acción 1:** Abrir o localizar `AceriaApp.sln` en la carpeta del punto 1.1; el recurso ya está incluido en la solución preparada.
 
@@ -155,7 +155,7 @@
 
 ---
 
-### Paso 7 — Crear el proyecto de tests
+### Paso 7 — Examinar el proyecto de tests incluido
 
 **Acción 1:** Abrir o localizar `tests/AceriaApp.Monolito.Tests/AceriaApp.Monolito.Tests.csproj` en la carpeta del punto 1.1; el recurso ya está incluido en la solución preparada.
 
@@ -179,7 +179,7 @@
 
 ---
 
-### Paso 8 — Añadir el proyecto de tests a la solución y referenciar el monolito
+### Paso 8 — Verificar la referencia de tests al monolito
 
 **Acción 1:** Abrir o localizar `AceriaApp.sln` en la carpeta del punto 1.1; el recurso ya está incluido en la solución preparada.
 
@@ -201,7 +201,7 @@
 
 ---
 
-### Paso 9 — Añadir los paquetes NuGet de EF Core al proyecto monolítico
+### Paso 9 — Comprobar los paquetes NuGet de EF Core ya instalados
 
 **Acción 1:** Abrir o localizar `src/AceriaApp.Monolito.Api/AceriaApp.Monolito.Api.csproj` en la carpeta del punto 1.1; el recurso ya está incluido en la solución preparada.
 
@@ -225,7 +225,7 @@
 
 ---
 
-### Paso 10 — Configurar la cadena de conexión en appsettings.json
+### Paso 10 — Comprobar la cadena de conexión en appsettings.json
 
 **Acción 1:** Abrir o localizar `src/AceriaApp.Monolito.Api/appsettings.json` en la carpeta del punto 1.1; el recurso ya está incluido en la solución preparada.
 
@@ -233,6 +233,7 @@
 
 **Acción 3:** Confirmar la ruta, el nombre y los elementos declarados en `src/AceriaApp.Monolito.Api/appsettings.json`; conservar los archivos heredados sin modificación.
 
+```json
 {
   "ConnectionStrings": {
     "AceriaDb": "Server=.\\SQLEXPRESS;Database=AceriaDb;Trusted_Connection=True;TrustServerCertificate=True"
@@ -245,6 +246,7 @@
   },
   "AllowedHosts": "*"
 }
+```
 
 
 **Acción 4:** Guardar únicamente si se ha realizado una corrección explícitamente indicada en esta práctica.
@@ -646,7 +648,7 @@ public class OrdenTests
 
 ---
 
-### Paso 19 — Crear el ADR de la decisión arquitectónica
+### Paso 19 — Examinar el ADR de la decisión arquitectónica
 
 **Acción 1:** Abrir o localizar `docs/ADR-001-monolito-vs-microservicios.md` en la carpeta del punto 1.1; el recurso ya está incluido en la solución preparada.
 
@@ -692,7 +694,7 @@ Se adopta un monolito modular como punto de partida, organizado por capas (prese
 
 ---
 
-### Paso 20 — Crear el README del punto
+### Paso 20 — Examinar el README del punto
 
 **Acción 1:** Abrir o localizar `README.md` en la carpeta del punto 1.1; el recurso ya está incluido en la solución preparada.
 
@@ -781,7 +783,7 @@ Este es el primer punto del curso. No hay punto anterior.
 
 ---
 
-### Paso 23 — Crear el .gitignore de la solución
+### Paso 23 — Verificar el .gitignore incluido
 
 **Acción 1:** Abrir o localizar `.gitignore` en la carpeta del punto 1.1; el recurso ya está incluido en la solución preparada.
 
@@ -815,45 +817,46 @@ TestResults/
 
 ### Paso 24 — Inicializar Git, hacer el commit inicial y verificar el estado final
 
-**Acción 1:** Escribir cd .... y pulsar Enter para volver a la raíz del repositorio AceriaApp.
+**Acción 1:** Situarse en la raíz del repositorio clonado (la carpeta que contiene `.git`) y ejecutar:
 
-**Acción 2:** Escribir git init y pulsar Enter (si no está inicializado).
+```powershell
+git status --short
+```
 
-**Acción 3:** Escribir git add . y pulsar Enter.
+**Acción 2:** Identificar los archivos que el alumno haya modificado realmente. Los proyectos y documentos de referencia ya vienen versionados: no hay que ejecutar `git init` ni crear un repositorio dentro de cada punto.
 
-**Acción 4:** Escribir git commit -m "Punto 1.1: estructura inicial del proyecto AceriaApp" y pulsar Enter.
+**Acción 3:** Si existen cambios propios que se desea conservar, preparar únicamente esos archivos mediante `git add -- <ruta-del-archivo>`. Si no existen cambios, omitir el commit: una copia recién clonada puede estar correctamente terminada.
 
-**Acción 5:** Escribir git log --oneline y pulsar Enter para verificar el commit y git status para verificar que el árbol está limpio.
+**Acción 4:** Cuando haya cambios preparados, ejecutar `git diff --cached --stat` y, tras revisarlos, `git commit -m "Punto 1.1: ejercicios de arquitectura monolítica"`. No se necesita crear un número predeterminado de commits, ya que el historial previo depende de la distribución del curso.
 
-**Por qué se hace:** el commit inicial registra el estado del punto 1.1 en el historial de Git. Cada punto del curso tendrá su propio commit para facilitar la comparación.
+**Acción 5:** Ejecutar `git status` y `git log -1 --oneline`. Interpretar la salida: un árbol limpio indica que no quedan cambios locales pendientes; el último commit puede ser el del repositorio original si no se han realizado modificaciones.
+
+**Por qué se hace:** Git registra de forma segura los cambios que el alumno decide conservar y permite comparar versiones. No debe utilizarse `git add .` de manera indiscriminada cuando existan otros archivos sin revisar.
 
 **Errores comunes:**
 
-- No tener configurado user.name y user.email: git commit falla. Ejecutar git config --global user.name "Nombre" y git config --global user.email "correo@dominio.com".
-- Añadir la carpeta bin/ y obj/ al commit: el .gitignore del paso 23 lo evita.
-- Hacer commit antes de git add .: no hay cambios en el índice.
+- Ejecutar `git init` en la carpeta independiente del ejercicio y producir un repositorio anidado.
+- Intentar `git commit` sin cambios preparados y confundir el mensaje `nothing to commit` con un error del ejercicio.
+- Añadir archivos de `bin/` o `obj/` por no revisar el estado y las exclusiones.
 
-**Verificación:** git log --oneline debe mostrar un commit con el mensaje Punto 1.1: estructura inicial del proyecto AceriaApp. git status debe mostrar nothing to commit, working tree clean.
-
-
-**Nota de trazabilidad:** en una descarga del repositorio puede no haber cambios nuevos que confirmar. Antes de ejecutar `git commit`, usar `git status` y confirmar únicamente los archivos efectivamente modificados durante el recorrido. No ejecutar `git init` dentro de cada punto: la raíz del repositorio ya contiene el historial.
+**Verificación:** `git status` describe fielmente los cambios locales; cuando se ha creado un commit, `git log -1 --oneline` refleja ese registro. La ejecución funcional y los tests se comprueban en los pasos anteriores, no mediante Git.
 
 ---
 
 ## Errores comunes del ejercicio completo
 
-Error Causa Solución
-dotnet ef no se reconoce La herramienta dotnet-ef no está instalada globalmente Ejecutar dotnet tool install --global dotnet-ef --version 8.0.0
-Unable to create an object of type 'AceriaDbContext' Falta el paquete Microsoft.EntityFrameworkCore.Design Ejecutar dotnet add package Microsoft.EntityFrameworkCore.Design --version 8.0.0
-A network-related or instance-specific error SQL Server Express no está arrancado Abrir Services.msc y arrancar SQL Server (SQLEXPRESS)
-InvalidOperationException: ConnectionString 'AceriaDb' not found La clave de la cadena de conexión no coincide Verificar que appsettings.json contiene "AceriaDb" exactamente
-The name 'UseSqlServer' does not exist Falta el using Microsoft.EntityFrameworkCore; Añadir el using al principio de Program.cs
-Swagger no aparece El entorno no es Development Verificar ASPNETCORE_ENVIRONMENT=Development o ejecutar dotnet run --environment Development
-El POST devuelve 400 El cuerpo JSON no coincide con la entidad Orden Verificar que el JSON tiene cliente, material, cantidad
-El GET devuelve 500 La base de datos no existe Ejecutar dotnet ef database update
-dotnet test no encuentra tests El proyecto de tests no está en la solución Ejecutar dotnet sln add tests\AceriaApp.Monolito.Tests\AceriaApp.Monolito.Tests.csproj
-El commit de Git falla user.name y user.email no configurados Ejecutar git config --global user.name y git config --global user.email
-
+| Error | Causa | Solución |
+|---|---|---|
+| dotnet ef no se reconoce | La herramienta dotnet-ef no está instalada globalmente | Ejecutar dotnet tool install --global dotnet-ef --version 8.0.0 |
+| Unable to create an object of type 'AceriaDbContext' | Falta el paquete Microsoft.EntityFrameworkCore.Design | Ejecutar dotnet add package Microsoft.EntityFrameworkCore.Design --version 8.0.0 |
+| A network-related or instance-specific error | SQL Server Express no está arrancado | Abrir Services.msc y arrancar SQL Server (SQLEXPRESS) |
+| InvalidOperationException: ConnectionString 'AceriaDb' not found | La clave de la cadena de conexión no coincide | Verificar que appsettings.json contiene "AceriaDb" exactamente |
+| The name 'UseSqlServer' does not exist | Falta el using Microsoft.EntityFrameworkCore; | Añadir el using al principio de Program.cs |
+| Swagger no aparece | El entorno no es Development | Verificar ASPNETCORE_ENVIRONMENT=Development o ejecutar dotnet run --environment Development |
+| El POST devuelve 400 | El cuerpo JSON no coincide con la entidad Orden | Verificar que el JSON tiene cliente, material, cantidad |
+| El GET devuelve 500 | La base de datos no existe | Ejecutar dotnet ef database update |
+| dotnet test no encuentra tests | El proyecto de tests no está en la solución | Ejecutar dotnet sln add tests\AceriaApp.Monolito.Tests\AceriaApp.Monolito.Tests.csproj |
+| El commit de Git falla | user.name y user.email no configurados | Ejecutar git config --global user.name y git config --global user.email |
 
 ---
 
@@ -1444,7 +1447,7 @@ public class AnalizadorMonolito
 
 ---
 
-### Paso 10 — Crear el proyecto de tests del punto 1.2
+### Paso 10 — Inspeccionar el proyecto de tests incluido
 
 **Acción 1:** Abrir `tests/AceriaApp.Metricas.Tests/AceriaApp.Metricas.Tests.csproj` en el Explorador de soluciones.
 
@@ -2002,25 +2005,29 @@ Se adoptan dos indicadores objetivos: el índice de acoplamiento entre proyectos
 
 ### Paso 21 — Verificar que no se ha modificado ningún archivo del punto 1.1
 
-**Acción 1:** En la terminal, escribir cd C:\cursos\AceriaApp\modulo-1-introduccion-microservicios y pulsar Enter.
+**Acción 1:** Abrir una terminal en `M01_INTRODUCCION_MICROSERVICIOS/PROYECTO`, dentro de la copia clonada del repositorio. No utilizar rutas absolutas de ejemplo: la ubicación depende de dónde haya descargado el alumno el curso.
 
-**Acción 2:** Escribir fc /L 1.1-monolito-vs-microservicios\docs\ADR-001-monolito-vs-microservicios.md 1.2-ventajas-inconvenientes\docs\ADR-001-monolito-vs-microservicios.md y pulsar Enter.
+**Acción 2:** Comparar las dos copias heredadas del ADR con el comando de Windows:
 
-**Acción 3:** Verificar que la salida muestra FC: no differences encountered.
+```powershell
+fc.exe /L "1.1-monolito-vs-microservicios\docs\ADR-001-monolito-vs-microservicios.md" "1.2-ventajas-inconvenientes\docs\ADR-001-monolito-vs-microservicios.md"
+```
 
-**Acción 4:** Escribir fc /L 1.1-monolito-vs-microservicios\README.md 1.2-ventajas-inconvenientes\README.md y pulsar Enter.
+**Acción 3:** Confirmar que `fc.exe` indica que no encuentra diferencias. De haberlas, identificar el cambio antes de continuar, sin sobrescribir el material del punto anterior.
 
-**Acción 5:** Verificar que la salida muestra diferencias, porque el README del punto 1.2 es nuevo y describe los añadidos.
+**Acción 4:** Comparar también `README.md` entre las dos carpetas: este documento debe ser diferente porque cada punto explica su propia ampliación.
 
-**Por qué se hace:** la comparación con fc verifica que el ADR-001 no se ha modificado y que el README del punto 1.2 es distinto al del punto 1.1.
+**Acción 5:** Volver a la solución del punto 1.2 y verificar que los documentos heredados permanecen disponibles junto a los nuevos.
+
+**Por qué se hace:** cada solución es una fotografía independiente y acumulativa. Contrastar los documentos repetidos permite detectar modificaciones accidentales del material heredado. El resultado no sustituye la compilación ni demuestra por sí mismo que el código esté intacto.
 
 **Errores comunes:**
 
-- Usar comp en lugar de fc: comp compara binarios y no muestra diferencias de texto.
-- Olvidar el flag /L: fc compara en modo ASCII y muestra líneas largas sin ajuste.
-- Comparar archivos de carpetas equivocadas: la comparación no es válida.
+- Ejecutar la comparación desde la carpeta de un punto concreto, en vez de `PROYECTO`: las rutas relativas dejan de ser válidas.
+- Confundir un README propio de cada punto, que cambia intencionadamente, con un documento heredado, que debe conservarse.
+- Interpretar una diferencia como autorización para sobrescribir el proyecto anterior.
 
-**Verificación:** el ADR-001 no muestra diferencias. El README del punto 1.2 muestra diferencias respecto al del punto 1.1.
+**Verificación:** los documentos heredados comparados coinciden. Si existe una diferencia, detener esa comprobación y determinar su origen antes de avanzar.
 
 ---
 
@@ -2080,45 +2087,46 @@ TestResults/
 
 ### Paso 24 — Hacer el commit del punto 1.2 y verificar el estado final
 
-**Acción 1:** Escribir cd C:\cursos\AceriaApp y pulsar Enter.
+**Acción 1:** Situarse en la raíz del repositorio clonado (la carpeta que contiene `.git`) y ejecutar:
 
-**Acción 2:** Escribir git add . y pulsar Enter.
+```powershell
+git status --short
+```
 
-**Acción 3:** Escribir git commit -m "Punto 1.2: análisis de ventajas e inconvenientes y métricas de acoplamiento" y pulsar Enter.
+**Acción 2:** Identificar los archivos que el alumno haya modificado realmente. Los proyectos y documentos de referencia ya vienen versionados: no hay que ejecutar `git init` ni crear un repositorio dentro de cada punto.
 
-**Acción 4:** Escribir git log --oneline y pulsar Enter para verificar los dos commits.
+**Acción 3:** Si existen cambios propios que se desea conservar, preparar únicamente esos archivos mediante `git add -- <ruta-del-archivo>`. Si no existen cambios, omitir el commit: una copia recién clonada puede estar correctamente terminada.
 
-**Acción 5:** Escribir git status y pulsar Enter para verificar que el árbol está limpio.
+**Acción 4:** Cuando haya cambios preparados, ejecutar `git diff --cached --stat` y, tras revisarlos, `git commit -m "Punto 1.2: avance de arquitectura de microservicios"`. No se necesita crear un número predeterminado de commits, ya que el historial previo depende de la distribución del curso.
 
-**Por qué se hace:** el commit del punto 1.2 registra el estado acumulado del proyecto. Los dos commits consecutivos permiten comparar el punto 1.1 y el punto 1.2 con git diff.
+**Acción 5:** Ejecutar `git status` y `git log -1 --oneline`. Interpretar la salida: un árbol limpio indica que no quedan cambios locales pendientes; el último commit puede ser el del repositorio original si no se han realizado modificaciones.
+
+**Por qué se hace:** Git registra de forma segura los cambios que el alumno decide conservar y permite comparar versiones. No debe utilizarse `git add .` de manera indiscriminada cuando existan otros archivos sin revisar.
 
 **Errores comunes:**
 
-- No tener configurado user.name y user.email: git commit falla.
-- Añadir la carpeta bin/ y obj/ al commit: el .gitignore lo evita.
-- Hacer commit antes de git add .: no hay cambios en el índice.
+- Ejecutar `git init` en la carpeta independiente del ejercicio y producir un repositorio anidado.
+- Intentar `git commit` sin cambios preparados y confundir el mensaje `nothing to commit` con un error del ejercicio.
+- Añadir archivos de `bin/` o `obj/` por no revisar el estado y las exclusiones.
 
-**Verificación:** git log --oneline muestra dos commits: Punto 1.1: estructura inicial del proyecto AceriaApp y Punto 1.2: análisis de ventajas e inconvenientes y métricas de acoplamiento. git status muestra nothing to commit, working tree clean.
-
-
-**Nota de trazabilidad:** en una descarga del repositorio puede no haber cambios nuevos que confirmar. Antes de ejecutar `git commit`, usar `git status` y confirmar únicamente los archivos efectivamente modificados durante el recorrido. No ejecutar `git init` dentro de cada punto: la raíz del repositorio ya contiene el historial.
+**Verificación:** `git status` describe fielmente los cambios locales; cuando se ha creado un commit, `git log -1 --oneline` refleja ese registro. La ejecución funcional y los tests se comprueban en los pasos anteriores, no mediante Git.
 
 ---
 
 ## Errores comunes del ejercicio completo
 
-Error Causa Solución
-xcopy no copia subcarpetas Falta el flag /E Ejecutar xcopy origen destino /E /I /H /Y
-fc muestra diferencias en el ADR-001 Se ha modificado el archivo del punto 1.1 Restaurar el ADR-001 desde el punto 1.1
-DivideByZeroException en IndiceAcoplamiento No se comprueba el divisor Añadir la comprobación if (NumeroDeProyectos == 0)
-NullReferenceException en AnalizadorMonolito No se inicializa _servicios Inicializar en el constructor
-The name 'Sum' does not exist Falta el using System.Linq; Añadir el using al principio del archivo
-The name 'List' does not exist Falta el using System.Collections.Generic; Añadir el using al principio del archivo
-Should() no se resuelve Falta el paquete FluentAssertions Ejecutar dotnet add package FluentAssertions
-El proyecto de tests no compila Falta la referencia al proyecto monolítico Ejecutar dotnet add reference
-El commit de Git incluye bin/ y obj/ Falta el .gitignore Crear el .gitignore con bin/ y obj/
-La compilación falla por el .dll bloqueado La API está en ejecución Detener la API con Ctrl+C
-
+| Error | Causa | Solución |
+|---|---|---|
+| xcopy no copia subcarpetas | Falta el flag /E | Ejecutar xcopy origen destino /E /I /H /Y |
+| fc muestra diferencias en el ADR-001 | Se ha modificado el archivo del punto 1.1 | Restaurar el ADR-001 desde el punto 1.1 |
+| DivideByZeroException en IndiceAcoplamiento | No se comprueba el divisor | Añadir la comprobación if (NumeroDeProyectos == 0) |
+| NullReferenceException en AnalizadorMonolito | No se inicializa _servicios | Inicializar en el constructor |
+| The name 'Sum' does not exist | Falta el using System.Linq; | Añadir el using al principio del archivo |
+| The name 'List' does not exist | Falta el using System.Collections.Generic; | Añadir el using al principio del archivo |
+| Should() no se resuelve | Falta el paquete FluentAssertions | Ejecutar dotnet add package FluentAssertions |
+| El proyecto de tests no compila | Falta la referencia al proyecto monolítico | Ejecutar dotnet add reference |
+| El commit de Git incluye bin/ y obj/ | Falta el .gitignore | Crear el .gitignore con bin/ y obj/ |
+| La compilación falla por el .dll bloqueado | La API está en ejecución | Detener la API con Ctrl+C |
 
 ---
 
@@ -2686,27 +2694,29 @@ public class CatalogoLimites
 
 ### Paso 10 — Añadir el using necesario en CatalogoLimites
 
-**Acción 1:** Abrir `tests/AceriaApp.Diseno.Tests/AceriaApp.Diseno.Tests.csproj` en el Explorador de soluciones.
+**Acción 1:** Abrir `src/AceriaApp.Monolito.Api/Diseno/CatalogoLimites.cs` en la solución del punto 1.3 y localizar `INICIO PASO 1.3.9`.
 
-**Acción 2:** Ejecutar `dotnet sln AceriaApp.sln list` y comprobar que `AceriaApp.Diseno.Tests` aparece en la solución.
+**Acción 2:** Inspeccionar las directivas `using` del bloque preparado. La activación del paso 1.3.9 ya incluye las directivas necesarias: no hay que copiarlas por segunda vez.
 
-**Acción 3:** Inspeccionar `tests/AceriaApp.Diseno.Tests/AceriaApp.Diseno.Tests.csproj` y confirmar la referencia al proyecto `AceriaApp.Monolito.Api` y el paquete `FluentAssertions`; no instalar duplicados.
+**Acción 3:** Tras activar el bloque del paso 9, comprobar que el archivo contiene `using System.Linq;` sin comentarios. Si la directiva ya está presente, conservarla.
 
-**Acción 4:** Ejecutar `dotnet restore AceriaApp.sln` y confirmar que la restauración termina sin errores.
+**Acción 4:** Relacionar `List<LimiteServicio>` con el almacenamiento del catálogo y `Where` con el filtrado de sus elementos. Explicar por qué `Where` es una extensión de LINQ sobre colecciones.
 
-**Por qué se hace:** el método Where pertenece a System.Linq. En proyectos con ImplicitUsings desactivado, hay que añadir el using explícito.
+**Acción 5:** Guardar el archivo y comprobar que el IDE reconoce las referencias. La compilación global se realizará después de activar el resto del código y de las pruebas del punto.
+
+**Por qué se hace:** distinguir una dependencia real del código de una directiva importada evita cambios duplicados. Las directivas del bloque preparado se activan con el propio ejercicio, y no mediante una modificación del proyecto de tests.
 
 **Errores comunes:**
 
-- Añadir using System.Collections.Generic; en lugar de System.Linq: no resuelve Where.
-- Añadir el using después del namespace: el compilador no lo reconoce.
-- Olvidar el using y confiar en ImplicitUsings: el proyecto puede tenerlo desactivado.
+- Abrir el archivo `.csproj` de tests en lugar de la clase que utiliza `Where`: son tareas diferentes.
+- Repetir una directiva `using` que ya viene preparada, en vez de verificar su activación.
+- Descomentar las líneas opcionales del reto junto con las del itinerario básico.
 
-**Verificación:** CatalogoLimites.cs compila sin errores y no muestra subrayados rojos.
+**Verificación:** al terminar la activación de los pasos de código pertinentes, la clase se reconoce sin errores de tipos o extensiones LINQ. El `.csproj` de tests no se modifica en este paso.
 
 ---
 
-### Paso 11 — Crear el proyecto de tests del punto 1.3
+### Paso 11 — Inspeccionar el proyecto de tests incluido
 
 **Acción 1:** Abrir `tests/AceriaApp.Diseno.Tests/AceriaApp.Diseno.Tests.csproj` en el Explorador de soluciones.
 
@@ -3194,25 +3204,33 @@ Se adoptan ocho principios: responsabilidad única, ocultación de información,
 
 ### Paso 21 — Verificar que no se ha modificado ningún archivo del punto 1.2
 
-**Acción 1:** En la terminal, escribir cd C:\cursos\AceriaApp\modulo-1-introduccion-microservicios y pulsar Enter.
+**Acción 1:** Abrir una terminal en `M01_INTRODUCCION_MICROSERVICIOS/PROYECTO`, dentro de la copia clonada del repositorio. No utilizar rutas absolutas de ejemplo: la ubicación depende de dónde haya descargado el alumno el curso.
 
-**Acción 2:** Escribir fc /L 1.2-ventajas-inconvenientes\docs\ADR-002-metricas-acoplamiento.md 1.3-principios-diseno\docs\ADR-002-metricas-acoplamiento.md y pulsar Enter.
+**Acción 2:** Comparar las dos copias heredadas del ADR con el comando de Windows:
 
-**Acción 3:** Verificar que la salida muestra FC: no differences encountered.
+```powershell
+fc.exe /L "1.2-ventajas-inconvenientes\docs\ADR-002-metricas-acoplamiento.md" "1.3-principios-diseno\docs\ADR-002-metricas-acoplamiento.md"
+```
 
-**Acción 4:** Escribir fc /L 1.2-ventajas-inconvenientes\docs\analisis-ventajas-inconvenientes.md 1.3-principios-diseno\docs\analisis-ventajas-inconvenientes.md y pulsar Enter.
+**Acción 3:** Confirmar que `fc.exe` indica que no encuentra diferencias. De haberlas, identificar el cambio antes de continuar, sin sobrescribir el material del punto anterior.
 
-**Acción 5:** Verificar que la salida muestra FC: no differences encountered.
+**Acción 4:** Repetir la comprobación con el documento heredado `analisis-ventajas-inconvenientes.md`:
 
-**Por qué se hace:** la comparación con fc verifica que los documentos del punto 1.2 no se han modificado.
+```powershell
+fc.exe /L "1.2-ventajas-inconvenientes\docs\analisis-ventajas-inconvenientes.md" "1.3-principios-diseno\docs\analisis-ventajas-inconvenientes.md"
+```
+
+**Acción 5:** Volver a la solución del punto 1.3 y verificar que los documentos heredados permanecen disponibles junto a los nuevos.
+
+**Por qué se hace:** cada solución es una fotografía independiente y acumulativa. Contrastar los documentos repetidos permite detectar modificaciones accidentales del material heredado. El resultado no sustituye la compilación ni demuestra por sí mismo que el código esté intacto.
 
 **Errores comunes:**
 
-- Usar comp en lugar de fc: comp compara binarios y no muestra diferencias de texto.
-- Olvidar el flag /L: fc compara en modo ASCII y muestra líneas largas sin ajuste.
-- Comparar archivos de carpetas equivocadas: la comparación no es válida.
+- Ejecutar la comparación desde la carpeta de un punto concreto, en vez de `PROYECTO`: las rutas relativas dejan de ser válidas.
+- Confundir un README propio de cada punto, que cambia intencionadamente, con un documento heredado, que debe conservarse.
+- Interpretar una diferencia como autorización para sobrescribir el proyecto anterior.
 
-**Verificación:** los dos documentos del punto 1.2 no muestran diferencias.
+**Verificación:** los documentos heredados comparados coinciden. Si existe una diferencia, detener esa comprobación y determinar su origen antes de avanzar.
 
 ---
 
@@ -3264,45 +3282,46 @@ Se adoptan ocho principios: responsabilidad única, ocultación de información,
 
 ### Paso 24 — Hacer el commit del punto 1.3 y verificar el estado final
 
-**Acción 1:** Escribir cd C:\cursos\AceriaApp y pulsar Enter.
+**Acción 1:** Situarse en la raíz del repositorio clonado (la carpeta que contiene `.git`) y ejecutar:
 
-**Acción 2:** Escribir git add . y pulsar Enter.
+```powershell
+git status --short
+```
 
-**Acción 3:** Escribir git commit -m "Punto 1.3: principios de diseño y validación de límites de servicio" y pulsar Enter.
+**Acción 2:** Identificar los archivos que el alumno haya modificado realmente. Los proyectos y documentos de referencia ya vienen versionados: no hay que ejecutar `git init` ni crear un repositorio dentro de cada punto.
 
-**Acción 4:** Escribir git log --oneline y pulsar Enter para verificar los tres commits.
+**Acción 3:** Si existen cambios propios que se desea conservar, preparar únicamente esos archivos mediante `git add -- <ruta-del-archivo>`. Si no existen cambios, omitir el commit: una copia recién clonada puede estar correctamente terminada.
 
-**Acción 5:** Escribir git status y pulsar Enter para verificar que el árbol está limpio.
+**Acción 4:** Cuando haya cambios preparados, ejecutar `git diff --cached --stat` y, tras revisarlos, `git commit -m "Punto 1.3: avance de arquitectura de microservicios"`. No se necesita crear un número predeterminado de commits, ya que el historial previo depende de la distribución del curso.
 
-**Por qué se hace:** el commit del punto 1.3 registra el estado acumulado del proyecto. Los tres commits consecutivos permiten comparar los puntos 1.1, 1.2 y 1.3 con git diff.
+**Acción 5:** Ejecutar `git status` y `git log -1 --oneline`. Interpretar la salida: un árbol limpio indica que no quedan cambios locales pendientes; el último commit puede ser el del repositorio original si no se han realizado modificaciones.
+
+**Por qué se hace:** Git registra de forma segura los cambios que el alumno decide conservar y permite comparar versiones. No debe utilizarse `git add .` de manera indiscriminada cuando existan otros archivos sin revisar.
 
 **Errores comunes:**
 
-- No tener configurado user.name y user.email: git commit falla.
-- Añadir la carpeta bin/ y obj/ al commit: el .gitignore lo evita.
-- Hacer commit antes de git add .: no hay cambios en el índice.
+- Ejecutar `git init` en la carpeta independiente del ejercicio y producir un repositorio anidado.
+- Intentar `git commit` sin cambios preparados y confundir el mensaje `nothing to commit` con un error del ejercicio.
+- Añadir archivos de `bin/` o `obj/` por no revisar el estado y las exclusiones.
 
-**Verificación:** git log --oneline muestra tres commits: Punto 1.1, Punto 1.2 y Punto 1.3. git status muestra nothing to commit, working tree clean.
-
-
-**Nota de trazabilidad:** en una descarga del repositorio puede no haber cambios nuevos que confirmar. Antes de ejecutar `git commit`, usar `git status` y confirmar únicamente los archivos efectivamente modificados durante el recorrido. No ejecutar `git init` dentro de cada punto: la raíz del repositorio ya contiene el historial.
+**Verificación:** `git status` describe fielmente los cambios locales; cuando se ha creado un commit, `git log -1 --oneline` refleja ese registro. La ejecución funcional y los tests se comprueban en los pasos anteriores, no mediante Git.
 
 ---
 
 ## Errores comunes del ejercicio completo
 
-Error Causa Solución
-xcopy no copia subcarpetas Falta el flag /E Ejecutar xcopy origen destino /E /I /H /Y
-List<string> no se resuelve Falta el using System.Collections.Generic; Añadir el using al principio del archivo
-Where no se resuelve Falta el using System.Linq; Añadir el using al principio del archivo
-NullReferenceException en CatalogoLimites No se inicializa _limites Inicializar en el constructor
-El validador no detecta errores Falta alguna comprobación Revisar las seis comprobaciones del método Validar
-El test de límite válido falla El límite tiene más de tres conceptos o más de tres dependencias Ajustar el límite de prueba
-Should() no se resuelve Falta el paquete FluentAssertions Ejecutar dotnet add package FluentAssertions
-El proyecto de tests no compila Falta la referencia al proyecto monolítico Ejecutar dotnet add reference
-La compilación falla por el .dll bloqueado La API está en ejecución Detener la API con Ctrl+C
-El commit incluye bin/ y obj/ Falta el .gitignore Verificar que el .gitignore está presente
-
+| Error | Causa | Solución |
+|---|---|---|
+| xcopy no copia subcarpetas | Falta el flag /E | Ejecutar xcopy origen destino /E /I /H /Y |
+| List<string> no se resuelve | Falta el using System.Collections.Generic; | Añadir el using al principio del archivo |
+| Where no se resuelve | Falta el using System.Linq; | Añadir el using al principio del archivo |
+| NullReferenceException en CatalogoLimites | No se inicializa _limites | Inicializar en el constructor |
+| El validador no detecta errores | Falta alguna comprobación | Revisar las seis comprobaciones del método Validar |
+| El test de límite válido falla | El límite tiene más de tres conceptos o más de tres dependencias | Ajustar el límite de prueba |
+| Should() no se resuelve | Falta el paquete FluentAssertions | Ejecutar dotnet add package FluentAssertions |
+| El proyecto de tests no compila | Falta la referencia al proyecto monolítico | Ejecutar dotnet add reference |
+| La compilación falla por el .dll bloqueado | La API está en ejecución | Detener la API con Ctrl+C |
+| El commit incluye bin/ y obj/ | Falta el .gitignore | Verificar que el .gitignore está presente |
 
 ---
 
@@ -3871,27 +3890,29 @@ public class CatalogoProyectos
 
 ### Paso 10 — Añadir el using necesario en CatalogoProyectos
 
-**Acción 1:** Abrir `tests/AceriaApp.Organizacion.Tests/AceriaApp.Organizacion.Tests.csproj` en el Explorador de soluciones.
+**Acción 1:** Abrir `src/AceriaApp.Monolito.Api/Organizacion/CatalogoProyectos.cs` en la solución del punto 1.4 y localizar `INICIO PASO 1.4.9`.
 
-**Acción 2:** Ejecutar `dotnet sln AceriaApp.sln list` y comprobar que `AceriaApp.Organizacion.Tests` aparece en la solución.
+**Acción 2:** Inspeccionar las directivas `using` del bloque preparado. La activación del paso 1.4.9 ya incluye las directivas necesarias: no hay que copiarlas por segunda vez.
 
-**Acción 3:** Inspeccionar `tests/AceriaApp.Organizacion.Tests/AceriaApp.Organizacion.Tests.csproj` y confirmar la referencia al proyecto `AceriaApp.Monolito.Api` y el paquete `FluentAssertions`; no instalar duplicados.
+**Acción 3:** Tras activar el bloque del paso 9, comprobar que el archivo contiene `using System.Linq;` sin comentarios. Si la directiva ya está presente, conservarla.
 
-**Acción 4:** Ejecutar `dotnet restore AceriaApp.sln` y confirmar que la restauración termina sin errores.
+**Acción 4:** Relacionar `List<string>` con el almacenamiento del catálogo y `Where` con el filtrado de sus elementos. Explicar por qué `Where` es una extensión de LINQ sobre colecciones.
 
-**Por qué se hace:** el método Where pertenece a System.Linq. En proyectos con ImplicitUsings desactivado, hay que añadir el using explícito.
+**Acción 5:** Guardar el archivo y comprobar que el IDE reconoce las referencias. La compilación global se realizará después de activar el resto del código y de las pruebas del punto.
+
+**Por qué se hace:** distinguir una dependencia real del código de una directiva importada evita cambios duplicados. Las directivas del bloque preparado se activan con el propio ejercicio, y no mediante una modificación del proyecto de tests.
 
 **Errores comunes:**
 
-- Añadir using System.Collections.Generic; en lugar de System.Linq: no resuelve Where.
-- Añadir el using después del namespace: el compilador no lo reconoce.
-- Olvidar el using y confiar en ImplicitUsings: el proyecto puede tenerlo desactivado.
+- Abrir el archivo `.csproj` de tests en lugar de la clase que utiliza `Where`: son tareas diferentes.
+- Repetir una directiva `using` que ya viene preparada, en vez de verificar su activación.
+- Descomentar las líneas opcionales del reto junto con las del itinerario básico.
 
-**Verificación:** CatalogoProyectos.cs compila sin errores y no muestra subrayados rojos.
+**Verificación:** al terminar la activación de los pasos de código pertinentes, la clase se reconoce sin errores de tipos o extensiones LINQ. El `.csproj` de tests no se modifica en este paso.
 
 ---
 
-### Paso 11 — Crear el proyecto de tests del punto 1.4
+### Paso 11 — Inspeccionar el proyecto de tests incluido
 
 **Acción 1:** Abrir `tests/AceriaApp.Organizacion.Tests/AceriaApp.Organizacion.Tests.csproj` en el Explorador de soluciones.
 
@@ -4338,25 +4359,33 @@ Se adopta un monorepo con una carpeta por módulo y una carpeta por punto. Dentr
 
 ### Paso 21 — Verificar que no se ha modificado ningún archivo del punto 1.3
 
-**Acción 1:** En la terminal, escribir cd C:\cursos\AceriaApp\modulo-1-introduccion-microservicios y pulsar Enter.
+**Acción 1:** Abrir una terminal en `M01_INTRODUCCION_MICROSERVICIOS/PROYECTO`, dentro de la copia clonada del repositorio. No utilizar rutas absolutas de ejemplo: la ubicación depende de dónde haya descargado el alumno el curso.
 
-**Acción 2:** Escribir fc /L 1.3-principios-diseno\docs\ADR-003-principios-diseno.md 1.4-organizacion-solucion\docs\ADR-003-principios-diseno.md y pulsar Enter.
+**Acción 2:** Comparar las dos copias heredadas del ADR con el comando de Windows:
 
-**Acción 3:** Verificar que la salida muestra FC: no differences encountered.
+```powershell
+fc.exe /L "1.3-principios-diseno\docs\ADR-003-principios-diseno.md" "1.4-organizacion-solucion\docs\ADR-003-principios-diseno.md"
+```
 
-**Acción 4:** Escribir fc /L 1.3-principios-diseno\docs\principios-diseno.md 1.4-organizacion-solucion\docs\principios-diseno.md y pulsar Enter.
+**Acción 3:** Confirmar que `fc.exe` indica que no encuentra diferencias. De haberlas, identificar el cambio antes de continuar, sin sobrescribir el material del punto anterior.
 
-**Acción 5:** Verificar que la salida muestra FC: no differences encountered.
+**Acción 4:** Repetir la comprobación con el documento heredado `principios-diseno.md`:
 
-**Por qué se hace:** la comparación con fc verifica que los documentos del punto 1.3 no se han modificado.
+```powershell
+fc.exe /L "1.3-principios-diseno\docs\principios-diseno.md" "1.4-organizacion-solucion\docs\principios-diseno.md"
+```
+
+**Acción 5:** Volver a la solución del punto 1.4 y verificar que los documentos heredados permanecen disponibles junto a los nuevos.
+
+**Por qué se hace:** cada solución es una fotografía independiente y acumulativa. Contrastar los documentos repetidos permite detectar modificaciones accidentales del material heredado. El resultado no sustituye la compilación ni demuestra por sí mismo que el código esté intacto.
 
 **Errores comunes:**
 
-- Usar comp en lugar de fc: comp compara binarios y no muestra diferencias de texto.
-- Olvidar el flag /L: fc compara en modo ASCII y muestra líneas largas sin ajuste.
-- Comparar archivos de carpetas equivocadas: la comparación no es válida.
+- Ejecutar la comparación desde la carpeta de un punto concreto, en vez de `PROYECTO`: las rutas relativas dejan de ser válidas.
+- Confundir un README propio de cada punto, que cambia intencionadamente, con un documento heredado, que debe conservarse.
+- Interpretar una diferencia como autorización para sobrescribir el proyecto anterior.
 
-**Verificación:** los dos documentos del punto 1.3 no muestran diferencias.
+**Verificación:** los documentos heredados comparados coinciden. Si existe una diferencia, detener esa comprobación y determinar su origen antes de avanzar.
 
 ---
 
@@ -4408,45 +4437,46 @@ Se adopta un monorepo con una carpeta por módulo y una carpeta por punto. Dentr
 
 ### Paso 24 — Hacer el commit del punto 1.4 y verificar el estado final
 
-**Acción 1:** Escribir cd C:\cursos\AceriaApp y pulsar Enter.
+**Acción 1:** Situarse en la raíz del repositorio clonado (la carpeta que contiene `.git`) y ejecutar:
 
-**Acción 2:** Escribir git add . y pulsar Enter.
+```powershell
+git status --short
+```
 
-**Acción 3:** Escribir git commit -m "Punto 1.4: organización de la solución y convenciones de nombres" y pulsar Enter.
+**Acción 2:** Identificar los archivos que el alumno haya modificado realmente. Los proyectos y documentos de referencia ya vienen versionados: no hay que ejecutar `git init` ni crear un repositorio dentro de cada punto.
 
-**Acción 4:** Escribir git log --oneline y pulsar Enter para verificar los cuatro commits.
+**Acción 3:** Si existen cambios propios que se desea conservar, preparar únicamente esos archivos mediante `git add -- <ruta-del-archivo>`. Si no existen cambios, omitir el commit: una copia recién clonada puede estar correctamente terminada.
 
-**Acción 5:** Escribir git status y pulsar Enter para verificar que el árbol está limpio.
+**Acción 4:** Cuando haya cambios preparados, ejecutar `git diff --cached --stat` y, tras revisarlos, `git commit -m "Punto 1.4: avance de arquitectura de microservicios"`. No se necesita crear un número predeterminado de commits, ya que el historial previo depende de la distribución del curso.
 
-**Por qué se hace:** el commit del punto 1.4 registra el estado acumulado del proyecto. Los cuatro commits consecutivos permiten comparar los puntos 1.1, 1.2, 1.3 y 1.4 con git diff.
+**Acción 5:** Ejecutar `git status` y `git log -1 --oneline`. Interpretar la salida: un árbol limpio indica que no quedan cambios locales pendientes; el último commit puede ser el del repositorio original si no se han realizado modificaciones.
+
+**Por qué se hace:** Git registra de forma segura los cambios que el alumno decide conservar y permite comparar versiones. No debe utilizarse `git add .` de manera indiscriminada cuando existan otros archivos sin revisar.
 
 **Errores comunes:**
 
-- No tener configurado user.name y user.email: git commit falla.
-- Añadir la carpeta bin/ y obj/ al commit: el .gitignore lo evita.
-- Hacer commit antes de git add .: no hay cambios en el índice.
+- Ejecutar `git init` en la carpeta independiente del ejercicio y producir un repositorio anidado.
+- Intentar `git commit` sin cambios preparados y confundir el mensaje `nothing to commit` con un error del ejercicio.
+- Añadir archivos de `bin/` o `obj/` por no revisar el estado y las exclusiones.
 
-**Verificación:** git log --oneline muestra cuatro commits: Punto 1.1, Punto 1.2, Punto 1.3 y Punto 1.4. git status muestra nothing to commit, working tree clean.
-
-
-**Nota de trazabilidad:** en una descarga del repositorio puede no haber cambios nuevos que confirmar. Antes de ejecutar `git commit`, usar `git status` y confirmar únicamente los archivos efectivamente modificados durante el recorrido. No ejecutar `git init` dentro de cada punto: la raíz del repositorio ya contiene el historial.
+**Verificación:** `git status` describe fielmente los cambios locales; cuando se ha creado un commit, `git log -1 --oneline` refleja ese registro. La ejecución funcional y los tests se comprueban en los pasos anteriores, no mediante Git.
 
 ---
 
 ## Errores comunes del ejercicio completo
 
-Error Causa Solución
-xcopy no copia subcarpetas Falta el flag /E Ejecutar xcopy origen destino /E /I /H /Y
-IReadOnlyList<string> no se resuelve Falta el using System.Collections.Generic; Añadir el using al principio del archivo
-Contains no se resuelve Falta el using System.Linq; Añadir el using al principio del archivo
-Where no se resuelve Falta el using System.Linq; Añadir el using al principio del archivo
-NullReferenceException en CatalogoProyectos No se inicializa _nombres Inicializar en el constructor
-El validador no detecta nombres sin prefijo Falta la comprobación con StartsWith Revisar la primera comprobación de Validar
-El validador acepta nombres con cuatro partes Falta la comprobación de longitud Revisar la comprobación partes.Length != 3
-Should() no se resuelve Falta el paquete FluentAssertions Ejecutar dotnet add package FluentAssertions
-El proyecto de tests no compila Falta la referencia al proyecto monolítico Ejecutar dotnet add reference
-La compilación falla por el .dll bloqueado La API está en ejecución Detener la API con Ctrl+C
-
+| Error | Causa | Solución |
+|---|---|---|
+| xcopy no copia subcarpetas | Falta el flag /E | Ejecutar xcopy origen destino /E /I /H /Y |
+| IReadOnlyList<string> no se resuelve | Falta el using System.Collections.Generic; | Añadir el using al principio del archivo |
+| Contains no se resuelve | Falta el using System.Linq; | Añadir el using al principio del archivo |
+| Where no se resuelve | Falta el using System.Linq; | Añadir el using al principio del archivo |
+| NullReferenceException en CatalogoProyectos | No se inicializa _nombres | Inicializar en el constructor |
+| El validador no detecta nombres sin prefijo | Falta la comprobación con StartsWith | Revisar la primera comprobación de Validar |
+| El validador acepta nombres con cuatro partes | Falta la comprobación de longitud | Revisar la comprobación partes.Length != 3 |
+| Should() no se resuelve | Falta el paquete FluentAssertions | Ejecutar dotnet add package FluentAssertions |
+| El proyecto de tests no compila | Falta la referencia al proyecto monolítico | Ejecutar dotnet add reference |
+| La compilación falla por el .dll bloqueado | La API está en ejecución | Detener la API con Ctrl+C |
 
 ---
 
@@ -5025,27 +5055,29 @@ public class CatalogoPracticas
 
 ### Paso 10 — Añadir el using necesario en CatalogoPracticas
 
-**Acción 1:** Abrir `tests/AceriaApp.BuenasPracticas.Tests/AceriaApp.BuenasPracticas.Tests.csproj` en el Explorador de soluciones.
+**Acción 1:** Abrir `src/AceriaApp.Monolito.Api/BuenasPracticas/CatalogoPracticas.cs` en la solución del punto 1.5 y localizar `INICIO PASO 1.5.9`.
 
-**Acción 2:** Ejecutar `dotnet sln AceriaApp.sln list` y comprobar que `AceriaApp.BuenasPracticas.Tests` aparece en la solución.
+**Acción 2:** Inspeccionar las directivas `using` del bloque preparado. La activación del paso 1.5.9 ya incluye las directivas necesarias: no hay que copiarlas por segunda vez.
 
-**Acción 3:** Inspeccionar `tests/AceriaApp.BuenasPracticas.Tests/AceriaApp.BuenasPracticas.Tests.csproj` y confirmar la referencia al proyecto `AceriaApp.Monolito.Api` y el paquete `FluentAssertions`; no instalar duplicados.
+**Acción 3:** Tras activar el bloque del paso 9, comprobar que el archivo contiene `using System.Collections.Generic;` sin comentarios. Comprobar también `using System.Linq;`.
 
-**Acción 4:** Ejecutar `dotnet restore AceriaApp.sln` y confirmar que la restauración termina sin errores.
+**Acción 4:** Relacionar `List<Practica>` con el almacenamiento del catálogo y `Where` con el filtrado de sus elementos. Explicar por qué `Where` es una extensión de LINQ sobre colecciones.
 
-**Por qué se hace:** el método Where pertenece a System.Linq. En proyectos con ImplicitUsings desactivado, hay que añadir el using explícito.
+**Acción 5:** Guardar el archivo y comprobar que el IDE reconoce las referencias. La compilación global se realizará después de activar el resto del código y de las pruebas del punto.
+
+**Por qué se hace:** distinguir una dependencia real del código de una directiva importada evita cambios duplicados. Las directivas del bloque preparado se activan con el propio ejercicio, y no mediante una modificación del proyecto de tests.
 
 **Errores comunes:**
 
-- Añadir using System.Collections.Generic; en lugar de System.Linq: no resuelve Where.
-- Añadir el using después del namespace: el compilador no lo reconoce.
-- Olvidar el using y confiar en ImplicitUsings: el proyecto puede tenerlo desactivado.
+- Abrir el archivo `.csproj` de tests en lugar de la clase que utiliza `Where`: son tareas diferentes.
+- Repetir una directiva `using` que ya viene preparada, en vez de verificar su activación.
+- Descomentar las líneas opcionales del reto junto con las del itinerario básico.
 
-**Verificación:** CatalogoPracticas.cs compila sin errores y no muestra subrayados rojos.
+**Verificación:** al terminar la activación de los pasos de código pertinentes, la clase se reconoce sin errores de tipos o extensiones LINQ. El `.csproj` de tests no se modifica en este paso.
 
 ---
 
-### Paso 11 — Crear el proyecto de tests del punto 1.5
+### Paso 11 — Inspeccionar el proyecto de tests incluido
 
 **Acción 1:** Abrir `tests/AceriaApp.BuenasPracticas.Tests/AceriaApp.BuenasPracticas.Tests.csproj` en el Explorador de soluciones.
 
@@ -5512,25 +5544,33 @@ Se adoptan las buenas prácticas de contrato, operación, comunicación y evoluc
 
 ### Paso 21 — Verificar que no se ha modificado ningún archivo del punto 1.4
 
-**Acción 1:** En la terminal, escribir cd C:\cursos\AceriaApp\modulo-1-introduccion-microservicios y pulsar Enter.
+**Acción 1:** Abrir una terminal en `M01_INTRODUCCION_MICROSERVICIOS/PROYECTO`, dentro de la copia clonada del repositorio. No utilizar rutas absolutas de ejemplo: la ubicación depende de dónde haya descargado el alumno el curso.
 
-**Acción 2:** Escribir fc /L 1.4-organizacion-solucion\docs\ADR-004-organizacion-solucion.md 1.5-buenas-practicas\docs\ADR-004-organizacion-solucion.md y pulsar Enter.
+**Acción 2:** Comparar las dos copias heredadas del ADR con el comando de Windows:
 
-**Acción 3:** Verificar que la salida muestra FC: no differences encountered.
+```powershell
+fc.exe /L "1.4-organizacion-solucion\docs\ADR-004-organizacion-solucion.md" "1.5-buenas-practicas\docs\ADR-004-organizacion-solucion.md"
+```
 
-**Acción 4:** Escribir fc /L 1.4-organizacion-solucion\docs\organizacion-solucion.md 1.5-buenas-practicas\docs\organizacion-solucion.md y pulsar Enter.
+**Acción 3:** Confirmar que `fc.exe` indica que no encuentra diferencias. De haberlas, identificar el cambio antes de continuar, sin sobrescribir el material del punto anterior.
 
-**Acción 5:** Verificar que la salida muestra FC: no differences encountered.
+**Acción 4:** Repetir la comprobación con el documento heredado `organizacion-solucion.md`:
 
-**Por qué se hace:** la comparación con fc verifica que los documentos del punto 1.4 no se han modificado.
+```powershell
+fc.exe /L "1.4-organizacion-solucion\docs\organizacion-solucion.md" "1.5-buenas-practicas\docs\organizacion-solucion.md"
+```
+
+**Acción 5:** Volver a la solución del punto 1.5 y verificar que los documentos heredados permanecen disponibles junto a los nuevos.
+
+**Por qué se hace:** cada solución es una fotografía independiente y acumulativa. Contrastar los documentos repetidos permite detectar modificaciones accidentales del material heredado. El resultado no sustituye la compilación ni demuestra por sí mismo que el código esté intacto.
 
 **Errores comunes:**
 
-- Usar comp en lugar de fc: comp compara binarios y no muestra diferencias de texto.
-- Olvidar el flag /L: fc compara en modo ASCII y muestra líneas largas sin ajuste.
-- Comparar archivos de carpetas equivocadas: la comparación no es válida.
+- Ejecutar la comparación desde la carpeta de un punto concreto, en vez de `PROYECTO`: las rutas relativas dejan de ser válidas.
+- Confundir un README propio de cada punto, que cambia intencionadamente, con un documento heredado, que debe conservarse.
+- Interpretar una diferencia como autorización para sobrescribir el proyecto anterior.
 
-**Verificación:** los dos documentos del punto 1.4 no muestran diferencias.
+**Verificación:** los documentos heredados comparados coinciden. Si existe una diferencia, detener esa comprobación y determinar su origen antes de avanzar.
 
 ---
 
@@ -5582,45 +5622,46 @@ Se adoptan las buenas prácticas de contrato, operación, comunicación y evoluc
 
 ### Paso 24 — Hacer el commit del punto 1.5 y verificar el estado final del módulo 1
 
-**Acción 1:** Escribir cd C:\cursos\AceriaApp y pulsar Enter.
+**Acción 1:** Situarse en la raíz del repositorio clonado (la carpeta que contiene `.git`) y ejecutar:
 
-**Acción 2:** Escribir git add . y pulsar Enter.
+```powershell
+git status --short
+```
 
-**Acción 3:** Escribir git commit -m "Punto 1.5: buenas prácticas y cierre del módulo 1" y pulsar Enter.
+**Acción 2:** Identificar los archivos que el alumno haya modificado realmente. Los proyectos y documentos de referencia ya vienen versionados: no hay que ejecutar `git init` ni crear un repositorio dentro de cada punto.
 
-**Acción 4:** Escribir git log --oneline y pulsar Enter para verificar los cinco commits.
+**Acción 3:** Si existen cambios propios que se desea conservar, preparar únicamente esos archivos mediante `git add -- <ruta-del-archivo>`. Si no existen cambios, omitir el commit: una copia recién clonada puede estar correctamente terminada.
 
-**Acción 5:** Escribir git status y pulsar Enter para verificar que el árbol está limpio.
+**Acción 4:** Cuando haya cambios preparados, ejecutar `git diff --cached --stat` y, tras revisarlos, `git commit -m "Punto 1.5: avance de arquitectura de microservicios"`. No se necesita crear un número predeterminado de commits, ya que el historial previo depende de la distribución del curso.
 
-**Por qué se hace:** el commit del punto 1.5 cierra el módulo 1. Los cinco commits consecutivos permiten comparar el estado del proyecto entre puntos consecutivos y entre módulos completos.
+**Acción 5:** Ejecutar `git status` y `git log -1 --oneline`. Interpretar la salida: un árbol limpio indica que no quedan cambios locales pendientes; el último commit puede ser el del repositorio original si no se han realizado modificaciones.
+
+**Por qué se hace:** Git registra de forma segura los cambios que el alumno decide conservar y permite comparar versiones. No debe utilizarse `git add .` de manera indiscriminada cuando existan otros archivos sin revisar.
 
 **Errores comunes:**
 
-- No tener configurado user.name y user.email: git commit falla.
-- Añadir la carpeta bin/ y obj/ al commit: el .gitignore lo evita.
-- Hacer commit antes de git add .: no hay cambios en el índice.
+- Ejecutar `git init` en la carpeta independiente del ejercicio y producir un repositorio anidado.
+- Intentar `git commit` sin cambios preparados y confundir el mensaje `nothing to commit` con un error del ejercicio.
+- Añadir archivos de `bin/` o `obj/` por no revisar el estado y las exclusiones.
 
-**Verificación:** git log --oneline muestra cinco commits: Punto 1.1, Punto 1.2, Punto 1.3, Punto 1.4 y Punto 1.5. git status muestra nothing to commit, working tree clean.
-
-
-**Nota de trazabilidad:** en una descarga del repositorio puede no haber cambios nuevos que confirmar. Antes de ejecutar `git commit`, usar `git status` y confirmar únicamente los archivos efectivamente modificados durante el recorrido. No ejecutar `git init` dentro de cada punto: la raíz del repositorio ya contiene el historial.
+**Verificación:** `git status` describe fielmente los cambios locales; cuando se ha creado un commit, `git log -1 --oneline` refleja ese registro. La ejecución funcional y los tests se comprueban en los pasos anteriores, no mediante Git.
 
 ---
 
 ## Errores comunes del ejercicio completo
 
-Error Causa Solución
-xcopy no copia subcarpetas Falta el flag /E Ejecutar xcopy origen destino /E /I /H /Y
-IReadOnlyList<string> no se resuelve Falta el using System.Collections.Generic; Añadir el using al principio del archivo
-ToList no se resuelve Falta el using System.Linq; Añadir el using al principio del archivo
-Contains no se resuelve Falta el using System.Linq; Añadir el using al principio del archivo
-Where no se resuelve Falta el using System.Linq; Añadir el using al principio del archivo
-NullReferenceException en CatalogoPracticas No se inicializa _practicas Inicializar en el constructor
-El validador no detecta categorías inválidas Falta la comprobación con Contains Revisar la primera comprobación del bucle
-El validador no detecta prácticas no aplicadas Falta la comprobación !practica.EstaAplicada Revisar la segunda comprobación del bucle
-Should() no se resuelve Falta el paquete FluentAssertions Ejecutar dotnet add package FluentAssertions
-El proyecto de tests no compila Falta la referencia al proyecto monolítico Ejecutar dotnet add reference
-
+| Error | Causa | Solución |
+|---|---|---|
+| xcopy no copia subcarpetas | Falta el flag /E | Ejecutar xcopy origen destino /E /I /H /Y |
+| IReadOnlyList<string> no se resuelve | Falta el using System.Collections.Generic; | Añadir el using al principio del archivo |
+| ToList no se resuelve | Falta el using System.Linq; | Añadir el using al principio del archivo |
+| Contains no se resuelve | Falta el using System.Linq; | Añadir el using al principio del archivo |
+| Where no se resuelve | Falta el using System.Linq; | Añadir el using al principio del archivo |
+| NullReferenceException en CatalogoPracticas | No se inicializa _practicas | Inicializar en el constructor |
+| El validador no detecta categorías inválidas | Falta la comprobación con Contains | Revisar la primera comprobación del bucle |
+| El validador no detecta prácticas no aplicadas | Falta la comprobación !practica.EstaAplicada | Revisar la segunda comprobación del bucle |
+| Should() no se resuelve | Falta el paquete FluentAssertions | Ejecutar dotnet add package FluentAssertions |
+| El proyecto de tests no compila | Falta la referencia al proyecto monolítico | Ejecutar dotnet add reference |
 
 ---
 
