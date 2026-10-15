@@ -85,6 +85,44 @@ def heading_and_items(text: str, point: str, is_practice: bool):
             out.append(line)
     return "\n".join(out).strip()+"\n"
 
+
+def aplicar_erratas(text: str, point: str, tipo: str):
+    """Solo erratas aprobadas para la vista docente; no toca fuentes."""
+    applied = []
+    if tipo == "PRACTICAS":
+        cambios = {
+            "2.1": [("con ocho proyectos","con siete proyectos")],
+            "2.2": [
+                ("con nueve proyectos","con ocho proyectos"),
+                ("los diez documentos","los once documentos"),
+                ("diez documentos","once documentos")
+            ]
+        }
+        for before, after in cambios.get(point,[]):
+            n=text.count(before)
+            if n:
+                text=text.replace(before,after)
+                applied.append(dict(antes=before,despues=after,veces=n))
+    if point=="2.2" and tipo=="PRACTICAS":
+        start=text.index("### PASO 2.2.21 —")
+        end=text.index("### PASO 2.2.22 —",start)
+        step=text[start:end]
+        extra=(
+          "- **Acción 6:** Comparar también **todos** los documentos heredados "
+          "de `docs` (no solo los dos ejemplos anteriores), desde CMD "
+          "en la carpeta raíz del curso:\n\n"
+          "```cmd\n"
+          "for %f in (\"modulo-2-apis-rest-aspnet-core\\\\2.1-diseno-apis-rest\\\\docs\\\\*.md\") do @fc /L \"%~f\" \"modulo-2-apis-rest-aspnet-core\\\\2.2-recursos-verbos-codigos\\\\docs\\\\%~nxf\"\n"
+          "```\n\n"
+          "**Verificación adicional:** todos los documentos heredados "
+          "coinciden; los dos nuevos del punto 2.2 se excluyen.\n\n"
+        )
+        if "**Por qué se hace:**" not in step: raise ValueError("Paso 2.2.21 sin justificación")
+        step=step.replace("**Por qué se hace:**",extra+"**Por qué se hace:**",1)
+        text=text[:start]+step+text[end:]
+        applied.append(dict(correccion="Comparación de todos los documentos heredados"))
+    return text, applied
+
 def canonical_tokens(s: str):
     """No acepta que desaparezcan frases: elimina solo marcas visuales."""
     # Los encabezados PASO pasan de 2.x.n a n, respetando títulos.
@@ -120,6 +158,9 @@ def main():
         p=doc["point"]
         theory_fragment=heading_and_items(doc["theory"],p,False)
         practice_fragment="## Punto "+p+" — "+HEAD[p]+"\n\n"+heading_and_items(doc["practice"],p,True)
+        theory_fragment, ct = aplicar_erratas(theory_fragment,p,"TEORIA")
+        practice_fragment, cp = aplicar_erratas(practice_fragment,p,"PRACTICAS")
+        doc["correcciones_aplicadas"]=ct+cp
         theory.append(theory_fragment)
         practice.append(practice_fragment)
         report["fuentes_presentes"].append({
