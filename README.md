@@ -30,3 +30,11 @@ Cada módulo se organiza en las carpetas `TEORIA/`, `PRACTICAS/` y `PROYECTO/`. 
 - Cada punto conserva `AceriaApp.sln`, `src/`, `tests/` y `docs/`.
 - Referencia de código: .NET 8, EF Core 8, SQL Server Express y xUnit.
 - Los retos de cada punto están identificados mediante comentarios para descomentarlos.
+
+### Módulo 2 — Desarrollo de APIs REST con ASP.NET Core
+
+- [Teoría completa (Markdown)](M02_APIS_REST_ASPNET_CORE/TEORIA/M02_TEORIA.md) · [PDF](M02_APIS_REST_ASPNET_CORE/TEORIA/M02_TEORIA.pdf)
+- [Prácticas paso a paso (Markdown)](M02_APIS_REST_ASPNET_CORE/PRACTICAS/M02_PRACTICAS.md) · [PDF](M02_APIS_REST_ASPNET_CORE/PRACTICAS/M02_PRACTICAS.pdf)
+- [Proyectos AceriaApp de los puntos 2.1 a 2.4](M02_APIS_REST_ASPNET_CORE/PROYECTO/)
+
+La teoría contiene los cuatro puntos del módulo. Las prácticas siguen la progresión indicada por las marcas de paso del código en cada solución independiente. Para ejecutar los ejercicios se necesitan .NET 8, Visual Studio y SQL Server Express.
