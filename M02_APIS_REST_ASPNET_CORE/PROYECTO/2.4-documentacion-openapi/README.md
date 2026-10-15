@@ -5,7 +5,7 @@ Construir una evolución verificable del monolito AceriaApp aplicando los concep
 
 ## Estado de la solución
 - Solución AceriaApp.sln con 10 proyectos en total (una API y 9 proyectos de pruebas).
-- 51 pruebas previstas en la solución completa, pendientes de comprobar mediante CI.
+- 51 pruebas acumuladas en la solución completa (resultado sujeto a CI).
 - Documento docs/documentacion-openapi.md y las decisiones arquitectónicas acumuladas.
 - El proyecto es independiente: conserva los archivos del punto previo salvo integraciones aditivas documentadas.
 
@@ -17,6 +17,7 @@ Construir una evolución verificable del monolito AceriaApp aplicando los concep
 5. Configurar SQL Server Express e iniciar la API con dotnet run --project src/AceriaApp.Monolito.Api.
 
 ## Qué incorpora este punto
+- La extensión `DocumentacionExtensions` sustituye la construcción manual de YAML; `Program.cs` se adapta exclusivamente en la copia 2.4 para invocar `AddDocumentacionOpenApi` y `UseDocumentacionOpenApi`, sin alterar 2.3.
 - SwaggerGen y SwaggerUI configurados desde DocumentacionExtensions; metadatos reales.
 - Program.cs de esta copia integra las extensiones y anota los endpoints.
 - WebApplicationFactory contrasta la respuesta HTTP real del documento en Development y su ausencia en Production.
