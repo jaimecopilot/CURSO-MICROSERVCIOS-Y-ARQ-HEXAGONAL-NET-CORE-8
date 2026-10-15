@@ -247,8 +247,10 @@ def activate_challenge(target,point):
         f=target/'tests/AceriaApp.Monolito.Tests/OrdenEndpointsTests.RETO.cs.txt'
         check(f.exists(),'No se encuentra reto 1.1 test')
         lines=f.read_text().splitlines()
-        # Saltar encabezados explicativos, descomentar solo a partir de using.
-        code='\n'.join(line[3:] if line.startswith('// ') else line for line in lines if line.startswith('// ') and not line.startswith('// RETO ') and not line.startswith('// Nota '))+'\n'
+        # El encabezado introductorio ocupa varias líneas; empezar en el primer using.
+        start=next((i for i,line in enumerate(lines) if line.startswith('// using ')), None)
+        check(start is not None,'RETO 1.1: plantilla sin usings')
+        code='\n'.join(line[3:] if line.startswith('// ') else line for line in lines[start:])+'\n'
         check('public class OrdenEndpointsTests' in code,'Plantilla RETO 1.1 inválida')
         dest=f.with_name('OrdenEndpointsTests.cs')
         dest.write_text(code)

@@ -113,6 +113,9 @@ jobs:
           - { punto: '1.1', database: 'Aceria_E2E_Express_11' }
           - { punto: '1.5', database: 'Aceria_E2E_Express_15' }
     steps:
+      - name: Habilitar rutas largas en Git Windows antes de checkout
+        shell: pwsh
+        run: git config --global core.longpaths true
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
