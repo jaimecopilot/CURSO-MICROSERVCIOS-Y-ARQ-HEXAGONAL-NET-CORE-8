@@ -1,0 +1,106 @@
+name: M02 - materiales integrados desde originales y API real
+
+on:
+  push:
+    branches:
+      - redisenio/m02-minimal-api-real-20261015
+    paths:
+      - '.github/workflows/m02-redisenio-materiales.yml'
+      - '.github/scripts/m02_integracion_pedagogica.py'
+      - '.github/scripts/construir_m02_desde_fuentes.py'
+      - '.github/scripts/pedagogia_m02.py'
+      - '.github/scripts/maquetacion_m02.py'
+      - '.github/scripts/pdf_m02_previsualizacion.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: m02-materiales-integrados
+  cancel-in-progress: true
+
+jobs:
+  construir-verificar-publicar:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: redisenio/m02-minimal-api-real-20261015
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Instalar convertidor y comprobadores PDF
+        run: python -m pip install --quiet markdown weasyprint pymupdf
+      - name: Integrar teoría y prácticas con las cuatro soluciones reales
+        run: python .github/scripts/m02_integracion_pedagogica.py
+      - name: Comprobar conservación y trazabilidad antes de PDF
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          theory=Path("M02_APIS_REST_ASPNET_CORE/TEORIA/M02_TEORIA.md").read_text()
+          practice=Path("M02_APIS_REST_ASPNET_CORE/PRACTICAS/M02_PRACTICAS.md").read_text()
+          assert len(re.findall(r"(?m)^### Bloque \d+ —",theory))==40
+          assert theory.count("](IMAGENES/")==8
+          assert len(re.findall(r"(?m)^### PASO 2\.[1-4]\.\d+ —",practice))==96
+          assert not re.search(r"\bgit\s+(add|commit|status|log|push|checkout|branch)\b",practice,re.I)
+          assert practice.count("**Código real que debes escribir")>=20
+          assert theory.count("#### Del concepto a ASP.NET Core 8") ==20
+          for p in range(1,5):
+              for part in ["TEORIA","PRACTICAS"]:
+                  assert f"## Punto 2.{p} —" in (theory if part=="TEORIA" else practice)
+              assert f"PROYECTO/2.{p}" in practice
+          assert "SqlServer" in practice or "LocalDB" in practice
+          assert "FluentValidation" in theory
+          assert "Swagger" in practice and "Swagger" in theory
+          for text in (theory,practice):
+              assert text.count("\n```")%2==0
+          print("OK: 40 bloques conservados, 8 figuras, 96 pasos nuevos, 20 integraciones prácticas, cero git.")
+          PY
+      - name: Generar PDF desde los mismos Markdown
+        run: |
+          python .github/scripts/pdf_m02_previsualizacion.py --directorio M02_APIS_REST_ASPNET_CORE/TEORIA
+          python .github/scripts/pdf_m02_previsualizacion.py --directorio M02_APIS_REST_ASPNET_CORE/PRACTICAS
+      - name: Validar PDF, imágenes y páginas
+        run: |
+          python - <<'PY'
+          import fitz
+          from pathlib import Path
+          root=Path("M02_APIS_REST_ASPNET_CORE")
+          for kind in ("TEORIA","PRACTICAS"):
+              pdf=root/kind/f"M02_{kind}.pdf"
+              md=root/kind/f"M02_{kind}.md"
+              doc=fitz.open(pdf)
+              alltext=" ".join(p.get_text() for p in doc)
+              assert len(doc)>25 and len(alltext)>30000,(kind,len(doc),len(alltext))
+              assert all(f"Punto 2.{n}" in alltext for n in range(1,5))
+              if kind=="TEORIA":
+                  graphics=sum(len(page.get_images(full=True)) for page in doc)
+                  vector=sum(len(page.get_drawings()) for page in doc)
+                  assert vector>30,(graphics,vector)
+              print(kind,"pages=",len(doc),"bytes=",pdf.stat().st_size,"MD_words=",len(md.read_text().split()))
+          PY
+      - name: Commit solo los cuatro archivos del alumnado
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add M02_APIS_REST_ASPNET_CORE/TEORIA/M02_TEORIA.md M02_APIS_REST_ASPNET_CORE/TEORIA/M02_TEORIA.pdf M02_APIS_REST_ASPNET_CORE/PRACTICAS/M02_PRACTICAS.md M02_APIS_REST_ASPNET_CORE/PRACTICAS/M02_PRACTICAS.pdf
+          if ! git diff --cached --quiet; then
+            git commit -m "docs(m02): teoría original ampliada y prácticas REST ejecutables"
+            git push origin HEAD:redisenio/m02-minimal-api-real-20261015
+          fi
+      - name: Adjuntar resultado y reporte
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m02-teoria-practica-integradas
+          path: |
+            M02_APIS_REST_ASPNET_CORE/TEORIA/M02_TEORIA.md
+            M02_APIS_REST_ASPNET_CORE/TEORIA/M02_TEORIA.pdf
+            M02_APIS_REST_ASPNET_CORE/PRACTICAS/M02_PRACTICAS.md
+            M02_APIS_REST_ASPNET_CORE/PRACTICAS/M02_PRACTICAS.pdf
+            m02_redisenio_informe.json
+          if-no-files-found: warn
