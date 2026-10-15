@@ -44,7 +44,7 @@ def activate(folder: Path, point: str, step: int):
                     raise RuntimeError(f"Inicio anidado: {file}")
                 active, found = True, True
                 out.append(line)
-            elif line.startswith(end):
+            elif line.strip() == end:
                 if not active:
                     raise RuntimeError(f"Fin sin inicio: {file}")
                 active = False
