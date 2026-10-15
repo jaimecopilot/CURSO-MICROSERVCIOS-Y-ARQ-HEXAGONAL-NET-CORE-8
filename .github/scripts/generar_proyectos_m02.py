@@ -86,6 +86,11 @@ def generate():
         if dest.exists(): shutil.rmtree(dest)
         shutil.copytree(old,dest,ignore=shutil.ignore_patterns("bin","obj",".vs","TestResults"))
         root=dest
+        if i==0:
+            import sys
+            sys.path.insert(0,str(Path(".github/scripts").resolve()))
+            from e2e_m01 import activate_step
+            for paso in range(1,25): activate_step(root,"1.5",paso)
         new_test(root,TEST_NAMES[i])
         if i==0: stage21(root)
         elif i==1: stage22(root)
@@ -98,6 +103,8 @@ def generate():
             rel=file.relative_to(old)
             if any(x in ("bin","obj",".vs","TestResults") for x in rel.parts): continue
             if str(rel).replace("\\","/") in ("README.md","AceriaApp.sln"):continue
+            if i==0 and rel.suffix==".cs" and "INICIO PASO 1.5" in file.read_text(encoding="utf-8"):
+                deviations.append(str(rel));continue
             if str(rel).replace("\\","/") in ("src/AceriaApp.Monolito.Api/Program.cs","src/AceriaApp.Monolito.Api/AceriaApp.Monolito.Api.csproj"): 
                 if i>=2: deviations.append(str(rel));continue
             target=root/rel
@@ -393,7 +400,7 @@ Se establece la convención 400 para datos de entrada inválidos, y 422 para det
     public class CrearOrdenRequestValidatorTests
     {
         private readonly CrearOrdenRequestValidator _v=new();
-        [Fact] public void Acepta_PeticionValida() => Assert.True(_v.Validate(new("ACX-001","CHAPA-3MM",10)).IsValid);
+        [Fact] public void Acepta_PeticionValida() => Assert.True(_v.Validate(new CrearOrdenRequest("ACX-001","CHAPA-3MM",10)).IsValid);
         [Fact] public void Rechaza_ClienteVacio() => Assert.False(_v.Validate(new("","CHAPA-3MM",10)).IsValid);
         [Fact] public void Rechaza_CantidadNegativa() => Assert.False(_v.Validate(new("ACX-001","CHAPA-3MM",-5)).IsValid);
         [Fact] public void Rechaza_CantidadExcesiva() => Assert.False(_v.Validate(new("ACX-001","CHAPA-3MM",20000)).IsValid);
