@@ -8,6 +8,8 @@ on:
       - '.github/fuentes-originales/m02/**'
       - '.github/scripts/construir_m02_desde_fuentes.py'
       - '.github/scripts/pedagogia_m02.py'
+      - '.github/scripts/maquetacion_m02.py'
+      - 'M02_APIS_REST_ASPNET_CORE/TEORIA/IMAGENES/*.svg'
       - '.github/scripts/pdf_m02_previsualizacion.py'
       - '.github/workflows/m02-previsualizacion-fuentes-originales.yml'
   workflow_dispatch:
@@ -24,6 +26,11 @@ jobs:
         run: |
           python .github/scripts/construir_m02_desde_fuentes.py \
             --parcial --salida m02_previsualizacion
+      - name: Copiar 8 figuras antes de producir PDF
+        run: |
+          mkdir -p m02_previsualizacion/IMAGENES
+          cp M02_APIS_REST_ASPNET_CORE/TEORIA/IMAGENES/*.svg m02_previsualizacion/IMAGENES/
+          test "$(find m02_previsualizacion/IMAGENES -name '*.svg' | wc -l)" -eq 8
       - name: Validar recuentos y origen exacto
         run: |
           python - <<'PY'
@@ -34,6 +41,11 @@ jobs:
           docs=info["fuentes_presentes"]
           assert [d["point"] for d in docs]==["2.1","2.2","2.3","2.4"], docs
           assert all(d["blocks"]==10 and d["steps"]==24 for d in docs)
+          teoria=next(base.glob("*_TEORIA.md")).read_text(encoding="utf-8")
+          practicas=next(base.glob("*_PRACTICAS.md")).read_text(encoding="utf-8")
+          assert teoria.count("](IMAGENES/") == 8
+          assert practicas.count("| Error observado | Causa | Solución guiada |") == 4
+          assert "Error Causa Solución" not in practicas
           for name in ("TEORIA","PRACTICAS"):
               text=next(base.glob("*_"+name+".md")).read_text(encoding="utf-8")
               assert "JAIME GALLO" in text
