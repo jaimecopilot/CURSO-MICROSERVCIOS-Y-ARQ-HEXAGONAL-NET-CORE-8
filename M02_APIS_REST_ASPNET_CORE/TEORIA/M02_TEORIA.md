@@ -24,6 +24,10 @@ Objetivos de aprendizaje:
 
 REST es un estilo arquitectónico definido por Roy Fielding en su tesis doctoral de 2000. No es un protocolo ni un estándar, sino un conjunto de restricciones que, aplicadas de forma conjunta, producen un sistema con propiedades específicas. Las restricciones son seis: cliente-servidor, sin estado, cacheable, interfaz uniforme, sistema en capas y código bajo demanda. Cada restricción aporta una propiedad al sistema. La restricción de cliente-servidor separa las responsabilidades de la interfaz de usuario y del almacenamiento de datos. La restricción de sin estado garantiza que cada petición contenga toda la información necesaria para ser procesada. La restricción de cacheable permite que las respuestas se almacenen para reducir la carga. La restricción de interfaz uniforme simplifica la arquitectura global.
 
+![Figura del punto 2.1: Las seis restricciones de REST y su función](IMAGENES/m02-2-1-rest-restricciones.svg)
+
+*Figura M02.2.1.1 — Las seis restricciones de REST y su función.*
+
 Restricciones de REST:  
   
 1. Cliente-servidor  
@@ -51,13 +55,17 @@ La aplicación de las seis restricciones produce un sistema con propiedades medi
 
 Un recurso es cualquier entidad identificable que puede ser referenciada y manipulada. En una API REST, los recursos son la unidad central del diseño. Una orden es un recurso. Un material es un recurso. Un cliente es un recurso. La colección de órdenes también es un recurso. Cada recurso se identifica con una URI única. La URI no describe acciones, describe entidades. La diferencia entre una URI que describe acciones y una URI que describe entidades es la diferencia entre RPC y REST. Una URI como /api/crearOrden describe una acción. Una URI como /api/v1/ordenes describe una entidad.
 
+![Figura del punto 2.1: De la colección al recurso y sus relaciones](IMAGENES/m02-2-1-uris.svg)
+
+*Figura M02.2.1.2 — De la colección al recurso y sus relaciones.*
+
 URIs de recursos:  
   
-/api/v1/ordenes           → colección de órdenes.  
-/api/v1/ordenes/{id}      → orden concreta.  
-/api/v1/ordenes/{id}/lineas → líneas de una orden concreta.  
-/api/v1/materiales       → colección de materiales.  
-/api/v1/clientes         → colección de clientes.
+- **/api/v1/ordenes** → colección de órdenes.
+- **/api/v1/ordenes/{id}** → orden concreta.
+- **/api/v1/ordenes/{id}/lineas** → líneas de una orden concreta.
+- **/api/v1/materiales** → colección de materiales.
+- **/api/v1/clientes** → colección de clientes.
 
 - **Línea 1:** /api/v1/ordenes → recurso de colección de órdenes.
 - **Línea 2:** /api/v1/ordenes/{id} → recurso de orden concreta.
@@ -99,12 +107,12 @@ Los métodos HTTP expresan la operación que se realiza sobre el recurso. Cada m
 
 Métodos HTTP:  
   
-GET     /api/v1/ordenes        → lista de órdenes. Seguro, idempotente.  
-GET     /api/v1/ordenes/{id}   → orden concreta. Seguro, idempotente.  
-POST    /api/v1/ordenes        → crear orden. No seguro, no idempotente.  
-PUT     /api/v1/ordenes/{id}   → reemplazar orden. No seguro, idempotente.  
-PATCH   /api/v1/ordenes/{id}   → modificar orden. No seguro, no idempotente.  
-DELETE  /api/v1/ordenes/{id}   → eliminar orden. No seguro, idempotente.
+- **GET     /api/v1/ordenes** → lista de órdenes. Seguro, idempotente.
+- **GET     /api/v1/ordenes/{id}** → orden concreta. Seguro, idempotente.
+- **POST    /api/v1/ordenes** → crear orden. No seguro, no idempotente.
+- **PUT     /api/v1/ordenes/{id}** → reemplazar orden. No seguro, idempotente.
+- **PATCH   /api/v1/ordenes/{id}** → modificar orden. No seguro, no idempotente.
+- **DELETE  /api/v1/ordenes/{id}** → eliminar orden. No seguro, idempotente.
 
 - **Línea 1:** GET /api/v1/ordenes → recupera la colección. Seguro e idempotente.
 - **Línea 2:** GET /api/v1/ordenes/{id} → recupera una orden. Seguro e idempotente.
@@ -124,16 +132,16 @@ Los códigos de estado HTTP expresan el resultado de la operación. Se organizan
 
 Códigos de estado habituales:  
   
-200 OK                    → operación exitosa con cuerpo.  
-201 Created               → recurso creado, con cabecera Location.  
-204 No Content            → operación exitosa sin cuerpo.  
-400 Bad Request           → error de validación o formato.  
-401 Unauthorized          → falta autenticación.  
-403 Forbidden             → autenticación correcta, sin permisos.  
-404 Not Found             → recurso no encontrado.  
-409 Conflict              → conflicto de estado.  
-422 Unprocessable Entity  → entidad semánticamente inválida.  
-500 Internal Server Error → error del servidor.
+- **200 OK** → operación exitosa con cuerpo.
+- **201 Created** → recurso creado, con cabecera Location.
+- **204 No Content** → operación exitosa sin cuerpo.
+- **400 Bad Request** → error de validación o formato.
+- **401 Unauthorized** → falta autenticación.
+- **403 Forbidden** → autenticación correcta, sin permisos.
+- **404 Not Found** → recurso no encontrado.
+- **409 Conflict** → conflicto de estado.
+- **422 Unprocessable Entity** → entidad semánticamente inválida.
+- **500 Internal Server Error** → error del servidor.
 
 - **Línea 1:** 200 OK → operación exitosa con cuerpo.
 - **Línea 2:** 201 Created → recurso creado, con cabecera Location.
@@ -157,11 +165,11 @@ El diseño de URIs sigue cinco reglas prácticas. La primera es usar sustantivos
 
 Reglas de diseño de URIs:  
   
-1. Sustantivos en plural        → /ordenes, /materiales.  
-2. Identificador tras colección → /ordenes/{id}.  
-3. Anidamiento de relaciones    → /ordenes/{id}/lineas.  
-4. Sin verbos                   → no /crearOrden.  
-5. Versionado en la URI         → /api/v1/ordenes.
+- **1. Sustantivos en plural** → /ordenes, /materiales.
+- **2. Identificador tras colección** → /ordenes/{id}.
+- **3. Anidamiento de relaciones** → /ordenes/{id}/lineas.
+- **4. Sin verbos** → no /crearOrden.
+- **5. Versionado en la URI** → /api/v1/ordenes.
 
 - **Línea 1:** 1. Sustantivos en plural → colecciones con sustantivo plural.
 - **Línea 2:** 2. Identificador tras colección → identificador después de la colección.
@@ -222,14 +230,14 @@ Los recursos pueden anidarse para expresar relaciones. Una orden tiene líneas. 
 
 Anidamiento de recursos:  
   
-/api/v1/ordenes                    → colección de órdenes.  
-/api/v1/ordenes/{id}               → orden concreta.  
-/api/v1/ordenes/{id}/lineas        → líneas de una orden.  
-/api/v1/ordenes/{id}/lineas/{lid}  → línea concreta.  
+- **/api/v1/ordenes** → colección de órdenes.
+- **/api/v1/ordenes/{id}** → orden concreta.
+- **/api/v1/ordenes/{id}/lineas** → líneas de una orden.
+- **/api/v1/ordenes/{id}/lineas/{lid}** → línea concreta.
   
 Alternativa sin anidar:  
   
-/api/v1/lineas?ordenId={id}        → líneas filtradas por orden.
+- **/api/v1/lineas?ordenId={id}** → líneas filtradas por orden.
 
 - **Línea 1:** /api/v1/ordenes → colección de órdenes.
 - **Línea 2:** /api/v1/ordenes/{id} → orden concreta.
@@ -286,12 +294,12 @@ El proyecto del curso aplica el diseño REST en cada endpoint. Los recursos se i
 
 Aplicación al proyecto del curso:  
   
-Recursos identificados     → /api/v1/ordenes, /api/v1/materiales.  
-Métodos HTTP con semántica → GET, POST, PUT, PATCH, DELETE.  
-Códigos de estado          → 200, 201, 204, 400, 404, 409, 422, 500.  
-Representaciones           → JSON por defecto.  
-Paginación                 → page, pageSize.  
-Relaciones anidadas        → /ordenes/{id}/lineas.
+- **Recursos identificados** → /api/v1/ordenes, /api/v1/materiales.
+- **Métodos HTTP con semántica** → GET, POST, PUT, PATCH, DELETE.
+- **Códigos de estado** → 200, 201, 204, 400, 404, 409, 422, 500.
+- **Representaciones** → JSON por defecto.
+- **Paginación** → page, pageSize.
+- **Relaciones anidadas** → /ordenes/{id}/lineas.
 
 - **Línea 1:** Recursos identificados → URIs que siguen las cinco reglas.
 - **Línea 2:** Métodos HTTP con semántica → métodos con semántica definida.
@@ -341,11 +349,11 @@ Un recurso es una entidad identificable que puede ser referenciada y manipulada 
 
 Recursos del dominio de la acería:  
   
-Orden         → orden de producción.  
-LineaOrden    → línea de una orden.  
-Material      → materia prima.  
-Cliente       → empresa compradora.  
-Movimiento    → movimiento de inventario.
+- **Orden** → orden de producción.
+- **LineaOrden** → línea de una orden.
+- **Material** → materia prima.
+- **Cliente** → empresa compradora.
+- **Movimiento** → movimiento de inventario.
 
 - **Línea 1:** Orden → recurso que representa una orden de producción.
 - **Línea 2:** LineaOrden → recurso que representa una línea de una orden.
@@ -390,6 +398,10 @@ La representación no contiene toda la información del recurso: contiene solo l
 
 Los verbos HTTP tienen una semántica definida por el estándar y por las convenciones del ecosistema REST. El verbo GET recupera una representación del recurso. El verbo POST crea un recurso nuevo. El verbo PUT reemplaza un recurso existente. El verbo PATCH modifica parcialmente un recurso existente. El verbo DELETE elimina un recurso existente. Cada verbo tiene tres propiedades: seguridad, idempotencia y cacheabilidad. La seguridad indica si el verbo modifica el estado del servidor. La idempotencia indica si ejecutar el verbo varias veces produce el mismo resultado que ejecutarlo una vez. La cacheabilidad indica si la respuesta puede almacenarse en caché.
 
+![Figura del punto 2.2: Cómo relacionar verbos HTTP con resultados](IMAGENES/m02-2-2-verbo-codigo.svg)
+
+*Figura M02.2.2.3 — Cómo relacionar verbos HTTP con resultados.*
+
 Propiedades de los verbos:  
   
 Verbo   | Seguro | Idempotente | Cacheable  
@@ -417,12 +429,12 @@ La combinación de verbo y URI define la operación. Los verbos se aplican de fo
 
 Combinaciones verbo-URI:  
   
-GET    /api/v1/ordenes          → lista de órdenes.  
-POST   /api/v1/ordenes          → crear orden.  
-GET    /api/v1/ordenes/{id}     → orden concreta.  
-PUT    /api/v1/ordenes/{id}     → reemplazar orden.  
-PATCH  /api/v1/ordenes/{id}     → modificar orden.  
-DELETE /api/v1/ordenes/{id}     → eliminar orden.
+- **GET    /api/v1/ordenes** → lista de órdenes.
+- **POST   /api/v1/ordenes** → crear orden.
+- **GET    /api/v1/ordenes/{id}** → orden concreta.
+- **PUT    /api/v1/ordenes/{id}** → reemplazar orden.
+- **PATCH  /api/v1/ordenes/{id}** → modificar orden.
+- **DELETE /api/v1/ordenes/{id}** → eliminar orden.
 
 - **Línea 1:** GET /api/v1/ordenes → recupera la colección.
 - **Línea 2:** POST /api/v1/ordenes → crea un elemento nuevo.
@@ -442,12 +454,12 @@ Los códigos de respuesta expresan el resultado de la operación. La relación e
 
 Relación verbo-código:  
   
-GET    /ordenes          → 200 OK  
-POST   /ordenes          → 201 Created  
-GET    /ordenes/{id}     → 200 OK | 404 Not Found  
-PUT    /ordenes/{id}     → 200 OK | 204 No Content | 404 Not Found  
-PATCH  /ordenes/{id}     → 200 OK | 204 No Content | 404 Not Found  
-DELETE /ordenes/{id}     → 204 No Content | 404 Not Found
+- **GET    /ordenes** → 200 OK
+- **POST   /ordenes** → 201 Created
+- **GET    /ordenes/{id}** → 200 OK | 404 Not Found
+- **PUT    /ordenes/{id}** → 200 OK | 204 No Content | 404 Not Found
+- **PATCH  /ordenes/{id}** → 200 OK | 204 No Content | 404 Not Found
+- **DELETE /ordenes/{id}** → 204 No Content | 404 Not Found
 
 - **Línea 1:** GET /ordenes → 200 OK → recuperación exitosa de la colección.
 - **Línea 2:** POST /ordenes → 201 Created → creación exitosa del recurso.
@@ -467,13 +479,13 @@ Los códigos de error del cliente se agrupan en la familia 4xx. Los más usados 
 
 Códigos de error del cliente:  
   
-400 Bad Request           → petición mal formada.  
-401 Unauthorized          → falta autenticación.  
-403 Forbidden             → sin permisos.  
-404 Not Found             → recurso no encontrado.  
-405 Method Not Allowed    → verbo no permitido.  
-409 Conflict              → conflicto de estado.  
-422 Unprocessable Entity  → entidad semánticamente inválida.
+- **400 Bad Request** → petición mal formada.
+- **401 Unauthorized** → falta autenticación.
+- **403 Forbidden** → sin permisos.
+- **404 Not Found** → recurso no encontrado.
+- **405 Method Not Allowed** → verbo no permitido.
+- **409 Conflict** → conflicto de estado.
+- **422 Unprocessable Entity** → entidad semánticamente inválida.
 
 - **Línea 1:** 400 Bad Request → petición mal formada.
 - **Línea 2:** 401 Unauthorized → falta autenticación.
@@ -494,11 +506,11 @@ Los códigos de error del servidor se agrupan en la familia 5xx. Los más usados
 
 Códigos de error del servidor:  
   
-500 Internal Server Error  → error no controlado.  
-501 Not Implemented        → funcionalidad no implementada.  
-502 Bad Gateway            → respuesta inválida del servidor destino.  
-503 Service Unavailable    → servicio no disponible.  
-504 Gateway Timeout        → timeout en servidor intermedio.
+- **500 Internal Server Error** → error no controlado.
+- **501 Not Implemented** → funcionalidad no implementada.
+- **502 Bad Gateway** → respuesta inválida del servidor destino.
+- **503 Service Unavailable** → servicio no disponible.
+- **504 Gateway Timeout** → timeout en servidor intermedio.
 
 - **Línea 1:** 500 Internal Server Error → error no controlado.
 - **Línea 2:** 501 Not Implemented → funcionalidad no implementada.
@@ -514,6 +526,10 @@ La elección del código 5xx adecuado es importante para la monitorización y pa
 ### Bloque 8 — Problem details como formato de error
 
 El formato problem details está definido en la RFC 7807 y describe la estructura de un error en una API REST. Los campos principales son type, title, status, detail e instance. El campo type identifica el tipo de error con una URI. El campo title es un resumen legible del error. El campo status es el código HTTP. El campo detail explica el error concreto. El campo instance identifica la instancia concreta del error. El formato se usa en todas las respuestas de error para que el cliente pueda procesarlas de forma uniforme.
+
+![Figura del punto 2.2: Los campos principales de Problem Details](IMAGENES/m02-2-2-problem-details.svg)
+
+*Figura M02.2.2.8 — Los campos principales de Problem Details.*
 
 ```json
 {  
@@ -569,12 +585,12 @@ El proyecto del curso aplica los conceptos de recursos, verbos y códigos de res
 
 Aplicación al proyecto del curso:  
   
-Recursos identificados   → Orden, LineaOrden, Material, Cliente.  
-Verbos por recurso       → GET, POST, PUT, PATCH, DELETE.  
-Códigos por verbo        → 200, 201, 204, 400, 404, 409, 422, 500.  
-Formato de error         → problem details.  
-Catálogo documentado     → docs/catalogo-recursos.md.  
-Validación automática    → clase ValidadorCatalogoRecursos.
+- **Recursos identificados** → Orden, LineaOrden, Material, Cliente.
+- **Verbos por recurso** → GET, POST, PUT, PATCH, DELETE.
+- **Códigos por verbo** → 200, 201, 204, 400, 404, 409, 422, 500.
+- **Formato de error** → problem details.
+- **Catálogo documentado** → docs/catalogo-recursos.md.
+- **Validación automática** → clase ValidadorCatalogoRecursos.
 
 - **Línea 1:** Recursos identificados → lista de recursos del dominio.
 - **Línea 2:** Verbos por recurso → combinaciones verbo-URI.
@@ -624,9 +640,13 @@ Objetivos de aprendizaje:
 
 La validación de peticiones es el proceso de comprobar que los datos recibidos cumplen las reglas definidas por el servicio. Sin validación, el servicio procesa datos incorrectos y produce resultados incorrectos o falla de forma imprevisible. La validación es un contrato de entrada: define qué datos acepta el servicio y qué datos rechaza. El contrato se documenta y se verifica en cada petición. La validación no es una tarea opcional ni una capa de defensa secundaria: es la primera línea de defensa de la API. Un servicio sin validación es un servicio que delega la responsabilidad de los datos al cliente.
 
+![Figura del punto 2.3: Recorrido de una petición por los tres niveles de validación](IMAGENES/m02-2-3-niveles-validacion.svg)
+
+*Figura M02.2.3.1 — Recorrido de una petición por los tres niveles de validación.*
+
 Flujo de la validación:  
   
-Cliente → Petición → Validación sintáctica → Validación semántica  
+- **Cliente** → Petición → Validación sintáctica → Validación semántica
        → Validación de negocio → Procesamiento → Respuesta
 
 - **Línea 1:** Cliente → Petición → el cliente envía la petición al servidor.
@@ -779,6 +799,10 @@ La integración con ASP.NET Core se realiza en el contenedor de dependencias. El
 
 En Minimal API, la validación se integra con un filtro de endpoint o con un manejador de excepciones. El filtro se ejecuta antes del manejador del endpoint y devuelve una respuesta problem details si la validación falla. El manejador se ejecuta solo si la validación pasa. La integración con Minimal API requiere registrar el filtro o el manejador en el contenedor y aplicarlo a los endpoints que lo necesitan. La aplicación selectiva del filtro permite que solo los endpoints con validación lo usen.
 
+![Figura del punto 2.3: Ejecución del filtro antes del manejador Minimal API](IMAGENES/m02-2-3-filtro-validacion.svg)
+
+*Figura M02.2.3.6 — Ejecución del filtro antes del manejador Minimal API.*
+
 public class ValidationFilter<T> : IEndpointFilter where T : class  
 {  
     private readonly IValidator<T> _validator;  
@@ -868,9 +892,9 @@ La validación fallida produce un código de respuesta específico. El código 4
 
 Códigos de respuesta según el nivel de validación:  
   
-Sintáctica fallida   → 400 Bad Request.  
-Semántica fallida    → 400 Bad Request.  
-Negocio fallida      → 422 Unprocessable Entity.
+- **Sintáctica fallida** → 400 Bad Request.
+- **Semántica fallida** → 400 Bad Request.
+- **Negocio fallida** → 422 Unprocessable Entity.
 
 - **Línea 1:** Sintáctica fallida → error de formato, código 400.
 - **Línea 2:** Semántica fallida → error de valores, código 400.
@@ -919,11 +943,11 @@ El proyecto del curso aplica la validación de peticiones en tres niveles. La va
 
 Aplicación al proyecto del curso:  
   
-Sintáctica    → records con tipos no anulables.  
-Semántica     → FluentValidation.  
-Negocio       → capa de aplicación.  
-Integración   → filtro genérico.  
-Respuesta     → problem details 400 o 422.
+- **Sintáctica** → records con tipos no anulables.
+- **Semántica** → FluentValidation.
+- **Negocio** → capa de aplicación.
+- **Integración** → filtro genérico.
+- **Respuesta** → problem details 400 o 422.
 
 - **Línea 1:** Sintáctica → tipos no anulables en los records.
 - **Línea 2:** Semántica → reglas con FluentValidation.
@@ -1007,6 +1031,10 @@ Un documento OpenAPI describe la API de forma completa y estructurada. La estruc
 
 Swagger es el nombre original del proyecto que dio lugar a OpenAPI. En la práctica, el término Swagger se usa para referirse a tres cosas: el formato de descripción, las herramientas de generación y la interfaz de usuario. La interfaz de usuario se llama Swagger UI y permite explorar la API de forma interactiva. Swagger UI lee el documento OpenAPI generado por el servidor y construye una página web que muestra los endpoints, los parámetros y las respuestas. La página incluye un botón para probar cada endpoint directamente desde el navegador. La combinación de OpenAPI y Swagger UI proporciona documentación viva y ejecutable.
 
+![Figura del punto 2.4: Del endpoint de ASP.NET Core al documento OpenAPI](IMAGENES/m02-2-4-generacion-openapi.svg)
+
+*Figura M02.2.4.2 — Del endpoint de ASP.NET Core al documento OpenAPI.*
+
 ```csharp
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -1036,6 +1064,10 @@ La configuración de Swagger en ASP.NET Core se realiza en dos fases. La primera
 ### Bloque 3 — Estructura de un documento OpenAPI
 
 Un documento OpenAPI se organiza en secciones. La sección info contiene los metadatos de la API: título, versión, descripción y contacto. La sección servers contiene las URL base de la API. La sección paths contiene los endpoints con sus métodos y parámetros. La sección components contiene los esquemas de datos reutilizables. La sección security contiene los esquemas de autenticación. La sección tags contiene las etiquetas que agrupan los endpoints. Cada sección tiene una estructura definida por la especificación. La estructura es la misma independientemente del lenguaje o del framework que genere el documento.
+
+![Figura del punto 2.4: Secciones que componen el contrato OpenAPI](IMAGENES/m02-2-4-estructura-openapi.svg)
+
+*Figura M02.2.4.3 — Secciones que componen el contrato OpenAPI.*
 
 ```yaml
 openapi: 3.0.3

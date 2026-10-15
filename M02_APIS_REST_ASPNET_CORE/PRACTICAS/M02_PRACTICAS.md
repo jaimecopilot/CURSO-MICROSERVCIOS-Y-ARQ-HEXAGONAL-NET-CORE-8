@@ -881,17 +881,18 @@ Se adopta el estilo arquitectónico REST con las seis restricciones, las cinco r
 
 ### Errores comunes del ejercicio completo
 
-Error Causa Solución
-xcopy no copia subcarpetas Falta el flag /E Ejecutar xcopy origen destino /E /I /H /Y
-StringComparison no se resuelve Falta el using System; Añadir el using al principio del archivo
-IReadOnlyList<string> no se resuelve Falta el using System.Collections.Generic; Añadir el using al principio del archivo
-Where no se resuelve Falta el using System.Linq; Añadir el using al principio del archivo
-NullReferenceException en CatalogoUris No se inicializa _uris Inicializar en el constructor
-El validador no detecta URIs sin prefijo Falta la comprobación con StartsWith Revisar la primera comprobación de Validar
-El validador no detecta verbos en mayúsculas Falta StringComparison.OrdinalIgnoreCase Añadir el parámetro a Contains
-Should() no se resuelve Falta el paquete FluentAssertions Ejecutar dotnet add package FluentAssertions
-El proyecto de tests no compila Falta la referencia al proyecto monolítico Ejecutar dotnet add reference
-La compilación falla por el .dll bloqueado La API está en ejecución Detener la API con Ctrl+C
+| Error observado | Causa | Solución guiada |
+|:---|:---|:---|
+| xcopy no copia subcarpetas | Falta el flag /E | Ejecutar xcopy origen destino /E /I /H /Y |
+| StringComparison no se resuelve | Falta el using System; | Añadir el using al principio del archivo |
+| IReadOnlyList<string> no se resuelve | Falta el using System.Collections.Generic; | Añadir el using al principio del archivo |
+| Where no se resuelve | Falta el using System.Linq; | Añadir el using al principio del archivo |
+| NullReferenceException en CatalogoUris | No se inicializa _uris | Inicializar en el constructor |
+| El validador no detecta URIs sin prefijo | Falta la comprobación con StartsWith | Revisar la primera comprobación de Validar |
+| El validador no detecta verbos en mayúsculas | Falta StringComparison.OrdinalIgnoreCase | Añadir el parámetro a Contains |
+| Should() no se resuelve | Falta el paquete FluentAssertions | Ejecutar dotnet add package FluentAssertions |
+| El proyecto de tests no compila | Falta la referencia al proyecto monolítico | Ejecutar dotnet add reference |
+| La compilación falla por el .dll bloqueado | La API está en ejecución | Detener la API con Ctrl+C |
 
 
 ---
@@ -1820,17 +1821,18 @@ for %f in (modulo-2-apis-rest-aspnet-core\2.1-diseno-apis-rest\docs\*.md) do @fc
 
 ### Errores comunes del ejercicio completo
 
-Error Causa Solución
-xcopy no copia subcarpetas Falta el flag /E Ejecutar xcopy origen destino /E /I /H /Y
-Dictionary<string, int[]> no se resuelve Falta el using System.Collections.Generic; Añadir el using al principio del archivo
-Contains no se resuelve Falta el using System.Linq; Añadir el using al principio del archivo
-Where no se resuelve Falta el using System.Linq; Añadir el using al principio del archivo
-NullReferenceException en CatalogoCombinaciones No se inicializa _combinaciones Inicializar en el constructor
-KeyNotFoundException en el validador No se comprueba si el verbo existe Comprobar ContainsKey antes de acceder
-El validador acepta códigos no permitidos Falta la comprobación con Contains Revisar la segunda comprobación del método
-Should() no se resuelve Falta el paquete FluentAssertions Ejecutar dotnet add package FluentAssertions
-El proyecto de tests no compila Falta la referencia al proyecto monolítico Ejecutar dotnet add reference
-La compilación falla por el .dll bloqueado La API está en ejecución Detener la API con Ctrl+C
+| Error observado | Causa | Solución guiada |
+|:---|:---|:---|
+| xcopy no copia subcarpetas | Falta el flag /E | Ejecutar xcopy origen destino /E /I /H /Y |
+| Dictionary<string, int[]> no se resuelve | Falta el using System.Collections.Generic; | Añadir el using al principio del archivo |
+| Contains no se resuelve | Falta el using System.Linq; | Añadir el using al principio del archivo |
+| Where no se resuelve | Falta el using System.Linq; | Añadir el using al principio del archivo |
+| NullReferenceException en CatalogoCombinaciones | No se inicializa _combinaciones | Inicializar en el constructor |
+| KeyNotFoundException en el validador | No se comprueba si el verbo existe | Comprobar ContainsKey antes de acceder |
+| El validador acepta códigos no permitidos | Falta la comprobación con Contains | Revisar la segunda comprobación del método |
+| Should() no se resuelve | Falta el paquete FluentAssertions | Ejecutar dotnet add package FluentAssertions |
+| El proyecto de tests no compila | Falta la referencia al proyecto monolítico | Ejecutar dotnet add reference |
+| La compilación falla por el .dll bloqueado | La API está en ejecución | Detener la API con Ctrl+C |
 
 
 ---
@@ -2782,17 +2784,18 @@ for %f in (modulo-2-apis-rest-aspnet-core\2.2-recursos-verbos-codigos\docs\*.md)
 
 ### Errores comunes del ejercicio completo
 
-Error Causa Solución
-xcopy no copia subcarpetas Falta el flag /E Ejecutar xcopy origen destino /E /I /H /Y
-AddValidatorsFromAssemblyContaining no se resuelve Falta el using FluentValidation; Añadir el using al principio del archivo
-CrearOrdenRequestValidator no se resuelve Falta el using AceriaApp.Monolito.Api.Validacion; Añadir el using al principio de Program.cs
-OfType, FirstOrDefault, GroupBy no se resuelven Falta el using System.Linq; Añadir el using al principio del archivo
-AbstractValidator no se resuelve Falta el paquete FluentValidation.DependencyInjectionExtensions Ejecutar dotnet add package FluentValidation.DependencyInjectionExtensions
-El validador no se ejecuta No está registrado en el contenedor Añadir AddValidatorsFromAssemblyContaining
-Should() no se resuelve Falta el paquete FluentAssertions Ejecutar dotnet add package FluentAssertions
-El proyecto de tests no compila Falta la referencia al proyecto monolítico Ejecutar dotnet add reference
-La compilación falla por el .dll bloqueado La API está en ejecución Detener la API con Ctrl+C
-El commit incluye bin/ y obj/ Falta el .gitignore Verificar que el .gitignore está presente
+| Error observado | Causa | Solución guiada |
+|:---|:---|:---|
+| xcopy no copia subcarpetas | Falta el flag /E | Ejecutar xcopy origen destino /E /I /H /Y |
+| AddValidatorsFromAssemblyContaining no se resuelve | Falta el using FluentValidation; | Añadir el using al principio del archivo |
+| CrearOrdenRequestValidator no se resuelve | Falta el using AceriaApp.Monolito.Api.Validacion; | Añadir el using al principio de Program.cs |
+| OfType, FirstOrDefault, GroupBy no se resuelven | Falta el using System.Linq; | Añadir el using al principio del archivo |
+| AbstractValidator no se resuelve | Falta el paquete FluentValidation.DependencyInjectionExtensions | Ejecutar dotnet add package FluentValidation.DependencyInjectionExtensions |
+| El validador no se ejecuta | No está registrado en el contenedor | Añadir AddValidatorsFromAssemblyContaining |
+| Should() no se resuelve | Falta el paquete FluentAssertions | Ejecutar dotnet add package FluentAssertions |
+| El proyecto de tests no compila | Falta la referencia al proyecto monolítico | Ejecutar dotnet add reference |
+| La compilación falla por el .dll bloqueado | La API está en ejecución | Detener la API con Ctrl+C |
+| El commit incluye bin/ y obj/ | Falta el .gitignore | Verificar que el .gitignore está presente |
 
 
 ---
@@ -3850,17 +3853,18 @@ for %f in (modulo-2-apis-rest-aspnet-core\2.3-validacion-peticiones\docs\*.md) d
 
 ### Errores comunes del ejercicio completo
 
-Error Causa Solución
-xcopy no copia subcarpetas Falta el flag /E Ejecutar xcopy origen destino /E /I /H /Y
-StringComparison no se resuelve Falta el using System; Añadir el using al principio del archivo
-Should() no se resuelve Falta el paquete FluentAssertions Ejecutar dotnet add package FluentAssertions
-El proyecto de tests no compila Falta la referencia al proyecto monolítico Ejecutar dotnet add reference
-NullReferenceException en ConfiguracionOpenApi No se inicializa Metadatos con new() Inicializar con new()
-El JSON Swagger no incluye la versión No se registró SwaggerDoc con los metadatos Revisar DocumentacionExtensions
-El endpoint Swagger no aparece Falta la integración en Program.cs Comprobar AddDocumentacionOpenApi y UseDocumentacionOpenApi
-La compilación falla por el .dll bloqueado La API está en ejecución Detener la API con Ctrl+C
-El commit incluye bin/ y obj/ Falta el .gitignore Verificar que el .gitignore está presente
-El commit no incluye los archivos nuevos No se ha ejecutado git add . Ejecutar git add . antes del commit
+| Error observado | Causa | Solución guiada |
+|:---|:---|:---|
+| xcopy no copia subcarpetas | Falta el flag /E | Ejecutar xcopy origen destino /E /I /H /Y |
+| StringComparison no se resuelve | Falta el using System; | Añadir el using al principio del archivo |
+| Should() no se resuelve | Falta el paquete FluentAssertions | Ejecutar dotnet add package FluentAssertions |
+| El proyecto de tests no compila | Falta la referencia al proyecto monolítico | Ejecutar dotnet add reference |
+| NullReferenceException en ConfiguracionOpenApi | No se inicializa Metadatos con new() | Inicializar con new() |
+| El JSON Swagger no incluye la versión | No se registró SwaggerDoc con los metadatos | Revisar DocumentacionExtensions |
+| El endpoint Swagger no aparece | Falta la integración en Program.cs | Comprobar AddDocumentacionOpenApi y UseDocumentacionOpenApi |
+| La compilación falla por el .dll bloqueado | La API está en ejecución | Detener la API con Ctrl+C |
+| El commit incluye bin/ y obj/ | Falta el .gitignore | Verificar que el .gitignore está presente |
+| El commit no incluye los archivos nuevos | No se ha ejecutado git add . | Ejecutar git add . antes del commit |
 
 ---
 
