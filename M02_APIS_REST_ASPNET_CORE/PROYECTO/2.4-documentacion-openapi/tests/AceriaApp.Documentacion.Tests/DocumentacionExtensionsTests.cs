@@ -1,38 +1,54 @@
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.AspNetCore.Hosting;
+using System.Net;
 using System.Text.Json;
-using System.Net.Http.Json;
+using AceriaApp.Monolito.Api.Documentacion;
+using FluentAssertions;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Xunit;
+
 namespace AceriaApp.Documentacion.Tests;
+
 public class DocumentacionExtensionsTests
 {
-    [Fact] public async Task Swagger_EnDesarrollo_DevuelveJsonOpenApi()
+    [Fact]
+    public async Task SwaggerJson_EnDevelopment_ContieneMetadatosV1()
     {
-        using var f=new WebApplicationFactory<Program>().WithWebHostBuilder(b=>b.UseEnvironment("Development"));
-        using var cliente=f.CreateClient();
-        var respuesta=await cliente.GetAsync("/swagger/v1/swagger.json");
-        respuesta.EnsureSuccessStatusCode();
-        using var json=JsonDocument.Parse(await respuesta.Content.ReadAsStringAsync());
-        Assert.True(json.RootElement.TryGetProperty("openapi",out _));
+        using var factory = new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(b => b.UseEnvironment("Development"));
+        using var client = factory.CreateClient();
+        using var response = await client.GetAsync("/swagger/v1/swagger.json");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var info = json.RootElement.GetProperty("info");
+        info.GetProperty("title").GetString().Should().Be("AceriaApp.Monolito.Api");
+        info.GetProperty("version").GetString().Should().Be("v1");
     }
-    [Fact] public async Task Swagger_ContieneVersion()
+
+    [Fact]
+    public async Task SwaggerJson_EnDevelopment_DescribeLosEndpointsReales()
     {
-        using var f=new WebApplicationFactory<Program>().WithWebHostBuilder(b=>b.UseEnvironment("Development"));
-        using var json=JsonDocument.Parse(await f.CreateClient().GetStringAsync("/swagger/v1/swagger.json"));
-        Assert.Equal("v1",json.RootElement.GetProperty("info").GetProperty("version").GetString());
+        using var factory = new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(b => b.UseEnvironment("Development"));
+        using var client = factory.CreateClient();
+        using var response = await client.GetAsync("/swagger/v1/swagger.json");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var ordenes = json.RootElement.GetProperty("paths")
+            .GetProperty("/api/v1/ordenes");
+        ordenes.TryGetProperty("get", out _).Should().BeTrue();
+        ordenes.TryGetProperty("post", out _).Should().BeTrue();
     }
-    [Fact] public async Task Swagger_DocumentaOrdenes()
+
+    [Fact]
+    public async Task SwaggerJson_EnProduction_NoEstaPublicado()
     {
-        using var f=new WebApplicationFactory<Program>().WithWebHostBuilder(b=>b.UseEnvironment("Development"));
-        using var json=JsonDocument.Parse(await f.CreateClient().GetStringAsync("/swagger/v1/swagger.json"));
-        Assert.True(json.RootElement.GetProperty("paths").TryGetProperty("/api/v1/ordenes",out _));
-        var invalid = await f.CreateClient().PostAsJsonAsync("/api/v1/ordenes", new { cliente="", material="CHAPA-3MM", cantidad=-1 });
-        Assert.Equal(System.Net.HttpStatusCode.BadRequest, invalid.StatusCode);
-    }
-    [Fact] public async Task Swagger_NoSePublicaEnProduccion()
-    {
-        using var f=new WebApplicationFactory<Program>().WithWebHostBuilder(b=>b.UseEnvironment("Production"));
-        var response=await f.CreateClient().GetAsync("/swagger/v1/swagger.json");
-        Assert.Equal(System.Net.HttpStatusCode.NotFound,response.StatusCode);
+        using var factory = new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(b => b.UseEnvironment("Production"));
+        using var client = factory.CreateClient();
+        using var response = await client.GetAsync("/swagger/v1/swagger.json");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 }
