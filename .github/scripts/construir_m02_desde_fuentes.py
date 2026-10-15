@@ -10,6 +10,7 @@ import hashlib
 import json
 import re
 from pathlib import Path
+from pedagogia_m02 import aplicar as aplicar_pedagogia
 
 SRC = Path(".github/fuentes-originales/m02")
 WORDS_RE = re.compile(r"\b[\wÁÉÍÓÚÜÑáéíóúüñ]+\b", re.UNICODE)
@@ -160,24 +161,6 @@ def aplicar_erratas(text: str, point: str, tipo: str):
             if n:
                 text=text.replace(before,after)
                 applied.append(dict(antes=before,despues=after,veces=n))
-    if point=="2.2" and tipo=="PRACTICAS":
-        start=text.index("### PASO 2.2.21 —")
-        end=text.index("### PASO 2.2.22 —",start)
-        step=text[start:end]
-        extra=(
-          "- **Acción 6:** Comparar también **todos** los documentos heredados "
-          "de `docs` (no solo los dos ejemplos anteriores), desde CMD "
-          "en la carpeta raíz del curso:\n\n"
-          "```cmd\n"
-          "for %f in (\"modulo-2-apis-rest-aspnet-core\\\\2.1-diseno-apis-rest\\\\docs\\\\*.md\") do @fc /L \"%~f\" \"modulo-2-apis-rest-aspnet-core\\\\2.2-recursos-verbos-codigos\\\\docs\\\\%~nxf\"\n"
-          "```\n\n"
-          "**Verificación adicional:** todos los documentos heredados "
-          "coinciden; los dos nuevos del punto 2.2 se excluyen.\n\n"
-        )
-        if "**Por qué se hace:**" not in step: raise ValueError("Paso 2.2.21 sin justificación")
-        step=step.replace("**Por qué se hace:**",extra+"**Por qué se hace:**",1)
-        text=text[:start]+step+text[end:]
-        applied.append(dict(correccion="Comparación de todos los documentos heredados"))
     return text, applied
 
 def canonical_tokens(s: str):
@@ -217,7 +200,8 @@ def main():
         practice_fragment="## Punto "+p+" — "+HEAD[p]+"\n\n"+enmarcar_codigo(heading_and_items(doc["practice"],p,True),True)
         theory_fragment, ct = aplicar_erratas(theory_fragment,p,"TEORIA")
         practice_fragment, cp = aplicar_erratas(practice_fragment,p,"PRACTICAS")
-        doc["correcciones_aplicadas"]=ct+cp
+        practice_fragment, extras = aplicar_pedagogia(practice_fragment,p,"PRACTICAS")
+        doc["correcciones_aplicadas"]=ct+cp+extras
         theory.append(theory_fragment)
         practice.append(practice_fragment)
         report["fuentes_presentes"].append({
