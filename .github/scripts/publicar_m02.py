@@ -52,7 +52,7 @@ def validate_sections(originals: list[dict], docs: dict[str,str]):
         assert "PARTE TEÓRICA (" not in v
         assert "PARTE PRÁCTICA (" not in v
         assert "Espero confirmación del usuario" not in v
-        assert v.count("```")==0
+        assert "§" not in v
     # En los ejemplos ya delimitados 2.4, fences completos y no anidados
     assert len(re.findall(r"(?m)^```",theory))%2==0
     assert len(re.findall(r"(?m)^```",pract))%2==0
