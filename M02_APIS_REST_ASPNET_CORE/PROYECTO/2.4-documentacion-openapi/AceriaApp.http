@@ -1,0 +1,38 @@
+@Host = http://localhost:5082
+GET {{Host}}/api/v1/ordenes
+
+### Detalle inexistente
+GET {{Host}}/api/v1/ordenes/00000000-0000-0000-0000-000000000001
+
+### Crear 201 (guardar el ID del cuerpo y Location)
+POST {{Host}}/api/v1/ordenes
+Content-Type: application/json
+
+{"cliente":"ACX-001","material":"CHAPA-3MM","cantidad":10}
+
+### Validación 400 en 2.3
+POST {{Host}}/api/v1/ordenes
+Content-Type: application/json
+
+{"cliente":"","material":"CHAPA-3MM","cantidad":0}
+
+### Negocio 422
+POST {{Host}}/api/v1/ordenes
+Content-Type: application/json
+
+{"cliente":"ACX-001","material":"CHAPA-3MM","cantidad":501}
+
+### Sustituir {id} por ID real
+PUT {{Host}}/api/v1/ordenes/{id}
+Content-Type: application/json
+
+{"cliente":"ACX-002","material":"CHAPA-5MM","cantidad":14}
+
+PATCH {{Host}}/api/v1/ordenes/{id}/cantidad
+Content-Type: application/json
+
+{"cantidad":15}
+
+POST {{Host}}/api/v1/ordenes/{id}/finalizar
+
+DELETE {{Host}}/api/v1/ordenes/{id}

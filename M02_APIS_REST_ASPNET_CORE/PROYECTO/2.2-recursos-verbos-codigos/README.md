@@ -1,26 +1,17 @@
-# Punto 2.2 — Recursos, verbos HTTP y códigos de respuesta
+# M02 — Etapa 2/4 · API REST en ASP.NET Core 8
 
-## Objetivo
-Construir una evolución verificable del monolito AceriaApp aplicando los conceptos de diseño de APIs REST.
+Este proyecto funciona independientemente del resto. El alumnado lo construye
+de forma progresiva siguiendo M02_PRACTICAS.md, con Visual Studio y SQL Server
+Express LocalDB (Windows). NO requiere comandos Git.
 
-## Estado de la solución
-- Solución AceriaApp.sln con 8 proyectos en total (una API y 7 proyectos de pruebas).
-- 36 pruebas previstas en la solución completa, pendientes de comprobar mediante CI.
-- Documento docs/catalogo-recursos.md y las decisiones arquitectónicas acumuladas.
-- El proyecto es independiente: conserva los archivos del punto previo salvo integraciones aditivas documentadas.
+## Ejecución
+1. Abrir src/AceriaApp.Api/AceriaApp.Api.csproj en Visual Studio.
+2. Comprobar que está instalado .NET 8 y SQL Server Express LocalDB.
+3. Ejecutar `dotnet restore` y `dotnet run --project src/AceriaApp.Api`.
+4. Probar las peticiones HTTP del archivo AceriaApp.http.
+5. Ejecutar `dotnet test tests/AceriaApp.Api.Tests`.
 
-## Cómo ejecutarlo
-1. Abrir AceriaApp.sln en Visual Studio con SDK .NET 8.
-2. Restaurar con dotnet restore AceriaApp.sln.
-3. Compilar con dotnet build AceriaApp.sln.
-4. Ejecutar dotnet test AceriaApp.sln.
-5. Configurar SQL Server Express e iniciar la API con dotnet run --project src/AceriaApp.Monolito.Api.
-
-## Qué incorpora este punto
-- Catálogo de recursos y ADR-007.
-- Validador de combinaciones verbo-código; cinco nuevos casos xUnit.
-- La tabla valida una convención local; no todos los códigos HTTP posibles.
-
-## Documentación
-- docs/catalogo-recursos.md
-- Los ADR previos conservados sin alteración.
+En Development, EnsureCreated crea la base de aprendizaje sin migraciones.
+No debe usarse como estrategia de despliegue productivo.
+La API emplea SQL Server Express LocalDB; EF Core InMemory está solo en tests.
+Etapa: POST PUT PATCH DELETE y reglas de dominio.

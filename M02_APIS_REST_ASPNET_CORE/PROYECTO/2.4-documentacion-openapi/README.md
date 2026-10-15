@@ -1,28 +1,17 @@
-# Punto 2.4 — Documentación mediante OpenAPI (Swagger)
+# M02 — Etapa 4/4 · API REST en ASP.NET Core 8
 
-## Objetivo
-Construir una evolución verificable del monolito AceriaApp aplicando los conceptos de diseño de APIs REST.
+Este proyecto funciona independientemente del resto. El alumnado lo construye
+de forma progresiva siguiendo M02_PRACTICAS.md, con Visual Studio y SQL Server
+Express LocalDB (Windows). NO requiere comandos Git.
 
-## Estado de la solución
-- Solución AceriaApp.sln con 10 proyectos en total (una API y 9 proyectos de pruebas).
-- 51 pruebas acumuladas en la solución completa (resultado sujeto a CI).
-- Documento docs/documentacion-openapi.md y las decisiones arquitectónicas acumuladas.
-- El proyecto es independiente: conserva los archivos del punto previo salvo integraciones aditivas documentadas.
+## Ejecución
+1. Abrir src/AceriaApp.Api/AceriaApp.Api.csproj en Visual Studio.
+2. Comprobar que está instalado .NET 8 y SQL Server Express LocalDB.
+3. Ejecutar `dotnet restore` y `dotnet run --project src/AceriaApp.Api`.
+4. Probar las peticiones HTTP del archivo AceriaApp.http.
+5. Ejecutar `dotnet test tests/AceriaApp.Api.Tests`.
 
-## Cómo ejecutarlo
-1. Abrir AceriaApp.sln en Visual Studio con SDK .NET 8.
-2. Restaurar con dotnet restore AceriaApp.sln.
-3. Compilar con dotnet build AceriaApp.sln.
-4. Ejecutar dotnet test AceriaApp.sln.
-5. Configurar SQL Server Express e iniciar la API con dotnet run --project src/AceriaApp.Monolito.Api.
-
-## Qué incorpora este punto
-- La extensión `DocumentacionExtensions` sustituye la construcción manual de YAML; `Program.cs` se adapta exclusivamente en la copia 2.4 para invocar `AddDocumentacionOpenApi` y `UseDocumentacionOpenApi`, sin alterar 2.3.
-- SwaggerGen y SwaggerUI configurados desde DocumentacionExtensions; metadatos reales.
-- Program.cs de esta copia integra las extensiones y anota los endpoints.
-- WebApplicationFactory contrasta la respuesta HTTP real del documento en Development y su ausencia en Production.
-- Nueve pruebas nuevas y ADR-009.
-
-## Documentación
-- docs/documentacion-openapi.md
-- Los ADR previos conservados sin alteración.
+En Development, EnsureCreated crea la base de aprendizaje sin migraciones.
+No debe usarse como estrategia de despliegue productivo.
+La API emplea SQL Server Express LocalDB; EF Core InMemory está solo en tests.
+Etapa: OpenAPI real, Swagger UI y pruebas de documento.
