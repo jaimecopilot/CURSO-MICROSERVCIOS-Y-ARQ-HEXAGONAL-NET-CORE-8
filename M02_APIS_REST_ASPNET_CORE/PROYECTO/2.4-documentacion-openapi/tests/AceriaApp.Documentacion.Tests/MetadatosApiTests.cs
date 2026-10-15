@@ -7,7 +7,7 @@ public class MetadatosApiTests
     {
         var m=new MetadatosApi();
         Assert.Equal("v1",m.Version); Assert.Equal("AceriaApp.Monolito.Api",m.Titulo);
-        Assert.Equal("equipo@aceria.local",m.ContactoEmail);
+        Assert.Equal("equipo@acerialocal",m.ContactoEmail);
     }
     [Fact] public void Metadatos_Personalizables()
     {
