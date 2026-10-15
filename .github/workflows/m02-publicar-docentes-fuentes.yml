@@ -1,17 +1,6 @@
 name: M02 - publicar docentes desde fuentes originales
 
 on:
-  push:
-    branches:
-      - desarrollo/m02-apis-rest-20261015
-    paths:
-      - '.github/workflows/m02-publicar-docentes-fuentes.yml'
-      - '.github/scripts/construir_m02_desde_fuentes.py'
-      - '.github/scripts/pedagogia_m02.py'
-      - '.github/scripts/maquetacion_m02.py'
-      - 'M02_APIS_REST_ASPNET_CORE/TEORIA/IMAGENES/*.svg'
-      - '.github/scripts/pdf_m02_previsualizacion.py'
-      - '.github/fuentes-originales/m02/punto-2.*.md'
   workflow_dispatch:
 
 permissions:
