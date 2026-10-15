@@ -282,9 +282,10 @@ def program(stage):
     'if(app.Environment.IsDevelopment()&&!app.Configuration.GetValue<bool>("SkipDatabaseInitialization"))',
     "{","    using var scope=app.Services.CreateScope();",
     "    await scope.ServiceProvider.GetRequiredService<AceriaDbContext>().Database.EnsureCreatedAsync();","}"]
-    parts.append(GETS.format(
-        getmeta=('.WithSummary("Lista las órdenes de producción").Produces<IEnumerable<OrdenDto>>(200)' if stage>=4 else ""),
-        onemeta=('.WithSummary("Obtiene una orden por ID").Produces<OrdenDto>(200).Produces(404)' if stage>=4 else "")))
+    getcode=GETS.replace("{getmeta}",('.WithSummary("Lista las órdenes de producción").Produces<IEnumerable<OrdenDto>>(200)' if stage>=4 else ""))
+    getcode=getcode.replace("{onemeta}",('.WithSummary("Obtiene una orden por ID").Produces<OrdenDto>(200).Produces(404)' if stage>=4 else ""))
+    getcode=getcode.replace("{{id:guid}}","{id:guid}")
+    parts.append(getcode)
     if stage>=2:
         check=('    if(string.IsNullOrWhiteSpace(request.Cliente)||string.IsNullOrWhiteSpace(request.Material)||request.Cantidad<=0)\n        return Results.BadRequest(new {error="Cliente, material y cantidad son obligatorios."});\n' if stage==2 else '')
         patchcheck=('    if(request.Cantidad<=0) return Results.BadRequest(new {error="Cantidad debe ser positiva."});\n' if stage==2 else '')
@@ -293,8 +294,9 @@ def program(stage):
         parts.append(POST.format(check=check,filter=filt,meta=('.WithSummary("Crea una orden").Produces<OrdenDto>(201).ProducesValidationProblem(400).ProducesProblem(422)' if stage>=4 else '')))
         parts.append(PUT.format(check=check,filter=filt,meta=('.WithSummary("Sustituye campos editables").Produces(204).Produces(404).ProducesProblem(409).ProducesValidationProblem(400)' if stage>=4 else '')))
         parts.append(PATCH.format(check=patchcheck,filter=patchfilt,meta=('.WithSummary("Modifica cantidad").Produces<OrdenDto>(200).ProducesValidationProblem(400)' if stage>=4 else '')))
-        parts.append(DELETE.format(meta=('.WithSummary("Elimina una orden pendiente").Produces(204).Produces(404)' if stage>=4 else ''),
-                     finishmeta=('.WithSummary("Finaliza una orden").Produces<OrdenDto>(200).ProducesProblem(409)' if stage>=4 else '')))
+        deletecode=DELETE.replace("{meta}",('.WithSummary("Elimina una orden pendiente").Produces(204).Produces(404)' if stage>=4 else ''))
+        deletecode=deletecode.replace("{finishmeta}",('.WithSummary("Finaliza una orden").Produces<OrdenDto>(200).ProducesProblem(409)' if stage>=4 else ''))
+        parts.append(deletecode)
     if stage>=4:parts.append("app.UseDocumentacion(); // PASO 2.4.4")
     parts+=["app.Run();","public partial class Program {} // permite WebApplicationFactory en tests"]
     return "\n".join(parts)
