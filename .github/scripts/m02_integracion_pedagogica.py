@@ -208,7 +208,7 @@ RESPONSE_HINT=[
 ["Cliente vacío → 400 + errors","Cantidad 10001 → 400 + errors",
  "Cantidad 501 → 422","Orden finalizada → 409"],
 ["GET /swagger/v1/swagger.json → 200 en Development",
- "info.version → v1","paths contiene GET y POST","schemas contiene CrearOrdenRequest",
+ "info.version → v1","paths contiene GET y POST → Rutas descubiertas","schemas contiene CrearOrdenRequest → Contrato registrado",
  "GET /swagger/v1/swagger.json → 404 en Production"]
 ]
 def read(stage:int,relative:str):
