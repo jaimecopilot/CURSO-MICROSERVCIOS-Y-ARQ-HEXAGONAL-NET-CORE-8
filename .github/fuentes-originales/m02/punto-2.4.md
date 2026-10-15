@@ -379,3 +379,312 @@ Resumen rápido de la teoría
 
 ---
 
+PARTE PRÁCTICA (27 minutos)
+
+Ejercicio: Añadir al punto 2.3 un documento de documentación OpenAPI en docs/, una clase de configuración de metadatos en el proyecto monolítico y un test unitario que verifique la configuración de OpenAPI. Cerrar el módulo 2 con el resumen del estado del proyecto. El punto 2.4 parte del contenido del punto 2.3 sin modificar ningún archivo existente: solo añade archivos nuevos.
+
+Ubicación de trabajo: C:\cursos\AceriaApp\modulo-2-apis-rest-aspnet-core\
+
+---
+
+Paso 1 — Crear la carpeta del punto 2.4 a partir del punto 2.3
+
+Acción 1: Abrir la terminal integrada de Visual Studio 2026 con Ctrl+ñ (o Ctrl+``  en teclados no españoles).
+Acción 2: Escribir cd C:\cursos\AceriaApp\modulo-2-apis-rest-aspnet-core y pulsar Enter.
+Acción 3: Escribir mkdir 2.4-documentacion-openapi y pulsar Enter.
+Acción 4: Escribir xcopy 2.3-validacion-peticiones 2.4-documentacion-openapi /E /I /H /Y y pulsar Enter.
+Acción 5: Escribir dir 2.4-documentacion-openapi y pulsar Enter para verificar que se ha copiado el contenido.
+
+Por qué se hace: cada punto del curso parte del contenido del punto anterior. El punto 2.4 se construye sobre el punto 2.3 copiando su contenido y añadiendo archivos nuevos sin modificar los existentes.
+
+Errores comunes:
+
+· Usar copy en lugar de xcopy: copy no copia carpetas de forma recursiva.
+· Olvidar el flag /E: no se copian las subcarpetas vacías.
+· Olvidar el flag /I: xcopy pregunta si el destino es un directorio cuando no existe.
+· Olvidar el flag /Y: xcopy pide confirmación para sobrescribir.
+
+Verificación: al ejecutar dir 2.4-documentacion-openapi, deben aparecer AceriaApp.sln, README.md, src, tests y docs.
+
+---
+
+Paso 2 — Abrir la solución copiada en Visual Studio 2026
+
+Acción 1: Escribir cd 2.4-documentacion-openapi y pulsar Enter.
+Acción 2: Escribir start AceriaApp.sln y pulsar Enter.
+Acción 3: Verificar que Visual Studio 2026 abre la solución y muestra los proyectos heredados del punto 2.3: AceriaApp.Monolito.Api, AceriaApp.Monolito.Tests, AceriaApp.Metricas.Tests, AceriaApp.Diseno.Tests, AceriaApp.Organizacion.Tests, AceriaApp.BuenasPracticas.Tests, AceriaApp.DisenoRest.Tests, AceriaApp.CatalogoRecursos.Tests y AceriaApp.Validacion.Tests.
+Acción 4: Verificar que la solución compila con Ctrl+Shift+B y que la salida muestra Build succeeded..
+
+Por qué se hace: abrir la solución copiada permite trabajar en el punto 2.4 sobre la base del punto 2.3. La compilación verifica que la copia es correcta.
+
+Errores comunes:
+
+· Abrir la solución del punto 2.3 en lugar de la del punto 2.4: los cambios se aplican al punto equivocado.
+· No compilar antes de empezar: si la copia tiene errores, los cambios posteriores fallan.
+· Tener la API del punto 2.3 en ejecución: el puerto queda ocupado y la compilación falla.
+
+Verificación: Visual Studio 2026 muestra la solución AceriaApp con los nueve proyectos heredados del punto 2.3 y la compilación es correcta.
+
+---
+
+Paso 3 — Verificar que la carpeta docs contiene los documentos del punto 2.3
+
+Acción 1: En el panel Solution Explorer, expandir la carpeta docs del punto 2.4.
+Acción 2: Verificar que contiene ADR-001 a ADR-008, analisis-ventajas-inconvenientes.md, principios-diseno.md, organizacion-solucion.md, buenas-practicas.md, diseno-apis-rest.md, catalogo-recursos.md y validacion-peticiones.md.
+Acción 3: Verificar que ninguno de los doce documentos se ha modificado.
+Acción 4: Verificar que la carpeta docs no contiene ningún archivo nuevo del punto 2.4 todavía.
+
+Por qué se hace: el punto 2.4 parte del contenido del punto 2.3, que ya incluye la carpeta docs con doce documentos. No se modifica ningún documento existente.
+
+Errores comunes:
+
+· Modificar alguno de los ADR o documentos existentes: viola la regla de no modificar archivos del punto anterior.
+· Eliminar algún documento existente: pierde la trazabilidad del punto 2.3.
+· Crear la carpeta docs si ya existe: mkdir falla.
+
+Verificación: la carpeta docs contiene los doce documentos del punto 2.3 sin modificaciones.
+
+---
+
+Paso 4 — Crear el documento de documentación OpenAPI en docs
+
+Acción 1: En el panel Solution Explorer, hacer clic derecho sobre la carpeta docs.
+Acción 2: Seleccionar Add → New Item → Text File y nombrar el archivo documentacion-openapi.md.
+Acción 3: Escribir exactamente el siguiente contenido:
+
+```markdown
+# Documentación OpenAPI — Punto 2.4
+
+## Estándar OpenAPI
+
+Especificación para describir APIs REST. Versión 3.0.3.
+
+## Swagger UI
+
+Interfaz gráfica que lee el documento OpenAPI y permite explorar la API.
+
+## Secciones del documento
+
+- `info`: metadatos de la API.
+- `servers`: URL base.
+- `paths`: endpoints.
+- `components`: esquemas reutilizables.
+- `security`: esquemas de autenticación.
+- `tags`: agrupación de endpoints.
+
+## Anotaciones de Minimal API
+
+- `WithName`: nombre único del endpoint.
+- `WithSummary`: resumen corto.
+- `WithDescription`: descripción larga.
+- `WithTags`: agrupación.
+- `Produces`: tipo de respuesta.
+- `ProducesProblem`: tipo de error.
+- `ProducesValidationProblem`: tipo de error de validación.
+
+## Esquemas
+
+Los esquemas se derivan de los DTOs y se referencian con `$ref`.
+
+## Ejemplos
+
+Los ejemplos se añaden en los esquemas de petición y de respuesta.
+
+## Versionado
+
+La versión de la documentación coincide con la versión del contrato en la URL.
+
+## Herramientas que consumen OpenAPI
+
+- Swagger UI.
+- OpenAPI Generator.
+- Postman.
+- ReDoc.
+
+## Aplicación al proyecto del curso
+
+| Elemento | Aplicación |
+|----------|------------|
+| Metadatos | `WithName`, `WithSummary`, `WithDescription`, `WithTags` |
+| Esquemas | Derivados de los DTOs |
+| Ejemplos | Añadidos en los esquemas |
+| Versionado | v1 en URL y documentación |
+| Errores | `ProducesProblem`, `ProducesValidationProblem` |
+
+## Cierre del módulo 2
+
+El proyecto AceriaApp dispone de:
+
+- API Minimal con endpoints REST.
+- Recursos identificados con URIs que siguen las cinco reglas.
+- Verbos HTTP con semántica correcta.
+- Códigos de respuesta adecuados a cada situación.
+- Validación de peticiones en tres niveles.
+- Documentación OpenAPI con metadatos, esquemas y ejemplos.
+- Cuarenta y cuatro pruebas unitarias acumuladas en diez proyectos de tests.
+- Nueve puntos completados (1.1 a 1.5 y 2.1 a 2.4).
+```
+
+Acción 4: Pulsar Ctrl+S para guardar el archivo.
+Acción 5: Verificar que el archivo aparece en la carpeta docs sin subrayados rojos.
+
+Por qué se hace: el documento de documentación OpenAPI es el artefacto de docs específico del punto 2.4. Incluye el cierre del módulo 2 con el resumen del estado del proyecto. No modifica los doce documentos existentes del punto 2.3.
+
+Errores comunes:
+
+· Nombrar el archivo con otro nombre: rompe la trazabilidad del punto.
+· Modificar los ADR existentes: viola la regla de no modificar archivos del punto anterior.
+· Guardar el archivo en la raíz del punto en lugar de docs: rompe la estructura del repositorio.
+
+Verificación: el archivo docs\documentacion-openapi.md existe con las once secciones.
+
+---
+
+Paso 5 — Crear la carpeta Documentacion en el proyecto monolítico
+
+Acción 1: En el panel Solution Explorer, hacer clic derecho sobre el proyecto AceriaApp.Monolito.Api.
+Acción 2: Seleccionar Add → New Folder y nombrar la carpeta Documentacion.
+Acción 3: Verificar que la carpeta Documentacion aparece dentro de AceriaApp.Monolito.Api sin afectar a las carpetas existentes.
+Acción 4: Verificar que no se ha modificado ningún archivo existente del punto 2.3.
+
+Por qué se hace: la carpeta Documentacion albergará las clases de configuración de OpenAPI. Se crea como carpeta nueva sin tocar las carpetas existentes.
+
+Errores comunes:
+
+· Crear la carpeta dentro de alguna de las carpetas existentes: rompe la separación de responsabilidades.
+· Modificar las carpetas existentes: viola la regla de no modificar archivos del punto anterior.
+· Crear la carpeta con otro nombre: rompe la convención del curso.
+
+Verificación: la carpeta Documentacion existe dentro de AceriaApp.Monolito.Api y las carpetas existentes permanecen intactas.
+
+---
+
+Paso 6 — Crear la clase MetadatosApi
+
+Acción 1: En el panel Solution Explorer, hacer clic derecho sobre la carpeta Documentacion.
+Acción 2: Seleccionar Add → Class y nombrar la clase MetadatosApi.cs.
+Acción 3: Escribir exactamente el siguiente código:
+
+```csharp
+namespace AceriaApp.Monolito.Api.Documentacion;
+
+public class MetadatosApi
+{
+    public string Titulo { get; init; } = "AceriaApp.Monolito.Api";
+    public string Version { get; init; } = "v1";
+    public string Descripcion { get; init; } = "API del monolito de referencia.";
+    public string ContactoNombre { get; init; } = "Equipo AceriaApp";
+    public string ContactoEmail { get; init; } = "equipo@acería.local";
+}
+```
+
+Acción 4: Pulsar Ctrl+S para guardar el archivo.
+Acción 5: Verificar que la clase compila sin errores.
+
+Por qué se hace: la clase MetadatosApi modela los metadatos que se usan en la configuración de OpenAPI. Los valores por defecto se aplican al proyecto del curso.
+
+Errores comunes:
+
+· Olvidar el namespace: la clase no se resuelve desde otros archivos.
+· No inicializar las propiedades de tipo string: el compilador emite advertencias de nulabilidad.
+· Usar set en lugar de init: permite modificar la instancia después de crearla.
+
+Verificación: la clase MetadatosApi compila sin errores y expone cinco propiedades.
+
+---
+
+Paso 7 — Crear la clase ConfiguracionOpenApi
+
+Acción 1: En el panel Solution Explorer, hacer clic derecho sobre la carpeta Documentacion.
+Acción 2: Seleccionar Add → Class y nombrar la clase ConfiguracionOpenApi.cs.
+Acción 3: Escribir exactamente el siguiente código:
+
+```csharp
+namespace AceriaApp.Monolito.Api.Documentacion;
+
+public class ConfiguracionOpenApi
+{
+    public MetadatosApi Metadatos { get; init; } = new();
+    public bool PublicarSwaggerUI { get; init; } = true;
+    public string RutaDocumento { get; init; } = "/swagger/v1/swagger.json";
+    public string NombreDocumento { get; init; } = "AceriaApp.Monolito.Api v1";
+
+    public bool EsEntornoDeDesarrollo(string entorno)
+    {
+        return string.Equals(entorno, "Development", StringComparison.OrdinalIgnoreCase);
+    }
+}
+```
+
+Acción 4: Pulsar Ctrl+S para guardar el archivo.
+Acción 5: Verificar que la clase compila sin errores.
+
+Por qué se hace: la clase ConfiguracionOpenApi agrupa los parámetros de la configuración de OpenAPI y expone un método para comprobar el entorno. Es el punto de entrada para la configuración de la documentación.
+
+Errores comunes:
+
+· Olvidar el using System;: StringComparison no se resuelve.
+· No inicializar Metadatos con new(): la clase lanza NullReferenceException.
+· Usar == en lugar de string.Equals con StringComparison: la comparación no es robusta.
+
+Verificación: la clase ConfiguracionOpenApi compila sin errores y expone cuatro propiedades y un método.
+
+---
+
+Paso 8 — Añadir el using necesario en ConfiguracionOpenApi
+
+Acción 1: En el panel Solution Explorer, hacer doble clic en ConfiguracionOpenApi.cs.
+Acción 2: Añadir la línea using System; al principio del archivo si no está presente.
+Acción 3: Verificar que no hay subrayados rojos en StringComparison.
+Acción 4: Pulsar Ctrl+S para guardar el archivo.
+
+Por qué se hace: el tipo StringComparison pertenece a System. En proyectos con ImplicitUsings desactivado, hay que añadir el using explícito.
+
+Errores comunes:
+
+· Añadir using System.Text; en lugar de System: no resuelve StringComparison.
+· Añadir el using después del namespace: el compilador no lo reconoce.
+· Olvidar el using y confiar en ImplicitUsings: el proyecto puede tenerlo desactivado.
+
+Verificación: ConfiguracionOpenApi.cs compila sin errores y no muestra subrayados rojos.
+
+---
+
+Paso 9 — Crear la clase ConstructorDocumentoOpenApi
+
+Acción 1: En el panel Solution Explorer, hacer clic derecho sobre la carpeta Documentacion.
+Acción 2: Seleccionar Add → Class y nombrar la clase ConstructorDocumentoOpenApi.cs.
+Acción 3: Escribir exactamente el siguiente código:
+
+```csharp
+namespace AceriaApp.Monolito.Api.Documentacion;
+
+public class ConstructorDocumentoOpenApi
+{
+    public string ConstruirCabecera(MetadatosApi metadatos)
+    {
+        return $"openapi: 3.0.3\ninfo:\n  title: {metadatos.Titulo}\n  version: {metadatos.Version}\n  description: {metadatos.Descripcion}";
+    }
+
+    public string ConstruirRuta(string recurso, string version)
+    {
+        return $"/api/{version}/{recurso}";
+    }
+}
+```
+
+Acción 4: Pulsar Ctrl+S para guardar el archivo.
+Acción 5: Verificar que la clase compila sin errores.
+
+Por qué se hace: la clase ConstructorDocumentoOpenApi construye la cabecera del documento OpenAPI y las rutas de los recursos. Es la base para verificar que la configuración produce las cadenas esperadas.
+
+Errores comunes:
+
+· Olvidar el namespace: la clase no se resuelve desde otros archivos.
+· Usar comillas simples en lugar de dobles en las cadenas interpoladas: el compilador emite error.
+· No escapar los saltos de línea: la cabecera no tiene el formato correcto.
+
+Verificación: la clase ConstructorDocumentoOpenApi compila sin errores y expone dos métodos.
+
+---
+
