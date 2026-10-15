@@ -688,3 +688,293 @@ Verificación: la clase ConstructorDocumentoOpenApi compila sin errores y expone
 
 ---
 
+Paso 10 — Crear el proyecto de tests del punto 2.4
+
+Acción 1: En el panel Solution Explorer, hacer clic derecho sobre la carpeta tests.
+Acción 2: Seleccionar Add → New Project.
+Acción 3: Seleccionar la plantilla xUnit Test Project, nombrar el proyecto AceriaApp.Documentacion.Tests y pulsar Create.
+Acción 4: Verificar que el proyecto aparece en la solución y que se ha creado la carpeta tests\AceriaApp.Documentacion.Tests.
+
+Por qué se hace: el punto 2.4 añade un proyecto de tests específico para las clases de documentación. Se crea como proyecto nuevo sin modificar los proyectos de tests existentes.
+
+Errores comunes:
+
+· Crear el proyecto dentro de src en lugar de tests: rompe la estructura.
+· Modificar los proyectos de tests del punto 2.3: viola la regla de no modificar archivos del punto anterior.
+· Usar dotnet new mstest: el curso usa xUnit.
+
+Verificación: el proyecto AceriaApp.Documentacion.Tests aparece en la solución y su carpeta existe en tests\AceriaApp.Documentacion.Tests.
+
+---
+
+Paso 11 — Añadir la referencia del proyecto de tests a la API monolítica
+
+Acción 1: En la terminal, escribir dotnet add tests\AceriaApp.Documentacion.Tests\AceriaApp.Documentacion.Tests.csproj reference src\AceriaApp.Monolito.Api\AceriaApp.Monolito.Api.csproj y pulsar Enter.
+Acción 2: Verificar que la salida muestra Reference added successfully.
+Acción 3: Verificar que el archivo AceriaApp.Documentacion.Tests.csproj contiene la referencia.
+
+Por qué se hace: la referencia permite que el proyecto de tests acceda a las clases de Documentacion del proyecto monolítico.
+
+Errores comunes:
+
+· Añadir la referencia en dirección inversa: crea una dependencia circular.
+· Olvidar el nombre completo del archivo .csproj: el comando falla.
+· Ejecutar el comando desde la carpeta equivocada: la ruta relativa no se resuelve.
+
+Verificación: el archivo AceriaApp.Documentacion.Tests.csproj contiene un ProjectReference al proyecto monolítico.
+
+---
+
+Paso 12 — Añadir el paquete FluentAssertions al proyecto de tests
+
+Acción 1: Escribir dotnet add tests\AceriaApp.Documentacion.Tests\AceriaApp.Documentacion.Tests.csproj package FluentAssertions y pulsar Enter.
+Acción 2: Escribir dotnet list tests\AceriaApp.Documentacion.Tests\AceriaApp.Documentacion.Tests.csproj package y pulsar Enter.
+Acción 3: Verificar que la salida muestra FluentAssertions con su versión.
+
+Por qué se hace: FluentAssertions proporciona la sintaxis de aserción usada en el curso. Se añade al nuevo proyecto de tests sin modificar los proyectos de tests existentes.
+
+Errores comunes:
+
+· Instalar una versión preliminar: el curso usa la última estable.
+· Olvidar el paquete: Should() no se resuelve en los tests.
+· Añadir el paquete al proyecto equivocado: los tests no compilan.
+
+Verificación: la salida de dotnet list package muestra FluentAssertions con una versión estable.
+
+---
+
+Paso 13 — Crear el archivo MetadatosApiTests.cs
+
+Acción 1: En el panel Solution Explorer, expandir tests → AceriaApp.Documentacion.Tests.
+Acción 2: Hacer doble clic en UnitTest1.cs y renombrarlo a MetadatosApiTests.cs.
+Acción 3: Escribir exactamente el siguiente código:
+
+```csharp
+using AceriaApp.Monolito.Api.Documentacion;
+using FluentAssertions;
+using Xunit;
+
+namespace AceriaApp.Documentacion.Tests;
+
+public class MetadatosApiTests
+{
+    [Fact]
+    public void MetadatosApi_ConValoresPorDefecto_DevuelveValoresEsperados()
+    {
+        var metadatos = new MetadatosApi();
+
+        metadatos.Titulo.Should().Be("AceriaApp.Monolito.Api");
+        metadatos.Version.Should().Be("v1");
+        metadatos.Descripcion.Should().Be("API del monolito de referencia.");
+        metadatos.ContactoNombre.Should().Be("Equipo AceriaApp");
+        metadatos.ContactoEmail.Should().Be("equipo@acería.local");
+    }
+
+    [Fact]
+    public void MetadatosApi_ConValoresPersonalizados_DevuelveValoresPersonalizados()
+    {
+        var metadatos = new MetadatosApi
+        {
+            Titulo = "AceriaApp.Ordenes.Api",
+            Version = "v2",
+            Descripcion = "API de órdenes de producción."
+        };
+
+        metadatos.Titulo.Should().Be("AceriaApp.Ordenes.Api");
+        metadatos.Version.Should().Be("v2");
+        metadatos.Descripcion.Should().Be("API de órdenes de producción.");
+    }
+}
+```
+
+Acción 4: Pulsar Ctrl+S para guardar el archivo.
+Acción 5: Verificar que la clase compila sin errores.
+
+Por qué se hace: los tests verifican que la clase MetadatosApi devuelve los valores por defecto esperados y que acepta valores personalizados.
+
+Errores comunes:
+
+· Olvidar el using AceriaApp.Monolito.Api.Documentacion;: la clase no se resuelve.
+· Usar Assert.Equal en lugar de Should().Be(): el curso usa FluentAssertions.
+· No cubrir el caso de valores personalizados: la inicialización no se verifica.
+
+Verificación: el archivo MetadatosApiTests.cs compila y contiene dos métodos de test.
+
+---
+
+Paso 14 — Crear el archivo ConfiguracionOpenApiTests.cs
+
+Acción 1: En el panel Solution Explorer, hacer clic derecho sobre el proyecto AceriaApp.Documentacion.Tests.
+Acción 2: Seleccionar Add → Class y nombrar la clase ConfiguracionOpenApiTests.cs.
+Acción 3: Escribir exactamente el siguiente código:
+
+```csharp
+using AceriaApp.Monolito.Api.Documentacion;
+using FluentAssertions;
+using Xunit;
+
+namespace AceriaApp.Documentacion.Tests;
+
+public class ConfiguracionOpenApiTests
+{
+    private readonly ConfiguracionOpenApi _configuracion = new();
+
+    [Fact]
+    public void ConfiguracionOpenApi_ConValoresPorDefecto_DevuelveValoresEsperados()
+    {
+        _configuracion.PublicarSwaggerUI.Should().BeTrue();
+        _configuracion.RutaDocumento.Should().Be("/swagger/v1/swagger.json");
+        _configuracion.NombreDocumento.Should().Be("AceriaApp.Monolito.Api v1");
+    }
+
+    [Fact]
+    public void EsEntornoDeDesarrollo_ConDevelopment_DevuelveTrue()
+    {
+        _configuracion.EsEntornoDeDesarrollo("Development").Should().BeTrue();
+    }
+
+    [Fact]
+    public void EsEntornoDeDesarrollo_ConProduction_DevuelveFalse()
+    {
+        _configuracion.EsEntornoDeDesarrollo("Production").Should().BeFalse();
+    }
+
+    [Fact]
+    public void EsEntornoDeDesarrollo_IgnoraMayusculas()
+    {
+        _configuracion.EsEntornoDeDesarrollo("development").Should().BeTrue();
+    }
+}
+```
+
+Acción 4: Pulsar Ctrl+S para guardar el archivo.
+Acción 5: Verificar que la clase compila sin errores.
+
+Por qué se hace: los tests verifican los valores por defecto de la configuración y el comportamiento del método EsEntornoDeDesarrollo con distintos valores de entrada.
+
+Errores comunes:
+
+· Olvidar el using AceriaApp.Monolito.Api.Documentacion;: la clase no se resuelve.
+· Usar Assert.True en lugar de Should().BeTrue(): el curso usa FluentAssertions.
+· No cubrir el caso de mayúsculas: la comparación robusta no se verifica.
+
+Verificación: el archivo ConfiguracionOpenApiTests.cs compila y contiene cuatro métodos de test.
+
+---
+
+Paso 15 — Crear el archivo ConstructorDocumentoOpenApiTests.cs
+
+Acción 1: En el panel Solution Explorer, hacer clic derecho sobre el proyecto AceriaApp.Documentacion.Tests.
+Acción 2: Seleccionar Add → Class y nombrar la clase ConstructorDocumentoOpenApiTests.cs.
+Acción 3: Escribir exactamente el siguiente código:
+
+```csharp
+using AceriaApp.Monolito.Api.Documentacion;
+using FluentAssertions;
+using Xunit;
+
+namespace AceriaApp.Documentacion.Tests;
+
+public class ConstructorDocumentoOpenApiTests
+{
+    private readonly ConstructorDocumentoOpenApi _constructor = new();
+
+    [Fact]
+    public void ConstruirCabecera_ConMetadatosPorDefecto_IncluyeTituloYVersion()
+    {
+        var metadatos = new MetadatosApi();
+
+        var cabecera = _constructor.ConstruirCabecera(metadatos);
+
+        cabecera.Should().Contain("openapi: 3.0.3");
+        cabecera.Should().Contain("title: AceriaApp.Monolito.Api");
+        cabecera.Should().Contain("version: v1");
+    }
+
+    [Fact]
+    public void ConstruirRuta_ConRecursoYVersion_DevuelveRutaEsperada()
+    {
+        var ruta = _constructor.ConstruirRuta("ordenes", "v1");
+
+        ruta.Should().Be("/api/v1/ordenes");
+    }
+
+    [Fact]
+    public void ConstruirRuta_ConVersionV2_DevuelveRutaConV2()
+    {
+        var ruta = _constructor.ConstruirRuta("ordenes", "v2");
+
+        ruta.Should().Be("/api/v2/ordenes");
+    }
+}
+```
+
+Acción 4: Pulsar Ctrl+S para guardar el archivo.
+Acción 5: Verificar que la clase compila sin errores.
+
+Por qué se hace: los tests verifican que la cabecera del documento incluye la versión de OpenAPI y los metadatos, y que las rutas se construyen correctamente con la versión del contrato.
+
+Errores comunes:
+
+· Olvidar el using AceriaApp.Monolito.Api.Documentacion;: las clases no se resuelven.
+· Usar Assert.Contains en lugar de Should().Contain(): el curso usa FluentAssertions.
+· No cubrir el caso de versión v2: el versionado no se verifica.
+
+Verificación: el archivo ConstructorDocumentoOpenApiTests.cs compila y contiene tres métodos de test.
+
+---
+
+Paso 16 — Compilar la solución completa
+
+Acción 1: Escribir dotnet build AceriaApp.sln y pulsar Enter.
+Acción 2: Verificar que la salida muestra Build succeeded. y 0 Warning(s), 0 Error(s).
+Acción 3: Verificar que el tiempo de compilación es inferior a 240 segundos.
+
+Por qué se hace: compilar la solución completa verifica que todos los proyectos, incluidos los nuevos, se resuelven correctamente.
+
+Errores comunes:
+
+· Tener la API en ejecución: el archivo .dll está bloqueado y la compilación falla.
+· No restaurar paquetes: dotnet build restaura por defecto, pero si hay un error de red, hay que ejecutar dotnet restore primero.
+· Usar una versión distinta del SDK: dotnet --version debe devolver 8.x.x.
+
+Verificación: la salida debe mostrar Build succeeded. con 0 Error(s).
+
+---
+
+Paso 17 — Ejecutar todos los tests del punto 2.4
+
+Acción 1: Escribir dotnet test tests\AceriaApp.Documentacion.Tests\AceriaApp.Documentacion.Tests.csproj y pulsar Enter.
+Acción 2: Verificar que la salida muestra Passed! - Failed: 0, Passed: 9, Skipped: 0.
+Acción 3: Verificar que el tiempo total es inferior a 30 segundos.
+
+Por qué se hace: ejecutar los tests del punto 2.4 verifica que las clases de documentación funcionan correctamente.
+
+Errores comunes:
+
+· Ejecutar dotnet test sin especificar el proyecto: ejecuta también los tests de los puntos anteriores, lo que alarga el tiempo.
+· No compilar antes: dotnet test compila por defecto, pero si hay errores, los tests no se ejecutan.
+· Tener la API en ejecución: el puerto puede estar ocupado.
+
+Verificación: la salida debe mostrar Passed! - Failed: 0, Passed: 9, Skipped: 0, Total: 9.
+
+---
+
+Paso 18 — Ejecutar todos los tests de la solución
+
+Acción 1: Escribir dotnet test AceriaApp.sln --no-build y pulsar Enter.
+Acción 2: Verificar que la salida muestra Passed! - Failed: 0, Passed: 51, Skipped: 0.
+Acción 3: Verificar que el tiempo total es inferior a 240 segundos.
+
+Por qué se hace: ejecutar todos los tests de la solución verifica que los tests de los puntos anteriores y del punto 2.4 pasan conjuntamente.
+
+Errores comunes:
+
+· No haber compilado antes: --no-build falla si no hay artefactos.
+· Tener tests de otros módulos: la solución solo contiene los proyectos de este punto.
+· Modificar los tests de los puntos anteriores: viola la regla de no modificar archivos del punto anterior.
+
+Verificación: la salida debe mostrar Passed! - Failed: 0, Passed: 51, Skipped: 0, Total: 51.
+
+---
+
