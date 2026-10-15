@@ -276,8 +276,14 @@ def enrich_theory(base:str):
                 # 2 códigos completos por punto, los demás con referencia,
                 # evitando reproducir Program.cs muchas veces.
                 if n in (4,8):
-                    pos=0 if stage==1 and n==4 else min(len(FILE_BY_POINT[stage-1])-1,(n//4))
-                    path,snippet=code_excerpt(stage,pos)
+                    examples={
+                        (1,4):(1,None),(1,8):(3,14),
+                        (2,4):(1,5),(2,8):(1,14),
+                        (3,4):(0,None),(3,8):(1,None),
+                        (4,4):(0,None),(4,8):(1,12)
+                    }
+                    pos,stepnumber=examples[(stage,n)]
+                    path,snippet=code_excerpt(stage,pos,stepnumber)
                     out+=f"**Código de referencia probado:** §{path}§\n"
                     out+=fenced(snippet)
                 out+="**Qué debe saber explicar el alumno.** Qué parte del contrato REST "
