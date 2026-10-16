@@ -2655,3 +2655,199 @@ Swagger UI facilita explorar las operaciones y ejecutarlas desde el navegador. W
 
 **Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
 
+
+
+---
+
+## Caso integrador del módulo — Seguir una orden desde la petición hasta el contrato publicado
+
+Hasta este momento se han estudiado recursos, operaciones, validación y OpenAPI por separado. En una API real estas decisiones interactúan en cada petición. El caso integrador permite recorrer una orden de fabricación de principio a fin, **sin introducir código de ejemplo que no exista en los cuatro proyectos**. Su propósito es unir el razonamiento teórico con observaciones repetibles en las prácticas y con los tests de cada etapa.
+
+El dominio continúa siendo el de AceriaApp: un taller recibe órdenes que indican Cliente, Material y Cantidad; cada orden tiene un identificador Guid, un Estado y una FechaCreacion. Una orden nace Pendiente y puede finalizarse. Las operaciones sobre órdenes finalizadas están restringidas. El recorrido comienza en la etapa 2.1 y va acumulando capacidades hasta 2.4. No se trata de cuatro servicios independientes de negocio ni de un sistema de microservicios desplegado: son **cuatro estados progresivos de una misma Minimal API docente**.
+
+### I. La frontera exterior: qué sabe y qué ignora el cliente
+
+El cliente de la API puede ser la herramienta de peticiones HTTP de Visual Studio, un test que utiliza HttpClient o la interfaz Swagger UI. Aunque se ejecuten en contextos diferentes, todos deben hablar el mismo contrato. En particular, ninguno necesita conocer cómo se construye AceriaDbContext ni el nombre interno de la clase que contiene el validador. Esos detalles quedan detrás de la frontera HTTP.
+
+Partamos de esta intención humana: «necesito fabricar diez unidades de CHAPA para ACX». El cliente no debería construir por sí mismo una instancia persistente de Orden con Estado y FechaCreacion arbitrarios. Lo que debe enviar es la información que admite CrearOrdenRequest. Esta idea se traduce en el siguiente mensaje, que puede prepararse en AceriaApp.http de la etapa 2.2 o posterior:
+
+~~~http
+POST /api/v1/ordenes HTTP/1.1
+Host: localhost:5000
+Content-Type: application/json
+
+{
+  "cliente": "ACX",
+  "material": "CHAPA",
+  "cantidad": 10
+}
+~~~
+
+La dirección de host y el puerto del ejemplo son ilustrativos: al ejecutarlo se utiliza la URL efectiva mostrada por Visual Studio. Los nombres de propiedades pertenecen al contrato serializado, mientras que la existencia del endpoint depende del estado del proyecto: **en 2.1 todavía no existe POST**. Intentar esta petición en 2.1 no es una prueba de un error de negocio, porque la operación no se ha incorporado.
+
+Desde 2.2, cuando la petición es válida, el servidor crea una entidad Orden nueva, asigna un Id mediante Guid.NewGuid y conserva los valores predeterminados de Estado y FechaCreacion. El contexto EF Core sigue la entidad, y SaveChangesAsync hace efectiva la escritura. El endpoint utiliza CreatedAtRoute con el nombre del GET individual, de modo que la respuesta expresa **201 Created** y aporta una cabecera Location.
+
+El Guid de una respuesta será distinto en cada ejecución. Por eso el procedimiento correcto del alumno consiste en **leer la cabecera Location recibida**, no copiar el identificador de una captura o de una respuesta antigua. La siguiente petición debe ir a esa URI real. Si devuelve 200 y un DTO correspondiente, el cliente habrá demostrado la relación entre la operación de creación y la identidad recuperable del nuevo recurso.
+
+¿Qué ha aprendido el alumno sobre REST? Que la URI no es un adorno. Constituye un identificador público que sobrevive a la propia operación POST. El cliente puede consultar más tarde el recurso usando su nombre, y el servidor puede cambiar la organización interna de clases sin obligar a convertir cada petición en una llamada a un método específico de C#.
+
+### II. La frontera de persistencia: entidad, contexto y representación
+
+Cuando GET /api/v1/ordenes/{id:guid} recibe un identificador válido, el delegado de Program.cs ejecuta una búsqueda mediante EF Core. La consulta utiliza AsNoTracking porque no necesita mantener esa entidad bajo seguimiento para cambiarla. Si no encuentra la fila, devuelve NotFound; si la encuentra, transforma la Orden en OrdenDto y responde Ok.
+
+La distinción puede dibujarse sin inventar capas de aplicación que no existen todavía:
+
+~~~text
+Cliente HTTP
+  |
+  | GET /api/v1/ordenes/{id:guid}
+  v
+Kestrel y enrutamiento ASP.NET Core
+  |
+  v
+MapGet de Program.cs
+  |
+  | AceriaDbContext obtenido por DI
+  v
+EF Core: búsqueda por Id
+  |
+  +---- No existe ------> Results.NotFound() --> HTTP 404
+  |
+  +---- Existe
+           |
+           v
+       OrdenDto.Desde(orden)
+           |
+           v
+       Results.Ok(dto) -----------------------> HTTP 200 + JSON
+~~~
+
+Este diagrama refleja el comportamiento de la etapa de lectura. No pretende mostrar un adaptador hexagonal, un servicio de dominio separado o un repositorio abstracto: esas piezas se abordarán después. La función del dibujo es localizar las decisiones reales. En el caso ausente, EF Core devuelve null, pero el código HTTP **se decide en el delegado**; la base no envía directamente un 404 a Internet.
+
+Hay dos errores que producen diagnósticos muy diferentes. Si el segmento de URI no puede enlazarse como Guid, la ruta con restricción guid puede no coincidir y devolver 404 sin ejecutar el delegado individual. Si la URI sí coincide, el delegado llega a EF Core y podría encontrar una ausencia. Para el cliente ambos casos comparten el número 404, pero para quien depura la aplicación el primer punto a observar es distinto.
+
+El DTO cumple otra función independiente: limita el contrato de salida. No se devuelve automáticamente cualquier propiedad pública añadida a la entidad persistente. En el proyecto actual OrdenDto incluye todos los campos centrales; esta coincidencia no convierte en irrelevante la separación. Un cambio futuro en la base no debería revelar nuevos datos sin una decisión consciente sobre la representación HTTP.
+
+**Ejercicio de observación.** Antes de enviar GET, escribe qué código esperas y qué campos debe contener el DTO. Ejecuta la petición, identifica el código y lee las propiedades serializadas. Si el código es correcto pero Cantidad no coincide con la entidad sembrada, la prueba no ha terminado: hay que revisar la selección de orden y el mapeo. Ésta es la razón de que RecursoExistente_ExponeDto compruebe no solo 200, sino también el identificador recibido.
+
+### III. Una secuencia de escritura con comprobación del estado persistente
+
+La etapa 2.2 incorpora PUT, PATCH, DELETE y la transición a Finalizada. El objetivo formativo no consiste en recitar una tabla de verbos, sino en observar cómo cada operación transforma —o preserva— la orden identificada por el Guid creado al comienzo.
+
+Después de crear la orden de Cantidad 10, el alumno prepara PUT sobre su identificador. Envía un CrearOrdenRequest con Cliente ACX2, Material CHAPA y Cantidad 11. El endpoint busca la orden, verifica que existe y sigue Pendiente, actualiza los tres campos editables y guarda. Si todo va bien, devuelve **204 No Content**. El cuerpo vacío es correcto. La forma de verificar la persistencia es enviar un GET y comprobar que Cliente ahora vale ACX2 y Cantidad 11.
+
+La siguiente operación modifica únicamente Cantidad mediante PATCH al subrecurso /cantidad. No se envía otro CrearOrdenRequest: el contrato es ActualizarCantidadRequest. Un cuerpo representativo es:
+
+~~~http
+PATCH /api/v1/ordenes/{id}/cantidad HTTP/1.1
+Host: localhost:5000
+Content-Type: application/json
+
+{"cantidad": 12}
+~~~
+
+El marcador {id} debe sustituirse por el Guid real de la orden. En esta etapa no se implementa JSON Patch genérico; es un endpoint específico para la cantidad. El delegado sustituye solo esa propiedad, guarda y devuelve **200 con el DTO**. El alumno debe comparar Cliente y Material con los valores que tenía después de PUT para demostrar que no cambiaron durante PATCH.
+
+La etapa incluye una decisión irreversible desde la perspectiva de este contrato: finalizar la orden. Para ello existe POST /api/v1/ordenes/{id:guid}/finalizar. Una vez ejecutada con éxito, el DTO refleja Estado Finalizada. Entonces PUT o PATCH intentados sobre el mismo Id ya no deberían cambiar los datos, aunque Cliente, Material y Cantidad sean formalmente aceptables. Devuelven **409 Conflict**.
+
+La situación permite entender por qué validar un request no es lo mismo que validar una operación de negocio. Un request con Cantidad 12 cumple las reglas sintácticas y el rango genérico; aun así, aplicarlo a una orden Finalizada sería ilegal bajo la política del taller. La condición de Estado debe comprobarse en el contexto de la entidad existente.
+
+Finalmente, DELETE sobre una orden Finalizada responde 409 en esta API; la orden debe seguir siendo consultable por GET. Para observar el camino exitoso de DELETE hay que utilizar una **orden distinta que permanezca Pendiente**. Se elimina y después GET responde 404. No se debe modificar artificialmente el Estado de la orden finalizada para hacer pasar el ejercicio: eso borraría la causa que se está intentando estudiar.
+
+**Matriz de secuencia recomendada:**
+
+| Orden | Operación | Observación de respuesta | Observación posterior |
+|:---|:---|:---|:---|
+| A, nueva | POST válido | 201, Location | GET de A: 200 |
+| A, Pendiente | PUT | 204, cuerpo vacío | GET: campos actualizados |
+| A, Pendiente | PATCH cantidad | 200 y DTO | GET: solo cambió Cantidad |
+| A, Pendiente | POST finalizar | 200 y DTO Finalizada | GET: Estado Finalizada |
+| A, Finalizada | PUT | 409 | GET: campos sin alterar |
+| A, Finalizada | DELETE | 409 | GET: A sigue existiendo |
+| B, Pendiente | DELETE | 204 | GET de B: 404 |
+
+No se debe interpretar la tabla como siete tests unitarios independientes ya escritos. Es una **secuencia de laboratorio** construida a partir de las operaciones implementadas; la batería automatizada cubre partes relevantes de ese recorrido. El alumno podrá demostrar la historia entera con AceriaApp.http, y la teoría le proporciona las preguntas que debe responder.
+
+### IV. Un límite de capacidad explica dos códigos de error
+
+Supongamos que otro cliente intenta crear 501 unidades. El JSON es comprensible y representa una cantidad positiva, pero la política del taller limita el lote a 500. El manejador responde 422 mediante Results.Problem. Un cliente que recibe ese error puede comprender que no se trata necesariamente de un servidor caído: la petición contradice una regla de capacidad.
+
+La etapa 2.3 introduce FluentValidation y una diferencia deliberada: su validador genérico acepta Cantidad entre 1 y 10000 inclusive. Por eso 501 supera el filtro y alcanza la comprobación de capacidad del delegado, mientras que 10001 se rechaza en el filtro con 400 y ValidationProblem. Los dos valores exceden 500, pero **el orden de ejecución y la responsabilidad de las reglas** determinan qué componente responde.
+
+No basta con decir al alumno que 400 se usa para errores y 422 para datos imposibles. Debe estudiar el camino exacto. Ante una solicitud válida de Cantidad 10, el filtro ejecuta ValidateAsync y luego next(context), con lo que el delegado puede crear la orden. Ante Cantidad 10001, IsValid es false y el filtro devuelve ValidationProblem sin ejecutar el delegado. Ante Cantidad 501, la validación es satisfactoria, el delegado sí se ejecuta, pero devuelve 422 antes de Add y SaveChangesAsync.
+
+Este recorrido sugiere un experimento de persistencia: consultar la colección antes y después de una creación rechazada. Una API debe evitar escribir una orden al mismo tiempo que informa de que no pudo aceptarla. Los tests de ValidacionHttpTests presentes verifican status y estructura errors para distintos valores; la comparación sistemática de la cantidad de órdenes antes y después de **todos** los fallos es un ejercicio adicional, no algo que ya se compruebe exhaustivamente.
+
+El mismo principio se aplica a un Cliente vacío. CrearOrdenValidator ejecuta NotEmpty, y ValidationFilter produce una respuesta 400 con errors agrupados por propiedad. El cuerpo del mensaje puede variar según mensajes y cultura; el contrato relevante incluye el status y la relación entre el campo incorrecto y la respuesta de validación. En cambio, un 409 de orden Finalizada utiliza Results.Problem y representa un conflicto de estado, no un error del campo Cliente.
+
+**Pregunta de diagnóstico 1.** El alumno recibe 400 al probar un caso que esperaba 422. ¿Qué comprobar? Primero el request exacto enviado. Después el rango del validador y la conexión del filtro. Si alguien cambió InclusiveBetween(1,10000) por InclusiveBetween(1,500), la regla de negocio ya no recibe Cantidad 501 y el contrato observable ha variado.
+
+**Pregunta de diagnóstico 2.** El alumno recibe 201 al enviar Cliente vacío en 2.3. ¿Qué comprobar? Que el filtro se haya añadido realmente al MapPost; registrar solamente los validadores en DI no ejecuta automáticamente las reglas. También hay que comprobar que el tipo genérico del filtro corresponda al contrato de entrada esperado.
+
+**Pregunta de diagnóstico 3.** La API falla antes de entrar en ValidationFilter al recibir un JSON roto. ¿Qué comprobar? El enlace realizado por ASP.NET Core, la cabecera Content-Type y la estructura del cuerpo. No se debe asumir que el filtro controla un objeto que nunca llegó a construirse correctamente.
+
+Estas preguntas enseñan a **localizar el primer límite atravesado por la petición**, una habilidad que será igualmente valiosa al introducir puertos y adaptadores en arquitectura hexagonal.
+
+### V. Del comportamiento al documento público de la etapa 2.4
+
+Una vez construida y validada la API, un consumidor externo necesita conocer las rutas disponibles, los esquemas JSON y las respuestas esperadas. El documento OpenAPI se genera con Swashbuckle y se publica en Development bajo /swagger/v1/swagger.json. Swagger UI lo utiliza para presentar una interfaz interactiva. El documento no es el servidor de órdenes: describe su contrato.
+
+Para este caso integrador, la comprobación de OpenAPI debe comenzar por dos preguntas: **¿aparece la ruta que acabo de ejecutar?** y **¿se documenta el código que acabo de observar?** Si DELETE de una orden Finalizada responde 409 pero OpenAPI solo publica 204 y 404, la interfaz informa de forma incompleta al consumidor. La revisión del proyecto 2.4 añadió explícitamente ProducesProblem(409) a los metadatos de DELETE y una prueba que verifica la presencia del código en el documento.
+
+Otro ejemplo es PATCH de cantidad. Sus caminos reales incluyen 200 para éxito, 404 si no existe, 409 si Finalizada, 422 si el lote es demasiado grande y 400 para errores del contrato de entrada. La documentación revisada expresa esos casos mediante metadatos de endpoint. Es importante no invertir la causalidad: añadir ProducesProblem(422) no hace que el manejador devuelva 422; el delegado ya contiene esa regla y la anotación comunica que existe.
+
+La prueba de contrato no debe basarse en un JSON escrito manualmente para «hacerlo coincidir» con las expectativas. ContratoOpenApiTests utiliza WebApplicationFactory para solicitar el documento real de la aplicación hospedada. OpenApi_ContieneRutasYVersion comprueba v1 y GET/POST de la colección. OpenApi_IncluyeEjemplo comprueba que CrearOrdenRequest tenga example. La nueva prueba OpenApi_DeclaraErroresDeOperacionesReales inspecciona respuestas alternativas. Produccion_NoExponeSwagger garantiza que la ruta de documentación no se publique al iniciar otro host en entorno Production.
+
+Es posible que una de estas pruebas falle mientras los endpoints de negocio sigan funcionando. Eso no significa que el test sea inútil: indica que la **descripción que otros clientes consumirían** ha perdido información. A la inversa, todos los tests del documento podrían pasar mientras SaveChangesAsync deja de persistir; por eso las pruebas de creación y lectura siguen formando parte de la etapa 2.4.
+
+El ejemplo definido mediante EjemploCrearOrden aporta Cliente ACX-001, Material CHAPA-3MM y Cantidad 10. Su presencia en el esquema no garantiza la creación de una fila: la orden solo nace cuando se ejecuta el POST real. Los alumnos deben comparar el ejemplo publicado, la petición que envía Swagger UI y la respuesta de la API. Ese contraste evita confundir documentación con simulación.
+
+### VI. La matriz de trazabilidad de un sistema que sí se ejecuta
+
+La teoría adquiere credibilidad cuando cada afirmación sobre lo implementado apunta a un archivo concreto, una actividad reproducible y una observación. En este módulo no se utiliza un proyecto ficticio como apéndice decorativo: la Minimal API del alumno progresa de una carpeta a la siguiente y conserva sus pruebas anteriores.
+
+| Concepto aprendido | Actividad práctica | Archivo real de la etapa | Evidencia automatizada |
+|:---|:---|:---|:---|
+| Identidad y DTO | 2.1.4–2.1.7 | Modelo/Orden.cs y Modelo/OrdenDto.cs | RecursoExistente_ExponeDto |
+| GET colección 200 | 2.1.14–2.1.16 | Program.cs de 2.1 | ListaVacia_Es200 |
+| GET individual 404 | 2.1.17–2.1.19 | Program.cs de 2.1 | RecursoInexistente_Es404 |
+| POST, 201 y Location | 2.2.5–2.2.8 | Program.cs de 2.2 | CrearYConsultar_Es201Y200 |
+| PUT/PATCH/DELETE | 2.2.11–2.2.17 | Program.cs de 2.2 | EditarYEliminar_CambiaPersistencia |
+| Capacidad máxima | 2.2.9–2.2.10 | Program.cs de 2.2 | ReglaCapacidad_Es422 |
+| Estado Finalizada | 2.2.18–2.2.20 | Program.cs de 2.2 | OrdenFinalizada_NoSeEdita409 |
+| Reglas de entrada | 2.3.3–2.3.7 | Validacion/Validadores.cs | DatosInvalidos_Es400ConErrors |
+| Ejecución del filtro | 2.3.8–2.3.17 | Validacion/ValidationFilter.cs | CantidadMasDe10000_Es400 |
+| Límite 501 | 2.3.20 | Program.cs de 2.3 | ReglaDeNegocio_501_Es422 |
+| Documento OpenAPI real | 2.4.4–2.4.10 | DocumentacionExtensions.cs | OpenApi_ContieneRutasYVersion |
+| Ejemplo del contrato | 2.4.16–2.4.19 | EjemploCrearOrden | OpenApi_IncluyeEjemplo |
+| Respuestas alternativas | 2.4.12–2.4.15 | Program.cs de 2.4 | OpenApi_DeclaraErroresDeOperacionesReales |
+| Ocultar documentación en Production | 2.4.23 | UseDocumentacion | Produccion_NoExponeSwagger |
+
+Esta tabla describe las etapas y los tests presentes en la versión revisada del recorrido. No confunde las pruebas HTTP con una auditoría de seguridad ni interpreta el uso de InMemory como una demostración de que SQL Server LocalDB está instalado en cada máquina. Cada fila puede verificarse abriendo el archivo correspondiente y ejecutando el caso indicado.
+
+### VII. Diagnóstico por evidencias, no por aproximaciones
+
+Una forma útil de resolver un fallo durante el taller consiste en conservar el primer dato observable y buscar el componente responsable. Si la aplicación no escucha en el puerto esperado, aún no tiene sentido discutir si el validador acepta Cantidad 501. Si el servidor escucha pero una ruta no coincide, el primer objetivo es comparar método y URI con MapGet, MapPost o la operación correspondiente. Si la ruta coincide, se examina el enlace del request y, finalmente, la lógica de acceso a datos.
+
+El alumno puede utilizar este itinerario:
+
+1. **Confirmar el estado de proyecto.** ¿Está ejecutando 2.1, 2.2, 2.3 o 2.4? Un endpoint introducido en 2.2 no debe esperarse en 2.1, y Swagger no se publica en las etapas anteriores a 2.4.
+2. **Confirmar host y entorno.** ¿Está usando la dirección real de Visual Studio? ¿El entorno es Development o Production? ¿Se trata del host local con SQL Server Express LocalDB o del host de WebApplicationFactory con base InMemory?
+3. **Confirmar método y ruta.** Comparar el mensaje HTTP exacto con la cadena de MapGet, MapPost, MapPut, MapPatch o MapDelete. Una ruta con Guid no válido puede no invocar el delegado restringido.
+4. **Confirmar el contrato JSON.** Comparar nombres y tipos del cuerpo con CrearOrdenRequest o ActualizarCantidadRequest. No enviar un DTO de salida completo como sustituto del request de creación.
+5. **Confirmar reglas de validación.** Si devuelve 400 con errors, observar el campo y el rango; verificar que ValidationFilter está enlazado al endpoint adecuado.
+6. **Confirmar reglas de negocio.** Si devuelve 422, revisar el límite 500; si devuelve 409, consultar Estado y la transición Finalizada.
+7. **Confirmar persistencia.** Si recibe éxito, ejecutar GET para verificar lo guardado. Si se usó 204, no esperar un cuerpo en PUT o DELETE.
+8. **Confirmar documentación.** Si el documento está incompleto, revisar los metadatos y las pruebas de OpenAPI; no alterar el resultado real solo para hacerlo parecerse a una descripción incorrecta.
+
+Este método evita un problema frecuente: cambiar piezas que no participan en el fallo. Por ejemplo, modificar la cadena de conexión no corrige una URL con un verbo no registrado; cambiar InclusiveBetween no repara la ausencia de Location; agregar un Produce no convierte un DELETE 409 en uno exitoso. Cada componente debe evaluarse según su responsabilidad.
+
+### VIII. Qué queda fuera de M02 y por qué importa conocer el límite
+
+El taller ha creado una API HTTP real con persistencia, DTO, validación y documentación. Eso no equivale a tener lista una plataforma productiva de microservicios. En los cuatro estados del módulo no se implementan puertos hexagonales, mediadores, un bus de eventos, un API Gateway, autenticación, control de concurrencia optimista ni políticas distribuidas de resiliencia. Presentarlos como si ya estuvieran presentes dificultaría el aprendizaje de los módulos siguientes.
+
+Se pueden identificar, sin implementarlas prematuramente, varias preguntas arquitectónicas que nacerán de este código. ¿Qué ocurre si el delegado conoce directamente demasiados detalles de EF Core? ¿Cómo podría probarse el dominio sin arrancar Kestrel? ¿Cómo separar un caso de uso de su adaptador de entrada HTTP y de un adaptador de persistencia? ¿Qué comportamiento debe conservarse si una futura arquitectura hexagonal redistribuye las responsabilidades entre capas?
+
+La respuesta inicial es **mantener estable el contrato de comportamiento** mientras evoluciona la organización interna. Los GET deberán seguir diferenciando 200 y 404; POST continuará expresando creación y ubicación; las restricciones de estado seguirán impidiendo escrituras no permitidas; y el documento OpenAPI seguirá representando la API publicada. Las pruebas acumulativas son la primera defensa contra una refactorización que rompa esos compromisos.
+
+Así se convierte M02 en un punto de partida para M03: el alumno no aprenderá arquitectura hexagonal como una colección de carpetas artificiales, sino como una evolución razonada de un servicio que ya entiende. Antes de esa transición debe poder reconstruir de memoria conceptual —no copiando líneas— el ciclo completo **petición → ruta → contrato → validación → regla de negocio → EF Core → DTO → respuesta → documento OpenAPI**, indicando qué etapas concretas de AceriaApp implementan cada parte.
