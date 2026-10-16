@@ -1762,7 +1762,7 @@ for %f in (modulo-2-apis-rest-aspnet-core\2.1-diseno-apis-rest\docs\*.md) do @fc
 - **Acción 1:** Escribir tree /F modulo-2-apis-rest-aspnet-core\2.2-recursos-verbos-codigos y pulsar Enter.
 - **Acción 2:** Verificar que la salida muestra AceriaApp.sln, README.md, src\AceriaApp.Monolito.Api\CatalogoRecursos con las tres clases nuevas, tests\AceriaApp.CatalogoRecursos.Tests con los dos archivos de tests y docs con el catálogo de recursos y el ADR-007.
 - **Acción 3:** Verificar que las carpetas Dominio, Infraestructura, Metricas, Diseno, Organizacion, BuenasPracticas y DisenoRest del punto 2.1 permanecen intactas.
-- **Acción 4:** Verificar que no existe ninguna carpeta labs ni ningún archivo metaprompt.md ni verificacion.md.
+- **Acción 4:** Comprobar que la estructura del proyecto contiene únicamente los archivos y carpetas de la solución de este punto.
 
 **Por qué se hace:** la verificación estructural confirma que el punto 2.2 añade archivos nuevos sin modificar los existentes.
 
@@ -2746,7 +2746,7 @@ for %f in (modulo-2-apis-rest-aspnet-core\2.2-recursos-verbos-codigos\docs\*.md)
 - **Acción 1:** Escribir tree /F modulo-2-apis-rest-aspnet-core\2.3-validacion-peticiones y pulsar Enter.
 - **Acción 2:** Verificar que la salida muestra AceriaApp.sln, README.md, src\AceriaApp.Monolito.Api\Validacion con las cuatro clases nuevas, tests\AceriaApp.Validacion.Tests con los dos archivos de tests y docs con el documento de validación y el ADR-008.
 - **Acción 3:** Verificar que las carpetas existentes del punto 2.2 permanecen intactas.
-- **Acción 4:** Verificar que no existe ninguna carpeta labs ni ningún archivo metaprompt.md ni verificacion.md.
+- **Acción 4:** Comprobar que la estructura del proyecto contiene únicamente los archivos y carpetas de la solución de este punto.
 
 **Por qué se hace:** la verificación estructural confirma que el punto 2.3 añade archivos nuevos sin modificar los existentes.
 
@@ -3797,7 +3797,7 @@ for %f in (modulo-2-apis-rest-aspnet-core\2.3-validacion-peticiones\docs\*.md) d
 - **Acción 1:** Escribir tree /F modulo-2-apis-rest-aspnet-core\2.4-documentacion-openapi y pulsar Enter.
 - **Acción 2:** Verificar que la salida muestra AceriaApp.sln, README.md, src\AceriaApp.Monolito.Api\Documentacion con las tres clases nuevas, tests\AceriaApp.Documentacion.Tests con los tres archivos de tests y docs con el documento de documentación y el ADR-009.
 - **Acción 3:** Verificar que las carpetas existentes del punto 2.3 permanecen intactas.
-- **Acción 4:** Verificar que no existe ninguna carpeta labs ni ningún archivo metaprompt.md ni verificacion.md.
+- **Acción 4:** Comprobar que la estructura del proyecto contiene únicamente los archivos y carpetas de la solución de este punto.
 
 **Por qué se hace:** la verificación estructural confirma que el punto 2.4 añade archivos nuevos sin modificar los existentes.
 
