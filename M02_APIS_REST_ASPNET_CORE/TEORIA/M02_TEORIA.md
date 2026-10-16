@@ -14,7 +14,7 @@ Objetivos de aprendizaje:
 - Identificar los recursos como unidad central del diseño de una API REST.
 - Comprender la relación entre recursos, URIs y representaciones.
 - Comprender el principio de interfaz uniforme y su aplicación en ASP.NET Core.
-- Añadir al proyecto AceriaApp un documento de diseño de APIs REST y una clase de validación de URIs REST.
+- Implementar los dos endpoints GET reales de AceriaApp con DTO, persistencia EF Core y pruebas HTTP.
 
 
 ---
@@ -382,6 +382,103 @@ La aplicación del diseño REST prepara el proyecto para los puntos posteriores 
 
 
 ---
+
+
+#### Estudio de caso 2.1.A — Una orden de fabricación vista desde tres fronteras
+
+Antes de analizar la siguiente etapa, conviene detenerse ante un problema de diseño. El cliente de AceriaApp necesita saber cuántas unidades se han encargado, pero no necesita conocer el nombre de una tabla de SQL Server. Por otro lado, EF Core necesita una entidad con propiedades configurables para persistirla, mientras que ASP.NET Core necesita un contrato estable que pueda serializarse como JSON. **Recurso, entidad y representación no son sinónimos.** Esta distinción evita que cada cambio de almacenamiento se convierta en una ruptura de la API.
+
+El archivo **Modelo/Orden.cs** de la etapa **2.1-diseno-apis-rest** contiene estos datos reales:
+
+~~~csharp
+public sealed class Orden
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public string Cliente { get; set; } = string.Empty;
+    public string Material { get; set; } = string.Empty;
+    public int Cantidad { get; set; }
+    public string Estado { get; set; } = "Pendiente";
+    public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
+}
+~~~
+
+El identificador representa la identidad de la orden, incluso cuando dos solicitudes tengan el mismo cliente y material. **Estado** forma parte del ciclo de negocio: desde el comienzo el valor predeterminado es «Pendiente», y la etapa 2.2 incorporará la transición a «Finalizada». **FechaCreacion** se calcula inicialmente en UTC, con independencia del idioma del usuario. Ninguna de estas propiedades obliga a publicar directamente la entidad.
+
+El contrato HTTP se expresa mediante **Modelo/OrdenDto.cs**:
+
+~~~csharp
+public sealed record OrdenDto(Guid Id, string Cliente, string Material,
+    int Cantidad, string Estado, DateTime FechaCreacion)
+{
+    public static OrdenDto Desde(Orden x) =>
+        new(x.Id,x.Cliente,x.Material,x.Cantidad,x.Estado,x.FechaCreacion);
+}
+~~~
+
+La palabra **record** permite definir un objeto que representa los datos transferidos. El método **Desde** convierte explícitamente la entidad al DTO. En este ejercicio los campos coinciden casi por completo, pero la separación sigue siendo esencial: una propiedad interna añadida en el futuro a Orden no aparecerá automáticamente en el JSON, porque no se incluye en el contrato OrdenDto. Tampoco debemos suponer que el nombre exacto de cada propiedad C# coincida con la propiedad enviada: la serialización JSON de ASP.NET Core aplica normalmente nombres camelCase.
+
+**Lectura guiada de la conversión.** Al recibir una entidad, el método lee Id, Cliente, Material, Cantidad, Estado y FechaCreacion en ese orden. Construye un nuevo valor OrdenDto y lo entrega a la capa HTTP. No ejecuta otra consulta ni guarda nada. En el código de 2.1 esa conversión aparece tras la lectura de EF Core. Si el alumno obtiene en la respuesta un dato distinto al esperado, puede inspeccionar separadamente el objeto persistido, la proyección y la serialización; no tiene que atribuir todo el problema al servidor web.
+
+**Error habitual.** Considerar que añadir una propiedad pública a Orden equivale a ampliar el contrato REST. No es así: el contrato lo define la representación, no la tabla. **Correspondencia práctica:** 2.1.4–2.1.7 construyen estas clases y 2.1.23 verifica el DTO a través de HTTP. El test real **RecursoExistente_ExponeDto** inserta una orden en la base aislada de pruebas y comprueba que el Id recibido coincide con el sembrado. Esta prueba no invoca directamente el método Desde, sino el endpoint completo.
+
+#### Estudio de caso 2.1.B — Dos solicitudes GET y cuatro decisiones diferentes
+
+El contrato público inicial ofrece exactamente dos rutas: **GET /api/v1/ordenes** y **GET /api/v1/ordenes/{id:guid}**. La primera pregunta qué elementos pertenecen a una colección; la segunda pide la representación de uno de sus miembros. La colección existe aunque no contenga ninguna orden, por eso la consulta vacía responde 200 con un array JSON vacío. En cambio, si se solicita un Id bien formado que no está persistido, falta el recurso individual y la decisión del manejador es 404.
+
+El fragmento real para listar en **Program.cs** es:
+
+~~~csharp
+app.MapGet("/api/v1/ordenes",async (AceriaDbContext db,CancellationToken ct)=>
+{
+    var ordenes=await db.Ordenes.AsNoTracking().OrderBy(x=>x.FechaCreacion).ToListAsync(ct);
+    return Results.Ok(ordenes.Select(OrdenDto.Desde));
+})
+.WithName("ListarOrdenes").WithTags("Ordenes");
+~~~
+
+**Paso 1.** MapGet asocia método y URI a un delegado. En el momento del arranque registra una ruta; no consulta todavía la base. **Paso 2.** ASP.NET Core obtiene AceriaDbContext mediante inyección de dependencias; su registro previo utiliza **UseSqlServer** y la cadena de conexión **AceriaApp**. **Paso 3.** El token de cancelación acompaña la operación asíncrona. **Paso 4.** AsNoTracking evita mantener entidades de lectura en el rastreador de cambios. **Paso 5.** OrderBy establece un orden por creación, aunque un sistema avanzado añadiría un criterio secundario para desempates. **Paso 6.** ToListAsync materializa la consulta; la conversión mediante Desde se realiza después en memoria. **Paso 7.** Results.Ok convierte la lista proyectada en respuesta HTTP 200.
+
+Esta etapa **no dispone aún de paginación**, ni de filtros por cliente, ni de XML. Los principios teóricos permiten justificar esas extensiones, pero sería incorrecto mostrar como ejecutables parámetros page o size inexistentes. La base de aprendizaje es precisamente dominar el estado real antes de agregar posibilidades. Tampoco se debe confundir **WithName** con la ruta: el primero aporta un nombre lógico que, en 2.2, utilizará CreatedAtRoute para construir la cabecera Location.
+
+En el endpoint individual se usa una restricción **{id:guid}**. Una URI que termina en **no-es-guid** no coincide con esa ruta y puede acabar en 404 antes de ejecutar el delegado. Una URI que termina en **00000000-0000-0000-0000-000000000001** sí puede coincidir, pero el manejador devuelve 404 si el Id no existe. Ambas producen el mismo código con causas de diagnóstico diferentes.
+
+~~~http
+GET /api/v1/ordenes HTTP/1.1
+Host: localhost:5000
+
+GET /api/v1/ordenes/00000000-0000-0000-0000-000000000001 HTTP/1.1
+Host: localhost:5000
+~~~
+
+**Error habitual.** Interpretar cualquier 404 como una caída de SQL Server. Un error de conexión con LocalDB no equivale a Results.NotFound. El alumno debe observar primero si su petición coincide con la ruta, después si el delegado se ejecutó y finalmente si la consulta encontró entidad. **Correspondencia:** pasos 2.1.14–2.1.20; tests **ListaVacia_Es200** y **RecursoInexistente_Es404** del archivo **GetTests.cs**.
+
+#### Estudio de caso 2.1.C — Quién hace qué cuando llega una petición
+
+Una Minimal API es pequeña en forma, no necesariamente en responsabilidades. En el programa real la cadena de conexión se configura mediante **AddDbContext**, y el delegado recibe el contexto ya preparado. El ciclo completo es: el cliente prepara el método HTTP, Kestrel recibe la solicitud, el sistema de rutas elige MapGet, el contenedor de dependencias resuelve AceriaDbContext, EF Core ejecuta una consulta sobre SQL Server Express LocalDB, el delegado convierte entidades a DTO y el servidor serializa el resultado. Cada componente puede fallar de una manera distinta.
+
+**Mapa de responsabilidades y síntomas observables:**
+
+| Momento | Qué comprobar | Síntoma útil |
+|:---|:---|:---|
+| Arranque | SDK .NET 8 y perfil de ejecución | La aplicación no llega a escuchar |
+| Conexión | Cadena AceriaApp y LocalDB disponible | Error de acceso a datos |
+| Ruta | Verbo GET y URI exacta | 404 sin entrar al delegado |
+| Búsqueda | Id Guid y existencia de la entidad | 404 devuelto por el manejador |
+| Proyección | OrdenDto.Desde | Contenido JSON del recurso |
+| Respuesta | Results.Ok | Estado 200 |
+
+Un código 200 no demuestra que todos los datos sean correctos. Por eso **RecursoExistente_ExponeDto** verifica también el identificador devuelto. Una prueba que solo comprobara el estado HTTP podría pasar incluso si se serializara la orden equivocada. A su vez, una prueba unitaria directa de OrdenDto.Desde no detectaría que la ruta está mal escrita. Ambas clases de prueba son útiles, pero el objetivo de esta etapa es comprobar el contrato HTTP real.
+
+En la etapa de desarrollo la base se inicializa con **EnsureCreatedAsync**, condicionada al entorno Development y a la opción SkipDatabaseInitialization. Es una simplificación de laboratorio, **no un ejemplo de estrategia de migraciones para producción**. Los tests sustituyen el proveedor por EF Core InMemory y crean una base aislada; el código de la aplicación del alumno continúa configurado para SQL Server, no para SQLite. Esto permite que las pruebas automatizadas se ejecuten en un agente sin LocalDB, pero no significa que las diferencias entre proveedores desaparezcan. Por ejemplo, una consulta SQL compleja, una restricción de clave o una transacción podrían comportarse de manera diferente.
+
+**Secuencia de recuperación ante un fallo.** Si la API no arranca, comprueba SDK y configuración antes de revisar los DTO. Si arranca pero la colección falla, verifica la cadena AceriaApp, la existencia de LocalDB y el contexto. Si la colección funciona pero el recurso individual no aparece, verifica la forma Guid y la existencia del Id. Si el Id existe y el JSON es incompleto, revisa la conversión a OrdenDto. La práctica 2.1.21–2.1.23 añade pruebas que aíslan parte de estas decisiones.
+
+#### Síntesis comprobable de 2.1: la API no es una tabla publicada
+
+El alumno ya puede responder a cinco preguntas sin repetir definiciones: por qué Orden y OrdenDto son tipos separados; por qué GET de una colección vacía devuelve 200; cómo distingue un Id mal formado de uno ausente; qué hace AsNoTracking; y de dónde procede el AceriaDbContext inyectado. Para demostrarlo, basta reconstruir el ejemplo con datos conocidos y asociar cada conclusión a una observación HTTP, no a una suposición.
+
+**Traza docente:** concepto de recurso → práctica 2.1.3–2.1.7 → archivos Modelo/Orden.cs y Modelo/OrdenDto.cs → **RecursoExistente_ExponeDto**; persistencia y DI → práctica 2.1.8–2.1.15 → Datos/AceriaDbContext.cs y Program.cs → **ListaVacia_Es200**; enrutamiento y semántica 404 → práctica 2.1.17–2.1.23 → MapGet individual → **RecursoInexistente_Es404**. La capa teórica y la capa práctica explican el mismo sistema desde perspectivas complementarias.
+
 
 ### Resumen rápido de la teoría
 
