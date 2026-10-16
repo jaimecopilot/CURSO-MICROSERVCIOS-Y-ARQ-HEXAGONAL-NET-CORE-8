@@ -1,6 +1,11 @@
 name: M02 - publicar docencia desde fuentes originales
 
 on:
+  push:
+    branches:
+      - desarrollo/m02-apis-rest-20261015
+    paths:
+      - '.github/scripts/pedagogia_m02.py'
   workflow_dispatch:
 
 permissions:

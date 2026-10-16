@@ -1,0 +1,37 @@
+name: M02 - verificar los 96 estados progresivos
+
+on:
+  push:
+    branches:
+      - desarrollo/m02-apis-rest-20261015
+    paths:
+      - 'M02_APIS_REST_ASPNET_CORE/PROYECTO/**'
+      - '.github/scripts/e2e_m02_stages.py'
+      - '.github/workflows/m02-verificacion-pasos.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  progresion:
+    name: "Punto ${{ matrix.punto }} — 24 estados"
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        punto: ['2.1', '2.2', '2.3', '2.4']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Compilar y ejecutar los estados progresivos en copias temporales
+        run: python .github/scripts/e2e_m02_stages.py --root . --point "${{ matrix.punto }}"
+      - name: Conservar resultados de la validación
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: "m02-progresion-${{ matrix.punto }}"
+          path: m02-stages-*.json
+          if-no-files-found: warn

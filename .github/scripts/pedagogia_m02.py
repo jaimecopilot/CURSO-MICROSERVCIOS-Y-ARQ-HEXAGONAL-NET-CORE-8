@@ -453,6 +453,13 @@ def aplicar(text: str, point: str, tipo: str) -> tuple[str,list[str]]:
     cambios=[]
     if tipo!="PRACTICAS":
         return text,cambios
+    # Una instrucción heredada describía carpetas de auditoría ajenas al alumno.
+    # Se reemplaza únicamente en la copia docente, nunca en los 4 originales.
+    interno="- **Acción 4:** Verificar que no existe ninguna carpeta labs ni ningún archivo metaprompt.md ni verificacion.md."
+    sustituto="- **Acción 4:** Comprobar que la estructura del proyecto contiene únicamente los archivos y carpetas de la solución de este punto."
+    if interno in text:
+        text=text.replace(interno,sustituto)
+        cambios.append("instrucción de comprobación orientada al alumno")
     if point=="2.2":
         text=insert_docs(text,"2.2",21,"2.1-diseno-apis-rest","2.2-recursos-verbos-codigos",11)
         cambios=["2.2.21 comparar 11 documentos heredados"]

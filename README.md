@@ -24,9 +24,11 @@ Curso teórico-práctico de **30 horas** dirigido a desarrolladores .NET con con
 
 Cada módulo se organiza en las carpetas `TEORIA/`, `PRACTICAS/` y `PROYECTO/`. Las carpetas docentes se incorporan con sus respectivos Markdown y PDF; los proyectos son estados reproducibles de AceriaApp por punto del temario.
 
-### Módulo 1
+### Módulo 1 — Introducción a los microservicios
 
-- [Proyecto AceriaApp — puntos 1.1 a 1.5](M01_INTRODUCCION_MICROSERVICIOS/PROYECTO/)
+- [Teoría (Markdown)](M01_INTRODUCCION_MICROSERVICIOS/TEORIA/M01_TEORIA.md) · [PDF](M01_INTRODUCCION_MICROSERVICIOS/TEORIA/M01_TEORIA.pdf)
+- [Prácticas (Markdown)](M01_INTRODUCCION_MICROSERVICIOS/PRACTICAS/M01_PRACTICAS.md) · [PDF](M01_INTRODUCCION_MICROSERVICIOS/PRACTICAS/M01_PRACTICAS.pdf)
+- [Proyectos AceriaApp — puntos 1.1 a 1.5](M01_INTRODUCCION_MICROSERVICIOS/PROYECTO/)
 - Cada punto conserva `AceriaApp.sln`, `src/`, `tests/` y `docs/`.
 - Referencia de código: .NET 8, EF Core 8, SQL Server Express y xUnit.
 - Los retos de cada punto están identificados mediante comentarios para descomentarlos.
@@ -35,6 +37,6 @@ Cada módulo se organiza en las carpetas `TEORIA/`, `PRACTICAS/` y `PROYECTO/`. 
 
 - [Teoría completa (Markdown)](M02_APIS_REST_ASPNET_CORE/TEORIA/M02_TEORIA.md) · [PDF](M02_APIS_REST_ASPNET_CORE/TEORIA/M02_TEORIA.pdf)
 - [Prácticas paso a paso (Markdown)](M02_APIS_REST_ASPNET_CORE/PRACTICAS/M02_PRACTICAS.md) · [PDF](M02_APIS_REST_ASPNET_CORE/PRACTICAS/M02_PRACTICAS.pdf)
-- [Proyectos AceriaApp de los puntos 2.1 a 2.4](M02_APIS_REST_ASPNET_CORE/PROYECTO/)
+- [Guía de este módulo](M02_APIS_REST_ASPNET_CORE/README.md) · [Proyectos AceriaApp — puntos 2.1 a 2.4](M02_APIS_REST_ASPNET_CORE/PROYECTO/)
 
 La teoría contiene los cuatro puntos del módulo. Las prácticas siguen la progresión indicada por las marcas de paso del código en cada solución independiente. Para ejecutar los ejercicios se necesitan .NET 8, Visual Studio y SQL Server Express.
