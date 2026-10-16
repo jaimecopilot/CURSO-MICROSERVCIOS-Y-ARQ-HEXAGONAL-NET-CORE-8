@@ -1459,6 +1459,8 @@ solamente códigos 204.
 
 **Verificación concreta.** Los tests de escritura siguen pasando.
 
+**Comprobación adicional guiada.** Antes de escribir reglas nuevas, ejecuta los tests heredados de lectura y escritura. Localiza CrearOrdenRequest, ActualizarCantidadRequest y la validación provisional de Program.cs. Señala qué peticiones alcanzan actualmente el delegado y cuáles no. Al terminar 2.3 deberán seguir funcionando los mismos verbos y rutas; cambiaremos el mecanismo de validación, no el modelo de recursos.
+
 **Si algo falla.** Si JSON roto produce un error inesperado, revisa Content-Type y la estructura del cuerpo antes del validador.
 
 ### PASO 2.3.2 — Distinguir JSON incorrecto, semántica y negocio
@@ -1473,6 +1475,8 @@ solamente códigos 204.
 
 **Verificación concreta.** Distingues sintaxis, semántica y regla de capacidad.
 
+**Comprobación adicional guiada.** Prepara tres cuerpos de petición: JSON mal formado, JSON correcto con Cliente vacío y JSON correcto con Cantidad 501. Predice qué componente detecta cada error: enlazador del framework, validador del request o límite operativo del taller. Conserva esos ejemplos para compararlos tras instalar el filtro. No des por supuesto que todas las respuestas tendrán la misma estructura errors.
+
 **Si algo falla.** Si JSON roto produce un error inesperado, revisa Content-Type y la estructura del cuerpo antes del validador.
 
 ### PASO 2.3.3 — Instalar FluentValidation.DependencyInjectionExtensions
@@ -1486,6 +1490,8 @@ solamente códigos 204.
 **Por qué funciona así.** La deserialización de un cuerpo JSON y la validación semántica no son lo mismo. Primero el framework interpreta el mensaje y después se comprueban las reglas de datos.
 
 **Verificación concreta.** AbstractValidator y AddValidatorsFromAssemblyContaining se resuelven.
+
+**Comprobación adicional guiada.** Añade FluentValidation.DependencyInjectionExtensions en la versión compatible con el proyecto de .NET 8. Comprueba que los tipos AbstractValidator, IValidator y AddValidatorsFromAssemblyContaining están disponibles. Restaura y compila antes de conectar el filtro. Instalar un paquete habilita clases y extensiones, pero por sí solo no intercepta ninguna petición HTTP.
 
 **Si algo falla.** Si JSON roto produce un error inesperado, revisa Content-Type y la estructura del cuerpo antes del validador.
 
@@ -1523,6 +1529,8 @@ public sealed class ActualizarCantidadValidator : AbstractValidator<ActualizarCa
 
 **Verificación concreta.** Un cliente vacío infringe una regla semántica.
 
+**Comprobación adicional guiada.** En Validacion/Validadores.cs crea CrearOrdenValidator para CrearOrdenRequest. Aplica NotEmpty a Cliente y comprueba que una cadena vacía produce fallo. Añade MaximumLength(100) y prueba mentalmente qué sucede con 100 y 101 caracteres. Distingue el validador de la configuración HasMaxLength(100) en EF Core: el objetivo es devolver un error entendible antes de intentar guardar.
+
 **Si algo falla.** Si RuleFor no compila, revisa FluentValidation y el using. Comprueba la diferencia entre NotEmpty y límites numéricos.
 
 ### PASO 2.3.5 — Definir Material y rango válido de Cantidad
@@ -1536,6 +1544,8 @@ public sealed class ActualizarCantidadValidator : AbstractValidator<ActualizarCa
 **Por qué funciona así.** FluentValidation expresa reglas sobre los contratos de entrada y devuelve errores por campo; no debe confundirse un record con el validador que lo inspecciona.
 
 **Verificación concreta.** La cantidad 0 o 10001 es inválida; 501 cumple el rango.
+
+**Comprobación adicional guiada.** Añade NotEmpty y MaximumLength(100) para Material, e InclusiveBetween(1,10000) para Cantidad. Revisa los casos de frontera 0, 1, 500, 501, 10000 y 10001 antes de enviar peticiones. El límite 10000 pertenece al contrato de datos de este taller; la restricción más estricta 500 permanece en el delegado como regla de negocio y producirá 422.
 
 **Si algo falla.** Si RuleFor no compila, revisa FluentValidation y el using. Comprueba la diferencia entre NotEmpty y límites numéricos.
 
@@ -1573,6 +1583,8 @@ public sealed class ActualizarCantidadValidator : AbstractValidator<ActualizarCa
 
 **Verificación concreta.** PATCH comparte el criterio semántico del campo Cantidad.
 
+**Comprobación adicional guiada.** Crea ActualizarCantidadValidator para ActualizarCantidadRequest con InclusiveBetween(1,10000). No lo sustituyas por CrearOrdenValidator: el PATCH solo recibe Cantidad y no debería pedir Cliente ni Material. Verifica el nombre exacto del record usado por el endpoint y por la regla. Un error de tipo impide conectar el filtro correcto.
+
 **Si algo falla.** Si RuleFor no compila, revisa FluentValidation y el using. Comprueba la diferencia entre NotEmpty y límites numéricos.
 
 ### PASO 2.3.7 — Ejecutar validadores y estudiar ValidationResult
@@ -1586,6 +1598,8 @@ public sealed class ActualizarCantidadValidator : AbstractValidator<ActualizarCa
 **Por qué funciona así.** FluentValidation expresa reglas sobre los contratos de entrada y devuelve errores por campo; no debe confundirse un record con el validador que lo inspecciona.
 
 **Verificación concreta.** Comprendes ValidationResult antes de conectar HTTP.
+
+**Comprobación adicional guiada.** En una pequeña prueba de ejecución o con el depurador, obtén un resultado de ValidateAsync con Cantidad 0 y observa IsValid false y su lista de errores. Repítelo con Cantidad 10 y comprueba IsValid true. La ausencia de excepción no equivale a éxito: se debe inspeccionar ValidationResult. No confundas esta comprobación aislada con una prueba HTTP del endpoint.
 
 **Si algo falla.** Si RuleFor no compila, revisa FluentValidation y el using. Comprueba la diferencia entre NotEmpty y límites numéricos.
 
@@ -1644,6 +1658,8 @@ public sealed class ValidationFilter<T>(IValidator<T> validator): IEndpointFilte
 
 **Verificación concreta.** Un request ausente no provoca NullReferenceException.
 
+**Comprobación adicional guiada.** En InvokeAsync examina context.Arguments y extrae OfType<T>().FirstOrDefault. El argumento esperado debe ser CrearOrdenRequest en POST/PUT y ActualizarCantidadRequest en PATCH. Si no se encuentra, el filtro produce ValidationProblem con clave body. Explica por qué ese caso no implica que cualquier JSON sintácticamente inválido atraviese el filtro: algunos errores suceden durante el enlace previo.
+
 **Si algo falla.** Si una petición inválida llega al endpoint, revisa el orden de ejecución y la condición IsValid antes de next(context).
 
 ### PASO 2.3.10 — Ejecutar ValidateAsync y respetar RequestAborted
@@ -1657,6 +1673,8 @@ public sealed class ValidationFilter<T>(IValidator<T> validator): IEndpointFilte
 **Por qué funciona así.** El filtro ejecuta ValidateAsync antes del manejador y utiliza Results.ValidationProblem si falla; solo invoca next(context) cuando la petición es válida.
 
 **Verificación concreta.** No continúa una operación que el cliente ha cancelado.
+
+**Comprobación adicional guiada.** Invoca validator.ValidateAsync(request, context.HttpContext.RequestAborted) con await. Localiza RequestAborted en el contexto HTTP y explica para qué sirve si el cliente cancela la solicitud. No llames a SaveChangesAsync dentro del filtro: aquí se decide si permitir la ejecución del manejador, no se persiste el recurso. Compila tras añadir la firma asincrónica.
 
 **Si algo falla.** Si una petición inválida llega al endpoint, revisa el orden de ejecución y la condición IsValid antes de next(context).
 
@@ -1698,6 +1716,8 @@ public sealed class ValidationFilter<T>(IValidator<T> validator): IEndpointFilte
 
 **Verificación concreta.** Cada propiedad tiene su colección de errores.
 
+**Comprobación adicional guiada.** Agrupa result.Errors por PropertyName y convierte cada grupo en un array de ErrorMessage. Para una propiedad con varios errores, no pierdas mensajes sobrescribiendo una cadena con otra. Dibuja una representación con Cliente y Material como claves y una lista de mensajes por clave. Después contrasta la estructura con el objeto que devuelve ValidationProblem.
+
 **Si algo falla.** Si una petición inválida llega al endpoint, revisa el orden de ejecución y la condición IsValid antes de next(context).
 
 ### PASO 2.3.12 — Responder mediante Results.ValidationProblem
@@ -1711,6 +1731,8 @@ public sealed class ValidationFilter<T>(IValidator<T> validator): IEndpointFilte
 **Por qué funciona así.** El filtro ejecuta ValidateAsync antes del manejador y utiliza Results.ValidationProblem si falla; solo invoca next(context) cuando la petición es válida.
 
 **Verificación concreta.** La respuesta incluye status 400 y el campo errors.
+
+**Comprobación adicional guiada.** Utiliza Results.ValidationProblem(errors) cuando IsValid es false. Ejecuta un POST con Cliente vacío tras conectar el filtro y comprueba HTTP 400 y la propiedad JSON errors. No devuelvas Results.Ok con un texto de error: eso haría creer al consumidor que su solicitud fue aceptada. Relaciona el campo errors con el diccionario preparado en el paso anterior.
 
 **Si algo falla.** Si una petición inválida llega al endpoint, revisa el orden de ejecución y la condición IsValid antes de next(context).
 
@@ -1762,6 +1784,8 @@ en errors; Cantidad=501 debe producir 422 porque es una regla del negocio.
 
 **Verificación concreta.** El endpoint se ejecuta solo cuando la validación pasa.
 
+**Comprobación adicional guiada.** Coloca return await next(context) exclusivamente en el camino de validación correcta. Comprueba que para Cantidad 0 el filtro termina antes de ejecutar db.Ordenes.Add y que para Cantidad 10 sí entra en el delegado. La diferencia debe observarse en el depurador y posteriormente por HTTP. Si el mismo request crea la orden y devuelve un error, revisa el orden de las instrucciones.
+
 **Si algo falla.** Si una petición inválida llega al endpoint, revisa el orden de ejecución y la condición IsValid antes de next(context).
 
 ### PASO 2.3.14 — Registrar validadores en el contenedor DI
@@ -1781,6 +1805,8 @@ builder.Services.AddValidatorsFromAssemblyContaining<CrearOrdenValidator>(); // 
 **Por qué funciona así.** El registro de validadores en DI no ejecuta la validación. AddEndpointFilter debe asociarse a cada POST, PUT o PATCH que acepte ese contrato.
 
 **Verificación concreta.** El filtro puede resolver IValidator<CrearOrdenRequest>.
+
+**Comprobación adicional guiada.** Registra builder.Services.AddValidatorsFromAssemblyContaining<CrearOrdenValidator>() antes de builder.Build. Explica que el contenedor encuentra los tipos IValidator correspondientes. Si olvidas este registro, la construcción de ValidationFilter<T> no podrá resolver correctamente su dependencia. No confundas registrar validadores con instalarlos automáticamente en todos los endpoints.
 
 **Si algo falla.** Si se acepta una petición inválida, puede faltar AddEndpointFilter aunque los validadores estén registrados en DI.
 
@@ -1804,6 +1830,8 @@ builder.Services.AddValidatorsFromAssemblyContaining<CrearOrdenValidator>(); // 
 
 **Verificación concreta.** POST con Cliente vacío devuelve 400 en vez de guardar una fila.
 
+**Comprobación adicional guiada.** En el MapPost de órdenes añade AddEndpointFilter<ValidationFilter<CrearOrdenRequest>> después del registro de ruta. Ejecuta una petición con Cliente vacío y verifica 400 con errors; luego una válida y verifica 201 con Location. Estas dos pruebas son indispensables: la primera demuestra que el filtro corta, y la segunda que no bloquea indiscriminadamente todas las peticiones.
+
 **Si algo falla.** Si se acepta una petición inválida, puede faltar AddEndpointFilter aunque los validadores estén registrados en DI.
 
 ### PASO 2.3.16 — Conectar filtro de CrearOrdenRequest al PUT
@@ -1817,6 +1845,8 @@ builder.Services.AddValidatorsFromAssemblyContaining<CrearOrdenValidator>(); // 
 **Por qué funciona así.** El registro de validadores en DI no ejecuta la validación. AddEndpointFilter debe asociarse a cada POST, PUT o PATCH que acepte ese contrato.
 
 **Verificación concreta.** PUT inválido no modifica la orden almacenada.
+
+**Comprobación adicional guiada.** Aplica el filtro del mismo tipo CrearOrdenRequest al MapPut. Usa una orden Pendiente creada previamente para comprobar un PUT con datos válidos y otro con Material vacío. No pruebes solo un Id inexistente: el manejador podría devolver 404 y no demostrarías que el filtro actúa. Verifica después por GET que el intento inválido no alteró los campos guardados.
 
 **Si algo falla.** Si se acepta una petición inválida, puede faltar AddEndpointFilter aunque los validadores estén registrados en DI.
 
@@ -1840,6 +1870,8 @@ builder.Services.AddValidatorsFromAssemblyContaining<CrearOrdenValidator>(); // 
 
 **Verificación concreta.** PATCH con Cantidad=0 devuelve 400.
 
+**Comprobación adicional guiada.** Aplica ValidationFilter<ActualizarCantidadRequest> al MapPatch de cantidad. Prueba Cantidad 0 frente a Cantidad 12. En el primer caso espera 400; en el segundo 200 con DTO actualizado, siempre que la orden permanezca Pendiente. Confirma que el filtro no exige Cliente ni Material, ya que no forman parte del contrato de este PATCH.
+
 **Si algo falla.** Si se acepta una petición inválida, puede faltar AddEndpointFilter aunque los validadores estén registrados en DI.
 
 ### PASO 2.3.18 — Enviar POST incorrecto y comprobar status 400
@@ -1854,6 +1886,8 @@ builder.Services.AddValidatorsFromAssemblyContaining<CrearOrdenValidator>(); // 
 
 **Verificación concreta.** El código es 400 y la base permanece sin cambios.
 
+**Comprobación adicional guiada.** En AceriaApp.http configura Content-Type application/json y envía POST con Cliente vacío. Registra estado 400 y el cuerpo; no te quedes únicamente con el texto visible del mensaje. Ejecuta después la misma solicitud con Cliente ACX y comprueba 201. Si ambos casos obtienen 201, vuelve a Program.cs y confirma que AddEndpointFilter está realmente encadenado al MapPost.
+
 **Si algo falla.** Si aparece 500 en vez de 400/422/409, revisa qué capa lanza la excepción y transforma el error de forma adecuada.
 
 ### PASO 2.3.19 — Inspeccionar la propiedad errors del Problem Details
@@ -1867,6 +1901,8 @@ builder.Services.AddValidatorsFromAssemblyContaining<CrearOrdenValidator>(); // 
 **Por qué funciona así.** Un 400 por datos fuera del rango, un 422 por la capacidad y un 409 por el estado de una orden pertenecen a causas diferentes que el cliente debe distinguir.
 
 **Verificación concreta.** El cliente puede mostrar el mensaje bajo el campo correcto.
+
+**Comprobación adicional guiada.** Abre la respuesta 400 y examina la propiedad errors; identifica la clave Cliente o su representación serializada y el array de mensajes. Compara esa estructura con un 422 emitido por Results.Problem: ambos son errores, pero no tienen por qué publicar exactamente las mismas claves. Evita hacer tests que dependan de la redacción exacta de mensajes localizados.
 
 **Si algo falla.** Si aparece 500 en vez de 400/422/409, revisa qué capa lanza la excepción y transforma el error de forma adecuada.
 
@@ -1898,6 +1934,8 @@ builder.Services.AddValidatorsFromAssemblyContaining<CrearOrdenValidator>(); // 
 **Por qué funciona así.** Un 400 por datos fuera del rango, un 422 por la capacidad y un 409 por el estado de una orden pertenecen a causas diferentes que el cliente debe distinguir.
 
 **Verificación concreta.** Se recibe 409 y los datos no cambian.
+
+**Comprobación adicional guiada.** Crea una orden válida, ejecuta POST /api/v1/ordenes/{id}/finalizar y después intenta editar mediante PUT. El conflicto 409 debe producirse dentro del delegado por Estado Finalizada, no en FluentValidation. Consulta el recurso por GET tras el intento: los datos no deben haber cambiado. Si obtienes 400, verifica que el request PUT era válido antes de probar la regla de estado.
 
 **Si algo falla.** Si aparece 500 en vez de 400/422/409, revisa qué capa lanza la excepción y transforma el error de forma adecuada.
 
@@ -1954,6 +1992,8 @@ public class ValidacionHttpTests
 
 **Verificación concreta.** Las respuestas se prueban a través del pipeline completo.
 
+**Comprobación adicional guiada.** Escribe ValidacionHttpTests con PostAsJsonAsync para Cliente vacío, Material vacío y Cantidad cero, y comprueba BadRequest y la propiedad errors. Añade los casos 10001 y 501 para separar 400 de 422. Cada test debe crear su propia ApiFactory; así no dependerá del orden de ejecución ni de datos guardados por otro método de prueba.
+
 **Si algo falla.** Si el test solo instancia un record, no prueba HTTP; usa WebApplicationFactory y examina errors del JSON.
 
 ### PASO 2.3.23 — Verificar que los GET siguen sin regresiones
@@ -1968,6 +2008,8 @@ public class ValidacionHttpTests
 
 **Verificación concreta.** El filtrado no rompe las rutas que ya funcionaban. Ejecuta además las pruebas xUnit del proyecto de esta etapa para confirmar que el ejercicio no ha roto los endpoints anteriores.
 
+**Comprobación adicional guiada.** Ejecuta las pruebas GET, las de escritura y las nuevas de validación dentro de la etapa 2.3. Los tres casos GET originales deben seguir funcionando: un filtro nuevo sobre POST/PUT/PATCH no debe cambiar las rutas GET. Si aparece una regresión, localiza el primer cambio que alteró el endpoint anterior en vez de borrar la prueba heredada.
+
 **Si algo falla.** Si el test solo instancia un record, no prueba HTTP; usa WebApplicationFactory y examina errors del JSON.
 
 ### PASO 2.3.24 — Reto: personalizar mensajes y comprobar errores
@@ -1981,6 +2023,8 @@ public class ValidacionHttpTests
 **Por qué funciona así.** Las pruebas HTTP recorren el pipeline completo y comprueban que los fallos se comunican como Problem Details sin alterar los datos.
 
 **Verificación concreta.** El mensaje devuelto es específico y mantiene status 400. Ejecuta además las pruebas xUnit del proyecto de esta etapa para confirmar que el ejercicio no ha roto los endpoints anteriores.
+
+**Comprobación adicional guiada.** Personaliza un mensaje del validador como ampliación y envía una petición que incumpla exactamente esa regla. Comprueba que el campo afectado conserva su clave y que solo cambia el mensaje esperado. Repite un caso válido para asegurarte de no bloquear la creación normal. La solución de referencia no incluye esta personalización, por lo que debes distinguir claramente el reto de lo implementado.
 
 **Si algo falla.** Si el test solo instancia un record, no prueba HTTP; usa WebApplicationFactory y examina errors del JSON.
 
