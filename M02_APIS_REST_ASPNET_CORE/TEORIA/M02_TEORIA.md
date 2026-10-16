@@ -194,6 +194,90 @@ La elección del código de estado tiene dos consecuencias prácticas. La primer
 
 ---
 
+
+#### Taller de diseño 2.1 — Estado persistente no equivale a sesión HTTP
+
+La restricción **stateless** de REST suele interpretarse incorrectamente como «el servidor no puede guardar nada». Si fuese así, una API de órdenes de fabricación sería imposible: después de crear una orden no podríamos volver a consultarla. Lo que REST exige es que cada petición se comprenda sin depender de una sesión de conversación almacenada en el servidor. Los recursos, naturalmente, pueden tener estado persistente en una base de datos. En AceriaApp, el estado de una orden se guarda mediante EF Core; no se almacena como «última orden del navegador» en una variable de sesión.
+
+Imaginemos dos clientes independientes. El primero consulta la colección y el segundo consulta el Id de una orden conocida. El servicio no necesita recordar qué pidió el primer cliente para resolver la solicitud del segundo. Ambos envían método y URI completos. Si mañana el navegador reinicia su proceso, puede volver a consultar una orden por su dirección; no debe reanudar una conversación de métodos C#.
+
+La aplicación cumple de manera sencilla la separación cliente–servidor: un cliente HTTP envía mensajes, el servidor recibe, consulta EF Core y responde. Esa separación es comprobable en **GetTests.cs**, porque el test no necesita instanciar manualmente OrdenDto.Desde para consumir el endpoint. El cliente de pruebas llama GetAsync a una URI y lee el cuerpo. El hecho de utilizar el mismo lenguaje C# para el test y el servidor no elimina la frontera HTTP.
+
+**Contraprueba útil.** Si el servidor respondiera a GET /api/v1/ordenes/{id} consultando una variable estática «UltimaOrdenSeleccionada», dos clientes que navegaran a la vez podrían interferir entre sí. El diseño real evita esa dependencia: el identificador viaja dentro de la solicitud. Eso no significa que la API ya solucione concurrencia o escalado horizontal; solo muestra una propiedad necesaria para acercarse al estilo REST.
+
+También hay que distinguir entre un servicio «en capas» y una arquitectura hexagonal acabada. Ahora el recorrido es pequeño: el delegado Minimal API conoce AceriaDbContext. En el futuro será posible introducir puertos y adaptadores, pero no corresponde fingir que este endpoint ya usa repositorios abstractos o una capa de aplicación independiente. Esta honestidad estructural permite apreciar el progreso cuando llegue M03.
+
+**Preguntas que deben responderse antes de programar:** ¿podría ejecutarse el mismo GET sin haber efectuado otro GET anterior? Sí. ¿Puede el servidor recordar órdenes en LocalDB? Sí. ¿Puede el cliente crear una orden simplemente escribiendo su Id en la URI? No, en 2.1 solo existen GET; POST se incorporará en 2.2. La teoría del protocolo y las capacidades de la etapa son dos niveles diferentes.
+
+#### Taller de diseño 2.1 — Negociación de representaciones y límites reales del ejemplo
+
+Un recurso no es su representación. La orden es el objeto identificado; el JSON es una manera de comunicarlo. El cliente puede expresar sus expectativas mediante cabeceras como **Accept** y enviar el formato de un cuerpo mediante **Content-Type**. Estas dos cabeceras cumplen funciones diferentes: Accept se refiere a la respuesta deseada; Content-Type describe el contenido que se está enviando.
+
+En este proyecto, los resultados de lectura se serializan a JSON mediante el soporte predeterminado de ASP.NET Core 8. No se ha implementado representación XML, CSV ni Protobuf. Por ello, aunque comprender negociación de contenido forme parte del temario REST, **no deben inventarse respuestas XML de AceriaApp**. Un manual fiable distingue el concepto general de la capacidad demostrable de la versión actual.
+
+La forma concreta del JSON está asociada a OrdenDto: Id, Cliente, Material, Cantidad, Estado y FechaCreacion. Una modificación de nombres de campos afecta a consumidores externos incluso cuando no cambia ninguna tabla SQL. Por ejemplo, si se renombrara una propiedad pública de OrdenDto y cambiase su serialización, un cliente JavaScript que lee el campo anterior podría dejar de interpretarlo. Es precisamente por eso por lo que la evolución contractual exige atención distinta a la evolución del modelo persistente.
+
+La fecha ofrece un ejemplo más sutil. FechaCreacion nace en UTC; el cliente podría presentarla en su zona horaria, pero eso es una decisión de visualización. Una fecha en UTC no garantiza por sí sola que el consumidor conozca la cultura y la zona del operador. El contrato debería documentar cómo se representa y qué significado tiene. En esta etapa no se incorporan transformaciones adicionales de fecha ni un serializador personalizado; el alumno observa la salida real del framework.
+
+**Prueba de coherencia:** genera una orden de test con un Id conocido y lee la respuesta mediante ReadFromJsonAsync<OrdenDto>. El test RecursoExistente_ExponeDto demuestra la correspondencia de identidad, aunque no prueba aún cada decisión de formato cultural. Si el consumidor puede recuperar el Id sin conocer el DbContext, la frontera HTTP cumple su objetivo básico; no debe afirmarse por ello que se han cubierto todos los escenarios de negociación.
+
+El mismo razonamiento se aplica al contenido de errores. Results.NotFound de la etapa 2.1 no obliga a devolver el mismo cuerpo que Results.Problem de 2.2 o Results.ValidationProblem de 2.3. El código y las pruebas deben observarse para describir las respuestas; no se deben tomar por sentado objetos JSON ficticios.
+
+#### Taller de diseño 2.1 — Caché, repetición y el peligro de prometer prestaciones inexistentes
+
+REST incluye la restricción de respuestas cacheables cuando resulta apropiado. Sin embargo, eso no significa que todo endpoint GET sea automáticamente servido desde una caché compartida. AceriaApp 2.1 **no define Cache-Control, ETag, Last-Modified ni una política explícita de invalidación**. El cliente debe tratar los resultados según las cabeceras efectivamente recibidas y las reglas HTTP aplicables; el manual no puede prometer una aceleración que la aplicación no implementa.
+
+¿Por qué estudiar entonces la caché desde el comienzo? Porque ayuda a comprender la importancia de la semántica del verbo. Un GET de lectura no debería crear una orden ni cambiar su Cantidad. Una petición segura es candidata a repetirse sin efectos de negocio; una operación de creación mediante POST cambia el estado y tiene otras necesidades. Si se escondiera una escritura dentro de GET por comodidad de prueba, tanto los navegadores como las herramientas automáticas podrían invocarla en momentos inesperados.
+
+La aplicación inicial muestra esta propiedad mediante código real: el MapGet de colección usa AsNoTracking y ToListAsync para consultar; no contiene Add, Remove ni SaveChangesAsync. La ausencia de escritura en ese manejador hace visible la intención de lectura. No demuestra la inexistencia absoluta de efectos secundarios técnicos —por ejemplo, los servidores pueden registrar solicitudes—, pero sí que el caso de negocio no está creando órdenes durante una consulta.
+
+Pensemos en una supuesta mejora de rendimiento: alguien propone guardar durante una hora cualquier lista de órdenes. Más tarde, otro cliente crea una orden nueva en 2.2. Si la caché no se invalida, el primer cliente podría continuar viendo una lista anterior. La pregunta importante no es solo «¿se puede cachear?» sino **qué validez tiene el dato, durante cuánto tiempo y quién invalida la representación**. Este módulo no implementa esas respuestas: las utiliza como criterio de diseño para entender por qué la caché necesita una política y pruebas propias.
+
+Un ejercicio sin alterar el proyecto consiste en escribir el contraste entre dos comportamientos:
+
+| Aspecto | Implementado en 2.1 | Posible evolución, todavía no implementada |
+|:---|:---|:---|
+| GET sin escritura de negocio | Sí | Conservar esta garantía |
+| Consulta a SQL Server desde la API | Sí | Optimizar consultas o proyecciones |
+| ETag o If-None-Match | No | Validación condicional de representación |
+| Cache-Control explícito | No | Definir políticas según el recurso |
+| Paginación por query string | No | Introducir límites y enlaces de navegación |
+
+La tabla diferencia realidad y diseño futuro. No constituye una invitación a copiar cinco rutas ficticias en el taller. El objetivo operativo sigue siendo observar 200, 404, DTO y persistencia con los tests reales de 2.1.
+
+#### Taller de diseño 2.1 — Inyección de dependencias y ciclo de vida de una consulta
+
+El constructor de AceriaDbContext recibe DbContextOptions<AceriaDbContext>, y Program.cs registra el contexto mediante AddDbContext. Eso permite que el framework cree y gestione una instancia apropiada para la petición, en vez de exigir que cada endpoint construya manualmente una conexión. El código del proyecto es una forma compacta de mostrar dependencia explícita: el delegado declara AceriaDbContext db como parámetro y ASP.NET Core lo suministra.
+
+La clase de contexto real contiene:
+
+~~~csharp
+public sealed class AceriaDbContext(
+    DbContextOptions<AceriaDbContext> options) : DbContext(options)
+{
+    public DbSet<Orden> Ordenes => Set<Orden>();
+    protected override void OnModelCreating(ModelBuilder b)
+    {
+        var e=b.Entity<Orden>();
+        e.HasKey(x=>x.Id);
+        e.Property(x=>x.Cliente).HasMaxLength(100).IsRequired();
+        e.Property(x=>x.Material).HasMaxLength(100).IsRequired();
+        e.Property(x=>x.Estado).HasMaxLength(24).IsRequired();
+    }
+}
+~~~
+
+**El constructor** transfiere las opciones preparadas por el contenedor al DbContext. **DbSet** indica la colección de entidades sobre las que el contexto puede consultar y guardar. **HasKey** señala la identidad persistente. **HasMaxLength** y **IsRequired** forman parte de la configuración de almacenamiento; no producen automáticamente mensajes FluentValidation para el cliente. Precisamente ese problema se abordará en 2.3.
+
+El punto de confusión más común es suponer que un DbSet se comporta como una lista C# cargada completamente. En realidad, la consulta se traduce y ejecuta a través del proveedor al materializarla; en este proyecto se utiliza ToListAsync para la colección y FirstOrDefaultAsync para el recurso individual. El contexto es el coordinador de acceso a datos; no es una tabla en memoria por el mero hecho de que se vea como una propiedad.
+
+**Caso de diagnóstico reproducible.** El alumno puede compilar la clase Orden y OrdenDto sin disponer de SQL Server, porque definir tipos no abre una conexión. Cuando inicia una aplicación Development que ejecuta EnsureCreatedAsync sí necesita la infraestructura de LocalDB configurada. Por último, cuando ejecuta GetTests, la factoría de prueba sustituye ese proveedor por InMemory. Son tres momentos distintos. Mezclarlos origina mensajes confusos como «el proyecto compila, por tanto la base de datos funciona», una conclusión incorrecta.
+
+La prueba HTTP con WebApplicationFactory también ayuda a diferenciar el comportamiento del código y el entorno. Que los tests con InMemory pasen no demuestra que una instalación LocalDB esté correcta. Para completar la actividad del alumno se necesita enviar la petición contra la aplicación local y observar el funcionamiento real con SQL Server Express LocalDB. Este contraste no es una desventaja del test: significa que cada comprobación posee un alcance definido.
+
+La secuencia didáctica se cierra con tres decisiones: qué contrato visible ofrece el endpoint, qué consulta realiza EF Core y en qué entorno se ejecuta esa consulta. Si el alumno puede contestarlas separadamente, está preparado para añadir las escrituras REST de 2.2 sin reducirlas a «más métodos de Program.cs».
+
+
 ### Bloque 6 — Diseño de URIs en APIs REST
 
 El diseño de URIs sigue cinco reglas prácticas. La primera es usar sustantivos en plural para las colecciones. La segunda es usar el identificador del recurso concreto después de la colección. La tercera es anidar las relaciones con sub-rutas. La cuarta es no incluir verbos en las URIs. La quinta es versionar la API en la propia URI. La aplicación conjunta de las cinco reglas produce URIs predecibles y consistentes. La consistencia permite que un cliente genérico pueda navegar la API sin conocerla de antemano.
@@ -2280,7 +2364,7 @@ El proyecto de test 2.4 contiene **ContratoOpenApiTests.cs**. El test **OpenApi_
 
 El tercer test, **Produccion_NoExponeSwagger**, utiliza **WithWebHostBuilder** para especificar Production y comprobar el 404. Juntos demuestran dos caras del contrato: que en Development el documento existe con sus elementos mínimos y que en Production no se publica bajo esa ruta.
 
-**Qué queda sin probar automáticamente.** Estos tests concretos no verifican todavía todos los métodos HTTP, todos los códigos de error alternativos ni la compatibilidad entre dos versiones históricas. No debe confundirse un test útil con una auditoría exhaustiva. El desarrollo pedagógico puede enseñar al alumno a revisar manualmente los bloques de paths, así como a construir tests adicionales del documento, sin afirmar que ya existen en el repositorio.
+**Qué queda sin probar automáticamente.** Estos tests concretos no verifican todavía todos los métodos HTTP, todos los códigos de error alternativos ni la compatibilidad entre dos versiones históricas. No debe confundirse un test útil con una verificación exhaustiva. El desarrollo pedagógico puede enseñar al alumno a revisar manualmente los bloques de paths, así como a construir tests adicionales del documento, sin afirmar que ya existen en el repositorio.
 
 Un itinerario de inspección fiable es:
 
