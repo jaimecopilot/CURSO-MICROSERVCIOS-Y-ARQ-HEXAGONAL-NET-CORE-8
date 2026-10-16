@@ -1494,6 +1494,171 @@ La aplicación de la validación prepara el proyecto para el punto 2.4, donde se
 
 ---
 
+
+#### Estudio de caso 2.3.A — Recibir JSON no significa aceptar la petición
+
+Una operación de escritura comienza cuando el servidor recibe bytes en una solicitud HTTP, no cuando ya dispone de una entidad Orden correcta. El cliente puede enviar un cuerpo que no sea JSON, un JSON sintácticamente inválido, una representación con propiedades omitidas, un valor fuera del rango permitido o una orden que contradiga el estado actual de la fábrica. Esos fallos no ocurren todos en la misma capa, aunque a menudo se agrupen indebidamente bajo la palabra «validación».
+
+El recorrido didáctico de AceriaApp distingue **enlace de modelos**, **validación de campos** y **reglas del negocio**:
+
+1. ASP.NET Core intenta asociar el cuerpo JSON al argumento CrearOrdenRequest o ActualizarCantidadRequest. Si no puede interpretar el cuerpo, el delegado puede no llegar a ejecutarse.
+2. El filtro genérico del punto 2.3 ejecuta FluentValidation sobre el request ya enlazado. Un cliente vacío o una cantidad fuera del rango 1–10000 provoca 400 con un objeto ValidationProblem.
+3. Si el filtro acepta la forma y rango general, el endpoint decide si Cantidad supera las 500 unidades que admite el taller. En ese caso responde 422.
+4. Si la cantidad es válida pero una modificación afecta a una orden Finalizada, el manejador rechaza la operación con 409, por conflicto con el estado persistido.
+5. Si no existe una orden identificada por el Guid solicitado, el manejador responde 404, aunque el JSON y su validación sean perfectos.
+
+**La posición del control importa.** Con Cantidad 10001 el filtro corta la petición antes del manejador. Con Cantidad 501 el filtro autoriza continuar porque 501 pertenece al rango genérico 1–10000; es la regla de negocio de 500 la que responde después. Esta separación está implementada de forma deliberada para que el alumno pueda estudiar quién es responsable de cada diagnóstico. El valor 500 es la capacidad real definida en este ejemplo, no una constante universal de fabricación industrial.
+
+El contrato de entrada real de la etapa 2.3 sigue siendo:
+
+~~~csharp
+public sealed record CrearOrdenRequest(string Cliente,string Material,int Cantidad);
+public sealed record ActualizarCantidadRequest(int Cantidad);
+~~~
+
+No se ha cambiado mágicamente el tipo de datos al instalar FluentValidation. La biblioteca introduce reglas y mecanismos de ejecución, no transforma un record en una entidad persistente ni crea por sí sola un endpoint HTTP.
+
+**Ejercicio de predicción con resultado contrastable:**
+
+| Cuerpo del POST | Capa responsable | Estado previsto |
+|:---|:---|:---|
+| Cliente vacío, Cantidad 10 | FluentValidation | 400 |
+| Cliente ACX, Cantidad 0 | FluentValidation | 400 |
+| Cliente ACX, Cantidad 501 | Regla capacidad en POST | 422 |
+| Cliente ACX, Cantidad 10001 | FluentValidation antes del POST | 400 |
+| Cliente ACX, Cantidad 500 | Ninguna de estas reglas bloquea | 201 |
+
+La tabla presupone Material no vacío y demás condiciones normales. Un JSON sintácticamente defectuoso requiere observar aparte el tratamiento de errores de enlace del framework. En la práctica 2.3.2 se clasifica cada fallo; en 2.3.18–2.3.21 se comprueban los efectos reales sobre la respuesta.
+
+#### Estudio de caso 2.3.B — Las reglas son ejecutables solo cuando alguien las invoca
+
+La clase real **Validacion/Validadores.cs** declara:
+
+~~~csharp
+public sealed class CrearOrdenValidator : AbstractValidator<CrearOrdenRequest>
+{
+    public CrearOrdenValidator()
+    {
+        RuleFor(x=>x.Cliente).NotEmpty().MaximumLength(100);
+        RuleFor(x=>x.Material).NotEmpty().MaximumLength(100);
+        RuleFor(x=>x.Cantidad).InclusiveBetween(1,10000);
+    }
+}
+public sealed class ActualizarCantidadValidator : AbstractValidator<ActualizarCantidadRequest>
+{
+    public ActualizarCantidadValidator() =>
+        RuleFor(x=>x.Cantidad).InclusiveBetween(1,10000);
+}
+~~~
+
+El razonamiento de estas reglas tiene varias capas. **NotEmpty** protege frente a ausencia de contenido útil en el campo; **MaximumLength(100)** mantiene una longitud compatible con el modelo persistente, donde el DbContext define un límite de 100 para Cliente y Material. **InclusiveBetween(1,10000)** admite ambos extremos y rechaza valores por debajo de 1 y por encima de 10000. No debe confundirse el máximo 10000 del contrato genérico con las 500 unidades que la fábrica admite en una orden real.
+
+¿Por qué no declarar simplemente InclusiveBetween(1,500) y terminar? Porque el ejercicio quiere mostrar dos tipos de restricciones. Una cantidad 501 tiene una forma numérica plausible, pero el taller del caso no puede aceptar ese lote. Es legítimo que una API combine validación del contrato y regla contextual de negocio. En otro diseño ambas capas podrían codificarse de otra manera, pero aquí la separación es visible y verificable.
+
+Para que el sistema pueda proporcionar validadores mediante inyección de dependencias, **Program.cs** ejecuta:
+
+~~~csharp
+builder.Services.AddValidatorsFromAssemblyContaining<CrearOrdenValidator>();
+~~~
+
+Este registro busca validadores y los incorpora al contenedor. **No inserta automáticamente una fase de validación en todos los endpoints.** Si alguien elimina el filtro de un POST, el hecho de que el validador siga registrado no garantiza que el request sea validado. Ésta es una de las lecciones más importantes del punto 2.3: distinguir instalación, registro e invocación.
+
+Las rutas de escritura que aceptan request con datos llevan una llamada como:
+
+~~~csharp
+.AddEndpointFilter<ValidationFilter<CrearOrdenRequest>>()
+~~~
+
+En POST y PUT se utiliza CrearOrdenRequest; en PATCH de cantidad se utiliza ValidationFilter con ActualizarCantidadRequest. GET y DELETE no reciben esos contratos de cuerpo y no se les agrega dicho filtro. La relación tipo–filtro–endpoint importa: aplicar el filtro del record equivocado provocaría que el filtro no encontrara el argumento que espera, o que se aplicaran reglas ajenas a la operación.
+
+**Pregunta de laboratorio.** ¿Qué pasaría si se instalan los paquetes NuGet pero nunca se registra AddValidatorsFromAssemblyContaining? El contenedor no tendría necesariamente un servicio IValidator del tipo solicitado y la construcción del filtro fallaría. ¿Y si se registra el validador, pero no se llama a AddEndpointFilter? El endpoint perdería esta barrera, aunque la clase de reglas exista en el proyecto. Estas dos causas se diagnostican de forma diferente.
+
+**Correspondencia:** pasos 2.3.3–2.3.7 → Validadores.cs; 2.3.14–2.3.17 → Program.cs y filtros conectados → tests HTTP de ValidacionHttpTests.
+
+#### Estudio de caso 2.3.C — Leer un filtro de endpoint línea por línea
+
+El componente central de la etapa 2.3 está en **Validacion/ValidationFilter.cs**. Se presenta completo porque cada línea participa en la semántica HTTP:
+
+~~~csharp
+public sealed class ValidationFilter<T>(IValidator<T> validator)
+    : IEndpointFilter where T:class
+{
+    public async ValueTask<object?> InvokeAsync(
+        EndpointFilterInvocationContext context,
+        EndpointFilterDelegate next)
+    {
+        var request=context.Arguments.OfType<T>().FirstOrDefault();
+        if(request is null) return Results.ValidationProblem(
+            new Dictionary<string,string[]> {
+                ["body"]=new[]{"Falta el cuerpo."}
+            });
+
+        var result=await validator.ValidateAsync(
+            request,context.HttpContext.RequestAborted);
+        if(!result.IsValid)
+        {
+            var errors=result.Errors.GroupBy(x=>x.PropertyName)
+                .ToDictionary(x=>x.Key,
+                    x=>x.Select(e=>e.ErrorMessage).ToArray());
+            return Results.ValidationProblem(errors);
+        }
+        return await next(context);
+    }
+}
+~~~
+
+**Primero: el tipo genérico.** T representa el contrato que se va a inspeccionar; no es una orden almacenada ni un DTO de salida. Gracias a esta abstracción, la misma lógica puede atender tanto a CrearOrdenRequest como a ActualizarCantidadRequest.
+
+**Segundo: la dependencia IValidator.** El constructor recibe un validador compatible con T. No se crea con new dentro del filtro, porque se espera que el contenedor lo resuelva a partir del registro previo.
+
+**Tercero: los argumentos.** context.Arguments contiene los valores ya enlazados que recibirá el endpoint. OfType<T>().FirstOrDefault busca el del tipo esperado. Si no lo encuentra, la rama especial de body devuelve un ValidationProblem. Esta rama no debe confundirse con todas las posibilidades de error de deserialización: algunos JSON inválidos son rechazados antes de que el filtro llegue a ejecutarse.
+
+**Cuarto: la operación asíncrona.** ValidateAsync evalúa reglas y recibe RequestAborted para que la validación pueda tener en cuenta la cancelación. El resultado contiene IsValid y una colección de errores; no se debe suponer que una ejecución sin excepción implique que todos los campos son válidos.
+
+**Quinto: el agrupamiento.** GroupBy(PropertyName) agrupa los mensajes por propiedad. ToDictionary convierte esa estructura en un diccionario de nombre de campo a array de mensajes. Esto permite que el consumidor represente, por ejemplo, varios errores para la misma propiedad sin perder información.
+
+**Sexto: la decisión HTTP.** Results.ValidationProblem(errors) devuelve una respuesta normalizada con estado **400** y la colección errors. Si no hay errores, **next(context)** continúa hacia el siguiente filtro o el manejador. Sin esta última llamada, ni siquiera las solicitudes válidas llegarían a la lógica que guarda la orden.
+
+Un diagrama mental útil es: **JSON enlazado → filtro → validación → [inválido: 400 y fin] / [válido: next y lógica de negocio]**. Este punto permite explicar por qué una petición con Cantidad 10001 no debe persistirse: el filtro devuelve la respuesta antes de que el delegado ejecute db.Ordenes.Add.
+
+**Error habitual:** invocar next antes de ValidateAsync y después construir un error. Si se persiste primero y se comunica un fallo más tarde, la respuesta engaña al cliente sobre la operación realizada. El filtro real se diseñó precisamente para impedir este orden incorrecto.
+
+#### Estudio de caso 2.3.D — El JSON de error también es un contrato
+
+Cuando una regla de FluentValidation falla, el consumidor no solo necesita saber que el estado fue 400. Necesita identificar los campos afectados y poder mostrar mensajes útiles. El cuerpo generado por ValidationProblem incluye una propiedad **errors** con grupos por campo; la forma exacta del objeto debe observarse mediante una petición real, no inventarse en el manual.
+
+Una petición representativa es:
+
+~~~http
+POST /api/v1/ordenes HTTP/1.1
+Host: localhost:5000
+Content-Type: application/json
+
+{"cliente":"","material":"CHAPA","cantidad":0}
+~~~
+
+El filtro evalúa reglas de Cliente y Cantidad. El resultado esperado es 400 con errors que permiten localizar ambas propiedades. Los textos de mensaje dependen de las reglas y de la configuración de la biblioteca; por ello no se enseña a los alumnos a comparar cadenas literales de un idioma como criterio único de validez. El test **DatosInvalidos_Es400ConErrors** comprueba por HTTP que la respuesta tiene BadRequest y contiene la propiedad errors.
+
+El test es una prueba parametrizada con tres entradas: Cliente vacío, Material vacío y Cantidad 0. Además, **CantidadMasDe10000_Es400** comprueba el valor 10001 y **ReglaDeNegocio_501_Es422** comprueba 501. No son ejercicios sueltos: ilustran la frontera entre el filtro y el manejo de negocio. Si cualquiera de esas peticiones persiste una orden, la validación no está interceptando correctamente la operación.
+
+**Cuidado con el tratamiento de errores.** Una respuesta 400 por sintaxis JSON mal formada puede proceder del propio binding del framework y diferir de ValidationProblem construido por nuestro filtro. Una respuesta 409 por recurso finalizado se produce en el manejador y utiliza Results.Problem. No es correcto asegurar que todos los errores HTTP de esta API comparten exactamente la propiedad errors, porque el propio código diferencia esos caminos.
+
+Al explicar el caso conviene pensar desde dos posiciones. Para el desarrollador del servidor, la regla concreta está en Validadores.cs o en Program.cs. Para el consumidor, ambos archivos son invisibles: solo ve un número y un cuerpo. La coherencia de las respuestas reduce esfuerzo de integración, pero no se consigue prometiendo estructuras que el código aún no produce.
+
+**Secuencia de observación:**
+
+1. Ejecutar un POST válido y confirmar 201 con Location.
+2. Repetir con Cliente vacío y confirmar 400 con errors.
+3. Repetir con Cantidad 10001 y confirmar 400 con errors.
+4. Repetir con Cantidad 501 y confirmar 422 por límite operativo.
+5. Crear otra orden, finalizarla y comprobar que PUT posterior responde 409.
+6. Volver a ejecutar GET de la colección para confirmar que los GET anteriores no sufren regresiones.
+
+**Diagnóstico si no coincide.** Si un valor 0 alcanza el manejador, buscar AddEndpointFilter. Si al arranque falta un servicio IValidator, revisar AddValidatorsFromAssemblyContaining. Si Cantidad 501 produce 400, comprobar si alguien ha cambiado el rango genérico a 500 y ha perdido la distinción pedagógica. Si falla la deserialización antes de entrar en el filtro, no «arreglar» el problema moviendo la regla de negocio a otro endpoint.
+
+**Traza docente:** 2.3.3–2.3.7 → Validadores.cs; 2.3.8–2.3.13 → ValidationFilter.cs; 2.3.14–2.3.17 → Program.cs; 2.3.18–2.3.23 → ValidacionHttpTests.cs y GET heredados. El resultado del punto se demuestra con solicitudes HTTP observables y persistencia no alterada cuando se rechazan entradas.
+
+
 ### Resumen rápido de la teoría
 
 - La validación es el contrato de entrada de la API y se aplica en tres niveles: sintáctica, semántica y de negocio.
