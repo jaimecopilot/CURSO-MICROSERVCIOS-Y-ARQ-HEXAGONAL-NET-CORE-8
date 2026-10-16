@@ -610,7 +610,9 @@ Objetivos de aprendizaje:
 - Aplicar los verbos HTTP con su semántica correcta.
 - Seleccionar el código de respuesta adecuado a cada situación.
 - Comprender la relación entre verbo, código de respuesta y estado del recurso.
-- Añadir al proyecto AceriaApp una clase de validación de combinaciones verbo-código y un catálogo de recursos del dominio.
+- Implementar sobre los GET existentes los endpoints `POST`, `PUT`, `PATCH`, `DELETE` y la transición `POST /finalizar` en ASP.NET Core Minimal API.
+- Persistir y consultar los cambios con EF Core 8 y SQL Server Express LocalDB, distinguiendo las respuestas 200, 201, 204, 400, 404, 409 y 422.
+- Comprobar los contratos HTTP mediante peticiones reproducibles y pruebas de integración, incluyendo la cabecera `Location`, la máquina de estados y la idempotencia.
 
 
 ---
@@ -1248,7 +1250,9 @@ Objetivos de aprendizaje:
 - Identificar los tres niveles de validación: sintáctica, semántica y de negocio.
 - Comprender el papel de FluentValidation en ASP.NET Core.
 - Comprender la relación entre validación fallida, código 400 y problem details.
-- Añadir al proyecto AceriaApp una clase de validación de peticiones con FluentValidation y un test unitario que verifique la validación.
+- Implementar validadores FluentValidation para los contratos de entrada de las órdenes y un `IEndpointFilter` que impida ejecutar el manejador cuando los datos incumplan las reglas.
+- Asociar los filtros a `POST`, `PUT` y `PATCH` sin romper los endpoints de consulta ya construidos.
+- Comprobar con pruebas HTTP de integración las respuestas de validación 400, la regla de capacidad 422 y los conflictos por estado 409, diferenciando su causa.
 
 
 ---
@@ -1957,7 +1961,9 @@ Objetivos de aprendizaje:
 - Comprender la generación automática de documentación a partir del código.
 - Comprender la estructura de un documento OpenAPI y sus secciones principales.
 - Comprender las anotaciones de metadatos en Minimal API.
-- Añadir al proyecto AceriaApp la documentación OpenAPI con metadatos, ejemplos y versionado, y un test unitario que verifique la documentación. Cerrar el módulo 2 con el resumen del estado del proyecto.
+- Publicar el documento OpenAPI `v1` generado por ASP.NET Core y Swashbuckle, incorporando metadatos, esquemas, ejemplos y respuestas que reflejen el comportamiento implementado.
+- Explorar el contrato generado desde Swagger UI y comprobarlo mediante pruebas HTTP de integración, incluida su disponibilidad en Development y su no publicación en Production.
+- Distinguir la versión declarada del documento OpenAPI del versionado efectivo de rutas o del servicio, que no se implementa en esta unidad.
 
 ---
 
