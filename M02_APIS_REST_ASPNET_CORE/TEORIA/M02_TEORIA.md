@@ -2313,6 +2313,92 @@ El versionado de la documentación tiene dos consecuencias prácticas. La primer
 
 ---
 
+
+#### Taller de lectura contractual 2.4 — Los metadatos deben seguir a las ramas de ejecución
+
+La documentación no debe elegirse por intuición. Si un endpoint responde 204, 404, 409 y 422 en caminos diferentes, un contrato que anuncie solo 204 engaña a los consumidores. AceriaApp permite verificar esta relación comparando **las ramas de Program.cs** con **las respuestas declaradas mediante Produces** y, finalmente, con **el documento JSON descargado**.
+
+Tomemos el DELETE individual. El manejador busca una orden por Guid. Si no la encuentra, devuelve NotFound; si la encuentra Finalizada, devuelve Problem con 409; si está Pendiente, la elimina, guarda y devuelve NoContent. Por tanto, la declaración de OpenAPI debe incluir 404, 409 y 204. En la etapa 2.4 revisada, el metadato correspondiente termina así:
+
+~~~csharp
+.WithSummary("Elimina una orden pendiente")
+.Produces(204).Produces(404).ProducesProblem(409)
+~~~
+
+La propia llamada ProducesProblem no decide qué pasa al ejecutar DELETE. El 409 procede de la condición dentro del delegado. El metadato declara ese posible resultado para herramientas de documentación y clientes. La separación permite corregir una omisión contractual sin alterar la política de eliminación.
+
+El PUT admite otro conjunto de caminos: no encontrado 404, orden finalizada 409, entrada inválida 400, capacidad 422 y modificación válida 204. El PATCH especializado de cantidad devuelve normalmente 200 con OrdenDto, además de poder responder 400, 404, 409 y 422. La revisión de esta etapa añadió los metadatos alternativos que faltaban, en lugar de cambiar el código de negocio para que coincidiera con una documentación incompleta.
+
+El test **OpenApi_DeclaraErroresDeOperacionesReales**, añadido a ContratoOpenApiTests.cs, descarga el JSON generado y comprueba, entre otras cosas, que POST declara 422, PUT declara 422 y DELETE declara 409. También comprueba los problemas 409 y 422 de PATCH. Esta prueba detecta una regresión concreta: que alguien elimine un metadato esencial aunque el endpoint siga compilando y funcionando.
+
+**Límite del test.** Verificar que OpenAPI anuncia 409 no sustituye a una prueba que provoque de verdad ese conflicto. La prueba OrdenFinalizada_NoSeEdita409 es la que ejerce la transición y observa el estado HTTP. Ambas se necesitan para cubrir **comportamiento real** y **declaración contractual**.
+
+El alumno puede aplicar el mismo razonamiento a una ruta nueva: identificar todos los retornos, elaborar una tabla de causas, documentar cada respuesta y construir una petición que pruebe los caminos relevantes. Ese itinerario es más fiable que copiar Produce(200) en todos los endpoints por comodidad.
+
+#### Taller de lectura contractual 2.4 — Versionar el documento no versiona automáticamente el servicio
+
+El documento se registra mediante SwaggerDoc("v1", ...) y las rutas de la API incluyen /api/v1. Es útil que el nombre del documento y la URI expresen la misma revisión lógica, pero son mecanismos distintos. El primero identifica un archivo de descripción; la segunda forma parte de la dirección que envía el cliente. Cambiar el texto de Version en OpenApiInfo no reescribe Program.cs ni duplica endpoints.
+
+Una API que evoluciona tiene que distinguir **cambios compatibles** y **cambios que pueden romper clientes**. Modificar la descripción textual de una operación suele ser inocuo. Añadir un nuevo campo opcional al JSON puede ser compatible con algunos clientes y problemático para otros que hagan validación estricta. Eliminar una propiedad, cambiar su tipo, renombrar una ruta o reinterpretar un código HTTP son transformaciones que deben estudiarse con cuidado.
+
+Consideremos tres decisiones hipotéticas, claramente **no implementadas** en este proyecto:
+
+1. Se propone aceptar una nota opcional en CrearOrdenRequest. Antes de hacerlo habría que decidir qué hace la lógica de creación, si se persiste, cómo cambia el esquema y cómo lo interpretarán los clientes actuales.
+2. Se propone sustituir Cantidad int por un objeto con unidades y valor. Cambia la forma del JSON; no bastaría con actualizar un texto de la UI.
+3. Se propone renombrar /api/v1/ordenes a /api/v2/producciones. Los clientes que utilizan la ruta antigua seguirían enviándola mientras no migren.
+
+En cada caso la pregunta correcta es **qué contrato consumen hoy las aplicaciones**. OpenAPI permite describirlo y compararlo, pero el generador no toma las decisiones de compatibilidad. En la etapa 2.4 solo se entrega el documento v1 correspondiente a los endpoints v1; no hay dos versiones ejecutables, negociación entre versiones ni estrategia de retirada de rutas.
+
+Una matriz de mantenimiento puede ayudar:
+
+| Cambio considerado | ¿Modifica comportamiento HTTP? | ¿Necesita prueba de contrato? |
+|:---|:---|:---|
+| Corregir Summary | No | Verificar JSON si Summary es parte de la revisión |
+| Agregar código 409 declarado que ya existe | No | Sí, comprobar responses |
+| Renombrar un campo JSON | Sí para consumidores | Sí, además de pruebas HTTP |
+| Añadir nueva ruta de versión | Sí | Sí, rutas y operaciones nuevas |
+| Ocultar Swagger en Production | Exposición del documento | Sí, prueba por entorno |
+
+El último caso demuestra por qué el entorno forma parte del contrato operativo. Un cliente normal de la API puede consultar órdenes en Production sin que necesariamente deba exponerse la interfaz interactiva de documentación. La configuración de AceriaApp condiciona Swagger al entorno Development; esto es distinto de proteger el recurso de órdenes con autorización, función que no está implementada.
+
+#### Taller de lectura contractual 2.4 — Una página Swagger bonita puede estar equivocada
+
+En un aula es fácil caer en la tentación de valorar el resultado porque Swagger UI enumera varias operaciones y permite pulsar Execute. Es una señal útil, pero insuficiente. Para considerar correcto el contrato deben contrastarse al menos cuatro evidencias diferentes.
+
+**Primera: el host devuelve el documento esperado.** GET /swagger/v1/swagger.json debe responder 200 en Development. La dirección la configura UseSwaggerUI para la UI y UseSwagger para el documento. Si la UI aparece en blanco, el diagnóstico empieza consultando directamente el JSON para separar problemas de exposición y problemas de visualización.
+
+**Segunda: el documento anuncia las rutas reales.** El objeto paths debe contener /api/v1/ordenes con get y post, y otras rutas de recurso individual. El test OpenApi_ContieneRutasYVersion comprueba expresamente la colección con GET y POST y info.version v1. No afirma tener cobertura exhaustiva de cada operación; para ello se necesitan pruebas adicionales.
+
+**Tercera: los esquemas representan los datos correctos.** CrearOrdenRequest posee Cliente, Material y Cantidad. OrdenDto posee además Id, Estado y FechaCreacion. Si el ejemplo del request incluyera un Id impuesto por el usuario, estaría enseñando algo que el POST real no admite. La clase EjemploCrearOrden utiliza el esquema del request y asigna un ejemplo válido; OpenApi_IncluyeEjemplo verifica que aparece dentro de components.schemas.
+
+**Cuarta: lo documentado se ejecuta de verdad.** El alumno crea una orden desde Swagger UI y consulta la URI devuelta. Debe observar 201 con Location, después 200 con DTO y el mismo Id. La herramienta gráfica no modifica las reglas HTTP de AceriaApp; simplemente actúa como otro cliente. Si la creación responde 422 por usar Cantidad 501, el problema no se corrige reescribiendo el ejemplo de presentación, sino entendiendo el límite operativo.
+
+Una tabla de observación ayuda a no mezclar síntomas:
+
+| Observación | Hipótesis de fallo | Primer archivo a revisar |
+|:---|:---|:---|
+| /swagger devuelve 404 en Development | Exposición o entorno | DocumentacionExtensions.cs |
+| UI carga sin rutas | Exploración o registro | AddEndpointsApiExplorer y Program.cs |
+| Falta example del request | Filtro de esquema | EjemploCrearOrden |
+| Falta 409 en DELETE | Metadato incompleto | Program.cs |
+| POST documentado crea pero GET falla | Comportamiento y persistencia | Program.cs y DbContext |
+| Swagger disponible en Production | Condición de exposición | UseDocumentacion |
+
+La revisión debe basarse en el síntoma más cercano a la causa. Si la petición real responde 201 y el esquema está desactualizado, la solución principal no es editar los datos del DbContext; es corregir la documentación generada y añadir una prueba para conservar el contrato. Si el esquema es correcto pero el servidor falla en SaveChangesAsync, el problema es de ejecución, no de OpenAPI.
+
+#### Taller de lectura contractual 2.4 — Desarrollo, producción y el alcance de las pruebas
+
+El entorno de ejecución determina ciertas funciones disponibles. En esta solución, UseDocumentacion llama a UseSwagger y UseSwaggerUI únicamente cuando IsDevelopment es true. Por ello se espera que /swagger/v1/swagger.json exista en Development, y que la misma ruta no se publique en Production. El test correspondiente no necesita desplegar un servidor externo: WebApplicationFactory permite crear otro host con UseEnvironment("Production") y enviar una petición a ese host.
+
+La comprobación enseña una idea importante: **una prueba de integración puede modificar el entorno sin cambiar el código de negocio**. Esto permite verificar decisiones de arranque y middleware que una prueba unitaria de EjemploCrearOrden jamás alcanzaría. A su vez, la respuesta 404 de Swagger en Production no debe confundirse con la protección completa del servicio. Los endpoints de órdenes permanecen sin un sistema de identidad o autorización en esta etapa.
+
+También conviene identificar qué aspectos siguen sin cubrir los tests: no se comprueba todavía la compatibilidad entre dos documentos históricos, porque solo existe v1; no se ensaya cada combinación posible de Content-Type y Accept; no se prueba una política de seguridad en Production que el código no ha implementado. La cobertura presente se reconoce por sus aserciones concretas, no por el número de métodos de test.
+
+El criterio de finalización del módulo es la correspondencia verificable entre tres superficies. **La teoría** debe explicar por qué un contrato HTTP se diseña de cierta manera. **La práctica** debe enseñar cómo implementarlo y observarlo. **El proyecto** debe contener el comportamiento y las pruebas que sostienen esa explicación. OpenAPI aporta una cuarta superficie: una descripción que otros programas podrán leer, generar o contrastar.
+
+Cuando estas superficies coinciden, el alumno ya dispone de una base real sobre la que estudiar arquitectura hexagonal en M03. Antes de esa etapa no es necesario fingir adaptadores, buses de eventos o pasarelas entre servicios: el valor de M02 está en dejar consolidada una API comprensible, persistente, validada y documentada con pruebas de contrato.
+
+
 ### Bloque 8 — Documentación de errores y problem details
 
 La documentación incluye los códigos de error y el formato problem details. El método ProducesProblem declara el tipo de error. El método ProducesValidationProblem declara el tipo de error de validación. La documentación muestra los códigos de error esperados para cada endpoint. La inclusión de los errores en la documentación permite al consumidor anticipar las respuestas. La anticipación reduce el tiempo de integración y mejora la experiencia del consumidor.
