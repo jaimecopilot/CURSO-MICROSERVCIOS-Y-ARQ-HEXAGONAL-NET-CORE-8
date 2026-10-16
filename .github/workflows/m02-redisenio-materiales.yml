@@ -108,6 +108,38 @@ jobs:
                   assert vector>30,(graphics,vector)
               print(kind,"pages=",len(doc),"bytes=",pdf.stat().st_size,"MD_words=",len(md.read_text().split()))
           PY
+      - name: Inspección geométrica de todas las páginas del PDF
+        run: |
+          python - <<'PY'
+          import fitz
+          from pathlib import Path
+          root=Path("M02_APIS_REST_ASPNET_CORE")
+          for kind in ("TEORIA","PRACTICAS"):
+              file=root/kind/f"M02_{kind}.pdf"
+              doc=fitz.open(file)
+              overflow=[]
+              min_content=10**9
+              for number,page in enumerate(doc,1):
+                  width,height=page.rect.width,page.rect.height
+                  min_content=min(min_content,len(page.get_text().strip()))
+                  for block in page.get_text("dict")["blocks"]:
+                      if block.get("type")==0:
+                          for line in block.get("lines",[]):
+                              for span in line.get("spans",[]):
+                                  raw=span.get("text","").strip()
+                                  if not raw: continue
+                                  x0,y0,x1,y1=span["bbox"]
+                                  if x0 < -2 or x1 > width+2 or y0 < -2 or y1 > height+2:
+                                      overflow.append((number,raw[:45],tuple(round(v,1) for v in (x0,y0,x1,y1))))
+                      elif block.get("type")==1:
+                          x0,y0,x1,y1=block["bbox"]
+                          if x0 < -2 or x1 > width+2 or y0 < -2 or y1 > height+2:
+                              overflow.append((number,"IMAGEN",tuple(round(v,1) for v in (x0,y0,x1,y1))))
+              print(f"{kind}: {len(doc)} páginas revisadas, minimo {min_content} caracteres por página; elementos fuera de A4: {len(overflow)}")
+              if overflow:
+                  print("Desbordamientos:",overflow[:25])
+                  raise SystemExit(f"Desbordamientos en {file}")
+          PY
       - name: Commit solo los cuatro archivos del alumnado
         run: |
           set -euo pipefail
