@@ -2044,12 +2044,14 @@ Un documento OpenAPI se organiza en secciones. La sección info contiene los met
 
 *Figura M02.2.4.3 — Secciones que componen el contrato OpenAPI.*
 
+**Ejemplo esquemático para aprender a leer la estructura** (no es una descarga literal de la salida de Swashbuckle; el documento auténtico debe obtenerse desde `/swagger/v1/swagger.json`). Se emplea aquí el título que declara la configuración real:
+
 ```yaml
 openapi: 3.0.3
 info:
-  title: AceriaApp.Monolito.Api
+  title: AceriaApp — Órdenes de producción
   version: v1
-  description: API del monolito de referencia.
+  description: API REST educativa creada con ASP.NET Core 8.
 servers:
   - url: https://localhost:7000
 paths:
@@ -2075,9 +2077,9 @@ components:
 
 - **Línea 1:** openapi: 3.0.3 → versión de la especificación.
 - **Línea 2:** info: → metadatos de la API.
-- **Línea 3:** title: AceriaApp.Monolito.Api → título.
+- **Línea 3:** title: AceriaApp — Órdenes de producción → título del ejemplo.
 - **Línea 4:** version: v1 → versión del contrato.
-- **Línea 5:** description: API del monolito de referencia. → descripción.
+- **Línea 5:** description: API REST educativa creada con ASP.NET Core 8. → descripción.
 - **Línea 6:** servers: → URL base de la API.
 - **Línea 7:** - url: https://localhost:7000 → URL del servidor.
 - **Línea 8:** paths: → endpoints.
@@ -2643,7 +2645,7 @@ Un itinerario de inspección fiable es:
 - OpenAPI es una especificación para describir APIs REST de forma legible por máquinas y personas.
 - Swagger UI lee el documento OpenAPI y construye una interfaz interactiva.
 - Un documento OpenAPI se organiza en secciones: info, servers, paths, components, security y tags.
-- Minimal API permite añadir metadatos con WithName, WithSummary, WithDescription y WithTags.
+- Minimal API permite añadir metadatos con `WithName`, `WithSummary`, `WithTags` y `Produces`; `WithDescription` es otra posibilidad, aunque no se utiliza en los endpoints de referencia.
 - Los esquemas de datos se derivan de los DTOs y se referencian con $ref.
 - Los ejemplos en los esquemas facilitan la integración del consumidor.
 - En el proyecto se declara un único documento OpenAPI `v1` y se utilizan rutas con el segmento literal `/api/v1`; esto no implica implementar múltiples versiones.
