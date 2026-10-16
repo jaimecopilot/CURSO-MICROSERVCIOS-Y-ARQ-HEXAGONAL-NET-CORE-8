@@ -1,0 +1,5 @@
+@Host = http://localhost:5082
+GET {{Host}}/api/v1/ordenes
+
+### Detalle inexistente
+GET {{Host}}/api/v1/ordenes/00000000-0000-0000-0000-000000000001
