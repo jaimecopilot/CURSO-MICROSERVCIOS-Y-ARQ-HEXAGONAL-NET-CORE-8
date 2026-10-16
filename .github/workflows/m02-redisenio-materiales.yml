@@ -6,6 +6,10 @@ on:
       - redisenio/m02-minimal-api-real-20261015
     paths:
       - '.github/workflows/m02-redisenio-materiales.yml'
+      - 'M02_APIS_REST_ASPNET_CORE/TEORIA/M02_TEORIA.md'
+      - 'M02_APIS_REST_ASPNET_CORE/PRACTICAS/M02_PRACTICAS.md'
+      - 'M02_APIS_REST_ASPNET_CORE/PROYECTO/2.4-documentacion-openapi/src/**'
+      - 'M02_APIS_REST_ASPNET_CORE/PROYECTO/2.4-documentacion-openapi/tests/**'
       - '.github/scripts/m02_integracion_pedagogica.py'
       - '.github/scripts/m02_pasos_especificos.py'
       - '.github/scripts/m02_casos_reales.py'
@@ -35,8 +39,25 @@ jobs:
           python-version: '3.12'
       - name: Instalar convertidor y comprobadores PDF
         run: python -m pip install --quiet markdown weasyprint pymupdf
-      - name: Integrar teoría y prácticas con las cuatro soluciones reales
-        run: python .github/scripts/m02_integracion_pedagogica.py
+      - name: Preservar los Markdown revisados sin regenerar desde las fuentes históricas
+        run: |
+          test -s M02_APIS_REST_ASPNET_CORE/TEORIA/M02_TEORIA.md
+          test -s M02_APIS_REST_ASPNET_CORE/PRACTICAS/M02_PRACTICAS.md
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Compilar y ejecutar tests de las cuatro etapas progresivas
+        shell: bash
+        run: |
+          set -euo pipefail
+          for stage in 2.1-diseno-apis-rest 2.2-recursos-verbos-codigos 2.3-validacion-peticiones 2.4-documentacion-openapi; do
+            dir="M02_APIS_REST_ASPNET_CORE/PROYECTO/$stage"
+            echo "::group::build/test $stage"
+            dotnet restore "$dir/tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj"
+            dotnet build "$dir/tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj" --no-restore -warnaserror
+            dotnet test "$dir/tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj" --no-build --logger "console;verbosity=normal"
+            echo "::endgroup::"
+          done
       - name: Comprobar conservación y trazabilidad antes de PDF
         run: |
           python - <<'PY'
