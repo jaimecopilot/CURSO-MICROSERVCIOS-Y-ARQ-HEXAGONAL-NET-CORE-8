@@ -449,7 +449,7 @@ Respuesta con metadatos:
 - **Línea 8:** "totalItems": 145, → total de elementos.
 - **Línea 9:** "totalPages": 8 → total de páginas.
 
-La paginación tiene dos consecuencias prácticas. La primera es que las respuestas se mantienen pequeñas y predecibles. La segunda es que el cliente puede construir la interfaz de navegación con los metadatos. La ausencia de paginación en colecciones grandes produce respuestas lentas, consumo elevado de memoria y dificultad para el cliente. La paginación es una buena práctica obligatoria en cualquier API REST que exponga colecciones.
+La paginación tiene dos consecuencias prácticas. La primera es que las respuestas se mantienen pequeñas y predecibles. La segunda es que el cliente puede construir la interfaz de navegación con los metadatos. La ausencia de paginación en colecciones grandes produce respuestas lentas, consumo elevado de memoria y dificultad para el cliente. La conveniencia de paginar depende del volumen esperado, las necesidades del cliente y el coste de la consulta: en colecciones grandes suele ser necesaria para evitar respuestas excesivas. No es una restricción formal de REST ni está implementada en los endpoints GET de AceriaApp de este módulo.
 
 
 ---
@@ -2106,29 +2106,34 @@ La estructura del documento OpenAPI se organiza de forma jerárquica. La secció
 
 ### Bloque 4 — Anotaciones de metadatos en Minimal API
 
-Minimal API permite añadir metadatos a los endpoints con métodos de extensión. Los métodos más usados son WithName, WithSummary, WithDescription, WithTags, Produces y ProducesProblem. El método WithName asigna un nombre único al endpoint. El método WithSummary añade un resumen corto. El método WithDescription añade una descripción larga. El método WithTags agrupa el endpoint bajo una etiqueta. El método Produces declara el tipo de respuesta. El método ProducesProblem declara el tipo de respuesta de error.
+Un endpoint hace dos trabajos relacionados, pero distintos: **ejecuta una petición HTTP** y **expone información sobre su contrato**. El manejador decide qué datos consulta, qué DTO devuelve y qué código HTTP resulta apropiado. Los métodos `WithName`, `WithTags`, `WithSummary` y `Produces` describen esa operación de modo que el explorador de endpoints y el generador OpenAPI puedan reconocerla.
+
+En el proyecto AceriaApp 2.4 la consulta de colección se implementa y documenta así, dentro de `Program.cs`:
 
 ```csharp
-app.MapGet("/api/v1/ordenes", async (AceriaDbContext db) =>
-    await db.Ordenes.AsNoTracking().ToListAsync())
-    .WithName("ListarOrdenes")
-    .WithSummary("Lista todas las órdenes")
-    .WithDescription("Devuelve la lista completa de órdenes de producción.")
-    .WithTags("Ordenes")
-    .Produces<List<Orden>>(StatusCodes.Status200OK)
-    .ProducesProblem(StatusCodes.Status500InternalServerError);
+app.MapGet("/api/v1/ordenes",async (AceriaDbContext db,CancellationToken ct)=>
+{
+    var ordenes=await db.Ordenes.AsNoTracking().OrderBy(x=>x.FechaCreacion).ToListAsync(ct);
+    return Results.Ok(ordenes.Select(OrdenDto.Desde));
+})
+.WithName("ListarOrdenes").WithTags("Ordenes")
+.WithSummary("Lista las órdenes de producción").Produces<IEnumerable<OrdenDto>>(200)
+;
 ```
 
-- **Línea 1:** app.MapGet("/api/v1/ordenes", async (AceriaDbContext db) => → declara el endpoint.
-- **Línea 2:** await db.Ordenes.AsNoTracking().ToListAsync()) → devuelve la lista.
-- **Línea 3:** .WithName("ListarOrdenes") → asigna un nombre único.
-- **Línea 4:** .WithSummary("Lista todas las órdenes") → añade un resumen.
-- **Línea 5:** .WithDescription("Devuelve la lista completa de órdenes de producción.") → añade una descripción.
-- **Línea 6:** .WithTags("Ordenes") → agrupa el endpoint bajo la etiqueta.
-- **Línea 7:** .Produces<List<Orden>>(StatusCodes.Status200OK) → declara el tipo de respuesta.
-- **Línea 8:** .ProducesProblem(StatusCodes.Status500InternalServerError); → declara el tipo de error.
+**Lectura progresiva del código:**
 
-Las anotaciones tienen dos consecuencias prácticas. La primera es que el documento OpenAPI se genera con metadatos completos. La segunda es que Swagger UI muestra la información en la interfaz. La combinación de ambas mejora la experiencia del consumidor. Las anotaciones se aplican de forma consistente en todos los endpoints. La consistencia es lo que permite que la documentación sea uniforme y predecible.
+1. `MapGet("/api/v1/ordenes", ...)` asigna una ruta y un verbo a un manejador. La ruta conserva exactamente el contrato iniciado en 2.1.
+2. `AceriaDbContext db` se obtiene mediante inyección de dependencias; `CancellationToken ct` permite cancelar la consulta cuando deja de tener sentido continuarla.
+3. `AsNoTracking` evita seguimiento de cambios para una operación de solo lectura. `OrderBy` establece el orden de las órdenes y `ToListAsync(ct)` materializa la consulta.
+4. `OrdenDto.Desde` transforma entidades persistentes en representaciones públicas; `Results.Ok` responde 200, también si la lista queda vacía.
+5. `WithName` identifica la operación, `WithTags` la agrupa, y `WithSummary` explica su propósito a quien consulta Swagger UI.
+6. `Produces<IEnumerable<OrdenDto>>(200)` declara el tipo y código de la **respuesta de éxito**; no hace que el servidor devuelva 200 ni transforma por sí mismo una entidad en DTO.
+
+`WithDescription` permite añadir descripciones más extensas, y `ProducesProblem` declarar errores, pero **no aparecen en esta ruta GET de la implementación de referencia**. Se estudian como opciones de ASP.NET Core, no como funciones que el alumno deba localizar en un archivo donde no existen.
+
+**Comprobación conceptual.** Si se cambiase `Produces(200)` por una declaración documental `Produces(201)`, la consulta seguiría devolviendo 200 porque el código ejecutado es `Results.Ok`. La documentación sería incorrecta. Esa discrepancia debe evitarse comparando las anotaciones con las respuestas reales y, después, verificando el documento OpenAPI mediante HTTP.
+
 
 ---
 
@@ -2284,36 +2289,29 @@ WithName, WithSummary, WithTags, Produces, ProducesProblem y ProducesValidationP
 
 La documentación de una API debe evolucionar junto con su contrato. SwaggerDoc permite declarar documentos con diferentes nombres o versiones; cada uno puede describir rutas y esquemas determinados. **AceriaApp publica solamente un documento v1**, accesible en Development desde /swagger/v1/swagger.json, y sus rutas reales contienen el segmento literal /api/v1. No hay aquí varios documentos entre los que seleccionar, ni negociación automática entre v1 y v2. Estudiar versionado sirve para anticipar cómo se comunicarían cambios incompatibles a los consumidores, sin fingir que ya existe una implementación multiversión.
 
-```csharp
-builder.Services.AddSwaggerGen(options =>
-{
-    options.SwaggerDoc("v1", new OpenApiInfo
-    {
-        Title = "AceriaApp.Monolito.Api",
-        Version = "v1",
-        Description = "API del monolito de referencia."
-    });
-});
+El documento se configura en `Documentacion/DocumentacionExtensions.cs`, dentro de `AddDocumentacion`:
 
-app.UseSwaggerUI(options =>
+```csharp
+services.AddEndpointsApiExplorer();
+services.AddSwaggerGen(options=>
 {
-    options.SwaggerEndpoint("/swagger/v1/swagger.json", "AceriaApp.Monolito.Api v1");
+    options.SwaggerDoc("v1",new OpenApiInfo{
+        Title="AceriaApp — Órdenes de producción",Version="v1",
+        Description="API REST educativa creada con ASP.NET Core 8.",
+        Contact=new OpenApiContact{Name="Equipo AceriaApp",Email="equipo@acerialocal"}
+    });
+    options.SchemaFilter<EjemploCrearOrden>();
 });
 ```
 
-- **Línea 1:** builder.Services.AddSwaggerGen(options => → registra el generador.
-- **Línea 2:** { → abre el bloque.
-- **Línea 3:** options.SwaggerDoc("v1", new OpenApiInfo → registra la versión v1.
-- **Línea 4:** { → abre el bloque de metadatos.
-- **Línea 5:** Title = "AceriaApp.Monolito.Api", → título de la API.
-- **Línea 6:** Version = "v1", → versión del contrato.
-- **Línea 7:** Description = "API del monolito de referencia." → descripción.
-- **Línea 8:** }); → cierra el bloque.
-- **Línea 9:** }); → cierra la configuración.
-- **Línea 10:** app.UseSwaggerUI(options => → configura Swagger UI.
-- **Línea 11:** { → abre el bloque.
-- **Línea 12:** options.SwaggerEndpoint("/swagger/v1/swagger.json", "AceriaApp.Monolito.Api v1"); → registra el endpoint del documento.
-- **Línea 13:** }); → cierra el bloque.
+`AddEndpointsApiExplorer` hace accesibles los metadatos de Minimal API al generador. `SwaggerDoc("v1", ...)` da nombre y versión **al único documento** que se genera, y `SchemaFilter<EjemploCrearOrden>` prepara el ejemplo del contrato de entrada que se estudia más adelante. La llamada que publica ese documento aparece en `UseDocumentacion` y solo se ejecuta cuando `app.Environment.IsDevelopment()`:
+
+```csharp
+app.UseSwagger();
+app.UseSwaggerUI(o=>o.SwaggerEndpoint("/swagger/v1/swagger.json","AceriaApp v1"));
+```
+
+El primer método expone el documento JSON; el segundo configura la interfaz que lo consume. Si cualquiera de ellos se suprime, la disponibilidad de Swagger UI o de su documento puede cambiar, aunque los endpoints de negocio sigan funcionando.
 
 En un sistema que soporte simultáneamente varias versiones, mantener documentación específica para cada contrato ayuda a evitar cambios incompatibles. **Esta etapa no demuestra coexistencia ni conservación de versiones anteriores**: solo publica `v1` y solo configura un documento Swagger. El segmento `/api/v1` es una convención explícita de ruta; la cadena `Version = "v1"` es metadato del documento. El alumno debe ser capaz de identificar ambos sin confundirlos con un mecanismo automático de versionado.
 
