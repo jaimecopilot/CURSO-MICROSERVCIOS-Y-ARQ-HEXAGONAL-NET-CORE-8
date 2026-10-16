@@ -869,6 +869,158 @@ La aplicación de estos conceptos prepara el proyecto para el punto 2.3, donde s
 
 ---
 
+
+#### Estudio de caso 2.2.A — Crear una orden cambia el estado, no solo el código HTTP
+
+La diferencia entre una demostración de verbos y una API que se puede utilizar está en la **persistencia observable**. En 2.2 el alumno no se limita a escribir que POST suele devolver 201. Envía una representación, el servidor crea una Orden con identidad propia, ejecuta SaveChangesAsync y permite consultar después la entidad mediante GET. Esa cadena causal constituye el comportamiento que debe aprenderse a comprobar.
+
+El contrato de entrada real vive en **Contratos/ContratosOrden.cs**:
+
+~~~csharp
+public sealed record CrearOrdenRequest(string Cliente,string Material,int Cantidad);
+public sealed record ActualizarCantidadRequest(int Cantidad);
+~~~
+
+CrearOrdenRequest no contiene Id, Estado ni FechaCreacion. Es el servidor quien genera la identidad y los valores iniciales de negocio. No hay que confundir este contrato de entrada con OrdenDto: uno expresa lo que acepta la operación; el otro, lo que expone la representación de salida. Esta diferencia aparecerá de nuevo en 2.3, cuando FluentValidation valide los datos que llegan antes de construir la entidad.
+
+La parte principal del POST en **Program.cs** de la etapa 2.2 es:
+
+~~~csharp
+var orden=new Orden{
+    Cliente=request.Cliente,
+    Material=request.Material,
+    Cantidad=request.Cantidad
+};
+db.Ordenes.Add(orden);
+await db.SaveChangesAsync();
+return Results.CreatedAtRoute(
+    "ObtenerOrdenPorId",new{id=orden.Id},OrdenDto.Desde(orden));
+~~~
+
+**Primera decisión:** no se copia el objeto recibido directamente al contexto; se crea una entidad con los campos permitidos. Así el cliente no decide por su cuenta que una orden nació Finalizada, ni impone la clave de otra entidad. **Segunda:** Add empieza a seguir una entidad nueva; la persistencia no debe darse por realizada hasta SaveChangesAsync. **Tercera:** CreatedAtRoute construye una respuesta HTTP 201 y una cabecera Location a partir del nombre lógico **ObtenerOrdenPorId** declarado en el GET. Se pasa el Id recién creado y se entrega el DTO de salida.
+
+Una secuencia de peticiones deliberadamente sencilla es:
+
+~~~http
+POST /api/v1/ordenes HTTP/1.1
+Host: localhost:5000
+Content-Type: application/json
+
+{"cliente":"ACX","material":"CHAPA","cantidad":10}
+~~~
+
+La respuesta esperada es **201 Created** con un cuerpo que representa la nueva orden y una cabecera **Location** apuntando a su recurso individual. El GUID concreto cambia entre ejecuciones; no debe copiarse un valor fijo del manual como si todas las órdenes compartieran Id.
+
+~~~http
+GET /api/v1/ordenes/{id-de-la-cabecera-location} HTTP/1.1
+Host: localhost:5000
+~~~
+
+La segunda operación debe devolver 200 si la inserción fue persistida. El test **CrearYConsultar_Es201Y200** utiliza HttpClient, examina el estado Created, exige que Location no sea null y consulta la propia URI recibida. Ésta es una prueba de contrato: no basta con que el método C# retorne el objeto correcto; el protocolo debe anunciar la dirección que el cliente utilizará.
+
+**Tres fallos que conviene distinguir:** una petición a una ruta inexistente no prueba nada del POST; una respuesta 201 sin Location pierde parte del contrato que se está enseñando; y devolver 201 antes de guardar podría hacer que el GET siguiente encontrara un recurso ausente. En las prácticas 2.2.5–2.2.8 se reproduce la cadena completa para separar estas causas.
+
+#### Estudio de caso 2.2.B — PUT, PATCH y DELETE bajo una misma lupa
+
+El sentido práctico de los verbos se comprende comparando qué cambia **y qué permanece**. El PUT de la etapa 2.2 recibe CrearOrdenRequest y reemplaza los tres campos editables: Cliente, Material y Cantidad. No reemplaza Id, Estado ni FechaCreacion. Por tanto, es una sustitución completa del **subconjunto editable** establecido por este contrato didáctico, no una promesa de aceptar cualquier propiedad imaginable del recurso.
+
+~~~csharp
+orden.Cliente=request.Cliente;
+orden.Material=request.Material;
+orden.Cantidad=request.Cantidad;
+await db.SaveChangesAsync();
+return Results.NoContent();
+~~~
+
+**NoContent** corresponde a 204: la modificación se produjo, pero la respuesta no incluye una representación actualizada. Para saber cómo quedó la orden, el alumno tiene que enviar un GET posterior. Si confunde el cuerpo vacío de 204 con una falta de ejecución, tenderá a repetir operaciones innecesariamente.
+
+El PATCH está deliberadamente especializado en la propiedad Cantidad. Su ruta real es **PATCH /api/v1/ordenes/{id:guid}/cantidad**. No utiliza el formato JSON Patch definido por RFC 6902, ni acepta una lista arbitraria de operaciones. Recibe ActualizarCantidadRequest, sustituye una sola propiedad, guarda y devuelve **200 con OrdenDto**. La distinción es importante: PATCH significa cambio parcial, pero no obliga a escoger JSON Patch para todas las APIs.
+
+~~~csharp
+orden.Cantidad=request.Cantidad;
+await db.SaveChangesAsync();
+return Results.Ok(OrdenDto.Desde(orden));
+~~~
+
+En un recorrido verificable, el alumno crea una orden con Cliente ACX y Cantidad 10, ejecuta PUT con Cliente ACX2 y Cantidad 11, verifica por GET esos campos, y ejecuta PATCH con Cantidad 12. El DTO devuelto por PATCH debe mostrar 12 sin borrar Cliente ni Material. El test **EditarYEliminar_CambiaPersistencia** comprueba precisamente 204 para PUT, 200 para PATCH y el valor 12 en el DTO de PATCH.
+
+DELETE utiliza el Id de la ruta. Cuando la orden existe y sigue pendiente, la elimina de la colección persistente con Remove y SaveChangesAsync y contesta 204. Un GET inmediato del mismo Id devuelve 404. Esa última consulta es la prueba más ilustrativa: no solo certifica que DELETE devolvió un código favorable, sino que el recurso ya no se representa. El mismo test ejecuta este ciclo y observa la ausencia posterior.
+
+| Operación real | Campo o recurso afectado | Respuesta normal |
+|:---|:---|:---|
+| POST colección | Orden nueva, con Id de servidor | 201 y Location |
+| PUT por Id | Cliente, Material y Cantidad | 204 sin cuerpo |
+| PATCH de cantidad | Solo Cantidad | 200 con DTO |
+| DELETE por Id | Elimina la orden pendiente | 204 sin cuerpo |
+| GET tras DELETE | No encuentra la orden eliminada | 404 |
+
+Es fácil confundir **idempotencia** con «todas las repeticiones devuelven el mismo código». Son cuestiones diferentes. Repetir un PUT con exactamente los mismos datos sobre una orden pendiente deja los mismos valores persistidos. Repetir un DELETE puede producir 404 la segunda vez y, aun así, no introducir nuevos efectos sobre el recurso que ya se eliminó. POST, por el contrario, crea un nuevo Id cada vez que se acepta; las peticiones repetidas no son idempotentes de forma automática.
+
+**Límite visible:** el ejemplo no implementa claves de idempotencia, ETags, If-Match ni control de concurrencia optimista. Dos usuarios editando simultáneamente requieren una discusión adicional antes de trasladar el ejercicio a producción. La práctica 2.2.11–2.2.17 permite ver los cambios básicos; el reto 2.2.24 pide razonar sobre repeticiones.
+
+#### Estudio de caso 2.2.C — Por qué 400, 409 y 422 no significan lo mismo
+
+Tres peticiones podrían llevar JSON válido y aun así recibir respuestas distintas. Para interpretar el estado HTTP hay que preguntar **en qué regla falló la operación**.
+
+En 2.2, antes de incorporar FluentValidation, el POST y el PUT verifican manualmente que Cliente y Material no estén vacíos y que Cantidad sea positiva. Cuando no se satisfacen estas condiciones se utiliza **Results.BadRequest**, que produce un 400 con un objeto de error simple. Esa forma provisional del error cambia en 2.3, cuando el filtro genérico produce ValidationProblem; no debe presentarse el objeto de 2.2 como si ya tuviera la estructura final.
+
+El taller también impone un límite de negocio: no procesa lotes mayores de 500 unidades. El código incluye:
+
+~~~csharp
+if(request.Cantidad>500)
+    return Results.Problem(
+        title:"El taller solo admite lotes de hasta 500.",
+        statusCode:StatusCodes.Status422UnprocessableEntity);
+~~~
+
+Un JSON con Cantidad 501 tiene una estructura correcta y expresa una cantidad numérica positiva, pero viola la capacidad del taller. En este contrato se comunica con **422 Unprocessable Entity**. Lo crucial no es memorizar que 422 siempre deba usarse para esa regla en todas las APIs: es aprender que el contrato debe elegir una política coherente y que la prueba debe comprobarla.
+
+Otra orden puede tener Cantidad 10, que respeta la capacidad, pero estar en estado **Finalizada**. El PUT, el PATCH y el DELETE de este taller prohíben modificarla. El código responde con **409 Conflict**: la operación choca con el estado actual del recurso. La URI es válida y el JSON puede ser correcto, pero la transición solicitada ya no está permitida.
+
+~~~csharp
+if(orden.Estado=="Finalizada")
+    return Results.Problem(
+        title:"No se puede modificar una orden finalizada.",
+        statusCode:409);
+~~~
+
+**Observación secuencial:** POST válido → recurso Pendiente → POST a **/api/v1/ordenes/{id}/finalizar** → recurso Finalizada → PUT sobre el mismo Id → 409. La etapa 2.2 implementa la transición explícita con MapPost y entrega 200 con DTO al finalizar correctamente. Finalizar una segunda vez también produce conflicto 409.
+
+| Contexto de petición | Qué falla | Respuesta de 2.2 |
+|:---|:---|:---|
+| Cliente vacío al crear | Requisito de entrada | 400 |
+| Cantidad 501 | Capacidad del taller | 422 |
+| Editar una orden finalizada | Estado actual del recurso | 409 |
+| Editar Id inexistente | Identidad no encontrada | 404 |
+| GET colección sin datos | Nada falla: colección vacía | 200 |
+
+**Error habitual:** documentar 422 como si significara que cualquier JSON incorrecto es semánticamente inválido. Un JSON mal formado puede ser rechazado en el propio enlace de modelos antes de llegar al delegado. La distinción se hará explícita en 2.3.
+
+Los tests **ReglaCapacidad_Es422** y **OrdenFinalizada_NoSeEdita409** prueban estas condiciones por HTTP, incluyendo la transición de estado antes del conflicto. Se enlazan con los pasos 2.2.18–2.2.23.
+
+#### Estudio de caso 2.2.D — Leer el contrato desde un cliente que no conoce C#
+
+El consumidor no ve SaveChangesAsync, no conoce el DbContext y no debe construir a mano la cadena de acceso a SQL Server. Ve una secuencia de mensajes HTTP. Esto cambia la forma de razonar sobre la calidad de la API: lo público son método, URI, cabeceras, cuerpo y respuesta; el lenguaje y las clases del servidor son decisiones internas.
+
+**Ruta de una operación completa.** El cliente envía un POST con Content-Type application/json. ASP.NET Core enlaza el JSON con CrearOrdenRequest. El delegado aplica las reglas básicas de 2.2, crea la entidad y la guarda. CreatedAtRoute determina Location usando la ruta GET con nombre ObtenerOrdenPorId. El cliente hace GET de ese Location. La respuesta incluye el DTO. Posteriormente PUT cambia los tres campos editables; PATCH cambia Cantidad; DELETE elimina el recurso si sigue pendiente.
+
+Este recorrido exige entender que **Location no es una propiedad de OrdenDto**: es una cabecera HTTP. Si se pierde el cuerpo de 201, el cliente todavía puede conocer la URI de su recurso. Si se omite Location y solo se devuelve Id, algunos clientes podrán construir la URI por convenio, pero se habrá perdido la señal explícita que se busca enseñar.
+
+**Diagnóstico por capas:**
+
+1. Si POST responde 404, verificar método y ruta antes de revisar la validación.
+2. Si responde 400, inspeccionar el JSON y los campos obligatorios de la etapa 2.2.
+3. Si responde 422, comprobar la regla de capacidad 500, no tratar de modificar el nombre de la ruta.
+4. Si responde 201, inspeccionar Location y ejecutar GET a esa ubicación.
+5. Si PUT responde 204, hacer GET para verificar la persistencia, sin esperar cuerpo.
+6. Si PUT responde 409, consultar el Estado de la orden y determinar si se finalizó.
+7. Si DELETE responde 204 y el GET siguiente responde 404, la ausencia es precisamente el efecto esperado.
+
+En esta versión no existe una protección contra dos clientes que envíen escrituras en carrera; tampoco autenticación, autorización ni mensajería distribuida. Este módulo estudia el contrato HTTP y el estado persistente de **un servicio**, preparando el terreno para arquitectura hexagonal y comunicación entre servicios. Explicar aquí mecanismos todavía no implementados sería confundir un itinerario progresivo con un producto final.
+
+**Correspondencia cerrada del punto:** prácticas 2.2.3–2.2.8 → ContratosOrden.cs, POST y test CrearYConsultar_Es201Y200; prácticas 2.2.11–2.2.17 → PUT/PATCH/DELETE y test EditarYEliminar_CambiaPersistencia; prácticas 2.2.18–2.2.23 → transición Finalizada, 409 y 422, tests OrdenFinalizada_NoSeEdita409 y ReglaCapacidad_Es422. Cada resultado tiene una petición y una prueba real que lo respalda.
+
+
 ### Resumen rápido de la teoría
 
 - Un recurso es una entidad identificable que agrupa datos y operaciones desde la perspectiva del cliente.
