@@ -13,10 +13,10 @@ El módulo desarrolla una **Minimal API real de AceriaApp** desde el diseño del
 
 | Punto | Contenido | Solución |
 |---|---|---|
-| [2.1](PROYECTO/2.1-diseno-apis-rest/) | Recursos, DTO, EF Core, SQL Server Express LocalDB y primeros endpoints GET | `PROYECTO/2.1-diseno-apis-rest/AceriaApp.sln` |
-| [2.2](PROYECTO/2.2-recursos-verbos-codigos/) | Verbos HTTP, POST y operaciones sobre recursos | `PROYECTO/2.2-recursos-verbos-codigos/AceriaApp.sln` |
-| [2.3](PROYECTO/2.3-validacion-peticiones/) | FluentValidation, reglas de negocio y problem details | `PROYECTO/2.3-validacion-peticiones/AceriaApp.sln` |
-| [2.4](PROYECTO/2.4-documentacion-openapi/) | OpenAPI/Swagger y comprobaciones del contrato publicado | `PROYECTO/2.4-documentacion-openapi/AceriaApp.sln` |
+| [2.1](PROYECTO/2.1-diseno-apis-rest/) | Recursos, DTO, EF Core, SQL Server Express LocalDB y primeros endpoints GET | `PROYECTO/2.1-diseno-apis-rest/src/AceriaApp.Api/AceriaApp.Api.csproj` |
+| [2.2](PROYECTO/2.2-recursos-verbos-codigos/) | Verbos HTTP, POST y operaciones sobre recursos | `PROYECTO/2.2-recursos-verbos-codigos/src/AceriaApp.Api/AceriaApp.Api.csproj` |
+| [2.3](PROYECTO/2.3-validacion-peticiones/) | FluentValidation, reglas de negocio y problem details | `PROYECTO/2.3-validacion-peticiones/src/AceriaApp.Api/AceriaApp.Api.csproj` |
+| [2.4](PROYECTO/2.4-documentacion-openapi/) | OpenAPI/Swagger y comprobaciones del contrato publicado | `PROYECTO/2.4-documentacion-openapi/src/AceriaApp.Api/AceriaApp.Api.csproj` |
 
 Los proyectos son **cuatro estados independientes y progresivos**: 2.2 continúa 2.1; 2.3 continúa 2.2; 2.4 completa el recorrido.
 
@@ -32,3 +32,5 @@ Los proyectos son **cuatro estados independientes y progresivos**: 2.2 continúa
 Lee la explicación del punto en [TEORÍA](TEORIA/M02_TEORIA.md), ejecuta el apartado equivalente de [PRÁCTICAS](PRACTICAS/M02_PRACTICAS.md) y contrasta el comportamiento con la solución correspondiente. En las prácticas se explica cómo crear los archivos, escribir el código, enviar peticiones y comprobar su resultado.
 
 El número de tests depende del **estado del proyecto de este recorrido Minimal API**: 3 pruebas en 2.1; 7 en 2.2; 12 en 2.3; y 15 en 2.4. No son los recuentos de la solución anterior basada en múltiples proyectos de prueba.
+
+> Para abrir la solución en Visual Studio se utiliza el archivo `.csproj` de cada etapa; la rama de rediseño no incluye archivos `.sln`. Los tests están en `tests/AceriaApp.Api.Tests/`.
