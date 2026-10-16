@@ -31,6 +31,6 @@ Los proyectos son **cuatro estados independientes y progresivos**: 2.2 continúa
 
 Lee la explicación del punto en [TEORÍA](TEORIA/M02_TEORIA.md), ejecuta el apartado equivalente de [PRÁCTICAS](PRACTICAS/M02_PRACTICAS.md) y contrasta el comportamiento con la solución correspondiente. En las prácticas se explica cómo crear los archivos, escribir el código, enviar peticiones y comprobar su resultado.
 
-El número de tests depende del **estado del proyecto de este recorrido Minimal API**: 3 pruebas en 2.1; 7 en 2.2; 12 en 2.3; y 15 en 2.4. No son los recuentos de la solución anterior basada en múltiples proyectos de prueba.
+El número de tests depende del **estado del proyecto de este recorrido Minimal API**: 3 pruebas en 2.1; 7 en 2.2; 12 en 2.3; y 16 en 2.4. Son los tests de las soluciones de este módulo.
 
-> Para abrir la solución en Visual Studio se utiliza el archivo `.csproj` de cada etapa; la rama de rediseño no incluye archivos `.sln`. Los tests están en `tests/AceriaApp.Api.Tests/`.
+> Para abrir cada etapa en Visual Studio, utiliza su archivo `.csproj`. Cada etapa contiene la API en `src/AceriaApp.Api/` y sus tests en `tests/AceriaApp.Api.Tests/`.
