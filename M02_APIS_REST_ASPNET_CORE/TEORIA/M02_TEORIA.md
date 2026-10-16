@@ -1561,6 +1561,77 @@ La adopción de mensajes específicos tiene dos consecuencias prácticas. La pri
 
 ---
 
+
+#### Taller de diagnóstico 2.3 — La frontera de entrada tiene varias puertas
+
+Un error de entrada no siempre llega a la misma instrucción del servidor. Si el cuerpo ni siquiera representa un JSON interpretable, ASP.NET Core puede rechazar la petición antes de invocar el delegado Minimal API y antes de que nuestro filtro tenga un objeto CrearOrdenRequest sobre el que operar. Si el JSON puede enlazarse al request pero Cliente está vacío, el filtro con FluentValidation reconoce la infracción. Si los campos son formalmente válidos pero Cantidad 501 supera la capacidad de taller, quien rechaza la operación es el delegado.
+
+El alumno debería poder señalar estas **tres puertas** sin necesidad de ver la pantalla de otro ordenador:
+
+1. **La entrada HTTP:** método, URI, cabecera Content-Type y bytes del cuerpo. Aquí puede fallar el enrutamiento o el análisis del contenido.
+2. **El contrato enlazado:** el framework construye un request tipado y el filtro lo inspecciona según sus reglas declarativas.
+3. **El estado y la política de negocio:** el manejador consulta la orden, comprueba capacidad o Estado y decide si procede guardar.
+
+En el segundo nivel, la clase ValidationFilter<T> obtiene el objeto con context.Arguments.OfType<T>().FirstOrDefault(). Eso presupone que el enlace correspondiente llegó a ofrecer un argumento. No se debe utilizar esa línea como excusa para afirmar que todas las solicitudes con JSON mal formado producirán necesariamente el mensaje «Falta el cuerpo». Algunas entradas defectuosas no superarán siquiera el enlace del framework.
+
+**Casos de predicción:** un cliente envía Cantidad como un texto que no pueda convertirse a entero; otro envía el entero 0; un tercero envía 501. El primero pone a prueba la conversión al tipo del contrato; el segundo llega al rango de FluentValidation si se enlaza; el tercero supera la validación genérica pero incumple la política 500. El código de estado y el cuerpo resultante deben observarse según la ruta concreta de error; no es correcto copiar el mismo JSON ficticio en los tres casos.
+
+A través de este análisis se comprende por qué un 400 puede tener más de un origen. La API del taller usa Results.ValidationProblem cuando el filtro genera errores por campos, y la semántica observable del fallo de enlace pertenece al framework. Se trata de capas complementarias, no de alternativas entre las que el profesor puede escoger sin mirar la implementación.
+
+En la práctica 2.3.2 se preparan peticiones diferentes para ubicar el fallo. En 2.3.8–2.3.17 se construye la segunda puerta. En 2.3.18–2.3.23 se verifica por HTTP qué puerta responde ante los valores elegidos. La comparación evita el problema pedagógico de introducir FluentValidation como si sustituyera a toda la infraestructura de ASP.NET Core.
+
+#### Taller de diagnóstico 2.3 — Valores frontera que revelan el orden de validación
+
+Los casos fáciles suelen esconder reglas incorrectas. Una cantidad 10 con Cliente y Material no vacíos es útil para demostrar el camino de éxito, pero por sí sola no dice nada del comportamiento en los límites. El contrato de AceriaApp define números enteros; por tanto, necesitamos observar al menos los valores que rodean cada umbral.
+
+Consideremos la secuencia 0, 1, 500, 501, 10000 y 10001. Con FluentValidation, Cantidad debe estar entre 1 y 10000 inclusive. Dentro de ese rango, la política operativa solo admite hasta 500. Se deducen respuestas diferentes:
+
+| Valor | ¿Pasa el rango genérico? | ¿Pasa el límite de negocio? | Resultado esperado de POST |
+|:---|:---|:---|:---|
+| 0 | No | No procede evaluar negocio | 400 |
+| 1 | Sí | Sí | 201 |
+| 500 | Sí | Sí | 201 |
+| 501 | Sí | No | 422 |
+| 10000 | Sí | No | 422 |
+| 10001 | No | No se ejecuta manejador | 400 |
+
+Esta matriz no debe leerse como una norma universal de códigos REST. Es el resultado de **estas reglas concretas en este orden concreto**. Otro proyecto podría concentrar validaciones o adoptar una convención diferente. En nuestro taller es valiosa porque obliga a demostrar que el filtro se conecta al endpoint y que la regla de negocio sigue existiendo.
+
+La misma técnica debe aplicarse a Cliente y Material. NotEmpty impide valores vacíos y MaximumLength(100) fija un máximo. Con longitudes 100 y 101 se identifica la frontera. Pero un tipo string en C# no garantiza que cualquier representación externa sea válida, y un máximo en EF Core no sustituye a la respuesta HTTP de validación. La regla se ejecuta antes de persistir justamente para no trasladar al consumidor una excepción de almacenamiento como si fuera una explicación de campos incorrectos.
+
+**Prueba negativa de persistencia.** Una mejora pedagógica razonable consiste en contar las órdenes antes y después de un POST inválido. Si el filtro rechaza con 400, la colección no debería aumentar por esa petición. Los tests actuales de la etapa 2.3 comprueban estados y errors; no contienen para todos los casos una aserción posterior de ausencia de inserción. Se propone como ejercicio complementario, no se declara cobertura ya existente.
+
+También debe comprobarse el camino válido después de incorporar un filtro. Un error frecuente es escribir una implementación que devuelve 400 correctamente para los ejemplos inválidos, pero no llama a next(context) en la rama válida. En ese caso ningún POST nuevo funcionaría. La regresión se descubre ejecutando CrearYConsultar_Es201Y200 además de los tests de validación; ésa es la razón por la que se heredan pruebas de etapas anteriores.
+
+#### Taller de diagnóstico 2.3 — Errores útiles sin filtrar detalles internos
+
+Un consumidor necesita información accionable: qué campo está mal, qué operación fue rechazada y qué puede cambiar para reintentarla. No necesita una traza completa de SQL Server, una cadena de conexión ni los nombres internos de las clases de infraestructura. Esta distinción explica el valor de las respuestas Problem Details y ValidationProblem.
+
+Results.ValidationProblem, utilizado por el filtro, recibe un diccionario agrupado por nombre de propiedad. Un cliente puede asociar cada conjunto de mensajes al control visual correspondiente de un formulario. Results.Problem, utilizado en las reglas 409 y 422, comunica una condición de negocio de la operación. Los mensajes concretos y la estructura deben contrastarse con los resultados reales; su semejanza conceptual no significa que posean las mismas propiedades JSON.
+
+Si un equipo decide escribir tests que comparen palabra por palabra cada mensaje de error, una corrección ortográfica podría hacer fallar la batería sin cambiar el contrato esencial. En estos ejercicios se comprueba al menos status y presencia de errors para 400. El alumno puede ampliar los tests para verificar que un campo concreto aparece en errors sin acoplarse a un mensaje en idioma único.
+
+**La localización no está implementada como una capa multilingüe completa.** FluentValidation puede generar mensajes a partir de su configuración y cultura, pero AceriaApp no dispone de un catálogo de traducciones específico para cada idioma del cliente. Presentarlo como un componente ya funcional induciría un error. La teoría debe explicar el desafío y la práctica debe comprobar el comportamiento efectivo de la instancia.
+
+Hay una consecuencia arquitectónica: la API debe separar errores atribuibles a la petición, conflictos por el estado y fallos internos no recuperables mediante la simple corrección de campos. Un cliente que recibe 422 por límite de capacidad necesita dividir el lote o solicitar otra política; uno que recibe 409 necesita consultar el recurso actual; uno que recibe una excepción transitoria de infraestructura necesitaría una estrategia diferente. Hacer que todos estos casos devuelvan 200 con un texto «error» impediría a los clientes interpretar correctamente las situaciones.
+
+En un sistema productivo también harían falta protección de datos sensibles, trazabilidad segura de incidencias y una política coherente de excepciones. El ejemplo del módulo no instala un middleware global para convertir absolutamente todos los fallos en Problem Details; enseña las respuestas explícitas que figuran en Program.cs y en ValidationFilter.cs. Esa delimitación protege la fiabilidad del aprendizaje.
+
+#### Taller de diagnóstico 2.3 — Cómo demostrar que el filtro no rompe la aplicación
+
+La dificultad no termina en escribir reglas correctas: hay que demostrar que quedaron insertadas en la ruta adecuada. El filtro genérico es una pieza reutilizable, pero solo interviene donde Program.cs lo encadena con AddEndpointFilter. Por eso el itinerario docente exige seguir el vínculo entre **tipo de request → validador → filtro → endpoint → prueba HTTP**.
+
+Para el POST, el tipo es CrearOrdenRequest, el validador es CrearOrdenValidator y el endpoint añade ValidationFilter<CrearOrdenRequest>. Para PUT se reutiliza esa misma pareja; para PATCH de cantidad se emplea ActualizarCantidadRequest con ActualizarCantidadValidator. No se instala un filtro de creación en GET porque no recibe ese cuerpo. Tampoco se añade a DELETE, cuyo comportamiento gira alrededor de un Guid de ruta y del Estado persistido.
+
+Imaginemos que por error se agregara ValidationFilter<ActualizarCantidadRequest> al POST de creación. El filtro buscaría un argumento del tipo equivocado y la petición podría ser rechazada con un error de body, aunque el cliente hubiera enviado Cliente, Material y Cantidad. Esta avería no se arregla ampliando el rango de Cantidad ni cambiando LocalDB: hay que revisar el tipo genérico asociado a la ruta.
+
+Otro error consiste en confiar en que AddValidatorsFromAssemblyContaining ejecuta las reglas por sí solo. El registro aporta servicios al contenedor, pero cada endpoint debe utilizar el filtro. La prueba de control consiste en enviar un POST con un Cliente vacío y verificar que el manejador no llega a crear la orden. A continuación se envía otro válido para verificar que la operación continúa. Ambos resultados importan: bloquear peticiones incorrectas y permitir las correctas.
+
+El contrato de regresión puede reconstruirse mediante pruebas concretas ya presentes. GetTests protege la lectura 200/404 y el DTO; EscrituraTests protege creación, edición, eliminación y conflictos; ValidacionHttpTests protege los errores 400, 422 y la propiedad errors. Ejecutar solo el test nuevo deja abierta la posibilidad de romper funciones anteriores. Ejecutar toda la etapa permite detectar una ruptura del comportamiento acumulativo.
+
+**Conclusión operativa:** validar no es solo declarar atributos o instalar una biblioteca. Es interceptar la petición correcta, explicar el fallo con un contrato HTTP y dejar intacta la persistencia cuando la operación se rechaza. El alumno que puede seguir esa cadena y encontrar el primer punto de fallo está preparado para estudiar documentación de contratos en 2.4.
+
+
 ### Bloque 8 — Validación y códigos de respuesta
 
 La validación fallida produce un código de respuesta específico. El código 400 Bad Request se usa cuando la petición no cumple el contrato de entrada. El código 422 Unprocessable Entity se usa cuando la petición es sintácticamente correcta pero semánticamente inválida. La elección entre 400 y 422 depende del nivel de validación que haya fallado. Si falla la validación sintáctica o semántica, se devuelve 400. Si falla la validación de negocio, se devuelve 422. La distinción permite al cliente distinguir entre un error de datos y un error de negocio.
