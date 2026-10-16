@@ -2823,7 +2823,7 @@ La teoría adquiere credibilidad cuando cada afirmación sobre lo implementado a
 | Respuestas alternativas | 2.4.12–2.4.15 | Program.cs de 2.4 | OpenApi_DeclaraErroresDeOperacionesReales |
 | Ocultar documentación en Production | 2.4.23 | UseDocumentacion | Produccion_NoExponeSwagger |
 
-Esta tabla describe las etapas y los tests presentes en la versión revisada del recorrido. No confunde las pruebas HTTP con una auditoría de seguridad ni interpreta el uso de InMemory como una demostración de que SQL Server LocalDB está instalado en cada máquina. Cada fila puede verificarse abriendo el archivo correspondiente y ejecutando el caso indicado.
+Esta tabla describe las etapas y los tests presentes en la versión revisada del recorrido. No confunde las pruebas HTTP con una evaluación de seguridad ni interpreta el uso de InMemory como una demostración de que SQL Server LocalDB está instalado en cada máquina. Cada fila puede verificarse abriendo el archivo correspondiente y ejecutando el caso indicado.
 
 ### VII. Diagnóstico por evidencias, no por aproximaciones
 
