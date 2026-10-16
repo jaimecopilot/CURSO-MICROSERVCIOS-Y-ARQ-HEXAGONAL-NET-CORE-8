@@ -814,6 +814,101 @@ El ejemplo PUT reemplaza los campos editables de una orden ya existente, conserv
 
 **Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
 
+
+#### Laboratorio razonado 2.2 — Diseñar la máquina de estados antes de escribir handlers
+
+Los verbos HTTP no bastan para decidir si una operación es válida. Una orden se comporta como un recurso de negocio: nace Pendiente, puede modificarse mientras permanece en ese estado y puede pasar a Finalizada. La transición altera lo que el cliente tiene permitido hacer a continuación. Si se aprende POST, PUT, PATCH y DELETE como cinco fragmentos independientes, se pierde la causa que los relaciona: todos actúan sobre **el mismo estado persistente**.
+
+La clase Orden define Estado con el valor inicial Pendiente. El endpoint de finalización de Program.cs encuentra una orden por Id y, si todavía no está finalizada, ejecuta:
+
+~~~csharp
+orden.Estado="Finalizada";
+await db.SaveChangesAsync();
+return Results.Ok(OrdenDto.Desde(orden));
+~~~
+
+Esa secuencia se inserta en un MapPost de ruta **/api/v1/ordenes/{id:guid}/finalizar**. La elección de POST para una transición nombrada no convierte a toda la API en RPC: el recurso sigue teniendo una URI identificable y la transición se expresa como una operación sobre él. Es una solución didáctica deliberada; existen otros modelos de diseño REST para transiciones de estado.
+
+La máquina de estados observada se resume de forma más precisa que una lista de verbos:
+
+| Estado inicial | Petición | Estado posterior | Resultado |
+|:---|:---|:---|:---|
+| Sin orden | POST colección válido | Pendiente | 201 y Location |
+| Pendiente | PUT válido | Pendiente con datos sustituidos | 204 |
+| Pendiente | PATCH cantidad válido | Pendiente con nueva cantidad | 200 |
+| Pendiente | POST finalizar | Finalizada | 200 |
+| Finalizada | PUT o PATCH | Finalizada, sin cambios | 409 |
+| Finalizada | DELETE | Finalizada, sin cambios | 409 |
+| Finalizada | POST finalizar | Finalizada, sin cambios | 409 |
+| Pendiente | DELETE | Recurso ausente | 204 |
+| Recurso ausente | GET individual | Recurso ausente | 404 |
+
+La columna «estado posterior» es importante: un código de respuesta no permite ignorar qué quedó guardado. Por ejemplo, la rama de conflicto 409 debe ejecutarse **antes de cambiar la entidad**. Si alguien editara Cantidad y guardara, y solo después devolviera 409, el cliente recibiría una negación falsa: la operación rechazada sí habría alterado el sistema.
+
+Un ejercicio de lectura consiste en recorrer el mismo Guid en cinco mensajes sucesivos: POST de creación, GET, PUT, POST finalizar y PUT otra vez. En cada momento el alumno puede anticipar el estado persistente y el código de respuesta. La API se comprende como una secuencia de observaciones, no como un conjunto de respuestas memorizadas.
+
+**¿Dónde se comprueba?** En la práctica 2.2.18–2.2.20 se intenta operar sobre una orden Finalizada. En EscrituraTests.cs, OrdenFinalizada_NoSeEdita409 construye el estado inicial adecuado antes de verificar el conflicto. Una prueba de 409 sin finalizar primero la orden podría estar probando una causa completamente diferente.
+
+#### Laboratorio razonado 2.2 — Persistencia y garantías que no ofrece SaveChangesAsync
+
+EF Core proporciona un contexto de cambios y una operación explícita de guardado. Esto permite que POST, PUT y PATCH separen lectura, cambio y persistencia. Pero no debemos atribuir a SaveChangesAsync propiedades que el ejercicio todavía no implementa.
+
+En un PUT, FindAsync recupera la orden; las asignaciones cambian campos de la entidad que el contexto rastrea; SaveChangesAsync envía los cambios; Results.NoContent entrega la respuesta 204. Si el alumno introduce AsNoTracking en la lectura destinada a modificación sin ajustar después el seguimiento, puede perder la escritura esperada. Por eso AsNoTracking es apropiado en los GET de consulta, mientras que el código de escritura utiliza una entidad cargada por FindAsync.
+
+La capa HTTP decide cuándo comunicar éxito. Un guardado que falla por indisponibilidad de SQL Server no debería ocultarse tras un NoContent. En el código real, el retorno 204 está después de await db.SaveChangesAsync. El orden protege la veracidad de la respuesta: el servidor confirma solo cuando la operación de persistencia finaliza satisfactoriamente.
+
+Sin embargo, el taller no incluye aún un token de concurrencia, una columna RowVersion ni un mecanismo If-Match. Consideremos el siguiente escenario posible, que **no es una prueba implementada**: dos operadores leen la misma orden Pendiente. Uno cambia Cantidad a 20 y el otro cambia Cantidad a 30. Si ambas escrituras se realizan sin coordinación, el resultado puede depender del orden de llegada. El hecho de que PUT sea idempotente cuando se repite con los mismos datos no resuelve el conflicto entre dos escrituras **diferentes**.
+
+Del mismo modo, repetir POST de creación cuando el cliente perdió la respuesta puede crear dos órdenes. El método genera Guid nuevos en el servidor y no admite una clave de idempotencia suministrada por el cliente. Una API productiva podría incorporar un identificador único de operación, reglas de deduplicación o un mecanismo de consulta posterior; esos sistemas no se enseñan como si existieran en esta solución.
+
+**Diagnóstico que sí corresponde a 2.2:**
+
+1. Si la respuesta 201 incluye un Id pero el GET falla, comprobar el guardado y el uso de Location.
+2. Si el PUT dice 204 pero GET muestra valores anteriores, revisar el seguimiento del contexto y SaveChangesAsync.
+3. Si PATCH cambia Material inesperadamente, revisar las asignaciones: solo debe tocar Cantidad.
+4. Si una orden finalizada cambia, revisar la posición de la comprobación Estado respecto del guardado.
+5. Si dos pruebas independientes comparten datos, comprobar su aislamiento de base antes de atribuirlo a una carrera entre usuarios.
+
+La distinción entre **garantías implementadas** y **riesgos estudiados** forma parte del aprendizaje de arquitectura. Una Minimal API real puede ser pequeña y correcta para su objetivo, sin pretender resolver de antemano todos los problemas de distribución.
+
+#### Laboratorio razonado 2.2 — El test HTTP como contrato entre dos programas
+
+En un test de integración HTTP el consumidor debe comportarse como cualquier cliente externo: preparar una petición, enviarla al host, recibir una respuesta y examinarla. Que servidor y test estén escritos en C# no permite saltarse ese límite. La factoría de pruebas levanta AceriaApp en memoria, pero las llamadas pasan por la infraestructura HTTP de ASP.NET Core.
+
+La prueba CrearYConsultar_Es201Y200 muestra un modelo de contrato completo. Envía un cuerpo mediante PostAsJsonAsync, exige **HttpStatusCode.Created**, comprueba que **Headers.Location** tenga valor y ejecuta GetAsync sobre esa ubicación. El éxito requiere tanto creación como posibilidad posterior de lectura. Si se borrara por accidente el WithName del GET que usa CreatedAtRoute, el test permitiría descubrir una regresión contractual que un test de entidad no vería.
+
+Otra prueba, EditarYEliminar_CambiaPersistencia, empieza por crear una orden y conservar su Id. Después usa PutAsJsonAsync y exige NoContent; PatchAsJsonAsync cambia Cantidad y exige Ok, inspeccionando el DTO; DeleteAsync elimina y el GET siguiente exige NotFound. Son varios mensajes pero una sola historia de negocio. Este orden es fundamental: un DELETE sobre un Guid aleatorio sin creación previa no ejercitaría realmente la rama de eliminación exitosa.
+
+El contrato puede representarse en forma de tabla de pruebas de frontera:
+
+| Preparación | Acción | Aserción mínima | Aserción complementaria |
+|:---|:---|:---|:---|
+| Base aislada | POST válido | 201 | Location no nulo y GET 200 |
+| Orden Pendiente | PUT válido | 204 | GET con nuevos valores |
+| Orden Pendiente | PATCH 12 | 200 | DTO con Cantidad 12 |
+| Orden Pendiente | DELETE | 204 | GET posterior 404 |
+| Orden Finalizada | PUT válido | 409 | Orden permanece intacta |
+| Cualquier petición nueva de 501 | POST | 422 | No se inserta una orden |
+
+La última aserción complementaria es una recomendación de ampliación de pruebas: los tests existentes verifican 422, pero no todos inspeccionan después la colección para demostrar ausencia de escritura. No debe declararse como comprobación automatizada ya incorporada. Justamente aprender a encontrar un hueco en los tests, sin inventar su cobertura, es parte de la formación avanzada.
+
+El uso de EF Core InMemory en las pruebas elimina la dependencia de SQL Server Express LocalDB en el agente. No reproduce todos los comportamientos de SQL Server. Si se introdujera más adelante un índice único, un bloqueo o una consulta SQL dependiente del proveedor, habría que diseñar pruebas apropiadas contra una base relacional compatible. La práctica 2.2 se limita a operaciones de lectura y escritura cuyo contrato puede observarse en este entorno aislado, complementadas con la ejecución local del alumnado.
+
+#### Laboratorio razonado 2.2 — Decidir qué información debe recibir el cliente
+
+Un error HTTP es un mensaje entre sistemas. Un código 400 comunica una entrada inaceptable en el nivel de este contrato; 404 representa ausencia de recurso; 409 explica conflicto con el estado existente; 422 declara que la petición puede entenderse pero la política del taller rechaza su contenido. Lo más valioso es que esas decisiones sean **repetibles**: dos peticiones equivalentes en el mismo estado no deberían recibir códigos arbitrarios.
+
+En 2.2, Results.BadRequest crea un pequeño objeto anónimo de error para campos obligatorios. Results.Problem genera una representación de problema para conflictos o capacidad. En 2.3 este primer camino será reemplazado por ValidationProblem, con errores agrupados por campo. La evolución didáctica muestra un contrato que se refina, sin negar que en 2.2 existe una forma provisional.
+
+**Ejemplo de secuencia de diagnóstico:** un consumidor recibe 422 al crear una orden. No debería volver a intentar diez veces el mismo POST sin cambios: la limitación de 500 unidades seguirá vigente. En cambio, si recibe una falla transitoria de red después de enviar POST, no puede suponer automáticamente que no se creó nada; precisamente la falta de idempotencia automática aconseja comprobar el resultado antes de repetir la creación.
+
+Otro consumidor recibe 409 al editar. La primera pregunta es si la orden sigue Pendiente. GET del mismo Id ayuda a inspeccionar el estado. No conviene cambiar el cuerpo de PUT al azar sin comprender que el recurso finalizado bloquea la operación independientemente de que los campos sean correctos. Este comportamiento conecta el diseño de API con los futuros conceptos de invariantes de dominio.
+
+Un tercer consumidor recibe 404 tras eliminar y repetir GET. En ese caso 404 no es necesariamente un problema operativo: puede ser la prueba de que DELETE sí tuvo el efecto pretendido. La interpretación adecuada exige reconstruir la secuencia previa, no tratar cada respuesta de manera aislada.
+
+**Criterio de suficiencia pedagógica:** al finalizar el punto 2.2, el alumno debe poder justificar cada resultado normal y alternativo a partir de estado, verbo, ruta y código real, y señalar qué test permite observarlo. Sin esa explicación, memorizar POST=201 y DELETE=204 sería una simplificación engañosa.
+
+
 ### Bloque 7 — Códigos de error del servidor
 
 Los códigos de error del servidor se agrupan en la familia 5xx. Los más usados son 500 Internal Server Error, 501 Not Implemented, 502 Bad Gateway, 503 Service Unavailable y 504 Gateway Timeout. El código 500 indica un error no controlado del servidor. El código 501 indica que el servidor no implementa la funcionalidad solicitada. El código 502 indica que un servidor intermedio recibió una respuesta inválida del servidor destino. El código 503 indica que el servicio no está disponible temporalmente. El código 504 indica que un servidor intermedio no recibió respuesta del servidor destino a tiempo.
