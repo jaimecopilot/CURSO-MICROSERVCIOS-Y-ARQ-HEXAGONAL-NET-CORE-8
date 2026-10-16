@@ -76,7 +76,7 @@ app.MapPut("/api/v1/ordenes/{id:guid}",async (Guid id,CrearOrdenRequest request,
 })
 .WithName("ReemplazarOrden").WithTags("Ordenes")
 .AddEndpointFilter<ValidationFilter<CrearOrdenRequest>>()
-.WithSummary("Sustituye campos editables").Produces(204).Produces(404).ProducesProblem(409).ProducesValidationProblem(400)
+.WithSummary("Sustituye campos editables").Produces(204).Produces(404).ProducesProblem(409).ProducesValidationProblem(400).ProducesProblem(422)
 ;
 
 
@@ -96,7 +96,7 @@ app.MapPatch("/api/v1/ordenes/{id:guid}/cantidad",
 })
 .WithName("CambiarCantidad").WithTags("Ordenes")
 .AddEndpointFilter<ValidationFilter<ActualizarCantidadRequest>>()
-.WithSummary("Modifica cantidad").Produces<OrdenDto>(200).ProducesValidationProblem(400)
+.WithSummary("Modifica cantidad").Produces<OrdenDto>(200).Produces(404).ProducesValidationProblem(400).ProducesProblem(409).ProducesProblem(422)
 ;
 
 
@@ -112,7 +112,7 @@ app.MapDelete("/api/v1/ordenes/{id:guid}",async (Guid id,AceriaDbContext db)=>
     return Results.NoContent();
 })
 .WithName("EliminarOrden").WithTags("Ordenes")
-.WithSummary("Elimina una orden pendiente").Produces(204).Produces(404)
+.WithSummary("Elimina una orden pendiente").Produces(204).Produces(404).ProducesProblem(409)
 ;
 // INICIO PASO 2.2.10: transición explícita del dominio.
 app.MapPost("/api/v1/ordenes/{id:guid}/finalizar",async (Guid id,AceriaDbContext db)=>
@@ -126,7 +126,7 @@ app.MapPost("/api/v1/ordenes/{id:guid}/finalizar",async (Guid id,AceriaDbContext
     return Results.Ok(OrdenDto.Desde(orden));
 })
 .WithName("FinalizarOrden").WithTags("Ordenes")
-.WithSummary("Finaliza una orden").Produces<OrdenDto>(200).ProducesProblem(409)
+.WithSummary("Finaliza una orden").Produces<OrdenDto>(200).Produces(404).ProducesProblem(409)
 ;
 
 app.UseDocumentacion(); // PASO 2.4.4
