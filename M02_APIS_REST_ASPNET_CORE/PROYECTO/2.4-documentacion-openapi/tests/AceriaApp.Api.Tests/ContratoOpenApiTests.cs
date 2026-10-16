@@ -27,6 +27,26 @@ public class ContratoOpenApiTests
         Assert.True(schemas.TryGetProperty("CrearOrdenRequest",out var schema));
         Assert.True(schema.TryGetProperty("example",out _));
     }
+    [Fact] public async Task OpenApi_DeclaraErroresDeOperacionesReales()
+    {
+        using var f=new ApiFactory();
+        var response=await f.CreateClient().GetAsync("/swagger/v1/swagger.json");
+        Assert.Equal(HttpStatusCode.OK,response.StatusCode);
+        using var json=JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var paths=json.RootElement.GetProperty("paths");
+        var coleccion=paths.GetProperty("/api/v1/ordenes");
+        Assert.True(coleccion.GetProperty("post").GetProperty("responses").TryGetProperty("422",out _));
+        var recurso=paths.EnumerateObject()
+            .First(p=>p.Name.StartsWith("/api/v1/ordenes/")
+                && p.Value.TryGetProperty("delete",out _)).Value;
+        Assert.True(recurso.GetProperty("put").GetProperty("responses").TryGetProperty("422",out _));
+        Assert.True(recurso.GetProperty("delete").GetProperty("responses").TryGetProperty("409",out _));
+        var rutaCantidad=paths.EnumerateObject()
+            .First(p=>p.Name.EndsWith("/cantidad")).Value;
+        Assert.True(rutaCantidad.GetProperty("patch").GetProperty("responses").TryGetProperty("409",out _));
+        Assert.True(rutaCantidad.GetProperty("patch").GetProperty("responses").TryGetProperty("422",out _));
+    }
+
     [Fact] public async Task Produccion_NoExponeSwagger()
     {
         using var f=new ApiFactory();
