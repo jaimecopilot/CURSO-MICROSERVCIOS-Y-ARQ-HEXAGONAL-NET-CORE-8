@@ -280,7 +280,17 @@ La secuencia didáctica se cierra con tres decisiones: qué contrato visible ofr
 
 ### Bloque 6 — Diseño de URIs en APIs REST
 
-El diseño de URIs sigue cinco reglas prácticas. La primera es usar sustantivos en plural para las colecciones. La segunda es usar el identificador del recurso concreto después de la colección. La tercera es anidar las relaciones con sub-rutas. La cuarta es no incluir verbos en las URIs. La quinta es versionar la API en la propia URI. La aplicación conjunta de las cinco reglas produce URIs predecibles y consistentes. La consistencia permite que un cliente genérico pueda navegar la API sin conocerla de antemano.
+Para diseñar URIs legibles conviene comenzar por las **colecciones de recursos** y mantener una estructura predecible. En AceriaApp, la colección se identifica mediante /api/v1/ordenes y cada miembro mediante /api/v1/ordenes/{id:guid}. El segmento v1 expresa la versión contractual de este ejemplo; no activa automáticamente un mecanismo de negociación de versiones. Las reglas «usar sustantivos» o «evitar verbos en las URIs» son pautas útiles, no prohibiciones absolutas: el endpoint real /api/v1/ordenes/{id:guid}/finalizar expresa una transición de negocio mediante POST. La decisión de ruta debe justificarse desde el cliente y comprobarse con el comportamiento del servicio.
+
+**Reglas prácticas para razonar, no para copiar a ciegas:**
+
+1. **Nombrar el recurso**, no una función interna de C#.
+2. **Distinguir colección y miembro** usando un identificador estable.
+3. **Conservar consistencia** en pluralización y segmentos.
+4. **Representar relaciones** solo cuando aporten claridad, sin profundidad excesiva.
+5. **Explicitar la versión** del contrato elegido y su estrategia de evolución.
+
+La práctica 2.1 registra únicamente las dos rutas GET; la transición finalizar se incorpora en 2.2. No atribuyas a 2.1 las operaciones de los siguientes estados.
 
 Reglas de diseño de URIs:  
   
@@ -355,7 +365,9 @@ La configuración de la interfaz uniforme tiene dos consecuencias prácticas. La
 
 ### Bloque 8 — Recursos anidados y relaciones
 
-Los recursos pueden anidarse para expresar relaciones. Una orden tiene líneas. Una línea tiene materiales. Las relaciones se expresan con sub-rutas. La URI /api/v1/ordenes/{id}/lineas expresa la colección de líneas de una orden concreta. La URI /api/v1/ordenes/{id}/lineas/{lineaId} expresa una línea concreta. El anidamiento tiene un límite práctico: no se anidan más de dos niveles para evitar URIs excesivamente largas. Las relaciones que superan dos niveles se expresan con recursos independientes y parámetros de consulta.
+Los recursos relacionados pueden expresarse mediante una estructura de URIs que muestre su relación. Por ejemplo, un dominio industrial podría identificar las líneas de una orden con una ruta anidada. **AceriaApp no implementa /api/v1/ordenes/{id}/lineas ni un modelo de LineaOrden** en ninguno de los cuatro estados de este módulo; esas rutas sirven aquí solo como hipótesis de diseño. La API del curso sí muestra una ruta subordinada de acción específica: PATCH /api/v1/ordenes/{id:guid}/cantidad, que modifica una sola propiedad de la orden.
+
+Una jerarquía excesivamente profunda complica la navegación y acopla al cliente a relaciones internas. Antes de diseñar una subruta conviene preguntar qué recurso identifica, qué verbo aceptará y qué contrato devolverá. La práctica utiliza las rutas existentes como evidencia, no endpoints anidados inventados.
 
 Anidamiento de recursos:  
   
@@ -406,7 +418,7 @@ app.MapGet("/api/v1/ordenes",async (AceriaDbContext db,CancellationToken ct)=>
 
 ### Bloque 9 — Paginación, filtrado y ordenación
 
-Las colecciones grandes no se devuelven completas. Se paginan con parámetros de consulta. Los parámetros habituales son page y pageSize para la paginación, filter para el filtrado y sort para la ordenación. Los parámetros de consulta se expresan con el signo ? después de la URI. La respuesta incluye metadatos de paginación: número de página, tamaño de página, total de elementos y total de páginas. Los metadatos permiten al cliente construir la interfaz de navegación sin conocer la colección completa.
+En una API con miles de recursos es necesario **diseñar una estrategia de paginación, filtrado y ordenación** para evitar transferencias enormes y resultados ambiguos. Es habitual utilizar parámetros de consulta como page, pageSize y sort, y devolver metadatos que permitan recorrer páginas. **La etapa 2.1 de AceriaApp todavía no implementa page, pageSize ni un filtro de cliente**: el GET de colección ejecuta una consulta ordenada por FechaCreacion y devuelve el conjunto obtenido. El contenido de este bloque explica una evolución deseable, no una prestación disponible. La actividad 2.1.24 invita a pensar cómo añadir un filtro sin alterar el contrato actual.
 
 Paginación, filtrado y ordenación:  
   
@@ -444,7 +456,7 @@ La paginación tiene dos consecuencias prácticas. La primera es que las respues
 
 ### Bloque 10 — Aplicación del diseño REST al proyecto del curso
 
-El proyecto del curso aplica el diseño REST en cada endpoint. Los recursos se identifican con URIs que siguen las cinco reglas. Los métodos HTTP expresan la semántica de la operación. Los códigos de estado expresan el resultado. Las representaciones se negocian con la cabecera Accept. Las colecciones se paginan con parámetros de consulta. Las relaciones se anidan con sub-rutas. El diseño se documenta en un documento de diseño de APIs REST y se audita con una clase de validación de URIs.
+La implementación real del punto 2.1 es deliberadamente acotada. AceriaApp declara **dos rutas GET** bajo /api/v1/ordenes: consulta de colección y consulta de un Id Guid. Utiliza AceriaDbContext con SQL Server Express LocalDB, transforma Orden en OrdenDto y diferencia 200 de 404. **No están implementados** la paginación, un serializador XML alternativo, las rutas de líneas de orden ni una clase separada de validación de URIs. El catálogo y las reglas REST se estudian como herramientas de diseño, pero los ejemplos ejecutables se contrastan con Program.cs y GetTests.cs. La práctica 2.1 enseña a crear esos archivos y observar sus respuestas.
 
 Aplicación al proyecto del curso:  
   
@@ -696,7 +708,7 @@ La elección del verbo correcto no es una cuestión de preferencia: es una cuest
 
 ### Bloque 4 — Verbos en colecciones y en recursos concretos
 
-La combinación de verbo y URI define la operación. Los verbos se aplican de forma distinta a colecciones y a recursos concretos. Sobre una colección, GET devuelve la lista, POST crea un elemento nuevo y DELETE elimina la colección completa. Sobre un recurso concreto, GET devuelve el recurso, PUT lo reemplaza, PATCH lo modifica parcialmente y DELETE lo elimina. La combinación de verbo y URI produce operaciones con semántica clara y predecible. La previsibilidad permite que el cliente sepa qué esperar sin consultar la documentación.
+La combinación de **método HTTP y URI** determina qué operación se solicita. GET /api/v1/ordenes consulta una colección; POST a esa colección crea una orden desde 2.2; GET, PUT y DELETE sobre /api/v1/ordenes/{id:guid} consultan, modifican o eliminan un recurso concreto. El PATCH real utiliza el sufijo /cantidad y solo cambia esa propiedad. **DELETE de la colección completa no está implementado**, ni debe suponerse que todas las APIs permitan borrar una colección por HTTP. El diseño correcto documenta expresamente qué métodos admite cada ruta.
 
 Combinaciones verbo-URI:  
   
@@ -1025,7 +1037,7 @@ La validación automática del catálogo comprueba tres cosas: que los verbos pe
 
 ### Bloque 10 — Aplicación al proyecto del curso
 
-El proyecto del curso aplica los conceptos de recursos, verbos y códigos de respuesta en cada endpoint. Los recursos se identifican con URIs que siguen las cinco reglas del punto 2.1. Los verbos se eligen según su semántica. Los códigos de respuesta se eligen según la relación sistemática entre verbo y resultado. El formato problem details se usa en todos los errores. El catálogo de recursos se documenta y se valida automáticamente. La aplicación conjunta produce una API predecible y coherente.
+El punto 2.2 materializa la semántica HTTP en los endpoints de órdenes: POST crea y devuelve 201 con Location, PUT modifica campos editables y responde 204, PATCH de cantidad responde 200 con DTO y DELETE elimina órdenes Pendientes con 204. La transición finalizar bloquea después ciertas escrituras mediante 409. Hay validaciones provisionales que responden 400 con un objeto simple y otras ramas que utilizan Results.Problem para 409 o 422: **no todos los errores de 2.2 comparten el mismo cuerpo Problem Details**. El proyecto no incorpora un catálogo validador de URIs separado; el contrato observable se comprueba mediante rutas, código y tests de integración HTTP. En las prácticas 2.2.1–2.2.24 el alumno reproduce las operaciones y verifica qué cambió en persistencia.
 
 Aplicación al proyecto del curso:  
   
@@ -1349,7 +1361,7 @@ La validación semántica tiene dos consecuencias prácticas. La primera es que 
 
 ### Bloque 4 — Validación de negocio
 
-La validación de negocio comprueba que los datos cumplen las reglas del dominio. Se aplica después de la validación semántica. En una API REST, la validación de negocio incluye la comprobación de unicidad, la comprobación de existencia de referencias y la comprobación de reglas específicas del dominio. Un Cliente que no existe falla la validación de negocio. Un Material que está bloqueado falla la validación de negocio. Una Orden con más líneas de las permitidas falla la validación de negocio. La validación de negocio se implementa en la capa de aplicación o en el dominio, no en el validador de la petición.
+Las reglas de negocio se refieren a decisiones que dependen del dominio y no solamente del tipo de dato. Por ejemplo, en la API real de AceriaApp una orden de más de 500 unidades se rechaza y una orden Finalizada ya no puede modificarse ni eliminarse. **No existe en este estado un catálogo de clientes válidos ni una operación para bloquear materiales**; esos otros posibles controles serían ampliaciones del dominio y necesitan código y datos propios. Para estudiar reglas de negocio conviene primero identificar las que efectivamente aparecen en Program.cs: capacidad y estado de la orden. Ambas pueden producir respuestas diferentes a los fallos de FluentValidation.
 
 ```csharp
 public class OrdenServicio  
@@ -1723,7 +1735,7 @@ La estructura del campo errors tiene dos consecuencias prácticas. La primera es
 
 ### Bloque 10 — Aplicación al proyecto del curso
 
-El proyecto del curso aplica la validación de peticiones en tres niveles. La validación sintáctica se aplica con tipos no anulables en los record de petición. La validación semántica se aplica con FluentValidation. La validación de negocio se aplica en la capa de aplicación con acceso a la base de datos. La integración con Minimal API se realiza con un filtro genérico. La respuesta de validación fallida usa problem details con código 400. La respuesta de validación de negocio fallida usa problem details con código 422.
+En la etapa 2.3, la entrada JSON se enlaza a los records de petición de ASP.NET Core; FluentValidation define reglas de campos y un ValidationFilter<T> las ejecuta sobre los endpoints POST, PUT y PATCH. Después, **los propios delegados de Program.cs** comprueban la capacidad máxima de 500 unidades y el estado Finalizada. La solución de M02 no contiene todavía una capa de aplicación hexagonal independiente: atribuirle allí las reglas de negocio sería una representación incorrecta. Los fallos del filtro devuelven ValidationProblem 400; las reglas de capacidad y de estado utilizan Results.Problem con 422 y 409. Se comprueban por HTTP mediante ValidacionHttpTests y la batería heredada de lectura y escritura.
 
 Aplicación al proyecto del curso:  
   
@@ -2276,7 +2288,7 @@ WithName, WithSummary, WithTags, Produces, ProducesProblem y ProducesValidationP
 
 ### Bloque 7 — Versionado de la documentación
 
-La documentación se versiona junto con el contrato. Cada versión del contrato tiene su propio documento OpenAPI. Swagger UI permite seleccionar la versión que se quiere consultar. La selección se realiza con el método SwaggerDoc que registra cada versión. La versión de la documentación coincide con la versión del contrato en la URL. La coincidencia permite que el consumidor consulte la documentación de la versión que usa. El versionado de la documentación es una consecuencia del versionado del contrato.
+La documentación de una API debe evolucionar junto con su contrato. SwaggerDoc permite declarar documentos con diferentes nombres o versiones; cada uno puede describir rutas y esquemas determinados. **AceriaApp publica solamente un documento v1**, accesible en Development desde /swagger/v1/swagger.json, y sus rutas reales contienen el segmento literal /api/v1. No hay aquí varios documentos entre los que seleccionar, ni negociación automática entre v1 y v2. Estudiar versionado sirve para anticipar cómo se comunicarían cambios incompatibles a los consumidores, sin fingir que ya existe una implementación multiversión.
 
 ```csharp
 builder.Services.AddSwaggerGen(options =>
@@ -2472,7 +2484,7 @@ La integración con herramientas tiene dos consecuencias prácticas. La primera 
 
 ### Bloque 10 — Aplicación al proyecto del curso
 
-El proyecto del curso aplica la documentación OpenAPI en todos los endpoints. Los metadatos se añaden con las anotaciones de Minimal API. Los esquemas se derivan de los DTOs. Los ejemplos se añaden en los esquemas de petición. La versión del contrato coincide con la versión de la URL. Los códigos de error se documentan con ProducesProblem y ProducesValidationProblem. La documentación se publica con Swagger UI en el entorno de desarrollo. La documentación se cierra con un test que verifica la generación del documento.
+La etapa 2.4 configura Swashbuckle y Swagger UI para exponer **en Development** un documento OpenAPI de la Minimal API real. Los tipos DTO y request generan esquemas; EjemploCrearOrden añade un ejemplo al request; WithSummary, Produces y ProducesProblem comunican las respuestas de las operaciones existentes. El documento se comprueba mediante tests que consultan /swagger/v1/swagger.json, localizan rutas y ejemplos, verifican ciertos códigos alternativos y confirman que la ruta de documentación no se publica en Production. **El ejemplo no incorpora autenticación, versiones simultáneas ni pasarela de servicios.** La comprobación de contrato complementa las pruebas HTTP de comportamiento de los puntos anteriores.
 
 ```text
 Aplicación al proyecto del curso:
