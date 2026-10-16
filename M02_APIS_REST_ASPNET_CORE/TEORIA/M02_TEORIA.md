@@ -306,7 +306,7 @@ Reglas de diseño de URIs:
 - **Línea 4:** 4. Sin verbos → las URIs no contienen verbos.
 - **Línea 5:** 5. Versionado en la URI → la versión va en la URI.
 
-Las cinco reglas se aplican de forma uniforme en toda la API. La uniformidad es lo que distingue una API REST de una API RPC. La uniformidad también facilita la documentación automática con OpenAPI, la generación de clientes y la integración con herramientas de monitorización. La violación de cualquiera de las cinco reglas rompe la uniformidad y obliga al cliente a conocer la API de antemano. El curso aplica las cinco reglas al diseño de la API de la acería.
+Estas son **convenciones de diseño**, no las restricciones formales de REST formuladas por Fielding: una URI que contiene un verbo no convierte automáticamente la API en RPC, del mismo modo que un nombre plural no garantiza que la API sea REST. El contrato depende también de la semántica HTTP, el tratamiento de las representaciones y el comportamiento del servidor. AceriaApp usa la ruta de acción `/api/v1/ordenes/{id:guid}/finalizar` en 2.2 por expresar una transición de negocio concreta; el alumno debe razonar ese caso en lugar de memorizar una prohibición absoluta.
 
 
 ---
@@ -456,25 +456,19 @@ La paginación tiene dos consecuencias prácticas. La primera es que las respues
 
 ### Bloque 10 — Aplicación del diseño REST al proyecto del curso
 
-La implementación real del punto 2.1 es deliberadamente acotada. AceriaApp declara **dos rutas GET** bajo /api/v1/ordenes: consulta de colección y consulta de un Id Guid. Utiliza AceriaDbContext con SQL Server Express LocalDB, transforma Orden en OrdenDto y diferencia 200 de 404. **No están implementados** la paginación, un serializador XML alternativo, las rutas de líneas de orden ni una clase separada de validación de URIs. El catálogo y las reglas REST se estudian como herramientas de diseño, pero los ejemplos ejecutables se contrastan con Program.cs y GetTests.cs. La práctica 2.1 enseña a crear esos archivos y observar sus respuestas.
+**Qué se materializa al finalizar 2.1.** El alumno dispone de una Minimal API ASP.NET Core 8 con exactamente dos operaciones: `GET /api/v1/ordenes` para consultar la colección y `GET /api/v1/ordenes/{id:guid}` para consultar una orden concreta. La entidad `Orden` se almacena mediante `AceriaDbContext` y SQL Server Express LocalDB; la respuesta pública se construye con `OrdenDto`. La colección existente o vacía responde 200, una orden presente responde 200 y una orden inexistente responde 404. Un identificador que no encaja en `{id:guid}` no alcanza ese manejador.
 
-Aplicación al proyecto del curso:  
-  
-- **Recursos identificados** → /api/v1/ordenes, /api/v1/materiales.
-- **Métodos HTTP con semántica** → GET, POST, PUT, PATCH, DELETE.
-- **Códigos de estado** → 200, 201, 204, 400, 404, 409, 422, 500.
-- **Representaciones** → JSON por defecto.
-- **Paginación** → page, pageSize.
-- **Relaciones anidadas** → /ordenes/{id}/lineas.
+| Decisión estudiada | Resultado observable en el proyecto 2.1 | Evidencia que deberá obtener el alumno |
+|:---|:---|:---|
+| Colección y recurso | Dos rutas GET bajo `/api/v1/ordenes` | Peticiones HTTP a ambas rutas |
+| Modelo y representación | `Orden` y `OrdenDto.Desde` | JSON de salida con datos del contrato |
+| Persistencia | `AceriaDbContext` registrado con proveedor SQL Server | Consulta a LocalDB en Development |
+| Semántica HTTP | 200 para una consulta válida; 404 si no existe la orden | Comparación entre una URI válida existente y otra ausente |
+| Comprobación aislada | `GetTests` con `WebApplicationFactory` y proveedor InMemory | Pruebas HTTP ejecutadas sin LocalDB en el entorno de test |
 
-- **Línea 1:** Recursos identificados → URIs que siguen las cinco reglas.
-- **Línea 2:** Métodos HTTP con semántica → métodos con semántica definida.
-- **Línea 3:** Códigos de estado → códigos adecuados a cada situación.
-- **Línea 4:** Representaciones → JSON por defecto.
-- **Línea 5:** Paginación → parámetros de consulta.
-- **Línea 6:** Relaciones anidadas → sub-rutas para relaciones.
+**Qué se analiza pero todavía no se implementa.** Paginación por `page`/`pageSize`, negociación de XML, `/api/v1/materiales`, `/api/v1/clientes`, líneas de una orden y validación automática del catálogo son posibilidades de diseño, no funcionalidades del código 2.1. Tampoco se deben anticipar aquí los endpoints de escritura, que llegan en 2.2. Esta distinción evita exigir al alumno que ejecute un ejemplo que no forma parte de su proyecto.
 
-La aplicación del diseño REST prepara el proyecto para los puntos posteriores del módulo 2. El punto 2.2 estudiará los recursos, verbos y códigos con detalle. El punto 2.3 estudiará la validación de peticiones. El punto 2.4 estudiará la documentación OpenAPI. La base del diseño REST es el fundamento de los tres puntos siguientes. El punto 2.1 establece los conceptos que se aplicarán en los tres puntos siguientes.
+El criterio para avanzar a 2.2 no consiste en haber copiado las clases: el alumno debe explicar la relación entre ruta, DTO, consulta EF Core y respuesta HTTP, ejecutar las dos operaciones y justificar por qué una colección vacía no se trata como un recurso inexistente.
 
 
 ---
@@ -1015,49 +1009,43 @@ app.MapPatch("/api/v1/ordenes/{id:guid}/cantidad",
 
 ### Bloque 9 — Catálogo de recursos y combinaciones válidas
 
-Un catálogo de recursos es una lista estructurada de los recursos que expone la API, con sus URIs, sus verbos permitidos y sus códigos de respuesta esperados. El catálogo sirve como contrato de referencia para el equipo y como base para la documentación automática. La estructura del catálogo incluye el nombre del recurso, la URI base, los verbos permitidos y los códigos de respuesta esperados para cada verbo. La validación automática del catálogo comprueba que las combinaciones de verbo y código son coherentes. La coherencia del catálogo es la base de la previsibilidad de la API.
+Un catálogo de recursos permite contrastar las operaciones que anuncia la API con las que realmente admite. Como instrumento de **diseño**, puede describir el nombre del recurso, su URI, los métodos HTTP y las respuestas de éxito o error. Es importante distinguirlo de un validador ejecutable: escribir una tabla no crea ningún endpoint ni garantiza que las declaraciones coincidan con el servidor.
 
-Catálogo de recursos:  
-  
-Recurso      | URI base                  | Verbos permitidos  
--------------|---------------------------|------------------  
-Orden        | /api/v1/ordenes           | GET, POST  
-Orden        | /api/v1/ordenes/{id}      | GET, PUT, PATCH, DELETE  
-LineaOrden   | /api/v1/ordenes/{id}/lineas | GET, POST  
-Material     | /api/v1/materiales        | GET, POST
+En AceriaApp 2.2 el catálogo que se debe comprobar es el siguiente:
 
-- **Línea 1:** Recurso | URI base | Verbos permitidos → cabecera de la tabla.
-- **Línea 2:** Orden | /api/v1/ordenes | GET, POST → colección de órdenes.
-- **Línea 3:** Orden | /api/v1/ordenes/{id} | GET, PUT, PATCH, DELETE → orden concreta.
-- **Línea 4:** LineaOrden | /api/v1/ordenes/{id}/lineas | GET, POST → colección de líneas.
-- **Línea 5:** Material | /api/v1/materiales | GET, POST → colección de materiales.
+| Operación | Ruta real | Resultado de éxito | Respuestas alternativas relevantes |
+|:---|:---|:---|:---|
+| Consultar órdenes | `GET /api/v1/ordenes` | 200 | — |
+| Consultar una orden | `GET /api/v1/ordenes/{id:guid}` | 200 | 404 |
+| Crear una orden | `POST /api/v1/ordenes` | 201 y `Location` | 400, 422 |
+| Sustituir campos editables | `PUT /api/v1/ordenes/{id:guid}` | 204 | 400, 404, 409, 422 |
+| Cambiar la cantidad | `PATCH /api/v1/ordenes/{id:guid}/cantidad` | 200 | 400, 404, 409, 422 |
+| Eliminar una orden pendiente | `DELETE /api/v1/ordenes/{id:guid}` | 204 | 404, 409 |
+| Finalizar una orden | `POST /api/v1/ordenes/{id:guid}/finalizar` | 200 | 404, 409 |
 
-La validación automática del catálogo comprueba tres cosas: que los verbos permitidos sean coherentes con la URI, que los códigos de respuesta sean coherentes con los verbos y que las URIs sigan las reglas de diseño. La comprobación se realiza con una clase de validación que recorre el catálogo y devuelve la lista de incoherencias. La validación automática evita que un endpoint con un verbo incorrecto o un código de respuesta inadecuado llegue a producción. La validación se ejecuta en los tests y en el pipeline de compilación.
+La tabla reúne los códigos previstos por los manejadores para los casos didácticos, no todos los errores que podría generar la infraestructura HTTP o una base de datos. Por ejemplo, para comprobar el 409 hay que crear y finalizar una orden antes de solicitar su modificación; enviar una ruta inventada solo comprobaría un 404. Para comprobar la persistencia de un POST no basta con observar el 201: debe seguirse `Location` con un GET.
+
+**Alcance del proyecto:** la etapa 2.2 no contiene un archivo de catálogo generado ni una clase `ValidadorCatalogoRecursos`. La validación efectiva de las combinaciones se obtiene aquí contrastando la tabla con `Program.cs`, las peticiones `AceriaApp.http` y los tests HTTP de lectura y escritura. Las rutas hipotéticas de materiales y líneas de una orden se reservarán para ejercicios de diseño: no deben presentarse como endpoints ya operativos.
 
 
 ---
 
 ### Bloque 10 — Aplicación al proyecto del curso
 
-El punto 2.2 materializa la semántica HTTP en los endpoints de órdenes: POST crea y devuelve 201 con Location, PUT modifica campos editables y responde 204, PATCH de cantidad responde 200 con DTO y DELETE elimina órdenes Pendientes con 204. La transición finalizar bloquea después ciertas escrituras mediante 409. Hay validaciones provisionales que responden 400 con un objeto simple y otras ramas que utilizan Results.Problem para 409 o 422: **no todos los errores de 2.2 comparten el mismo cuerpo Problem Details**. El proyecto no incorpora un catálogo validador de URIs separado; el contrato observable se comprueba mediante rutas, código y tests de integración HTTP. En las prácticas 2.2.1–2.2.24 el alumno reproduce las operaciones y verifica qué cambió en persistencia.
+La etapa 2.2 convierte la semántica HTTP en operaciones ejecutables y persistentes sobre órdenes. `POST` crea y devuelve 201 con `Location`; `PUT` sustituye los campos editables y responde 204; `PATCH` modifica la cantidad y devuelve 200 con DTO; `DELETE` elimina una orden pendiente y devuelve 204. El endpoint `POST /finalizar` cambia el estado, y las escrituras posteriores sobre una orden finalizada reciben 409. Una cantidad superior a la capacidad admitida se rechaza con 422.
 
-Aplicación al proyecto del curso:  
-  
-- **Recursos identificados** → Orden, LineaOrden, Material, Cliente.
-- **Verbos por recurso** → GET, POST, PUT, PATCH, DELETE.
-- **Códigos por verbo** → 200, 201, 204, 400, 404, 409, 422, 500.
-- **Formato de error** → problem details.
-- **Catálogo documentado** → docs/catalogo-recursos.md.
-- **Validación automática** → clase ValidadorCatalogoRecursos.
+La actividad no consiste en implementar una tabla de verbos: consiste en **construir cada ruta, ejecutar una petición, verificar la persistencia y contrastar el resultado con el contrato**. Las reglas de validación de entrada de esta etapa son provisionales. El 400 puede tener un cuerpo JSON simple, mientras el 409 y el 422 utilizan `Results.Problem`; el alumno comprobará esa diferencia antes de incorporar los filtros FluentValidation de 2.3.
 
-- **Línea 1:** Recursos identificados → lista de recursos del dominio.
-- **Línea 2:** Verbos por recurso → combinaciones verbo-URI.
-- **Línea 3:** Códigos por verbo → relación sistemática verbo-código.
-- **Línea 4:** Formato de error → problem details.
-- **Línea 5:** Catálogo documentado → documento de catálogo.
-- **Línea 6:** Validación automática → clase de validación.
+| Secuencia de observación | Resultado que demuestra el contrato |
+|:---|:---|
+| POST correcto → leer `Location` → GET | La orden existe y conserva los valores guardados |
+| PUT correcto → GET | Los campos editables se sustituyen, respuesta 204 |
+| PATCH correcto → GET | Solo cambia la cantidad, respuesta 200 del PATCH |
+| Finalizar → intentar PUT/PATCH/DELETE | La orden permanece finalizada y el servicio devuelve 409 |
+| DELETE de una orden pendiente → GET | La eliminación responde 204 y la consulta posterior 404 |
+| Repetir PUT o DELETE | Se razona la idempotencia por efecto final, no por igualdad de códigos HTTP |
 
-La aplicación de estos conceptos prepara el proyecto para el punto 2.3, donde se estudiará la validación de peticiones con FluentValidation. La validación de peticiones se apoya en los recursos y en los códigos de respuesta definidos en el punto 2.2. El punto 2.3 usará los recursos del catálogo para validar las peticiones de creación y de modificación. El punto 2.2 establece la base que se aplicará en los dos puntos siguientes del módulo 2.
+Este conjunto de comportamientos constituye la base funcional que usará el punto 2.3: los validadores nuevos deberán impedir entradas incorrectas **sin alterar** las operaciones de lectura ni las reglas de estado ya demostradas.
 
 
 ---
@@ -2327,7 +2315,7 @@ app.UseSwaggerUI(options =>
 - **Línea 12:** options.SwaggerEndpoint("/swagger/v1/swagger.json", "AceriaApp.Monolito.Api v1"); → registra el endpoint del documento.
 - **Línea 13:** }); → cierra el bloque.
 
-El versionado de la documentación tiene dos consecuencias prácticas. La primera es que el consumidor puede consultar la versión que usa. La segunda es que la documentación de versiones antiguas sigue disponible mientras el contrato antiguo siga activo. La combinación de ambas permite la evolución sin romper a los consumidores. El curso usa el versionado en la URL y en la documentación de forma coherente.
+En un sistema que soporte simultáneamente varias versiones, mantener documentación específica para cada contrato ayuda a evitar cambios incompatibles. **Esta etapa no demuestra coexistencia ni conservación de versiones anteriores**: solo publica `v1` y solo configura un documento Swagger. El segmento `/api/v1` es una convención explícita de ruta; la cadena `Version = "v1"` es metadato del documento. El alumno debe ser capaz de identificar ambos sin confundirlos con un mecanismo automático de versionado.
 
 ---
 
@@ -2495,7 +2483,7 @@ La etapa 2.4 configura Swashbuckle y Swagger UI para exponer **en Development** 
 ```text
 Aplicación al proyecto del curso:
 
-Metadatos        → WithName, WithSummary, WithDescription, WithTags.
+Metadatos        → WithName, WithSummary, WithTags, Produces.
 Esquemas         → derivados de los DTOs.
 Ejemplos         → añadidos en los esquemas de petición.
 Versionado       → v1 en URL y en documentación.
@@ -2660,7 +2648,7 @@ Un itinerario de inspección fiable es:
 - Minimal API permite añadir metadatos con WithName, WithSummary, WithDescription y WithTags.
 - Los esquemas de datos se derivan de los DTOs y se referencian con $ref.
 - Los ejemplos en los esquemas facilitan la integración del consumidor.
-- El versionado de la documentación coincide con el versionado del contrato en la URL.
+- En el proyecto se declara un único documento OpenAPI `v1` y se utilizan rutas con el segmento literal `/api/v1`; esto no implica implementar múltiples versiones.
 - Los errores se documentan con ProducesProblem y ProducesValidationProblem.
 
 ---
