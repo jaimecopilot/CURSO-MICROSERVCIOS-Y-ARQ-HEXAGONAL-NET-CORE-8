@@ -715,6 +715,8 @@ La prueba debe rechazar una implementación que devuelva todas las filas.
 
 **Verificación concreta.** La lista sigue devolviendo 200 y el detalle inexistente 404.
 
+**Comprobación adicional guiada.** Abre la etapa 2.1 que ya funcionaba y ejecuta las tres pruebas GET antes de modificarla. Duplica ese estado de referencia para iniciar 2.2. Compara luego Program.cs en ambas carpetas: las dos rutas de lectura deben permanecer disponibles mientras se añaden las operaciones de escritura. Si un GET deja de funcionar después de añadir POST, el cambio se considera una regresión.
+
 **Si algo falla.** Si el JSON puede cambiar el ID o Estado, el contrato de entrada está exponiendo datos internos; utiliza CrearOrdenRequest.
 
 ### PASO 2.2.2 — Diseñar la tabla verbo, URI, petición y respuesta
@@ -729,6 +731,8 @@ La prueba debe rechazar una implementación que devuelva todas las filas.
 
 **Verificación concreta.** La tabla coincide con las rutas que programarás, sin acciones Git.
 
+**Comprobación adicional guiada.** Dibuja una tabla con recurso, método, ruta, cuerpo de entrada y respuesta: POST a colección para crear; PUT y DELETE al Id; PATCH de cantidad al subrecurso /cantidad; POST al Id/finalizar para cambiar el estado. Indica con qué URI se verifica cada cambio mediante GET. Asegúrate de separar claramente 201 con Location, 204 sin cuerpo y 200 con DTO.
+
 **Si algo falla.** Si el JSON puede cambiar el ID o Estado, el contrato de entrada está exponiendo datos internos; utiliza CrearOrdenRequest.
 
 ### PASO 2.2.3 — Separar contrato de entrada y DTO de salida
@@ -742,6 +746,8 @@ La prueba debe rechazar una implementación que devuelva todas las filas.
 **Por qué funciona así.** El diseño de las rutas y los contratos evita recibir propiedades de servidor desde JSON. El resultado público se devuelve mediante OrdenDto, no directamente desde la entidad.
 
 **Verificación concreta.** Id, Estado y FechaCreacion quedan fuera del contrato de creación.
+
+**Comprobación adicional guiada.** Compara OrdenDto con CrearOrdenRequest y ActualizarCantidadRequest. El DTO de salida contiene Id, Estado y FechaCreacion, mientras que el request de creación solo contiene Cliente, Material y Cantidad. Señala quién decide los campos ausentes al crear el recurso. Este ejercicio previene que se acepte directamente una entidad EF Core enviada desde el exterior.
 
 **Si algo falla.** Si el JSON puede cambiar el ID o Estado, el contrato de entrada está exponiendo datos internos; utiliza CrearOrdenRequest.
 
@@ -765,6 +771,8 @@ public sealed record ActualizarCantidadRequest(int Cantidad);
 **Por qué funciona así.** El diseño de las rutas y los contratos evita recibir propiedades de servidor desde JSON. El resultado público se devuelve mediante OrdenDto, no directamente desde la entidad.
 
 **Verificación concreta.** Los dos records compilan y se distinguen del OrdenDto de salida.
+
+**Comprobación adicional guiada.** Crea Contratos/ContratosOrden.cs y declara los dos records, respetando los tipos string e int. Compila antes de modificar Program.cs. En el depurador, un CrearOrdenRequest debe mostrar exactamente tres componentes, no un Guid creado por el cliente. ActualizarCantidadRequest tiene una sola propiedad: no puede cambiar Material mediante el PATCH especializado de esta API.
 
 **Si algo falla.** Si el JSON puede cambiar el ID o Estado, el contrato de entrada está exponiendo datos internos; utiliza CrearOrdenRequest.
 
@@ -801,6 +809,8 @@ app.MapPost("/api/v1/ordenes",async (CrearOrdenRequest request,AceriaDbContext d
 
 **Verificación concreta.** La URL acepta POST con Content-Type application/json.
 
+**Comprobación adicional guiada.** Registra MapPost sobre /api/v1/ordenes con CrearOrdenRequest y AceriaDbContext. Reconoce que el request llega del cuerpo JSON y el contexto se resuelve desde DI. Comprueba que el endpoint está antes de app.Run y que el nombre CrearOrden no reemplaza el nombre ObtenerOrdenPorId del GET. Si falla el enlace del request, revisa Content-Type application/json y la forma del cuerpo.
+
 **Si algo falla.** Si el POST no persiste, verifica SaveChangesAsync; si Location falta, revisa CreatedAtRoute y el nombre de GET.
 
 ### PASO 2.2.6 — Persistir la orden con Add y SaveChangesAsync
@@ -814,6 +824,8 @@ app.MapPost("/api/v1/ordenes",async (CrearOrdenRequest request,AceriaDbContext d
 **Por qué funciona así.** El POST crea un recurso y debe confirmar la inserción mediante SaveChangesAsync. CreatedAtRoute devuelve 201 y un enlace Location utilizable mediante GET.
 
 **Verificación concreta.** Una nueva fila queda persistida en LocalDB.
+
+**Comprobación adicional guiada.** Crea una instancia Orden a partir de Cliente, Material y Cantidad, utiliza db.Ordenes.Add y llama a await db.SaveChangesAsync. Coloca un breakpoint antes y después de guardar. Explica por qué Add registra el cambio en el contexto, mientras que SaveChangesAsync efectúa la persistencia. No asignes el Estado desde el request: la orden comienza Pendiente según el modelo.
 
 **Si algo falla.** Si el POST no persiste, verifica SaveChangesAsync; si Location falta, revisa CreatedAtRoute y el nombre de GET.
 
@@ -867,6 +879,8 @@ app.MapPost("/api/v1/ordenes",async (CrearOrdenRequest request,AceriaDbContext d
 
 **Verificación concreta.** GET muestra los mismos valores guardados por POST.
 
+**Comprobación adicional guiada.** Después de POST, toma literalmente la cabecera Location devuelta por el servidor y ejecuta GET sin fabricar manualmente un Guid. Compara el Id del recurso consultado con el Id devuelto al crearlo, y verifica Cliente, Material, Cantidad y Estado Pendiente. Este encadenamiento detecta errores de persistencia que un simple Assert del código 201 no descubriría.
+
 **Si algo falla.** Si el POST no persiste, verifica SaveChangesAsync; si Location falta, revisa CreatedAtRoute y el nombre de GET.
 
 ### PASO 2.2.9 — Rechazar provisionalmente peticiones sin datos
@@ -881,6 +895,8 @@ app.MapPost("/api/v1/ordenes",async (CrearOrdenRequest request,AceriaDbContext d
 
 **Verificación concreta.** La petición inválida produce 400 y no crea una orden.
 
+**Comprobación adicional guiada.** Envía un POST con Cliente vacío, otro con Material vacío y uno con Cantidad cero. En la etapa 2.2 los controles son provisionales y se expresan con Results.BadRequest y un objeto de error simple. Anota por qué esas respuestas todavía no tienen necesariamente el formato ValidationProblem que se introducirá con FluentValidation en 2.3.
+
 **Si algo falla.** Si un 501 da 400, la condición provisional está mezclada con la política de capacidad; distingue ambos casos.
 
 ### PASO 2.2.10 — Comprobar la política del taller y respuesta 422
@@ -894,6 +910,8 @@ app.MapPost("/api/v1/ordenes",async (CrearOrdenRequest request,AceriaDbContext d
 **Por qué funciona así.** Un cuerpo incorrecto es distinto de una regla del negocio. En 2.2 el 400 es provisional; 501 unidades reciben 422 por la capacidad limitada del taller.
 
 **Verificación concreta.** El JSON de capacidad 501 produce 422; se distingue de 400.
+
+**Comprobación adicional guiada.** Envía un POST con Cantidad 501 y observa el 422 producido por la política del taller. Repite con Cantidad 500 y comprueba que esa regla no lo rechaza. No confundas este límite de negocio con el rango genérico 1–10000 que llegará en 2.3. Si el valor 501 llega a persistirse, verifica que el control aparezca antes de db.Ordenes.Add.
 
 **Si algo falla.** Si un 501 da 400, la condición provisional está mezclada con la política de capacidad; distingue ambos casos.
 
@@ -933,6 +951,8 @@ app.MapPut("/api/v1/ordenes/{id:guid}",async (Guid id,CrearOrdenRequest request,
 
 **Verificación concreta.** PUT puede buscar un recurso por identificador.
 
+**Comprobación adicional guiada.** Declara MapPut sobre /api/v1/ordenes/{id:guid}, recibe el Guid de la ruta y el request del cuerpo. Usa db.Ordenes.FindAsync para localizar la entidad existente. Separa las ramas 404 si falta y 409 si está Finalizada antes de editar. Un PUT sobre una URI arbitraria que no exista no debe convertirse en una creación silenciosa en este ejercicio.
+
 **Si algo falla.** Si el PUT no actualiza, revisa FindAsync(id) y SaveChangesAsync. El GUID no debe cambiar.
 
 ### PASO 2.2.12 — Modificar Cliente, Material y Cantidad con PUT
@@ -946,6 +966,8 @@ app.MapPut("/api/v1/ordenes/{id:guid}",async (Guid id,CrearOrdenRequest request,
 **Por qué funciona así.** PUT sustituye los campos editables de una orden existente. Si el Guid no identifica un recurso debe devolver 404, no crear silenciosamente otro.
 
 **Verificación concreta.** PUT válido responde 204 y mantiene el mismo Guid.
+
+**Comprobación adicional guiada.** Asigna al objeto obtenido de EF Core los tres campos editables: Cliente, Material y Cantidad. Mantén Id, Estado y FechaCreacion. Ejecuta la operación con valores distintos a los originales y prepara un GET para comprobarlos. Si accidentalmente se crea una nueva Orden en lugar de modificar la recuperada, estarás cambiando la semántica del PUT esperado.
 
 **Si algo falla.** Si el PUT no actualiza, revisa FindAsync(id) y SaveChangesAsync. El GUID no debe cambiar.
 
@@ -997,6 +1019,8 @@ no está cumpliendo el contrato concreto de este ejemplo.
 
 **Verificación concreta.** La consulta evidencia que el cambio se persistió.
 
+**Comprobación adicional guiada.** Comprueba que PUT devuelve 204 y no exige cuerpo de respuesta. Ejecuta después GET de ese mismo Id y observa los valores actualizados. Diferencia las dos comprobaciones: el estado 204 prueba cómo se respondió, mientras que GET prueba qué estado quedó persistido. Si recibes 200 tras PUT, revisa que no hayas copiado el retorno de PATCH.
+
 **Si algo falla.** Si el PUT no actualiza, revisa FindAsync(id) y SaveChangesAsync. El GUID no debe cambiar.
 
 ### PASO 2.2.14 — Programar MapPatch para cambiar solo Cantidad
@@ -1034,6 +1058,8 @@ app.MapPatch("/api/v1/ordenes/{id:guid}/cantidad",
 
 **Verificación concreta.** PATCH admite un cuerpo que contiene solo Cantidad.
 
+**Comprobación adicional guiada.** Registra MapPatch sobre /api/v1/ordenes/{id:guid}/cantidad, no sobre la colección completa. El cuerpo es ActualizarCantidadRequest y solo contiene Cantidad. Recupera la orden con FindAsync y prepara las ramas 404, 409 y 422 existentes. No utilices JsonPatchDocument: este ejemplo implementa un PATCH especializado, no JSON Patch RFC 6902.
+
 **Si algo falla.** Si PATCH cambia otros campos, no reasignes Cliente ni Material desde ActualizarCantidadRequest.
 
 ### PASO 2.2.15 — Comprobar que PATCH no modifica los demás campos
@@ -1047,6 +1073,8 @@ app.MapPatch("/api/v1/ordenes/{id:guid}/cantidad",
 **Por qué funciona así.** PATCH realiza un cambio parcial de Cantidad y conserva los demás datos. Su resultado debe verificarse con una lectura posterior.
 
 **Verificación concreta.** Se obtiene 200 y no cambian datos no incluidos en el parche.
+
+**Comprobación adicional guiada.** Haz GET y anota Cliente y Material; después ejecuta PATCH para cambiar solo Cantidad. Vuelve a hacer GET y compara campo a campo. El resultado normal de PATCH es 200 con DTO, que también permite inspeccionar la nueva cantidad directamente. Si se modifica Cliente por error, revisa qué propiedades toca el delegado.
 
 **Si algo falla.** Si PATCH cambia otros campos, no reasignes Cliente ni Material desde ActualizarCantidadRequest.
 
@@ -1080,6 +1108,8 @@ app.MapDelete("/api/v1/ordenes/{id:guid}",async (Guid id,AceriaDbContext db)=>
 
 **Verificación concreta.** DELETE existente devuelve 204.
 
+**Comprobación adicional guiada.** Registra MapDelete con Guid, consulta la entidad y verifica si está Finalizada. Solo si sigue pendiente llama a Remove y SaveChangesAsync. El retorno exitoso es NoContent 204. No permitas eliminar una orden finalizada por saltarte la comprobación de Estado; la regla de conflicto forma parte del mismo contrato que posteriormente probará el cliente.
+
 **Si algo falla.** Si DELETE devuelve éxito pero GET encuentra la orden, revisa Remove y SaveChangesAsync.
 
 ### PASO 2.2.17 — Verificar 204 seguido de GET 404
@@ -1093,6 +1123,8 @@ app.MapDelete("/api/v1/ordenes/{id:guid}",async (Guid id,AceriaDbContext db)=>
 **Por qué funciona así.** DELETE quita un recurso persistido. La consulta posterior puede devolver 404; esa diferencia no impide que la eliminación sea idempotente.
 
 **Verificación concreta.** El GET devuelve 404 y el recurso sigue ausente.
+
+**Comprobación adicional guiada.** Después de DELETE exitoso, envía GET al mismo Id y confirma 404. Vuelve a consultar GET /api/v1/ordenes para comprobar que la orden desapareció de la colección. Un DELETE 204 por sí solo no demuestra la ausencia persistente. Si GET sigue encontrando la orden, revisa la entidad extraída del DbContext y la llamada a SaveChangesAsync.
 
 **Si algo falla.** Si DELETE devuelve éxito pero GET encuentra la orden, revisa Remove y SaveChangesAsync.
 
@@ -1129,6 +1161,8 @@ public partial class Program {} // permite WebApplicationFactory en tests
 
 **Verificación concreta.** La transición devuelve 200 y el DTO indica Finalizada.
 
+**Comprobación adicional guiada.** Añade MapPost a /api/v1/ordenes/{id:guid}/finalizar como transición explícita. Desde una orden Pendiente, asigna Estado Finalizada, guarda y devuelve 200 con OrdenDto. Ejecuta dos veces la misma transición: la segunda debe devolver 409 porque la orden ya estaba Finalizada. Comprueba que este POST actúa sobre el estado de la orden existente, no crea otra fila.
+
 **Si algo falla.** Si una orden finalizada cambia de estado o desaparece, comprueba la condición Estado antes de escribir.
 
 ### PASO 2.2.19 — Bloquear PUT y PATCH para órdenes finalizadas
@@ -1143,6 +1177,8 @@ public partial class Program {} // permite WebApplicationFactory en tests
 
 **Verificación concreta.** Ninguna modificación se guarda sobre una orden finalizada.
 
+**Comprobación adicional guiada.** Finaliza una orden de prueba y trata de modificarla con PUT y PATCH. Ambos deben producir un conflicto 409. En el depurador observa que la comprobación de Estado sucede antes de modificar Cliente, Material o Cantidad. Consulta luego la orden por GET para verificar que el rechazo no cambió los valores persistidos.
+
 **Si algo falla.** Si una orden finalizada cambia de estado o desaparece, comprueba la condición Estado antes de escribir.
 
 ### PASO 2.2.20 — Bloquear DELETE y devolver conflicto 409
@@ -1156,6 +1192,8 @@ public partial class Program {} // permite WebApplicationFactory en tests
 **Por qué funciona así.** La transición Finalizada cambia el estado de negocio. PUT, PATCH y DELETE deben respetarlo y producir 409 si se intenta una operación incompatible.
 
 **Verificación concreta.** Un recurso finalizado permanece en la base tras DELETE fallido.
+
+**Comprobación adicional guiada.** Con una orden ya Finalizada, ejecuta DELETE. La respuesta esperada es 409; el recurso debe seguir existiendo y ser consultable con GET. El contraste entre respuesta HTTP y persistencia evita el error de devolver 409 después de haber borrado. Si la orden desaparece, mueve el control de Estado antes de Remove y SaveChangesAsync.
 
 **Si algo falla.** Si una orden finalizada cambia de estado o desaparece, comprueba la condición Estado antes de escribir.
 
@@ -1235,6 +1273,8 @@ public class EscrituraTests
 
 **Verificación concreta.** El test confirma creación y posterior consulta por HTTP.
 
+**Comprobación adicional guiada.** En EscrituraTests crea una petición mediante PostAsJsonAsync y comprueba HttpStatusCode.Created. Examina created.Headers.Location y utiliza esa dirección en GetAsync. No reemplaces esta prueba de integración por una llamada directa al método que crea la entidad: lo importante es comprobar ruta, serialización, respuesta y Location funcionando conjuntamente.
+
 **Si algo falla.** Si una prueba de escritura pasa sin volver a consultar la orden, no ha demostrado persistencia; añade el GET posterior.
 
 ### PASO 2.2.22 — Escribir pruebas HTTP PUT, PATCH y DELETE
@@ -1313,6 +1353,8 @@ public class EscrituraTests
 
 **Verificación concreta.** Se comprueban 204, 200, 204 y después 404.
 
+**Comprobación adicional guiada.** Construye una prueba que cree una orden, ejecute PUT, ejecute PATCH, lea el DTO actualizado, elimine y finalmente compruebe GET 404. Mantén el mismo Id durante todo el caso y utiliza una factoría aislada para no depender de otras pruebas. Si un paso falla, inspecciona la respuesta de ese paso antes de evaluar el resto del encadenamiento.
+
 **Si algo falla.** Si una prueba de escritura pasa sin volver a consultar la orden, no ha demostrado persistencia; añade el GET posterior.
 
 ### PASO 2.2.23 — Probar automáticamente 422 y 409
@@ -1326,6 +1368,8 @@ public class EscrituraTests
 **Por qué funciona así.** Los tests deben confirmar los efectos de POST, PUT, PATCH, DELETE, la capacidad del taller y el conflicto de estado a través de peticiones HTTP reales.
 
 **Verificación concreta.** La batería comprueba las respuestas 422 y 409. Ejecuta además las pruebas xUnit del proyecto de esta etapa para confirmar que el ejercicio no ha roto los endpoints anteriores.
+
+**Comprobación adicional guiada.** Ejecuta los tests ReglaCapacidad_Es422 y OrdenFinalizada_NoSeEdita409. El segundo debe crear una orden y finalizarla antes de pedir su modificación; sin esa preparación no estás reproduciendo el conflicto. Confirma después que las pruebas GET de 2.1 siguen pasando. La nueva funcionalidad no justifica romper el contrato de lectura anterior.
 
 **Si algo falla.** Si una prueba de escritura pasa sin volver a consultar la orden, no ha demostrado persistencia; añade el GET posterior.
 
