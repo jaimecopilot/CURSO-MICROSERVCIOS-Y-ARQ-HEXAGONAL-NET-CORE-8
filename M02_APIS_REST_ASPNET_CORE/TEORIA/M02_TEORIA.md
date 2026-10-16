@@ -2162,6 +2162,142 @@ La aplicación de la documentación cierra el módulo 2 y prepara el terreno par
 
 ---
 
+
+#### Estudio de caso 2.4.A — Swagger UI no sustituye al contrato OpenAPI
+
+En la cuarta etapa la API ya puede leer, crear, modificar, finalizar y borrar órdenes pendientes. La documentación debe describir **ese sistema real**, no una muestra imaginaria. El estándar OpenAPI define un documento estructurado y legible por herramientas; Swagger UI es una interfaz web que interpreta el documento y facilita explorar y enviar peticiones. Que aparezca una página atractiva en el navegador no demuestra por sí solo que todos los endpoints y códigos estén bien documentados.
+
+En la solución **2.4-documentacion-openapi**, el archivo **Documentacion/DocumentacionExtensions.cs** declara un método de extensión que registra los servicios:
+
+~~~csharp
+public static IServiceCollection AddDocumentacion(
+    this IServiceCollection services)
+{
+    services.AddEndpointsApiExplorer();
+    services.AddSwaggerGen(options=>
+    {
+        options.SwaggerDoc("v1",new OpenApiInfo{
+            Title="AceriaApp — Órdenes de producción",
+            Version="v1",
+            Description="API REST educativa creada con ASP.NET Core 8.",
+            Contact=new OpenApiContact{
+                Name="Equipo AceriaApp",Email="equipo@acerialocal"
+            }
+        });
+        options.SchemaFilter<EjemploCrearOrden>();
+    });
+    return services;
+}
+~~~
+
+**AddEndpointsApiExplorer** incorpora la información de los endpoints Minimal API al mecanismo de descubrimiento. **AddSwaggerGen** configura la generación del documento. **SwaggerDoc** crea el documento denominado v1 y su bloque info. **SchemaFilter** permite enriquecer el esquema del contrato de entrada con un ejemplo. Nada de ello implica generar una segunda base de datos, modificar la lógica de pedidos o introducir un controlador MVC.
+
+En **Program.cs**, antes de Build, se utiliza **builder.Services.AddDocumentacion()**. Al final, antes de Run, se invoca **app.UseDocumentacion()**. El primer método registra capacidades; el segundo instala el comportamiento de exposición. Esta diferencia entre **registro de servicios** y **configuración de la canalización** es análoga a la distinción hecha en 2.3 entre registrar validadores y ejecutar filtros.
+
+~~~csharp
+public static WebApplication UseDocumentacion(
+    this WebApplication app)
+{
+    if(app.Environment.IsDevelopment())
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI(o=>o.SwaggerEndpoint(
+            "/swagger/v1/swagger.json","AceriaApp v1"));
+    }
+    return app;
+}
+~~~
+
+La condición Development tiene una función verificable: en producción este código no instala Swagger ni la UI. El test **Produccion_NoExponeSwagger** crea una aplicación de prueba con Environment Production y solicita **/swagger/v1/swagger.json**, esperando 404. No debe deducirse que esa sola condición convierte la API en segura. El control de acceso, la autenticación, la protección de secretos y la configuración de una aplicación productiva exigen otras medidas que no se implementan aquí.
+
+**Experimento:** ejecuta la etapa 2.4 en Development, descarga **/swagger/v1/swagger.json** y localiza info.version. A continuación cambia el entorno del host de pruebas a Production; no basta con ocultar la página /swagger, también debe dejar de servirse el JSON. La diferencia se enseña en 2.4.4–2.4.10 y se comprueba en 2.4.23.
+
+#### Estudio de caso 2.4.B — Qué puede y qué no puede descubrirse automáticamente
+
+OpenAPI suele contener secciones **info**, **paths** y **components.schemas**. Info describe la propia API; paths agrupa rutas y operaciones; schemas presenta las formas de los datos que se intercambian. Los tipos de C# son la materia prima, pero una documentación clara exige metadatos intencionados por el autor.
+
+En **Program.cs** de 2.4, un GET de colección se anota del modo siguiente:
+
+~~~csharp
+.WithName("ListarOrdenes")
+.WithTags("Ordenes")
+.WithSummary("Lista las órdenes de producción")
+.Produces<IEnumerable<OrdenDto>>(200)
+~~~
+
+**WithName** nombra la operación dentro del servidor y participa en la generación de enlaces. **WithTags** agrupa visualmente endpoints de órdenes. **WithSummary** ofrece una frase breve para una persona que consulta Swagger UI. **Produces** declara el tipo y el código de la respuesta de éxito. Es importante notar que ese último metadato **no crea el comportamiento**: el resultado 200 lo devuelve el delegado MapGet con Results.Ok.
+
+El GET individual incorpora **Produces(404)** porque su implementación tiene una rama que responde NotFound. Para POST se anuncian **201**, el error de validación **400** y el problema de capacidad **422**. Para PUT aparecen éxito 204, ausencia 404, conflicto 409 y validación 400. Los detalles del contrato deben contrastarse con las ramas del manejador, no extraerse solo de una lista de verbos HTTP.
+
+Una tabla mental ayuda a leer un documento OpenAPI sin confundir sus secciones:
+
+| Elemento | Pregunta que responde | Dónde se origina |
+|:---|:---|:---|
+| info.version | ¿Cómo se identifica esta revisión del contrato? | SwaggerDoc |
+| paths | ¿Qué URIs y operaciones expone la API? | MapGet, MapPost y demás mapas |
+| summary | ¿Cómo se explica una operación en una frase? | WithSummary |
+| responses | ¿Qué códigos y representaciones se declaran? | Produces y metadatos relacionados |
+| components.schemas | ¿Qué forma tienen los DTO y requests? | Tipos y generador de esquemas |
+| example | ¿Qué datos orientativos se muestran? | EjemploCrearOrden |
+
+**Diferencia entre descubrir y verificar.** Que Swagger encuentre un endpoint no demuestra que el endpoint funcione. Que encuentre un esquema no demuestra que todas las reglas de FluentValidation estén reflejadas en él. Y que aparezca un código 409 documentado no significa que exista una prueba de ese conflicto. El contrato publicado y el comportamiento ejecutado son dos objetos de comprobación complementarios.
+
+Esta etapa no usa la API OpenAPI integrada de versiones posteriores de .NET para sustituir su solución original: utiliza **Swashbuckle.AspNetCore** y sus extensiones tal como figuran en los archivos .csproj y DocumentacionExtensions.cs de .NET 8. Tampoco implementa un sistema de negociación de versiones v1/v2. El nombre v1 coincide con el documento de Swagger y con el segmento literal /api/v1 en las rutas.
+
+#### Estudio de caso 2.4.C — Ejemplo de petición, esquema y respuesta real
+
+El registro de SchemaFilter permite añadir un ejemplo para **CrearOrdenRequest**. La clase concreta solo actúa cuando el tipo que se está describiendo coincide con ese contrato:
+
+~~~csharp
+public sealed class EjemploCrearOrden : ISchemaFilter
+{
+    public void Apply(OpenApiSchema schema,
+        SchemaFilterContext context)
+    {
+        if(context.Type!=typeof(CrearOrdenRequest)) return;
+        schema.Example=new OpenApiObject{
+            ["cliente"]=new OpenApiString("ACX-001"),
+            ["material"]=new OpenApiString("CHAPA-3MM"),
+            ["cantidad"]=new OpenApiInteger(10)
+        };
+    }
+}
+~~~
+
+La comparación de tipos impide aplicar el ejemplo a todas las respuestas. **OpenApiString** y **OpenApiInteger** expresan los tipos adecuados para las propiedades. El ejemplo usa nombres JSON camelCase y una cantidad 10 permitida por el servicio. No crea una orden hasta que un cliente envía una petición: el documento OpenAPI describe posibilidades, no materializa registros de negocio.
+
+Desde Swagger UI el alumno puede seleccionar POST /api/v1/ordenes, observar la representación propuesta, pulsar la acción de ejecución y estudiar el resultado. Debe fijarse en **tres evidencias**: el cuerpo de request enviado, el estado 201 con Location y el GET de la ruta individual que confirma la existencia. Así descubre la utilidad de tener esquemas y ejemplos, pero también la importancia de comprobar que el ejemplo sigue siendo válido tras cambios del contrato.
+
+La prueba **OpenApi_IncluyeEjemplo** descarga el JSON de documentación mediante HTTP, localiza **components.schemas**, exige la presencia de **CrearOrdenRequest** y comprueba que aparece **example**. No compara arbitrariamente toda la representación del documento, porque el generador puede reordenar campos o metadatos sin cambiar el comportamiento público.
+
+**Error habitual:** suponer que un ejemplo equivale a una validación obligatoria. El documento puede mostrar Cantidad 10 y, sin embargo, la API sigue recibiendo 501 y 10001. La decisión real entre 422 y 400 se toma según lo aprendido en 2.3. Para que la documentación esté completa deben describirse esos códigos y, si se requiere, enriquecerse los esquemas y descripciones de reglas. El paso 2.4.16–2.4.19 contrasta el ejemplo escrito con la operación de creación real.
+
+#### Estudio de caso 2.4.D — Una prueba de contrato observa el servidor, no su archivo fuente
+
+Cuando una API se publica para otros equipos, una regresión puede consistir simplemente en cambiar una ruta, eliminar un response declarado o renombrar una propiedad del request. La aplicación quizá siga compilando; un consumidor existente, sin embargo, dejaría de funcionar. Las comprobaciones de OpenAPI complementan, sin sustituir, los tests de comportamiento HTTP.
+
+El proyecto de test 2.4 contiene **ContratoOpenApiTests.cs**. El test **OpenApi_ContieneRutasYVersion** hace GET del documento generado, comprueba el estado 200, analiza su JSON, verifica que info.version sea v1 y localiza en paths la ruta **/api/v1/ordenes** con sus operaciones get y post. Es especialmente importante que descargue el JSON servido por **WebApplicationFactory**: no analiza una cadena pegada en un test ni un archivo de ejemplo ajeno al host.
+
+El tercer test, **Produccion_NoExponeSwagger**, utiliza **WithWebHostBuilder** para especificar Production y comprobar el 404. Juntos demuestran dos caras del contrato: que en Development el documento existe con sus elementos mínimos y que en Production no se publica bajo esa ruta.
+
+**Qué queda sin probar automáticamente.** Estos tests concretos no verifican todavía todos los métodos HTTP, todos los códigos de error alternativos ni la compatibilidad entre dos versiones históricas. No debe confundirse un test útil con una auditoría exhaustiva. El desarrollo pedagógico puede enseñar al alumno a revisar manualmente los bloques de paths, así como a construir tests adicionales del documento, sin afirmar que ya existen en el repositorio.
+
+Un itinerario de inspección fiable es:
+
+1. Descargar el documento y comprobar que el servidor responde 200 en Development.
+2. Leer info y reconocer el título y versión.
+3. Buscar paths y comprobar las operaciones documentadas de órdenes.
+4. Abrir la operación POST y comparar sus respuestas declaradas con los retornos reales de Program.cs.
+5. Localizar CrearOrdenRequest entre los esquemas y estudiar el ejemplo JSON.
+6. Repetir una petición real desde la UI y contrastar los resultados.
+7. Cambiar el entorno de prueba a Production y comprobar que la URL del documento responde 404.
+8. Volver a ejecutar los tests de lectura, escritura y validación de etapas anteriores para detectar regresiones ajenas a Swagger.
+
+**Advertencia de alcance:** una API con documentación navegable no tiene por ello autenticación, negociación de caché o soporte completo de observabilidad. La rama de ejemplo enseña un mecanismo acotado y operativo. Es preferible documentar de forma exacta siete rutas existentes que inventar veinte endpoints para obtener una interfaz más vistosa.
+
+**Traza docente:** 2.4.2–2.4.8 → DocumentacionExtensions.cs y Program.cs → Swagger JSON; 2.4.9–2.4.15 → metadatos y rutas existentes → OpenApi_ContieneRutasYVersion; 2.4.16–2.4.19 → EjemploCrearOrden → OpenApi_IncluyeEjemplo; 2.4.20–2.4.23 → ContratoOpenApiTests.cs → Produccion_NoExponeSwagger.
+
+
 ### Resumen rápido de la teoría
 
 - OpenAPI es una especificación para describir APIs REST de forma legible por máquinas y personas.
