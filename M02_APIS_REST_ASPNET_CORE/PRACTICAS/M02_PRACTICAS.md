@@ -2094,6 +2094,8 @@ una lectura válida en un fallo de contrato.
 
 **Verificación concreta.** La futura documentación reflejará endpoints ya comprobados.
 
+**Comprobación adicional guiada.** Ejecuta los tests del estado 2.3 y enumera las rutas efectivas de Program.cs: GET colección, GET individual, POST colección, PUT por Id, PATCH de cantidad, DELETE por Id y POST finalizar. Clasifica sus respuestas normales y alternativas. Esta lista, derivada del código y no de un esquema inventado, será la referencia para revisar lo que posteriormente anuncie Swagger.
+
 **Si algo falla.** Si SwaggerGen no se resuelve, revisa la versión de Swashbuckle compatible con .NET 8.
 
 ### PASO 2.4.2 — Instalar Swashbuckle.AspNetCore compatible con .NET 8
@@ -2107,6 +2109,8 @@ una lectura válida en un fallo de contrato.
 **Por qué funciona así.** Swashbuckle descubre la API real desde ASP.NET Core: registrar AddSwaggerGen y definir SwaggerDoc produce un documento estándar a partir de rutas y tipos.
 
 **Verificación concreta.** AddSwaggerGen y UseSwagger están disponibles.
+
+**Comprobación adicional guiada.** Instala Swashbuckle.AspNetCore compatible con .NET 8 y restaura paquetes. Comprueba que el proyecto reconoce AddSwaggerGen, UseSwagger y UseSwaggerUI. No sustituyas automáticamente el mecanismo por bibliotecas de versiones posteriores de .NET: este ejercicio muestra el paquete elegido. Una restauración correcta confirma dependencias, no que el JSON OpenAPI tenga rutas correctas.
 
 **Si algo falla.** Si SwaggerGen no se resuelve, revisa la versión de Swashbuckle compatible con .NET 8.
 
@@ -2173,6 +2177,8 @@ public sealed class EjemploCrearOrden : ISchemaFilter
 
 **Verificación concreta.** La configuración OpenAPI queda separada de Program.cs.
 
+**Comprobación adicional guiada.** Crea Documentacion/DocumentacionExtensions.cs y define una clase estática. Separa AddDocumentacion, que registra servicios, de UseDocumentacion, que instala exposición HTTP. Comprueba los namespaces de Microsoft.OpenApi y de Swashbuckle. No mezcles en ese archivo las reglas de CrearOrdenValidator: la documentación debe describir el contrato sin asumir la responsabilidad de validar peticiones.
+
 **Si algo falla.** Si SwaggerGen no se resuelve, revisa la versión de Swashbuckle compatible con .NET 8.
 
 ### PASO 2.4.4 — Registrar AddEndpointsApiExplorer y AddSwaggerGen
@@ -2238,6 +2244,8 @@ public sealed class EjemploCrearOrden : ISchemaFilter
 
 **Verificación concreta.** Los servicios descubren los endpoints Minimal API.
 
+**Comprobación adicional guiada.** Dentro de AddDocumentacion incorpora services.AddEndpointsApiExplorer y services.AddSwaggerGen. Antes de iniciar el host, localiza qué endpoints Minimal API se han declarado y qué metadatos podrán descubrirse. Si Swagger muestra un documento vacío, comprueba tanto este registro como la existencia real de MapGet y MapPost, antes de añadir rutas manuales al JSON.
+
 **Si algo falla.** Si SwaggerGen no se resuelve, revisa la versión de Swashbuckle compatible con .NET 8.
 
 ### PASO 2.4.5 — Configurar SwaggerDoc con información y versión v1
@@ -2251,6 +2259,8 @@ public sealed class EjemploCrearOrden : ISchemaFilter
 **Por qué funciona así.** Swashbuckle descubre la API real desde ASP.NET Core: registrar AddSwaggerGen y definir SwaggerDoc produce un documento estándar a partir de rutas y tipos.
 
 **Verificación concreta.** La sección info del JSON muestra esos valores.
+
+**Comprobación adicional guiada.** Configura SwaggerDoc para v1, título AceriaApp — Órdenes de producción y descripción educativa. Verifica que en el JSON info.version aparece v1 y que los nombres de documentación no cambian las rutas /api/v1/ordenes. Identifica la diferencia entre el nombre de documento v1 y la cadena literal de versión que aparece en cada URI.
 
 **Si algo falla.** Si SwaggerGen no se resuelve, revisa la versión de Swashbuckle compatible con .NET 8.
 
@@ -2271,6 +2281,8 @@ builder.Services.AddDocumentacion(); // PASO 2.4.3
 
 **Verificación concreta.** Se registra el generador en el contenedor.
 
+**Comprobación adicional guiada.** Invoca builder.Services.AddDocumentacion antes de builder.Build. Compila y confirma que el método de extensión se resuelve mediante el namespace AceriaApp.Api.Documentacion. En este punto aún falta instalar el middleware de Swagger; el registro de servicios y la disponibilidad pública del documento son responsabilidades distintas.
+
 **Si algo falla.** Si /swagger devuelve 404 en Development, comprueba AddDocumentacion y UseDocumentacion y el entorno.
 
 ### PASO 2.4.7 — Configurar UseSwagger y Swagger UI en Development
@@ -2284,6 +2296,8 @@ builder.Services.AddDocumentacion(); // PASO 2.4.3
 **Por qué funciona así.** La publicación de Swagger UI y JSON ocurre después de construir la aplicación y se restringe a Development; la documentación no debe inventarse manualmente.
 
 **Verificación concreta.** Swagger no se publica automáticamente en Production.
+
+**Comprobación adicional guiada.** En UseDocumentacion añade un control IsDevelopment y, dentro de él, app.UseSwagger y app.UseSwaggerUI. Establece SwaggerEndpoint con /swagger/v1/swagger.json. No coloques UseSwagger fuera de esa condición: el test posterior exige que el documento no se publique desde un host Production. Si cambia la URL del JSON, sincroniza la configuración de la UI y las pruebas.
 
 **Si algo falla.** Si /swagger devuelve 404 en Development, comprueba AddDocumentacion y UseDocumentacion y el entorno.
 
@@ -2304,6 +2318,8 @@ app.UseDocumentacion(); // PASO 2.4.4
 
 **Verificación concreta.** La interfaz presenta los endpoints del proyecto.
 
+**Comprobación adicional guiada.** Invoca app.UseDocumentacion antes de app.Run, arranca en Development y abre /swagger. Si la UI carga pero no muestra operaciones, abre directamente el JSON del endpoint configurado y comprueba si la ausencia está en el documento o en la interfaz. La página de Swagger no es una respuesta creada por ninguno de los delegados que persisten órdenes.
+
 **Si algo falla.** Si /swagger devuelve 404 en Development, comprueba AddDocumentacion y UseDocumentacion y el entorno.
 
 ### PASO 2.4.9 — Descargar el JSON real /swagger/v1/swagger.json
@@ -2317,6 +2333,8 @@ app.UseDocumentacion(); // PASO 2.4.4
 **Por qué funciona así.** La publicación de Swagger UI y JSON ocurre después de construir la aplicación y se restringe a Development; la documentación no debe inventarse manualmente.
 
 **Verificación concreta.** La petición devuelve 200 y el documento empieza por openapi.
+
+**Comprobación adicional guiada.** Solicita GET /swagger/v1/swagger.json mediante el navegador o el archivo HTTP y guarda la respuesta JSON real. Revisa que el estado sea 200 en Development. No pegues un documento OpenAPI ficticio en el proyecto como reemplazo de la generación: la finalidad es demostrar que el documento deriva de los endpoints implementados.
 
 **Si algo falla.** Si /swagger devuelve 404 en Development, comprueba AddDocumentacion y UseDocumentacion y el entorno.
 
@@ -2332,6 +2350,8 @@ app.UseDocumentacion(); // PASO 2.4.4
 
 **Verificación concreta.** GET, POST, PUT, PATCH y DELETE figuran donde corresponde.
 
+**Comprobación adicional guiada.** Identifica en el JSON las propiedades info, paths y components.schemas. Busca /api/v1/ordenes en paths y CrearOrdenRequest en los esquemas. Explica cuál describe metadatos de la API, cuál la superficie de rutas y cuál la forma de los mensajes. Si una propiedad no aparece, inspecciona el registro del generador y las anotaciones de los endpoints.
+
 **Si algo falla.** Si /swagger devuelve 404 en Development, comprueba AddDocumentacion y UseDocumentacion y el entorno.
 
 ### PASO 2.4.11 — Aplicar WithName y WithTags a los endpoints
@@ -2345,6 +2365,8 @@ app.UseDocumentacion(); // PASO 2.4.4
 **Por qué funciona así.** Los metadatos de una operación declaran rutas, respuestas y esquemas; son documentación de un comportamiento que ya fue implementado y probado.
 
 **Verificación concreta.** Los nombres se utilizan también en CreatedAtRoute.
+
+**Comprobación adicional guiada.** Asigna nombres distintos mediante WithName y agrupa mediante WithTags("Ordenes"). Comprueba que los nombres lógicos ListarOrdenes, ObtenerOrdenPorId y CrearOrden no sustituyen las URIs públicas. Si escribes por error dos nombres iguales, revisa además las referencias que CreatedAtRoute utiliza para construir Location; la documentación no debe romper la navegación HTTP.
 
 **Si algo falla.** Si falta un código de respuesta, añade Produces/ProducesProblem al endpoint correspondiente sin inventar comportamientos.
 
@@ -2366,6 +2388,8 @@ app.UseDocumentacion(); // PASO 2.4.4
 **Por qué funciona así.** Los metadatos de una operación declaran rutas, respuestas y esquemas; son documentación de un comportamiento que ya fue implementado y probado.
 
 **Verificación concreta.** El documento describe la lectura y la ausencia del recurso.
+
+**Comprobación adicional guiada.** Añade WithSummary y Produces<IEnumerable<OrdenDto>>(200) al GET de colección. Para GET individual anuncia también 404, porque la rama Results.NotFound existe. Abre Swagger JSON y compara el resumen y las responses de ambos GET. Produce metadatos, no comportamiento: quita mentalmente Produces y observa que Results.Ok seguiría devolviendo 200.
 
 **Si algo falla.** Si falta un código de respuesta, añade Produces/ProducesProblem al endpoint correspondiente sin inventar comportamientos.
 
@@ -2417,6 +2441,8 @@ pueden estar registrados y, sin embargo, /swagger devolver 404.
 
 **Verificación concreta.** Swagger enumera creación y error de contrato.
 
+**Comprobación adicional guiada.** Documenta POST con 201, ValidationProblem 400 y Problem 422; conserva CreatedAtRoute dentro del manejador. Descarga el JSON y busca las respuestas de la operación post. Si la documentación anunciase 200 como éxito único, no coincidiría con el comportamiento de creación real. Comprueba después un POST desde el cliente HTTP para verificar que 201 sigue operativo.
+
 **Si algo falla.** Si falta un código de respuesta, añade Produces/ProducesProblem al endpoint correspondiente sin inventar comportamientos.
 
 ### PASO 2.4.14 — Documentar PUT y PATCH con códigos alternativos
@@ -2431,6 +2457,8 @@ pueden estar registrados y, sin embargo, /swagger devolver 404.
 
 **Verificación concreta.** La documentación debe coincidir con los Results usados.
 
+**Comprobación adicional guiada.** Anota en PUT los posibles 204, 404, 400, 409 y 422; en PATCH de cantidad, 200, 404, 400, 409 y 422. Verifica cada estado frente a las ramas de Program.cs. En la etapa 2.4 actualizada se incluyen metadatos explícitos para esas alternativas. No asumas que ProducesProblem agrega automáticamente el código de fallo a los delegados: describe la respuesta, no la ejecuta.
+
 **Si algo falla.** Si falta un código de respuesta, añade Produces/ProducesProblem al endpoint correspondiente sin inventar comportamientos.
 
 ### PASO 2.4.15 — Documentar DELETE y el conflicto 409
@@ -2444,6 +2472,8 @@ pueden estar registrados y, sin embargo, /swagger devolver 404.
 **Por qué funciona así.** Los metadatos de una operación declaran rutas, respuestas y esquemas; son documentación de un comportamiento que ya fue implementado y probado.
 
 **Verificación concreta.** El consumidor puede anticipar una eliminación rechazada.
+
+**Comprobación adicional guiada.** Documenta DELETE con 204, 404 y conflicto 409. Comprueba que 204 sigue sin cuerpo y que 409 se produce cuando la orden ya está Finalizada. Revisa también la acción POST finalizar, que puede devolver 200, 404 o 409. La documentación debe expresar las ramas existentes, no códigos genéricos copiados de una lista teórica de HTTP.
 
 **Si algo falla.** Si falta un código de respuesta, añade Produces/ProducesProblem al endpoint correspondiente sin inventar comportamientos.
 
@@ -2527,6 +2557,8 @@ public sealed class EjemploCrearOrden : ISchemaFilter
 
 **Verificación concreta.** El ejemplo aparece en la sección reusable de esquemas.
 
+**Comprobación adicional guiada.** Solicita el JSON y abre components.schemas.CrearOrdenRequest. Identifica example, los tipos de cliente, material y cantidad, y relaciónalo con el record de entrada. Comprueba que el ejemplo no pertenece a OrdenDto, porque éste es el contrato de salida. Si el objeto example falta, revisa que SchemaFilter se registró y que context.Type coincide con CrearOrdenRequest.
+
 **Si algo falla.** Si no aparece example, comprueba SchemaFilter y el tipo CrearOrdenRequest usado en el esquema.
 
 ### PASO 2.4.18 — Ejecutar un POST desde Swagger UI
@@ -2541,6 +2573,8 @@ public sealed class EjemploCrearOrden : ISchemaFilter
 
 **Verificación concreta.** Se crea un recurso de verdad desde el explorador HTTP.
 
+**Comprobación adicional guiada.** En Swagger UI expande POST /api/v1/ordenes, habilita la edición del cuerpo y utiliza el ejemplo de entrada con Cantidad 10. Ejecuta y observa el estado, la respuesta y la cabecera Location. Recuerda que la interfaz está realizando una solicitud real: si utilizas LocalDB de desarrollo, la orden queda persistida como en cualquier otro POST.
+
 **Si algo falla.** Si no aparece example, comprueba SchemaFilter y el tipo CrearOrdenRequest usado en el esquema.
 
 ### PASO 2.4.19 — Consultar la orden creada desde la propia UI
@@ -2554,6 +2588,8 @@ public sealed class EjemploCrearOrden : ISchemaFilter
 **Por qué funciona así.** Un ejemplo JSON ilustra el contrato de entrada. Swagger UI permite usarlo para enviar una petición real, pero no crea datos hasta ejecutar el endpoint.
 
 **Verificación concreta.** GET responde 200 con el DTO de la misma orden.
+
+**Comprobación adicional guiada.** Toma el Id del resultado de POST y ejecuta el GET individual desde la misma UI. Compara Cliente, Material, Cantidad y Estado. Si el POST dijo 201 pero el GET no encuentra el recurso, investiga persistencia y generación de Location, no solo los esquemas de Swagger. La utilidad de una UI interactiva es precisamente contrastar documentación con ejecución.
 
 **Si algo falla.** Si no aparece example, comprueba SchemaFilter y el tipo CrearOrdenRequest usado en el esquema.
 
@@ -2610,6 +2646,8 @@ public class ContratoOpenApiTests
 
 **Verificación concreta.** El test descarga la respuesta del servidor y la analiza.
 
+**Comprobación adicional guiada.** Crea ContratoOpenApiTests usando WebApplicationFactory y HttpClient. En el test solicita realmente /swagger/v1/swagger.json y analiza el resultado con JsonDocument. No leas un archivo de muestra incluido en el proyecto. Esta prueba debe ejercitar AddDocumentacion, UseDocumentacion, el enrutamiento del documento y el generador de Swashbuckle.
+
 **Si algo falla.** Si el JSON no incluye rutas, comprueba MapGet/MapPost y que las pruebas apuntan al servidor correcto.
 
 ### PASO 2.4.21 — Comprobar rutas GET y POST en paths
@@ -2624,6 +2662,8 @@ public class ContratoOpenApiTests
 
 **Verificación concreta.** Un cambio de ruta erróneo hace fallar el contrato.
 
+**Comprobación adicional guiada.** En el JSON de pruebas busca paths./api/v1/ordenes y comprueba que contiene los miembros get y post. Mantén las comprobaciones dentro del host real de test. Añade como ampliación las rutas PUT, PATCH y DELETE solo si también actualizas la prueba y el código de metadatos; la nueva prueba OpenApi_DeclaraErroresDeOperacionesReales comprueba respuestas 409 y 422 publicadas.
+
 **Si algo falla.** Si el JSON no incluye rutas, comprueba MapGet/MapPost y que las pruebas apuntan al servidor correcto.
 
 ### PASO 2.4.22 — Comprobar schema y ejemplo de petición
@@ -2637,6 +2677,8 @@ public class ContratoOpenApiTests
 **Por qué funciona así.** Descargar el JSON OpenAPI con WebApplicationFactory y comprobar info, paths y schemas es una prueba contractual real; en Production debe respetarse el 404.
 
 **Verificación concreta.** El esquema se genera a partir del contrato público.
+
+**Comprobación adicional guiada.** Comprueba que components.schemas contiene CrearOrdenRequest y que el esquema declara example. Relaciona las claves camelCase del ejemplo con los nombres de las propiedades del record. No compares todos los caracteres del documento como si la posición de las propiedades JSON fuera relevante: lo importante es la estructura y contenido contractual.
 
 **Si algo falla.** Si el JSON no incluye rutas, comprueba MapGet/MapPost y que las pruebas apuntan al servidor correcto.
 
@@ -2668,6 +2710,8 @@ public class ContratoOpenApiTests
 **Por qué funciona así.** Cambiar un WithSummary y ver reflejada la modificación en el JSON demuestra la vinculación de la documentación con el código ejecutado.
 
 **Verificación concreta.** Se verifica que el documento evoluciona al modificar el código. Ejecuta además las pruebas xUnit del proyecto de esta etapa para confirmar que el ejercicio no ha roto los endpoints anteriores.
+
+**Comprobación adicional guiada.** Como reto, cambia WithSummary del PATCH por una frase más precisa y vuelve a consultar el JSON OpenAPI. Localiza la operación patch de la ruta /api/v1/ordenes/{id}/cantidad y verifica que la propiedad summary refleja tu modificación. No cambies la ruta ni el request para conseguirlo. Repite los tests de documentación y los de ejecución para descartar regresiones.
 
 **Si algo falla.** Si el summary no cambia, modifica WithSummary en el endpoint real y vuelve a solicitar el documento.
 
