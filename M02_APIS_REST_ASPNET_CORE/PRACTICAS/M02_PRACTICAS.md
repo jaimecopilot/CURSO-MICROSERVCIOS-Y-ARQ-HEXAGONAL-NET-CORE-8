@@ -451,6 +451,9 @@ public partial class Program {} // permite WebApplicationFactory en tests
 
 **Si algo falla.** Si aparece 404, revisa Guid, la plantilla {id:guid} y la existencia de la orden; en colección vacía corresponde 200.
 
+
+**Comprobación guiada del archivo HTTP.** Configura Host con la dirección y puerto reales mostrados por Visual Studio. Ejecuta primero GET /api/v1/ordenes y observa el 200 y el array JSON, aunque esté vacío. Ejecuta después GET /api/v1/ordenes/00000000-0000-0000-0000-000000000001: una base sin esa clave devuelve 404. Sustituye finalmente el Guid por un texto inválido y explica por qué un 404 de enrutamiento no es una avería de LocalDB. Anota qué mensaje corresponde al endpoint y cuál al enrutador.
+
 ### PASO 2.1.21 — Crear el proyecto xUnit de pruebas HTTP
 
 **Objetivo del paso.** Crear el proyecto xUnit de pruebas HTTP.
@@ -802,6 +805,9 @@ app.MapPost("/api/v1/ordenes",async (CrearOrdenRequest request,AceriaDbContext d
 **Verificación concreta.** El resultado es 201 con cabecera Location.
 
 **Si algo falla.** Si el POST no persiste, verifica SaveChangesAsync; si Location falta, revisa CreatedAtRoute y el nombre de GET.
+
+
+**Prueba encadenada del 201.** Envía POST con Cliente ACX, Material CHAPA y Cantidad 10. Inspecciona la respuesta en tres lugares distintos: el código 201, la cabecera Location y el cuerpo con Id generado. Copia la URI de Location y haz GET. La nueva consulta debe devolver 200 y el mismo Id. Si Location no aparece, revisa el nombre lógico ObtenerOrdenPorId; si el GET no encuentra el recurso, revisa la persistencia. La prueba correspondiente es CrearYConsultar_Es201Y200.
 
 ### PASO 2.2.8 — Enviar POST y consultar por GET la orden creada
 
@@ -1291,6 +1297,9 @@ public class EscrituraTests
 
 **Si algo falla.** Si se crean órdenes duplicadas al repetir PUT, se está usando Add en lugar de actualizar la entidad encontrada.
 
+
+**Experimento sobre la idempotencia.** Crea una orden pendiente y guarda el Id. Ejecuta dos veces el mismo PUT con el mismo Cliente, Material y Cantidad. Verifica mediante GET que repetir la petición no introduce otro cambio en esos campos. Después ejecuta DELETE: la primera respuesta esperada es 204, y un segundo DELETE puede devolver 404 porque el recurso ya no existe. Explica por qué la idempotencia describe el efecto persistente, no que todos los intentos tengan que devolver idéntico código.
+
 #### Caso práctico completo — PATCH, eliminación e idempotencia: observar el estado final
 
 Conserva la orden creada en el caso anterior. Ejecuta PATCH sobre
@@ -1529,6 +1538,9 @@ public sealed class ValidationFilter<T>(IValidator<T> validator): IEndpointFilte
 **Verificación concreta.** El filtro recibe EndpointFilterInvocationContext y EndpointFilterDelegate.
 
 **Si algo falla.** Si una petición inválida llega al endpoint, revisa el orden de ejecución y la condición IsValid antes de next(context).
+
+
+**Lectura obligatoria antes de ejecutar.** Localiza y señala cuatro lugares en ValidationFilter.cs: OfType<T> identifica el argumento, ValidateAsync invoca las reglas, GroupBy/ToDictionary preparan los errores y next(context) permite continuar. Explica por qué llamar a next antes de validar sería peligroso: podría persistirse una orden rechazada. Compilar el filtro no demuestra todavía que se use; su instalación en los endpoints se comprobará en 2.3.15–2.3.18.
 
 ### PASO 2.3.9 — Obtener la petición de EndpointFilterInvocationContext
 
@@ -1781,6 +1793,9 @@ builder.Services.AddValidatorsFromAssemblyContaining<CrearOrdenValidator>(); // 
 **Verificación concreta.** El primero devuelve 400, el segundo 422.
 
 **Si algo falla.** Si aparece 500 en vez de 400/422/409, revisa qué capa lanza la excepción y transforma el error de forma adecuada.
+
+
+**Dos valores, dos responsabilidades.** Envía POST con Cliente ACX, Material CHAPA y Cantidad 10001; debe devolver 400 con errors por superar el rango del validador. Repite con Cantidad 501; debe devolver 422 por exceder el máximo operativo del taller y no debe crear la orden. Localiza en Validadores.cs el límite genérico y en Program.cs la regla de negocio. Si ambas respuestas pasan a ser 400, comprueba que alguien no haya reducido por error el rango genérico hasta 500.
 
 ### PASO 2.3.21 — Reproducir 409 con orden ya finalizada
 
@@ -2363,6 +2378,9 @@ public sealed class EjemploCrearOrden : ISchemaFilter
 
 **Si algo falla.** Si no aparece example, comprueba SchemaFilter y el tipo CrearOrdenRequest usado en el esquema.
 
+
+**Separación entre ejemplo y transacción.** Abre /swagger/v1/swagger.json en Development y localiza components.schemas.CrearOrdenRequest.example. Verifica que el ejemplo incluya ACX-001, CHAPA-3MM y Cantidad 10. Este documento no guarda una orden en la base de datos. Solamente al ejecutar de verdad el POST desde Swagger UI se produce la creación; anota ambas pruebas en columnas distintas para no confundir documentación y funcionamiento.
+
 ### PASO 2.4.17 — Inspeccionar example de CrearOrdenRequest en Swagger
 
 **Objetivo del paso.** Inspeccionar example de CrearOrdenRequest en Swagger.
@@ -2501,6 +2519,9 @@ public class ContratoOpenApiTests
 **Verificación concreta.** El endpoint no se publica y responde 404. Ejecuta además las pruebas xUnit del proyecto de esta etapa para confirmar que el ejercicio no ha roto los endpoints anteriores.
 
 **Si algo falla.** Si el JSON no incluye rutas, comprueba MapGet/MapPost y que las pruebas apuntan al servidor correcto.
+
+
+**Comparación reproducible entre entornos.** Solicita /swagger/v1/swagger.json en Development y confirma 200. Ejecuta después Produccion_NoExponeSwagger de ContratoOpenApiTests.cs: crea un host de pruebas con Environment Production y la misma ruta debe devolver 404. Comprueba la condición IsDevelopment en UseDocumentacion. La ausencia de Swagger en Production no prueba por sí sola que los endpoints estén autenticados o protegidos; no atribuyas al ejemplo garantías que todavía no implementa.
 
 ### PASO 2.4.24 — Reto: documentar PATCH y verificar su summary en JSON
 
