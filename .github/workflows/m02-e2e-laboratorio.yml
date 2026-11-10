@@ -9,14 +9,6 @@ on:
       - 'M02_APIS_REST_ASPNET_CORE/PROYECTO/**'
       - '.github/scripts/e2e_laboratorio_m02.py'
       - '.github/workflows/m02-e2e-laboratorio.yml'
-  pull_request:
-    branches:
-      - main
-    paths:
-      - 'M02_APIS_REST_ASPNET_CORE/PRACTICAS/M02_PRACTICAS.md'
-      - 'M02_APIS_REST_ASPNET_CORE/PROYECTO/**'
-      - '.github/scripts/e2e_laboratorio_m02.py'
-      - '.github/workflows/m02-e2e-laboratorio.yml'
   workflow_dispatch:
 permissions:
   contents: read
