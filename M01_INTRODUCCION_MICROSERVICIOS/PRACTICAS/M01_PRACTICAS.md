@@ -2970,13 +2970,18 @@ public class CatalogoLimites
 
 ---
 
-### Paso 13 — Añadir el paquete FluentAssertions al proyecto de tests
+### Paso 13 — Comprobar el paquete FluentAssertions al proyecto de tests
 
-**Acción 1:** Abrir `tests/AceriaApp.Diseno.Tests/AceriaApp.Diseno.Tests.csproj` en el Explorador de soluciones.
+**Acción 1:** Abre `tests/AceriaApp.Diseno.Tests/AceriaApp.Diseno.Tests.csproj` y localiza la dependencia `FluentAssertions` existente; no la instales dos veces en este proyecto preparado.
 
-**Acción 2:** Ejecutar `dotnet sln AceriaApp.sln list` y comprobar que `AceriaApp.Diseno.Tests` aparece en la solución.
+**Acción 2:** Ejecuta `dotnet list tests/AceriaApp.Diseno.Tests/AceriaApp.Diseno.Tests.csproj package` desde la raíz de la etapa y comprueba que el paquete aparece con su versión.
 
-**Acción 3:** Inspeccionar `tests/AceriaApp.Diseno.Tests/AceriaApp.Diseno.Tests.csproj` y confirmar la referencia al proyecto `AceriaApp.Monolito.Api` y el paquete `FluentAssertions`; no instalar duplicados.
+**Acción 3:** Revisa que los tests de `ValidadorLimiteServicio` y `CatalogoLimites` usan `FluentAssertions` para expresar sus resultados esperados.
+
+**Acción 4:** Ejecuta `dotnet restore AceriaApp.sln` antes de activar los tests; si NuGet falla revisa la restauración y no cambies las aserciones.
+
+
+
 
 **Por qué se hace:** FluentAssertions proporciona la sintaxis de aserción usada en el curso. Se añade al nuevo proyecto de tests sin modificar los proyectos de tests existentes.
 
@@ -2995,11 +3000,16 @@ public class CatalogoLimites
 **Archivo preparado en este punto:** `tests/AceriaApp.Diseno.Tests/ValidadorLimiteServicioTests.cs`. El bloque de código original figura a continuación como referencia de aprendizaje; la acción efectiva consiste en activar el bloque comentado correspondiente.
 
 
-**Acción 1:** Abrir `tests/AceriaApp.Diseno.Tests/ValidadorLimiteServicioTests.cs` dentro de la solución `AceriaApp.sln` del punto 1.3; no crear otro archivo.
+**Acción 1:** Abre `tests/AceriaApp.Diseno.Tests/ValidadorLimiteServicioTests.cs` en Visual Studio y localiza los delimitadores `INICIO PASO 1.3.14` y `FIN PASO 1.3.14`.
 
-**Acción 2:** Localizar el marcador `INICIO PASO 1.3.14` y seleccionar solo las líneas de código comentadas del bloque, sin modificar los marcadores ni el código heredado.
+**Acción 2:** Selecciona las líneas de C# entre ambos marcadores, pulsa **Ctrl+K, Ctrl+U** y deja comentados los fragmentos del reto opcional.
 
-**Acción 3:** Pulsar `Ctrl+K, Ctrl+U` para activar las líneas seleccionadas; contrastar el código resultante con el ejemplo explicado a continuación.
+**Acción 3:** Lee cada escenario positivo y negativo y vincúlalo a las reglas de `ValidadorLimiteServicio`: detecta dependencias excesivas, datos compartidos y límites que exponen entidades.
+
+**Acción 4:** Guarda y compila el proyecto `AceriaApp.Diseno.Tests`; corrige clases incompletas o imports antes de modificar las expectativas de las pruebas.
+
+
+
 
 ```csharp
 using AceriaApp.Monolito.Api.Diseno;
@@ -3121,9 +3131,7 @@ public class ValidadorLimiteServicioTests
 - **Línea 51 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
 
 
-**Acción 4:** Pulsar Ctrl+S para guardar el archivo.
 
-**Acción 5:** Verificar que la clase compila sin errores.
 
 **Por qué se hace:** los tests verifican que el validador acepta un límite completo y rechaza los límites que violan los principios de responsabilidad única, cohesión y contexto delimitado.
 
@@ -3142,11 +3150,16 @@ public class ValidadorLimiteServicioTests
 **Archivo preparado en este punto:** `tests/AceriaApp.Diseno.Tests/CatalogoLimitesTests.cs`. El bloque de código original figura a continuación como referencia de aprendizaje; la acción efectiva consiste en activar el bloque comentado correspondiente.
 
 
-**Acción 1:** Abrir `tests/AceriaApp.Diseno.Tests/CatalogoLimitesTests.cs` dentro de la solución `AceriaApp.sln` del punto 1.3; no crear otro archivo.
+**Acción 1:** Abre `tests/AceriaApp.Diseno.Tests/CatalogoLimitesTests.cs` y busca `INICIO PASO 1.3.15` y el fin del mismo bloque.
 
-**Acción 2:** Localizar el marcador `INICIO PASO 1.3.15` y seleccionar solo las líneas de código comentadas del bloque, sin modificar los marcadores ni el código heredado.
+**Acción 2:** Descomenta solo las declaraciones internas con **Ctrl+K, Ctrl+U**, conservando comentados los bloques de reto y evitando duplicar la clase de tests.
 
-**Acción 3:** Pulsar `Ctrl+K, Ctrl+U` para activar las líneas seleccionadas; contrastar el código resultante con el ejemplo explicado a continuación.
+**Acción 3:** Analiza qué datos del escenario producen los resultados de `LimitesValidos y LimitesInvalidos` y por qué el catálogo usa el validador o el indicador creado en pasos anteriores.
+
+**Acción 4:** Guarda y compila el proyecto de tests, comprobando que no requiere modificar fuentes del punto anterior.
+
+
+
 
 ```csharp
 using AceriaApp.Monolito.Api.Diseno;
@@ -3235,9 +3248,7 @@ public class CatalogoLimitesTests
 - **Línea 38 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
 
 
-**Acción 4:** Pulsar Ctrl+S para guardar el archivo.
 
-**Acción 5:** Verificar que la clase compila sin errores.
 
 **Por qué se hace:** el test verifica que el catálogo filtra correctamente los límites válidos y los inválidos según el validador.
 
@@ -3253,11 +3264,16 @@ public class CatalogoLimitesTests
 
 ### Paso 16 — Compilar la solución completa
 
-**Acción 1:** Escribir dotnet build AceriaApp.sln y pulsar Enter.
+**Acción 1:** En la terminal de `1.3-principios-diseno`, donde está `AceriaApp.sln`, ejecuta `dotnet build AceriaApp.sln -c Release`.
 
-**Acción 2:** Verificar que la salida muestra Build succeeded. y 0 Warning(s), 0 Error(s).
+**Acción 2:** Comprueba que compilan los 5 proyectos acumulados y que el resumen muestra **0 errores**.
 
-**Acción 3:** Confirmar que el proceso termina sin fallos y registrar cualquier incidencia de compilación o prueba.
+**Acción 3:** Ante un error, identifica primero archivo y línea; localiza el marcador `INICIO PASO` responsable antes de intentar crear una clase nueva.
+
+**Acción 4:** Conserva la salida de compilación y verifica que los proyectos heredados no han cambiado respecto a `1.2-ventajas-inconvenientes`.
+
+
+
 
 **Por qué se hace:** compilar la solución completa verifica que todos los proyectos, incluidos los nuevos, se resuelven correctamente.
 
@@ -3273,11 +3289,16 @@ public class CatalogoLimitesTests
 
 ### Paso 17 — Ejecutar todos los tests del punto 1.3
 
-**Acción 1:** Escribir dotnet test tests\AceriaApp.Diseno.Tests\AceriaApp.Diseno.Tests.csproj y pulsar Enter.
+**Acción 1:** Abre el **Explorador de pruebas** de Visual Studio o una terminal en la carpeta de la solución 1.3.
 
-**Acción 2:** Verificar que la salida muestra Passed! - Failed: 0, Passed: 4, Skipped: 0.
+**Acción 2:** Ejecuta `dotnet test tests/AceriaApp.Diseno.Tests/AceriaApp.Diseno.Tests.csproj -c Release` para comprobar únicamente los tests nuevos de la etapa.
 
-**Acción 3:** Confirmar que el proceso termina sin fallos y registrar cualquier incidencia de compilación o prueba.
+**Acción 3:** Verifica que pasan **4 pruebas** de `AceriaApp.Diseno.Tests` con 0 fallos; relaciona cada caso con `ValidadorLimiteServicio` o `CatalogoLimites`.
+
+**Acción 4:** Si falla algún test, consulta el primer mensaje de aserción y examina los bloques activados en los pasos 14 y 15 sin cambiar valores esperados a ciegas.
+
+
+
 
 **Por qué se hace:** ejecutar los tests del punto 1.3 verifica que las clases de diseño funcionan correctamente.
 
@@ -3293,11 +3314,16 @@ public class CatalogoLimitesTests
 
 ### Paso 18 — Ejecutar todos los tests de la solución
 
-**Acción 1:** Escribir dotnet test AceriaApp.sln --no-build y pulsar Enter.
+**Acción 1:** En la carpeta de `AceriaApp.sln` ejecuta `dotnet test AceriaApp.sln -c Release --no-build` después del build Release del paso 16.
 
-**Acción 2:** Verificar que la salida muestra Passed! - Failed: 0, Passed: 13, Skipped: 0.
+**Acción 2:** Comprueba que pasan **13 pruebas acumuladas**: 9 heredadas más 4 de la etapa 1.3.
 
-**Acción 3:** Confirmar que el proceso termina sin fallos y registrar cualquier incidencia de compilación o prueba.
+**Acción 3:** Si no se encuentran los ensamblados, vuelve a compilar en Release y repite el comando sin mezclar resultados Debug y Release.
+
+**Acción 4:** Guarda el resumen: los tests heredados deben seguir pasando, pues una nueva etapa no puede romper las capacidades previas de AceriaApp.
+
+
+
 
 **Por qué se hace:** ejecutar todos los tests de la solución verifica que los tests de los puntos 1.1, 1.2 y 1.3 pasan conjuntamente.
 
@@ -3313,11 +3339,16 @@ public class CatalogoLimitesTests
 
 ### Paso 19 — Revisar el documento preparado: README.md
 
-**Acción 1:** Abrir o localizar `README.md` en la carpeta del punto 1.3; el recurso ya está incluido en la solución preparada.
+**Acción 1:** Abre el archivo `README.md` de la carpeta `1.3-principios-diseno`, no el del punto `1.2-ventajas-inconvenientes`.
 
-**Acción 2:** Examinar su contenido y contrastarlo con el ejemplo de referencia que figura a continuación, sin volver a crear el recurso.
+**Acción 2:** Localiza en el documento el objetivo de la etapa y los archivos `LimiteServicio`, `ValidadorLimiteServicio`, `CatalogoLimites` y `AceriaApp.Diseno.Tests`.
 
-**Acción 3:** Confirmar la ruta, el nombre y los elementos declarados en `README.md`; conservar los archivos heredados sin modificación.
+**Acción 3:** Comprueba que las rutas de ejecución y tests mencionadas corresponden a los proyectos físicos de esta etapa.
+
+**Acción 4:** Anota qué información nueva aporta este README respecto al anterior; no lo sobrescribas con la versión heredada.
+
+
+
 
 ```markdown
 # Punto 1.3 — Principios de diseño
@@ -3352,9 +3383,7 @@ Comprender los principios de diseño que guían la descomposición de un sistema
 - [Principios de diseño](docs/principios-diseno.md).
 ```
 
-**Acción 4:** Guardar únicamente si se ha realizado una corrección explícitamente indicada en esta práctica.
 
-**Acción 5:** Verificar que el archivo preparado sigue accesible y que el proyecto conserva la configuración de .NET 8.
 
 **Por qué se hace:** se trabaja sobre el material proporcionado y se evita duplicar archivos o alterar el punto anterior.  el README del punto 1.3 explica el objetivo, el estado, la ejecución y los añadidos. No modifica el README del punto 1.2.
 
@@ -3370,11 +3399,16 @@ Comprender los principios de diseño que guían la descomposición de un sistema
 
 ### Paso 20 — Revisar el documento preparado: ADR-003-principios-diseno.md
 
-**Acción 1:** Abrir o localizar `docs/ADR-003-principios-diseno.md` en la carpeta del punto 1.3; el recurso ya está incluido en la solución preparada.
+**Acción 1:** Abre `docs/ADR-003-principios-diseno.md` dentro de `1.3-principios-diseno` en el editor Markdown; el archivo se entrega preparado.
 
-**Acción 2:** Examinar su contenido y contrastarlo con el ejemplo de referencia que figura a continuación, sin volver a crear el recurso.
+**Acción 2:** Lee Estado, Contexto, Decisión, Alternativas y Consecuencias, vinculando la decisión con límites de servicio, autonomía y cohesión.
 
-**Acción 3:** Confirmar la ruta, el nombre y los elementos declarados en `docs/ADR-003-principios-diseno.md`; conservar los archivos heredados sin modificación.
+**Acción 3:** Identifica un resultado de los tests de 1.3 que apoye la decisión y una limitación que el ejemplo no demuestra.
+
+**Acción 4:** Comprueba que el ADR del punto anterior permanece presente e idéntico: cada decisión arquitectónica se documenta por separado.
+
+
+
 
 ```markdown
 # ADR-003: Aplicación de principios de diseño a los límites de servicio
@@ -3398,9 +3432,7 @@ Se adoptan ocho principios: responsabilidad única, ocultación de información,
 - Mitigación: revisar los umbrales al final de cada módulo.
 ```
 
-**Acción 4:** Guardar únicamente si se ha realizado una corrección explícitamente indicada en esta práctica.
 
-**Acción 5:** Verificar que el archivo preparado sigue accesible y que el proyecto conserva la configuración de .NET 8.
 
 **Por qué se hace:** se trabaja sobre el material proporcionado y se evita duplicar archivos o alterar el punto anterior.  el ADR-003 documenta la decisión de aplicar principios de diseño y de validarlos automáticamente. Es un artefacto nuevo del punto 1.3 que no modifica los ADR existentes.
 
@@ -3416,15 +3448,18 @@ Se adoptan ocho principios: responsabilidad única, ocultación de información,
 
 ### Paso 21 — Verificar que no se ha modificado ningún archivo del punto 1.2
 
-**Acción 1:** En la terminal, escribir cd C:\cursos\AceriaApp\modulo-1-introduccion-microservicios y pulsar Enter.
+**Acción 1:** En tu copia del repositorio localiza las carpetas `docs` de `1.2-ventajas-inconvenientes` y `1.3-principios-diseno`.
 
-**Acción 2:** Escribir fc /L 1.2-ventajas-inconvenientes\docs\ADR-002-metricas-acoplamiento.md 1.3-principios-diseno\docs\ADR-002-metricas-acoplamiento.md y pulsar Enter.
+**Acción 2:** Selecciona un fichero **heredado** presente en ambas carpetas y compara su contenido con `fc /L` en Windows o un hash SHA-256.
 
-**Acción 3:** Verificar que la salida muestra FC: no differences encountered.
+**Acción 3:** Los documentos heredados deben ser idénticos; el `README.md` de 1.3 puede ser diferente porque explica la etapa actual.
 
-**Acción 4:** Escribir fc /L 1.2-ventajas-inconvenientes\docs\analisis-ventajas-inconvenientes.md 1.3-principios-diseno\docs\analisis-ventajas-inconvenientes.md y pulsar Enter.
+**Acción 4:** Registra el resultado y no modifiques los originales de `1.2-ventajas-inconvenientes` para forzar igualdad.
 
-**Acción 5:** Verificar que la salida muestra FC: no differences encountered.
+
+
+
+
 
 **Por qué se hace:** la comparación con fc verifica que los documentos del punto 1.2 no se han modificado.
 
@@ -3440,13 +3475,17 @@ Se adoptan ocho principios: responsabilidad única, ocultación de información,
 
 ### Paso 22 — Verificar la estructura del punto 1.3
 
-**Acción 1:** Escribir tree /F 1.3-principios-diseno y pulsar Enter.
+**Acción 1:** Desde `M01_INTRODUCCION_MICROSERVICIOS/PROYECTO` ejecuta `tree /F 1.3-principios-diseno` en una terminal Windows.
 
-**Acción 2:** Verificar que la salida muestra AceriaApp.sln, README.md, src\AceriaApp.Monolito.Api\Diseno con las tres clases nuevas, tests\AceriaApp.Diseno.Tests con los dos archivos de tests y docs con el ADR-001, el ADR-002, el ADR-003, el análisis comparativo y el documento de principios.
+**Acción 2:** Comprueba en `src/AceriaApp.Monolito.Api/Diseno` los tres tipos `LimiteServicio.cs`, `ValidadorLimiteServicio.cs` y `CatalogoLimites.cs`.
 
-**Acción 3:** Verificar que las carpetas Dominio, Infraestructura y Metricas del punto 1.2 permanecen intactas.
+**Acción 3:** En `tests/AceriaApp.Diseno.Tests` localiza las pruebas del validador y catálogo; en `docs` localiza `principios-diseno.md`, `ADR-003-principios-diseno.md` y los documentos heredados.
 
-**Acción 4:** Verificar que la carpeta del punto contiene únicamente código, tests, documentación y configuración necesarios para estudiar el ejemplo.
+**Acción 4:** Distingue los archivos fuente de las carpetas temporales `bin` y `obj`, que no deben incorporarse como entregables.
+
+
+
+
 
 **Por qué se hace:** la verificación estructural confirma que el punto 1.3 añade archivos nuevos sin modificar los existentes.
 
@@ -3462,15 +3501,18 @@ Se adoptan ocho principios: responsabilidad única, ocultación de información,
 
 ### Paso 23 — Revisar el documento preparado: .gitignore
 
-**Acción 1:** Abrir o localizar `.gitignore` en la carpeta del punto 1.3; el recurso ya está incluido en la solución preparada.
+**Acción 1:** Abre el `.gitignore` de la carpeta `1.3-principios-diseno` en un editor que muestre ficheros ocultos.
 
-**Acción 2:** Examinar su contenido y contrastarlo con el ejemplo de referencia que figura a continuación, sin volver a crear el recurso.
+**Acción 2:** Comprueba que conserva las exclusiones `bin/`, `obj/`, `.vs/`, resultados y archivos de usuario sin ignorar el código fuente.
 
-**Acción 3:** Confirmar la ruta, el nombre y los elementos declarados en `.gitignore`; conservar los archivos heredados sin modificación.
+**Acción 3:** Ejecuta `git status --short` en tu copia personal tras compilar y confirma que no aparecen binarios temporales.
 
-**Acción 4:** Guardar únicamente si se ha realizado una corrección explícitamente indicada en esta práctica.
+**Acción 4:** No sustituyas el fichero ya incluido por una plantilla ajena; verifica que conserva la política del punto anterior.
 
-**Acción 5:** Verificar que el archivo preparado sigue accesible y que el proyecto conserva la configuración de .NET 8.
+
+
+
+
 
 **Por qué se hace:** se trabaja sobre el material proporcionado y se evita duplicar archivos o alterar el punto anterior.  el .gitignore se hereda del punto 1.2 sin modificaciones. La verificación confirma que no se ha tocado.
 
@@ -3486,15 +3528,18 @@ Se adoptan ocho principios: responsabilidad única, ocultación de información,
 
 ### Paso 24 — Hacer el commit del punto 1.3 y verificar el estado final
 
-**Acción 1:** Escribir cd C:\cursos\AceriaApp y pulsar Enter.
+**Acción 1:** Desde tu copia personal (no la rama del profesor) ejecuta `git status` para identificar los cambios de `1.3-principios-diseno`.
 
-**Acción 2:** Escribir git add . y pulsar Enter.
+**Acción 2:** Revisa `git diff --stat` y prepara con `git add` solo archivos de esta etapa, sin incluir carpetas compiladas ni secretos.
 
-**Acción 3:** Escribir git commit -m "Punto 1.3: principios de diseño y validación de límites de servicio" y pulsar Enter.
+**Acción 3:** Realiza el commit del punto 1.3 con un mensaje descriptivo de límites de servicio, autonomía y cohesión; no sobrescribas los commits de etapas previas.
 
-**Acción 4:** Escribir git log --oneline y pulsar Enter para verificar los tres commits.
+**Acción 4:** Comprueba `git log -1 --oneline`, `git status` y conserva el resultado de los 13 tests acumulados como evidencia final.
 
-**Acción 5:** Escribir git status y pulsar Enter para verificar que el árbol está limpio.
+
+
+
+
 
 **Por qué se hace:** el commit del punto 1.3 registra el estado acumulado del proyecto. Los tres commits consecutivos permiten comparar los puntos 1.1, 1.2 y 1.3 con git diff.
 
@@ -4200,13 +4245,18 @@ public class CatalogoProyectos
 
 ---
 
-### Paso 13 — Añadir el paquete FluentAssertions al proyecto de tests
+### Paso 13 — Comprobar el paquete FluentAssertions al proyecto de tests
 
-**Acción 1:** Abrir `tests/AceriaApp.Organizacion.Tests/AceriaApp.Organizacion.Tests.csproj` en el Explorador de soluciones.
+**Acción 1:** Abre `tests/AceriaApp.Organizacion.Tests/AceriaApp.Organizacion.Tests.csproj` y localiza la dependencia `FluentAssertions` existente; no la instales dos veces en este proyecto preparado.
 
-**Acción 2:** Ejecutar `dotnet sln AceriaApp.sln list` y comprobar que `AceriaApp.Organizacion.Tests` aparece en la solución.
+**Acción 2:** Ejecuta `dotnet list tests/AceriaApp.Organizacion.Tests/AceriaApp.Organizacion.Tests.csproj package` desde la raíz de la etapa y comprueba que el paquete aparece con su versión.
 
-**Acción 3:** Inspeccionar `tests/AceriaApp.Organizacion.Tests/AceriaApp.Organizacion.Tests.csproj` y confirmar la referencia al proyecto `AceriaApp.Monolito.Api` y el paquete `FluentAssertions`; no instalar duplicados.
+**Acción 3:** Revisa que los tests de `ValidadorConvencionNombres` y `CatalogoProyectos` usan `FluentAssertions` para expresar sus resultados esperados.
+
+**Acción 4:** Ejecuta `dotnet restore AceriaApp.sln` antes de activar los tests; si NuGet falla revisa la restauración y no cambies las aserciones.
+
+
+
 
 **Por qué se hace:** FluentAssertions proporciona la sintaxis de aserción usada en el curso. Se añade al nuevo proyecto de tests sin modificar los proyectos de tests existentes.
 
@@ -4225,11 +4275,16 @@ public class CatalogoProyectos
 **Archivo preparado en este punto:** `tests/AceriaApp.Organizacion.Tests/ValidadorConvencionNombresTests.cs`. El bloque de código original figura a continuación como referencia de aprendizaje; la acción efectiva consiste en activar el bloque comentado correspondiente.
 
 
-**Acción 1:** Abrir `tests/AceriaApp.Organizacion.Tests/ValidadorConvencionNombresTests.cs` dentro de la solución `AceriaApp.sln` del punto 1.4; no crear otro archivo.
+**Acción 1:** Abre `tests/AceriaApp.Organizacion.Tests/ValidadorConvencionNombresTests.cs` en Visual Studio y localiza los delimitadores `INICIO PASO 1.4.14` y `FIN PASO 1.4.14`.
 
-**Acción 2:** Localizar el marcador `INICIO PASO 1.4.14` y seleccionar solo las líneas de código comentadas del bloque, sin modificar los marcadores ni el código heredado.
+**Acción 2:** Selecciona las líneas de C# entre ambos marcadores, pulsa **Ctrl+K, Ctrl+U** y deja comentados los fragmentos del reto opcional.
 
-**Acción 3:** Pulsar `Ctrl+K, Ctrl+U` para activar las líneas seleccionadas; contrastar el código resultante con el ejemplo explicado a continuación.
+**Acción 3:** Lee cada escenario positivo y negativo y vincúlalo a las reglas de `ValidadorConvencionNombres`: comprueba prefijo, tres componentes y sufijos permitidos.
+
+**Acción 4:** Guarda y compila el proyecto `AceriaApp.Organizacion.Tests`; corrige clases incompletas o imports antes de modificar las expectativas de las pruebas.
+
+
+
 
 ```csharp
 using AceriaApp.Monolito.Api.Organizacion;
@@ -4324,9 +4379,7 @@ public class ValidadorConvencionNombresTests
 - **Línea 38 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
 
 
-**Acción 4:** Pulsar Ctrl+S para guardar el archivo.
 
-**Acción 5:** Verificar que la clase compila sin errores.
 
 **Por qué se hace:** los tests verifican que el validador acepta nombres correctos y rechaza nombres sin prefijo, con tipo no permitido y con número de partes incorrecto.
 
@@ -4345,11 +4398,16 @@ public class ValidadorConvencionNombresTests
 **Archivo preparado en este punto:** `tests/AceriaApp.Organizacion.Tests/CatalogoProyectosTests.cs`. El bloque de código original figura a continuación como referencia de aprendizaje; la acción efectiva consiste en activar el bloque comentado correspondiente.
 
 
-**Acción 1:** Abrir `tests/AceriaApp.Organizacion.Tests/CatalogoProyectosTests.cs` dentro de la solución `AceriaApp.sln` del punto 1.4; no crear otro archivo.
+**Acción 1:** Abre `tests/AceriaApp.Organizacion.Tests/CatalogoProyectosTests.cs` y busca `INICIO PASO 1.4.15` y el fin del mismo bloque.
 
-**Acción 2:** Localizar el marcador `INICIO PASO 1.4.15` y seleccionar solo las líneas de código comentadas del bloque, sin modificar los marcadores ni el código heredado.
+**Acción 2:** Descomenta solo las declaraciones internas con **Ctrl+K, Ctrl+U**, conservando comentados los bloques de reto y evitando duplicar la clase de tests.
 
-**Acción 3:** Pulsar `Ctrl+K, Ctrl+U` para activar las líneas seleccionadas; contrastar el código resultante con el ejemplo explicado a continuación.
+**Acción 3:** Analiza qué datos del escenario producen los resultados de `ProyectosValidos y ProyectosInvalidos` y por qué el catálogo usa el validador o el indicador creado en pasos anteriores.
+
+**Acción 4:** Guarda y compila el proyecto de tests, comprobando que no requiere modificar fuentes del punto anterior.
+
+
+
 
 ```csharp
 using AceriaApp.Monolito.Api.Organizacion;
@@ -4422,9 +4480,7 @@ public class CatalogoProyectosTests
 - **Línea 30 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
 
 
-**Acción 4:** Pulsar Ctrl+S para guardar el archivo.
 
-**Acción 5:** Verificar que la clase compila sin errores.
 
 **Por qué se hace:** el test verifica que el catálogo filtra correctamente los nombres válidos y los inválidos según el validador de convenciones.
 
@@ -4440,11 +4496,16 @@ public class CatalogoProyectosTests
 
 ### Paso 16 — Compilar la solución completa
 
-**Acción 1:** Escribir dotnet build AceriaApp.sln y pulsar Enter.
+**Acción 1:** En la terminal de `1.4-organizacion-solucion`, donde está `AceriaApp.sln`, ejecuta `dotnet build AceriaApp.sln -c Release`.
 
-**Acción 2:** Verificar que la salida muestra Build succeeded. y 0 Warning(s), 0 Error(s).
+**Acción 2:** Comprueba que compilan los 6 proyectos acumulados y que el resumen muestra **0 errores**.
 
-**Acción 3:** Confirmar que el proceso termina sin fallos y registrar cualquier incidencia de compilación o prueba.
+**Acción 3:** Ante un error, identifica primero archivo y línea; localiza el marcador `INICIO PASO` responsable antes de intentar crear una clase nueva.
+
+**Acción 4:** Conserva la salida de compilación y verifica que los proyectos heredados no han cambiado respecto a `1.3-principios-diseno`.
+
+
+
 
 **Por qué se hace:** compilar la solución completa verifica que todos los proyectos, incluidos los nuevos, se resuelven correctamente.
 
@@ -4460,11 +4521,16 @@ public class CatalogoProyectosTests
 
 ### Paso 17 — Ejecutar todos los tests del punto 1.4
 
-**Acción 1:** Escribir dotnet test tests\AceriaApp.Organizacion.Tests\AceriaApp.Organizacion.Tests.csproj y pulsar Enter.
+**Acción 1:** Abre el **Explorador de pruebas** de Visual Studio o una terminal en la carpeta de la solución 1.4.
 
-**Acción 2:** Verificar que la salida muestra Passed! - Failed: 0, Passed: 5, Skipped: 0.
+**Acción 2:** Ejecuta `dotnet test tests/AceriaApp.Organizacion.Tests/AceriaApp.Organizacion.Tests.csproj -c Release` para comprobar únicamente los tests nuevos de la etapa.
 
-**Acción 3:** Confirmar que el proceso termina sin fallos y registrar cualquier incidencia de compilación o prueba.
+**Acción 3:** Verifica que pasan **5 pruebas** de `AceriaApp.Organizacion.Tests` con 0 fallos; relaciona cada caso con `ValidadorConvencionNombres` o `CatalogoProyectos`.
+
+**Acción 4:** Si falla algún test, consulta el primer mensaje de aserción y examina los bloques activados en los pasos 14 y 15 sin cambiar valores esperados a ciegas.
+
+
+
 
 **Por qué se hace:** ejecutar los tests del punto 1.4 verifica que las clases de organización funcionan correctamente.
 
@@ -4480,11 +4546,16 @@ public class CatalogoProyectosTests
 
 ### Paso 18 — Ejecutar todos los tests de la solución
 
-**Acción 1:** Escribir dotnet test AceriaApp.sln --no-build y pulsar Enter.
+**Acción 1:** En la carpeta de `AceriaApp.sln` ejecuta `dotnet test AceriaApp.sln -c Release --no-build` después del build Release del paso 16.
 
-**Acción 2:** Verificar que la salida muestra Passed! - Failed: 0, Passed: 18, Skipped: 0.
+**Acción 2:** Comprueba que pasan **18 pruebas acumuladas**: 13 heredadas más 5 de la etapa 1.4.
 
-**Acción 3:** Confirmar que el proceso termina sin fallos y registrar cualquier incidencia de compilación o prueba.
+**Acción 3:** Si no se encuentran los ensamblados, vuelve a compilar en Release y repite el comando sin mezclar resultados Debug y Release.
+
+**Acción 4:** Guarda el resumen: los tests heredados deben seguir pasando, pues una nueva etapa no puede romper las capacidades previas de AceriaApp.
+
+
+
 
 **Por qué se hace:** ejecutar todos los tests de la solución verifica que los tests de los puntos 1.1, 1.2, 1.3 y 1.4 pasan conjuntamente.
 
@@ -4500,11 +4571,16 @@ public class CatalogoProyectosTests
 
 ### Paso 19 — Revisar el documento preparado: README.md
 
-**Acción 1:** Abrir o localizar `README.md` en la carpeta del punto 1.4; el recurso ya está incluido en la solución preparada.
+**Acción 1:** Abre el archivo `README.md` de la carpeta `1.4-organizacion-solucion`, no el del punto `1.3-principios-diseno`.
 
-**Acción 2:** Examinar su contenido y contrastarlo con el ejemplo de referencia que figura a continuación, sin volver a crear el recurso.
+**Acción 2:** Localiza en el documento el objetivo de la etapa y los archivos `ConvencionNombres`, `ValidadorConvencionNombres`, `CatalogoProyectos` y `AceriaApp.Organizacion.Tests`.
 
-**Acción 3:** Confirmar la ruta, el nombre y los elementos declarados en `README.md`; conservar los archivos heredados sin modificación.
+**Acción 3:** Comprueba que las rutas de ejecución y tests mencionadas corresponden a los proyectos físicos de esta etapa.
+
+**Acción 4:** Anota qué información nueva aporta este README respecto al anterior; no lo sobrescribas con la versión heredada.
+
+
+
 
 ```markdown
 # Punto 1.4 — Organización de una solución basada en microservicios
@@ -4541,9 +4617,7 @@ Comprender cómo se organiza una solución basada en microservicios y añadir al
 - [Organización de la solución](docs/organizacion-solucion.md).
 ```
 
-**Acción 4:** Guardar únicamente si se ha realizado una corrección explícitamente indicada en esta práctica.
 
-**Acción 5:** Verificar que el archivo preparado sigue accesible y que el proyecto conserva la configuración de .NET 8.
 
 **Por qué se hace:** se trabaja sobre el material proporcionado y se evita duplicar archivos o alterar el punto anterior.  el README del punto 1.4 explica el objetivo, el estado, la ejecución y los añadidos. No modifica el README del punto 1.3.
 
@@ -4559,11 +4633,16 @@ Comprender cómo se organiza una solución basada en microservicios y añadir al
 
 ### Paso 20 — Revisar el documento preparado: ADR-004-organizacion-solucion.md
 
-**Acción 1:** Abrir o localizar `docs/ADR-004-organizacion-solucion.md` en la carpeta del punto 1.4; el recurso ya está incluido en la solución preparada.
+**Acción 1:** Abre `docs/ADR-004-organizacion-solucion.md` dentro de `1.4-organizacion-solucion` en el editor Markdown; el archivo se entrega preparado.
 
-**Acción 2:** Examinar su contenido y contrastarlo con el ejemplo de referencia que figura a continuación, sin volver a crear el recurso.
+**Acción 2:** Lee Estado, Contexto, Decisión, Alternativas y Consecuencias, vinculando la decisión con organización de soluciones y nomenclatura.
 
-**Acción 3:** Confirmar la ruta, el nombre y los elementos declarados en `docs/ADR-004-organizacion-solucion.md`; conservar los archivos heredados sin modificación.
+**Acción 3:** Identifica un resultado de los tests de 1.4 que apoye la decisión y una limitación que el ejemplo no demuestra.
+
+**Acción 4:** Comprueba que el ADR del punto anterior permanece presente e idéntico: cada decisión arquitectónica se documenta por separado.
+
+
+
 
 ```markdown
 # ADR-004: Organización de la solución y convenciones de nombres
@@ -4587,9 +4666,7 @@ Se adopta un monorepo con una carpeta por módulo y una carpeta por punto. Dentr
 - Mitigación: validación automática de convenciones con la clase `ValidadorConvencionNombres`.
 ```
 
-**Acción 4:** Guardar únicamente si se ha realizado una corrección explícitamente indicada en esta práctica.
 
-**Acción 5:** Verificar que el archivo preparado sigue accesible y que el proyecto conserva la configuración de .NET 8.
 
 **Por qué se hace:** se trabaja sobre el material proporcionado y se evita duplicar archivos o alterar el punto anterior.  el ADR-004 documenta la decisión de organización y convenciones. Es un artefacto nuevo del punto 1.4 que no modifica los ADR existentes.
 
@@ -4605,15 +4682,18 @@ Se adopta un monorepo con una carpeta por módulo y una carpeta por punto. Dentr
 
 ### Paso 21 — Verificar que no se ha modificado ningún archivo del punto 1.3
 
-**Acción 1:** En la terminal, escribir cd C:\cursos\AceriaApp\modulo-1-introduccion-microservicios y pulsar Enter.
+**Acción 1:** En tu copia del repositorio localiza las carpetas `docs` de `1.3-principios-diseno` y `1.4-organizacion-solucion`.
 
-**Acción 2:** Escribir fc /L 1.3-principios-diseno\docs\ADR-003-principios-diseno.md 1.4-organizacion-solucion\docs\ADR-003-principios-diseno.md y pulsar Enter.
+**Acción 2:** Selecciona un fichero **heredado** presente en ambas carpetas y compara su contenido con `fc /L` en Windows o un hash SHA-256.
 
-**Acción 3:** Verificar que la salida muestra FC: no differences encountered.
+**Acción 3:** Los documentos heredados deben ser idénticos; el `README.md` de 1.4 puede ser diferente porque explica la etapa actual.
 
-**Acción 4:** Escribir fc /L 1.3-principios-diseno\docs\principios-diseno.md 1.4-organizacion-solucion\docs\principios-diseno.md y pulsar Enter.
+**Acción 4:** Registra el resultado y no modifiques los originales de `1.3-principios-diseno` para forzar igualdad.
 
-**Acción 5:** Verificar que la salida muestra FC: no differences encountered.
+
+
+
+
 
 **Por qué se hace:** la comparación con fc verifica que los documentos del punto 1.3 no se han modificado.
 
@@ -4629,13 +4709,17 @@ Se adopta un monorepo con una carpeta por módulo y una carpeta por punto. Dentr
 
 ### Paso 22 — Verificar la estructura del punto 1.4
 
-**Acción 1:** Escribir tree /F 1.4-organizacion-solucion y pulsar Enter.
+**Acción 1:** Desde `M01_INTRODUCCION_MICROSERVICIOS/PROYECTO` ejecuta `tree /F 1.4-organizacion-solucion` en una terminal Windows.
 
-**Acción 2:** Verificar que la salida muestra AceriaApp.sln, README.md, src\AceriaApp.Monolito.Api\Organizacion con las tres clases nuevas, tests\AceriaApp.Organizacion.Tests con los dos archivos de tests y docs con el ADR-001, ADR-002, ADR-003, ADR-004, el análisis comparativo, el documento de principios y el documento de organización.
+**Acción 2:** Comprueba en `src/AceriaApp.Monolito.Api/Organizacion` los tres tipos `ConvencionNombres.cs`, `ValidadorConvencionNombres.cs` y `CatalogoProyectos.cs`.
 
-**Acción 3:** Verificar que las carpetas Dominio, Infraestructura, Metricas y Diseno del punto 1.3 permanecen intactas.
+**Acción 3:** En `tests/AceriaApp.Organizacion.Tests` localiza las pruebas del validador y catálogo; en `docs` localiza `organizacion-solucion.md`, `ADR-004-organizacion-solucion.md` y los documentos heredados.
 
-**Acción 4:** Verificar que la carpeta del punto contiene únicamente código, tests, documentación y configuración necesarios para estudiar el ejemplo.
+**Acción 4:** Distingue los archivos fuente de las carpetas temporales `bin` y `obj`, que no deben incorporarse como entregables.
+
+
+
+
 
 **Por qué se hace:** la verificación estructural confirma que el punto 1.4 añade archivos nuevos sin modificar los existentes.
 
@@ -4651,15 +4735,18 @@ Se adopta un monorepo con una carpeta por módulo y una carpeta por punto. Dentr
 
 ### Paso 23 — Revisar el documento preparado: .gitignore
 
-**Acción 1:** Abrir o localizar `.gitignore` en la carpeta del punto 1.4; el recurso ya está incluido en la solución preparada.
+**Acción 1:** Abre el `.gitignore` de la carpeta `1.4-organizacion-solucion` en un editor que muestre ficheros ocultos.
 
-**Acción 2:** Examinar su contenido y contrastarlo con el ejemplo de referencia que figura a continuación, sin volver a crear el recurso.
+**Acción 2:** Comprueba que conserva las exclusiones `bin/`, `obj/`, `.vs/`, resultados y archivos de usuario sin ignorar el código fuente.
 
-**Acción 3:** Confirmar la ruta, el nombre y los elementos declarados en `.gitignore`; conservar los archivos heredados sin modificación.
+**Acción 3:** Ejecuta `git status --short` en tu copia personal tras compilar y confirma que no aparecen binarios temporales.
 
-**Acción 4:** Guardar únicamente si se ha realizado una corrección explícitamente indicada en esta práctica.
+**Acción 4:** No sustituyas el fichero ya incluido por una plantilla ajena; verifica que conserva la política del punto anterior.
 
-**Acción 5:** Verificar que el archivo preparado sigue accesible y que el proyecto conserva la configuración de .NET 8.
+
+
+
+
 
 **Por qué se hace:** se trabaja sobre el material proporcionado y se evita duplicar archivos o alterar el punto anterior.  el .gitignore se hereda del punto 1.3 sin modificaciones. La verificación confirma que no se ha tocado.
 
@@ -4675,15 +4762,18 @@ Se adopta un monorepo con una carpeta por módulo y una carpeta por punto. Dentr
 
 ### Paso 24 — Hacer el commit del punto 1.4 y verificar el estado final
 
-**Acción 1:** Escribir cd C:\cursos\AceriaApp y pulsar Enter.
+**Acción 1:** Desde tu copia personal (no la rama del profesor) ejecuta `git status` para identificar los cambios de `1.4-organizacion-solucion`.
 
-**Acción 2:** Escribir git add . y pulsar Enter.
+**Acción 2:** Revisa `git diff --stat` y prepara con `git add` solo archivos de esta etapa, sin incluir carpetas compiladas ni secretos.
 
-**Acción 3:** Escribir git commit -m "Punto 1.4: organización de la solución y convenciones de nombres" y pulsar Enter.
+**Acción 3:** Realiza el commit del punto 1.4 con un mensaje descriptivo de organización de soluciones y nomenclatura; no sobrescribas los commits de etapas previas.
 
-**Acción 4:** Escribir git log --oneline y pulsar Enter para verificar los cuatro commits.
+**Acción 4:** Comprueba `git log -1 --oneline`, `git status` y conserva el resultado de los 18 tests acumulados como evidencia final.
 
-**Acción 5:** Escribir git status y pulsar Enter para verificar que el árbol está limpio.
+
+
+
+
 
 **Por qué se hace:** el commit del punto 1.4 registra el estado acumulado del proyecto. Los cuatro commits consecutivos permiten comparar los puntos 1.1, 1.2, 1.3 y 1.4 con git diff.
 
@@ -5399,13 +5489,18 @@ public class CatalogoPracticas
 
 ---
 
-### Paso 13 — Añadir el paquete FluentAssertions al proyecto de tests
+### Paso 13 — Comprobar el paquete FluentAssertions al proyecto de tests
 
-**Acción 1:** Abrir `tests/AceriaApp.BuenasPracticas.Tests/AceriaApp.BuenasPracticas.Tests.csproj` en el Explorador de soluciones.
+**Acción 1:** Abre `tests/AceriaApp.BuenasPracticas.Tests/AceriaApp.BuenasPracticas.Tests.csproj` y localiza la dependencia `FluentAssertions` existente; no la instales dos veces en este proyecto preparado.
 
-**Acción 2:** Ejecutar `dotnet sln AceriaApp.sln list` y comprobar que `AceriaApp.BuenasPracticas.Tests` aparece en la solución.
+**Acción 2:** Ejecuta `dotnet list tests/AceriaApp.BuenasPracticas.Tests/AceriaApp.BuenasPracticas.Tests.csproj package` desde la raíz de la etapa y comprueba que el paquete aparece con su versión.
 
-**Acción 3:** Inspeccionar `tests/AceriaApp.BuenasPracticas.Tests/AceriaApp.BuenasPracticas.Tests.csproj` y confirmar la referencia al proyecto `AceriaApp.Monolito.Api` y el paquete `FluentAssertions`; no instalar duplicados.
+**Acción 3:** Revisa que los tests de `ValidadorBuenasPracticas` y `CatalogoPracticas` usan `FluentAssertions` para expresar sus resultados esperados.
+
+**Acción 4:** Ejecuta `dotnet restore AceriaApp.sln` antes de activar los tests; si NuGet falla revisa la restauración y no cambies las aserciones.
+
+
+
 
 **Por qué se hace:** FluentAssertions proporciona la sintaxis de aserción usada en el curso. Se añade al nuevo proyecto de tests sin modificar los proyectos de tests existentes.
 
@@ -5424,11 +5519,16 @@ public class CatalogoPracticas
 **Archivo preparado en este punto:** `tests/AceriaApp.BuenasPracticas.Tests/ValidadorBuenasPracticasTests.cs`. El bloque de código original figura a continuación como referencia de aprendizaje; la acción efectiva consiste en activar el bloque comentado correspondiente.
 
 
-**Acción 1:** Abrir `tests/AceriaApp.BuenasPracticas.Tests/ValidadorBuenasPracticasTests.cs` dentro de la solución `AceriaApp.sln` del punto 1.5; no crear otro archivo.
+**Acción 1:** Abre `tests/AceriaApp.BuenasPracticas.Tests/ValidadorBuenasPracticasTests.cs` en Visual Studio y localiza los delimitadores `INICIO PASO 1.5.14` y `FIN PASO 1.5.14`.
 
-**Acción 2:** Localizar el marcador `INICIO PASO 1.5.14` y seleccionar solo las líneas de código comentadas del bloque, sin modificar los marcadores ni el código heredado.
+**Acción 2:** Selecciona las líneas de C# entre ambos marcadores, pulsa **Ctrl+K, Ctrl+U** y deja comentados los fragmentos del reto opcional.
 
-**Acción 3:** Pulsar `Ctrl+K, Ctrl+U` para activar las líneas seleccionadas; contrastar el código resultante con el ejemplo explicado a continuación.
+**Acción 3:** Lee cada escenario positivo y negativo y vincúlalo a las reglas de `ValidadorBuenasPracticas`: rechaza categorías ajenas al catálogo, listas vacías y prácticas no aplicadas.
+
+**Acción 4:** Guarda y compila el proyecto `AceriaApp.BuenasPracticas.Tests`; corrige clases incompletas o imports antes de modificar las expectativas de las pruebas.
+
+
+
 
 ```csharp
 using AceriaApp.Monolito.Api.BuenasPracticas;
@@ -5554,9 +5654,7 @@ public class ValidadorBuenasPracticasTests
 - **Línea 52 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
 
 
-**Acción 4:** Pulsar Ctrl+S para guardar el archivo.
 
-**Acción 5:** Verificar que la clase compila sin errores.
 
 **Por qué se hace:** los tests verifican que el validador acepta prácticas completas y rechaza prácticas con categoría no permitida, prácticas no aplicadas y listas vacías.
 
@@ -5575,11 +5673,16 @@ public class ValidadorBuenasPracticasTests
 **Archivo preparado en este punto:** `tests/AceriaApp.BuenasPracticas.Tests/CatalogoPracticasTests.cs`. El bloque de código original figura a continuación como referencia de aprendizaje; la acción efectiva consiste en activar el bloque comentado correspondiente.
 
 
-**Acción 1:** Abrir `tests/AceriaApp.BuenasPracticas.Tests/CatalogoPracticasTests.cs` dentro de la solución `AceriaApp.sln` del punto 1.5; no crear otro archivo.
+**Acción 1:** Abre `tests/AceriaApp.BuenasPracticas.Tests/CatalogoPracticasTests.cs` y busca `INICIO PASO 1.5.15` y el fin del mismo bloque.
 
-**Acción 2:** Localizar el marcador `INICIO PASO 1.5.15` y seleccionar solo las líneas de código comentadas del bloque, sin modificar los marcadores ni el código heredado.
+**Acción 2:** Descomenta solo las declaraciones internas con **Ctrl+K, Ctrl+U**, conservando comentados los bloques de reto y evitando duplicar la clase de tests.
 
-**Acción 3:** Pulsar `Ctrl+K, Ctrl+U` para activar las líneas seleccionadas; contrastar el código resultante con el ejemplo explicado a continuación.
+**Acción 3:** Analiza qué datos del escenario producen los resultados de `PracticasAplicadas y PracticasPendientes` y por qué el catálogo usa el validador o el indicador creado en pasos anteriores.
+
+**Acción 4:** Guarda y compila el proyecto de tests, comprobando que no requiere modificar fuentes del punto anterior.
+
+
+
 
 ```csharp
 using AceriaApp.Monolito.Api.BuenasPracticas;
@@ -5638,9 +5741,7 @@ public class CatalogoPracticasTests
 - **Línea 23 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
 
 
-**Acción 4:** Pulsar Ctrl+S para guardar el archivo.
 
-**Acción 5:** Verificar que la clase compila sin errores.
 
 **Por qué se hace:** el test verifica que el catálogo filtra correctamente las prácticas aplicadas y las pendientes.
 
@@ -5656,11 +5757,16 @@ public class CatalogoPracticasTests
 
 ### Paso 16 — Compilar la solución completa
 
-**Acción 1:** Escribir dotnet build AceriaApp.sln y pulsar Enter.
+**Acción 1:** En la terminal de `1.5-buenas-practicas`, donde está `AceriaApp.sln`, ejecuta `dotnet build AceriaApp.sln -c Release`.
 
-**Acción 2:** Verificar que la salida muestra Build succeeded. y 0 Warning(s), 0 Error(s).
+**Acción 2:** Comprueba que compilan los 7 proyectos acumulados y que el resumen muestra **0 errores**.
 
-**Acción 3:** Confirmar que el proceso termina sin fallos y registrar cualquier incidencia de compilación o prueba.
+**Acción 3:** Ante un error, identifica primero archivo y línea; localiza el marcador `INICIO PASO` responsable antes de intentar crear una clase nueva.
+
+**Acción 4:** Conserva la salida de compilación y verifica que los proyectos heredados no han cambiado respecto a `1.4-organizacion-solucion`.
+
+
+
 
 **Por qué se hace:** compilar la solución completa verifica que todos los proyectos, incluidos los nuevos, se resuelven correctamente.
 
@@ -5676,11 +5782,16 @@ public class CatalogoPracticasTests
 
 ### Paso 17 — Ejecutar todos los tests del punto 1.5
 
-**Acción 1:** Escribir dotnet test tests\AceriaApp.BuenasPracticas.Tests\AceriaApp.BuenasPracticas.Tests.csproj y pulsar Enter.
+**Acción 1:** Abre el **Explorador de pruebas** de Visual Studio o una terminal en la carpeta de la solución 1.5.
 
-**Acción 2:** Verificar que la salida muestra Passed! - Failed: 0, Passed: 5, Skipped: 0.
+**Acción 2:** Ejecuta `dotnet test tests/AceriaApp.BuenasPracticas.Tests/AceriaApp.BuenasPracticas.Tests.csproj -c Release` para comprobar únicamente los tests nuevos de la etapa.
 
-**Acción 3:** Confirmar que el proceso termina sin fallos y registrar cualquier incidencia de compilación o prueba.
+**Acción 3:** Verifica que pasan **5 pruebas** de `AceriaApp.BuenasPracticas.Tests` con 0 fallos; relaciona cada caso con `ValidadorBuenasPracticas` o `CatalogoPracticas`.
+
+**Acción 4:** Si falla algún test, consulta el primer mensaje de aserción y examina los bloques activados en los pasos 14 y 15 sin cambiar valores esperados a ciegas.
+
+
+
 
 **Por qué se hace:** ejecutar los tests del punto 1.5 verifica que las clases de buenas prácticas funcionan correctamente.
 
@@ -5696,11 +5807,16 @@ public class CatalogoPracticasTests
 
 ### Paso 18 — Ejecutar todos los tests de la solución
 
-**Acción 1:** Escribir dotnet test AceriaApp.sln --no-build y pulsar Enter.
+**Acción 1:** En la carpeta de `AceriaApp.sln` ejecuta `dotnet test AceriaApp.sln -c Release --no-build` después del build Release del paso 16.
 
-**Acción 2:** Verificar que la salida muestra Passed! - Failed: 0, Passed: 23, Skipped: 0.
+**Acción 2:** Comprueba que pasan **23 pruebas acumuladas**: 18 heredadas más 5 de la etapa 1.5.
 
-**Acción 3:** Confirmar que el proceso termina sin fallos y registrar cualquier incidencia de compilación o prueba.
+**Acción 3:** Si no se encuentran los ensamblados, vuelve a compilar en Release y repite el comando sin mezclar resultados Debug y Release.
+
+**Acción 4:** Guarda el resumen: los tests heredados deben seguir pasando, pues una nueva etapa no puede romper las capacidades previas de AceriaApp.
+
+
+
 
 **Por qué se hace:** ejecutar todos los tests de la solución verifica que los tests de los puntos 1.1, 1.2, 1.3, 1.4 y 1.5 pasan conjuntamente.
 
@@ -5716,11 +5832,16 @@ public class CatalogoPracticasTests
 
 ### Paso 19 — Revisar el documento preparado: README.md
 
-**Acción 1:** Abrir o localizar `README.md` en la carpeta del punto 1.5; el recurso ya está incluido en la solución preparada.
+**Acción 1:** Abre el archivo `README.md` de la carpeta `1.5-buenas-practicas`, no el del punto `1.4-organizacion-solucion`.
 
-**Acción 2:** Examinar su contenido y contrastarlo con el ejemplo de referencia que figura a continuación, sin volver a crear el recurso.
+**Acción 2:** Localiza en el documento el objetivo de la etapa y los archivos `Practica`, `ValidadorBuenasPracticas`, `CatalogoPracticas` y `AceriaApp.BuenasPracticas.Tests`.
 
-**Acción 3:** Confirmar la ruta, el nombre y los elementos declarados en `README.md`; conservar los archivos heredados sin modificación.
+**Acción 3:** Comprueba que las rutas de ejecución y tests mencionadas corresponden a los proyectos físicos de esta etapa.
+
+**Acción 4:** Anota qué información nueva aporta este README respecto al anterior; no lo sobrescribas con la versión heredada.
+
+
+
 
 ```markdown
 # Punto 1.5 — Buenas prácticas
@@ -5760,9 +5881,7 @@ Comprender las buenas prácticas aplicables al desarrollo de microservicios y a�
 - [Buenas prácticas](docs/buenas-practicas.md).
 ```
 
-**Acción 4:** Guardar únicamente si se ha realizado una corrección explícitamente indicada en esta práctica.
 
-**Acción 5:** Verificar que el archivo preparado sigue accesible y que el proyecto conserva la configuración de .NET 8.
 
 **Por qué se hace:** se trabaja sobre el material proporcionado y se evita duplicar archivos o alterar el punto anterior.  el README del punto 1.5 explica el objetivo, el estado, la ejecución y los añadidos. No modifica el README del punto 1.4.
 
@@ -5778,11 +5897,16 @@ Comprender las buenas prácticas aplicables al desarrollo de microservicios y a�
 
 ### Paso 20 — Revisar el documento preparado: ADR-005-buenas-practicas.md
 
-**Acción 1:** Abrir o localizar `docs/ADR-005-buenas-practicas.md` en la carpeta del punto 1.5; el recurso ya está incluido en la solución preparada.
+**Acción 1:** Abre `docs/ADR-005-buenas-practicas.md` dentro de `1.5-buenas-practicas` en el editor Markdown; el archivo se entrega preparado.
 
-**Acción 2:** Examinar su contenido y contrastarlo con el ejemplo de referencia que figura a continuación, sin volver a crear el recurso.
+**Acción 2:** Lee Estado, Contexto, Decisión, Alternativas y Consecuencias, vinculando la decisión con buenas prácticas declaradas de la solución.
 
-**Acción 3:** Confirmar la ruta, el nombre y los elementos declarados en `docs/ADR-005-buenas-practicas.md`; conservar los archivos heredados sin modificación.
+**Acción 3:** Identifica un resultado de los tests de 1.5 que apoye la decisión y una limitación que el ejemplo no demuestra.
+
+**Acción 4:** Comprueba que el ADR del punto anterior permanece presente e idéntico: cada decisión arquitectónica se documenta por separado.
+
+
+
 
 ```markdown
 # ADR-005: Adopción de buenas prácticas y cierre del módulo 1
@@ -5806,9 +5930,7 @@ Se adoptan las buenas prácticas de contrato, operación, comunicación y evoluc
 - Mitigación: revisar las categorías al final de cada módulo.
 ```
 
-**Acción 4:** Guardar únicamente si se ha realizado una corrección explícitamente indicada en esta práctica.
 
-**Acción 5:** Verificar que el archivo preparado sigue accesible y que el proyecto conserva la configuración de .NET 8.
 
 **Por qué se hace:** se trabaja sobre el material proporcionado y se evita duplicar archivos o alterar el punto anterior.  el ADR-005 documenta la decisión de adoptar buenas prácticas y de cerrar el módulo 1. Es un artefacto nuevo del punto 1.5 que no modifica los ADR existentes.
 
@@ -5824,15 +5946,18 @@ Se adoptan las buenas prácticas de contrato, operación, comunicación y evoluc
 
 ### Paso 21 — Verificar que no se ha modificado ningún archivo del punto 1.4
 
-**Acción 1:** En la terminal, escribir cd C:\cursos\AceriaApp\modulo-1-introduccion-microservicios y pulsar Enter.
+**Acción 1:** En tu copia del repositorio localiza las carpetas `docs` de `1.4-organizacion-solucion` y `1.5-buenas-practicas`.
 
-**Acción 2:** Escribir fc /L 1.4-organizacion-solucion\docs\ADR-004-organizacion-solucion.md 1.5-buenas-practicas\docs\ADR-004-organizacion-solucion.md y pulsar Enter.
+**Acción 2:** Selecciona un fichero **heredado** presente en ambas carpetas y compara su contenido con `fc /L` en Windows o un hash SHA-256.
 
-**Acción 3:** Verificar que la salida muestra FC: no differences encountered.
+**Acción 3:** Los documentos heredados deben ser idénticos; el `README.md` de 1.5 puede ser diferente porque explica la etapa actual.
 
-**Acción 4:** Escribir fc /L 1.4-organizacion-solucion\docs\organizacion-solucion.md 1.5-buenas-practicas\docs\organizacion-solucion.md y pulsar Enter.
+**Acción 4:** Registra el resultado y no modifiques los originales de `1.4-organizacion-solucion` para forzar igualdad.
 
-**Acción 5:** Verificar que la salida muestra FC: no differences encountered.
+
+
+
+
 
 **Por qué se hace:** la comparación con fc verifica que los documentos del punto 1.4 no se han modificado.
 
@@ -5848,13 +5973,17 @@ Se adoptan las buenas prácticas de contrato, operación, comunicación y evoluc
 
 ### Paso 22 — Verificar la estructura del punto 1.5
 
-**Acción 1:** Escribir tree /F 1.5-buenas-practicas y pulsar Enter.
+**Acción 1:** Desde `M01_INTRODUCCION_MICROSERVICIOS/PROYECTO` ejecuta `tree /F 1.5-buenas-practicas` en una terminal Windows.
 
-**Acción 2:** Verificar que la salida muestra AceriaApp.sln, README.md, src\AceriaApp.Monolito.Api\BuenasPracticas con las tres clases nuevas, tests\AceriaApp.BuenasPracticas.Tests con los dos archivos de tests y docs con el ADR-001, ADR-002, ADR-003, ADR-004, ADR-005, el análisis comparativo, el documento de principios, el documento de organización y el documento de buenas prácticas.
+**Acción 2:** Comprueba en `src/AceriaApp.Monolito.Api/BuenasPracticas` los tres tipos `Practica.cs`, `ValidadorBuenasPracticas.cs` y `CatalogoPracticas.cs`.
 
-**Acción 3:** Verificar que las carpetas Dominio, Infraestructura, Metricas, Diseno y Organizacion del punto 1.4 permanecen intactas.
+**Acción 3:** En `tests/AceriaApp.BuenasPracticas.Tests` localiza las pruebas del validador y catálogo; en `docs` localiza `buenas-practicas.md`, `ADR-005-buenas-practicas.md` y los documentos heredados.
 
-**Acción 4:** Verificar que la carpeta del punto contiene únicamente código, tests, documentación y configuración necesarios para estudiar el ejemplo.
+**Acción 4:** Distingue los archivos fuente de las carpetas temporales `bin` y `obj`, que no deben incorporarse como entregables.
+
+
+
+
 
 **Por qué se hace:** la verificación estructural confirma que el punto 1.5 añade archivos nuevos sin modificar los existentes.
 
@@ -5870,15 +5999,18 @@ Se adoptan las buenas prácticas de contrato, operación, comunicación y evoluc
 
 ### Paso 23 — Revisar el documento preparado: .gitignore
 
-**Acción 1:** Abrir o localizar `.gitignore` en la carpeta del punto 1.5; el recurso ya está incluido en la solución preparada.
+**Acción 1:** Abre el `.gitignore` de la carpeta `1.5-buenas-practicas` en un editor que muestre ficheros ocultos.
 
-**Acción 2:** Examinar su contenido y contrastarlo con el ejemplo de referencia que figura a continuación, sin volver a crear el recurso.
+**Acción 2:** Comprueba que conserva las exclusiones `bin/`, `obj/`, `.vs/`, resultados y archivos de usuario sin ignorar el código fuente.
 
-**Acción 3:** Confirmar la ruta, el nombre y los elementos declarados en `.gitignore`; conservar los archivos heredados sin modificación.
+**Acción 3:** Ejecuta `git status --short` en tu copia personal tras compilar y confirma que no aparecen binarios temporales.
 
-**Acción 4:** Guardar únicamente si se ha realizado una corrección explícitamente indicada en esta práctica.
+**Acción 4:** No sustituyas el fichero ya incluido por una plantilla ajena; verifica que conserva la política del punto anterior.
 
-**Acción 5:** Verificar que el archivo preparado sigue accesible y que el proyecto conserva la configuración de .NET 8.
+
+
+
+
 
 **Por qué se hace:** se trabaja sobre el material proporcionado y se evita duplicar archivos o alterar el punto anterior.  el .gitignore se hereda del punto 1.4 sin modificaciones. La verificación confirma que no se ha tocado.
 
@@ -5894,15 +6026,18 @@ Se adoptan las buenas prácticas de contrato, operación, comunicación y evoluc
 
 ### Paso 24 — Hacer el commit del punto 1.5 y verificar el estado final del módulo 1
 
-**Acción 1:** Escribir cd C:\cursos\AceriaApp y pulsar Enter.
+**Acción 1:** Desde tu copia personal (no la rama del profesor) ejecuta `git status` para identificar los cambios de `1.5-buenas-practicas`.
 
-**Acción 2:** Escribir git add . y pulsar Enter.
+**Acción 2:** Revisa `git diff --stat` y prepara con `git add` solo archivos de esta etapa, sin incluir carpetas compiladas ni secretos.
 
-**Acción 3:** Escribir git commit -m "Punto 1.5: buenas prácticas y cierre del módulo 1" y pulsar Enter.
+**Acción 3:** Realiza el commit del punto 1.5 con un mensaje descriptivo de buenas prácticas declaradas de la solución; no sobrescribas los commits de etapas previas.
 
-**Acción 4:** Escribir git log --oneline y pulsar Enter para verificar los cinco commits.
+**Acción 4:** Comprueba `git log -1 --oneline`, `git status` y conserva el resultado de los 23 tests acumulados como evidencia final.
 
-**Acción 5:** Escribir git status y pulsar Enter para verificar que el árbol está limpio.
+
+
+
+
 
 **Por qué se hace:** el commit del punto 1.5 cierra el módulo 1. Los cinco commits consecutivos permiten comparar el estado del proyecto entre puntos consecutivos y entre módulos completos.
 
