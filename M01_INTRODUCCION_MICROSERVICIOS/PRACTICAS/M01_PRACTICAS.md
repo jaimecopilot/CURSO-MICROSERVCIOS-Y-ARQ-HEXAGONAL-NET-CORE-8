@@ -938,23 +938,6 @@ TestResults/
 
 ---
 
-## Errores comunes del ejercicio completo
-
-Error Causa Solución
-dotnet ef no se reconoce La herramienta dotnet-ef no está instalada globalmente Ejecutar dotnet tool install --global dotnet-ef --version 8.0.0
-Unable to create an object of type 'AceriaDbContext' Falta el paquete Microsoft.EntityFrameworkCore.Design Ejecutar dotnet add package Microsoft.EntityFrameworkCore.Design --version 8.0.0
-A network-related or instance-specific error SQL Server Express no está arrancado Abrir Services.msc y arrancar SQL Server (SQLEXPRESS)
-InvalidOperationException: ConnectionString 'AceriaDb' not found La clave de la cadena de conexión no coincide Verificar que appsettings.json contiene "AceriaDb" exactamente
-The name 'UseSqlServer' does not exist Falta el using Microsoft.EntityFrameworkCore; Añadir el using al principio de Program.cs
-Swagger no aparece El entorno no es Development Verificar ASPNETCORE_ENVIRONMENT=Development o ejecutar dotnet run --environment Development
-El POST devuelve 400 El cuerpo JSON no coincide con la entidad Orden Verificar que el JSON tiene cliente, material, cantidad
-El GET devuelve 500 La base de datos no existe Ejecutar dotnet ef database update
-dotnet test no encuentra tests El proyecto de tests no está en la solución Ejecutar dotnet sln add tests\AceriaApp.Monolito.Tests\AceriaApp.Monolito.Tests.csproj
-El commit de Git falla user.name y user.email no configurados Ejecutar git config --global user.name y git config --global user.email
-
-
----
-
 ## Reto de ampliación: solución guiada
 
 **Problema a resolver:** añadir un endpoint GET /api/v1/ordenes/{id} que devuelva una orden concreta por su identificador, y un test unitario que verifique la ausencia de la orden en la capa de persistencia cuando el identificador no existe.
@@ -2298,23 +2281,6 @@ TestResults/
 
 ---
 
-## Errores comunes del ejercicio completo
-
-Error Causa Solución
-xcopy no copia subcarpetas Falta el flag /E Ejecutar xcopy origen destino /E /I /H /Y
-fc muestra diferencias en el ADR-001 Se ha modificado el archivo del punto 1.1 Restaurar el ADR-001 desde el punto 1.1
-DivideByZeroException en IndiceAcoplamiento No se comprueba el divisor Añadir la comprobación if (NumeroDeProyectos == 0)
-NullReferenceException en AnalizadorMonolito No se inicializa _servicios Inicializar en el constructor
-The name 'Sum' does not exist Falta el using System.Linq; Añadir el using al principio del archivo
-The name 'List' does not exist Falta el using System.Collections.Generic; Añadir el using al principio del archivo
-Should() no se resuelve Falta el paquete FluentAssertions Ejecutar dotnet add package FluentAssertions
-El proyecto de tests no compila Falta la referencia al proyecto monolítico Ejecutar dotnet add reference
-El commit de Git incluye bin/ y obj/ Falta el .gitignore Crear el .gitignore con bin/ y obj/
-La compilación falla por el .dll bloqueado La API está en ejecución Detener la API con Ctrl+C
-
-
----
-
 ## Reto de ampliación: solución guiada
 
 **Problema a resolver:** añadir un método ServicioMenosAcoplado a AnalizadorMonolito que devuelva el servicio con menor índice de complejidad, y un test que verifique que devuelve el servicio correcto cuando hay empate.
@@ -3576,23 +3542,6 @@ Se adoptan ocho principios: responsabilidad única, ocultación de información,
 
 ---
 
-## Errores comunes del ejercicio completo
-
-Error Causa Solución
-xcopy no copia subcarpetas Falta el flag /E Ejecutar xcopy origen destino /E /I /H /Y
-List<string> no se resuelve Falta el using System.Collections.Generic; Añadir el using al principio del archivo
-Where no se resuelve Falta el using System.Linq; Añadir el using al principio del archivo
-NullReferenceException en CatalogoLimites No se inicializa _limites Inicializar en el constructor
-El validador no detecta errores Falta alguna comprobación Revisar las seis comprobaciones del método Validar
-El test de límite válido falla El límite tiene más de tres conceptos o más de tres dependencias Ajustar el límite de prueba
-Should() no se resuelve Falta el paquete FluentAssertions Ejecutar dotnet add package FluentAssertions
-El proyecto de tests no compila Falta la referencia al proyecto monolítico Ejecutar dotnet add reference
-La compilación falla por el .dll bloqueado La API está en ejecución Detener la API con Ctrl+C
-El commit incluye bin/ y obj/ Falta el .gitignore Verificar que el .gitignore está presente
-
-
----
-
 ## Reto de ampliación: solución guiada
 
 **Problema a resolver:** añadir un método Resumen a CatalogoLimites que devuelva el número de límites válidos, el número de límites inválidos y el porcentaje de validez, y un test que verifique el cálculo cuando hay tres límites válidos y uno inválido.
@@ -4809,23 +4758,6 @@ Se adopta un monorepo con una carpeta por módulo y una carpeta por punto. Dentr
 
 
 **Nota de trazabilidad:** en una descarga del repositorio puede no haber cambios nuevos que confirmar. Antes de ejecutar `git commit`, usar `git status` y confirmar únicamente los archivos efectivamente modificados durante el recorrido. No ejecutar `git init` dentro de cada punto: la raíz del repositorio ya contiene el historial.
-
----
-
-## Errores comunes del ejercicio completo
-
-Error Causa Solución
-xcopy no copia subcarpetas Falta el flag /E Ejecutar xcopy origen destino /E /I /H /Y
-IReadOnlyList<string> no se resuelve Falta el using System.Collections.Generic; Añadir el using al principio del archivo
-Contains no se resuelve Falta el using System.Linq; Añadir el using al principio del archivo
-Where no se resuelve Falta el using System.Linq; Añadir el using al principio del archivo
-NullReferenceException en CatalogoProyectos No se inicializa _nombres Inicializar en el constructor
-El validador no detecta nombres sin prefijo Falta la comprobación con StartsWith Revisar la primera comprobación de Validar
-El validador acepta nombres con cuatro partes Falta la comprobación de longitud Revisar la comprobación partes.Length != 3
-Should() no se resuelve Falta el paquete FluentAssertions Ejecutar dotnet add package FluentAssertions
-El proyecto de tests no compila Falta la referencia al proyecto monolítico Ejecutar dotnet add reference
-La compilación falla por el .dll bloqueado La API está en ejecución Detener la API con Ctrl+C
-
 
 ---
 
@@ -6077,23 +6009,6 @@ Se adoptan las buenas prácticas de contrato, operación, comunicación y evoluc
 
 
 **Nota de trazabilidad:** en una descarga del repositorio puede no haber cambios nuevos que confirmar. Antes de ejecutar `git commit`, usar `git status` y confirmar únicamente los archivos efectivamente modificados durante el recorrido. No ejecutar `git init` dentro de cada punto: la raíz del repositorio ya contiene el historial.
-
----
-
-## Errores comunes del ejercicio completo
-
-Error Causa Solución
-xcopy no copia subcarpetas Falta el flag /E Ejecutar xcopy origen destino /E /I /H /Y
-IReadOnlyList<string> no se resuelve Falta el using System.Collections.Generic; Añadir el using al principio del archivo
-ToList no se resuelve Falta el using System.Linq; Añadir el using al principio del archivo
-Contains no se resuelve Falta el using System.Linq; Añadir el using al principio del archivo
-Where no se resuelve Falta el using System.Linq; Añadir el using al principio del archivo
-NullReferenceException en CatalogoPracticas No se inicializa _practicas Inicializar en el constructor
-El validador no detecta categorías inválidas Falta la comprobación con Contains Revisar la primera comprobación del bucle
-El validador no detecta prácticas no aplicadas Falta la comprobación !practica.EstaAplicada Revisar la segunda comprobación del bucle
-Should() no se resuelve Falta el paquete FluentAssertions Ejecutar dotnet add package FluentAssertions
-El proyecto de tests no compila Falta la referencia al proyecto monolítico Ejecutar dotnet add reference
-
 
 ---
 

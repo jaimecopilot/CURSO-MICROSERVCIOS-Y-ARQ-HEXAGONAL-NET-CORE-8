@@ -70,6 +70,10 @@ def main():
     doc=fitz.open(str(PDF))
     if len(doc) < 50: raise RuntimeError(f"PDF demasiado corto: {len(doc)} páginas")
     alltext="\n".join(p.get_text() for p in doc)
+    if re.search(r"Errores\\s+comunes\\s+del\\s+ejercicio\\s+completo",source,flags=re.I):
+        raise RuntimeError("El Markdown conserva la sección eliminada")
+    if re.search(r"Errores\\s+comunes\\s+del\\s+ejercicio\\s+completo",alltext,flags=re.I):
+        raise RuntimeError("El PDF conserva la sección eliminada")
     for part in range(1,6):
         if f"Punto 1.{part}" not in alltext: raise RuntimeError(f"Falta Punto 1.{part}")
     bounds=[];blank=[]
