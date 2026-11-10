@@ -1,5 +1,5 @@
 {
-  "fecha": "2026-11-10T19:31:57.428009+00:00",
+  "fecha": "2026-11-10T19:49:32.444309+00:00",
   "origen": "M03_PRACTICAS.md",
   "etapas": [
     {
@@ -733,7 +733,61 @@
     }
   ],
   "construccion": "desde texto; nunca desde PROYECTO/M03",
-  "source_sha256": "bcd851083f2508845d88802f52b3fa2ea246e473d150ace8593ecc4f80e52a86",
+  "source_sha256": "d162347f2fa676a4f31355ce26909e2c3de103e3f3534f23a9965d7b45596c74",
+  "retos_optativos": {
+    "resultado": "PASS",
+    "etapas_obligatorias_intactas": true,
+    "retos": [
+      {
+        "punto": "3.1",
+        "estado": "PASS",
+        "tests_proyecto": 8,
+        "tests_solucion": 24,
+        "fragmentos_csharp": 3,
+        "archivos": [
+          "src/AceriaApp.Api/Capas/ValidadorReglaDependencia.cs",
+          "tests/AceriaApp.Capas.Tests/ValidadorReglaDependenciaTests.cs"
+        ],
+        "test_resumen": "PASS"
+      },
+      {
+        "punto": "3.2",
+        "estado": "PASS",
+        "tests_proyecto": 9,
+        "tests_solucion": 32,
+        "fragmentos_csharp": 3,
+        "archivos": [
+          "src/AceriaApp.Api/PuertosAdaptadores/ValidadorPuertosAdaptadores.cs",
+          "tests/AceriaApp.PuertosAdaptadores.Tests/ValidadorPuertosAdaptadoresTests.cs"
+        ],
+        "test_resumen": "PASS"
+      },
+      {
+        "punto": "3.3",
+        "estado": "PASS",
+        "tests_proyecto": 8,
+        "tests_solucion": 39,
+        "fragmentos_csharp": 3,
+        "archivos": [
+          "src/AceriaApp.Api/SeparacionCapas/ValidadorSeparacionCapas.cs",
+          "tests/AceriaApp.SeparacionCapas.Tests/ValidadorSeparacionCapasTests.cs"
+        ],
+        "test_resumen": "PASS"
+      },
+      {
+        "punto": "3.4",
+        "estado": "PASS",
+        "tests_proyecto": 9,
+        "tests_solucion": 51,
+        "fragmentos_csharp": 3,
+        "archivos": [
+          "src/AceriaApp.Api/Implementacion/ValidadorRegistroServicios.cs",
+          "tests/AceriaApp.Implementacion.Tests/ValidadorRegistroServiciosTests.cs"
+        ],
+        "test_resumen": "PASS"
+      }
+    ]
+  },
   "resumen": {
     "resultado": "PASS",
     "pasos": 96,
