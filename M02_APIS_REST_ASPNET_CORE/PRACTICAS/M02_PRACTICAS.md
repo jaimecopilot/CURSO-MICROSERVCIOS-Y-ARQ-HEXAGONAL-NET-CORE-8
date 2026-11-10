@@ -34,6 +34,18 @@ Los fragmentos se presentan según la etapa en la que el alumno debe introducirl
 
 ---
 
+## Preparación común del puesto de trabajo
+
+**Herramientas:** Visual Studio con desarrollo ASP.NET y web, SDK .NET 8 y, para ejecutar la API local, SQL Server Express **LocalDB** en Windows. Comprueba en una terminal `dotnet --list-sdks` y `sqllocaldb info MSSQLLocalDB`; no confundas la compilación con la disponibilidad de la base. En Visual Studio, `Ctrl+S` guarda, **Compilar solución** comprueba el código y **F5** inicia el perfil seleccionado. La dirección real de Kestrel se obtiene en la salida `Now listening on:`.
+
+**Carpetas de trabajo:** crea una carpeta propia para cada etapa, sin editar el código de referencia. Para 2.1, el resultado esperado al terminar incluye `src/AceriaApp.Api`, `tests/AceriaApp.Api.Tests` y `AceriaApp.http` bajo la misma raíz del punto. En el asistente de Visual Studio, elige como ubicación de la API la carpeta `src` de tu espacio de trabajo, de modo que el proyecto se guarde en `src/AceriaApp.Api`. Si ya trabajas con una solución, incorpora ambos proyectos a ella; los comandos de este manual se ejecutan desde la **raíz de la etapa**.
+
+**Progresión de archivos:** en 2.2, 2.3 y 2.4 comienza con una copia del trabajo terminado del punto anterior, no con el proyecto de referencia que ya incorpora pasos futuros. Conserva un único `Program.cs` y una sola clase por nombre. Cuando se indique *añadir dentro*, no pegues otra clase completa: sitúa el nuevo método antes de su llave final. Si un paso propone analizar un bloque ya creado, **no lo dupliques**.
+
+**Resultado de aprendizaje:** en cada paso realiza las cuatro acciones numeradas y comprueba el resultado antes de avanzar. Los pasos de diseño, inspección y depuración también exigen evidencia, aunque no modifiquen archivos. Los retos se realizan en copias aparte y no forman parte de las pruebas obligatorias de la etapa.
+
+---
+
 ## Punto 2.1 — Del diseño REST a los primeros endpoints GET
 
 **Proyecto comprobado:** `PROYECTO/2.1-diseno-apis-rest`. El punto comienza estudiando el contrato de recursos y concluye con una ejecución verificable. Ninguna comprobación sustituye a un endpoint realmente implementado.
@@ -49,8 +61,6 @@ Los fragmentos se presentan según la etapa en la que el alumno debe introducirl
 3. Pulsa **Crear**, abre `AceriaApp.Api.csproj` en el Explorador de soluciones y comprueba `<TargetFramework>net8.0</TargetFramework>`. Si no aparece .NET 8, instala ese SDK antes de seguir.
 4. Ejecuta una compilación desde **Compilar > Compilar solución** o `dotnet build` en la carpeta del proyecto; identifica `Program.cs` como punto de entrada y guarda la solución de trabajo.
 
-
-**Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
 **Por qué funciona así.** El programa aún se está preparando: comprobar SDK, arranque y URI antes de introducir persistencia permite aislar errores de herramienta frente a errores de API.
 
@@ -70,8 +80,6 @@ Los fragmentos se presentan según la etapa en la que el alumno debe introducirl
 4. Detén Kestrel con el botón **Detener** o `Ctrl+C`. Si la plantilla incluye un `MapGet("/")` de ejemplo, identifícalo; se retirará cuando sustituyas `Program.cs` por la API del taller.
 
 
-**Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
-
 **Por qué funciona así.** El programa aún se está preparando: comprobar SDK, arranque y URI antes de introducir persistencia permite aislar errores de herramienta frente a errores de API.
 
 **Verificación concreta.** Registra la URL y puerto de escucha y demuestra que puedes iniciar y detener el servidor vacío. No interpretes un 404 en `/api/v1/ordenes` como error: ese endpoint todavía no existe.
@@ -89,8 +97,6 @@ Los fragmentos se presentan según la etapa en la que el alumno debe introducirl
 3. Separa la identidad pública de una orden (`Guid Id`) de su representación (`OrdenDto`); razona por qué el cliente no debería ver obligatoriamente todos los campos de EF Core.
 4. Antes de programar, comprueba que las dos URIs son sustantivos de recurso y que la plantilla `{id:guid}` exigirá un identificador con formato GUID.
 
-
-**Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
 **Por qué funciona así.** El programa aún se está preparando: comprobar SDK, arranque y URI antes de introducir persistencia permite aislar errores de herramienta frente a errores de API.
 
@@ -145,8 +151,6 @@ public sealed class Orden
 3. Anota qué campos podrían establecerse desde `CrearOrdenRequest` más adelante y cuáles seguirán bajo control del servidor (`Id`, `Estado`, `FechaCreacion`).
 4. No modifiques todavía la entidad ni dupliques su clase. Completa una pequeña tabla «propiedad → valor inicial → responsable» como evidencia conceptual.
 
-
-**Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
 **Por qué funciona así.** La entidad y el DTO cumplen funciones diferentes. La primera modela los datos persistidos y el segundo limita el contrato JSON que puede ver el consumidor.
 
@@ -229,8 +233,6 @@ public sealed record OrdenDto(
 4. Ejecuta `dotnet restore src/AceriaApp.Api/AceriaApp.Api.csproj`. No añadas SQLite ni InMemory a la aplicación principal; InMemory se reservará al proyecto de tests.
 
 
-**Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
-
 **Por qué funciona así.** El acceso a datos se configura en infraestructura mediante EF Core y DI. LocalDB es la base efectiva de la API; EnsureCreated se usa solo durante el aprendizaje.
 
 **Verificación concreta.** El `.csproj` contiene el proveedor `Microsoft.EntityFrameworkCore.SqlServer` versión 8.x y `dotnet restore` termina correctamente. Esto aún no prueba que LocalDB esté disponible.
@@ -283,8 +285,6 @@ public sealed class AceriaDbContext(
 4. Guarda, ejecuta `dotnet build` y diferencia estas restricciones de modelo de las futuras reglas FluentValidation: aquí estás describiendo el almacenamiento.
 
 
-**Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
-
 **Código de este paso.** Añade el método al cuerpo del `AceriaDbContext` creado en 2.1.9; no borres el constructor ni `DbSet`. Comprueba que la clase final coincide con la referencia del punto 2.1.
 
 ```csharp
@@ -316,8 +316,6 @@ protected override void OnModelCreating(ModelBuilder b)
 3. Comprueba que SQL Server Express LocalDB está instalado. Desde una consola de Windows ejecuta `sqllocaldb info MSSQLLocalDB`; si no está iniciada, usa `sqllocaldb start MSSQLLocalDB`.
 4. Guarda el JSON, comprueba las comas y las comillas y no añadas usuarios ni contraseñas reales al repositorio.
 
-
-**Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
 **Por qué funciona así.** El acceso a datos se configura en infraestructura mediante EF Core y DI. LocalDB es la base efectiva de la API; EnsureCreated se usa solo durante el aprendizaje.
 
@@ -366,8 +364,6 @@ builder.Services.AddDbContext<AceriaDbContext>(options =>
 3. En Visual Studio selecciona el perfil Development y comprueba que LocalDB esté iniciada. Arranca la API y revisa en el Explorador de objetos SQL Server si se creó `AceriaAppM02`.
 4. Detén el servidor. Explica por qué los tests establecerán `SkipDatabaseInitialization=true` y por qué `EnsureCreated` no sustituye a las migraciones de producción.
 
-
-**Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
 **Código de este paso.** Este bloque va después de `builder.Build()` y antes de mapear los endpoints. Crea la base de aprendizaje solo en Development; la opción `SkipDatabaseInitialization` se utiliza en los tests de integración.
 
@@ -432,8 +428,6 @@ app.MapGet("/api/v1/ordenes",
 4. Guarda, compila y ejecuta el GET. Comprueba que devuelve el mismo JSON, porque `AsNoTracking` cambia el seguimiento de entidades, no el contrato HTTP.
 
 
-**Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
-
 **Código de este paso.** Modifica la consulta existente y verifica que la ruta, el tipo de respuesta y la ordenación siguen siendo los mismos. Esta consulta es la versión final del endpoint de colección.
 
 ```csharp
@@ -460,8 +454,6 @@ var ordenes = await db.Ordenes.AsNoTracking()
 3. Pulsa **Send Request** sobre esa línea (cliente HTTP de Visual Studio) o usa `curl` contra el mismo host. Observa la línea de estado, la cabecera `Content-Type` y el cuerpo.
 4. Si la tabla aún está vacía, verifica que el JSON sea `[]`. Si ya hay datos de otro intento, usa una base de pruebas limpia o explica por qué aparecen elementos.
 
-
-**Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
 **Por qué funciona así.** El verbo GET no modifica recursos. MapGet recibe dependencias y parámetros, consulta la orden y traduce el resultado a 200 o 404 con DTOs.
 
@@ -516,8 +508,6 @@ app.MapGet("/api/v1/ordenes/{id:guid}",
 4. Continúa la ejecución y comprueba que la respuesta es 404 sin un DTO inventado. Si el identificador sí existe, la otra rama devolverá 200 con la representación.
 
 
-**Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
-
 **Por qué funciona así.** El verbo GET no modifica recursos. MapGet recibe dependencias y parámetros, consulta la orden y traduce el resultado a 200 o 404 con DTOs.
 
 **Verificación concreta.** Demuestra que el manejador, no la base de datos ni Swagger, decide devolver 404 cuando la consulta no encuentra una orden.
@@ -536,8 +526,6 @@ app.MapGet("/api/v1/ordenes/{id:guid}",
 4. Comprueba que ahora sí se entra en el delegado, se consulta EF Core y se obtiene `NotFound`. Documenta las dos causas aunque el código HTTP externo pueda ser 404.
 
 
-**Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
-
 **Por qué funciona así.** El verbo GET no modifica recursos. MapGet recibe dependencias y parámetros, consulta la orden y traduce el resultado a 200 o 404 con DTOs.
 
 **Verificación concreta.** Tabla con «URL», «¿entra en el endpoint?», «origen del 404». Debe mostrar NO para formato inválido y SÍ para GUID válido ausente.
@@ -555,8 +543,6 @@ app.MapGet("/api/v1/ordenes/{id:guid}",
 3. Arranca la API y ejecuta las dos peticiones con **Send Request**. Guarda junto a cada una el resultado esperado: 200 con array para colección y 404 para recurso ausente.
 4. Abre `Program.cs` en el depurador y comprueba qué dependencia se inyecta; realiza el caso práctico completo de lectura EF Core situado después de esta actividad.
 
-
-**Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
 **Por qué funciona así.** El verbo GET no modifica recursos. MapGet recibe dependencias y parámetros, consulta la orden y traduce el resultado a 200 o 404 con DTOs.
 
@@ -750,8 +736,6 @@ public class GetTests
 4. Añade una prueba xUnit específica del filtro, ejecútala y documenta qué diferencia hay entre filtrar colección y consultar un recurso por GUID.
 
 
-**Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
-
 **Por qué funciona así.** El filtrado de la colección conserva la idea de recurso y añade una consulta con parámetros, sin transformar el endpoint en una operación RPC.
 
 **Verificación concreta.** La solución ampliada filtra sin cambiar el contrato de los GET básicos. Este reto no debe introducirse obligatoriamente en el proyecto base de la etapa 2.2.
@@ -819,8 +803,6 @@ La prueba debe rechazar una implementación que devuelva todas las filas.
 4. Anota el estado inicial y conserva una copia de seguridad del punto 2.1; los nuevos endpoints se añadirán progresivamente en `Program.cs`.
 
 
-**Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.2-recursos-verbos-codigos` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
-
 **Por qué funciona así.** El diseño de las rutas y los contratos evita recibir propiedades de servidor desde JSON. El resultado público se devuelve mediante OrdenDto, no directamente desde la entidad.
 
 **Verificación concreta.** La etapa 2.2 parte de la API de lectura de 2.1 sin regresiones: 3 tests y las dos peticiones GET siguen correctos.
@@ -839,8 +821,6 @@ La prueba debe rechazar una implementación que devuelva todas las filas.
 4. Añade los casos alternativos 400 (entrada inválida), 404 (id inexistente), 409 (estado incompatible) y 422 (capacidad del taller). Marca cuáles pertenecen a pasos siguientes para no implementarlos todos todavía.
 
 
-**Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.2-recursos-verbos-codigos` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
-
 **Por qué funciona así.** El diseño de las rutas y los contratos evita recibir propiedades de servidor desde JSON. El resultado público se devuelve mediante OrdenDto, no directamente desde la entidad.
 
 **Verificación concreta.** Tu tabla debe enumerar las siete operaciones reales del proyecto de referencia 2.2 y distinguir los resultados HTTP de los cambios almacenados en `Ordenes`.
@@ -858,8 +838,6 @@ La prueba debe rechazar una implementación que devuelva todas las filas.
 3. Dibuja dos contratos de entrada: `CrearOrdenRequest(string Cliente, string Material, int Cantidad)` y `ActualizarCantidadRequest(int Cantidad)`. Compáralos con `OrdenDto`, que además publica id, estado y fecha.
 4. Justifica por qué el endpoint POST no debería aceptar libremente un `Orden` completo con un `Id` proporcionado por el cliente.
 
-
-**Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.2-recursos-verbos-codigos` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
 **Por qué funciona así.** El diseño de las rutas y los contratos evita recibir propiedades de servidor desde JSON. El resultado público se devuelve mediante OrdenDto, no directamente desde la entidad.
 
@@ -1019,8 +997,6 @@ return Results.CreatedAtRoute(
 4. No incorpores todavía FluentValidation ni dupliques el `if`. La sustitución por validadores y filtros se realizará expresamente en 2.3.
 
 
-**Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.2-recursos-verbos-codigos` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
-
 **Por qué funciona así.** Un cuerpo incorrecto es distinto de una regla del negocio. En 2.2 el 400 es provisional; 501 unidades reciben 422 por la capacidad limitada del taller.
 
 **Verificación concreta.** Tres POST inválidos devuelven 400 y no crean registros. El cuerpo 400 todavía no tiene por qué ser `ValidationProblemDetails`.
@@ -1038,8 +1014,6 @@ return Results.CreatedAtRoute(
 3. Comprueba que se alcanza `Results.Problem(... statusCode: 422)` y que no se ejecuta `db.Ordenes.Add`.
 4. Anota la diferencia entre un valor sintácticamente correcto pero no aceptable por la capacidad del taller y una entrada obligatoria ausente. Repite con cantidad 500 para observar que no entra en esta condición.
 
-
-**Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.2-recursos-verbos-codigos` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
 **Por qué funciona así.** Un cuerpo incorrecto es distinto de una regla del negocio. En 2.2 el 400 es provisional; 501 unidades reciben 422 por la capacidad limitada del taller.
 
@@ -1474,8 +1448,6 @@ public async Task EditarYEliminar_CambiaPersistencia()
 4. Verifica el recuento **7 superados, 0 fallidos**, con todos los tests del punto 2.1 preservados.
 
 
-**Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.2-recursos-verbos-codigos` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
-
 **Añade estas dos pruebas dentro de `EscrituraTests` (sin duplicar la clase):**
 
 ```csharp
@@ -1523,8 +1495,6 @@ public async Task OrdenFinalizada_NoSeEdita409()
 3. Crea otra orden pendiente, ejecuta DELETE dos veces y luego GET; registra 204, 404 y 404 como secuencia posible.
 4. Razona qué significa idempotencia a partir del estado final, no de que los códigos HTTP de dos solicitudes consecutivas deban ser iguales.
 
-
-**Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.2-recursos-verbos-codigos` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
 **Por qué funciona así.** La idempotencia habla del efecto final: repetir PUT no multiplica los recursos, y repetir DELETE no restaura lo eliminado. Las respuestas HTTP pueden diferir.
 
@@ -1601,8 +1571,6 @@ solamente códigos 204.
 4. Anota qué 400 se obtienen hoy mediante `if` provisionales de `Program.cs`. Estos controles se reemplazarán por validadores y filtros sin cambiar las rutas públicas.
 
 
-**Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.3-validacion-peticiones` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
-
 **Por qué funciona así.** La deserialización de un cuerpo JSON y la validación semántica no son lo mismo. Primero el framework interpreta el mensaje y después se comprueban las reglas de datos.
 
 **Verificación concreta.** Antes de modificar el código deben pasar las 7 pruebas de 2.2. Has identificado los `if` provisionales y conservas una copia funcional.
@@ -1621,8 +1589,6 @@ solamente códigos 204.
 4. Crea una tabla «entrada → nivel de validación → HTTP esperado → efecto sobre la tabla» y consérvala para repetir el experimento tras conectar los filtros.
 
 
-**Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.3-validacion-peticiones` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
-
 **Por qué funciona así.** La deserialización de un cuerpo JSON y la validación semántica no son lo mismo. Primero el framework interpreta el mensaje y después se comprueban las reglas de datos.
 
 **Verificación concreta.** La tabla distingue JSON mal formado, cantidad fuera de rango semántico y capacidad 501. Al completar 2.3 debe poder justificarse 400 frente a 422.
@@ -1640,8 +1606,6 @@ solamente códigos 204.
 3. Abre el `.csproj` y comprueba la nueva dependencia. Ejecuta `dotnet restore` y revisa posibles conflictos de versiones.
 4. No elimines `Microsoft.EntityFrameworkCore.SqlServer`. Instalar el paquete no registra validadores ni convierte automáticamente los POST en validaciones.
 
-
-**Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.3-validacion-peticiones` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
 **Por qué funciona así.** La deserialización de un cuerpo JSON y la validación semántica no son lo mismo. Primero el framework interpreta el mensaje y después se comprueban las reglas de datos.
 
@@ -1696,8 +1660,6 @@ public sealed class CrearOrdenValidator : AbstractValidator<CrearOrdenRequest>
 3. Verifica el significado de los límites 0, 1, 500, 501, 10000 y 10001. El valor 501 pasa FluentValidation pero será rechazado por la regla del negocio.
 4. Guarda y compila. Comprueba que las nuevas reglas se añadieron al constructor **existente**, no a un segundo validador con el mismo nombre.
 
-
-**Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.3-validacion-peticiones` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
 **Código de este paso.** Añade las reglas dentro del mismo constructor, después de la de Cliente. El rango semántico `1..10000` es diferente del límite de capacidad de negocio `500` evaluado en el endpoint.
 
@@ -1757,8 +1719,6 @@ public sealed class ActualizarCantidadValidator
 3. Repite con `new CrearOrdenRequest("ACX", "CHAPA", 10)` y comprueba que cambia `IsValid`. Observa que un validador es una clase ejecutable aunque todavía no se invoque en HTTP.
 4. **Elimina el archivo temporal de exploración** tras anotar el resultado: el estado canónico 2.3 incorpora pruebas de integración HTTP específicas en 2.3.22 y no debe conservar tests de laboratorio transitorios.
 
-
-**Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.3-validacion-peticiones` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
 **Por qué funciona así.** FluentValidation expresa reglas sobre los contratos de entrada y devuelve errores por campo; no debe confundirse un record con el validador que lo inspecciona.
 
@@ -2144,8 +2104,6 @@ builder.Services.AddValidatorsFromAssemblyContaining<CrearOrdenValidator>();
 4. Contrasta el significado de 409 (conflicto de estado persistido) con 400 (datos inválidos) y 422 (capacidad excedida).
 
 
-**Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.3-validacion-peticiones` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
-
 **Por qué funciona así.** Un 400 por datos fuera del rango, un 422 por la capacidad y un 409 por el estado de una orden pertenecen a causas diferentes que el cliente debe distinguir.
 
 **Verificación concreta.** PUT sobre una orden finalizada devuelve 409 y no altera el registro. Las reglas de estado del punto 2.2 siguen activas.
@@ -2225,8 +2183,6 @@ public class ValidacionHttpTests
 4. Ejecuta por separado una prueba GET y una de escritura si hay algún fallo para distinguir regresión del código previo de problema de validación.
 
 
-**Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.3-validacion-peticiones` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
-
 **Por qué funciona así.** Las pruebas HTTP recorren el pipeline completo y comprueban que los fallos se comunican como Problem Details sin alterar los datos.
 
 **Verificación concreta.** `dotnet test` termina con 12 superadas y 0 fallidas; la introducción de filtros no ha roto las rutas de lectura ni las operaciones de escritura.
@@ -2244,8 +2200,6 @@ public class ValidacionHttpTests
 3. Envía una petición inválida y localiza el texto personalizado dentro de `errors` del JSON 400; compara antes y después.
 4. Añade una aserción HTTP sobre esa cadena, ejecútala y documenta el resultado. Revierte el reto en la copia que utilizarás para comenzar 2.4.
 
-
-**Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.3-validacion-peticiones` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
 **Por qué funciona así.** Las pruebas HTTP recorren el pipeline completo y comprueban que los fallos se comunican como Problem Details sin alterar los datos.
 
@@ -2319,8 +2273,6 @@ una lectura válida en un fallo de contrato.
 4. Prepara una tabla que servirá para comparar **lo que hace el código** con **lo que describirá el documento Swagger**. No inventes rutas que no existan.
 
 
-**Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.4-documentacion-openapi` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
-
 **Por qué funciona así.** Swashbuckle descubre la API real desde ASP.NET Core: registrar AddSwaggerGen y definir SwaggerDoc produce un documento estándar a partir de rutas y tipos.
 
 **Verificación concreta.** La tabla contiene siete operaciones y sus códigos reales, y el proyecto de 2.3 sigue pasando 12 tests antes de introducir Swagger.
@@ -2338,8 +2290,6 @@ una lectura válida en un fallo de contrato.
 3. Abre `AceriaApp.Api.csproj` y verifica que conserva EF Core SQL Server y FluentValidation además de Swashbuckle.
 4. Restaura con `dotnet restore`. No instales Swashbuckle exclusivamente en el proyecto de tests ni añadas servicios Swagger antes de comprender cómo se registran.
 
-
-**Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.4-documentacion-openapi` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
 **Por qué funciona así.** Swashbuckle descubre la API real desde ASP.NET Core: registrar AddSwaggerGen y definir SwaggerDoc produce un documento estándar a partir de rutas y tipos.
 
@@ -3038,8 +2988,6 @@ public async Task Produccion_NoExponeSwagger()
 3. Reinicia el servidor y solicita otra vez `/swagger/v1/swagger.json`; busca en `paths` la operación `patch` correspondiente a la ruta `/cantidad`.
 4. Comprueba que su propiedad `summary` contiene el nuevo texto. Si la UI conserva una versión anterior, actualiza la página o vuelve a descargar el JSON generado.
 
-
-**Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.4-documentacion-openapi` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
 **Por qué funciona así.** Cambiar un WithSummary y ver reflejada la modificación en el JSON demuestra la vinculación de la documentación con el código ejecutado.
 
