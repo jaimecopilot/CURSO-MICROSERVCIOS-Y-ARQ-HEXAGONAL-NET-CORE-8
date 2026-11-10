@@ -1,0 +1,76 @@
+name: M05 - teoria practicas proyectos y E2E desde el laboratorio
+on:
+  push:
+    branches:
+      - 'main'
+    paths:
+      - 'M05_DDD_CQRS/TEORIA/M05_TEORIA.md'
+      - 'M05_DDD_CQRS/PRACTICAS/M05_PRACTICAS.md'
+      - '.github/scripts/m05_e2e_desde_practicas.py'
+      - '.github/scripts/m05_generar_pdf.py'
+      - '.github/scripts/m05_crear_figuras.py'
+      - '.github/workflows/m05-integracion.yml'
+      - 'M04_PATRONES_ARQUITECTURA/PROYECTO/4.5-inyeccion-dependencias/**'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: m05-e2e-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  integracion:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Preparar las dependencias PDF
+        run: python -m pip install markdown weasyprint pymupdf cairosvg beautifulsoup4
+      - name: Generar diagramas SVG y PNG originales para teoría
+        run: python3 .github/scripts/m05_crear_figuras.py
+      - name: Reconstruir y compilar las cinco etapas exclusivamente desde el manual
+        run: python3 .github/scripts/m05_e2e_desde_practicas.py --out M05_DDD_CQRS/M05_E2E_RESULTADOS.json
+      - name: Generar los PDF y comprobar todas las páginas y el contenido
+        run: python3 .github/scripts/m05_generar_pdf.py
+      - name: Publicar PDF, evidencia E2E y proyectos generados desde las prácticas
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add M05_DDD_CQRS/TEORIA/IMAGENES \
+                  M05_DDD_CQRS/GRAFICOS \
+                  M05_DDD_CQRS/PROYECTO \
+                  M05_DDD_CQRS/TEORIA/M05_TEORIA.pdf \
+                  M05_DDD_CQRS/PRACTICAS/M05_PRACTICAS.pdf \
+                  M05_DDD_CQRS/M05_E2E_RESULTADOS.json \
+                  M05_DDD_CQRS/REPORTE_PDF_M05.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'docs(m05): PDF y proyectos reproducidos desde las prácticas con E2E PASS'
+            git fetch origin "${GITHUB_REF_NAME}"
+            if git diff --quiet HEAD^ "origin/${GITHUB_REF_NAME}" -- \
+              M05_DDD_CQRS/PRACTICAS/M05_PRACTICAS.md \
+              M05_DDD_CQRS/TEORIA/M05_TEORIA.md \
+              .github/scripts/m05_e2e_desde_practicas.py \
+              .github/scripts/m05_generar_pdf.py \
+              .github/scripts/m05_crear_figuras.py \
+              .github/workflows/m05-integracion.yml \
+              M04_PATRONES_ARQUITECTURA/PROYECTO/4.5-inyeccion-dependencias; then
+              git rebase "origin/${GITHUB_REF_NAME}"
+              git push origin "HEAD:${GITHUB_REF_NAME}"
+            else
+              echo 'El manual ha avanzado: no se publica un proyecto desactualizado.'
+              exit 1
+            fi
+          fi
+      - name: Adjuntar resultado detallado de los 120 pasos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: M05-trazabilidad-e2e
+          path: |
+            M05_DDD_CQRS/M05_E2E_RESULTADOS.json
+            M05_DDD_CQRS/REPORTE_PDF_M05.json

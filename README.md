@@ -48,3 +48,9 @@ Cada módulo se organiza en las carpetas `TEORIA/`, `PRACTICAS/` y `PROYECTO/`. 
 - [Teoría](M04_PATRONES_ARQUITECTURA/TEORIA/M04_TEORIA.md) · [PDF](M04_PATRONES_ARQUITECTURA/TEORIA/M04_TEORIA.pdf).
 - [Prácticas guiadas](M04_PATRONES_ARQUITECTURA/PRACTICAS/M04_PRACTICAS.md) · [PDF](M04_PATRONES_ARQUITECTURA/PRACTICAS/M04_PRACTICAS.pdf).
 - [Proyectos y validación](M04_PATRONES_ARQUITECTURA/README.md): cinco etapas progresivas, 4.1–4.5.
+
+### Módulo 5 — Introducción a DDD y CQRS
+
+- [Teoría](M05_DDD_CQRS/TEORIA/M05_TEORIA.md) · [PDF](M05_DDD_CQRS/TEORIA/M05_TEORIA.pdf).
+- [Prácticas guiadas](M05_DDD_CQRS/PRACTICAS/M05_PRACTICAS.md) · [PDF](M05_DDD_CQRS/PRACTICAS/M05_PRACTICAS.pdf).
+- [Proyectos y validación](M05_DDD_CQRS/README.md): cinco etapas progresivas, 5.1–5.5.
