@@ -151,7 +151,7 @@ def run(args,w,key):
 def match_reference(stage,w):
     ref=BASE/"PROYECTO"/stage
     expected={x.relative_to(ref) for x in ref.rglob("*.cs")}
-    actual={x.relative_to(w) for x in w.rglob("*.cs")}
+    actual={x.relative_to(w) for x in w.rglob("*.cs") if "obj" not in x.parts and "bin" not in x.parts}
     check(expected==actual,f"{stage}: archivos fuente distintos: falta {expected-actual} sobra {actual-expected}")
     for rel in expected:
         original=(ref/rel).read_text(encoding="utf-8")
