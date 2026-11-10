@@ -1,0 +1,36 @@
+[
+  {
+    "documento": "TEORIA",
+    "paginas": 63,
+    "bytes": 363631,
+    "palabras": 24285,
+    "pdf": "M05_DDD_CQRS/TEORIA/M05_TEORIA.pdf",
+    "explicaciones_separadas": 389,
+    "citas_de_linea_comprobadas": 389,
+    "ampliaciones": 50,
+    "figuras": 16,
+    "markdown_sha256": "8789955a14881ae39e168b882bf2dc7f33bcf68f913c3a4babece39f42d82246",
+    "bloques_html": 950,
+    "bloques_pdf_verificados": 950,
+    "bloques_omitidos": 0,
+    "paginas_blancas": [],
+    "desbordamientos": []
+  },
+  {
+    "documento": "PRACTICAS",
+    "paginas": 146,
+    "bytes": 449106,
+    "palabras": 49308,
+    "pdf": "M05_DDD_CQRS/PRACTICAS/M05_PRACTICAS.pdf",
+    "explicaciones_separadas": 301,
+    "citas_de_linea_comprobadas": 301,
+    "ampliaciones": 0,
+    "figuras": 0,
+    "markdown_sha256": "07f73c5b2fbdb63ae7560f9305641ef507e1658ab3725d6223dbe6a2568af720",
+    "bloques_html": 2452,
+    "bloques_pdf_verificados": 2452,
+    "bloques_omitidos": 0,
+    "paginas_blancas": [],
+    "desbordamientos": []
+  }
+]
