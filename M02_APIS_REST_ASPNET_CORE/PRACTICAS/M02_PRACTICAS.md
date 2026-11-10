@@ -42,15 +42,19 @@ Los fragmentos se presentan según la etapa en la que el alumno debe introducirl
 
 **Resultado de aprendizaje.** Crear el proyecto ASP.NET Core Empty desde Visual Studio.
 
-**Acción.** Archivo > Nuevo > Proyecto > ASP.NET Core Empty. Selecciona C#, .NET 8 y el nombre AceriaApp.Api. No marques autenticación.
+**Procedimiento guiado.**
+
+1. En Visual Studio selecciona **Archivo > Nuevo > Proyecto**; busca «ASP.NET Core Empty» (C#), no la plantilla MVC ni Web API con controladores.
+2. Ponle el nombre `AceriaApp.Api`, elige la carpeta de trabajo del punto 2.1 y selecciona **.NET 8.0**. Deja desactivada la autenticación; conserva HTTPS solo si vas a configurar el certificado local.
+3. Pulsa **Crear**, abre `AceriaApp.Api.csproj` en el Explorador de soluciones y comprueba `<TargetFramework>net8.0</TargetFramework>`. Si no aparece .NET 8, instala ese SDK antes de seguir.
+4. Ejecuta una compilación desde **Compilar > Compilar solución** o `dotnet build` en la carpeta del proyecto; identifica `Program.cs` como punto de entrada y guarda la solución de trabajo.
+
 
 **Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Construcción y evidencia del paso.** Crea la API y comprueba en `AceriaApp.Api.csproj` que `TargetFramework` es `net8.0`. La plantilla vacía debe arrancar antes de introducir EF Core. Si utilizas la carpeta de referencia, no vuelvas a crear el proyecto: ese estado se utiliza para contrastar el resultado.
-
 **Por qué funciona así.** El programa aún se está preparando: comprobar SDK, arranque y URI antes de introducir persistencia permite aislar errores de herramienta frente a errores de API.
 
-**Verificación concreta.** Verifica el TargetFramework net8.0 y arranca el proyecto vacío.
+**Verificación concreta.** Debes disponer de `src/AceriaApp.Api/AceriaApp.Api.csproj` con `net8.0`, un `Program.cs` generado por la plantilla y una compilación sin errores. No debe existir aún ningún endpoint de órdenes.
 
 **Si algo falla.** Si falla el inicio, revisa que hayas seleccionado ASP.NET Core Empty y net8.0; no es necesario instalar controladores.
 
@@ -58,15 +62,19 @@ Los fragmentos se presentan según la etapa en la que el alumno debe introducirl
 
 **Resultado de aprendizaje.** Explorar Program.cs, Kestrel y el perfil de arranque.
 
-**Acción.** Abre Program.cs y localiza CreateBuilder, Build y Run. Ejecuta con F5, observa la dirección del perfil local y detén Kestrel.
+**Procedimiento guiado.**
+
+1. Abre `Program.cs` y localiza `WebApplication.CreateBuilder(args)`, `builder.Build()` y `app.Run()`. Anota en qué orden se ejecutan.
+2. En el selector de inicio, elige el perfil del proyecto `AceriaApp.Api` y pulsa **F5**; alternativamente usa `dotnet run --project src/AceriaApp.Api` desde la raíz de tu trabajo.
+3. Observa en la ventana de salida la línea `Now listening on:` y copia la URL **real** (puerto incluido). Abre esa dirección en el navegador y distingue la ruta `/` de una ruta todavía inexistente.
+4. Detén Kestrel con el botón **Detener** o `Ctrl+C`. Si la plantilla incluye un `MapGet("/")` de ejemplo, identifícalo; se retirará cuando sustituyas `Program.cs` por la API del taller.
+
 
 **Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Construcción y evidencia del paso.** Arranca el proyecto vacío, lee la URL en la salida de Kestrel y detén la ejecución. Este paso no registra endpoints ni necesita LocalDB: una página sin ruta propia no significa que el arranque sea incorrecto.
-
 **Por qué funciona así.** El programa aún se está preparando: comprobar SDK, arranque y URI antes de introducir persistencia permite aislar errores de herramienta frente a errores de API.
 
-**Verificación concreta.** Kestrel escucha en el puerto anunciado; no es una prueba de base de datos.
+**Verificación concreta.** Registra la URL y puerto de escucha y demuestra que puedes iniciar y detener el servidor vacío. No interpretes un 404 en `/api/v1/ordenes` como error: ese endpoint todavía no existe.
 
 **Si algo falla.** Si falla el inicio, revisa que hayas seleccionado ASP.NET Core Empty y net8.0; no es necesario instalar controladores.
 
@@ -74,15 +82,19 @@ Los fragmentos se presentan según la etapa en la que el alumno debe introducirl
 
 **Resultado de aprendizaje.** Dibujar los recursos y decidir las dos URIs GET.
 
-**Acción.** Diseña las rutas GET /api/v1/ordenes y GET /api/v1/ordenes/{id:guid}. Explica qué recurso identifica cada una.
+**Procedimiento guiado.**
+
+1. En una tabla de diseño escribe dos filas: `GET /api/v1/ordenes` (colección) y `GET /api/v1/ordenes/{id:guid}` (un miembro).
+2. Para cada fila anota qué representa la URI, qué entrada necesita, qué JSON debe devolver y qué ocurriría si no hay registros o el GUID no existe.
+3. Separa la identidad pública de una orden (`Guid Id`) de su representación (`OrdenDto`); razona por qué el cliente no debería ver obligatoriamente todos los campos de EF Core.
+4. Antes de programar, comprueba que las dos URIs son sustantivos de recurso y que la plantilla `{id:guid}` exigirá un identificador con formato GUID.
+
 
 **Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Construcción y evidencia del paso.** Escribe las dos rutas en tu cuaderno técnico: colección `/api/v1/ordenes` y miembro `/api/v1/ordenes/{id:guid}`. Distingue que el nombre de ruta no es una tabla SQL y que la restricción `guid` es de enrutamiento.
-
 **Por qué funciona así.** El programa aún se está preparando: comprobar SDK, arranque y URI antes de introducir persistencia permite aislar errores de herramienta frente a errores de API.
 
-**Verificación concreta.** Las dos rutas usan sustantivos en plural, y el detalle tiene un Guid.
+**Verificación concreta.** La tabla debe mostrar que una colección vacía se obtiene con 200 y `[]`; una orden inexistente con URI válida se responderá con 404. Aún no se realizan llamadas HTTP.
 
 **Si algo falla.** Si falla el inicio, revisa que hayas seleccionado ASP.NET Core Empty y net8.0; no es necesario instalar controladores.
 
@@ -90,7 +102,13 @@ Los fragmentos se presentan según la etapa en la que el alumno debe introducirl
 
 **Resultado de aprendizaje.** Crear carpeta Modelo y entidad Orden.
 
-**Acción.** Añade la carpeta Modelo. Crea Orden.cs con Guid Id, Cliente, Material, Cantidad, Estado y FechaCreacion; compara con la clase de referencia.
+**Procedimiento guiado.**
+
+1. En **Explorador de soluciones**, botón derecho sobre `AceriaApp.Api` > **Agregar > Nueva carpeta**; escribe `Modelo`.
+2. Dentro de `Modelo`, usa **Agregar > Clase** y crea `Orden.cs`. Reemplaza el contenido generado por la clase completa del bloque C# de este paso, respetando `namespace AceriaApp.Api.Modelo`.
+3. Comprueba uno por uno los seis datos: `Id`, `Cliente`, `Material`, `Cantidad`, `Estado` y `FechaCreacion`. Conserva la inicialización de Guid, estado y hora UTC.
+4. Guarda con `Ctrl+S` y compila. Si el proyecto muestra un error de namespace, contrasta la ruta física `Modelo/Orden.cs` con la declaración `namespace`.
+
 
 **Archivo de trabajo: `src/AceriaApp.Api/Modelo/Orden.cs`**.
 
@@ -110,11 +128,9 @@ public sealed class Orden
 // FIN PASO 2.1.4
 ```
 
-**Construcción y evidencia del paso.** En `Modelo/Orden.cs` incorpora exactamente las seis propiedades del ejemplo y su namespace. Comprueba que `Id` se inicializa con `Guid.NewGuid()`, `Estado` con `Pendiente` y `FechaCreacion` con UTC. Aún no debe haber endpoints.
-
 **Por qué funciona así.** La entidad y el DTO cumplen funciones diferentes. La primera modela los datos persistidos y el segundo limita el contrato JSON que puede ver el consumidor.
 
-**Verificación concreta.** La clase Orden compila, y el estado inicial es Pendiente.
+**Verificación concreta.** `Orden.cs` debe compilar, contener las seis propiedades indicadas y dar `Estado == "Pendiente"` al crear `new Orden()`. Todavía no existe un controlador, repositorio ni DTO.
 
 **Si algo falla.** Si no compilan Orden u OrdenDto, comprueba namespaces y tipos. No conviertas la entidad en el contrato JSON.
 
@@ -122,15 +138,19 @@ public sealed class Orden
 
 **Resultado de aprendizaje.** Explicar ID Guid, Estado y FechaCreacion de la entidad.
 
-**Acción.** En Orden.cs observa que Id se genera por defecto y FechaCreacion emplea UtcNow. Distingue los datos que proporciona el servidor de los del cliente.
+**Procedimiento guiado.**
+
+1. Reabre `Modelo/Orden.cs`, identifica las expresiones `Guid.NewGuid()`, `"Pendiente"` y `DateTime.UtcNow` y explica qué valor crea cada una.
+2. En el depurador, crea una instancia de `Orden` al llegar al paso donde se utiliza por primera vez (o examina el inicializador en el editor); comprueba qué campos quedan vacíos antes de recibir una petición.
+3. Anota qué campos podrían establecerse desde `CrearOrdenRequest` más adelante y cuáles seguirán bajo control del servidor (`Id`, `Estado`, `FechaCreacion`).
+4. No modifiques todavía la entidad ni dupliques su clase. Completa una pequeña tabla «propiedad → valor inicial → responsable» como evidencia conceptual.
+
 
 **Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Construcción y evidencia del paso.** En una instancia `new Orden()`, razona qué valores se generan en el servidor y cuáles vendrán de la petición de un cliente. No copies la misma clase por segunda vez ni cambies el identificador tras persistirla.
-
 **Por qué funciona así.** La entidad y el DTO cumplen funciones diferentes. La primera modela los datos persistidos y el segundo limita el contrato JSON que puede ver el consumidor.
 
-**Verificación concreta.** No se reciben el Id ni la fecha desde una petición de creación.
+**Verificación concreta.** La tabla diferencia los tres valores inicializados por servidor y los datos de negocio que se recibirán del cliente. El código de `Orden.cs` debe permanecer exactamente igual que al finalizar 2.1.4.
 
 **Si algo falla.** Si no compilan Orden u OrdenDto, comprueba namespaces y tipos. No conviertas la entidad en el contrato JSON.
 
@@ -138,7 +158,13 @@ public sealed class Orden
 
 **Resultado de aprendizaje.** Crear OrdenDto como contrato de salida.
 
-**Acción.** En Modelo crea OrdenDto.cs como record público con los datos que va a serializar JSON; no lo conviertas en entidad de EF Core.
+**Procedimiento guiado.**
+
+1. En la carpeta `Modelo`, crea otro archivo **Clase** llamado `OrdenDto.cs`. Elimina la clase vacía sugerida por Visual Studio.
+2. Escribe el `public sealed record OrdenDto(...)` del ejemplo del paso 2.1.6, con exactamente los seis parámetros públicos que se serializarán en JSON.
+3. Comprueba el namespace `AceriaApp.Api.Modelo` y que no has añadido `DbSet<OrdenDto>` ni atributos de tabla: este tipo es un contrato de salida, no una entidad persistente.
+4. Guarda y compila; no copies todavía el método `Desde`, porque corresponde a la ampliación del paso siguiente.
+
 
 **Archivo de trabajo: `src/AceriaApp.Api/Modelo/OrdenDto.cs`**.
 
@@ -151,11 +177,9 @@ public sealed record OrdenDto(
     int Cantidad, string Estado, DateTime FechaCreacion);
 ```
 
-**Secuencia de construcción.** En `src/AceriaApp.Api/Modelo/OrdenDto.cs` crea primero solo el tipo record. Todavía no tiene método `Desde`; se añadirá en 2.1.7. No copies ahora la versión final.
-
 **Por qué funciona así.** La entidad y el DTO cumplen funciones diferentes. La primera modela los datos persistidos y el segundo limita el contrato JSON que puede ver el consumidor.
 
-**Verificación concreta.** El compilador distingue Orden de OrdenDto.
+**Verificación concreta.** Existe un único archivo `OrdenDto.cs` con un record público de seis componentes. Compila y no contiene todavía ninguna segunda declaración de `OrdenDto`.
 
 **Si algo falla.** Si no compilan Orden u OrdenDto, comprueba namespaces y tipos. No conviertas la entidad en el contrato JSON.
 
@@ -163,7 +187,13 @@ public sealed record OrdenDto(
 
 **Resultado de aprendizaje.** Programar la conversión OrdenDto.Desde.
 
-**Acción.** Añade a OrdenDto un método estático Desde(Orden x); construye el record usando las propiedades de una orden.
+**Procedimiento guiado.**
+
+1. Abre el `OrdenDto.cs` del paso anterior. Sustituye su `;` final por un cuerpo entre llaves `{ ... }`, sin conservar dos records con el mismo nombre.
+2. Dentro del record añade exactamente el método `public static OrdenDto Desde(Orden x)` mostrado en el fragmento completo de este paso.
+3. Relaciona en orden `x.Id`, `x.Cliente`, `x.Material`, `x.Cantidad`, `x.Estado` y `x.FechaCreacion` con los parámetros del record. No alteres la entidad original.
+4. Guarda y compila. Revisa el mensaje del compilador si una propiedad se llama de modo distinto o si quedó un punto y coma antes del cuerpo.
+
 
 **Archivo de trabajo: `src/AceriaApp.Api/Modelo/OrdenDto.cs`**.
 
@@ -181,11 +211,9 @@ public sealed record OrdenDto(
 }
 ```
 
-**Secuencia de construcción.** En el mismo `OrdenDto.cs`, convierte el record de 2.1.6 en un record con cuerpo: cambia el punto y coma final por llaves y añade dentro `Desde`. El resultado es un único archivo, no dos records.
-
 **Por qué funciona así.** La entidad y el DTO cumplen funciones diferentes. La primera modela los datos persistidos y el segundo limita el contrato JSON que puede ver el consumidor.
 
-**Verificación concreta.** El DTO contiene el mismo Id y datos públicos que la entidad.
+**Verificación concreta.** `OrdenDto.Desde(new Orden())` debe poder producir un `OrdenDto` sin conversión explícita de tipos ni duplicación del record.
 
 **Si algo falla.** Si no compilan Orden u OrdenDto, comprueba namespaces y tipos. No conviertas la entidad en el contrato JSON.
 
@@ -193,15 +221,19 @@ public sealed record OrdenDto(
 
 **Resultado de aprendizaje.** Instalar EF Core 8 para SQL Server.
 
-**Acción.** Desde Administrar paquetes NuGet instala Microsoft.EntityFrameworkCore.SqlServer 8.x en AceriaApp.Api, o utiliza dotnet add package con versión 8.
+**Procedimiento guiado.**
+
+1. Sobre el proyecto `AceriaApp.Api` abre **Administrar paquetes NuGet** y busca `Microsoft.EntityFrameworkCore.SqlServer`.
+2. Selecciona una versión de la rama **8.0.x** compatible con el proyecto (la referencia utiliza `8.0.21`), acepta los cambios y deja que NuGet restaure dependencias.
+3. Comprueba en `AceriaApp.Api.csproj` que aparece el `PackageReference` a SQL Server. Como alternativa reproducible, desde la carpeta raíz de tu solución ejecuta `dotnet add src/AceriaApp.Api/AceriaApp.Api.csproj package Microsoft.EntityFrameworkCore.SqlServer --version 8.0.21`.
+4. Ejecuta `dotnet restore src/AceriaApp.Api/AceriaApp.Api.csproj`. No añadas SQLite ni InMemory a la aplicación principal; InMemory se reservará al proyecto de tests.
+
 
 **Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Construcción y evidencia del paso.** Instala `Microsoft.EntityFrameworkCore.SqlServer` con una versión 8.x compatible con el SDK y guarda el `.csproj`. Que el paquete se restaure no verifica la conexión; esa verificación llegará tras configurar `AceriaDbContext` y LocalDB.
-
 **Por qué funciona así.** El acceso a datos se configura en infraestructura mediante EF Core y DI. LocalDB es la base efectiva de la API; EnsureCreated se usa solo durante el aprendizaje.
 
-**Verificación concreta.** La compilación reconoce UseSqlServer.
+**Verificación concreta.** El `.csproj` contiene el proveedor `Microsoft.EntityFrameworkCore.SqlServer` versión 8.x y `dotnet restore` termina correctamente. Esto aún no prueba que LocalDB esté disponible.
 
 **Si algo falla.** Si falla UseSqlServer, revisa la dependencia NuGet. Si LocalDB no responde, verifica la instancia MSSQLLocalDB.
 
@@ -209,7 +241,13 @@ public sealed record OrdenDto(
 
 **Resultado de aprendizaje.** Crear AceriaDbContext y DbSet<Orden>.
 
-**Acción.** Crea Datos/AceriaDbContext.cs; haz que herede de DbContext y declara DbSet<Orden> Ordenes.
+**Procedimiento guiado.**
+
+1. Crea la carpeta `Datos` dentro de `src/AceriaApp.Api` y añade el archivo `AceriaDbContext.cs`.
+2. Escribe el código del paso 2.1.9: importa `AceriaApp.Api.Modelo`, importa `Microsoft.EntityFrameworkCore` y define el namespace `AceriaApp.Api.Datos`.
+3. Haz que `AceriaDbContext` herede de `DbContext`, reciba `DbContextOptions<AceriaDbContext>` y exponga `DbSet<Orden> Ordenes => Set<Orden>()`.
+4. Guarda y compila para confirmar que Visual Studio resuelve `DbContext`, `DbSet` y `Orden`. Deja `OnModelCreating` para el paso 2.1.10.
+
 
 **Archivo de trabajo: `src/AceriaApp.Api/Datos/AceriaDbContext.cs`**.
 
@@ -227,11 +265,9 @@ public sealed class AceriaDbContext(
 }
 ```
 
-**Secuencia de construcción.** En `src/AceriaApp.Api/Datos/AceriaDbContext.cs` crea únicamente el contexto y el conjunto de órdenes. En 2.1.10 incorporarás la configuración del modelo a esta misma clase.
-
 **Por qué funciona así.** El acceso a datos se configura en infraestructura mediante EF Core y DI. LocalDB es la base efectiva de la API; EnsureCreated se usa solo durante el aprendizaje.
 
-**Verificación concreta.** Al compilar, el contexto conoce Orden y puede consultarla.
+**Verificación concreta.** `AceriaDbContext.cs` compila y expone `Ordenes` como conjunto EF Core. Todavía no tiene reglas de longitud ni clave configuradas.
 
 **Si algo falla.** Si falla UseSqlServer, revisa la dependencia NuGet. Si LocalDB no responde, verifica la instancia MSSQLLocalDB.
 
@@ -239,7 +275,13 @@ public sealed class AceriaDbContext(
 
 **Resultado de aprendizaje.** Configurar OnModelCreating, clave y longitudes.
 
-**Acción.** En OnModelCreating configura HasKey(Id), las longitudes de Cliente y Material y los campos obligatorios.
+**Procedimiento guiado.**
+
+1. Abre el `AceriaDbContext.cs` que creaste y sitúa el cursor **dentro de la clase**, justo antes de su llave final.
+2. Inserta el método `protected override void OnModelCreating(ModelBuilder b)` que aparece en el fragmento. No crees otro contexto.
+3. Comprueba `HasKey(x => x.Id)` y las reglas de `Cliente`, `Material` y `Estado`: longitudes 100, 100 y 24 respectivamente, todas obligatorias.
+4. Guarda, ejecuta `dotnet build` y diferencia estas restricciones de modelo de las futuras reglas FluentValidation: aquí estás describiendo el almacenamiento.
+
 
 **Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
@@ -259,7 +301,7 @@ protected override void OnModelCreating(ModelBuilder b)
 
 **Por qué funciona así.** El acceso a datos se configura en infraestructura mediante EF Core y DI. LocalDB es la base efectiva de la API; EnsureCreated se usa solo durante el aprendizaje.
 
-**Verificación concreta.** El modelo restringe tamaños de columna y reconoce la clave.
+**Verificación concreta.** El archivo final del contexto coincide en propiedades y reglas con `PROYECTO/2.1.../Datos/AceriaDbContext.cs`. Debe compilar, sin clases ni métodos duplicados.
 
 **Si algo falla.** Si falla UseSqlServer, revisa la dependencia NuGet. Si LocalDB no responde, verifica la instancia MSSQLLocalDB.
 
@@ -267,15 +309,19 @@ protected override void OnModelCreating(ModelBuilder b)
 
 **Resultado de aprendizaje.** Configurar la cadena de conexión a LocalDB.
 
-**Acción.** En appsettings.json añade ConnectionStrings:AceriaApp con (localdb)\MSSQLLocalDB y Database=AceriaAppM02. No sustituyas LocalDB por SQLite.
+**Procedimiento guiado.**
+
+1. En `src/AceriaApp.Api/appsettings.json`, conserva la estructura de objeto JSON y crea la sección `ConnectionStrings` si no existe.
+2. Añade la clave `AceriaApp` con el servidor `(localdb)\MSSQLLocalDB`, la base `AceriaAppM02`, `Trusted_Connection=True` y `TrustServerCertificate=True`. En JSON la barra invertida de LocalDB debe aparecer escapada como `\\`.
+3. Comprueba que SQL Server Express LocalDB está instalado. Desde una consola de Windows ejecuta `sqllocaldb info MSSQLLocalDB`; si no está iniciada, usa `sqllocaldb start MSSQLLocalDB`.
+4. Guarda el JSON, comprueba las comas y las comillas y no añadas usuarios ni contraseñas reales al repositorio.
+
 
 **Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Construcción y evidencia del paso.** En `appsettings.json` debe existir la clave `ConnectionStrings:AceriaApp`. Usa `(localdb)\\MSSQLLocalDB` y la base `AceriaAppM02`; no incluyas credenciales reales en un archivo de prácticas.
-
 **Por qué funciona así.** El acceso a datos se configura en infraestructura mediante EF Core y DI. LocalDB es la base efectiva de la API; EnsureCreated se usa solo durante el aprendizaje.
 
-**Verificación concreta.** La cadena se lee desde Configuration y apunta al servidor local.
+**Verificación concreta.** `builder.Configuration.GetConnectionString("AceriaApp")` deberá resolver la cadena correcta. El nombre `AceriaApp` es el de la clave de configuración; `AceriaAppM02` es el nombre de la base.
 
 **Si algo falla.** Si falla UseSqlServer, revisa la dependencia NuGet. Si LocalDB no responde, verifica la instancia MSSQLLocalDB.
 
@@ -283,7 +329,13 @@ protected override void OnModelCreating(ModelBuilder b)
 
 **Resultado de aprendizaje.** Registrar AceriaDbContext mediante AddDbContext.
 
-**Acción.** En Program.cs, antes de builder.Build, añade AddDbContext<AceriaDbContext> con UseSqlServer y GetConnectionString.
+**Procedimiento guiado.**
+
+1. Abre `Program.cs` y elimina el endpoint demostrativo `MapGet("/")` de la plantilla vacía, si existe. Conserva la estructura `CreateBuilder` → `Build` → `Run`.
+2. Al comienzo importa `AceriaApp.Api.Datos`, `AceriaApp.Api.Modelo` y `Microsoft.EntityFrameworkCore`. Sitúa el cursor **después de `CreateBuilder(args)` y antes de `builder.Build()`**.
+3. Añade únicamente `builder.Services.AddDbContext<AceriaDbContext>(...)` del bloque de este paso; `UseSqlServer` debe leer la cadena `AceriaApp` configurada en 2.1.11.
+4. Guarda y compila. No pegues aquí `EnsureCreatedAsync`, porque esa inicialización se incorpora en el paso 2.1.13. No crees un segundo `builder` ni una segunda aplicación.
+
 
 **Archivo de trabajo: `src/AceriaApp.Api/Program.cs`**.
 
@@ -296,11 +348,9 @@ builder.Services.AddDbContext<AceriaDbContext>(options =>
         builder.Configuration.GetConnectionString("AceriaApp")));
 ```
 
-**Construcción y evidencia del paso.** En `Program.cs`, coloca `AddDbContext<AceriaDbContext>` antes de `builder.Build()`. La línea `UseSqlServer` obtiene la cadena `AceriaApp` del archivo anterior. Comprueba que no se crean dos registraciones del contexto.
-
 **Por qué funciona así.** El acceso a datos se configura en infraestructura mediante EF Core y DI. LocalDB es la base efectiva de la API; EnsureCreated se usa solo durante el aprendizaje.
 
-**Verificación concreta.** El manejador HTTP podrá recibir AceriaDbContext por inyección.
+**Verificación concreta.** `Program.cs` compila con una sola llamada `AddDbContext<AceriaDbContext>` anterior a `Build`, y la aplicación sigue arrancando aunque aún no tenga endpoints REST.
 
 **Si algo falla.** Si falla UseSqlServer, revisa la dependencia NuGet. Si LocalDB no responde, verifica la instancia MSSQLLocalDB.
 
@@ -309,7 +359,13 @@ builder.Services.AddDbContext<AceriaDbContext>(options =>
 
 **Resultado de aprendizaje.** Crear la base didáctica solo en Development.
 
-**Acción.** En Development crea la base de enseñanza con Database.EnsureCreatedAsync usando un scope; deja escrito que en producción se usarían migraciones.
+**Procedimiento guiado.**
+
+1. En `Program.cs`, busca exactamente la línea `var app = builder.Build();` y coloca el cursor **después de ella** y antes de cualquier `app.MapGet`.
+2. Inserta el bloque de `if (app.Environment.IsDevelopment() && !...)` con `CreateScope()`, `GetRequiredService<AceriaDbContext>()` y `EnsureCreatedAsync()` del ejemplo.
+3. En Visual Studio selecciona el perfil Development y comprueba que LocalDB esté iniciada. Arranca la API y revisa en el Explorador de objetos SQL Server si se creó `AceriaAppM02`.
+4. Detén el servidor. Explica por qué los tests establecerán `SkipDatabaseInitialization=true` y por qué `EnsureCreated` no sustituye a las migraciones de producción.
+
 
 **Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
@@ -328,7 +384,7 @@ if (app.Environment.IsDevelopment()
 
 **Por qué funciona así.** El acceso a datos se configura en infraestructura mediante EF Core y DI. LocalDB es la base efectiva de la API; EnsureCreated se usa solo durante el aprendizaje.
 
-**Verificación concreta.** Al arrancar en Windows aparece la base AceriaAppM02 si LocalDB está instalado.
+**Verificación concreta.** La aplicación Development arranca sin error de conexión y la base `AceriaAppM02` existe en LocalDB. El bloque aparece una sola vez y no se ejecuta en Production.
 
 **Si algo falla.** Si falla UseSqlServer, revisa la dependencia NuGet. Si LocalDB no responde, verifica la instancia MSSQLLocalDB.
 
@@ -336,7 +392,13 @@ if (app.Environment.IsDevelopment()
 
 **Resultado de aprendizaje.** Escribir el endpoint GET de colección.
 
-**Acción.** En Program.cs escribe MapGet de /api/v1/ordenes y recibe AceriaDbContext como argumento del lambda.
+**Procedimiento guiado.**
+
+1. En el mismo `Program.cs`, antes de `app.Run()`, pega el único `app.MapGet("/api/v1/ordenes", ...)` del bloque 2.1.14.
+2. Asegúrate de que la lambda recibe `AceriaDbContext db` y `CancellationToken ct`, consulta `db.Ordenes`, ordena por `FechaCreacion` y transforma cada entidad mediante `OrdenDto.Desde`.
+3. Añade al final de la operación `WithName("ListarOrdenes")` y `WithTags("Ordenes")`. No escribas un segundo endpoint para la misma ruta.
+4. Compila y ejecuta. En esta primera versión todavía no se utiliza `AsNoTracking`; lo añadirás al endpoint **existente** en el próximo paso.
+
 
 **Archivo de trabajo: `src/AceriaApp.Api/Program.cs`**.
 
@@ -352,11 +414,9 @@ app.MapGet("/api/v1/ordenes",
 .WithName("ListarOrdenes").WithTags("Ordenes");
 ```
 
-**Secuencia de construcción.** Escribe en `Program.cs` el GET funcional con persistencia y conversión a DTO. En el siguiente paso se añade `AsNoTracking`; no debes duplicar la ruta.
-
 **Por qué funciona así.** El verbo GET no modifica recursos. MapGet recibe dependencias y parámetros, consulta la orden y traduce el resultado a 200 o 404 con DTOs.
 
-**Verificación concreta.** El endpoint queda registrado y responde a GET.
+**Verificación concreta.** Una petición GET a `/api/v1/ordenes` debe devolver 200 y JSON de colección. No debe existir otra ruta GET de colección duplicada en `Program.cs`.
 
 **Si algo falla.** Si aparece 404, revisa Guid, la plantilla {id:guid} y la existencia de la orden; en colección vacía corresponde 200.
 
@@ -364,7 +424,13 @@ app.MapGet("/api/v1/ordenes",
 
 **Resultado de aprendizaje.** Utilizar AsNoTracking y proyectar a DTO.
 
-**Acción.** Dentro de MapGet consulta db.Ordenes.AsNoTracking, materializa la lista y aplica OrdenDto.Desde a cada entidad.
+**Procedimiento guiado.**
+
+1. Abre el `MapGet` de colección del paso 2.1.14 y localiza la consulta que comienza con `var ordenes = await db.Ordenes`.
+2. Sustituye **solo** esa instrucción por la consulta mostrada en 2.1.15, incorporando `.AsNoTracking()` antes de `OrderBy`.
+3. No cambies el nombre de ruta, el delegado, `Results.Ok`, ni la transformación a `OrdenDto`; conserva el resto del manejador sin duplicarlo.
+4. Guarda, compila y ejecuta el GET. Comprueba que devuelve el mismo JSON, porque `AsNoTracking` cambia el seguimiento de entidades, no el contrato HTTP.
+
 
 **Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
@@ -379,7 +445,7 @@ var ordenes = await db.Ordenes.AsNoTracking()
 
 **Por qué funciona así.** El verbo GET no modifica recursos. MapGet recibe dependencias y parámetros, consulta la orden y traduce el resultado a 200 o 404 con DTOs.
 
-**Verificación concreta.** La salida expone DTOs y no instancias de la entidad EF Core.
+**Verificación concreta.** El proyecto compila y el GET conserva 200 y los mismos campos DTO. En el código hay un solo `MapGet` de colección con `AsNoTracking()`.
 
 **Si algo falla.** Si aparece 404, revisa Guid, la plantilla {id:guid} y la existencia de la orden; en colección vacía corresponde 200.
 
@@ -387,15 +453,19 @@ var ordenes = await db.Ordenes.AsNoTracking()
 
 **Resultado de aprendizaje.** Ejecutar GET y verificar 200 con lista vacía.
 
-**Acción.** Abre AceriaApp.http, ejecuta GET de colección y comprueba el código y el JSON aunque la tabla esté vacía.
+**Procedimiento guiado.**
+
+1. Arranca `AceriaApp.Api` en Development y toma la URL publicada en `Now listening on:`. No presupongas que siempre es el puerto 5082.
+2. Abre o crea `AceriaApp.http` en la raíz de tu carpeta de trabajo. Ajusta `@Host` a esa URL y escribe `GET {{Host}}/api/v1/ordenes`.
+3. Pulsa **Send Request** sobre esa línea (cliente HTTP de Visual Studio) o usa `curl` contra el mismo host. Observa la línea de estado, la cabecera `Content-Type` y el cuerpo.
+4. Si la tabla aún está vacía, verifica que el JSON sea `[]`. Si ya hay datos de otro intento, usa una base de pruebas limpia o explica por qué aparecen elementos.
+
 
 **Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Construcción y evidencia del paso.** Con LocalDB disponible ejecuta el GET de colección desde `AceriaApp.http`: espera **HTTP 200** y un array JSON (`[]` si aún no hay órdenes). Un array vacío no es un 404.
-
 **Por qué funciona así.** El verbo GET no modifica recursos. MapGet recibe dependencias y parámetros, consulta la orden y traduce el resultado a 200 o 404 con DTOs.
 
-**Verificación concreta.** La respuesta es 200 y un arreglo JSON; no 404.
+**Verificación concreta.** Evidencia: captura o copia de la respuesta con `HTTP/1.1 200` y un array JSON (`[]` en base vacía). Un conjunto vacío no produce 404.
 
 **Si algo falla.** Si aparece 404, revisa Guid, la plantilla {id:guid} y la existencia de la orden; en colección vacía corresponde 200.
 
@@ -403,7 +473,13 @@ var ordenes = await db.Ordenes.AsNoTracking()
 
 **Resultado de aprendizaje.** Escribir el GET individual con {id:guid}.
 
-**Acción.** Añade MapGet /api/v1/ordenes/{id:guid} y recibe Guid id y DbContext inyectado.
+**Procedimiento guiado.**
+
+1. En `Program.cs`, debajo del GET de colección y antes de `app.Run()`, añade una segunda **ruta distinta**: `/api/v1/ordenes/{id:guid}`.
+2. Copia la lambda completa del bloque: recibe `Guid id`, obtiene el contexto por DI, ejecuta `FirstOrDefaultAsync` y convierte la entidad a `OrdenDto` si existe.
+3. Define `IResult response` y conserva ambas ramas, `Results.Ok(...)` y `Results.NotFound()`. Termina con `WithName("ObtenerOrdenPorId")` y `WithTags("Ordenes")`.
+4. Guarda, compila y prueba el GET con `00000000-0000-0000-0000-000000000001` si no existe esa orden.
+
 
 **Archivo de trabajo: `src/AceriaApp.Api/Program.cs`**.
 
@@ -422,11 +498,9 @@ app.MapGet("/api/v1/ordenes/{id:guid}",
 .WithName("ObtenerOrdenPorId").WithTags("Ordenes");
 ```
 
-**Secuencia de construcción.** Añade **una sola vez** el GET de detalle en `Program.cs`. El paso 2.1.18 analizará la rama `NotFound`, ya presente aquí; no añadirá un segundo endpoint.
-
 **Por qué funciona así.** El verbo GET no modifica recursos. MapGet recibe dependencias y parámetros, consulta la orden y traduce el resultado a 200 o 404 con DTOs.
 
-**Verificación concreta.** La ruta coincide con un identificador Guid válido.
+**Verificación concreta.** La segunda ruta responde 404 para un GUID bien formado ausente. Debe existir **una sola** declaración de cada GET en `Program.cs`.
 
 **Si algo falla.** Si aparece 404, revisa Guid, la plantilla {id:guid} y la existencia de la orden; en colección vacía corresponde 200.
 
@@ -434,15 +508,19 @@ app.MapGet("/api/v1/ordenes/{id:guid}",
 
 **Resultado de aprendizaje.** Devolver NotFound cuando no existe la orden.
 
-**Acción.** Busca mediante FirstOrDefaultAsync y devuelve Results.NotFound cuando la orden no existe; usa Results.Ok cuando aparece.
+**Procedimiento guiado.**
+
+1. No añadas código nuevo: abre el GET individual del paso 2.1.17 y marca las líneas `FirstOrDefaultAsync` y el condicional `orden is null`.
+2. Establece un punto de interrupción en la instrucción que construye `IResult response` y ejecuta con F5.
+3. Envía desde el archivo HTTP una petición con un GUID válido que no exista. Inspecciona en el depurador que `orden == null`.
+4. Continúa la ejecución y comprueba que la respuesta es 404 sin un DTO inventado. Si el identificador sí existe, la otra rama devolverá 200 con la representación.
+
 
 **Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Construcción y evidencia del paso.** Reutiliza el GET de detalle de 2.1.17 y solicita un `Guid` inexistente pero bien formado. Debes obtener **HTTP 404**; esa ruta llega al manejador y este constata que no existe una fila.
-
 **Por qué funciona así.** El verbo GET no modifica recursos. MapGet recibe dependencias y parámetros, consulta la orden y traduce el resultado a 200 o 404 con DTOs.
 
-**Verificación concreta.** Un GUID nuevo devuelve 404 sin excepción 500.
+**Verificación concreta.** Demuestra que el manejador, no la base de datos ni Swagger, decide devolver 404 cuando la consulta no encuentra una orden.
 
 **Si algo falla.** Si aparece 404, revisa Guid, la plantilla {id:guid} y la existencia de la orden; en colección vacía corresponde 200.
 
@@ -450,15 +528,19 @@ app.MapGet("/api/v1/ordenes/{id:guid}",
 
 **Resultado de aprendizaje.** Comprobar diferencias entre ruta incorrecta y recurso ausente.
 
-**Acción.** Envía una ruta con identificador que no es GUID y otra con GUID inexistente; anota qué parte resuelve el enrutador y cuál el manejador.
+**Procedimiento guiado.**
+
+1. Prepara dos URL diferentes en `AceriaApp.http`: una terminada en `/no-es-guid` y otra terminada en `/00000000-0000-0000-0000-000000000001`.
+2. Pon un punto de interrupción al entrar en el delegado del GET por id y ejecuta primero la URL con texto no GUID.
+3. Observa que la restricción de ruta `{id:guid}` impide que entre en el delegado. Ejecuta después la URL con GUID bien formado, pero inexistente.
+4. Comprueba que ahora sí se entra en el delegado, se consulta EF Core y se obtiene `NotFound`. Documenta las dos causas aunque el código HTTP externo pueda ser 404.
+
 
 **Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Construcción y evidencia del paso.** Compara una ruta con `id=no-es-guid` y otra con `id` GUID válido pero inexistente. Ambos casos pueden devolver 404, pero el primero lo decide el enrutamiento y el segundo la consulta del manejador. Utiliza puntos de interrupción para distinguirlos.
-
 **Por qué funciona así.** El verbo GET no modifica recursos. MapGet recibe dependencias y parámetros, consulta la orden y traduce el resultado a 200 o 404 con DTOs.
 
-**Verificación concreta.** Comprendes la diferencia entre plantilla que no coincide y recurso ausente.
+**Verificación concreta.** Tabla con «URL», «¿entra en el endpoint?», «origen del 404». Debe mostrar NO para formato inválido y SÍ para GUID válido ausente.
 
 **Si algo falla.** Si aparece 404, revisa Guid, la plantilla {id:guid} y la existencia de la orden; en colección vacía corresponde 200.
 
@@ -466,15 +548,19 @@ app.MapGet("/api/v1/ordenes/{id:guid}",
 
 **Resultado de aprendizaje.** Crear AceriaApp.http y enviar peticiones desde Visual Studio.
 
-**Acción.** En Visual Studio abre o crea AceriaApp.http, define @Host y dos peticiones GET con la ruta versionada.
+**Procedimiento guiado.**
+
+1. En la raíz de la carpeta del punto 2.1, crea `AceriaApp.http` con **Agregar > Nuevo elemento > archivo HTTP**, o un archivo de texto con extensión `.http`.
+2. Escribe `@Host = http://localhost:PUERTO_REAL` usando el puerto visto al arrancar. Añade una petición GET de colección, una línea `###` y una petición GET de detalle con un GUID de ejemplo.
+3. Arranca la API y ejecuta las dos peticiones con **Send Request**. Guarda junto a cada una el resultado esperado: 200 con array para colección y 404 para recurso ausente.
+4. Abre `Program.cs` en el depurador y comprueba qué dependencia se inyecta; realiza el caso práctico completo de lectura EF Core situado después de esta actividad.
+
 
 **Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Construcción y evidencia del paso.** Crea `AceriaApp.http` con una variable para el host de ejecución y dos solicitudes GET separadas por `###`. No escribas puertos fijos si el perfil local utiliza uno distinto: toma la URL de la salida de la API.
-
 **Por qué funciona así.** El verbo GET no modifica recursos. MapGet recibe dependencias y parámetros, consulta la orden y traduce el resultado a 200 o 404 con DTOs.
 
-**Verificación concreta.** Puedes ejecutar ambos GET sin copiar URLs del navegador.
+**Verificación concreta.** El archivo `.http` queda guardado y reproduce dos respuestas observables de la API real, sin inventar un puerto ni pedir Swagger en una etapa que aún no lo incluye.
 
 **Si algo falla.** Si aparece 404, revisa Guid, la plantilla {id:guid} y la existencia de la orden; en colección vacía corresponde 200.
 
@@ -517,7 +603,13 @@ la petición anterior; restaura el código y vuelve a comprobarlo.
 
 **Resultado de aprendizaje.** Crear el proyecto xUnit de pruebas HTTP.
 
-**Acción.** Crea un proyecto xUnit AceriaApp.Api.Tests y referencia AceriaApp.Api; instala Microsoft.AspNetCore.Mvc.Testing 8.
+**Procedimiento guiado.**
+
+1. En el Explorador de soluciones, crea un proyecto **xUnit Test Project** llamado `AceriaApp.Api.Tests` bajo `tests`, con destino .NET 8, o ejecuta los comandos PowerShell del bloque.
+2. Agrega una referencia **de proyecto** desde los tests a `src/AceriaApp.Api/AceriaApp.Api.csproj`, no una referencia a una DLL copiada.
+3. Instala en el proyecto de tests `Microsoft.AspNetCore.Mvc.Testing` y `Microsoft.EntityFrameworkCore.InMemory`, ambos 8.x. Comprueba que no se han añadido a la API de producción.
+4. Elimina el archivo `UnitTest1.cs` generado por defecto en la plantilla xUnit si existe, porque el laboratorio entregará después tres pruebas específicas. Añade el proyecto de tests a la solución y ejecuta `dotnet restore`.
+
 
 **Archivo de trabajo: `tests/AceriaApp.Api.Tests/ApiFactory.cs`**.
 
@@ -530,11 +622,9 @@ dotnet add tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj package Microsof
 dotnet add tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj package Microsoft.EntityFrameworkCore.InMemory --version 8.0.21
 ```
 
-**Secuencia de construcción.** Este paso crea el proyecto de tests y sus referencias. Si ya existe por haber abierto el estado de referencia, examina el `.csproj` sin crear otro proyecto. El archivo `ApiFactory.cs` se crea en el **paso 2.1.22**, no aquí.
-
 **Por qué funciona así.** WebApplicationFactory prueba la aplicación como servidor HTTP: permite distinguir compilación C# de comportamiento observable del enrutamiento y la serialización.
 
-**Verificación concreta.** Las clases de tests referencian Program de la API.
+**Verificación concreta.** Existe `tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj` con referencia a la API y los paquetes de integración. No debe quedar un test de plantilla que altere el recuento de 3 pruebas.
 
 **Si algo falla.** Si falla ApiFactory, comprueba Program partial y el registro de DbContext con InMemory solo para tests.
 
@@ -542,7 +632,13 @@ dotnet add tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj package Microsof
 
 **Resultado de aprendizaje.** Configurar WebApplicationFactory y base aislada para tests.
 
-**Acción.** Crea ApiFactory derivada de WebApplicationFactory<Program>; sustituye solo para pruebas el proveedor por EF Core InMemory.
+**Procedimiento guiado.**
+
+1. En la carpeta del proyecto de tests, crea `ApiFactory.cs` y pega íntegro el código C# de este paso. Verifica que la clase hereda de `WebApplicationFactory<Program>`.
+2. Abre el `Program.cs` de la API y, **después de `app.Run();`**, añade `public partial class Program {}` para que el host de pruebas pueda localizar el punto de entrada.
+3. En `ConfigureTestServices`, comprueba que se elimina `DbContextOptions<AceriaDbContext>` y se registra una base **InMemory** exclusiva de los tests, con un nombre aleatorio por factoría.
+4. Comprueba la opción `SkipDatabaseInitialization=true`: esta configuración debe evitar que los tests necesiten LocalDB. Guarda y compila el proyecto de tests.
+
 
 **Archivo de trabajo: `tests/AceriaApp.Api.Tests/ApiFactory.cs`**.
 
@@ -574,11 +670,9 @@ public sealed class ApiFactory:WebApplicationFactory<Program>
 }
 ```
 
-**Construcción y evidencia del paso.** Ahora sí crea `tests/AceriaApp.Api.Tests/ApiFactory.cs`. Debe heredar de `WebApplicationFactory<Program>`, establecer `SkipDatabaseInitialization=true` y reemplazar el proveedor del contexto **solo dentro del host de pruebas**. Contrasta el archivo con la referencia de 2.1.
-
 **Por qué funciona así.** WebApplicationFactory prueba la aplicación como servidor HTTP: permite distinguir compilación C# de comportamiento observable del enrutamiento y la serialización.
 
-**Verificación concreta.** Las pruebas arrancan ASP.NET Core en memoria; la aplicación real conserva LocalDB.
+**Verificación concreta.** `ApiFactory` compila y arranca el host de pruebas sin instalar SQL Server. La aplicación habitual sigue utilizando LocalDB; solo el host de tests sustituye el proveedor.
 
 **Si algo falla.** Si falla ApiFactory, comprueba Program partial y el registro de DbContext con InMemory solo para tests.
 
@@ -586,7 +680,13 @@ public sealed class ApiFactory:WebApplicationFactory<Program>
 
 **Resultado de aprendizaje.** Probar 200, 404 y DTO mediante GetTests.
 
-**Acción.** Crea GetTests y tres casos: colección 200, GUID inexistente 404, orden insertada recuperada como OrdenDto.
+**Procedimiento guiado.**
+
+1. Dentro del proyecto de tests crea `GetTests.cs` con los imports y la clase completa que aparece en el bloque C#.
+2. Comprueba los tres métodos: `ListaVacia_Es200`, `RecursoInexistente_Es404` y `RecursoExistente_ExponeDto`; cada uno debe instanciar su factoría aislada.
+3. En el tercer test observa la inserción mediante el contexto de prueba, `SaveChangesAsync`, el GET y la deserialización posterior a `OrdenDto`.
+4. Ejecuta `dotnet test tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj` desde la raíz del punto; abre el Explorador de pruebas si lo prefieres y comprueba nombres y resultados.
+
 
 **Archivo de trabajo: `tests/AceriaApp.Api.Tests/GetTests.cs`**.
 
@@ -632,11 +732,9 @@ public class GetTests
 }
 ```
 
-**Construcción y evidencia del paso.** Crea `GetTests.cs` y ejecuta `dotnet test tests/AceriaApp.Api.Tests`. Se esperan tres casos: colección 200, GUID inexistente 404 y DTO recuperado después de insertar la entidad en la base aislada de la factoría.
-
 **Por qué funciona así.** WebApplicationFactory prueba la aplicación como servidor HTTP: permite distinguir compilación C# de comportamiento observable del enrutamiento y la serialización.
 
-**Verificación concreta.** dotnet test ejecuta los tres casos con resultado satisfactorio.
+**Verificación concreta.** Debe indicar **3 tests superados, 0 fallidos**. Un fallo de `WebApplicationFactory` obliga a revisar `Program partial`, referencia de proyecto y configuración InMemory.
 
 **Si algo falla.** Si falla ApiFactory, comprueba Program partial y el registro de DbContext con InMemory solo para tests.
 
@@ -644,15 +742,19 @@ public class GetTests
 
 **Resultado de aprendizaje.** Reto: incorporar consulta por cliente y explicar su URI.
 
-**Acción.** Como reto, acepta ?cliente=ACX-001 en el GET de colección y aplica Where solo cuando se recibe cliente; crea un test.
+**Procedimiento guiado.**
+
+1. Este es un **reto opcional**: realiza una copia separada de tu solución 2.1 para no alterar el estado de referencia que utilizará 2.2.
+2. En el GET de colección acepta un parámetro opcional `string? cliente`, filtra mediante `Where` solo si se ha enviado y conserva `AsNoTracking` y la respuesta DTO.
+3. Crea una petición HTTP con `?cliente=ACX-001` y otra con un cliente inexistente; la segunda debe devolver 200 con `[]`, no 404.
+4. Añade una prueba xUnit específica del filtro, ejecútala y documenta qué diferencia hay entre filtrar colección y consultar un recurso por GUID.
+
 
 **Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Construcción y evidencia del paso.** El filtrado por `cliente` es un **reto opcional**, no un endpoint presente en el código base de 2.1. Añádelo en tu propia copia, crea su test y documenta la diferencia entre colección filtrada vacía y un recurso individual ausente.
-
 **Por qué funciona así.** El filtrado de la colección conserva la idea de recurso y añade una consulta con parámetros, sin transformar el endpoint en una operación RPC.
 
-**Verificación concreta.** La colección devuelve únicamente órdenes del cliente indicado.
+**Verificación concreta.** La solución ampliada filtra sin cambiar el contrato de los GET básicos. Este reto no debe introducirse obligatoriamente en el proyecto base de la etapa 2.2.
 
 **Si algo falla.** Si el filtro no cambia el resultado, revisa el nombre cliente en la query y la condición Where.
 
