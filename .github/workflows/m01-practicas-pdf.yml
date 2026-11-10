@@ -1,0 +1,44 @@
+name: M01 - practicas Markdown y PDF sincronizados
+on:
+  push:
+    branches:
+      - 'revision/m01-guia-autonoma-20261110'
+      - 'main'
+    paths:
+      - 'M01_INTRODUCCION_MICROSERVICIOS/PRACTICAS/M01_PRACTICAS.md'
+      - '.github/scripts/generar_pdf_m01_practicas.py'
+      - '.github/workflows/m01-practicas-pdf.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: m01-practicas-pdf-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  maquetar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Instalar conversor
+        run: python -m pip install markdown weasyprint pymupdf
+      - name: PDF M01 desde el Markdown y validacion de 120 pasos
+        run: python .github/scripts/generar_pdf_m01_practicas.py
+      - name: Publicar solamente el PDF de practicas M01
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add M01_INTRODUCCION_MICROSERVICIOS/PRACTICAS/M01_PRACTICAS.pdf
+          if ! git diff --cached --quiet; then
+            git commit -m "docs(m01): publicar PDF desde las practicas validadas"
+            git fetch origin "${GITHUB_REF_NAME}"
+            if git diff --quiet HEAD^ "origin/${GITHUB_REF_NAME}" -- M01_INTRODUCCION_MICROSERVICIOS/PRACTICAS/M01_PRACTICAS.md .github/scripts/generar_pdf_m01_practicas.py; then
+              git rebase "origin/${GITHUB_REF_NAME}"
+              git push origin "HEAD:${GITHUB_REF_NAME}"
+            else
+              echo "Markdown modificado durante la conversion; no publicar PDF obsoleto."
+            fi
+          fi
