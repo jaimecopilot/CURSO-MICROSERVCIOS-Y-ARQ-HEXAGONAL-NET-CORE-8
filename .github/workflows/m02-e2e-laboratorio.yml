@@ -4,6 +4,7 @@ on:
     branches:
       - 'verificacion/e2e-main-20261110'
       - 'main'
+      - 'correccion/m02-manual-autonomo-20261110'
     paths:
       - 'M02_APIS_REST_ASPNET_CORE/PRACTICAS/M02_PRACTICAS.md'
       - 'M02_APIS_REST_ASPNET_CORE/PROYECTO/**'
@@ -13,7 +14,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: m02-e2e-laboratorio
+  group: m02-e2e-laboratorio-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   reconstruir:
