@@ -811,15 +811,19 @@ La prueba debe rechazar una implementación que devuelva todas las filas.
 
 **Resultado de aprendizaje.** Recuperar el estado GET funcional sin modificarlo.
 
-**Acción.** Abre la etapa 2.1 ya programada; copia tu solución de trabajo a la carpeta del punto 2.2 y ejecuta los GET existentes.
+**Procedimiento guiado.**
+
+1. Cierra la API del punto 2.1 y copia tu **solución de trabajo terminada** a una carpeta nueva para 2.2, conservando `src`, `tests` y `AceriaApp.http`. No copies el proyecto de referencia 2.2, porque ya contiene lo que vas a aprender.
+2. Abre la copia 2.2 en Visual Studio y comprueba que no se están ejecutando simultáneamente dos servidores en el mismo puerto.
+3. Ejecuta el proyecto de tests heredado y verifica sus tres casos de GET. Después arranca la API y prueba de nuevo colección 200 y recurso inexistente 404.
+4. Anota el estado inicial y conserva una copia de seguridad del punto 2.1; los nuevos endpoints se añadirán progresivamente en `Program.cs`.
+
 
 **Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.2-recursos-verbos-codigos` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Construcción y evidencia del paso.** Crea la copia de trabajo para 2.2 a partir de tu solución final 2.1; verifica primero que sus dos GET siguen dando 200 y 404. El proyecto de referencia de 2.2 es el estado **final** de esta etapa, no el punto de partida obligatorio.
-
 **Por qué funciona así.** El diseño de las rutas y los contratos evita recibir propiedades de servidor desde JSON. El resultado público se devuelve mediante OrdenDto, no directamente desde la entidad.
 
-**Verificación concreta.** La lista sigue devolviendo 200 y el detalle inexistente 404.
+**Verificación concreta.** La etapa 2.2 parte de la API de lectura de 2.1 sin regresiones: 3 tests y las dos peticiones GET siguen correctos.
 
 **Si algo falla.** Si el JSON puede cambiar el ID o Estado, el contrato de entrada está exponiendo datos internos; utiliza CrearOrdenRequest.
 
@@ -827,15 +831,19 @@ La prueba debe rechazar una implementación que devuelva todas las filas.
 
 **Resultado de aprendizaje.** Diseñar la tabla verbo, URI, petición y respuesta.
 
-**Acción.** Construye una tabla con GET/POST/PUT/PATCH/DELETE y las URIs de órdenes; anota cuándo será 201, 204, 400, 404, 409 y 422.
+**Procedimiento guiado.**
+
+1. Crea en tus notas una tabla con columnas **verbo, URI, JSON de entrada, respuesta y efecto persistente**.
+2. Escribe una fila por cada operación prevista: GET de colección, GET individual, POST colección, PUT individual, PATCH `/cantidad`, DELETE individual y POST `/finalizar`.
+3. Anota los éxitos previstos: 200 para GET, PATCH y finalizar; 201 + `Location` para creación; 204 para PUT y DELETE.
+4. Añade los casos alternativos 400 (entrada inválida), 404 (id inexistente), 409 (estado incompatible) y 422 (capacidad del taller). Marca cuáles pertenecen a pasos siguientes para no implementarlos todos todavía.
+
 
 **Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.2-recursos-verbos-codigos` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Construcción y evidencia del paso.** Prepara una tabla de operaciones de **las rutas que vas a implementar**, no de hipotéticos recursos adicionales. Anota `Location` para POST y el efecto sobre datos persistidos para PUT, PATCH y DELETE.
-
 **Por qué funciona así.** El diseño de las rutas y los contratos evita recibir propiedades de servidor desde JSON. El resultado público se devuelve mediante OrdenDto, no directamente desde la entidad.
 
-**Verificación concreta.** La tabla coincide con las rutas que programarás, sin acciones Git.
+**Verificación concreta.** Tu tabla debe enumerar las siete operaciones reales del proyecto de referencia 2.2 y distinguir los resultados HTTP de los cambios almacenados en `Ordenes`.
 
 **Si algo falla.** Si el JSON puede cambiar el ID o Estado, el contrato de entrada está exponiendo datos internos; utiliza CrearOrdenRequest.
 
@@ -843,15 +851,19 @@ La prueba debe rechazar una implementación que devuelva todas las filas.
 
 **Resultado de aprendizaje.** Separar contrato de entrada y DTO de salida.
 
-**Acción.** En la carpeta Contratos dibuja qué acepta el cliente y qué genera el servidor. No recibas Orden directamente desde JSON.
+**Procedimiento guiado.**
+
+1. Abre la entidad `Modelo/Orden.cs` y el contrato de salida `Modelo/OrdenDto.cs` creados en 2.1.
+2. Crea la carpeta `Contratos` e identifica **qué puede escribir el cliente**: `Cliente`, `Material` y `Cantidad` para crear o sustituir, y solo `Cantidad` para PATCH.
+3. Dibuja dos contratos de entrada: `CrearOrdenRequest(string Cliente, string Material, int Cantidad)` y `ActualizarCantidadRequest(int Cantidad)`. Compáralos con `OrdenDto`, que además publica id, estado y fecha.
+4. Justifica por qué el endpoint POST no debería aceptar libremente un `Orden` completo con un `Id` proporcionado por el cliente.
+
 
 **Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.2-recursos-verbos-codigos` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Construcción y evidencia del paso.** En `Contratos/ContratosOrden.cs` separa lo que escribe el consumidor (`CrearOrdenRequest`, `ActualizarCantidadRequest`) de `OrdenDto`, que contiene datos generados por el servidor. El cliente no debe asignar `Id` ni `FechaCreacion`.
-
 **Por qué funciona así.** El diseño de las rutas y los contratos evita recibir propiedades de servidor desde JSON. El resultado público se devuelve mediante OrdenDto, no directamente desde la entidad.
 
-**Verificación concreta.** Id, Estado y FechaCreacion quedan fuera del contrato de creación.
+**Verificación concreta.** Debe quedar una separación explícita entre entidad persistente, contrato de entrada y DTO de respuesta; la clase `Orden` existente no se modifica.
 
 **Si algo falla.** Si el JSON puede cambiar el ID o Estado, el contrato de entrada está exponiendo datos internos; utiliza CrearOrdenRequest.
 
@@ -859,7 +871,13 @@ La prueba debe rechazar una implementación que devuelva todas las filas.
 
 **Resultado de aprendizaje.** Crear CrearOrdenRequest y ActualizarCantidadRequest.
 
-**Acción.** Crea ContratosOrden.cs con CrearOrdenRequest(Cliente, Material, Cantidad) y ActualizarCantidadRequest(Cantidad).
+**Procedimiento guiado.**
+
+1. En `src/AceriaApp.Api/Contratos` crea `ContratosOrden.cs`; si Visual Studio propone una clase vacía, sustitúyela por el contenido del fragmento C#.
+2. Declara el namespace `AceriaApp.Api.Contratos` y **dos records**: `CrearOrdenRequest` y `ActualizarCantidadRequest`, exactamente como en el ejemplo.
+3. Guarda el archivo e importa este namespace en `Program.cs` antes de registrar los endpoints que recibirán esos tipos.
+4. Compila el proyecto y comprueba que el compilador reconoce ambos records sin mezclar sus propiedades con `OrdenDto`.
+
 
 **Archivo de trabajo: `src/AceriaApp.Api/Contratos/ContratosOrden.cs`**.
 
@@ -872,11 +890,9 @@ public sealed record ActualizarCantidadRequest(int Cantidad);
 // FIN PASO 2.2.4
 ```
 
-**Construcción y evidencia del paso.** Crea dos records públicos en `ContratosOrden.cs` y añade el namespace `AceriaApp.Api.Contratos`. Comprueba que el proyecto puede referenciarlos desde `Program.cs` sin introducir todavía FluentValidation.
-
 **Por qué funciona así.** El diseño de las rutas y los contratos evita recibir propiedades de servidor desde JSON. El resultado público se devuelve mediante OrdenDto, no directamente desde la entidad.
 
-**Verificación concreta.** Los dos records compilan y se distinguen del OrdenDto de salida.
+**Verificación concreta.** El archivo contiene dos tipos públicos y ningún DTO de EF Core. Compilación correcta, sin duplicar namespace ni modificar los GET existentes.
 
 **Si algo falla.** Si el JSON puede cambiar el ID o Estado, el contrato de entrada está exponiendo datos internos; utiliza CrearOrdenRequest.
 
@@ -884,7 +900,13 @@ public sealed record ActualizarCantidadRequest(int Cantidad);
 
 **Resultado de aprendizaje.** Programar MapPost y recibir JSON de una orden.
 
-**Acción.** En Program.cs declara MapPost /api/v1/ordenes con CrearOrdenRequest y AceriaDbContext. Explica cómo se enlaza JSON.
+**Procedimiento guiado.**
+
+1. Abre `Program.cs`, añade `using AceriaApp.Api.Contratos;` al comienzo y sitúate **después de los GET y antes de `app.Run()`**.
+2. Inserta **una sola vez** el `MapPost("/api/v1/ordenes", ...)` mostrado en el bloque C#. Conserva completos los parámetros `CrearOrdenRequest request` y `AceriaDbContext db`.
+3. Revisa las tres ramas del handler: rechazo provisional de campos vacíos, límite de cantidad superior a 500 y camino válido de creación.
+4. Guarda y compila. Los pasos 2.2.6–2.2.10 analizarán, ejecutarán y contrastarán esas ramas; no debes crear más versiones del POST.
+
 
 **Archivo de trabajo: `src/AceriaApp.Api/Program.cs`**.
 
@@ -909,11 +931,9 @@ app.MapPost("/api/v1/ordenes",async (CrearOrdenRequest request,AceriaDbContext d
 ;
 ```
 
-**Construcción y evidencia del paso.** En `Program.cs` agrega **un solo MapPost**. La versión completa se muestra en este paso para que compile. Los pasos 2.2.6 y 2.2.7 explican y comprueban las sentencias de persistencia y `Location` que ya aparecen en ese manejador.
-
 **Por qué funciona así.** El POST crea un recurso y debe confirmar la inserción mediante SaveChangesAsync. CreatedAtRoute devuelve 201 y un enlace Location utilizable mediante GET.
 
-**Verificación concreta.** La URL acepta POST con Content-Type application/json.
+**Verificación concreta.** Existe exactamente un POST de colección, compila y acepta JSON con `cliente`, `material` y `cantidad`; un request de negocio correcto alcanza el camino de creación.
 
 **Si algo falla.** Si el POST no persiste, verifica SaveChangesAsync; si Location falta, revisa CreatedAtRoute y el nombre de GET.
 
@@ -921,15 +941,19 @@ app.MapPost("/api/v1/ordenes",async (CrearOrdenRequest request,AceriaDbContext d
 
 **Resultado de aprendizaje.** Persistir la orden con Add y SaveChangesAsync.
 
-**Acción.** Dentro de POST crea una entidad Orden con los campos del contrato, ejecuta db.Ordenes.Add y SaveChangesAsync.
+**Procedimiento guiado.**
+
+1. Abre el POST creado en 2.2.5; localiza `new Orden { Cliente = ..., Material = ..., Cantidad = ... }` y comprueba que el servidor asigna automáticamente Id, estado y fecha.
+2. Coloca un punto de interrupción en `db.Ordenes.Add(orden)` y otro en `await db.SaveChangesAsync()`. Arranca con F5.
+3. Envía desde `AceriaApp.http` un POST válido de prueba; observa que `Add` incorpora la entidad al contexto y que `SaveChangesAsync` confirma la operación.
+4. Consulta la tabla con el Explorador de objetos de SQL Server o mediante el GET de colección y comprueba que la orden quedó almacenada. No borres `SaveChangesAsync` de la versión final.
+
 
 **Referencia de código:** `src/AceriaApp.Api/Program.cs`. Busca el método HTTP correspondiente y su llamada a `SaveChangesAsync`. Comprueba el comportamiento indicado en la acción antes de continuar.
 
-**Construcción y evidencia del paso.** Localiza `db.Ordenes.Add(orden)` y `SaveChangesAsync()` en el POST creado. Comprueba que sin `SaveChangesAsync` una orden nueva no se mantiene tras otra petición. No añadas un segundo POST.
-
 **Por qué funciona así.** El POST crea un recurso y debe confirmar la inserción mediante SaveChangesAsync. CreatedAtRoute devuelve 201 y un enlace Location utilizable mediante GET.
 
-**Verificación concreta.** Una nueva fila queda persistida en LocalDB.
+**Verificación concreta.** El Id generado es un GUID y el nuevo registro se recupera tras una petición HTTP posterior; no basta con que se haya ejecutado `Add` sin excepción.
 
 **Si algo falla.** Si el POST no persiste, verifica SaveChangesAsync; si Location falta, revisa CreatedAtRoute y el nombre de GET.
 
@@ -937,7 +961,13 @@ app.MapPost("/api/v1/ordenes",async (CrearOrdenRequest request,AceriaDbContext d
 
 **Resultado de aprendizaje.** Devolver 201 y Location con CreatedAtRoute.
 
-**Acción.** Devuelve Results.CreatedAtRoute usando el nombre ObtenerOrdenPorId y el identificador generado.
+**Procedimiento guiado.**
+
+1. En el mismo POST localiza `Results.CreatedAtRoute("ObtenerOrdenPorId", new { id = orden.Id }, OrdenDto.Desde(orden))`. No lo añadas otra vez: ya aparece en el handler completo de 2.2.5.
+2. Busca en el GET individual el `.WithName("ObtenerOrdenPorId")`; comprueba que ese nombre coincide exactamente con el utilizado por `CreatedAtRoute`.
+3. Ejecuta el POST válido desde el cliente HTTP e inspecciona **código 201**, cabecera **Location** y cuerpo con el Id de la nueva orden.
+4. Copia la URL de `Location` y ejecuta inmediatamente GET. Si falta la cabecera, revisa el nombre de ruta; si GET responde 404, comprueba el Id realmente guardado.
+
 
 **Archivo de trabajo: `src/AceriaApp.Api/Program.cs`**.
 
@@ -951,11 +981,9 @@ return Results.CreatedAtRoute(
     OrdenDto.Desde(orden));
 ```
 
-**Construcción y evidencia del paso.** La sentencia `CreatedAtRoute("ObtenerOrdenPorId", ...)` del **mismo** POST debe generar 201 y la cabecera `Location`; revisa que el nombre coincida con el GET de detalle construido en 2.1.
-
 **Por qué funciona así.** El POST crea un recurso y debe confirmar la inserción mediante SaveChangesAsync. CreatedAtRoute devuelve 201 y un enlace Location utilizable mediante GET.
 
-**Verificación concreta.** El resultado es 201 con cabecera Location.
+**Verificación concreta.** POST 201 + `Location` utilizable y GET posterior 200 con el mismo Id. El servidor no debe limitarse a devolver 200 sin recurso creado.
 
 **Si algo falla.** Si el POST no persiste, verifica SaveChangesAsync; si Location falta, revisa CreatedAtRoute y el nombre de GET.
 
@@ -963,15 +991,19 @@ return Results.CreatedAtRoute(
 
 **Resultado de aprendizaje.** Enviar POST y consultar por GET la orden creada.
 
-**Acción.** Envía POST con ACX-001, CHAPA-3MM y 10; copia el identificador y ejecuta GET de detalle.
+**Procedimiento guiado.**
+
+1. En `AceriaApp.http`, prepara un POST con `Content-Type: application/json` y el cuerpo `{ "cliente": "ACX-001", "material": "CHAPA-3MM", "cantidad": 10 }`.
+2. Arranca la API con LocalDB, ejecuta la solicitud y conserva el Id y `Location` devueltos.
+3. Sustituye `{id}` de una petición GET por el GUID real y ejecútala; verifica que los tres campos son iguales a los enviados y que el estado inicial es `Pendiente`.
+4. Anota qué resultados demuestran el contrato (201 y 200) y cuáles demuestran persistencia (el recurso sigue existiendo en un segundo request).
+
 
 **Referencia de código:** `src/AceriaApp.Api/Program.cs`. Busca el método HTTP correspondiente y su llamada a `SaveChangesAsync`. Comprueba el comportamiento indicado en la acción antes de continuar.
 
-**Construcción y evidencia del paso.** Envía POST con `cliente=ACX-001`, `material=CHAPA-3MM` y `cantidad=10`. Copia el `Guid` retornado y ejecuta GET al recurso; comprueba que coincide con `Location` y con los campos persistidos.
-
 **Por qué funciona así.** El POST crea un recurso y debe confirmar la inserción mediante SaveChangesAsync. CreatedAtRoute devuelve 201 y un enlace Location utilizable mediante GET.
 
-**Verificación concreta.** GET muestra los mismos valores guardados por POST.
+**Verificación concreta.** La respuesta GET individual debe mostrar el mismo `id`, `cliente`, `material`, `cantidad=10` y `estado=Pendiente`.
 
 **Si algo falla.** Si el POST no persiste, verifica SaveChangesAsync; si Location falta, revisa CreatedAtRoute y el nombre de GET.
 
@@ -979,15 +1011,19 @@ return Results.CreatedAtRoute(
 
 **Resultado de aprendizaje.** Rechazar provisionalmente peticiones sin datos.
 
-**Acción.** En 2.2, antes de introducir FluentValidation, añade un BadRequest provisional ante Cliente o Material vacíos y Cantidad no positiva.
+**Procedimiento guiado.**
+
+1. Abre las primeras condiciones del POST de 2.2.5 y localiza las comprobaciones provisionales de `Cliente`, `Material` y `Cantidad <= 0`.
+2. Prepara tres solicitudes, cambiando una propiedad cada vez: `cliente` vacío, `material` vacío y `cantidad: 0`; conserva las otras dos propiedades correctas.
+3. Ejecuta cada POST y verifica el código **400 Bad Request** y el cuerpo de error simple que devuelve esta etapa; comprueba con GET que no se han añadido órdenes inválidas.
+4. No incorpores todavía FluentValidation ni dupliques el `if`. La sustitución por validadores y filtros se realizará expresamente en 2.3.
+
 
 **Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.2-recursos-verbos-codigos` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Construcción y evidencia del paso.** La comprobación provisional de campos obligatorios vive en el POST de esta etapa. Prueba `cliente` vacío y `cantidad=0`: espera 400. Cuando llegues a 2.3 se reemplaza este mecanismo por los filtros, sin duplicar validaciones.
-
 **Por qué funciona así.** Un cuerpo incorrecto es distinto de una regla del negocio. En 2.2 el 400 es provisional; 501 unidades reciben 422 por la capacidad limitada del taller.
 
-**Verificación concreta.** La petición inválida produce 400 y no crea una orden.
+**Verificación concreta.** Tres POST inválidos devuelven 400 y no crean registros. El cuerpo 400 todavía no tiene por qué ser `ValidationProblemDetails`.
 
 **Si algo falla.** Si un 501 da 400, la condición provisional está mezclada con la política de capacidad; distingue ambos casos.
 
@@ -995,15 +1031,19 @@ return Results.CreatedAtRoute(
 
 **Resultado de aprendizaje.** Comprobar la política del taller y respuesta 422.
 
-**Acción.** Rechaza Cantidad superior a 500 por política de capacidad con Results.Problem statusCode 422.
+**Procedimiento guiado.**
+
+1. Prepara un POST con `Cliente` y `Material` válidos y `cantidad: 501`; no lo mezcles con un campo vacío que activaría la regla provisional de 400.
+2. Coloca un punto de interrupción en `if (request.Cantidad > 500)` del POST y ejecuta la solicitud desde el archivo HTTP.
+3. Comprueba que se alcanza `Results.Problem(... statusCode: 422)` y que no se ejecuta `db.Ordenes.Add`.
+4. Anota la diferencia entre un valor sintácticamente correcto pero no aceptable por la capacidad del taller y una entrada obligatoria ausente. Repite con cantidad 500 para observar que no entra en esta condición.
+
 
 **Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.2-recursos-verbos-codigos` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Construcción y evidencia del paso.** Con `cantidad=501` y los otros campos válidos, el manejador alcanza la política de capacidad y devuelve 422; no confundas este límite de negocio con la validación semántica de `cantidad<=0`.
-
 **Por qué funciona así.** Un cuerpo incorrecto es distinto de una regla del negocio. En 2.2 el 400 es provisional; 501 unidades reciben 422 por la capacidad limitada del taller.
 
-**Verificación concreta.** El JSON de capacidad 501 produce 422; se distingue de 400.
+**Verificación concreta.** Cantidad 501 produce HTTP 422 sin inserción; 500 pasa el límite de negocio y puede crear una orden si las demás condiciones son válidas.
 
 **Si algo falla.** Si un 501 da 400, la condición provisional está mezclada con la política de capacidad; distingue ambos casos.
 
@@ -1011,7 +1051,13 @@ return Results.CreatedAtRoute(
 
 **Resultado de aprendizaje.** Programar MapPut con identificador Guid.
 
-**Acción.** Declara MapPut /api/v1/ordenes/{id:guid} con Guid, CrearOrdenRequest y AceriaDbContext.
+**Procedimiento guiado.**
+
+1. Debajo del POST y antes de `app.Run()`, pega el único `MapPut("/api/v1/ordenes/{id:guid}", ...)` del ejemplo, con `Guid id`, `CrearOrdenRequest` y DbContext.
+2. Comprueba el flujo dentro del manejador: 400 provisional, búsqueda por GUID, 404 si no existe, 409 si está finalizada, 422 si supera capacidad, actualización y `SaveChangesAsync`.
+3. Deja el mismo `.WithName("ReemplazarOrden")` y `.WithTags("Ordenes")`, sin cambiar el nombre del GET anterior.
+4. Guarda y compila; la modificación de los campos y su prueba se explican en 2.2.12–2.2.13, no mediante la creación de un segundo PUT.
+
 
 **Archivo de trabajo: `src/AceriaApp.Api/Program.cs`**.
 
@@ -1039,11 +1085,9 @@ app.MapPut("/api/v1/ordenes/{id:guid}",async (Guid id,CrearOrdenRequest request,
 ;
 ```
 
-**Construcción y evidencia del paso.** Crea un único `MapPut("/api/v1/ordenes/{id:guid}", ...)`; el fragmento incluye las ramas necesarias para compilar. El paso 2.2.12 estudiará y probará el reemplazo de los tres campos editables de ese mismo endpoint.
-
 **Por qué funciona así.** PUT sustituye los campos editables de una orden existente. Si el Guid no identifica un recurso debe devolver 404, no crear silenciosamente otro.
 
-**Verificación concreta.** PUT puede buscar un recurso por identificador.
+**Verificación concreta.** El proyecto compila con un PUT y su ruta individual; el GET y POST anteriores siguen disponibles.
 
 **Si algo falla.** Si el PUT no actualiza, revisa FindAsync(id) y SaveChangesAsync. El GUID no debe cambiar.
 
@@ -1051,15 +1095,19 @@ app.MapPut("/api/v1/ordenes/{id:guid}",async (Guid id,CrearOrdenRequest request,
 
 **Resultado de aprendizaje.** Modificar Cliente, Material y Cantidad con PUT.
 
-**Acción.** En el PUT carga FindAsync(id), devuelve 404 si no existe y sustituye los tres campos editables; SaveChangesAsync.
+**Procedimiento guiado.**
+
+1. Crea una orden `Pendiente` mediante POST y conserva su GUID. No utilices una orden previamente finalizada.
+2. En el `MapPut` de 2.2.11, examina `FindAsync(id)`, las tres asignaciones `Cliente`, `Material`, `Cantidad` y la llamada `SaveChangesAsync()`.
+3. Envía PUT al GUID real con los valores `ACX-002`, `CHAPA-5MM` y `14`; no incluyas en el JSON `Id`, `Estado` ni `FechaCreacion`.
+4. Con un punto de interrupción comprueba que el contexto encuentra la misma entidad, que el Id no cambia y que se sustituyen los tres campos editables.
+
 
 **Referencia de código:** `src/AceriaApp.Api/Program.cs`. Busca el método HTTP correspondiente y su llamada a `SaveChangesAsync`. Comprueba el comportamiento indicado en la acción antes de continuar.
 
-**Construcción y evidencia del paso.** En el `MapPut` anterior verifica `FindAsync(id)`, 404 para recurso ausente, 409 para orden finalizada y 422 para capacidad. Solo si es editable cambia `Cliente`, `Material` y `Cantidad`, y guarda los cambios.
-
 **Por qué funciona así.** PUT sustituye los campos editables de una orden existente. Si el Guid no identifica un recurso debe devolver 404, no crear silenciosamente otro.
 
-**Verificación concreta.** PUT válido responde 204 y mantiene el mismo Guid.
+**Verificación concreta.** PUT del recurso pendiente devuelve 204 y conserva el mismo GUID; la actualización debe afectar Cliente, Material y Cantidad, sin crear una nueva fila.
 
 **Si algo falla.** Si el PUT no actualiza, revisa FindAsync(id) y SaveChangesAsync. El GUID no debe cambiar.
 
@@ -1103,15 +1151,19 @@ no está cumpliendo el contrato concreto de este ejemplo.
 
 **Resultado de aprendizaje.** Comprobar 204 y consultar por GET los cambios.
 
-**Acción.** Tras PUT ejecuta GET del mismo recurso y comprueba Cliente, Material y Cantidad nuevos.
+**Procedimiento guiado.**
+
+1. Después de ejecutar PUT, comprueba que la respuesta es **204 No Content**: un cuerpo vacío es correcto para este resultado.
+2. Envía un GET al mismo GUID usando la petición de detalle de tu archivo `.http`.
+3. Compara cada campo con los valores anteriores: Cliente, Material y Cantidad deben haberse sustituido; Estado debe seguir siendo `Pendiente`.
+4. Repite un PUT idéntico y comprueba que no aparece otra orden. Registra la evidencia del efecto persistente en lugar de deducirlo solo del 204.
+
 
 **Referencia de código:** `src/AceriaApp.Api/Program.cs`. Busca el método HTTP correspondiente y su llamada a `SaveChangesAsync`. Comprueba el comportamiento indicado en la acción antes de continuar.
 
-**Construcción y evidencia del paso.** Prueba PUT con el GUID creado y campos diferentes: espera **204 sin cuerpo**. Ejecuta GET después para observar los valores nuevos, porque el 204 por sí solo no demuestra qué se almacenó.
-
 **Por qué funciona así.** PUT sustituye los campos editables de una orden existente. Si el Guid no identifica un recurso debe devolver 404, no crear silenciosamente otro.
 
-**Verificación concreta.** La consulta evidencia que el cambio se persistió.
+**Verificación concreta.** Dos PUT idénticos conservan una sola orden con los nuevos valores. GET posterior 200; PUT 204 sin JSON de respuesta.
 
 **Si algo falla.** Si el PUT no actualiza, revisa FindAsync(id) y SaveChangesAsync. El GUID no debe cambiar.
 
@@ -1119,7 +1171,13 @@ no está cumpliendo el contrato concreto de este ejemplo.
 
 **Resultado de aprendizaje.** Programar MapPatch para cambiar solo Cantidad.
 
-**Acción.** Declara MapPatch /api/v1/ordenes/{id:guid}/cantidad con ActualizarCantidadRequest.
+**Procedimiento guiado.**
+
+1. En `Program.cs`, incorpora el único `MapPatch("/api/v1/ordenes/{id:guid}/cantidad", ...)` del bloque C#.
+2. Comprueba que el contrato utilizado es **`ActualizarCantidadRequest`**, no `CrearOrdenRequest`, y que la ruta incluye el segmento final `/cantidad`.
+3. Sigue las ramas de búsqueda, rechazo por estado y capacidad, y asignación exclusiva de `orden.Cantidad`; guarda con `SaveChangesAsync`.
+4. Compila el proyecto. Prepara en `AceriaApp.http` un PATCH con `Content-Type: application/json` y cuerpo `{ "cantidad": 15 }`.
+
 
 **Archivo de trabajo: `src/AceriaApp.Api/Program.cs`**.
 
@@ -1146,11 +1204,9 @@ app.MapPatch("/api/v1/ordenes/{id:guid}/cantidad",
 ;
 ```
 
-**Construcción y evidencia del paso.** Crea el único `MapPatch` especializado en `/cantidad`. No se está implementando JSON Patch genérico: `ActualizarCantidadRequest` contiene una sola propiedad. Comprueba que el handler conserva los demás campos.
-
 **Por qué funciona así.** PATCH realiza un cambio parcial de Cantidad y conserva los demás datos. Su resultado debe verificarse con una lectura posterior.
 
-**Verificación concreta.** PATCH admite un cuerpo que contiene solo Cantidad.
+**Verificación concreta.** Hay un solo handler PATCH de cantidad, con cuerpo tipado, respuesta 200 en operación válida y sin necesidad de JSON Patch genérico.
 
 **Si algo falla.** Si PATCH cambia otros campos, no reasignes Cliente ni Material desde ActualizarCantidadRequest.
 
@@ -1158,15 +1214,19 @@ app.MapPatch("/api/v1/ordenes/{id:guid}/cantidad",
 
 **Resultado de aprendizaje.** Comprobar que PATCH no modifica los demás campos.
 
-**Acción.** Guarda la nueva cantidad y devuelve Results.Ok(OrdenDto.Desde(orden)); consulta después y verifica que Cliente sigue igual.
+**Procedimiento guiado.**
+
+1. Antes de aplicar PATCH, ejecuta un GET del recurso y anota los valores actuales de Cliente, Material y Cantidad.
+2. Envía PATCH con una cantidad diferente y comprueba su respuesta **200** con el DTO actualizado.
+3. Repite GET a la misma URI de detalle y compara los campos: Cantidad habrá cambiado y Cliente/Material deben permanecer idénticos.
+4. Si se modificó algún otro campo, revisa el handler de 2.2.14; no añadas una segunda ruta PATCH para corregirlo.
+
 
 **Referencia de código:** `src/AceriaApp.Api/Program.cs`. Busca el método HTTP correspondiente y su llamada a `SaveChangesAsync`. Comprueba el comportamiento indicado en la acción antes de continuar.
 
-**Construcción y evidencia del paso.** Desde el endpoint PATCH anterior cambia `Cantidad` y comprueba su 200 y DTO. A continuación haz GET y compara `Cliente` y `Material` anteriores; no crees otro handler para guardar.
-
 **Por qué funciona así.** PATCH realiza un cambio parcial de Cantidad y conserva los demás datos. Su resultado debe verificarse con una lectura posterior.
 
-**Verificación concreta.** Se obtiene 200 y no cambian datos no incluidos en el parche.
+**Verificación concreta.** PATCH 200 y GET posterior 200; solo cambia `Cantidad`. El estado y el Id siguen siendo los mismos.
 
 **Si algo falla.** Si PATCH cambia otros campos, no reasignes Cliente ni Material desde ActualizarCantidadRequest.
 
@@ -1174,7 +1234,13 @@ app.MapPatch("/api/v1/ordenes/{id:guid}/cantidad",
 
 **Resultado de aprendizaje.** Programar MapDelete para eliminar una orden.
 
-**Acción.** Declara MapDelete /api/v1/ordenes/{id:guid}; usa FindAsync, Remove y SaveChangesAsync.
+**Procedimiento guiado.**
+
+1. Debajo del PATCH, agrega el `MapDelete("/api/v1/ordenes/{id:guid}", ...)` del bloque de este paso.
+2. Verifica que primero consulta `FindAsync(id)`, después descarta recursos inexistentes (404) o finalizados (409), y solo entonces ejecuta `Remove` y `SaveChangesAsync`.
+3. Prepara una orden nueva `Pendiente` para probar el borrado, evitando utilizar la orden finalizada de otros ejercicios.
+4. Compila y ejecuta DELETE contra el GUID real. Comprueba que la respuesta es **204 No Content**.
+
 
 **Archivo de trabajo: `src/AceriaApp.Api/Program.cs`**.
 
@@ -1196,11 +1262,9 @@ app.MapDelete("/api/v1/ordenes/{id:guid}",async (Guid id,AceriaDbContext db)=>
 ;
 ```
 
-**Construcción y evidencia del paso.** Registra `MapDelete` con su consulta `FindAsync`, bloqueo 409 por estado, `Remove`, `SaveChangesAsync` y resultado 204. No confundas eliminación lógica con borrado físico: este ejercicio utiliza `Remove`.
-
 **Por qué funciona así.** DELETE quita un recurso persistido. La consulta posterior puede devolver 404; esa diferencia no impide que la eliminación sea idempotente.
 
-**Verificación concreta.** DELETE existente devuelve 204.
+**Verificación concreta.** El DELETE de una orden pendiente finaliza con 204 y no deja esa orden en la tabla; el código contiene un solo MapDelete.
 
 **Si algo falla.** Si DELETE devuelve éxito pero GET encuentra la orden, revisa Remove y SaveChangesAsync.
 
@@ -1208,15 +1272,19 @@ app.MapDelete("/api/v1/ordenes/{id:guid}",async (Guid id,AceriaDbContext db)=>
 
 **Resultado de aprendizaje.** Verificar 204 seguido de GET 404.
 
-**Acción.** Llama GET al recurso recién eliminado y después repite DELETE sobre su Id.
+**Procedimiento guiado.**
+
+1. Guarda el GUID de la orden que acabas de eliminar y ejecuta GET sobre su URI individual.
+2. Comprueba **404** porque la orden ya no existe. Repite DELETE sobre el mismo GUID y comprueba también la respuesta de recurso inexistente.
+3. Comprueba con GET de colección que no se ha recuperado la orden ni creado otra en su lugar.
+4. Escribe una conclusión breve: repetir DELETE puede producir distintos códigos HTTP, pero no modifica el estado final una vez eliminado el recurso.
+
 
 **Referencia de código:** `src/AceriaApp.Api/Program.cs`. Busca el método HTTP correspondiente y su llamada a `SaveChangesAsync`. Comprueba el comportamiento indicado en la acción antes de continuar.
 
-**Construcción y evidencia del paso.** Al borrar una orden `Pendiente`, espera 204. Un GET posterior y un segundo DELETE deben indicar que ya no existe. La idempotencia se razona por el estado final, no por repetir el mismo código HTTP.
-
 **Por qué funciona así.** DELETE quita un recurso persistido. La consulta posterior puede devolver 404; esa diferencia no impide que la eliminación sea idempotente.
 
-**Verificación concreta.** El GET devuelve 404 y el recurso sigue ausente.
+**Verificación concreta.** Secuencia verificable: primer DELETE 204, GET 404 y segundo DELETE 404, con ausencia persistente de la orden.
 
 **Si algo falla.** Si DELETE devuelve éxito pero GET encuentra la orden, revisa Remove y SaveChangesAsync.
 
@@ -1224,7 +1292,13 @@ app.MapDelete("/api/v1/ordenes/{id:guid}",async (Guid id,AceriaDbContext db)=>
 
 **Resultado de aprendizaje.** Programar la transición de estado finalizar.
 
-**Acción.** Declara POST /api/v1/ordenes/{id:guid}/finalizar para establecer Estado=Finalizada y guardar.
+**Procedimiento guiado.**
+
+1. Registra un nuevo endpoint `POST /api/v1/ordenes/{id:guid}/finalizar` copiando el bloque del laboratorio **antes de `app.Run()`**; no copies `app.Run()` ni otra clase `Program`.
+2. Dentro de la lambda localiza `FindAsync`, las respuestas 404/409, la asignación `Estado = "Finalizada"` y `SaveChangesAsync`.
+3. Crea una orden nueva pendiente, anota su Id y ejecuta POST a la URI `/finalizar` correspondiente, sin cuerpo JSON si no lo necesita.
+4. Repite POST finalizar con el mismo GUID y observa 409; explica por qué terminar dos veces la misma transición no se acepta como una segunda operación válida.
+
 
 **Archivo de trabajo: `src/AceriaApp.Api/Program.cs`**.
 
@@ -1246,11 +1320,9 @@ app.MapPost("/api/v1/ordenes/{id:guid}/finalizar",async (Guid id,AceriaDbContext
 ;
 ```
 
-**Construcción y evidencia del paso.** Crea el endpoint POST `/api/v1/ordenes/{id:guid}/finalizar` como una transición explícita. Solo una orden existente y todavía pendiente puede finalizarse; repetir la transición devuelve 409.
-
 **Por qué funciona así.** La transición Finalizada cambia el estado de negocio. PUT, PATCH y DELETE deben respetarlo y producir 409 si se intenta una operación incompatible.
 
-**Verificación concreta.** La transición devuelve 200 y el DTO indica Finalizada.
+**Verificación concreta.** Primer finalizar 200 con DTO de estado `Finalizada`; segundo finalizar 409, y el GET de detalle conserva el estado final.
 
 **Si algo falla.** Si una orden finalizada cambia de estado o desaparece, comprueba la condición Estado antes de escribir.
 
@@ -1258,15 +1330,19 @@ app.MapPost("/api/v1/ordenes/{id:guid}/finalizar",async (Guid id,AceriaDbContext
 
 **Resultado de aprendizaje.** Bloquear PUT y PATCH para órdenes finalizadas.
 
-**Acción.** En PUT y PATCH comprueba Estado=Finalizada antes de modificar y devuelve Problem con 409.
+**Procedimiento guiado.**
+
+1. Selecciona una orden cuyo estado sea `Finalizada` y conserva su Id; crea otra `Pendiente` para disponer de control positivo.
+2. Ejecuta PUT con datos válidos contra la orden finalizada y comprueba **409 Conflict**. Haz después PATCH a `/cantidad` sobre el mismo GUID.
+3. Ejecuta GET después de cada intento y verifica que ninguno modificó los campos persistidos.
+4. Abre los handlers PUT y PATCH para localizar sus comprobaciones de `Estado == "Finalizada"`, ya incluidas en 2.2.11 y 2.2.14. No las pegues otra vez.
+
 
 **Referencia de código:** `src/AceriaApp.Api/Program.cs`. Busca el método HTTP correspondiente y su llamada a `SaveChangesAsync`. Comprueba el comportamiento indicado en la acción antes de continuar.
 
-**Construcción y evidencia del paso.** Después de finalizar una orden, repite PUT y PATCH contra el mismo GUID: deben devolver **409** sin modificar los datos. Las comprobaciones de estado existen en los handlers escritos anteriormente.
-
 **Por qué funciona así.** La transición Finalizada cambia el estado de negocio. PUT, PATCH y DELETE deben respetarlo y producir 409 si se intenta una operación incompatible.
 
-**Verificación concreta.** Ninguna modificación se guarda sobre una orden finalizada.
+**Verificación concreta.** PUT y PATCH de una orden finalizada producen 409 y dejan la entidad inalterada. Una orden pendiente sigue siendo modificable.
 
 **Si algo falla.** Si una orden finalizada cambia de estado o desaparece, comprueba la condición Estado antes de escribir.
 
@@ -1274,15 +1350,19 @@ app.MapPost("/api/v1/ordenes/{id:guid}/finalizar",async (Guid id,AceriaDbContext
 
 **Resultado de aprendizaje.** Bloquear DELETE y devolver conflicto 409.
 
-**Acción.** En DELETE bloquea también la eliminación de una orden finalizada devolviendo 409.
+**Procedimiento guiado.**
+
+1. Conserva el GUID finalizado del ejercicio anterior y ejecuta DELETE sobre él.
+2. Comprueba que devuelve **409** y que GET de detalle sigue devolviendo **200** con Estado `Finalizada`.
+3. Contrasta el comportamiento con un DELETE de una orden pendiente (204) y con un GUID inexistente (404).
+4. Señala en `MapDelete` el `if (orden.Estado == "Finalizada")` que impide llegar a `db.Ordenes.Remove`; no crees otro endpoint.
+
 
 **Referencia de código:** `src/AceriaApp.Api/Program.cs`. Busca el método HTTP correspondiente y su llamada a `SaveChangesAsync`. Comprueba el comportamiento indicado en la acción antes de continuar.
 
-**Construcción y evidencia del paso.** Aplica la misma prueba a DELETE: un recurso `Finalizada` no debe eliminarse; devuelve 409 y un GET posterior debe encontrarlo todavía.
-
 **Por qué funciona así.** La transición Finalizada cambia el estado de negocio. PUT, PATCH y DELETE deben respetarlo y producir 409 si se intenta una operación incompatible.
 
-**Verificación concreta.** Un recurso finalizado permanece en la base tras DELETE fallido.
+**Verificación concreta.** El servicio diferencia 204, 404 y 409 según exista el recurso y esté permitido eliminarlo; 409 no altera datos.
 
 **Si algo falla.** Si una orden finalizada cambia de estado o desaparece, comprueba la condición Estado antes de escribir.
 
@@ -1290,7 +1370,13 @@ app.MapPost("/api/v1/ordenes/{id:guid}/finalizar",async (Guid id,AceriaDbContext
 
 **Resultado de aprendizaje.** Escribir pruebas HTTP POST y Location.
 
-**Acción.** Añade EscrituraTests con POST, verifica 201, Location y GET posterior del recurso creado.
+**Procedimiento guiado.**
+
+1. En el proyecto xUnit heredado de 2.1 crea `EscrituraTests.cs` y pega la clase y el primer método del bloque `CrearYConsultar_Es201Y200`.
+2. Conserva imports `System.Net`, `System.Net.Http.Json`, `AceriaApp.Api.Contratos`, `AceriaApp.Api.Modelo` y `Xunit`. No declares otra clase `EscrituraTests`.
+3. Recorre el test: crea `ApiFactory`, ejecuta POST, comprueba 201 y `Location`, y solicita GET mediante la cabecera recibida.
+4. Guarda y ejecuta el proyecto de tests. Los tres GET existentes y este nuevo caso deben superar sus aserciones antes de ampliar la clase.
+
 
 **Archivo de trabajo: `tests/AceriaApp.Api.Tests/EscrituraTests.cs`**.
 
@@ -1322,11 +1408,9 @@ public class EscrituraTests
 }
 ```
 
-**Construcción y evidencia del paso.** Crea `EscrituraTests.cs` y escribe primero el test `CrearYConsultar_Es201Y200`. El archivo de referencia contiene también tests que construirás en los pasos 2.2.22 y 2.2.23; no pegues otra clase con el mismo nombre.
-
 **Por qué funciona así.** Los tests deben confirmar los efectos de POST, PUT, PATCH, DELETE, la capacidad del taller y el conflicto de estado a través de peticiones HTTP reales.
 
-**Verificación concreta.** El test confirma creación y posterior consulta por HTTP.
+**Verificación concreta.** La nueva prueba demuestra POST→Location→GET y no solo POST 201. La clase se ampliará en los pasos siguientes.
 
 **Si algo falla.** Si una prueba de escritura pasa sin volver a consultar la orden, no ha demostrado persistencia; añade el GET posterior.
 
@@ -1334,7 +1418,13 @@ public class EscrituraTests
 
 **Resultado de aprendizaje.** Escribir pruebas HTTP PUT, PATCH y DELETE.
 
-**Acción.** En el test del ciclo completo ejecuta PUT, PATCH y DELETE, leyendo el DTO después de cada cambio.
+**Procedimiento guiado.**
+
+1. Abre `EscrituraTests.cs` y sitúa el cursor **dentro de su clase**, antes de la última llave `}`.
+2. Inserta únicamente el nuevo método `EditarYEliminar_CambiaPersistencia` del bloque de este paso; conserva `CrearYConsultar_Es201Y200`.
+3. Sigue el recorrido del caso: POST crea, PUT actualiza, PATCH cambia cantidad, DELETE elimina y GET confirma el 404 final.
+4. Ejecuta xUnit y, si falla, identifica cuál de las aserciones indica el primer contrato incumplido. No dupliques la clase ni vuelvas a crear el archivo.
+
 
 **Archivo de trabajo: `tests/AceriaApp.Api.Tests/EscrituraTests.cs`**.
 
@@ -1366,11 +1456,9 @@ public async Task EditarYEliminar_CambiaPersistencia()
 }
 ```
 
-**Construcción y evidencia del paso.** Añade en la **misma clase EscrituraTests** el caso `EditarYEliminar_CambiaPersistencia`. Verifica secuencialmente PUT 204, PATCH 200, DELETE 204 y GET 404 con la orden creada al principio.
-
 **Por qué funciona así.** Los tests deben confirmar los efectos de POST, PUT, PATCH, DELETE, la capacidad del taller y el conflicto de estado a través de peticiones HTTP reales.
 
-**Verificación concreta.** Se comprueban 204, 200, 204 y después 404.
+**Verificación concreta.** La suite incluye los tres GET heredados y los dos casos de escritura nuevos, sin pruebas de plantilla ni clases duplicadas.
 
 **Si algo falla.** Si una prueba de escritura pasa sin volver a consultar la orden, no ha demostrado persistencia; añade el GET posterior.
 
@@ -1378,11 +1466,15 @@ public async Task EditarYEliminar_CambiaPersistencia()
 
 **Resultado de aprendizaje.** Probar automáticamente 422 y 409.
 
-**Acción.** Añade pruebas de capacidad 501 y conflicto tras finalizar; ejecuta todo el proyecto xUnit.
+**Procedimiento guiado.**
+
+1. Dentro de la misma clase `EscrituraTests`, añade los dos métodos del fragmento de este paso: `ReglaCapacidad_Es422` y `OrdenFinalizada_NoSeEdita409`.
+2. En el primer test prepara cantidad 501 y comprueba 422; en el segundo, crea una orden, finalízala y verifica 409 al intentar PUT.
+3. Ejecuta `dotnet test tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj` desde la raíz de esta etapa o usa **Test > Run All Tests** en Visual Studio.
+4. Verifica el recuento **7 superados, 0 fallidos**, con todos los tests del punto 2.1 preservados.
+
 
 **Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.2-recursos-verbos-codigos` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
-
-**Construcción y evidencia del paso.** Completa `EscrituraTests` con `ReglaCapacidad_Es422` y `OrdenFinalizada_NoSeEdita409`. Ejecuta `dotnet test tests/AceriaApp.Api.Tests` y espera 7 tests acumulados en la etapa 2.2.
 
 **Añade estas dos pruebas dentro de `EscrituraTests` (sin duplicar la clase):**
 
@@ -1416,7 +1508,7 @@ public async Task OrdenFinalizada_NoSeEdita409()
 
 **Por qué funciona así.** Los tests deben confirmar los efectos de POST, PUT, PATCH, DELETE, la capacidad del taller y el conflicto de estado a través de peticiones HTTP reales.
 
-**Verificación concreta.** La batería comprueba las respuestas 422 y 409.
+**Verificación concreta.** Se superan 7 pruebas acumuladas: 3 GET + 4 de escritura. El error 422 y el conflicto 409 están comprobados mediante HTTP.
 
 **Si algo falla.** Si una prueba de escritura pasa sin volver a consultar la orden, no ha demostrado persistencia; añade el GET posterior.
 
@@ -1424,15 +1516,19 @@ public async Task OrdenFinalizada_NoSeEdita409()
 
 **Resultado de aprendizaje.** Reto: comprobar idempotencia y efecto persistente.
 
-**Acción.** Como reto envía dos PUT idénticos y dos DELETE sobre el mismo Guid. Distingue efecto final de código HTTP.
+**Procedimiento guiado.**
+
+1. Reto opcional: trabaja en una copia aparte para no alterar la etapa 2.2 de referencia.
+2. Crea una orden nueva, envía dos PUT **idénticos** al mismo GUID y después ejecuta GET; anota que solo queda un recurso con el estado esperado.
+3. Crea otra orden pendiente, ejecuta DELETE dos veces y luego GET; registra 204, 404 y 404 como secuencia posible.
+4. Razona qué significa idempotencia a partir del estado final, no de que los códigos HTTP de dos solicitudes consecutivas deban ser iguales.
+
 
 **Referencia para comprobar el resultado:** los archivos del proyecto `PROYECTO/2.2-recursos-verbos-codigos` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
-**Construcción y evidencia del paso.** El reto de idempotencia es opcional y debe probar **efectos persistentes**: dos PUT idénticos no multiplican órdenes, y repetir DELETE no devuelve la entidad eliminada. Conserva evidencia de ambas respuestas y de los GET posteriores.
-
 **Por qué funciona así.** La idempotencia habla del efecto final: repetir PUT no multiplica los recursos, y repetir DELETE no restaura lo eliminado. Las respuestas HTTP pueden diferir.
 
-**Verificación concreta.** El estado del recurso no se duplica y el segundo DELETE no lo restaura.
+**Verificación concreta.** La evidencia del reto muestra una única entidad tras repetir PUT y ausencia de entidad tras repetir DELETE; no afecta a las 7 pruebas base.
 
 **Si algo falla.** Si se crean órdenes duplicadas al repetir PUT, se está usando Add en lugar de actualizar la entidad encontrada.
 
