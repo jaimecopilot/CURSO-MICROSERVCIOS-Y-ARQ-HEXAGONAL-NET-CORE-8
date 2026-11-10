@@ -1,5 +1,5 @@
 {
-  "fecha": "2026-11-10T19:04:55.855262+00:00",
+  "fecha": "2026-11-10T19:31:57.428009+00:00",
   "origen": "M03_PRACTICAS.md",
   "etapas": [
     {
@@ -733,7 +733,7 @@
     }
   ],
   "construccion": "desde texto; nunca desde PROYECTO/M03",
-  "source_sha256": "7360c7274bd4f8620173893351004757acc4f41ccebb916e24d19b4afbf0c008",
+  "source_sha256": "bcd851083f2508845d88802f52b3fa2ea246e473d150ace8593ecc4f80e52a86",
   "resumen": {
     "resultado": "PASS",
     "pasos": 96,
