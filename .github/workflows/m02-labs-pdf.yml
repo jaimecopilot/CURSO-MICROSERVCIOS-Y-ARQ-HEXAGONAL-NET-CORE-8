@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - 'verificacion/e2e-main-20261110'
+      - 'main'
     paths:
       - 'M02_APIS_REST_ASPNET_CORE/PRACTICAS/M02_PRACTICAS.md'
       - '.github/scripts/generar_pdf_m02.py'
