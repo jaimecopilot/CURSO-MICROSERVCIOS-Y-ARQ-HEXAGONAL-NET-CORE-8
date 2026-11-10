@@ -57,7 +57,11 @@ def main():
             for marker in re.findall(r"// INICIO PASO (2\.[1-4]\.\d+)", block.group(1)):
                 assert marker == match.group(1), f"Marcador {marker} en paso {match.group(1)}"
 
-    assert source.count("**Construcción y evidencia del paso.**") >= 76
+    assert source.count("**Procedimiento guiado.**") == 96
+    assert source.count("**Verificación concreta.**") == 96
+    assert "**Acción.**" not in source
+    for match in re.finditer(r"\\*\\*Procedimiento guiado\\.\\*\\*\\n\\n((?:[1-9]\\. [^\\n]+\\n){4,})",source):
+        assert len(re.findall(r"^[1-9]\\. ",match.group(1),flags=re.M)) == 4
     assert all(f"## Punto 2.{p} —" in source for p in range(1, 5))
     page_html = markdown.markdown(source,
                                   extensions=["extra", "sane_lists", "toc"],
