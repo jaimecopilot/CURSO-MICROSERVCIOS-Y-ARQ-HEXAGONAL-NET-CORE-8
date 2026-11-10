@@ -4,7 +4,7 @@ using AceriaApp.Api.Contratos;
 using AceriaApp.Api.Modelo;
 using Xunit;
 namespace AceriaApp.Api.Tests;
-// INICIO PASO 2.2.11: probar POST/GET/PUT/PATCH/DELETE con HTTP.
+// INICIO PASO 2.2.21: probar POST/GET/PUT/PATCH/DELETE con HTTP.
 public class EscrituraTests
 {
     [Fact] public async Task CrearYConsultar_Es201Y200()
@@ -17,6 +17,7 @@ public class EscrituraTests
         var get=await client.GetAsync(created.Headers.Location);
         Assert.Equal(HttpStatusCode.OK,get.StatusCode);
     }
+    // PASO 2.2.22: PUT/PATCH/DELETE.
     [Fact] public async Task EditarYEliminar_CambiaPersistencia()
     {
         using var f=new ApiFactory();using var c=f.CreateClient();
@@ -37,6 +38,7 @@ public class EscrituraTests
         var gone=await c.GetAsync("/api/v1/ordenes/"+dto.Id);
         Assert.Equal(HttpStatusCode.NotFound,gone.StatusCode);
     }
+    // PASO 2.2.23: 422 y 409.
     [Fact] public async Task ReglaCapacidad_Es422()
     {
         using var f=new ApiFactory();
