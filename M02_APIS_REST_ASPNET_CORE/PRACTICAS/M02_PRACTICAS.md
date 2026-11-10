@@ -2273,6 +2273,15 @@ app.UseDocumentacion(); // PASO 2.4.4
 ;
 ```
 
+**Metadatos del GET individual (el mismo paso):**
+
+```csharp
+.WithName("ObtenerOrdenPorId").WithTags("Ordenes")
+.WithSummary("Obtiene una orden por ID")
+.Produces<OrdenDto>(200).Produces(404);
+```
+
+
 **Construcción y evidencia del paso.** Añade `WithSummary` y `Produces` a los GET existentes y conserva el cuerpo de cada manejador. Para la colección corresponde 200 con `IEnumerable<OrdenDto>`; para el detalle corresponde 200 con `OrdenDto` y alternativa 404.
 
 **Por qué funciona así.** Los metadatos de una operación declaran rutas, respuestas y esquemas; son documentación de un comportamiento que ya fue implementado y probado.
@@ -2357,20 +2366,26 @@ pueden estar registrados y, sin embargo, /swagger devolver 404.
 **Código que se incorpora en este paso:**
 
 ```csharp
-// Al final del MapPut:
+.WithName("ReemplazarOrden").WithTags("Ordenes")
+.AddEndpointFilter<ValidationFilter<CrearOrdenRequest>>()
 .WithSummary("Sustituye campos editables")
 .Produces(204).Produces(404)
 .ProducesProblem(409)
 .ProducesValidationProblem(400)
 .ProducesProblem(422);
 
-// Al final del MapPatch:
-.WithSummary("Modifica cantidad")
-.Produces<OrdenDto>(200).Produces(404)
-.ProducesValidationProblem(400)
-.ProducesProblem(409)
-.ProducesProblem(422);
+// La cadena de PATCH se ofrece separadamente a continuación.
 ```
+
+**Declaración completa de PATCH, separada de PUT:**
+
+```csharp
+.WithName("CambiarCantidad").WithTags("Ordenes")
+.AddEndpointFilter<ValidationFilter<ActualizarCantidadRequest>>()
+.WithSummary("Modifica cantidad").Produces<OrdenDto>(200).Produces(404)
+.ProducesValidationProblem(400).ProducesProblem(409).ProducesProblem(422);
+```
+
 
 **Por qué funciona así.** Los metadatos de una operación declaran rutas, respuestas y esquemas; son documentación de un comportamiento que ya fue implementado y probado.
 
@@ -2391,16 +2406,22 @@ pueden estar registrados y, sin embargo, /swagger devolver 404.
 **Código que se incorpora en este paso:**
 
 ```csharp
-// Al final del MapDelete:
+.WithName("EliminarOrden").WithTags("Ordenes")
 .WithSummary("Elimina una orden pendiente")
 .Produces(204).Produces(404)
 .ProducesProblem(409);
 
-// Al final del MapPost que finaliza una orden:
-.WithSummary("Finaliza una orden")
-.Produces<OrdenDto>(200).Produces(404)
-.ProducesProblem(409);
+// La cadena de finalizar se ofrece separadamente a continuación.
 ```
+
+**Declaración de la transición finalizar:**
+
+```csharp
+.WithName("FinalizarOrden").WithTags("Ordenes")
+.WithSummary("Finaliza una orden").Produces<OrdenDto>(200)
+.Produces(404).ProducesProblem(409);
+```
+
 
 **Por qué funciona así.** Los metadatos de una operación declaran rutas, respuestas y esquemas; son documentación de un comportamiento que ya fue implementado y probado.
 
@@ -2432,7 +2453,11 @@ public sealed class EjemploCrearOrden : ISchemaFilter
         };
     }
 }
-// Dentro de AddSwaggerGen(options => {...}), agrega:
+```
+
+**Registro del filtro dentro de `AddSwaggerGen(options => ...)`:**
+
+```csharp
 options.SchemaFilter<EjemploCrearOrden>();
 ```
 
