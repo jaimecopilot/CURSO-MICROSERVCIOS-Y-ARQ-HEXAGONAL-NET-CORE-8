@@ -24,6 +24,16 @@ despliegues productivos.
 
 ---
 
+## Cómo construir las cuatro etapas sin duplicar código
+
+Cada punto tiene su **proyecto de referencia terminado** en `PROYECTO/2.1`, `PROYECTO/2.2`, `PROYECTO/2.3` o `PROYECTO/2.4`. La referencia es la evidencia del estado final, no un archivo que deba copiarse antes de empezar. El alumno crea su propia solución, añade cada archivo y modifica lo que ya ha escrito al avanzar de paso. **No se deben pegar dos versiones completas de una misma clase o de un mismo endpoint.**
+
+Los fragmentos se presentan según la etapa en la que el alumno debe introducirlos. El recorrido es **diseño → archivo → código → compilación → petición o prueba → resultado esperado**. Cuando un paso solo examina un comportamiento incorporado anteriormente, se indica expresamente y se evita volver a crear el código. Los retos son ampliaciones opcionales, no requisitos para que los proyectos de referencia compilen.
+
+**Criterio de finalización:** al completar cada punto, el código de los archivos indicados debe equivaler funcionalmente al proyecto correspondiente y superar sus pruebas. La aplicación local usa SQL Server Express LocalDB; solo los tests sustituyen ese proveedor por InMemory.
+
+---
+
 ## Punto 2.1 — Del diseño REST a los primeros endpoints GET
 
 **Proyecto comprobado:** `PROYECTO/2.1-diseno-apis-rest`. El punto comienza estudiando el contrato de recursos y concluye con una ejecución verificable. Ninguna comprobación sustituye a un endpoint realmente implementado.
@@ -35,6 +45,8 @@ despliegues productivos.
 **Acciones guiadas.** Archivo > Nuevo > Proyecto > ASP.NET Core Empty. Selecciona C#, .NET 8 y el nombre AceriaApp.Api. No marques autenticación. Trabaja sobre la copia de tu solución de esta etapa y guarda el archivo antes de ejecutar la aplicación. Cuando el código usa `MapGet`, `MapPost`, `MapPut`, `MapPatch` o `MapDelete`, consulta también la tabla de verbos del punto para justificar la URI y la respuesta.
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
+
+**Construcción y evidencia del paso.** Crea la API y comprueba en `AceriaApp.Api.csproj` que `TargetFramework` es `net8.0`. La plantilla vacía debe arrancar antes de introducir EF Core. Si utilizas la carpeta de referencia, no vuelvas a crear el proyecto: ese estado se utiliza para contrastar el resultado.
 
 **Por qué funciona así.** El programa aún se está preparando: comprobar SDK, arranque y URI antes de introducir persistencia permite aislar errores de herramienta frente a errores de API.
 
@@ -50,6 +62,8 @@ despliegues productivos.
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
+**Construcción y evidencia del paso.** Arranca el proyecto vacío, lee la URL en la salida de Kestrel y detén la ejecución. Este paso no registra endpoints ni necesita LocalDB: una página sin ruta propia no significa que el arranque sea incorrecto.
+
 **Por qué funciona así.** El programa aún se está preparando: comprobar SDK, arranque y URI antes de introducir persistencia permite aislar errores de herramienta frente a errores de API.
 
 **Verificación concreta.** Kestrel escucha en el puerto anunciado; no es una prueba de base de datos. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
@@ -63,6 +77,8 @@ despliegues productivos.
 **Acciones guiadas.** Diseña las rutas GET /api/v1/ordenes y GET /api/v1/ordenes/{id:guid}. Explica qué recurso identifica cada una. Trabaja sobre la copia de tu solución de esta etapa y guarda el archivo antes de ejecutar la aplicación. Cuando el código usa `MapGet`, `MapPost`, `MapPut`, `MapPatch` o `MapDelete`, consulta también la tabla de verbos del punto para justificar la URI y la respuesta.
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
+
+**Construcción y evidencia del paso.** Escribe las dos rutas en tu cuaderno técnico: colección `/api/v1/ordenes` y miembro `/api/v1/ordenes/{id:guid}`. Distingue que el nombre de ruta no es una tabla SQL y que la restricción `guid` es de enrutamiento.
 
 **Por qué funciona así.** El programa aún se está preparando: comprobar SDK, arranque y URI antes de introducir persistencia permite aislar errores de herramienta frente a errores de API.
 
@@ -94,6 +110,8 @@ public sealed class Orden
 // FIN PASO 2.1.4
 ```
 
+**Construcción y evidencia del paso.** En `Modelo/Orden.cs` incorpora exactamente las seis propiedades del ejemplo y su namespace. Comprueba que `Id` se inicializa con `Guid.NewGuid()`, `Estado` con `Pendiente` y `FechaCreacion` con UTC. Aún no debe haber endpoints.
+
 **Por qué funciona así.** La entidad y el DTO cumplen funciones diferentes. La primera modela los datos persistidos y el segundo limita el contrato JSON que puede ver el consumidor.
 
 **Verificación concreta.** La clase Orden compila, y el estado inicial es Pendiente. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
@@ -107,6 +125,8 @@ public sealed class Orden
 **Acciones guiadas.** En Orden.cs observa que Id se genera por defecto y FechaCreacion emplea UtcNow. Distingue los datos que proporciona el servidor de los del cliente. Trabaja sobre la copia de tu solución de esta etapa y guarda el archivo antes de ejecutar la aplicación. Cuando el código usa `MapGet`, `MapPost`, `MapPut`, `MapPatch` o `MapDelete`, consulta también la tabla de verbos del punto para justificar la URI y la respuesta.
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
+
+**Construcción y evidencia del paso.** En una instancia `new Orden()`, razona qué valores se generan en el servidor y cuáles vendrán de la petición de un cliente. No copies la misma clase por segunda vez ni cambies el identificador tras persistirla.
 
 **Por qué funciona así.** La entidad y el DTO cumplen funciones diferentes. La primera modela los datos persistidos y el segundo limita el contrato JSON que puede ver el consumidor.
 
@@ -125,15 +145,13 @@ public sealed class Orden
 
 ```csharp
 namespace AceriaApp.Api.Modelo;
-// INICIO PASO 2.1.5
-public sealed record OrdenDto(Guid Id, string Cliente, string Material,
-    int Cantidad, string Estado, DateTime FechaCreacion)
-{
-    public static OrdenDto Desde(Orden x) =>
-        new(x.Id,x.Cliente,x.Material,x.Cantidad,x.Estado,x.FechaCreacion);
-}
-// FIN PASO 2.1.5
+
+public sealed record OrdenDto(
+    Guid Id, string Cliente, string Material,
+    int Cantidad, string Estado, DateTime FechaCreacion);
 ```
+
+**Secuencia de construcción.** En `src/AceriaApp.Api/Modelo/OrdenDto.cs` crea primero solo el tipo record. Todavía no tiene método `Desde`; se añadirá en 2.1.7. No copies ahora la versión final.
 
 **Por qué funciona así.** La entidad y el DTO cumplen funciones diferentes. La primera modela los datos persistidos y el segundo limita el contrato JSON que puede ver el consumidor.
 
@@ -152,15 +170,18 @@ public sealed record OrdenDto(Guid Id, string Cliente, string Material,
 
 ```csharp
 namespace AceriaApp.Api.Modelo;
-// INICIO PASO 2.1.5
-public sealed record OrdenDto(Guid Id, string Cliente, string Material,
+
+public sealed record OrdenDto(
+    Guid Id, string Cliente, string Material,
     int Cantidad, string Estado, DateTime FechaCreacion)
 {
+    // PASO 2.1.7: transformar Orden en OrdenDto.
     public static OrdenDto Desde(Orden x) =>
-        new(x.Id,x.Cliente,x.Material,x.Cantidad,x.Estado,x.FechaCreacion);
+        new(x.Id, x.Cliente, x.Material, x.Cantidad, x.Estado, x.FechaCreacion);
 }
-// FIN PASO 2.1.5
 ```
+
+**Secuencia de construcción.** En el mismo `OrdenDto.cs`, convierte el record de 2.1.6 en un record con cuerpo: cambia el punto y coma final por llaves y añade dentro `Desde`. El resultado es un único archivo, no dos records.
 
 **Por qué funciona así.** La entidad y el DTO cumplen funciones diferentes. La primera modela los datos persistidos y el segundo limita el contrato JSON que puede ver el consumidor.
 
@@ -175,6 +196,8 @@ public sealed record OrdenDto(Guid Id, string Cliente, string Material,
 **Acciones guiadas.** Desde Administrar paquetes NuGet instala Microsoft.EntityFrameworkCore.SqlServer 8.x en AceriaApp.Api, o utiliza dotnet add package con versión 8. Trabaja sobre la copia de tu solución de esta etapa y guarda el archivo antes de ejecutar la aplicación. Cuando el código usa `MapGet`, `MapPost`, `MapPut`, `MapPatch` o `MapDelete`, consulta también la tabla de verbos del punto para justificar la URI y la respuesta.
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
+
+**Construcción y evidencia del paso.** Instala `Microsoft.EntityFrameworkCore.SqlServer` con una versión 8.x compatible con el SDK y guarda el `.csproj`. Que el paquete se restaure no verifica la conexión; esa verificación llegará tras configurar `AceriaDbContext` y LocalDB.
 
 **Por qué funciona así.** El acceso a datos se configura en infraestructura mediante EF Core y DI. LocalDB es la base efectiva de la API; EnsureCreated se usa solo durante el aprendizaje.
 
@@ -194,22 +217,17 @@ public sealed record OrdenDto(Guid Id, string Cliente, string Material,
 ```csharp
 using AceriaApp.Api.Modelo;
 using Microsoft.EntityFrameworkCore;
+
 namespace AceriaApp.Api.Datos;
-// INICIO PASO 2.1.6
-public sealed class AceriaDbContext(DbContextOptions<AceriaDbContext> options) : DbContext(options)
+
+public sealed class AceriaDbContext(
+    DbContextOptions<AceriaDbContext> options) : DbContext(options)
 {
     public DbSet<Orden> Ordenes => Set<Orden>();
-    protected override void OnModelCreating(ModelBuilder b)
-    {
-        var e=b.Entity<Orden>();
-        e.HasKey(x=>x.Id);
-        e.Property(x=>x.Cliente).HasMaxLength(100).IsRequired();
-        e.Property(x=>x.Material).HasMaxLength(100).IsRequired();
-        e.Property(x=>x.Estado).HasMaxLength(24).IsRequired();
-    }
 }
-// FIN PASO 2.1.6
 ```
+
+**Secuencia de construcción.** En `src/AceriaApp.Api/Datos/AceriaDbContext.cs` crea únicamente el contexto y el conjunto de órdenes. En 2.1.10 incorporarás la configuración del modelo a esta misma clase.
 
 **Por qué funciona así.** El acceso a datos se configura en infraestructura mediante EF Core y DI. LocalDB es la base efectiva de la API; EnsureCreated se usa solo durante el aprendizaje.
 
@@ -225,6 +243,20 @@ public sealed class AceriaDbContext(DbContextOptions<AceriaDbContext> options) :
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
+**Código de este paso.** Añade el método al cuerpo del `AceriaDbContext` creado en 2.1.9; no borres el constructor ni `DbSet`. Comprueba que la clase final coincide con la referencia del punto 2.1.
+
+```csharp
+// Dentro de AceriaDbContext, antes de su última llave:
+protected override void OnModelCreating(ModelBuilder b)
+{
+    var e = b.Entity<Orden>();
+    e.HasKey(x => x.Id);
+    e.Property(x => x.Cliente).HasMaxLength(100).IsRequired();
+    e.Property(x => x.Material).HasMaxLength(100).IsRequired();
+    e.Property(x => x.Estado).HasMaxLength(24).IsRequired();
+}
+```
+
 **Por qué funciona así.** El acceso a datos se configura en infraestructura mediante EF Core y DI. LocalDB es la base efectiva de la API; EnsureCreated se usa solo durante el aprendizaje.
 
 **Verificación concreta.** El modelo restringe tamaños de columna y reconoce la clave. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
@@ -238,6 +270,8 @@ public sealed class AceriaDbContext(DbContextOptions<AceriaDbContext> options) :
 **Acciones guiadas.** En appsettings.json añade ConnectionStrings:AceriaApp con (localdb)\MSSQLLocalDB y Database=AceriaAppM02. No sustituyas LocalDB por SQLite. Trabaja sobre la copia de tu solución de esta etapa y guarda el archivo antes de ejecutar la aplicación. Cuando el código usa `MapGet`, `MapPost`, `MapPut`, `MapPatch` o `MapDelete`, consulta también la tabla de verbos del punto para justificar la URI y la respuesta.
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
+
+**Construcción y evidencia del paso.** En `appsettings.json` debe existir la clave `ConnectionStrings:AceriaApp`. Usa `(localdb)\\MSSQLLocalDB` y la base `AceriaAppM02`; no incluyas credenciales reales en un archivo de prácticas.
 
 **Por qué funciona así.** El acceso a datos se configura en infraestructura mediante EF Core y DI. LocalDB es la base efectiva de la API; EnsureCreated se usa solo durante el aprendizaje.
 
@@ -268,6 +302,8 @@ if(app.Environment.IsDevelopment()&&!app.Configuration.GetValue<bool>("SkipDatab
     await scope.ServiceProvider.GetRequiredService<AceriaDbContext>().Database.EnsureCreatedAsync();
 }
 ```
+
+**Construcción y evidencia del paso.** En `Program.cs`, coloca `AddDbContext<AceriaDbContext>` antes de `builder.Build()`. La línea `UseSqlServer` obtiene la cadena `AceriaApp` del archivo anterior. Comprueba que no se crean dos registraciones del contexto.
 
 **Por qué funciona así.** El acceso a datos se configura en infraestructura mediante EF Core y DI. LocalDB es la base efectiva de la API; EnsureCreated se usa solo durante el aprendizaje.
 
@@ -317,6 +353,19 @@ la petición anterior; restaura el código y vuelve a comprobarlo.
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
+**Código de este paso.** Este bloque va después de `builder.Build()` y antes de mapear los endpoints. Crea la base de aprendizaje solo en Development; la opción `SkipDatabaseInitialization` se utiliza en los tests de integración.
+
+```csharp
+// En Program.cs, justo después de var app = builder.Build():
+if (app.Environment.IsDevelopment()
+    && !app.Configuration.GetValue<bool>("SkipDatabaseInitialization"))
+{
+    using var scope = app.Services.CreateScope();
+    await scope.ServiceProvider.GetRequiredService<AceriaDbContext>()
+        .Database.EnsureCreatedAsync();
+}
+```
+
 **Por qué funciona así.** El acceso a datos se configura en infraestructura mediante EF Core y DI. LocalDB es la base efectiva de la API; EnsureCreated se usa solo durante el aprendizaje.
 
 **Verificación concreta.** Al arrancar en Windows aparece la base AceriaAppM02 si LocalDB está instalado. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
@@ -333,16 +382,17 @@ la petición anterior; restaura el código y vuelve a comprobarlo.
 
 
 ```csharp
-// INICIO PASO 2.1.8: colección de recursos, consulta real con EF Core.
-app.MapGet("/api/v1/ordenes",async (AceriaDbContext db,CancellationToken ct)=>
+app.MapGet("/api/v1/ordenes",
+    async (AceriaDbContext db, CancellationToken ct) =>
 {
-    var ordenes=await db.Ordenes.AsNoTracking().OrderBy(x=>x.FechaCreacion).ToListAsync(ct);
+    var ordenes = await db.Ordenes
+        .OrderBy(x => x.FechaCreacion).ToListAsync(ct);
     return Results.Ok(ordenes.Select(OrdenDto.Desde));
 })
-.WithName("ListarOrdenes").WithTags("Ordenes")
-
-;
+.WithName("ListarOrdenes").WithTags("Ordenes");
 ```
+
+**Secuencia de construcción.** Escribe en `Program.cs` el GET funcional con persistencia y conversión a DTO. En el siguiente paso se añade `AsNoTracking`; no debes duplicar la ruta.
 
 **Por qué funciona así.** El verbo GET no modifica recursos. MapGet recibe dependencias y parámetros, consulta la orden y traduce el resultado a 200 o 404 con DTOs.
 
@@ -358,6 +408,15 @@ app.MapGet("/api/v1/ordenes",async (AceriaDbContext db,CancellationToken ct)=>
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
+**Código de este paso.** Modifica la consulta existente y verifica que la ruta, el tipo de respuesta y la ordenación siguen siendo los mismos. Esta consulta es la versión final del endpoint de colección.
+
+```csharp
+// En el MapGet de 2.1.14, sustituye solo la consulta:
+var ordenes = await db.Ordenes.AsNoTracking()
+    .OrderBy(x => x.FechaCreacion).ToListAsync(ct);
+// Mantén la llamada: return Results.Ok(ordenes.Select(OrdenDto.Desde));
+```
+
 **Por qué funciona así.** El verbo GET no modifica recursos. MapGet recibe dependencias y parámetros, consulta la orden y traduce el resultado a 200 o 404 con DTOs.
 
 **Verificación concreta.** La salida expone DTOs y no instancias de la entidad EF Core. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
@@ -371,6 +430,8 @@ app.MapGet("/api/v1/ordenes",async (AceriaDbContext db,CancellationToken ct)=>
 **Acciones guiadas.** Abre AceriaApp.http, ejecuta GET de colección y comprueba el código y el JSON aunque la tabla esté vacía. Trabaja sobre la copia de tu solución de esta etapa y guarda el archivo antes de ejecutar la aplicación. Cuando el código usa `MapGet`, `MapPost`, `MapPut`, `MapPatch` o `MapDelete`, consulta también la tabla de verbos del punto para justificar la URI y la respuesta.
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
+
+**Construcción y evidencia del paso.** Con LocalDB disponible ejecuta el GET de colección desde `AceriaApp.http`: espera **HTTP 200** y un array JSON (`[]` si aún no hay órdenes). Un array vacío no es un 404.
 
 **Por qué funciona así.** El verbo GET no modifica recursos. MapGet recibe dependencias y parámetros, consulta la orden y traduce el resultado a 200 o 404 con DTOs.
 
@@ -388,20 +449,20 @@ app.MapGet("/api/v1/ordenes",async (AceriaDbContext db,CancellationToken ct)=>
 
 
 ```csharp
-// INICIO PASO 2.1.9: recurso individual.
-app.MapGet("/api/v1/ordenes/{id:guid}",async (Guid id,AceriaDbContext db)=>
+app.MapGet("/api/v1/ordenes/{id:guid}",
+    async (Guid id, AceriaDbContext db) =>
 {
-    var orden=await db.Ordenes.AsNoTracking().FirstOrDefaultAsync(x=>x.Id==id);
-    IResult response=orden is null ? Results.NotFound() : Results.Ok(OrdenDto.Desde(orden));
+    var orden = await db.Ordenes.AsNoTracking()
+        .FirstOrDefaultAsync(x => x.Id == id);
+    IResult response = orden is null
+        ? Results.NotFound()
+        : Results.Ok(OrdenDto.Desde(orden));
     return response;
 })
-.WithName("ObtenerOrdenPorId").WithTags("Ordenes")
-
-;
-
-app.Run();
-public partial class Program {} // permite WebApplicationFactory en tests
+.WithName("ObtenerOrdenPorId").WithTags("Ordenes");
 ```
+
+**Secuencia de construcción.** Añade **una sola vez** el GET de detalle en `Program.cs`. El paso 2.1.18 analizará la rama `NotFound`, ya presente aquí; no añadirá un segundo endpoint.
 
 **Por qué funciona así.** El verbo GET no modifica recursos. MapGet recibe dependencias y parámetros, consulta la orden y traduce el resultado a 200 o 404 con DTOs.
 
@@ -417,6 +478,8 @@ public partial class Program {} // permite WebApplicationFactory en tests
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
+**Construcción y evidencia del paso.** Reutiliza el GET de detalle de 2.1.17 y solicita un `Guid` inexistente pero bien formado. Debes obtener **HTTP 404**; esa ruta llega al manejador y este constata que no existe una fila.
+
 **Por qué funciona así.** El verbo GET no modifica recursos. MapGet recibe dependencias y parámetros, consulta la orden y traduce el resultado a 200 o 404 con DTOs.
 
 **Verificación concreta.** Un GUID nuevo devuelve 404 sin excepción 500. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
@@ -431,6 +494,8 @@ public partial class Program {} // permite WebApplicationFactory en tests
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
+**Construcción y evidencia del paso.** Compara una ruta con `id=no-es-guid` y otra con `id` GUID válido pero inexistente. Ambos casos pueden devolver 404, pero el primero lo decide el enrutamiento y el segundo la consulta del manejador. Utiliza puntos de interrupción para distinguirlos.
+
 **Por qué funciona así.** El verbo GET no modifica recursos. MapGet recibe dependencias y parámetros, consulta la orden y traduce el resultado a 200 o 404 con DTOs.
 
 **Verificación concreta.** Comprendes la diferencia entre plantilla que no coincide y recurso ausente. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
@@ -444,6 +509,8 @@ public partial class Program {} // permite WebApplicationFactory en tests
 **Acciones guiadas.** En Visual Studio abre o crea AceriaApp.http, define @Host y dos peticiones GET con la ruta versionada. Trabaja sobre la copia de tu solución de esta etapa y guarda el archivo antes de ejecutar la aplicación. Cuando el código usa `MapGet`, `MapPost`, `MapPut`, `MapPatch` o `MapDelete`, consulta también la tabla de verbos del punto para justificar la URI y la respuesta.
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
+
+**Construcción y evidencia del paso.** Crea `AceriaApp.http` con una variable para el host de ejecución y dos solicitudes GET separadas por `###`. No escribas puertos fijos si el perfil local utiliza uno distinto: toma la URL de la salida de la API.
 
 **Por qué funciona así.** El verbo GET no modifica recursos. MapGet recibe dependencias y parámetros, consulta la orden y traduce el resultado a 200 o 404 con DTOs.
 
@@ -460,32 +527,15 @@ public partial class Program {} // permite WebApplicationFactory en tests
 **Código real contrastado: `tests/AceriaApp.Api.Tests/ApiFactory.cs`**. Es el estado final del archivo en la solución verificada; si ya has creado parte del mismo en pasos anteriores, incorpora solo lo que corresponde a esta actividad y conserva lo demás.
 
 
-```csharp
-using AceriaApp.Api.Datos;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.AspNetCore.TestHost;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-namespace AceriaApp.Api.Tests;
-// INICIO PASO 2.1.12: HTTP real; base en memoria SOLO en tests automatizados.
-public sealed class ApiFactory:WebApplicationFactory<Program>
-{
-    private readonly string _databaseName="Tests-"+Guid.NewGuid();
-    protected override void ConfigureWebHost(IWebHostBuilder builder)
-    {
-        builder.UseEnvironment("Development");
-        builder.UseSetting("SkipDatabaseInitialization","true");
-        builder.ConfigureTestServices(services=>
-        {
-            services.RemoveAll<DbContextOptions<AceriaDbContext>>();
-            services.AddDbContext<AceriaDbContext>(opt=>
-                opt.UseInMemoryDatabase(_databaseName));
-        });
-    }
-}
+```powershell
+# Desde la carpeta raíz del punto 2.1:
+dotnet new xunit -n AceriaApp.Api.Tests -o tests/AceriaApp.Api.Tests --framework net8.0
+dotnet add tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj reference src/AceriaApp.Api/AceriaApp.Api.csproj
+dotnet add tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj package Microsoft.AspNetCore.Mvc.Testing --version 8.0.21
+dotnet add tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj package Microsoft.EntityFrameworkCore.InMemory --version 8.0.21
 ```
+
+**Secuencia de construcción.** Este paso crea el proyecto de tests y sus referencias. Si ya existe por haber abierto el estado de referencia, examina el `.csproj` sin crear otro proyecto. El archivo `ApiFactory.cs` se crea en el **paso 2.1.22**, no aquí.
 
 **Por qué funciona así.** WebApplicationFactory prueba la aplicación como servidor HTTP: permite distinguir compilación C# de comportamiento observable del enrutamiento y la serialización.
 
@@ -528,6 +578,8 @@ public sealed class ApiFactory:WebApplicationFactory<Program>
     }
 }
 ```
+
+**Construcción y evidencia del paso.** Ahora sí crea `tests/AceriaApp.Api.Tests/ApiFactory.cs`. Debe heredar de `WebApplicationFactory<Program>`, establecer `SkipDatabaseInitialization=true` y reemplazar el proveedor del contexto **solo dentro del host de pruebas**. Contrasta el archivo con la referencia de 2.1.
 
 **Por qué funciona así.** WebApplicationFactory prueba la aplicación como servidor HTTP: permite distinguir compilación C# de comportamiento observable del enrutamiento y la serialización.
 
@@ -585,6 +637,8 @@ public class GetTests
 }
 ```
 
+**Construcción y evidencia del paso.** Crea `GetTests.cs` y ejecuta `dotnet test tests/AceriaApp.Api.Tests`. Se esperan tres casos: colección 200, GUID inexistente 404 y DTO recuperado después de insertar la entidad en la base aislada de la factoría.
+
 **Por qué funciona así.** WebApplicationFactory prueba la aplicación como servidor HTTP: permite distinguir compilación C# de comportamiento observable del enrutamiento y la serialización.
 
 **Verificación concreta.** dotnet test ejecuta los tres casos con resultado satisfactorio. Ejecuta además las pruebas xUnit del proyecto de esta etapa para confirmar que el ejercicio no ha roto los endpoints anteriores.
@@ -598,6 +652,8 @@ public class GetTests
 **Acciones guiadas.** Como reto, acepta ?cliente=ACX-001 en el GET de colección y aplica Where solo cuando se recibe cliente; crea un test. Trabaja sobre la copia de tu solución de esta etapa y guarda el archivo antes de ejecutar la aplicación. Cuando el código usa `MapGet`, `MapPost`, `MapPut`, `MapPatch` o `MapDelete`, consulta también la tabla de verbos del punto para justificar la URI y la respuesta.
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.1-diseno-apis-rest` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
+
+**Construcción y evidencia del paso.** El filtrado por `cliente` es un **reto opcional**, no un endpoint presente en el código base de 2.1. Añádelo en tu propia copia, crea su test y documenta la diferencia entre colección filtrada vacía y un recurso individual ausente.
 
 **Por qué funciona así.** El filtrado de la colección conserva la idea de recurso y añade una consulta con parámetros, sin transformar el endpoint en una operación RPC.
 
@@ -662,6 +718,8 @@ La prueba debe rechazar una implementación que devuelva todas las filas.
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.2-recursos-verbos-codigos` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
+**Construcción y evidencia del paso.** Crea la copia de trabajo para 2.2 a partir de tu solución final 2.1; verifica primero que sus dos GET siguen dando 200 y 404. El proyecto de referencia de 2.2 es el estado **final** de esta etapa, no el punto de partida obligatorio.
+
 **Por qué funciona así.** El diseño de las rutas y los contratos evita recibir propiedades de servidor desde JSON. El resultado público se devuelve mediante OrdenDto, no directamente desde la entidad.
 
 **Verificación concreta.** La lista sigue devolviendo 200 y el detalle inexistente 404. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
@@ -676,6 +734,8 @@ La prueba debe rechazar una implementación que devuelva todas las filas.
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.2-recursos-verbos-codigos` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
+**Construcción y evidencia del paso.** Prepara una tabla de operaciones de **las rutas que vas a implementar**, no de hipotéticos recursos adicionales. Anota `Location` para POST y el efecto sobre datos persistidos para PUT, PATCH y DELETE.
+
 **Por qué funciona así.** El diseño de las rutas y los contratos evita recibir propiedades de servidor desde JSON. El resultado público se devuelve mediante OrdenDto, no directamente desde la entidad.
 
 **Verificación concreta.** La tabla coincide con las rutas que programarás, sin acciones Git. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
@@ -689,6 +749,8 @@ La prueba debe rechazar una implementación que devuelva todas las filas.
 **Acciones guiadas.** En la carpeta Contratos dibuja qué acepta el cliente y qué genera el servidor. No recibas Orden directamente desde JSON. Trabaja sobre la copia de tu solución de esta etapa y guarda el archivo antes de ejecutar la aplicación. Cuando el código usa `MapGet`, `MapPost`, `MapPut`, `MapPatch` o `MapDelete`, consulta también la tabla de verbos del punto para justificar la URI y la respuesta.
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.2-recursos-verbos-codigos` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
+
+**Construcción y evidencia del paso.** En `Contratos/ContratosOrden.cs` separa lo que escribe el consumidor (`CrearOrdenRequest`, `ActualizarCantidadRequest`) de `OrdenDto`, que contiene datos generados por el servidor. El cliente no debe asignar `Id` ni `FechaCreacion`.
 
 **Por qué funciona así.** El diseño de las rutas y los contratos evita recibir propiedades de servidor desde JSON. El resultado público se devuelve mediante OrdenDto, no directamente desde la entidad.
 
@@ -712,6 +774,8 @@ public sealed record CrearOrdenRequest(string Cliente,string Material,int Cantid
 public sealed record ActualizarCantidadRequest(int Cantidad);
 // FIN PASO 2.2.4
 ```
+
+**Construcción y evidencia del paso.** Crea dos records públicos en `ContratosOrden.cs` y añade el namespace `AceriaApp.Api.Contratos`. Comprueba que el proyecto puede referenciarlos desde `Program.cs` sin introducir todavía FluentValidation.
 
 **Por qué funciona así.** El diseño de las rutas y los contratos evita recibir propiedades de servidor desde JSON. El resultado público se devuelve mediante OrdenDto, no directamente desde la entidad.
 
@@ -748,6 +812,8 @@ app.MapPost("/api/v1/ordenes",async (CrearOrdenRequest request,AceriaDbContext d
 ;
 ```
 
+**Construcción y evidencia del paso.** En `Program.cs` agrega **un solo MapPost**. La versión completa se muestra en este paso para que compile. Los pasos 2.2.6 y 2.2.7 explican y comprueban las sentencias de persistencia y `Location` que ya aparecen en ese manejador.
+
 **Por qué funciona así.** El POST crea un recurso y debe confirmar la inserción mediante SaveChangesAsync. CreatedAtRoute devuelve 201 y un enlace Location utilizable mediante GET.
 
 **Verificación concreta.** La URL acepta POST con Content-Type application/json. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
@@ -761,6 +827,8 @@ app.MapPost("/api/v1/ordenes",async (CrearOrdenRequest request,AceriaDbContext d
 **Acciones guiadas.** Dentro de POST crea una entidad Orden con los campos del contrato, ejecuta db.Ordenes.Add y SaveChangesAsync. Trabaja sobre la copia de tu solución de esta etapa y guarda el archivo antes de ejecutar la aplicación. Cuando el código usa `MapGet`, `MapPost`, `MapPut`, `MapPatch` o `MapDelete`, consulta también la tabla de verbos del punto para justificar la URI y la respuesta.
 
 **Referencia de código:** `src/AceriaApp.Api/Program.cs`. Busca el método HTTP correspondiente y su llamada a `SaveChangesAsync`. Comprueba el comportamiento indicado en la acción antes de continuar.
+
+**Construcción y evidencia del paso.** Localiza `db.Ordenes.Add(orden)` y `SaveChangesAsync()` en el POST creado. Comprueba que sin `SaveChangesAsync` una orden nueva no se mantiene tras otra petición. No añadas un segundo POST.
 
 **Por qué funciona así.** El POST crea un recurso y debe confirmar la inserción mediante SaveChangesAsync. CreatedAtRoute devuelve 201 y un enlace Location utilizable mediante GET.
 
@@ -797,6 +865,8 @@ app.MapPost("/api/v1/ordenes",async (CrearOrdenRequest request,AceriaDbContext d
 ;
 ```
 
+**Construcción y evidencia del paso.** La sentencia `CreatedAtRoute("ObtenerOrdenPorId", ...)` del **mismo** POST debe generar 201 y la cabecera `Location`; revisa que el nombre coincida con el GET de detalle construido en 2.1.
+
 **Por qué funciona así.** El POST crea un recurso y debe confirmar la inserción mediante SaveChangesAsync. CreatedAtRoute devuelve 201 y un enlace Location utilizable mediante GET.
 
 **Verificación concreta.** El resultado es 201 con cabecera Location. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
@@ -810,6 +880,8 @@ app.MapPost("/api/v1/ordenes",async (CrearOrdenRequest request,AceriaDbContext d
 **Acciones guiadas.** Envía POST con ACX-001, CHAPA-3MM y 10; copia el identificador y ejecuta GET de detalle. Trabaja sobre la copia de tu solución de esta etapa y guarda el archivo antes de ejecutar la aplicación. Cuando el código usa `MapGet`, `MapPost`, `MapPut`, `MapPatch` o `MapDelete`, consulta también la tabla de verbos del punto para justificar la URI y la respuesta.
 
 **Referencia de código:** `src/AceriaApp.Api/Program.cs`. Busca el método HTTP correspondiente y su llamada a `SaveChangesAsync`. Comprueba el comportamiento indicado en la acción antes de continuar.
+
+**Construcción y evidencia del paso.** Envía POST con `cliente=ACX-001`, `material=CHAPA-3MM` y `cantidad=10`. Copia el `Guid` retornado y ejecuta GET al recurso; comprueba que coincide con `Location` y con los campos persistidos.
 
 **Por qué funciona así.** El POST crea un recurso y debe confirmar la inserción mediante SaveChangesAsync. CreatedAtRoute devuelve 201 y un enlace Location utilizable mediante GET.
 
@@ -825,6 +897,8 @@ app.MapPost("/api/v1/ordenes",async (CrearOrdenRequest request,AceriaDbContext d
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.2-recursos-verbos-codigos` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
+**Construcción y evidencia del paso.** La comprobación provisional de campos obligatorios vive en el POST de esta etapa. Prueba `cliente` vacío y `cantidad=0`: espera 400. Cuando llegues a 2.3 se reemplaza este mecanismo por los filtros, sin duplicar validaciones.
+
 **Por qué funciona así.** Un cuerpo incorrecto es distinto de una regla del negocio. En 2.2 el 400 es provisional; 501 unidades reciben 422 por la capacidad limitada del taller.
 
 **Verificación concreta.** La petición inválida produce 400 y no crea una orden. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
@@ -838,6 +912,8 @@ app.MapPost("/api/v1/ordenes",async (CrearOrdenRequest request,AceriaDbContext d
 **Acciones guiadas.** Rechaza Cantidad superior a 500 por política de capacidad con Results.Problem statusCode 422. Trabaja sobre la copia de tu solución de esta etapa y guarda el archivo antes de ejecutar la aplicación. Cuando el código usa `MapGet`, `MapPost`, `MapPut`, `MapPatch` o `MapDelete`, consulta también la tabla de verbos del punto para justificar la URI y la respuesta.
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.2-recursos-verbos-codigos` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
+
+**Construcción y evidencia del paso.** Con `cantidad=501` y los otros campos válidos, el manejador alcanza la política de capacidad y devuelve 422; no confundas este límite de negocio con la validación semántica de `cantidad<=0`.
 
 **Por qué funciona así.** Un cuerpo incorrecto es distinto de una regla del negocio. En 2.2 el 400 es provisional; 501 unidades reciben 422 por la capacidad limitada del taller.
 
@@ -877,6 +953,8 @@ app.MapPut("/api/v1/ordenes/{id:guid}",async (Guid id,CrearOrdenRequest request,
 ;
 ```
 
+**Construcción y evidencia del paso.** Crea un único `MapPut("/api/v1/ordenes/{id:guid}", ...)`; el fragmento incluye las ramas necesarias para compilar. El paso 2.2.12 estudiará y probará el reemplazo de los tres campos editables de ese mismo endpoint.
+
 **Por qué funciona así.** PUT sustituye los campos editables de una orden existente. Si el Guid no identifica un recurso debe devolver 404, no crear silenciosamente otro.
 
 **Verificación concreta.** PUT puede buscar un recurso por identificador. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
@@ -890,6 +968,8 @@ app.MapPut("/api/v1/ordenes/{id:guid}",async (Guid id,CrearOrdenRequest request,
 **Acciones guiadas.** En el PUT carga FindAsync(id), devuelve 404 si no existe y sustituye los tres campos editables; SaveChangesAsync. Trabaja sobre la copia de tu solución de esta etapa y guarda el archivo antes de ejecutar la aplicación. Cuando el código usa `MapGet`, `MapPost`, `MapPut`, `MapPatch` o `MapDelete`, consulta también la tabla de verbos del punto para justificar la URI y la respuesta.
 
 **Referencia de código:** `src/AceriaApp.Api/Program.cs`. Busca el método HTTP correspondiente y su llamada a `SaveChangesAsync`. Comprueba el comportamiento indicado en la acción antes de continuar.
+
+**Construcción y evidencia del paso.** En el `MapPut` anterior verifica `FindAsync(id)`, 404 para recurso ausente, 409 para orden finalizada y 422 para capacidad. Solo si es editable cambia `Cliente`, `Material` y `Cantidad`, y guarda los cambios.
 
 **Por qué funciona así.** PUT sustituye los campos editables de una orden existente. Si el Guid no identifica un recurso debe devolver 404, no crear silenciosamente otro.
 
@@ -941,6 +1021,8 @@ no está cumpliendo el contrato concreto de este ejemplo.
 
 **Referencia de código:** `src/AceriaApp.Api/Program.cs`. Busca el método HTTP correspondiente y su llamada a `SaveChangesAsync`. Comprueba el comportamiento indicado en la acción antes de continuar.
 
+**Construcción y evidencia del paso.** Prueba PUT con el GUID creado y campos diferentes: espera **204 sin cuerpo**. Ejecuta GET después para observar los valores nuevos, porque el 204 por sí solo no demuestra qué se almacenó.
+
 **Por qué funciona así.** PUT sustituye los campos editables de una orden existente. Si el Guid no identifica un recurso debe devolver 404, no crear silenciosamente otro.
 
 **Verificación concreta.** La consulta evidencia que el cambio se persistió. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
@@ -978,6 +1060,8 @@ app.MapPatch("/api/v1/ordenes/{id:guid}/cantidad",
 ;
 ```
 
+**Construcción y evidencia del paso.** Crea el único `MapPatch` especializado en `/cantidad`. No se está implementando JSON Patch genérico: `ActualizarCantidadRequest` contiene una sola propiedad. Comprueba que el handler conserva los demás campos.
+
 **Por qué funciona así.** PATCH realiza un cambio parcial de Cantidad y conserva los demás datos. Su resultado debe verificarse con una lectura posterior.
 
 **Verificación concreta.** PATCH admite un cuerpo que contiene solo Cantidad. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
@@ -991,6 +1075,8 @@ app.MapPatch("/api/v1/ordenes/{id:guid}/cantidad",
 **Acciones guiadas.** Guarda la nueva cantidad y devuelve Results.Ok(OrdenDto.Desde(orden)); consulta después y verifica que Cliente sigue igual. Trabaja sobre la copia de tu solución de esta etapa y guarda el archivo antes de ejecutar la aplicación. Cuando el código usa `MapGet`, `MapPost`, `MapPut`, `MapPatch` o `MapDelete`, consulta también la tabla de verbos del punto para justificar la URI y la respuesta.
 
 **Referencia de código:** `src/AceriaApp.Api/Program.cs`. Busca el método HTTP correspondiente y su llamada a `SaveChangesAsync`. Comprueba el comportamiento indicado en la acción antes de continuar.
+
+**Construcción y evidencia del paso.** Desde el endpoint PATCH anterior cambia `Cantidad` y comprueba su 200 y DTO. A continuación haz GET y compara `Cliente` y `Material` anteriores; no crees otro handler para guardar.
 
 **Por qué funciona así.** PATCH realiza un cambio parcial de Cantidad y conserva los demás datos. Su resultado debe verificarse con una lectura posterior.
 
@@ -1024,6 +1110,8 @@ app.MapDelete("/api/v1/ordenes/{id:guid}",async (Guid id,AceriaDbContext db)=>
 ;
 ```
 
+**Construcción y evidencia del paso.** Registra `MapDelete` con su consulta `FindAsync`, bloqueo 409 por estado, `Remove`, `SaveChangesAsync` y resultado 204. No confundas eliminación lógica con borrado físico: este ejercicio utiliza `Remove`.
+
 **Por qué funciona así.** DELETE quita un recurso persistido. La consulta posterior puede devolver 404; esa diferencia no impide que la eliminación sea idempotente.
 
 **Verificación concreta.** DELETE existente devuelve 204. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
@@ -1037,6 +1125,8 @@ app.MapDelete("/api/v1/ordenes/{id:guid}",async (Guid id,AceriaDbContext db)=>
 **Acciones guiadas.** Llama GET al recurso recién eliminado y después repite DELETE sobre su Id. Trabaja sobre la copia de tu solución de esta etapa y guarda el archivo antes de ejecutar la aplicación. Cuando el código usa `MapGet`, `MapPost`, `MapPut`, `MapPatch` o `MapDelete`, consulta también la tabla de verbos del punto para justificar la URI y la respuesta.
 
 **Referencia de código:** `src/AceriaApp.Api/Program.cs`. Busca el método HTTP correspondiente y su llamada a `SaveChangesAsync`. Comprueba el comportamiento indicado en la acción antes de continuar.
+
+**Construcción y evidencia del paso.** Al borrar una orden `Pendiente`, espera 204. Un GET posterior y un segundo DELETE deben indicar que ya no existe. La idempotencia se razona por el estado final, no por repetir el mismo código HTTP.
 
 **Por qué funciona así.** DELETE quita un recurso persistido. La consulta posterior puede devolver 404; esa diferencia no impide que la eliminación sea idempotente.
 
@@ -1073,6 +1163,8 @@ app.Run();
 public partial class Program {} // permite WebApplicationFactory en tests
 ```
 
+**Construcción y evidencia del paso.** Crea el endpoint POST `/api/v1/ordenes/{id:guid}/finalizar` como una transición explícita. Solo una orden existente y todavía pendiente puede finalizarse; repetir la transición devuelve 409.
+
 **Por qué funciona así.** La transición Finalizada cambia el estado de negocio. PUT, PATCH y DELETE deben respetarlo y producir 409 si se intenta una operación incompatible.
 
 **Verificación concreta.** La transición devuelve 200 y el DTO indica Finalizada. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
@@ -1087,6 +1179,8 @@ public partial class Program {} // permite WebApplicationFactory en tests
 
 **Referencia de código:** `src/AceriaApp.Api/Program.cs`. Busca el método HTTP correspondiente y su llamada a `SaveChangesAsync`. Comprueba el comportamiento indicado en la acción antes de continuar.
 
+**Construcción y evidencia del paso.** Después de finalizar una orden, repite PUT y PATCH contra el mismo GUID: deben devolver **409** sin modificar los datos. Las comprobaciones de estado existen en los handlers escritos anteriormente.
+
 **Por qué funciona así.** La transición Finalizada cambia el estado de negocio. PUT, PATCH y DELETE deben respetarlo y producir 409 si se intenta una operación incompatible.
 
 **Verificación concreta.** Ninguna modificación se guarda sobre una orden finalizada. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
@@ -1100,6 +1194,8 @@ public partial class Program {} // permite WebApplicationFactory en tests
 **Acciones guiadas.** En DELETE bloquea también la eliminación de una orden finalizada devolviendo 409. Trabaja sobre la copia de tu solución de esta etapa y guarda el archivo antes de ejecutar la aplicación. Cuando el código usa `MapGet`, `MapPost`, `MapPut`, `MapPatch` o `MapDelete`, consulta también la tabla de verbos del punto para justificar la URI y la respuesta.
 
 **Referencia de código:** `src/AceriaApp.Api/Program.cs`. Busca el método HTTP correspondiente y su llamada a `SaveChangesAsync`. Comprueba el comportamiento indicado en la acción antes de continuar.
+
+**Construcción y evidencia del paso.** Aplica la misma prueba a DELETE: un recurso `Finalizada` no debe eliminarse; devuelve 409 y un GET posterior debe encontrarlo todavía.
 
 **Por qué funciona así.** La transición Finalizada cambia el estado de negocio. PUT, PATCH y DELETE deben respetarlo y producir 409 si se intenta una operación incompatible.
 
@@ -1179,6 +1275,8 @@ public class EscrituraTests
 }
 ```
 
+**Construcción y evidencia del paso.** Crea `EscrituraTests.cs` y escribe primero el test `CrearYConsultar_Es201Y200`. El archivo de referencia contiene también tests que construirás en los pasos 2.2.22 y 2.2.23; no pegues otra clase con el mismo nombre.
+
 **Por qué funciona así.** Los tests deben confirmar los efectos de POST, PUT, PATCH, DELETE, la capacidad del taller y el conflicto de estado a través de peticiones HTTP reales.
 
 **Verificación concreta.** El test confirma creación y posterior consulta por HTTP. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
@@ -1257,6 +1355,8 @@ public class EscrituraTests
 }
 ```
 
+**Construcción y evidencia del paso.** Añade en la **misma clase EscrituraTests** el caso `EditarYEliminar_CambiaPersistencia`. Verifica secuencialmente PUT 204, PATCH 200, DELETE 204 y GET 404 con la orden creada al principio.
+
 **Por qué funciona así.** Los tests deben confirmar los efectos de POST, PUT, PATCH, DELETE, la capacidad del taller y el conflicto de estado a través de peticiones HTTP reales.
 
 **Verificación concreta.** Se comprueban 204, 200, 204 y después 404. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
@@ -1271,6 +1371,8 @@ public class EscrituraTests
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.2-recursos-verbos-codigos` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
+**Construcción y evidencia del paso.** Completa `EscrituraTests` con `ReglaCapacidad_Es422` y `OrdenFinalizada_NoSeEdita409`. Ejecuta `dotnet test tests/AceriaApp.Api.Tests` y espera 7 tests acumulados en la etapa 2.2.
+
 **Por qué funciona así.** Los tests deben confirmar los efectos de POST, PUT, PATCH, DELETE, la capacidad del taller y el conflicto de estado a través de peticiones HTTP reales.
 
 **Verificación concreta.** La batería comprueba las respuestas 422 y 409. Ejecuta además las pruebas xUnit del proyecto de esta etapa para confirmar que el ejercicio no ha roto los endpoints anteriores.
@@ -1284,6 +1386,8 @@ public class EscrituraTests
 **Acciones guiadas.** Como reto envía dos PUT idénticos y dos DELETE sobre el mismo Guid. Distingue efecto final de código HTTP. Trabaja sobre la copia de tu solución de esta etapa y guarda el archivo antes de ejecutar la aplicación. Cuando el código usa `MapGet`, `MapPost`, `MapPut`, `MapPatch` o `MapDelete`, consulta también la tabla de verbos del punto para justificar la URI y la respuesta.
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.2-recursos-verbos-codigos` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
+
+**Construcción y evidencia del paso.** El reto de idempotencia es opcional y debe probar **efectos persistentes**: dos PUT idénticos no multiplican órdenes, y repetir DELETE no devuelve la entidad eliminada. Conserva evidencia de ambas respuestas y de los GET posteriores.
 
 **Por qué funciona así.** La idempotencia habla del efecto final: repetir PUT no multiplica los recursos, y repetir DELETE no restaura lo eliminado. Las respuestas HTTP pueden diferir.
 
