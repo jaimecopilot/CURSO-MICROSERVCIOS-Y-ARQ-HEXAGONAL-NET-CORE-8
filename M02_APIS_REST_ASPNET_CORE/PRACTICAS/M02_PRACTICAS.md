@@ -2951,7 +2951,7 @@ public async Task OpenApi_IncluyeEjemplo()
 1. Dentro de esa misma clase agrega `Produccion_NoExponeSwagger()` según el fragmento del paso.
 2. Observa `f.WithWebHostBuilder(b => b.UseEnvironment("Production"))`: se crea otro host de prueba con un entorno diferente al de Development.
 3. Ejecuta GET `/swagger/v1/swagger.json` en ese host y comprueba **404**. Este test no debe borrar ni alterar los endpoints REST.
-4. Ejecuta la suite acumulada de la etapa 2.4 y comprueba que los tres tests de contrato funcionan junto con los heredados.
+4. En la misma clase añade el test adicional `OpenApi_DeclaraErroresDeOperacionesReales` del bloque siguiente. Ejecuta `dotnet test` y comprueba que las cuatro pruebas de contrato funcionan junto a las heredadas.
 
 
 **Referencia de código:** `DocumentacionExtensions.cs`, `Program.cs` o `ContratoOpenApiTests.cs` según el caso. La prueba debe leer el documento generado, no un texto YAML escrito a mano.
@@ -2971,9 +2971,47 @@ public async Task Produccion_NoExponeSwagger()
 }
 ```
 
+**Comprobación adicional de trazabilidad de códigos HTTP.** Añade este método en la misma clase `ContratoOpenApiTests`, después del test de Production. No crees otra clase de pruebas. Los códigos que declara OpenAPI deben proceder de los endpoints reales.
+
+```csharp
+// PASO 2.4.23: comprobar que OpenAPI refleja las ramas HTTP del servidor.
+    [Fact] public async Task OpenApi_DeclaraErroresDeOperacionesReales()
+    {
+        using var factory = new ApiFactory();
+        var response = await factory.CreateClient().GetAsync("/swagger/v1/swagger.json");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var paths = document.RootElement.GetProperty("paths");
+        var collection = paths.GetProperty("/api/v1/ordenes");
+        Assert.True(collection.GetProperty("post").GetProperty("responses").TryGetProperty("422", out _));
+
+        var member = paths.EnumerateObject()
+            .First(path => path.Name.StartsWith("/api/v1/ordenes/")
+                && path.Value.TryGetProperty("delete", out _)).Value;
+        var putResponses = member.GetProperty("put").GetProperty("responses");
+        foreach (var code in new[] { "204", "400", "404", "409", "422" })
+            Assert.True(putResponses.TryGetProperty(code, out _), $"PUT debe declarar {code}");
+        var deleteResponses = member.GetProperty("delete").GetProperty("responses");
+        foreach (var code in new[] { "204", "404", "409" })
+            Assert.True(deleteResponses.TryGetProperty(code, out _), $"DELETE debe declarar {code}");
+
+        var quantity = paths.EnumerateObject()
+            .First(path => path.Name.EndsWith("/cantidad")).Value;
+        var patchResponses = quantity.GetProperty("patch").GetProperty("responses");
+        foreach (var code in new[] { "200", "400", "404", "409", "422" })
+            Assert.True(patchResponses.TryGetProperty(code, out _), $"PATCH debe declarar {code}");
+
+        var finish = paths.EnumerateObject()
+            .First(path => path.Name.EndsWith("/finalizar")).Value;
+        var finishResponses = finish.GetProperty("post").GetProperty("responses");
+        foreach (var code in new[] { "200", "404", "409" })
+            Assert.True(finishResponses.TryGetProperty(code, out _), $"Finalizar debe declarar {code}");
+    }
+```
+
 **Por qué funciona así.** Descargar el JSON OpenAPI con WebApplicationFactory y comprobar info, paths y schemas es una prueba contractual real; en Production debe respetarse el 404.
 
-**Verificación concreta.** En Production Swagger no se publica (404); en Development el documento sigue devolviendo 200. La suite base de 2.4 alcanza 15 tests sin fallos.
+**Verificación concreta.** En Production Swagger no se publica (404); en Development el documento sigue devolviendo 200. La suite base de 2.4 alcanza 16 tests sin fallos.
 
 **Si algo falla.** Si el JSON no incluye rutas, comprueba MapGet/MapPost y que las pruebas apuntan al servidor correcto.
 
