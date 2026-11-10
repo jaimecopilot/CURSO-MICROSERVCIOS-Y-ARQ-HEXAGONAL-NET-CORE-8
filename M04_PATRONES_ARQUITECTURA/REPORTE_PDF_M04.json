@@ -1,0 +1,30 @@
+[
+  {
+    "documento": "TEORIA",
+    "paginas": 62,
+    "bytes": 353700,
+    "palabras": 23549,
+    "pdf": "M04_PATRONES_ARQUITECTURA/TEORIA/M04_TEORIA.pdf",
+    "explicaciones_separadas": 392,
+    "markdown_sha256": "5dc77e104b0f69234fcf0decbf8e3d41bee6710c8eda94edd23340e8d3b15515",
+    "bloques_html": 979,
+    "bloques_pdf_verificados": 979,
+    "bloques_omitidos": 0,
+    "paginas_blancas": [],
+    "desbordamientos": []
+  },
+  {
+    "documento": "PRACTICAS",
+    "paginas": 139,
+    "bytes": 435005,
+    "palabras": 46238,
+    "pdf": "M04_PATRONES_ARQUITECTURA/PRACTICAS/M04_PRACTICAS.pdf",
+    "explicaciones_separadas": 276,
+    "markdown_sha256": "3dd267cc7b10552d500594ae491c1b5a484f3abb5bbe291228dd1c5985ea2629",
+    "bloques_html": 2375,
+    "bloques_pdf_verificados": 2375,
+    "bloques_omitidos": 0,
+    "paginas_blancas": [],
+    "desbordamientos": []
+  }
+]
