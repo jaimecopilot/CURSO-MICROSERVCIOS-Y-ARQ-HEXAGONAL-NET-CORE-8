@@ -428,7 +428,9 @@ public class AceriaDbContext : DbContext
 - Usar DbSet<Orden> Ordenes { get; set; } sin => Set<Orden>(): el curso usa la forma con expresión para evitar setters.
 
 **Verificación:** la clase AceriaDbContext debe compilar sin errores y el proyecto debe reconocer Microsoft.EntityFrameworkCore.
-\n\n**Interpretación del resultado:** `AceriaDbContext` expone `Ordenes` como conjunto persistente. La clase del dominio no debe encargarse de abrir conexiones; esa responsabilidad corresponde a la infraestructura.
+
+
+**Interpretación del resultado:** `AceriaDbContext` expone `Ordenes` como conjunto persistente. La clase del dominio no debe encargarse de abrir conexiones; esa responsabilidad corresponde a la infraestructura.
 
 ---
 
@@ -521,7 +523,9 @@ app.Run();
 - Olvidar app.Run(); al final: el proceso termina inmediatamente y no escucha peticiones.
 
 **Verificación:** Program.cs debe compilar sin errores y mostrar las llamadas a AddDbContext, AddEndpointsApiExplorer, AddSwaggerGen, los dos MapGet/MapPost y la llamada a app.Run().
-\n\n**Interpretación del resultado:** Al ejecutar el host se resuelven dependencias por inyección. GET consulta órdenes existentes y POST crea una nueva; las respuestas HTTP dependen del resultado de EF Core.
+
+
+**Interpretación del resultado:** Al ejecutar el host se resuelven dependencias por inyección. GET consulta órdenes existentes y POST crea una nueva; las respuestas HTTP dependen del resultado de EF Core.
 
 ---
 
@@ -544,7 +548,9 @@ app.Run();
 **Errores comunes:** ejecutar `migrations add Inicial` otra vez; cambiar la migración heredada; buscar una marca temporal arbitraria.
 
 **Verificación:** los dos archivos ahora tienen extensión `.cs`, la solución compila y `202610140001_Inicial` figura en la lista de migraciones.
-\n\n**Interpretación del resultado:** La migración versionada describe la tabla que EF Core aplicará al servidor. Una clase `DbContext` por sí sola no crea físicamente la base de datos.
+
+
+**Interpretación del resultado:** La migración versionada describe la tabla que EF Core aplicará al servidor. Una clase `DbContext` por sí sola no crea físicamente la base de datos.
 
 ---
 
@@ -599,7 +605,9 @@ app.Run();
 - Olvidar Ctrl+C antes de continuar: el proceso queda en segundo plano y bloquea el siguiente dotnet run.
 
 **Verificación:** Swagger UI debe mostrar los dos endpoints y permitir ejecutar el GET (que devuelve una lista vacía []).
-\n\n**Interpretación del resultado:** La respuesta `[]` de GET antes de crear órdenes confirma la ruta y consulta inicial. Tras POST, un nuevo GET debe devolver el registro almacenado; ese comportamiento es distinto de comprobar solo la compilación.
+
+
+**Interpretación del resultado:** La respuesta `[]` de GET antes de crear órdenes confirma la ruta y consulta inicial. Tras POST, un nuevo GET debe devolver el registro almacenado; ese comportamiento es distinto de comprobar solo la compilación.
 
 ---
 
@@ -682,7 +690,9 @@ public class OrdenTests
 - Olvidar el using AceriaApp.Monolito.Api.Dominio;: la clase Orden no se resuelve.
 
 **Verificación:** OrdenTests.cs debe compilar sin errores y mostrar el método Orden_ConDatosValidos_SeCreaCorrectamente.
-\n\n**Interpretación del resultado:** La prueba unitaria de `Orden` comprueba la creación y los valores de la entidad. No hace una petición HTTP ni comprueba SQL Server.
+
+
+**Interpretación del resultado:** La prueba unitaria de `Orden` comprueba la creación y los valores de la entidad. No hace una petición HTTP ni comprueba SQL Server.
 
 ---
 
@@ -1368,7 +1378,9 @@ public class MetricasAcoplamiento
 - No comprobar la división por cero: el método lanza DivideByZeroException si el divisor es cero.
 
 **Verificación:** la clase MetricasAcoplamiento compila sin errores y expone cuatro propiedades y dos métodos.
-\n\n**Interpretación del resultado:** Un índice de acoplamiento compara referencias y número de proyectos. La ausencia de proyectos requiere tratamiento explícito para no dividir por cero.
+
+
+**Interpretación del resultado:** Un índice de acoplamiento compara referencias y número de proyectos. La ausencia de proyectos requiere tratamiento explícito para no dividir por cero.
 
 ---
 
@@ -1441,7 +1453,9 @@ public class MetricasServicio
 - No documentar los umbrales de EsCandidatoAExtraccion: el método devuelve un bool sin explicar los criterios.
 
 **Verificación:** la clase MetricasServicio compila sin errores y expone cuatro propiedades y dos métodos.
-\n\n**Interpretación del resultado:** El método candidato combina dos umbrales. Un `true` muestra que el escenario cumple esta heurística, no que ya se pueda desplegar como microservicio.
+
+
+**Interpretación del resultado:** El método candidato combina dos umbrales. Un `true` muestra que el escenario cumple esta heurística, no que ya se pueda desplegar como microservicio.
 
 ---
 
@@ -1534,7 +1548,9 @@ public class AnalizadorMonolito
 - Devolver IEnumerable sin using System.Linq: los métodos Sum y Where no se resuelven.
 
 **Verificación:** la clase AnalizadorMonolito compila sin errores y expone un constructor y dos métodos.
-\n\n**Interpretación del resultado:** El agregador calcula indicadores a partir de las capacidades declaradas; no descubre automáticamente dependencias reales en la solución .NET.
+
+
+**Interpretación del resultado:** El agregador calcula indicadores a partir de las capacidades declaradas; no descubre automáticamente dependencias reales en la solución .NET.
 
 ---
 
@@ -2787,7 +2803,9 @@ public record ResultadoValidacion(bool EsValido, IReadOnlyList<string> Errores);
 - Usar bool en lugar de ResultadoValidacion: pierde la información de los errores.
 
 **Verificación:** la clase ValidadorLimiteServicio compila sin errores y expone un método Validar y un record auxiliar.
-\n\n**Interpretación del resultado:** Cada mensaje representa una infracción diferente. Al recibir un límite correcto, el resultado debe ser válido y no contener errores.
+
+
+**Interpretación del resultado:** Cada mensaje representa una infracción diferente. Al recibir un límite correcto, el resultado debe ser válido y no contener errores.
 
 ---
 
@@ -2889,7 +2907,9 @@ public class CatalogoLimites
 - Devolver List<LimiteServicio> en lugar de IEnumerable<LimiteServicio>: expone la implementación interna.
 
 **Verificación:** la clase CatalogoLimites compila sin errores y expone un constructor y dos métodos.
-\n\n**Interpretación del resultado:** El catálogo no corrige límites inválidos: los clasifica a partir del resultado del validador para orientar una revisión de arquitectura.
+
+
+**Interpretación del resultado:** El catálogo no corrige límites inválidos: los clasifica a partir del resultado del validador para orientar una revisión de arquitectura.
 
 ---
 
@@ -4063,7 +4083,9 @@ public record ResultadoConvencion(bool EsValido, IReadOnlyList<string> Errores);
 - No comprobar la longitud de las partes: el validador acepta nombres mal formados.
 
 **Verificación:** la clase ValidadorConvencionNombres compila sin errores y expone un constructor, un método y un record.
-\n\n**Interpretación del resultado:** El nombre tiene tres segmentos y el último pertenece a un conjunto permitido. El validador ilustra reglas de nomenclatura, no comprueba la estructura física del repositorio.
+
+
+**Interpretación del resultado:** El nombre tiene tres segmentos y el último pertenece a un conjunto permitido. El validador ilustra reglas de nomenclatura, no comprueba la estructura física del repositorio.
 
 ---
 
@@ -5306,7 +5328,9 @@ public record ResultadoPracticas(bool EsValido, IReadOnlyList<string> Errores);
 - No comprobar el caso de lista vacía: el validador devuelve válido sin prácticas.
 
 **Verificación:** la clase ValidadorBuenasPracticas compila sin errores y expone un constructor, un método y un record.
-\n\n**Interpretación del resultado:** El validador inspecciona declaraciones. Una práctica marcada como aplicada puede no estar implementada; para certificarla hace falta una prueba funcional del endpoint.
+
+
+**Interpretación del resultado:** El validador inspecciona declaraciones. Una práctica marcada como aplicada puede no estar implementada; para certificarla hace falta una prueba funcional del endpoint.
 
 ---
 
@@ -5408,7 +5432,9 @@ public class CatalogoPracticas
 - Devolver List<Practica> en lugar de IEnumerable<Practica>: expone la implementación interna.
 
 **Verificación:** la clase CatalogoPracticas compila sin errores y expone un constructor y dos métodos.
-\n\n**Interpretación del resultado:** La separación entre aplicadas y pendientes depende exclusivamente del estado de los objetos `Practica` y puede verificarse con las pruebas del catálogo.
+
+
+**Interpretación del resultado:** La separación entre aplicadas y pendientes depende exclusivamente del estado de los objetos `Practica` y puede verificarse con las pruebas del catálogo.
 
 ---
 
