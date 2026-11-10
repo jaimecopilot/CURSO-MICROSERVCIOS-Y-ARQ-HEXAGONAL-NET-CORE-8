@@ -1460,6 +1460,8 @@ solamente códigos 204.
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.3-validacion-peticiones` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
+**Construcción y evidencia del paso.** Parte del punto 2.2 funcionando: crea una orden, actualízala y consulta el estado final. Los nuevos validadores no deben cambiar el contrato de los GET ni la capacidad del negocio.
+
 **Por qué funciona así.** La deserialización de un cuerpo JSON y la validación semántica no son lo mismo. Primero el framework interpreta el mensaje y después se comprueban las reglas de datos.
 
 **Verificación concreta.** Los tests de escritura siguen pasando. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
@@ -1474,6 +1476,8 @@ solamente códigos 204.
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.3-validacion-peticiones` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
+**Construcción y evidencia del paso.** Distingue tres fronteras: JSON mal formado (ASP.NET Core), cantidad fuera de rango semántico (FluentValidation) y cantidad que supera la capacidad admitida (regla del manejador). Anota el código y la causa antes de cambiar el código.
+
 **Por qué funciona así.** La deserialización de un cuerpo JSON y la validación semántica no son lo mismo. Primero el framework interpreta el mensaje y después se comprueban las reglas de datos.
 
 **Verificación concreta.** Distingues sintaxis, semántica y regla de capacidad. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
@@ -1487,6 +1491,8 @@ solamente códigos 204.
 **Acciones guiadas.** Instala FluentValidation.DependencyInjectionExtensions compatible con .NET 8 en el proyecto de API. Trabaja sobre la copia de tu solución de esta etapa y guarda el archivo antes de ejecutar la aplicación. Cuando el código usa `MapGet`, `MapPost`, `MapPut`, `MapPatch` o `MapDelete`, consulta también la tabla de verbos del punto para justificar la URI y la respuesta.
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.3-validacion-peticiones` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
+
+**Construcción y evidencia del paso.** Instala `FluentValidation.DependencyInjectionExtensions` en la API y comprueba las referencias de NuGet. El paquete por sí solo no valida peticiones; hacen falta tipos validadores, DI y filtros conectados.
 
 **Por qué funciona así.** La deserialización de un cuerpo JSON y la validación semántica no son lo mismo. Primero el framework interpreta el mensaje y después se comprueban las reglas de datos.
 
@@ -1506,23 +1512,19 @@ solamente códigos 204.
 ```csharp
 using AceriaApp.Api.Contratos;
 using FluentValidation;
+
 namespace AceriaApp.Api.Validacion;
-// INICIO PASO 2.3.3
+
 public sealed class CrearOrdenValidator : AbstractValidator<CrearOrdenRequest>
 {
     public CrearOrdenValidator()
     {
-        RuleFor(x=>x.Cliente).NotEmpty().MaximumLength(100);
-        RuleFor(x=>x.Material).NotEmpty().MaximumLength(100);
-        RuleFor(x=>x.Cantidad).InclusiveBetween(1,10000);
+        RuleFor(x => x.Cliente).NotEmpty().MaximumLength(100);
     }
 }
-public sealed class ActualizarCantidadValidator : AbstractValidator<ActualizarCantidadRequest>
-{
-    public ActualizarCantidadValidator() => RuleFor(x=>x.Cantidad).InclusiveBetween(1,10000);
-}
-// FIN PASO 2.3.3
 ```
+
+**Secuencia de construcción.** Crea `src/AceriaApp.Api/Validacion/Validadores.cs` con el validador inicial de Cliente. En 2.3.5 ampliarás su constructor para Material y Cantidad. No copies aún el validador de PATCH.
 
 **Por qué funciona así.** FluentValidation expresa reglas sobre los contratos de entrada y devuelve errores por campo; no debe confundirse un record con el validador que lo inspecciona.
 
@@ -1537,6 +1539,14 @@ public sealed class ActualizarCantidadValidator : AbstractValidator<ActualizarCa
 **Acciones guiadas.** En ese validador incorpora Material obligatorio y Cantidad InclusiveBetween(1,10000). Trabaja sobre la copia de tu solución de esta etapa y guarda el archivo antes de ejecutar la aplicación. Cuando el código usa `MapGet`, `MapPost`, `MapPut`, `MapPatch` o `MapDelete`, consulta también la tabla de verbos del punto para justificar la URI y la respuesta.
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.3-validacion-peticiones` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
+
+**Código de este paso.** Añade las reglas dentro del mismo constructor, después de la de Cliente. El rango semántico `1..10000` es diferente del límite de capacidad de negocio `500` evaluado en el endpoint.
+
+```csharp
+// Añade estas dos líneas al constructor de CrearOrdenValidator:
+RuleFor(x => x.Material).NotEmpty().MaximumLength(100);
+RuleFor(x => x.Cantidad).InclusiveBetween(1, 10000);
+```
 
 **Por qué funciona así.** FluentValidation expresa reglas sobre los contratos de entrada y devuelve errores por campo; no debe confundirse un record con el validador que lo inspecciona.
 
@@ -1554,25 +1564,18 @@ public sealed class ActualizarCantidadValidator : AbstractValidator<ActualizarCa
 
 
 ```csharp
-using AceriaApp.Api.Contratos;
-using FluentValidation;
-namespace AceriaApp.Api.Validacion;
-// INICIO PASO 2.3.3
-public sealed class CrearOrdenValidator : AbstractValidator<CrearOrdenRequest>
+// Añade al final de Validadores.cs, fuera de CrearOrdenValidator:
+public sealed class ActualizarCantidadValidator
+    : AbstractValidator<ActualizarCantidadRequest>
 {
-    public CrearOrdenValidator()
+    public ActualizarCantidadValidator()
     {
-        RuleFor(x=>x.Cliente).NotEmpty().MaximumLength(100);
-        RuleFor(x=>x.Material).NotEmpty().MaximumLength(100);
-        RuleFor(x=>x.Cantidad).InclusiveBetween(1,10000);
+        RuleFor(x => x.Cantidad).InclusiveBetween(1, 10000);
     }
 }
-public sealed class ActualizarCantidadValidator : AbstractValidator<ActualizarCantidadRequest>
-{
-    public ActualizarCantidadValidator() => RuleFor(x=>x.Cantidad).InclusiveBetween(1,10000);
-}
-// FIN PASO 2.3.3
 ```
+
+**Secuencia de construcción.** No sustituye a `CrearOrdenValidator`: es una **segunda clase** del mismo archivo `Validadores.cs`, destinada a PATCH. Ambas clases deben compilar juntas.
 
 **Por qué funciona así.** FluentValidation expresa reglas sobre los contratos de entrada y devuelve errores por campo; no debe confundirse un record con el validador que lo inspecciona.
 
@@ -1587,6 +1590,8 @@ public sealed class ActualizarCantidadValidator : AbstractValidator<ActualizarCa
 **Acciones guiadas.** Instancia los validadores en un test sencillo y observa IsValid y Errors con peticiones válidas e inválidas. Trabaja sobre la copia de tu solución de esta etapa y guarda el archivo antes de ejecutar la aplicación. Cuando el código usa `MapGet`, `MapPost`, `MapPut`, `MapPatch` o `MapDelete`, consulta también la tabla de verbos del punto para justificar la URI y la respuesta.
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.3-validacion-peticiones` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
+
+**Construcción y evidencia del paso.** Crea una pequeña prueba de exploración con `CrearOrdenValidator`: compara una instancia válida y otra con `Cantidad=0`. Observa `IsValid` y `Errors`; estas comprobaciones aisladas no sustituyen la prueba HTTP del filtro conectado.
 
 **Por qué funciona así.** FluentValidation expresa reglas sobre los contratos de entrada y devuelve errores por campo; no debe confundirse un record con el validador que lo inspecciona.
 
@@ -1605,28 +1610,36 @@ public sealed class ActualizarCantidadValidator : AbstractValidator<ActualizarCa
 
 ```csharp
 using FluentValidation;
+
 namespace AceriaApp.Api.Validacion;
-// INICIO PASO 2.3.4
-public sealed class ValidationFilter<T>(IValidator<T> validator): IEndpointFilter where T:class
+
+public sealed class ValidationFilter<T>(IValidator<T> validator)
+    : IEndpointFilter where T : class
 {
-    public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context,
-        EndpointFilterDelegate next)
+    public async ValueTask<object?> InvokeAsync(
+        EndpointFilterInvocationContext context, EndpointFilterDelegate next)
     {
-        var request=context.Arguments.OfType<T>().FirstOrDefault();
-        if(request is null) return Results.ValidationProblem(
-            new Dictionary<string,string[]> { ["body"]=new[]{"Falta el cuerpo."} });
-        var result=await validator.ValidateAsync(request,context.HttpContext.RequestAborted);
-        if(!result.IsValid)
+        var request = context.Arguments.OfType<T>().FirstOrDefault();
+        if (request is null)
+            return Results.ValidationProblem(
+                new Dictionary<string,string[]> {
+                    ["body"] = new[] { "Falta el cuerpo." }
+                });
+        var result = await validator.ValidateAsync(
+            request, context.HttpContext.RequestAborted);
+        if (!result.IsValid)
         {
-            var errors=result.Errors.GroupBy(x=>x.PropertyName)
-                .ToDictionary(x=>x.Key,x=>x.Select(e=>e.ErrorMessage).ToArray());
+            var errors = result.Errors.GroupBy(x => x.PropertyName)
+                .ToDictionary(x => x.Key,
+                    x => x.Select(e => e.ErrorMessage).ToArray());
             return Results.ValidationProblem(errors);
         }
         return await next(context);
     }
 }
-// FIN PASO 2.3.4
 ```
+
+**Secuencia de construcción.** En `Validacion/ValidationFilter.cs` implementa el filtro completo para que compile; los pasos 2.3.9–2.3.13 descompondrán sus decisiones. No repitas el código en esas actividades; depúralo y observa dónde sale el flujo.
 
 **Por qué funciona así.** El filtro ejecuta ValidateAsync antes del manejador y utiliza Results.ValidationProblem si falla; solo invoca next(context) cuando la petición es válida.
 
@@ -1642,6 +1655,8 @@ public sealed class ValidationFilter<T>(IValidator<T> validator): IEndpointFilte
 
 **Referencia de código:** `src/AceriaApp.Api/Validacion/ValidationFilter.cs` y el endpoint de `Program.cs` sobre el que se instala el filtro. Comprueba dónde se produce `ValidationProblem` y dónde se llama a `next(context)`.
 
+**Construcción y evidencia del paso.** En `ValidationFilter<T>.InvokeAsync`, coloca un punto de interrupción en `context.Arguments.OfType<T>()`. Identifica por qué el request se busca por tipo y qué respuesta debe emitirse si no se encuentra.
+
 **Por qué funciona así.** El filtro ejecuta ValidateAsync antes del manejador y utiliza Results.ValidationProblem si falla; solo invoca next(context) cuando la petición es válida.
 
 **Verificación concreta.** Un request ausente no provoca NullReferenceException. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
@@ -1655,6 +1670,8 @@ public sealed class ValidationFilter<T>(IValidator<T> validator): IEndpointFilte
 **Acciones guiadas.** Invoca ValidateAsync pasando RequestAborted desde HttpContext para respetar cancelaciones. Trabaja sobre la copia de tu solución de esta etapa y guarda el archivo antes de ejecutar la aplicación. Cuando el código usa `MapGet`, `MapPost`, `MapPut`, `MapPatch` o `MapDelete`, consulta también la tabla de verbos del punto para justificar la URI y la respuesta.
 
 **Referencia de código:** `src/AceriaApp.Api/Validacion/ValidationFilter.cs` y el endpoint de `Program.cs` sobre el que se instala el filtro. Comprueba dónde se produce `ValidationProblem` y dónde se llama a `next(context)`.
+
+**Construcción y evidencia del paso.** Depura la invocación `ValidateAsync(request, context.HttpContext.RequestAborted)`. Comprueba que usa el request real y que la cancelación proviene del contexto HTTP; no crees un token global.
 
 **Por qué funciona así.** El filtro ejecuta ValidateAsync antes del manejador y utiliza Results.ValidationProblem si falla; solo invoca next(context) cuando la petición es válida.
 
@@ -1672,29 +1689,16 @@ public sealed class ValidationFilter<T>(IValidator<T> validator): IEndpointFilte
 
 
 ```csharp
-using FluentValidation;
-namespace AceriaApp.Api.Validacion;
-// INICIO PASO 2.3.4
-public sealed class ValidationFilter<T>(IValidator<T> validator): IEndpointFilter where T:class
-{
-    public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context,
-        EndpointFilterDelegate next)
-    {
-        var request=context.Arguments.OfType<T>().FirstOrDefault();
-        if(request is null) return Results.ValidationProblem(
-            new Dictionary<string,string[]> { ["body"]=new[]{"Falta el cuerpo."} });
-        var result=await validator.ValidateAsync(request,context.HttpContext.RequestAborted);
-        if(!result.IsValid)
-        {
-            var errors=result.Errors.GroupBy(x=>x.PropertyName)
-                .ToDictionary(x=>x.Key,x=>x.Select(e=>e.ErrorMessage).ToArray());
-            return Results.ValidationProblem(errors);
-        }
-        return await next(context);
-    }
-}
-// FIN PASO 2.3.4
+// Dentro de InvokeAsync, en la rama !result.IsValid:
+var errors = result.Errors.GroupBy(x => x.PropertyName)
+    .ToDictionary(x => x.Key,
+        x => x.Select(e => e.ErrorMessage).ToArray());
+return Results.ValidationProblem(errors);
 ```
+
+**Secuencia de construcción.** Este fragmento **ya forma parte** de `ValidationFilter.cs` creado en 2.3.8. Utilízalo para analizar la transformación de `ValidationFailure` en el diccionario de errores; no pegues otra clase.
+
+**Construcción y evidencia del paso.** Separa la agrupación por `PropertyName` de la conversión a `string[]`. Envía dos datos inválidos a la vez y comprueba que `errors` tiene una clave por propiedad y un array de mensajes por clave.
 
 **Por qué funciona así.** El filtro ejecuta ValidateAsync antes del manejador y utiliza Results.ValidationProblem si falla; solo invoca next(context) cuando la petición es válida.
 
@@ -1709,6 +1713,8 @@ public sealed class ValidationFilter<T>(IValidator<T> validator): IEndpointFilte
 **Acciones guiadas.** Ante fallo devuelve Results.ValidationProblem(errors) sin invocar el manejador siguiente. Trabaja sobre la copia de tu solución de esta etapa y guarda el archivo antes de ejecutar la aplicación. Cuando el código usa `MapGet`, `MapPost`, `MapPut`, `MapPatch` o `MapDelete`, consulta también la tabla de verbos del punto para justificar la URI y la respuesta.
 
 **Referencia de código:** `src/AceriaApp.Api/Validacion/ValidationFilter.cs` y el endpoint de `Program.cs` sobre el que se instala el filtro. Comprueba dónde se produce `ValidationProblem` y dónde se llama a `next(context)`.
+
+**Construcción y evidencia del paso.** Cuando `IsValid=false`, devuelve `Results.ValidationProblem(errors)` y comprueba 400 con JSON de errores. Verifica con un GET posterior que un POST inválido no ha insertado la orden.
 
 **Por qué funciona así.** El filtro ejecuta ValidateAsync antes del manejador y utiliza Results.ValidationProblem si falla; solo invoca next(context) cuando la petición es válida.
 
@@ -1760,6 +1766,8 @@ en errors; Cantidad=501 debe producir 422 porque es una regla del negocio.
 
 **Referencia de código:** `src/AceriaApp.Api/Validacion/ValidationFilter.cs` y el endpoint de `Program.cs` sobre el que se instala el filtro. Comprueba dónde se produce `ValidationProblem` y dónde se llama a `next(context)`.
 
+**Construcción y evidencia del paso.** En la rama válida debe ejecutarse `next(context)`; si falta, el filtro intercepta todas las peticiones sin permitir el POST real. Contrasta con una orden válida y su `Location`.
+
 **Por qué funciona así.** El filtro ejecuta ValidateAsync antes del manejador y utiliza Results.ValidationProblem si falla; solo invoca next(context) cuando la petición es válida.
 
 **Verificación concreta.** El endpoint se ejecuta solo cuando la validación pasa. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
@@ -1779,6 +1787,8 @@ en errors; Cantidad=501 debe producir 422 porque es una regla del negocio.
 using FluentValidation;
 builder.Services.AddValidatorsFromAssemblyContaining<CrearOrdenValidator>(); // PASO 2.3.5
 ```
+
+**Construcción y evidencia del paso.** Registra `AddValidatorsFromAssemblyContaining<CrearOrdenValidator>()` antes de `builder.Build()`. Verifica que DI resuelve `IValidator<CrearOrdenRequest>` y `IValidator<ActualizarCantidadRequest>`.
 
 **Por qué funciona así.** El registro de validadores en DI no ejecuta la validación. AddEndpointFilter debe asociarse a cada POST, PUT o PATCH que acepte ese contrato.
 
@@ -1802,6 +1812,8 @@ builder.Services.AddValidatorsFromAssemblyContaining<CrearOrdenValidator>(); // 
 ;
 ```
 
+**Construcción y evidencia del paso.** En el **POST existente**, añade `AddEndpointFilter<ValidationFilter<CrearOrdenRequest>>()`. Ejecuta un caso válido (201) y otro con Cliente vacío (400). No crees otra ruta POST.
+
 **Por qué funciona así.** El registro de validadores en DI no ejecuta la validación. AddEndpointFilter debe asociarse a cada POST, PUT o PATCH que acepte ese contrato.
 
 **Verificación concreta.** POST con Cliente vacío devuelve 400 en vez de guardar una fila. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
@@ -1815,6 +1827,8 @@ builder.Services.AddValidatorsFromAssemblyContaining<CrearOrdenValidator>(); // 
 **Acciones guiadas.** Añade el mismo filtro de CrearOrdenRequest al MapPut. Trabaja sobre la copia de tu solución de esta etapa y guarda el archivo antes de ejecutar la aplicación. Cuando el código usa `MapGet`, `MapPost`, `MapPut`, `MapPatch` o `MapDelete`, consulta también la tabla de verbos del punto para justificar la URI y la respuesta.
 
 **Referencia de código:** `src/AceriaApp.Api/Validacion/ValidationFilter.cs` y el endpoint de `Program.cs` sobre el que se instala el filtro. Comprueba dónde se produce `ValidationProblem` y dónde se llama a `next(context)`.
+
+**Construcción y evidencia del paso.** Aplica el mismo filtro al PUT existente y utiliza una orden `Pendiente` real. Envía un request inválido y consulta por GET: debe devolver 400 sin modificar la orden.
 
 **Por qué funciona así.** El registro de validadores en DI no ejecuta la validación. AddEndpointFilter debe asociarse a cada POST, PUT o PATCH que acepte ese contrato.
 
@@ -1838,6 +1852,8 @@ builder.Services.AddValidatorsFromAssemblyContaining<CrearOrdenValidator>(); // 
 ;
 ```
 
+**Construcción y evidencia del paso.** Asocia `ValidationFilter<ActualizarCantidadRequest>` al PATCH de `/cantidad`; comprueba el caso inválido y el válido. Los tres filtros deben convivir sin alterar los GET.
+
 **Por qué funciona así.** El registro de validadores en DI no ejecuta la validación. AddEndpointFilter debe asociarse a cada POST, PUT o PATCH que acepte ese contrato.
 
 **Verificación concreta.** PATCH con Cantidad=0 devuelve 400. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
@@ -1851,6 +1867,8 @@ builder.Services.AddValidatorsFromAssemblyContaining<CrearOrdenValidator>(); // 
 **Acciones guiadas.** Envía un POST con Material vacío y comprueba código, Content-Type y ausencia de inserción. Trabaja sobre la copia de tu solución de esta etapa y guarda el archivo antes de ejecutar la aplicación. Cuando el código usa `MapGet`, `MapPost`, `MapPut`, `MapPatch` o `MapDelete`, consulta también la tabla de verbos del punto para justificar la URI y la respuesta.
 
 **Referencia de código:** `src/AceriaApp.Api/Validacion/ValidationFilter.cs` y el endpoint de `Program.cs` sobre el que se instala el filtro. Comprueba dónde se produce `ValidationProblem` y dónde se llama a `next(context)`.
+
+**Construcción y evidencia del paso.** Desde el archivo `.http` envía `Material=""`. Espera HTTP 400 y un cuerpo `ValidationProblem`; comprueba que no se ha insertado nada en la base persistente.
 
 **Por qué funciona así.** Un 400 por datos fuera del rango, un 422 por la capacidad y un 409 por el estado de una orden pertenecen a causas diferentes que el cliente debe distinguir.
 
@@ -1866,6 +1884,8 @@ builder.Services.AddValidatorsFromAssemblyContaining<CrearOrdenValidator>(); // 
 
 **Referencia de código:** `src/AceriaApp.Api/Validacion/ValidationFilter.cs` y el endpoint de `Program.cs` sobre el que se instala el filtro. Comprueba dónde se produce `ValidationProblem` y dónde se llama a `next(context)`.
 
+**Construcción y evidencia del paso.** Revisa el `Content-Type` y la propiedad `errors`. Identifica el nombre de campo que devuelve FluentValidation y no confundas el detalle de errores de contrato con `Results.Problem` del negocio.
+
 **Por qué funciona así.** Un 400 por datos fuera del rango, un 422 por la capacidad y un 409 por el estado de una orden pertenecen a causas diferentes que el cliente debe distinguir.
 
 **Verificación concreta.** El cliente puede mostrar el mensaje bajo el campo correcto. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
@@ -1880,6 +1900,8 @@ builder.Services.AddValidatorsFromAssemblyContaining<CrearOrdenValidator>(); // 
 
 **Referencia de código:** `src/AceriaApp.Api/Validacion/ValidationFilter.cs` y el endpoint de `Program.cs` sobre el que se instala el filtro. Comprueba dónde se produce `ValidationProblem` y dónde se llama a `next(context)`.
 
+**Construcción y evidencia del paso.** Compara dos peticiones que difieren solo en cantidad: `10001` debe fallar en el validador con 400; `501` supera la regla de negocio pero está dentro del rango semántico, por eso devuelve 422.
+
 **Por qué funciona así.** Un 400 por datos fuera del rango, un 422 por la capacidad y un 409 por el estado de una orden pertenecen a causas diferentes que el cliente debe distinguir.
 
 **Verificación concreta.** El primero devuelve 400, el segundo 422. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
@@ -1893,6 +1915,8 @@ builder.Services.AddValidatorsFromAssemblyContaining<CrearOrdenValidator>(); // 
 **Acciones guiadas.** Crea, finaliza e intenta editar una orden: no es un fallo semántico, sino un conflicto de estado. Trabaja sobre la copia de tu solución de esta etapa y guarda el archivo antes de ejecutar la aplicación. Cuando el código usa `MapGet`, `MapPost`, `MapPut`, `MapPatch` o `MapDelete`, consulta también la tabla de verbos del punto para justificar la URI y la respuesta.
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.3-validacion-peticiones` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
+
+**Construcción y evidencia del paso.** Crea, finaliza y vuelve a editar una orden: debe resultar 409, no 400. El estado persistente condiciona la operación aunque el JSON enviado sea correcto.
 
 **Por qué funciona así.** Un 400 por datos fuera del rango, un 422 por la capacidad y un 409 por el estado de una orden pertenecen a causas diferentes que el cliente debe distinguir.
 
@@ -1910,44 +1934,24 @@ builder.Services.AddValidatorsFromAssemblyContaining<CrearOrdenValidator>(); // 
 
 
 ```csharp
-using System.Net;
-using System.Net.Http.Json;
-using System.Text.Json;
-using AceriaApp.Api.Contratos;
-using Xunit;
-namespace AceriaApp.Api.Tests;
-// INICIO PASO 2.3.8: se verifica el filtro ACTIVO, no su mera existencia.
-public class ValidacionHttpTests
+// En tests/AceriaApp.Api.Tests/ValidacionHttpTests.cs:
+[Theory]
+[InlineData("", "CHAPA", 10)]
+[InlineData("ACX", "", 10)]
+[InlineData("ACX", "CHAPA", 0)]
+public async Task DatosInvalidos_Es400ConErrors(
+    string cliente, string material, int cantidad)
 {
-    [Theory]
-    [InlineData("","CHAPA",10)]
-    [InlineData("ACX","",10)]
-    [InlineData("ACX","CHAPA",0)]
-    public async Task DatosInvalidos_Es400ConErrors(string cliente,string material,int cantidad)
-    {
-        using var f=new ApiFactory();
-        var r=await f.CreateClient().PostAsJsonAsync("/api/v1/ordenes",
-            new CrearOrdenRequest(cliente,material,cantidad));
-        Assert.Equal(HttpStatusCode.BadRequest,r.StatusCode);
-        using var json=JsonDocument.Parse(await r.Content.ReadAsStringAsync());
-        Assert.True(json.RootElement.TryGetProperty("errors",out _));
-    }
-    [Fact] public async Task CantidadMasDe10000_Es400()
-    {
-        using var f=new ApiFactory();
-        var r=await f.CreateClient().PostAsJsonAsync("/api/v1/ordenes",
-            new CrearOrdenRequest("ACX","CHAPA",10001));
-        Assert.Equal(HttpStatusCode.BadRequest,r.StatusCode);
-    }
-    [Fact] public async Task ReglaDeNegocio_501_Es422()
-    {
-        using var f=new ApiFactory();
-        var r=await f.CreateClient().PostAsJsonAsync("/api/v1/ordenes",
-            new CrearOrdenRequest("ACX","CHAPA",501));
-        Assert.Equal(HttpStatusCode.UnprocessableEntity,r.StatusCode);
-    }
+    using var f = new ApiFactory();
+    var r = await f.CreateClient().PostAsJsonAsync("/api/v1/ordenes",
+        new CrearOrdenRequest(cliente, material, cantidad));
+    Assert.Equal(HttpStatusCode.BadRequest, r.StatusCode);
+    using var json = JsonDocument.Parse(await r.Content.ReadAsStringAsync());
+    Assert.True(json.RootElement.TryGetProperty("errors", out _));
 }
 ```
+
+**Secuencia de construcción.** Importa `System.Net`, `System.Net.Http.Json`, `System.Text.Json`, `AceriaApp.Api.Contratos` y `Xunit`, y sitúa el método dentro de `public class ValidacionHttpTests`. Añade al mismo archivo los tests de `10001` (400) y `501` (422) mostrados en la referencia; ejecuta todos antes de avanzar.
 
 **Por qué funciona así.** Las pruebas HTTP recorren el pipeline completo y comprueban que los fallos se comunican como Problem Details sin alterar los datos.
 
@@ -1963,6 +1967,8 @@ public class ValidacionHttpTests
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.3-validacion-peticiones` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
+**Construcción y evidencia del paso.** Ejecuta `dotnet test tests/AceriaApp.Api.Tests`: deben pasar 12 tests acumulados. Comprueba que continúan los casos GET, escritura y validación; un test nuevo correcto no compensa una regresión.
+
 **Por qué funciona así.** Las pruebas HTTP recorren el pipeline completo y comprueban que los fallos se comunican como Problem Details sin alterar los datos.
 
 **Verificación concreta.** El filtrado no rompe las rutas que ya funcionaban. Ejecuta además las pruebas xUnit del proyecto de esta etapa para confirmar que el ejercicio no ha roto los endpoints anteriores.
@@ -1976,6 +1982,8 @@ public class ValidacionHttpTests
 **Acciones guiadas.** Reto: incorpora WithMessage a una regla y comprueba desde un test HTTP el texto dentro de errors. Trabaja sobre la copia de tu solución de esta etapa y guarda el archivo antes de ejecutar la aplicación. Cuando el código usa `MapGet`, `MapPost`, `MapPut`, `MapPatch` o `MapDelete`, consulta también la tabla de verbos del punto para justificar la URI y la respuesta.
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.3-validacion-peticiones` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
+
+**Construcción y evidencia del paso.** El reto de `WithMessage` es opcional. Si lo realizas, cambia una regla concreta, ejecuta una petición inválida y verifica el mensaje dentro de la clave adecuada de `errors`, sin modificar los códigos de respuesta.
 
 **Por qué funciona así.** Las pruebas HTTP recorren el pipeline completo y comprueban que los fallos se comunican como Problem Details sin alterar los datos.
 
@@ -2045,6 +2053,8 @@ una lectura válida en un fallo de contrato.
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.4-documentacion-openapi` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
+**Construcción y evidencia del paso.** Antes de documentar, haz inventario de las siete operaciones de órdenes y de sus respuestas reales. Los metadatos que declares después deben coincidir con el servidor, no con resultados imaginados.
+
 **Por qué funciona así.** Swashbuckle descubre la API real desde ASP.NET Core: registrar AddSwaggerGen y definir SwaggerDoc produce un documento estándar a partir de rutas y tipos.
 
 **Verificación concreta.** La futura documentación reflejará endpoints ya comprobados. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
@@ -2058,6 +2068,8 @@ una lectura válida en un fallo de contrato.
 **Acciones guiadas.** Instala Swashbuckle.AspNetCore 6.6.2 para .NET 8 en el proyecto API, no solo en tests. Trabaja sobre la copia de tu solución de esta etapa y guarda el archivo antes de ejecutar la aplicación. Cuando el código usa `MapGet`, `MapPost`, `MapPut`, `MapPatch` o `MapDelete`, consulta también la tabla de verbos del punto para justificar la URI y la respuesta.
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.4-documentacion-openapi` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
+
+**Construcción y evidencia del paso.** Instala `Swashbuckle.AspNetCore` 6.6.2 en la API de esta etapa. Una instalación correcta no publica ningún documento hasta registrar servicios y middleware.
 
 **Por qué funciona así.** Swashbuckle descubre la API real desde ASP.NET Core: registrar AddSwaggerGen y definir SwaggerDoc produce un documento estándar a partir de rutas y tipos.
 
@@ -2075,54 +2087,17 @@ una lectura válida en un fallo de contrato.
 
 
 ```csharp
-using AceriaApp.Api.Contratos;
-using Microsoft.OpenApi.Any;
-using Microsoft.OpenApi.Models;
-using Swashbuckle.AspNetCore.SwaggerGen;
+// Crea src/AceriaApp.Api/Documentacion/DocumentacionExtensions.cs:
 namespace AceriaApp.Api.Documentacion;
-// INICIO PASO 2.4.3
+
 public static class DocumentacionExtensions
 {
-    public static IServiceCollection AddDocumentacion(this IServiceCollection services)
-    {
-        services.AddEndpointsApiExplorer();
-        services.AddSwaggerGen(options=>
-        {
-            options.SwaggerDoc("v1",new OpenApiInfo{
-                Title="AceriaApp — Órdenes de producción",Version="v1",
-                Description="API REST educativa creada con ASP.NET Core 8.",
-                Contact=new OpenApiContact{Name="Equipo AceriaApp",Email="equipo@acerialocal"}
-            });
-            options.SchemaFilter<EjemploCrearOrden>();
-        });
-        return services;
-    }
-    public static WebApplication UseDocumentacion(this WebApplication app)
-    {
-        if(app.Environment.IsDevelopment())
-        {
-            app.UseSwagger();
-            app.UseSwaggerUI(o=>o.SwaggerEndpoint("/swagger/v1/swagger.json","AceriaApp v1"));
-        }
-        return app;
-    }
+    // En 2.4.4 se añadirá AddDocumentacion.
+    // En 2.4.7 se añadirá UseDocumentacion.
 }
-// FIN PASO 2.4.3
-// INICIO PASO 2.4.5
-public sealed class EjemploCrearOrden : ISchemaFilter
-{
-    public void Apply(OpenApiSchema schema,SchemaFilterContext context)
-    {
-        if(context.Type!=typeof(CrearOrdenRequest)) return;
-        schema.Example=new OpenApiObject{
-            ["cliente"]=new OpenApiString("ACX-001"),
-            ["material"]=new OpenApiString("CHAPA-3MM"),
-            ["cantidad"]=new OpenApiInteger(10)
-        };
-    }
-}
-// FIN PASO 2.4.5
 ```
+
+**Secuencia de construcción.** Crea una clase estática vacía para organizar el registro y la publicación de Swagger. No añadas todavía `EjemploCrearOrden`, que corresponde al paso 2.4.16.
 
 **Por qué funciona así.** Swashbuckle descubre la API real desde ASP.NET Core: registrar AddSwaggerGen y definir SwaggerDoc produce un documento estándar a partir de rutas y tipos.
 
@@ -2140,54 +2115,17 @@ public sealed class EjemploCrearOrden : ISchemaFilter
 
 
 ```csharp
-using AceriaApp.Api.Contratos;
-using Microsoft.OpenApi.Any;
-using Microsoft.OpenApi.Models;
-using Swashbuckle.AspNetCore.SwaggerGen;
-namespace AceriaApp.Api.Documentacion;
-// INICIO PASO 2.4.3
-public static class DocumentacionExtensions
+// Dentro de DocumentacionExtensions:
+public static IServiceCollection AddDocumentacion(
+    this IServiceCollection services)
 {
-    public static IServiceCollection AddDocumentacion(this IServiceCollection services)
-    {
-        services.AddEndpointsApiExplorer();
-        services.AddSwaggerGen(options=>
-        {
-            options.SwaggerDoc("v1",new OpenApiInfo{
-                Title="AceriaApp — Órdenes de producción",Version="v1",
-                Description="API REST educativa creada con ASP.NET Core 8.",
-                Contact=new OpenApiContact{Name="Equipo AceriaApp",Email="equipo@acerialocal"}
-            });
-            options.SchemaFilter<EjemploCrearOrden>();
-        });
-        return services;
-    }
-    public static WebApplication UseDocumentacion(this WebApplication app)
-    {
-        if(app.Environment.IsDevelopment())
-        {
-            app.UseSwagger();
-            app.UseSwaggerUI(o=>o.SwaggerEndpoint("/swagger/v1/swagger.json","AceriaApp v1"));
-        }
-        return app;
-    }
+    services.AddEndpointsApiExplorer();
+    services.AddSwaggerGen();
+    return services;
 }
-// FIN PASO 2.4.3
-// INICIO PASO 2.4.5
-public sealed class EjemploCrearOrden : ISchemaFilter
-{
-    public void Apply(OpenApiSchema schema,SchemaFilterContext context)
-    {
-        if(context.Type!=typeof(CrearOrdenRequest)) return;
-        schema.Example=new OpenApiObject{
-            ["cliente"]=new OpenApiString("ACX-001"),
-            ["material"]=new OpenApiString("CHAPA-3MM"),
-            ["cantidad"]=new OpenApiInteger(10)
-        };
-    }
-}
-// FIN PASO 2.4.5
 ```
+
+**Secuencia de construcción.** Añade un método de extensión que registra el explorador de endpoints y el generador. Se necesitan los paquetes del paso 2.4.2 y los `using` de ASP.NET Core. En 2.4.5 configurarás las opciones de `AddSwaggerGen`.
 
 **Por qué funciona así.** Swashbuckle descubre la API real desde ASP.NET Core: registrar AddSwaggerGen y definir SwaggerDoc produce un documento estándar a partir de rutas y tipos.
 
@@ -2202,6 +2140,26 @@ public sealed class EjemploCrearOrden : ISchemaFilter
 **Acciones guiadas.** Configura SwaggerDoc v1 con título, versión, descripción y contacto de AceriaApp. Trabaja sobre la copia de tu solución de esta etapa y guarda el archivo antes de ejecutar la aplicación. Cuando el código usa `MapGet`, `MapPost`, `MapPut`, `MapPatch` o `MapDelete`, consulta también la tabla de verbos del punto para justificar la URI y la respuesta.
 
 **Referencia de código:** `DocumentacionExtensions.cs`, `Program.cs` o `ContratoOpenApiTests.cs` según el caso. La prueba debe leer el documento generado, no un texto YAML escrito a mano.
+
+**Código de este paso.** En el mismo archivo agrega `using Microsoft.OpenApi.Models;`. El documento se llama `v1`: eso no crea automáticamente otra versión de la API.
+
+```csharp
+// Sustituye services.AddSwaggerGen() dentro de AddDocumentacion:
+services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "AceriaApp — Órdenes de producción",
+        Version = "v1",
+        Description = "API REST educativa creada con ASP.NET Core 8.",
+        Contact = new OpenApiContact
+        {
+            Name = "Equipo AceriaApp",
+            Email = "equipo@acerialocal"
+        }
+    });
+});
+```
 
 **Por qué funciona así.** Swashbuckle descubre la API real desde ASP.NET Core: registrar AddSwaggerGen y definir SwaggerDoc produce un documento estándar a partir de rutas y tipos.
 
@@ -2222,6 +2180,8 @@ public sealed class EjemploCrearOrden : ISchemaFilter
 builder.Services.AddDocumentacion(); // PASO 2.4.3
 ```
 
+**Construcción y evidencia del paso.** En `Program.cs` añade `builder.Services.AddDocumentacion()` **antes** de `builder.Build()`, conservando el registro del DbContext y FluentValidation. El método pertenece al archivo que estás construyendo en 2.4.3–2.4.5.
+
 **Por qué funciona así.** La publicación de Swagger UI y JSON ocurre después de construir la aplicación y se restringe a Development; la documentación no debe inventarse manualmente.
 
 **Verificación concreta.** Se registra el generador en el contenedor. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
@@ -2235,6 +2195,22 @@ builder.Services.AddDocumentacion(); // PASO 2.4.3
 **Acciones guiadas.** En UseDocumentacion coloca UseSwagger y UseSwaggerUI dentro de la condición IsDevelopment. Trabaja sobre la copia de tu solución de esta etapa y guarda el archivo antes de ejecutar la aplicación. Cuando el código usa `MapGet`, `MapPost`, `MapPut`, `MapPatch` o `MapDelete`, consulta también la tabla de verbos del punto para justificar la URI y la respuesta.
 
 **Referencia de código:** `DocumentacionExtensions.cs`, `Program.cs` o `ContratoOpenApiTests.cs` según el caso. La prueba debe leer el documento generado, no un texto YAML escrito a mano.
+
+**Código de este paso.** Incorpora el método en la misma clase estática. La restricción a `Development` debe ser comprobada por un test posterior.
+
+```csharp
+// Añade a la misma clase DocumentacionExtensions:
+public static WebApplication UseDocumentacion(this WebApplication app)
+{
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI(o =>
+            o.SwaggerEndpoint("/swagger/v1/swagger.json", "AceriaApp v1"));
+    }
+    return app;
+}
+```
 
 **Por qué funciona así.** La publicación de Swagger UI y JSON ocurre después de construir la aplicación y se restringe a Development; la documentación no debe inventarse manualmente.
 
@@ -2255,6 +2231,8 @@ builder.Services.AddDocumentacion(); // PASO 2.4.3
 app.UseDocumentacion(); // PASO 2.4.4
 ```
 
+**Construcción y evidencia del paso.** Coloca `app.UseDocumentacion()` antes de `app.Run()`; abre `/swagger` con el servidor en Development. Verifica que Swagger UI muestra las rutas existentes.
+
 **Por qué funciona así.** La publicación de Swagger UI y JSON ocurre después de construir la aplicación y se restringe a Development; la documentación no debe inventarse manualmente.
 
 **Verificación concreta.** La interfaz presenta los endpoints del proyecto. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
@@ -2268,6 +2246,8 @@ app.UseDocumentacion(); // PASO 2.4.4
 **Acciones guiadas.** Descarga /swagger/v1/swagger.json como texto JSON, no una cadena YAML fabricada. Trabaja sobre la copia de tu solución de esta etapa y guarda el archivo antes de ejecutar la aplicación. Cuando el código usa `MapGet`, `MapPost`, `MapPut`, `MapPatch` o `MapDelete`, consulta también la tabla de verbos del punto para justificar la URI y la respuesta.
 
 **Referencia de código:** `DocumentacionExtensions.cs`, `Program.cs` o `ContratoOpenApiTests.cs` según el caso. La prueba debe leer el documento generado, no un texto YAML escrito a mano.
+
+**Construcción y evidencia del paso.** Solicita `GET /swagger/v1/swagger.json` a la API levantada. Guarda el cuerpo JSON devuelto por el servidor; no sustituyas la prueba por un archivo estático escrito a mano.
 
 **Por qué funciona así.** La publicación de Swagger UI y JSON ocurre después de construir la aplicación y se restringe a Development; la documentación no debe inventarse manualmente.
 
@@ -2283,6 +2263,8 @@ app.UseDocumentacion(); // PASO 2.4.4
 
 **Referencia de código:** `DocumentacionExtensions.cs`, `Program.cs` o `ContratoOpenApiTests.cs` según el caso. La prueba debe leer el documento generado, no un texto YAML escrito a mano.
 
+**Construcción y evidencia del paso.** Localiza `info.version`, `paths` y `components.schemas` en el documento. Compara las rutas publicadas con las que aparecen en `Program.cs`.
+
 **Por qué funciona así.** La publicación de Swagger UI y JSON ocurre después de construir la aplicación y se restringe a Development; la documentación no debe inventarse manualmente.
 
 **Verificación concreta.** GET, POST, PUT, PATCH y DELETE figuran donde corresponde. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
@@ -2296,6 +2278,8 @@ app.UseDocumentacion(); // PASO 2.4.4
 **Acciones guiadas.** En Program.cs examina WithName y WithTags para agrupar los endpoints de órdenes. Trabaja sobre la copia de tu solución de esta etapa y guarda el archivo antes de ejecutar la aplicación. Cuando el código usa `MapGet`, `MapPost`, `MapPut`, `MapPatch` o `MapDelete`, consulta también la tabla de verbos del punto para justificar la URI y la respuesta.
 
 **Referencia de código:** `DocumentacionExtensions.cs`, `Program.cs` o `ContratoOpenApiTests.cs` según el caso. La prueba debe leer el documento generado, no un texto YAML escrito a mano.
+
+**Construcción y evidencia del paso.** Revisa los `WithName` y `WithTags` ya usados en los endpoints anteriores. No los dupliques: comprueba su efecto en la agrupación por `Ordenes` de Swagger UI.
 
 **Por qué funciona así.** Los metadatos de una operación declaran rutas, respuestas y esquemas; son documentación de un comportamiento que ya fue implementado y probado.
 
@@ -2317,6 +2301,8 @@ app.UseDocumentacion(); // PASO 2.4.4
 .WithSummary("Lista las órdenes de producción").Produces<IEnumerable<OrdenDto>>(200)
 ;
 ```
+
+**Construcción y evidencia del paso.** Añade `WithSummary` y `Produces` a los GET existentes y conserva el cuerpo de cada manejador. Para la colección corresponde 200 con `IEnumerable<OrdenDto>`; para el detalle corresponde 200 con `OrdenDto` y alternativa 404.
 
 **Por qué funciona así.** Los metadatos de una operación declaran rutas, respuestas y esquemas; son documentación de un comportamiento que ya fue implementado y probado.
 
@@ -2368,6 +2354,8 @@ pueden estar registrados y, sin embargo, /swagger devolver 404.
 
 **Referencia de código:** `DocumentacionExtensions.cs`, `Program.cs` o `ContratoOpenApiTests.cs` según el caso. La prueba debe leer el documento generado, no un texto YAML escrito a mano.
 
+**Construcción y evidencia del paso.** En el POST añade declaraciones de respuesta 201 y `ValidationProblem(400)` que correspondan al código que ejecuta la etapa 2.3; conserva 422 como regla de capacidad.
+
 **Por qué funciona así.** Los metadatos de una operación declaran rutas, respuestas y esquemas; son documentación de un comportamiento que ya fue implementado y probado.
 
 **Verificación concreta.** Swagger enumera creación y error de contrato. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
@@ -2382,6 +2370,8 @@ pueden estar registrados y, sin embargo, /swagger devolver 404.
 
 **Referencia de código:** `DocumentacionExtensions.cs`, `Program.cs` o `ContratoOpenApiTests.cs` según el caso. La prueba debe leer el documento generado, no un texto YAML escrito a mano.
 
+**Construcción y evidencia del paso.** Revisa PUT y PATCH en `Program.cs` y documenta sus respuestas reales: PUT 204, 404, 400, 409 y 422; PATCH 200, 404, 400, 409 y 422. Declara esos metadatos sin cambiar las ramas de ejecución.
+
 **Por qué funciona así.** Los metadatos de una operación declaran rutas, respuestas y esquemas; son documentación de un comportamiento que ya fue implementado y probado.
 
 **Verificación concreta.** La documentación debe coincidir con los Results usados. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
@@ -2395,6 +2385,8 @@ pueden estar registrados y, sin embargo, /swagger devolver 404.
 **Acciones guiadas.** Documenta DELETE y el conflicto 409 de órdenes finalizadas. Trabaja sobre la copia de tu solución de esta etapa y guarda el archivo antes de ejecutar la aplicación. Cuando el código usa `MapGet`, `MapPost`, `MapPut`, `MapPatch` o `MapDelete`, consulta también la tabla de verbos del punto para justificar la URI y la respuesta.
 
 **Referencia de código:** `DocumentacionExtensions.cs`, `Program.cs` o `ContratoOpenApiTests.cs` según el caso. La prueba debe leer el documento generado, no un texto YAML escrito a mano.
+
+**Construcción y evidencia del paso.** Documenta DELETE con 204, 404 y 409, y el endpoint `finalizar` con 200, 404 y 409. Un código anunciado por Swagger debe estar respaldado por una rama de ejecución o un comportamiento del framework.
 
 **Por qué funciona así.** Los metadatos de una operación declaran rutas, respuestas y esquemas; son documentación de un comportamiento que ya fue implementado y probado.
 
@@ -2412,54 +2404,25 @@ pueden estar registrados y, sin embargo, /swagger devolver 404.
 
 
 ```csharp
-using AceriaApp.Api.Contratos;
-using Microsoft.OpenApi.Any;
-using Microsoft.OpenApi.Models;
-using Swashbuckle.AspNetCore.SwaggerGen;
-namespace AceriaApp.Api.Documentacion;
-// INICIO PASO 2.4.3
-public static class DocumentacionExtensions
-{
-    public static IServiceCollection AddDocumentacion(this IServiceCollection services)
-    {
-        services.AddEndpointsApiExplorer();
-        services.AddSwaggerGen(options=>
-        {
-            options.SwaggerDoc("v1",new OpenApiInfo{
-                Title="AceriaApp — Órdenes de producción",Version="v1",
-                Description="API REST educativa creada con ASP.NET Core 8.",
-                Contact=new OpenApiContact{Name="Equipo AceriaApp",Email="equipo@acerialocal"}
-            });
-            options.SchemaFilter<EjemploCrearOrden>();
-        });
-        return services;
-    }
-    public static WebApplication UseDocumentacion(this WebApplication app)
-    {
-        if(app.Environment.IsDevelopment())
-        {
-            app.UseSwagger();
-            app.UseSwaggerUI(o=>o.SwaggerEndpoint("/swagger/v1/swagger.json","AceriaApp v1"));
-        }
-        return app;
-    }
-}
-// FIN PASO 2.4.3
-// INICIO PASO 2.4.5
+// Añade al archivo, fuera de la clase DocumentacionExtensions:
 public sealed class EjemploCrearOrden : ISchemaFilter
 {
-    public void Apply(OpenApiSchema schema,SchemaFilterContext context)
+    public void Apply(OpenApiSchema schema, SchemaFilterContext context)
     {
-        if(context.Type!=typeof(CrearOrdenRequest)) return;
-        schema.Example=new OpenApiObject{
-            ["cliente"]=new OpenApiString("ACX-001"),
-            ["material"]=new OpenApiString("CHAPA-3MM"),
-            ["cantidad"]=new OpenApiInteger(10)
+        if (context.Type != typeof(CrearOrdenRequest)) return;
+        schema.Example = new OpenApiObject
+        {
+            ["cliente"] = new OpenApiString("ACX-001"),
+            ["material"] = new OpenApiString("CHAPA-3MM"),
+            ["cantidad"] = new OpenApiInteger(10)
         };
     }
 }
-// FIN PASO 2.4.5
+// Dentro de AddSwaggerGen(options => {...}), agrega:
+options.SchemaFilter<EjemploCrearOrden>();
 ```
+
+**Secuencia de construcción.** Importa `AceriaApp.Api.Contratos`, `Microsoft.OpenApi.Any`, `Microsoft.OpenApi.Models` y `Swashbuckle.AspNetCore.SwaggerGen`. Esta es la última ampliación del archivo que lo deja equivalente a la solución de 2.4.
 
 **Por qué funciona así.** Un ejemplo JSON ilustra el contrato de entrada. Swagger UI permite usarlo para enviar una petición real, pero no crea datos hasta ejecutar el endpoint.
 
@@ -2475,6 +2438,8 @@ public sealed class EjemploCrearOrden : ISchemaFilter
 
 **Referencia de código:** `DocumentacionExtensions.cs`, `Program.cs` o `ContratoOpenApiTests.cs` según el caso. La prueba debe leer el documento generado, no un texto YAML escrito a mano.
 
+**Construcción y evidencia del paso.** Ejecuta la API, solicita el documento JSON real y busca `components.schemas.CrearOrdenRequest.example`. El ejemplo proviene del SchemaFilter, no de una orden almacenada.
+
 **Por qué funciona así.** Un ejemplo JSON ilustra el contrato de entrada. Swagger UI permite usarlo para enviar una petición real, pero no crea datos hasta ejecutar el endpoint.
 
 **Verificación concreta.** El ejemplo aparece en la sección reusable de esquemas. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
@@ -2489,6 +2454,8 @@ public sealed class EjemploCrearOrden : ISchemaFilter
 
 **Referencia de código:** `DocumentacionExtensions.cs`, `Program.cs` o `ContratoOpenApiTests.cs` según el caso. La prueba debe leer el documento generado, no un texto YAML escrito a mano.
 
+**Construcción y evidencia del paso.** Desde Swagger UI envía un POST con los datos del ejemplo y comprueba 201 y la cabecera `Location`. La interfaz no cambia el comportamiento del endpoint, solamente lo facilita.
+
 **Por qué funciona así.** Un ejemplo JSON ilustra el contrato de entrada. Swagger UI permite usarlo para enviar una petición real, pero no crea datos hasta ejecutar el endpoint.
 
 **Verificación concreta.** Se crea un recurso de verdad desde el explorador HTTP. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
@@ -2502,6 +2469,8 @@ public sealed class EjemploCrearOrden : ISchemaFilter
 **Acciones guiadas.** Copia el GUID obtenido y ejecuta GET de detalle desde la UI. Trabaja sobre la copia de tu solución de esta etapa y guarda el archivo antes de ejecutar la aplicación. Cuando el código usa `MapGet`, `MapPost`, `MapPut`, `MapPatch` o `MapDelete`, consulta también la tabla de verbos del punto para justificar la URI y la respuesta.
 
 **Referencia de código:** `DocumentacionExtensions.cs`, `Program.cs` o `ContratoOpenApiTests.cs` según el caso. La prueba debe leer el documento generado, no un texto YAML escrito a mano.
+
+**Construcción y evidencia del paso.** Utiliza el `Guid` de la orden creada para ejecutar GET por id desde Swagger UI. Debes obtener 200 con los mismos datos que devolvió POST.
 
 **Por qué funciona así.** Un ejemplo JSON ilustra el contrato de entrada. Swagger UI permite usarlo para enviar una petición real, pero no crea datos hasta ejecutar el endpoint.
 
@@ -2519,44 +2488,24 @@ public sealed class EjemploCrearOrden : ISchemaFilter
 
 
 ```csharp
-using System.Net;
-using System.Text.Json;
-using Microsoft.AspNetCore.Hosting;
-using Xunit;
-namespace AceriaApp.Api.Tests;
-// INICIO PASO 2.4.8: abrir OpenAPI JSON REAL mediante HTTP.
-public class ContratoOpenApiTests
+// Dentro de tests/AceriaApp.Api.Tests/ContratoOpenApiTests.cs:
+[Fact]
+public async Task OpenApi_ContieneRutasYVersion()
 {
-    [Fact] public async Task OpenApi_ContieneRutasYVersion()
-    {
-        using var f=new ApiFactory();
-        var r=await f.CreateClient().GetAsync("/swagger/v1/swagger.json");
-        Assert.Equal(HttpStatusCode.OK,r.StatusCode);
-        using var json=JsonDocument.Parse(await r.Content.ReadAsStringAsync());
-        Assert.Equal("v1",json.RootElement.GetProperty("info").GetProperty("version").GetString());
-        var paths=json.RootElement.GetProperty("paths");
-        Assert.True(paths.TryGetProperty("/api/v1/ordenes",out var resource));
-        Assert.True(resource.TryGetProperty("get",out _));
-        Assert.True(resource.TryGetProperty("post",out _));
-    }
-    [Fact] public async Task OpenApi_IncluyeEjemplo()
-    {
-        using var f=new ApiFactory();
-        var r=await f.CreateClient().GetAsync("/swagger/v1/swagger.json");
-        using var json=JsonDocument.Parse(await r.Content.ReadAsStringAsync());
-        var schemas=json.RootElement.GetProperty("components").GetProperty("schemas");
-        Assert.True(schemas.TryGetProperty("CrearOrdenRequest",out var schema));
-        Assert.True(schema.TryGetProperty("example",out _));
-    }
-    [Fact] public async Task Produccion_NoExponeSwagger()
-    {
-        using var f=new ApiFactory();
-        using var other=f.WithWebHostBuilder(b=>b.UseEnvironment("Production"));
-        var r=await other.CreateClient().GetAsync("/swagger/v1/swagger.json");
-        Assert.Equal(HttpStatusCode.NotFound,r.StatusCode);
-    }
+    using var f = new ApiFactory();
+    var r = await f.CreateClient().GetAsync("/swagger/v1/swagger.json");
+    Assert.Equal(HttpStatusCode.OK, r.StatusCode);
+    using var json = JsonDocument.Parse(await r.Content.ReadAsStringAsync());
+    Assert.Equal("v1",
+        json.RootElement.GetProperty("info").GetProperty("version").GetString());
+    var paths = json.RootElement.GetProperty("paths");
+    Assert.True(paths.TryGetProperty("/api/v1/ordenes", out var resource));
+    Assert.True(resource.TryGetProperty("get", out _));
+    Assert.True(resource.TryGetProperty("post", out _));
 }
 ```
+
+**Secuencia de construcción.** Crea la clase de tests y sus `using` (`System.Net`, `System.Text.Json`, `Xunit`). Los siguientes pasos amplían esa misma clase: no pegues tres declaraciones diferentes de `ContratoOpenApiTests`.
 
 **Por qué funciona así.** Descargar el JSON OpenAPI con WebApplicationFactory y comprobar info, paths y schemas es una prueba contractual real; en Production debe respetarse el 404.
 
@@ -2572,6 +2521,8 @@ public class ContratoOpenApiTests
 
 **Referencia de código:** `DocumentacionExtensions.cs`, `Program.cs` o `ContratoOpenApiTests.cs` según el caso. La prueba debe leer el documento generado, no un texto YAML escrito a mano.
 
+**Construcción y evidencia del paso.** En el test `OpenApi_ContieneRutasYVersion` de 2.4.20 comprueba `info.version=v1`, `paths[/api/v1/ordenes].get` y `post`. No crees otro proyecto ni otro documento YAML.
+
 **Por qué funciona así.** Descargar el JSON OpenAPI con WebApplicationFactory y comprobar info, paths y schemas es una prueba contractual real; en Production debe respetarse el 404.
 
 **Verificación concreta.** Un cambio de ruta erróneo hace fallar el contrato. Usa la herramienta HTTP o el depurador solo si este paso interactúa con una ruta; los cambios de configuración y modelo se verifican primero con la compilación.
@@ -2585,6 +2536,8 @@ public class ContratoOpenApiTests
 **Acciones guiadas.** Agrega un test que compruebe CrearOrdenRequest y su propiedad example en components.schemas. Trabaja sobre la copia de tu solución de esta etapa y guarda el archivo antes de ejecutar la aplicación. Cuando el código usa `MapGet`, `MapPost`, `MapPut`, `MapPatch` o `MapDelete`, consulta también la tabla de verbos del punto para justificar la URI y la respuesta.
 
 **Referencia de código:** `DocumentacionExtensions.cs`, `Program.cs` o `ContratoOpenApiTests.cs` según el caso. La prueba debe leer el documento generado, no un texto YAML escrito a mano.
+
+**Construcción y evidencia del paso.** Añade `OpenApi_IncluyeEjemplo` a la clase de tests existente y verifica el `example` dentro del esquema `CrearOrdenRequest`. Ejecuta pruebas para confirmar que Swagger se genera desde la aplicación.
 
 **Por qué funciona así.** Descargar el JSON OpenAPI con WebApplicationFactory y comprobar info, paths y schemas es una prueba contractual real; en Production debe respetarse el 404.
 
@@ -2600,6 +2553,8 @@ public class ContratoOpenApiTests
 
 **Referencia de código:** `DocumentacionExtensions.cs`, `Program.cs` o `ContratoOpenApiTests.cs` según el caso. La prueba debe leer el documento generado, no un texto YAML escrito a mano.
 
+**Construcción y evidencia del paso.** Añade `Produccion_NoExponeSwagger` usando `WithWebHostBuilder(b => b.UseEnvironment("Production"))`. La petición a `/swagger/v1/swagger.json` debe devolver 404, mientras el documento está disponible en Development.
+
 **Por qué funciona así.** Descargar el JSON OpenAPI con WebApplicationFactory y comprobar info, paths y schemas es una prueba contractual real; en Production debe respetarse el 404.
 
 **Verificación concreta.** El endpoint no se publica y responde 404. Ejecuta además las pruebas xUnit del proyecto de esta etapa para confirmar que el ejercicio no ha roto los endpoints anteriores.
@@ -2613,6 +2568,8 @@ public class ContratoOpenApiTests
 **Acciones guiadas.** Reto: añade un resumen específico a PATCH y comprueba que paths muestra summary actualizado. Trabaja sobre la copia de tu solución de esta etapa y guarda el archivo antes de ejecutar la aplicación. Cuando el código usa `MapGet`, `MapPost`, `MapPut`, `MapPatch` o `MapDelete`, consulta también la tabla de verbos del punto para justificar la URI y la respuesta.
 
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.4-documentacion-openapi` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
+
+**Construcción y evidencia del paso.** Reto opcional: cambia el `WithSummary` del endpoint PATCH y verifica que la propiedad `summary` del documento JSON adopta el nuevo texto. No edites el JSON como si fuera fuente.
 
 **Por qué funciona así.** Cambiar un WithSummary y ver reflejada la modificación en el JSON demuestra la vinculación de la documentación con el código ejecutado.
 
