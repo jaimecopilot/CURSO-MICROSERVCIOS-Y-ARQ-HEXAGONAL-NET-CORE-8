@@ -5,7 +5,7 @@
 
 ## Objetivo
 
-el documento de capas de la aplicación es el artefacto de `docs` específico del punto 3.1. No modifica los trece documentos existentes del punto 2.4.
+el documento de capas de la aplicación es el artefacto de `docs` específico del punto 3.1. Se crea en este punto y conserva intactos los archivos heredados de M02 2.4.
 
 ## Estado verificado del punto
 

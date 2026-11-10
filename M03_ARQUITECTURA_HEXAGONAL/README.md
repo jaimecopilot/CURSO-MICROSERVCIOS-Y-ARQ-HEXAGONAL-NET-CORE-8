@@ -21,4 +21,4 @@ Los cuatro puntos de M03 usan las carpetas 3.1, 3.2, 3.3 y 3.4 autónomas, mante
 python3 .github/scripts/m03_e2e_desde_practicas.py --out M03_ARQUITECTURA_HEXAGONAL/M03_E2E_RESULTADOS.json
 ```
 
-Este comprobador copia exclusivamente el **punto 2.4 aprobado de M02**, reconstruye cada etapa de M03 leyendo los 96 pasos del Markdown y ejecuta compilaciones y pruebas. Los pasos exclusivamente manuales de Visual Studio se documentan con evidencia esperada, pero no se afirma haber ejecutado clics en el IDE. El workflow publica los proyectos y los PDF solo después de que el E2E se complete correctamente.
+Este comprobador copia exclusivamente el **punto 2.4 aprobado de M02**, reconstruye cada etapa de M03 leyendo los 96 pasos del Markdown y ejecuta compilaciones y pruebas. Después aplica y prueba los cuatro retos optativos en copias temporales independientes, conservando intactos los proyectos obligatorios. Los pasos exclusivamente manuales de Visual Studio se documentan con evidencia esperada, pero no se afirma haber ejecutado clics en el IDE. El workflow publica los proyectos y los PDF solo después de que el E2E se complete correctamente.

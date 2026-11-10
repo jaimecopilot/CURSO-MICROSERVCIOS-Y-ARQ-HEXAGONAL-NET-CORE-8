@@ -6,7 +6,8 @@ partida y aplica en orden las operaciones tipadas M03_CODIGO del manual.
 Compila en puntos intermedios y ejecuta las pruebas xUnit acumuladas.
 """
 from __future__ import annotations
-import argparse, hashlib, json, os, re, shutil, subprocess, sys
+import argparse, hashlib, json, os, re, shutil, subprocess, sys, tempfile, textwrap
+import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -150,6 +151,66 @@ def build_and_test(stage:Path,expected:int):
        f'Pruebas del punto: esperado {expected}, PASS={found}, Total={totals}, fallidas={failed}\n{outcome[-3500:]}')
  return {'tests':found,'test_projects':len(matches),'build_tail':log[-250:]}
 
+def verify_challenges(projects:Path,source:str):
+ """Ejecuta los fragmentos optativos del manual en copias de cada etapa."""
+ sections=source.split('## Reto de ampliación (optativo)')[1:]
+ check(len(sections)==4,'Deben existir cuatro retos optativos')
+ before={str(p):disk_sha(p) for p in projects.rglob('*') if p.is_file()
+         and not any(x in p.parts for x in ('bin','obj','TestResults'))}
+ results=[]
+ ns={'t':'http://microsoft.com/schemas/VisualStudio/TeamTest/2010'}
+ for n,(slug,section) in enumerate(zip(STAGES,sections),1):
+  entry={'punto':f'3.{n}','estado':'FAIL'}
+  try:
+   section=section.split('## Resultado verificable',1)[0]
+   blocks=re.findall(r'```csharp\n([\s\S]*?)\n```',section)
+   check(len(blocks)==3,f'Reto 3.{n}: se esperan record, método y test')
+   validator=re.search(r'\*\*Paso 1:\*\* En `([^`]+)`',section).group(1)
+   testfile=re.search(r'\*\*Paso 6:\*\* En `([^`]+)`',section).group(1)
+   testproject=re.search(r'`dotnet test ([^`]+)`',section).group(1).replace('\\','/')
+   expected=int(re.search(r'\*\*Verificación:\*\*.*?Passed: (\d+)',section).group(1))
+   with tempfile.TemporaryDirectory(prefix=f'm03-reto-{n}-') as temporary:
+    stage=Path(temporary)/slug
+    copy_project(projects/slug,stage)
+    paths=[]
+    for folder,name,block in [('src',validator,blocks[1]),('tests',testfile,blocks[2])]:
+     candidates=list((stage/folder).rglob(name))
+     check(len(candidates)==1,f'Destino ambiguo del reto: {name}')
+     dest=candidates[0];content=dest.read_text(encoding='utf-8')
+     endings=list(re.finditer(r'^}\s*$',content,re.M))
+     check(len(endings)==1,f'Se esperaba una clase con un cierre principal: {name}')
+     at=endings[0].start()
+     content=content[:at]+'\n'+textwrap.indent(block,'    ')+'\n'+content[at:]
+     if folder=='src':content=content.rstrip()+'\n\n'+blocks[0]+'\n'
+     dest.write_text(content,encoding='utf-8');paths.append(str(dest.relative_to(stage)))
+    command('dotnet','restore','AceriaApp.sln',cwd=stage)
+    command('dotnet','build','AceriaApp.sln','-c','Release','--no-restore',cwd=stage)
+    command('dotnet','test','AceriaApp.sln','-c','Release','--no-build','--no-restore',
+            '--logger','trx','--results-directory','TestResults',cwd=stage)
+    total=0;target_count=None;summary_pass=False
+    for trx in (stage/'TestResults').glob('*.trx'):
+     xml=ET.parse(trx);tests=xml.findall('.//t:UnitTestResult',ns)
+     check(tests and all(t.get('outcome')=='Passed' for t in tests),f'Pruebas fallidas u omitidas: {trx.name}')
+     total+=len(tests)
+     methods=xml.findall('.//t:TestMethod',ns)
+     if any(m.get('className','').startswith(Path(testproject).stem+'.') for m in methods):
+      check(target_count is None,'Resultados duplicados del proyecto del reto')
+      target_count=len(tests)
+      summary_pass=any(t.get('testName','').endswith('Resumen_ConCatalogoPorDefecto_CuentaCorrectamente') for t in tests)
+    check(total==EXPECTED[n-1]+1,f'Reto 3.{n}: total {total}, esperado {EXPECTED[n-1]+1}')
+    check(target_count==expected and summary_pass,f'Reto 3.{n}: no se verificó el resultado del manual')
+    entry.update(estado='PASS',tests_proyecto=target_count,tests_solucion=total,
+                 fragmentos_csharp=3,archivos=paths,test_resumen='PASS')
+  except Exception as exc:
+   entry['error']=str(exc)
+  results.append(entry)
+  print(json.dumps(entry,ensure_ascii=False),flush=True)
+ after={str(p):disk_sha(p) for p in projects.rglob('*') if p.is_file()
+        and not any(x in p.parts for x in ('bin','obj','TestResults'))}
+ check(before==after,'Los retos han alterado las etapas obligatorias')
+ return {'resultado':'PASS' if all(r['estado']=='PASS' for r in results) else 'FAIL',
+         'etapas_obligatorias_intactas':True,'retos':results}
+
 def main():
  p=argparse.ArgumentParser()
  p.add_argument('--out',type=Path,default=BASE/'M03_E2E_RESULTADOS.json')
@@ -201,6 +262,9 @@ def main():
    previous=stage
   check(len(report['pasos'])==96,'No se han visitado los 96 pasos')
   check(all(x['estado']=='PASS' for x in report['etapas']) or args.no_tests,'Etapa incompleta')
+  if not args.no_tests:
+   report['retos_optativos']=verify_challenges(output,source)
+   check(report['retos_optativos']['resultado']=='PASS','Hay retos optativos sin superar')
   report['resumen']={'resultado':'PASS' if not args.no_tests else 'SIN_TESTS','pasos':96,
       'operaciones_codigo':len(codes),'builds_intermedios':sum(x['builds_intermedios'] for x in report['etapas']),
       'tests_por_etapa':EXPECTED}

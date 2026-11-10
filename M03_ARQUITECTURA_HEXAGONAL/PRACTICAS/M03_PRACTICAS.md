@@ -26,7 +26,7 @@ El alumnado continúa el proyecto AceriaApp que culminó en **M02 2.4**. Cada ap
 ---
 # Punto 3.1 — Capas de la aplicación
 
-**Objetivos del punto.** el documento de capas de la aplicación es el artefacto de `docs` específico del punto 3.1. No modifica los trece documentos existentes del punto 2.4.
+**Objetivos del punto.** el documento de capas de la aplicación es el artefacto de `docs` específico del punto 3.1. Se crea en este punto y conserva intactos los archivos heredados de M02 2.4.
 
 **Carpeta de trabajo:** `M03_ARQUITECTURA_HEXAGONAL/PROYECTO/3.1-capas-aplicacion`. Esta etapa continúa la anterior sin alterar su copia. El código de la referencia es un resultado final, no una solución que el alumno deba pegar al inicio.
 
@@ -55,7 +55,7 @@ El alumnado continúa el proyecto AceriaApp que culminó en **M02 2.4**. Cada ap
 
 **Por qué funciona así.** cada punto del curso parte del contenido del punto anterior. El punto 3.1 es el primer punto del módulo 3 y parte del punto 2.4, que es el último punto del módulo 2. La copia se hace en la carpeta del módulo 3.
 
-**Verificación concreta.** al ejecutar `dir modulo-3-arquitectura-hexagonal\3.1-capas-aplicacion`, deben aparecer `AceriaApp.sln`, `README.md`, `src`, `tests` y `docs`.
+**Verificación concreta.** Desde la raíz del repositorio, ejecuta `dir M03_ARQUITECTURA_HEXAGONAL\PROYECTO\3.1-capas-aplicacion`. Deben aparecer `README.md`, `src`, `tests`, `AceriaApp.http` y el nuevo `global.json`. La solución se crea en el paso 2 y la carpeta `docs` en el paso 3.
 
 **Diagnóstico si falla.**
 
@@ -86,30 +86,30 @@ El alumnado continúa el proyecto AceriaApp que culminó en **M02 2.4**. Cada ap
 
 - Abrir la solución del punto 2.4 en lugar de la del punto 3.1: los cambios se aplican al punto equivocado.
 - No compilar antes de empezar: si la copia tiene errores, los cambios posteriores fallan.
-- Tener la API del punto 2.4 en ejecución: el puerto queda ocupado y la compilación falla.
+- Tener la API en ejecución mientras Windows bloquea sus archivos de salida: detén la aplicación antes de recompilar.
 
 
-### PASO 3.1.3 — Verificar que la carpeta `docs` contiene los documentos del punto 2.4
+### PASO 3.1.3 — Preparar la carpeta `docs` para la documentación de arquitectura
 
-**Resultado de aprendizaje.** Verificar que la carpeta `docs` contiene los documentos del punto 2.4. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
+**Resultado de aprendizaje.** Preparar la carpeta `docs` para la documentación de arquitectura. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
 
 **Procedimiento guiado.**
 
 1. Abre `docs` dentro de `3.1-capas-aplicacion`. Si es la primera etapa y no existe, créala: botón derecho sobre la raíz del punto y `Agregar > Nueva carpeta`.
-2. Comprueba que los documentos de la etapa anterior no se han modificado. A partir de aquí se añade una nueva decisión y un nuevo documento de diseño.
-3. Anota los nombres de los documentos que recibes y los que crearás: `capas-aplicacion.md` y `ADR-010-capas-aplicacion.md`.
-4. No reescribas un ADR anterior para explicar un diseño nuevo. Comprueba que los documentos heredados mantienen su contenido entre etapas.
+2. La base M02 2.4 conserva su documentación en `README.md`; no incorpora una carpeta `docs`. Comprueba que ese README sigue presente en la copia.
+3. Anota los dos documentos nuevos que crearás durante este punto: `capas-aplicacion.md` y `ADR-010-capas-aplicacion.md`.
+4. Deja `docs` preparada y vacía. El documento de diseño se añadirá en el paso 4 y el ADR en el paso 20; las etapas posteriores heredarán ambos.
 
 
-**Por qué funciona así.** el punto 3.1 parte del contenido del punto 2.4, que ya incluye la carpeta `docs` con trece documentos. No se modifica ningún documento existente.
+**Por qué funciona así.** el punto 3.1 incorpora documentación específica de arquitectura a la API de M02. Crear `docs` en la copia mantiene intacto el punto anterior.
 
-**Verificación concreta.** la carpeta `docs` contiene los trece documentos del punto 2.4 sin modificaciones.
+**Verificación concreta.** la carpeta `docs` existe dentro de `3.1-capas-aplicacion`, está vacía al terminar este paso y los archivos de M02 permanecen intactos.
 
 **Diagnóstico si falla.**
 
-- Modificar alguno de los ADR o documentos existentes: viola la regla de no modificar archivos del punto anterior.
-- Eliminar algún documento existente: pierde la trazabilidad del punto 2.4.
-- Crear la carpeta `docs` si ya existe: `mkdir` falla.
+- Crear `docs` dentro de M02: comprueba que trabajas en la copia del punto 3.1.
+- Eliminar `README.md`: conserva ese archivo hasta su actualización guiada en el paso 19.
+- Repetir la creación si `docs` ya existe: abre la carpeta y revisa su contenido antes de continuar.
 
 
 ### PASO 3.1.4 — Crear el documento de capas de la aplicación en `docs`
@@ -183,7 +183,7 @@ Núcleo central con dominio y aplicación, rodeado de puertos y adaptadores. Un 
 La implementación de partida no es `AceriaApp.Monolito.Api`, sino la Minimal API del proyecto `M02_APIS_REST_ASPNET_CORE/PROYECTO/2.4-documentacion-openapi`. Los ejemplos de esta ficha describen conceptos de diseño; su implementación real se incorpora al código en 3.3 y 3.4, con puertos de aplicación e infraestructura SQL Server. No se considera registrado un adaptador solo por mencionarlo en un catálogo.
 ```
 
-**Por qué funciona así.** el documento de capas de la aplicación es el artefacto de `docs` específico del punto 3.1. No modifica los trece documentos existentes del punto 2.4.
+**Por qué funciona así.** el documento de capas de la aplicación es el artefacto de `docs` específico del punto 3.1. Se crea en este punto y conserva intactos los archivos heredados de M02 2.4.
 
 **Verificación concreta.** el archivo `docs\capas-aplicacion.md` existe con las nueve secciones.
 
@@ -194,9 +194,9 @@ La implementación de partida no es `AceriaApp.Monolito.Api`, sino la Minimal AP
 - Guardar el archivo en la raíz del punto en lugar de `docs`: rompe la estructura del repositorio.
 
 
-### PASO 3.1.5 — Crear la carpeta `Capas` en el proyecto monolítico
+### PASO 3.1.5 — Crear la carpeta `Capas` en el proyecto `AceriaApp.Api`
 
-**Resultado de aprendizaje.** Crear la carpeta `Capas` en el proyecto monolítico. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
+**Resultado de aprendizaje.** Crear la carpeta `Capas` en el proyecto `AceriaApp.Api`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
 
 **Procedimiento guiado.**
 
@@ -442,9 +442,9 @@ public class CatalogoCapas
 - Usar `dotnet new mstest`: el curso usa xUnit.
 
 
-### PASO 3.1.12 — Añadir la referencia del proyecto de tests a la API monolítica
+### PASO 3.1.12 — Añadir la referencia del proyecto de tests a la API `AceriaApp.Api`
 
-**Resultado de aprendizaje.** Añadir la referencia del proyecto de tests a la API monolítica. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
+**Resultado de aprendizaje.** Añadir la referencia del proyecto de tests a la API `AceriaApp.Api`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
 
 **Procedimiento guiado.**
 
@@ -454,7 +454,7 @@ public class CatalogoCapas
 4. No dupliques `ProjectReference` si la referencia ya está preparada en el XML del paso 11.
 
 
-**Por qué funciona así.** la referencia permite que el proyecto de tests acceda a las clases de `Capas` del proyecto monolítico.
+**Por qué funciona así.** la referencia permite que el proyecto de tests acceda a las clases de `Capas` del proyecto `AceriaApp.Api`.
 
 **Verificación concreta.** El proyecto de tests `AceriaApp.Capas.Tests` restaura, referencia a `AceriaApp.Api` y no sustituye ninguna suite heredada.
 
@@ -720,7 +720,7 @@ public class CatalogoCapasTests
 
 ## Objetivo
 
-el documento de capas de la aplicación es el artefacto de `docs` específico del punto 3.1. No modifica los trece documentos existentes del punto 2.4.
+el documento de capas de la aplicación es el artefacto de `docs` específico del punto 3.1. Se crea en este punto y conserva intactos los archivos heredados de M02 2.4.
 
 ## Estado verificado del punto
 
@@ -900,7 +900,7 @@ TestResults/
 4. Conserva el resumen de pruebas y compara el proyecto final con la carpeta de referencia del punto; ambas deben representar el mismo código.
 
 
-**Por qué funciona así.** el commit del punto 3.1 registra el estado acumulado del proyecto. Los diez commits consecutivos permiten comparar el estado del proyecto entre puntos consecutivos y entre módulos completos.
+**Por qué funciona así.** el commit del punto 3.1 registra el estado acumulado del proyecto. Los commits de cada punto permiten comparar el estado del proyecto entre puntos consecutivos y entre módulos completos.
 
 **Verificación concreta.** El punto termina con compilación y suite de pruebas completa, sin modificar la referencia de la etapa anterior.
 
@@ -915,7 +915,7 @@ TestResults/
 
 Esta ampliación añade una operación de resumen al validador y una prueba de su resultado. **Realízala después de superar la etapa básica y sus tests.** Incorpora cada fragmento en la clase indicada y conserva el namespace del proyecto en el que trabajas.
 
-**Reto:** añadir un método `Resumen` a `ValidadorReglaDependencia` que cuente el número de dependencias permitidas y prohibidas del catálogo, y un test que verifique el cálculo.
+**Reto:** añadir un método `Resumen` a `ValidadorReglaDependencia` que devuelva el número de capas y de dependencias permitidas del catálogo, y un test que verifique el cálculo.
 
 **Paso 1:** En `ValidadorReglaDependencia.cs`, añadir el siguiente `record` al final del archivo:
 
@@ -1156,9 +1156,9 @@ La implementación de partida no es `AceriaApp.Monolito.Api`, sino la Minimal AP
 - Guardar el archivo en la raíz del punto en lugar de `docs`: rompe la estructura del repositorio.
 
 
-### PASO 3.2.5 — Crear la carpeta `PuertosAdaptadores` en el proyecto monolítico
+### PASO 3.2.5 — Crear la carpeta `PuertosAdaptadores` en el proyecto `AceriaApp.Api`
 
-**Resultado de aprendizaje.** Crear la carpeta `PuertosAdaptadores` en el proyecto monolítico. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
+**Resultado de aprendizaje.** Crear la carpeta `PuertosAdaptadores` en el proyecto `AceriaApp.Api`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
 
 **Procedimiento guiado.**
 
@@ -1455,9 +1455,9 @@ public class CatalogoPuertosAdaptadores
 - Usar `dotnet new mstest`: el curso usa xUnit.
 
 
-### PASO 3.2.12 — Añadir la referencia del proyecto de tests a la API monolítica
+### PASO 3.2.12 — Añadir la referencia del proyecto de tests a la API `AceriaApp.Api`
 
-**Resultado de aprendizaje.** Añadir la referencia del proyecto de tests a la API monolítica. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
+**Resultado de aprendizaje.** Añadir la referencia del proyecto de tests a la API `AceriaApp.Api`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
 
 **Procedimiento guiado.**
 
@@ -1467,7 +1467,7 @@ public class CatalogoPuertosAdaptadores
 4. No dupliques `ProjectReference` si la referencia ya está preparada en el XML del paso 11.
 
 
-**Por qué funciona así.** la referencia permite que el proyecto de tests acceda a las clases de `PuertosAdaptadores` del proyecto monolítico.
+**Por qué funciona así.** la referencia permite que el proyecto de tests acceda a las clases de `PuertosAdaptadores` del proyecto `AceriaApp.Api`.
 
 **Verificación concreta.** El proyecto de tests `AceriaApp.PuertosAdaptadores.Tests` restaura, referencia a `AceriaApp.Api` y no sustituye ninguna suite heredada.
 
@@ -1941,7 +1941,7 @@ Se parte de la API real y probada de M02, se conservan sus endpoints y se añade
 4. Conserva el resumen de pruebas y compara el proyecto final con la carpeta de referencia del punto; ambas deben representar el mismo código.
 
 
-**Por qué funciona así.** el commit del punto 3.2 registra el estado acumulado del proyecto. Los once commits consecutivos permiten comparar el estado del proyecto entre puntos consecutivos y entre módulos completos.
+**Por qué funciona así.** el commit del punto 3.2 registra el estado acumulado del proyecto. Los commits de cada punto permiten comparar el estado del proyecto entre puntos consecutivos y entre módulos completos.
 
 **Verificación concreta.** El punto termina con compilación y suite de pruebas completa, sin modificar la referencia de la etapa anterior.
 
@@ -2199,9 +2199,9 @@ La implementación de partida no es `AceriaApp.Monolito.Api`, sino la Minimal AP
 - Guardar el archivo en la raíz del punto en lugar de `docs`: rompe la estructura del repositorio.
 
 
-### PASO 3.3.5 — Crear la carpeta `SeparacionCapas` en el proyecto monolítico
+### PASO 3.3.5 — Crear la carpeta `SeparacionCapas` en el proyecto `AceriaApp.Api`
 
-**Resultado de aprendizaje.** Crear la carpeta `SeparacionCapas` en el proyecto monolítico. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
+**Resultado de aprendizaje.** Crear la carpeta `SeparacionCapas` en el proyecto `AceriaApp.Api`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
 
 **Procedimiento guiado.**
 
@@ -2682,9 +2682,9 @@ public static class ServiciosHexagonales
 - Usar `dotnet new mstest`: el curso usa xUnit.
 
 
-### PASO 3.3.12 — Añadir la referencia del proyecto de tests a la API monolítica
+### PASO 3.3.12 — Añadir la referencia del proyecto de tests a la API `AceriaApp.Api`
 
-**Resultado de aprendizaje.** Añadir la referencia del proyecto de tests a la API monolítica. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
+**Resultado de aprendizaje.** Añadir la referencia del proyecto de tests a la API `AceriaApp.Api`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
 
 **Procedimiento guiado.**
 
@@ -2704,7 +2704,7 @@ public static class ServiciosHexagonales
   </ItemGroup>
 ```
 
-**Por qué funciona así.** la referencia permite que el proyecto de tests acceda a las clases de `SeparacionCapas` del proyecto monolítico.
+**Por qué funciona así.** la referencia permite que el proyecto de tests acceda a las clases de `SeparacionCapas` del proyecto `AceriaApp.Api`.
 
 **Verificación concreta.** El proyecto de tests `AceriaApp.SeparacionCapas.Tests` restaura, referencia a `AceriaApp.Api` y no sustituye ninguna suite heredada.
 
@@ -3160,7 +3160,7 @@ Se parte de la API real y probada de M02, se conservan sus endpoints y se añade
 4. Conserva el resumen de pruebas y compara el proyecto final con la carpeta de referencia del punto; ambas deben representar el mismo código.
 
 
-**Por qué funciona así.** el commit del punto 3.3 registra el estado acumulado del proyecto. Los doce commits consecutivos permiten comparar el estado del proyecto entre puntos consecutivos y entre módulos completos.
+**Por qué funciona así.** el commit del punto 3.3 registra el estado acumulado del proyecto. Los commits de cada punto permiten comparar el estado del proyecto entre puntos consecutivos y entre módulos completos.
 
 **Verificación concreta.** El punto termina con compilación y suite de pruebas completa, sin modificar la referencia de la etapa anterior.
 
@@ -3220,7 +3220,7 @@ public void Resumen_ConCatalogoPorDefecto_CuentaCorrectamente()
     var resumen = _validador.Resumen(CatalogoProyectos.ProyectosPorDefecto());
 
     resumen.Proyectos.Should().Be(4);
-    resumen.Referencias.Should().Be(4);
+    resumen.Referencias.Should().Be(5);
 }
 ```
 
@@ -3231,7 +3231,7 @@ public void Resumen_ConCatalogoPorDefecto_CuentaCorrectamente()
 - **Línea 3:** `{` → abre el cuerpo.
 - **Línea 4:** `var resumen = _validador.Resumen(CatalogoProyectos.ProyectosPorDefecto());` → invoca el método.
 - **Línea 5:** `resumen.Proyectos.Should().Be(4);` → verifica el número de proyectos.
-- **Línea 6:** `resumen.Referencias.Should().Be(4);` → verifica el número de referencias.
+- **Línea 6:** `resumen.Referencias.Should().Be(5);` → verifica las cinco referencias: una de Aplicación, dos de Infraestructura y dos de la API.
 - **Línea 7:** `}` → cierra el cuerpo.
 
 **Paso 8:** Ejecutar `dotnet test tests\AceriaApp.SeparacionCapas.Tests\AceriaApp.SeparacionCapas.Tests.csproj` y verificar que pasan los ocho tests.
@@ -3415,9 +3415,9 @@ La implementación de partida no es `AceriaApp.Monolito.Api`, sino la Minimal AP
 - Guardar el archivo en la raíz del punto en lugar de `docs`: rompe la estructura del repositorio.
 
 
-### PASO 3.4.5 — Crear la carpeta `Implementacion` en el proyecto monolítico
+### PASO 3.4.5 — Crear la carpeta `Implementacion` en el proyecto `AceriaApp.Api`
 
-**Resultado de aprendizaje.** Crear la carpeta `Implementacion` en el proyecto monolítico. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
+**Resultado de aprendizaje.** Crear la carpeta `Implementacion` en el proyecto `AceriaApp.Api`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
 
 **Procedimiento guiado.**
 
@@ -3774,9 +3774,9 @@ if (app.Environment.IsDevelopment() && !app.Configuration.GetValue<bool>("SkipDa
 - Usar `dotnet new mstest`: el curso usa xUnit.
 
 
-### PASO 3.4.12 — Añadir la referencia del proyecto de tests a la API monolítica
+### PASO 3.4.12 — Añadir la referencia del proyecto de tests a la API `AceriaApp.Api`
 
-**Resultado de aprendizaje.** Añadir la referencia del proyecto de tests a la API monolítica. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
+**Resultado de aprendizaje.** Añadir la referencia del proyecto de tests a la API `AceriaApp.Api`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
 
 **Procedimiento guiado.**
 
@@ -3793,7 +3793,7 @@ if (app.Environment.IsDevelopment() && !app.Configuration.GetValue<bool>("SkipDa
 app.MapHexagonalOrdenes();
 ```
 
-**Por qué funciona así.** la referencia permite que el proyecto de tests acceda a las clases de `Implementacion` del proyecto monolítico.
+**Por qué funciona así.** la referencia permite que el proyecto de tests acceda a las clases de `Implementacion` del proyecto `AceriaApp.Api`.
 
 **Verificación concreta.** GET/POST/finalizar están registrados por el adaptador HTTP y utilizan `OrdenesCasoUso`.
 
@@ -4359,7 +4359,7 @@ Se parte de la API real y probada de M02, se conservan sus endpoints y se añade
 4. Conserva el resumen de pruebas y compara el proyecto final con la carpeta de referencia del punto; ambas deben representar el mismo código.
 
 
-**Por qué funciona así.** el commit del punto 3.4 cierra el módulo 3. Los trece commits consecutivos permiten comparar el estado del proyecto entre puntos consecutivos y entre módulos completos.
+**Por qué funciona así.** el commit del punto 3.4 cierra el módulo 3. Los commits de cada punto permiten comparar el estado del proyecto entre puntos consecutivos y entre módulos completos.
 
 **Verificación concreta.** El punto termina con compilación y suite de pruebas completa, sin modificar la referencia de la etapa anterior.
 
