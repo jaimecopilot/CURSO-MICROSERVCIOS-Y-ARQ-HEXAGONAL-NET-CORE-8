@@ -1142,9 +1142,6 @@ app.MapPost("/api/v1/ordenes/{id:guid}/finalizar",async (Guid id,AceriaDbContext
 .WithName("FinalizarOrden").WithTags("Ordenes")
 
 ;
-
-app.Run();
-public partial class Program {} // permite WebApplicationFactory en tests
 ```
 
 **Construcción y evidencia del paso.** Crea el endpoint POST `/api/v1/ordenes/{id:guid}/finalizar` como una transición explícita. Solo una orden existente y todavía pendiente puede finalizarse; repetir la transición devuelve 409.
