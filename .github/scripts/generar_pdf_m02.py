@@ -45,6 +45,8 @@ hr { border: none; border-top: 1pt solid #d0d9e2; margin: 14pt 0; }
 
 def main():
     source = MD.read_text(encoding="utf-8")
+    if re.search(r"Errores\s+comunes\s+del\s+ejercicio\s+completo",source,flags=re.I):
+        raise RuntimeError("La sección prohibida sigue en el Markdown M02")
     steps = re.findall(r"^### PASO (2\.[1-4]\.\d+) —", source, flags=re.M)
     expected = [f"2.{p}.{n}" for p in range(1, 5) for n in range(1, 25)]
     assert steps == expected, f"Pasos perdidos, duplicados o desordenados: {len(steps)}"
@@ -75,6 +77,8 @@ def main():
     if len(doc) < 30:
         raise RuntimeError("El PDF parece incompleto")
     fulltext = "\n".join(pg.get_text() for pg in doc)
+    if re.search(r"Errores\s+comunes\s+del\s+ejercicio\s+completo",fulltext,flags=re.I):
+        raise RuntimeError("La sección prohibida sigue en el PDF M02")
     for p in range(1,5):
         if f"Punto 2.{p}" not in fulltext:
             raise RuntimeError(f"Falta punto 2.{p} en PDF")
