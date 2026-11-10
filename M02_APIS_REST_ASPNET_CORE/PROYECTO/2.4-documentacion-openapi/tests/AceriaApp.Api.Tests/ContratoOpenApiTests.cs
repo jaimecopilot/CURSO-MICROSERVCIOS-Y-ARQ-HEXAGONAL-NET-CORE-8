@@ -3,7 +3,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Xunit;
 namespace AceriaApp.Api.Tests;
-// INICIO PASO 2.4.8: abrir OpenAPI JSON REAL mediante HTTP.
+// INICIO PASO 2.4.20: abrir OpenAPI JSON REAL mediante HTTP.
 public class ContratoOpenApiTests
 {
     [Fact] public async Task OpenApi_ContieneRutasYVersion()
@@ -18,6 +18,7 @@ public class ContratoOpenApiTests
         Assert.True(resource.TryGetProperty("get",out _));
         Assert.True(resource.TryGetProperty("post",out _));
     }
+    // PASO 2.4.22: esquema y ejemplo.
     [Fact] public async Task OpenApi_IncluyeEjemplo()
     {
         using var f=new ApiFactory();
@@ -27,6 +28,7 @@ public class ContratoOpenApiTests
         Assert.True(schemas.TryGetProperty("CrearOrdenRequest",out var schema));
         Assert.True(schema.TryGetProperty("example",out _));
     }
+    // PASO 2.4.23: documentacion no publicada en Production.
     [Fact] public async Task Produccion_NoExponeSwagger()
     {
         using var f=new ApiFactory();
