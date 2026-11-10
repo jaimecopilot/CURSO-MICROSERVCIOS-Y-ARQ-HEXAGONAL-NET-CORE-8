@@ -49,6 +49,14 @@ def main():
     expected = [f"2.{p}.{n}" for p in range(1, 5) for n in range(1, 25)]
     assert steps == expected, f"Pasos perdidos, duplicados o desordenados: {len(steps)}"
     assert "## Cómo construir las cuatro etapas sin duplicar código" in source
+    # Los bloques C# no pueden anunciar como "INICIO PASO" otro ejercicio.
+    candidates = list(re.finditer(r"^### PASO (2\.[1-4]\.\d+) —", source, re.M))
+    for index, match in enumerate(candidates):
+        body = source[match.end():candidates[index+1].start() if index+1 < len(candidates) else len(source)]
+        for block in re.finditer(r"\`\`\`csharp\n([\s\S]*?)\n\`\`\`", body):
+            for marker in re.findall(r"// INICIO PASO (2\.[1-4]\.\d+)", block.group(1)):
+                assert marker == match.group(1), f"Marcador {marker} en paso {match.group(1)}"
+
     assert source.count("**Construcción y evidencia del paso.**") >= 76
     assert all(f"## Punto 2.{p} —" in source for p in range(1, 5))
     page_html = markdown.markdown(source,

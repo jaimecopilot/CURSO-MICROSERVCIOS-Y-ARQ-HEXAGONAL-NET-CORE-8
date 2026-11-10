@@ -289,7 +289,7 @@ protected override void OnModelCreating(ModelBuilder b)
 
 
 ```csharp
-// INICIO PASO 2.1.7: SQL Server Express LocalDB, no SQLite.
+// INICIO PASO 2.1.12: SQL Server Express LocalDB, no SQLite.
 builder.Services.AddDbContext<AceriaDbContext>(o=>
     o.UseSqlServer(builder.Configuration.GetConnectionString("AceriaApp")));
 
@@ -561,7 +561,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 namespace AceriaApp.Api.Tests;
-// INICIO PASO 2.1.12: HTTP real; base en memoria SOLO en tests automatizados.
+// INICIO PASO 2.1.22: HTTP real; base en memoria SOLO en tests automatizados.
 public sealed class ApiFactory:WebApplicationFactory<Program>
 {
     private readonly string _databaseName="Tests-"+Guid.NewGuid();
@@ -604,7 +604,7 @@ using AceriaApp.Api.Modelo;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 namespace AceriaApp.Api.Tests;
-// INICIO PASO 2.1.13: dos peticiones HTTP, código y DTO.
+// INICIO PASO 2.1.23: dos peticiones HTTP, código y DTO.
 public class GetTests
 {
     [Fact] public async Task ListaVacia_Es200()
@@ -846,23 +846,12 @@ app.MapPost("/api/v1/ordenes",async (CrearOrdenRequest request,AceriaDbContext d
 
 
 ```csharp
-// INICIO PASO 2.2.5: crear una orden, persistirla, devolver 201 + Location.
-app.MapPost("/api/v1/ordenes",async (CrearOrdenRequest request,AceriaDbContext db)=>
-{
-    if(string.IsNullOrWhiteSpace(request.Cliente)||string.IsNullOrWhiteSpace(request.Material)||request.Cantidad<=0)
-        return Results.BadRequest(new {error="Cliente, material y cantidad son obligatorios."});
-    if(request.Cantidad>500)
-        return Results.Problem(title:"El taller solo admite lotes de hasta 500.",
-            statusCode:StatusCodes.Status422UnprocessableEntity);
-    var orden=new Orden{Cliente=request.Cliente,Material=request.Material,Cantidad=request.Cantidad};
-    db.Ordenes.Add(orden);
-    await db.SaveChangesAsync();
-    return Results.CreatedAtRoute("ObtenerOrdenPorId",new{id=orden.Id},OrdenDto.Desde(orden));
-})
-.WithName("CrearOrden").WithTags("Ordenes")
-
-
-;
+// Este retorno ya está en el único MapPost creado en 2.2.5.
+// PASO 2.2.7: comprueba que el GET tiene el nombre ObtenerOrdenPorId.
+return Results.CreatedAtRoute(
+    "ObtenerOrdenPorId",
+    new { id = orden.Id },
+    OrdenDto.Desde(orden));
 ```
 
 **Construcción y evidencia del paso.** La sentencia `CreatedAtRoute("ObtenerOrdenPorId", ...)` del **mismo** POST debe generar 201 y la cabecera `Location`; revisa que el nombre coincida con el GET de detalle construido en 2.1.
@@ -931,7 +920,7 @@ app.MapPost("/api/v1/ordenes",async (CrearOrdenRequest request,AceriaDbContext d
 
 
 ```csharp
-// INICIO PASO 2.2.7: sustitución completa de los campos editables.
+// INICIO PASO 2.2.11: sustitución completa de los campos editables.
 app.MapPut("/api/v1/ordenes/{id:guid}",async (Guid id,CrearOrdenRequest request,AceriaDbContext db)=>
 {
     if(string.IsNullOrWhiteSpace(request.Cliente)||string.IsNullOrWhiteSpace(request.Material)||request.Cantidad<=0)
@@ -1039,7 +1028,7 @@ no está cumpliendo el contrato concreto de este ejemplo.
 
 
 ```csharp
-// INICIO PASO 2.2.8: cambiar SOLO la cantidad.
+// INICIO PASO 2.2.14: cambiar SOLO la cantidad.
 app.MapPatch("/api/v1/ordenes/{id:guid}/cantidad",
     async (Guid id,ActualizarCantidadRequest request,AceriaDbContext db)=>
 {
@@ -1094,7 +1083,7 @@ app.MapPatch("/api/v1/ordenes/{id:guid}/cantidad",
 
 
 ```csharp
-// INICIO PASO 2.2.9: eliminar recurso persistido.
+// INICIO PASO 2.2.16: eliminar recurso persistido.
 app.MapDelete("/api/v1/ordenes/{id:guid}",async (Guid id,AceriaDbContext db)=>
 {
     var orden=await db.Ordenes.FindAsync(id);
@@ -1144,7 +1133,7 @@ app.MapDelete("/api/v1/ordenes/{id:guid}",async (Guid id,AceriaDbContext db)=>
 
 
 ```csharp
-// INICIO PASO 2.2.10: transición explícita del dominio.
+// INICIO PASO 2.2.18: transición explícita del dominio.
 app.MapPost("/api/v1/ordenes/{id:guid}/finalizar",async (Guid id,AceriaDbContext db)=>
 {
     var orden=await db.Ordenes.FindAsync(id);
@@ -1218,59 +1207,23 @@ using System.Net.Http.Json;
 using AceriaApp.Api.Contratos;
 using AceriaApp.Api.Modelo;
 using Xunit;
+
 namespace AceriaApp.Api.Tests;
-// INICIO PASO 2.2.11: probar POST/GET/PUT/PATCH/DELETE con HTTP.
+
 public class EscrituraTests
 {
-    [Fact] public async Task CrearYConsultar_Es201Y200()
+    // PASO 2.2.21: primera prueba de escritura.
+    [Fact]
+    public async Task CrearYConsultar_Es201Y200()
     {
-        using var f=new ApiFactory();using var client=f.CreateClient();
-        var created=await client.PostAsJsonAsync("/api/v1/ordenes",
-            new CrearOrdenRequest("ACX","CHAPA",10));
-        Assert.Equal(HttpStatusCode.Created,created.StatusCode);
+        using var f = new ApiFactory();
+        using var client = f.CreateClient();
+        var created = await client.PostAsJsonAsync("/api/v1/ordenes",
+            new CrearOrdenRequest("ACX", "CHAPA", 10));
+        Assert.Equal(HttpStatusCode.Created, created.StatusCode);
         Assert.NotNull(created.Headers.Location);
-        var get=await client.GetAsync(created.Headers.Location);
-        Assert.Equal(HttpStatusCode.OK,get.StatusCode);
-    }
-    [Fact] public async Task EditarYEliminar_CambiaPersistencia()
-    {
-        using var f=new ApiFactory();using var c=f.CreateClient();
-        var made=await c.PostAsJsonAsync("/api/v1/ordenes",
-            new CrearOrdenRequest("ACX","CHAPA",10));
-        var dto=await made.Content.ReadFromJsonAsync<OrdenDto>();
-        Assert.NotNull(dto);
-        var put=await c.PutAsJsonAsync("/api/v1/ordenes/"+dto.Id,
-            new CrearOrdenRequest("ACX2","CHAPA",11));
-        Assert.Equal(HttpStatusCode.NoContent,put.StatusCode);
-        var patch=await c.PatchAsJsonAsync("/api/v1/ordenes/"+dto.Id+"/cantidad",
-            new ActualizarCantidadRequest(12));
-        Assert.Equal(HttpStatusCode.OK,patch.StatusCode);
-        var changed=await patch.Content.ReadFromJsonAsync<OrdenDto>();
-        Assert.Equal(12,changed?.Cantidad);
-        var del=await c.DeleteAsync("/api/v1/ordenes/"+dto.Id);
-        Assert.Equal(HttpStatusCode.NoContent,del.StatusCode);
-        var gone=await c.GetAsync("/api/v1/ordenes/"+dto.Id);
-        Assert.Equal(HttpStatusCode.NotFound,gone.StatusCode);
-    }
-    [Fact] public async Task ReglaCapacidad_Es422()
-    {
-        using var f=new ApiFactory();
-        var r=await f.CreateClient().PostAsJsonAsync("/api/v1/ordenes",
-            new CrearOrdenRequest("ACX","CHAPA",501));
-        Assert.Equal(HttpStatusCode.UnprocessableEntity,r.StatusCode);
-    }
-    [Fact] public async Task OrdenFinalizada_NoSeEdita409()
-    {
-        using var f=new ApiFactory();using var c=f.CreateClient();
-        var made=await c.PostAsJsonAsync("/api/v1/ordenes",
-            new CrearOrdenRequest("ACX","CHAPA",2));
-        var dto=await made.Content.ReadFromJsonAsync<OrdenDto>();
-        Assert.NotNull(dto);
-        var done=await c.PostAsync("/api/v1/ordenes/"+dto.Id+"/finalizar",null);
-        Assert.Equal(HttpStatusCode.OK,done.StatusCode);
-        var put=await c.PutAsJsonAsync("/api/v1/ordenes/"+dto.Id,
-            new CrearOrdenRequest("ACX","CHAPA",3));
-        Assert.Equal(HttpStatusCode.Conflict,put.StatusCode);
+        var get = await client.GetAsync(created.Headers.Location);
+        Assert.Equal(HttpStatusCode.OK, get.StatusCode);
     }
 }
 ```
@@ -1293,65 +1246,29 @@ public class EscrituraTests
 
 
 ```csharp
-using System.Net;
-using System.Net.Http.Json;
-using AceriaApp.Api.Contratos;
-using AceriaApp.Api.Modelo;
-using Xunit;
-namespace AceriaApp.Api.Tests;
-// INICIO PASO 2.2.11: probar POST/GET/PUT/PATCH/DELETE con HTTP.
-public class EscrituraTests
+// Añade dentro de EscrituraTests, sin crear otra clase:
+[Fact]
+public async Task EditarYEliminar_CambiaPersistencia()
 {
-    [Fact] public async Task CrearYConsultar_Es201Y200()
-    {
-        using var f=new ApiFactory();using var client=f.CreateClient();
-        var created=await client.PostAsJsonAsync("/api/v1/ordenes",
-            new CrearOrdenRequest("ACX","CHAPA",10));
-        Assert.Equal(HttpStatusCode.Created,created.StatusCode);
-        Assert.NotNull(created.Headers.Location);
-        var get=await client.GetAsync(created.Headers.Location);
-        Assert.Equal(HttpStatusCode.OK,get.StatusCode);
-    }
-    [Fact] public async Task EditarYEliminar_CambiaPersistencia()
-    {
-        using var f=new ApiFactory();using var c=f.CreateClient();
-        var made=await c.PostAsJsonAsync("/api/v1/ordenes",
-            new CrearOrdenRequest("ACX","CHAPA",10));
-        var dto=await made.Content.ReadFromJsonAsync<OrdenDto>();
-        Assert.NotNull(dto);
-        var put=await c.PutAsJsonAsync("/api/v1/ordenes/"+dto.Id,
-            new CrearOrdenRequest("ACX2","CHAPA",11));
-        Assert.Equal(HttpStatusCode.NoContent,put.StatusCode);
-        var patch=await c.PatchAsJsonAsync("/api/v1/ordenes/"+dto.Id+"/cantidad",
-            new ActualizarCantidadRequest(12));
-        Assert.Equal(HttpStatusCode.OK,patch.StatusCode);
-        var changed=await patch.Content.ReadFromJsonAsync<OrdenDto>();
-        Assert.Equal(12,changed?.Cantidad);
-        var del=await c.DeleteAsync("/api/v1/ordenes/"+dto.Id);
-        Assert.Equal(HttpStatusCode.NoContent,del.StatusCode);
-        var gone=await c.GetAsync("/api/v1/ordenes/"+dto.Id);
-        Assert.Equal(HttpStatusCode.NotFound,gone.StatusCode);
-    }
-    [Fact] public async Task ReglaCapacidad_Es422()
-    {
-        using var f=new ApiFactory();
-        var r=await f.CreateClient().PostAsJsonAsync("/api/v1/ordenes",
-            new CrearOrdenRequest("ACX","CHAPA",501));
-        Assert.Equal(HttpStatusCode.UnprocessableEntity,r.StatusCode);
-    }
-    [Fact] public async Task OrdenFinalizada_NoSeEdita409()
-    {
-        using var f=new ApiFactory();using var c=f.CreateClient();
-        var made=await c.PostAsJsonAsync("/api/v1/ordenes",
-            new CrearOrdenRequest("ACX","CHAPA",2));
-        var dto=await made.Content.ReadFromJsonAsync<OrdenDto>();
-        Assert.NotNull(dto);
-        var done=await c.PostAsync("/api/v1/ordenes/"+dto.Id+"/finalizar",null);
-        Assert.Equal(HttpStatusCode.OK,done.StatusCode);
-        var put=await c.PutAsJsonAsync("/api/v1/ordenes/"+dto.Id,
-            new CrearOrdenRequest("ACX","CHAPA",3));
-        Assert.Equal(HttpStatusCode.Conflict,put.StatusCode);
-    }
+    using var f = new ApiFactory();
+    using var c = f.CreateClient();
+    var made = await c.PostAsJsonAsync("/api/v1/ordenes",
+        new CrearOrdenRequest("ACX", "CHAPA", 10));
+    var dto = await made.Content.ReadFromJsonAsync<OrdenDto>();
+    Assert.NotNull(dto);
+    var put = await c.PutAsJsonAsync("/api/v1/ordenes/" + dto.Id,
+        new CrearOrdenRequest("ACX2", "CHAPA", 11));
+    Assert.Equal(HttpStatusCode.NoContent, put.StatusCode);
+    var patch = await c.PatchAsJsonAsync(
+        "/api/v1/ordenes/" + dto.Id + "/cantidad",
+        new ActualizarCantidadRequest(12));
+    Assert.Equal(HttpStatusCode.OK, patch.StatusCode);
+    var changed = await patch.Content.ReadFromJsonAsync<OrdenDto>();
+    Assert.Equal(12, changed?.Cantidad);
+    var del = await c.DeleteAsync("/api/v1/ordenes/" + dto.Id);
+    Assert.Equal(HttpStatusCode.NoContent, del.StatusCode);
+    var gone = await c.GetAsync("/api/v1/ordenes/" + dto.Id);
+    Assert.Equal(HttpStatusCode.NotFound, gone.StatusCode);
 }
 ```
 
@@ -1372,6 +1289,36 @@ public class EscrituraTests
 **Código relacionado:** consulta los archivos del proyecto `PROYECTO/2.2-recursos-verbos-codigos` para contrastar las declaraciones que acabas de añadir, sin copiar anticipadamente etapas posteriores.
 
 **Construcción y evidencia del paso.** Completa `EscrituraTests` con `ReglaCapacidad_Es422` y `OrdenFinalizada_NoSeEdita409`. Ejecuta `dotnet test tests/AceriaApp.Api.Tests` y espera 7 tests acumulados en la etapa 2.2.
+
+**Añade estas dos pruebas dentro de `EscrituraTests` (sin duplicar la clase):**
+
+```csharp
+[Fact]
+public async Task ReglaCapacidad_Es422()
+{
+    using var f = new ApiFactory();
+    var r = await f.CreateClient().PostAsJsonAsync("/api/v1/ordenes",
+        new CrearOrdenRequest("ACX", "CHAPA", 501));
+    Assert.Equal(HttpStatusCode.UnprocessableEntity, r.StatusCode);
+}
+
+[Fact]
+public async Task OrdenFinalizada_NoSeEdita409()
+{
+    using var f = new ApiFactory();
+    using var c = f.CreateClient();
+    var made = await c.PostAsJsonAsync("/api/v1/ordenes",
+        new CrearOrdenRequest("ACX", "CHAPA", 2));
+    var dto = await made.Content.ReadFromJsonAsync<OrdenDto>();
+    Assert.NotNull(dto);
+    var done = await c.PostAsync(
+        "/api/v1/ordenes/" + dto.Id + "/finalizar", null);
+    Assert.Equal(HttpStatusCode.OK, done.StatusCode);
+    var put = await c.PutAsJsonAsync("/api/v1/ordenes/" + dto.Id,
+        new CrearOrdenRequest("ACX", "CHAPA", 3));
+    Assert.Equal(HttpStatusCode.Conflict, put.StatusCode);
+}
+```
 
 **Por qué funciona así.** Los tests deben confirmar los efectos de POST, PUT, PATCH, DELETE, la capacidad del taller y el conflicto de estado a través de peticiones HTTP reales.
 
