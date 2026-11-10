@@ -1,0 +1,32 @@
+name: M02 - E2E codigo reconstruido paso a paso desde Markdown
+on:
+  push:
+    branches:
+      - 'verificacion/e2e-main-20261110'
+    paths:
+      - 'M02_APIS_REST_ASPNET_CORE/PRACTICAS/M02_PRACTICAS.md'
+      - 'M02_APIS_REST_ASPNET_CORE/PROYECTO/**'
+      - '.github/scripts/e2e_laboratorio_m02.py'
+      - '.github/workflows/m02-e2e-laboratorio.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: m02-e2e-laboratorio
+  cancel-in-progress: true
+jobs:
+  reconstruir:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Reconstruir y probar las cuatro etapas usando solo el código del Markdown
+        run: python3 .github/scripts/e2e_laboratorio_m02.py --out m02-e2e-resultado.json
+      - name: Guardar resultados de los 96 pasos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m02-e2e-laboratorio
+          path: m02-e2e-resultado.json
