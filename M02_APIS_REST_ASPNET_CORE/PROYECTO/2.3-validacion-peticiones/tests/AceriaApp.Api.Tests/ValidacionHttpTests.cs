@@ -4,7 +4,7 @@ using System.Text.Json;
 using AceriaApp.Api.Contratos;
 using Xunit;
 namespace AceriaApp.Api.Tests;
-// INICIO PASO 2.3.8: se verifica el filtro ACTIVO, no su mera existencia.
+// INICIO PASO 2.3.22: se verifica el filtro ACTIVO, no su mera existencia.
 public class ValidacionHttpTests
 {
     [Theory]

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 namespace AceriaApp.Api.Tests;
-// INICIO PASO 2.1.12: HTTP real; base en memoria SOLO en tests automatizados.
+// INICIO PASO 2.1.22: HTTP real; base en memoria SOLO en tests automatizados.
 public sealed class ApiFactory:WebApplicationFactory<Program>
 {
     private readonly string _databaseName="Tests-"+Guid.NewGuid();

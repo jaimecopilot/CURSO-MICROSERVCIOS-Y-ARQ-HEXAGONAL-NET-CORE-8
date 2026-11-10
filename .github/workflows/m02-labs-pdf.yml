@@ -1,0 +1,60 @@
+name: M02 - sincronizar laboratorio MD y PDF
+on:
+  push:
+    branches:
+      - 'verificacion/e2e-main-20261110'
+      - 'main'
+    paths:
+      - 'M02_APIS_REST_ASPNET_CORE/PRACTICAS/M02_PRACTICAS.md'
+      - '.github/scripts/generar_pdf_m02.py'
+      - '.github/workflows/m02-labs-pdf.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: m02-labs-pdf
+  cancel-in-progress: false
+jobs:
+  maquetar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Instalar herramientas de maquetacion
+        run: python -m pip install markdown weasyprint pymupdf
+      - name: Regenerar PDF solo si cambió el Markdown o el maquetador
+        shell: bash
+        run: |
+          python - <<'PYTHON'
+          import hashlib,subprocess,sys
+          from pathlib import Path
+          inputs=[Path('M02_APIS_REST_ASPNET_CORE/PRACTICAS/M02_PRACTICAS.md'),
+                  Path('.github/scripts/generar_pdf_m02.py')]
+          fingerprint=hashlib.sha256()
+          for path in inputs:
+              fingerprint.update(path.as_posix().encode())
+              fingerprint.update(path.read_bytes())
+          checksum=fingerprint.hexdigest()
+          marker=Path('.github/m02-pdf-source.sha256')
+          pdf=Path('M02_APIS_REST_ASPNET_CORE/PRACTICAS/M02_PRACTICAS.pdf')
+          if marker.exists() and marker.read_text().strip()==checksum and pdf.exists():
+              print('PDF ya sincronizado con Markdown y maquetador: no se regenera.')
+          else:
+              subprocess.run([sys.executable,'.github/scripts/generar_pdf_m02.py'],check=True)
+              marker.write_text(checksum+'\n')
+              print('PDF regenerado: fuentes verificadas y huella actualizada.')
+          PYTHON
+      - name: Publicar el mismo PDF verificado en esta rama
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add M02_APIS_REST_ASPNET_CORE/PRACTICAS/M02_PRACTICAS.pdf .github/m02-pdf-source.sha256
+          if ! git diff --cached --quiet; then
+            git commit -m "docs(m02): actualizar PDF de practicas desde Markdown validado"
+            git push
+          fi

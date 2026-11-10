@@ -5,7 +5,7 @@ using AceriaApp.Api.Modelo;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 namespace AceriaApp.Api.Tests;
-// INICIO PASO 2.1.13: dos peticiones HTTP, código y DTO.
+// INICIO PASO 2.1.23: dos peticiones HTTP, código y DTO.
 public class GetTests
 {
     [Fact] public async Task ListaVacia_Es200()

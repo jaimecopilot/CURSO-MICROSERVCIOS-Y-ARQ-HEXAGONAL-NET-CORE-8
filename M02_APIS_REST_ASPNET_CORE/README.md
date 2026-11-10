@@ -1,36 +1,30 @@
-# Módulo 2 — Desarrollo de APIs REST con ASP.NET Core 8
+# Módulo 2 — APIs REST con ASP.NET Core 8
 
 **Autor: JAIME GALLO**
 
-El módulo desarrolla una **Minimal API real de AceriaApp** desde el diseño del contrato REST hasta la validación y documentación de sus endpoints. Cada apartado dispone de teoría, práctica guiada y un estado ejecutable de la aplicación.
+## Material canónico de aprendizaje
 
-## Material del alumno
+- [Teoría de M02](TEORIA/M02_TEORIA.md).
+- [Prácticas de M02](PRACTICAS/M02_PRACTICAS.md): **guion único del alumno**, con 96 pasos numerados de 2.1.1 a 2.4.24.
+- [Prácticas de M02 en PDF](PRACTICAS/M02_PRACTICAS.pdf): generado directamente desde el mismo Markdown, con la plantilla tipográfica del módulo 1.
 
-- [Teoría completa del módulo](TEORIA/M02_TEORIA.md) · [PDF](TEORIA/M02_TEORIA.pdf)
-- [Prácticas guiadas del módulo](PRACTICAS/M02_PRACTICAS.md) · [PDF](PRACTICAS/M02_PRACTICAS.pdf)
+## Cómo utilizar las prácticas
 
-## Proyectos del módulo
+El alumno trabaja sobre su propia solución y sigue el **orden de los pasos**. El código fuente que aparece en el laboratorio debe escribirse en el archivo indicado. Cuando el ejercicio dice *ampliar*, debe modificar el archivo ya creado, no volver a copiar una versión completa ni declarar un segundo endpoint con la misma ruta.
 
-| Punto | Contenido | Solución |
-|---|---|---|
-| [2.1](PROYECTO/2.1-diseno-apis-rest/) | Recursos, DTO, EF Core, SQL Server Express LocalDB y primeros endpoints GET | `PROYECTO/2.1-diseno-apis-rest/src/AceriaApp.Api/AceriaApp.Api.csproj` |
-| [2.2](PROYECTO/2.2-recursos-verbos-codigos/) | Verbos HTTP, POST y operaciones sobre recursos | `PROYECTO/2.2-recursos-verbos-codigos/src/AceriaApp.Api/AceriaApp.Api.csproj` |
-| [2.3](PROYECTO/2.3-validacion-peticiones/) | FluentValidation, reglas de negocio y problem details | `PROYECTO/2.3-validacion-peticiones/src/AceriaApp.Api/AceriaApp.Api.csproj` |
-| [2.4](PROYECTO/2.4-documentacion-openapi/) | OpenAPI/Swagger y comprobaciones del contrato publicado | `PROYECTO/2.4-documentacion-openapi/src/AceriaApp.Api/AceriaApp.Api.csproj` |
+Cada carpeta de PROYECTO contiene el **estado final de referencia de su etapa**, no una aplicación que deba copiarse al principio:
 
-Los proyectos son **cuatro estados independientes y progresivos**: 2.2 continúa 2.1; 2.3 continúa 2.2; 2.4 completa el recorrido.
+| Etapa | Carpeta | Resultado |
+| --- | --- | --- |
+| 2.1 | `PROYECTO/2.1-diseno-apis-rest` | GET, OrdenDto, EF Core 8, LocalDB y pruebas HTTP |
+| 2.2 | `PROYECTO/2.2-recursos-verbos-codigos` | POST, PUT, PATCH, DELETE y reglas de estado |
+| 2.3 | `PROYECTO/2.3-validacion-peticiones` | FluentValidation y filtros conectados a endpoints |
+| 2.4 | `PROYECTO/2.4-documentacion-openapi` | Documento Swagger/OpenAPI y pruebas de contrato |
 
-## Entorno de trabajo
+## Comprobaciones de aprendizaje
 
-- Visual Studio con soporte para ASP.NET Core y el **SDK .NET 8**.
-- **EF Core 8 y SQL Server Express LocalDB** en Windows.
-- xUnit y herramientas HTTP de Visual Studio para comprobar las respuestas.
-- Cada proyecto contiene sus instrucciones de ejecución.
+Las cuatro soluciones usan .NET 8 y se pueden compilar y probar de forma independiente. La aplicación local requiere **SQL Server Express LocalDB**; las pruebas usan **EF Core InMemory** para ejecutarse sin una base externa.
 
-## Recorrido sugerido
+El laboratorio se comprueba también con un **E2E de reconstrucción**: una copia temporal de las cuatro etapas se genera a partir de fragmentos C# del Markdown y se compila repetidamente hasta superar sus pruebas. Esta comprobación no automatiza las acciones exclusivamente manuales del IDE.
 
-Lee la explicación del punto en [TEORÍA](TEORIA/M02_TEORIA.md), ejecuta el apartado equivalente de [PRÁCTICAS](PRACTICAS/M02_PRACTICAS.md) y contrasta el comportamiento con la solución correspondiente. En las prácticas se explica cómo crear los archivos, escribir el código, enviar peticiones y comprobar su resultado.
-
-El número de tests depende del **estado del proyecto de este recorrido Minimal API**: 3 pruebas en 2.1; 7 en 2.2; 12 en 2.3; y 15 en 2.4. Son los tests de las soluciones de este módulo.
-
-> Para abrir cada etapa en Visual Studio, utiliza su archivo `.csproj`. Cada etapa contiene la API en `src/AceriaApp.Api/` y sus tests en `tests/AceriaApp.Api.Tests/`.
+Los PDFs se obtienen desde los Markdown mediante el flujo de generación del repositorio. El archivo MD es la fuente; el PDF es el material distribuible.

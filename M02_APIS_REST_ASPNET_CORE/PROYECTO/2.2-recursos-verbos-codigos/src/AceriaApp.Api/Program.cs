@@ -4,32 +4,35 @@ using Microsoft.EntityFrameworkCore;
 using AceriaApp.Api.Contratos;
 
 var builder=WebApplication.CreateBuilder(args);
-// INICIO PASO 2.1.7: SQL Server Express LocalDB, no SQLite.
+// INICIO PASO 2.1.12: SQL Server Express LocalDB, no SQLite.
 builder.Services.AddDbContext<AceriaDbContext>(o=>
     o.UseSqlServer(builder.Configuration.GetConnectionString("AceriaApp")));
 
 var app=builder.Build();
 // EnsureCreated se utiliza SOLO como ayuda didáctica en Development.
 // Para un sistema productivo se utilizarían migraciones controladas.
+// PASO 2.1.13: inicializar LocalDB solo en Development.
 if(app.Environment.IsDevelopment()&&!app.Configuration.GetValue<bool>("SkipDatabaseInitialization"))
 {
     using var scope=app.Services.CreateScope();
     await scope.ServiceProvider.GetRequiredService<AceriaDbContext>().Database.EnsureCreatedAsync();
 }
 
-// INICIO PASO 2.1.8: colección de recursos, consulta real con EF Core.
+// INICIO PASO 2.1.14: colección de recursos, consulta real con EF Core.
 app.MapGet("/api/v1/ordenes",async (AceriaDbContext db,CancellationToken ct)=>
 {
+    // PASO 2.1.15: lectura sin tracking y proyeccion a DTO.
     var ordenes=await db.Ordenes.AsNoTracking().OrderBy(x=>x.FechaCreacion).ToListAsync(ct);
     return Results.Ok(ordenes.Select(OrdenDto.Desde));
 })
 .WithName("ListarOrdenes").WithTags("Ordenes")
 
 ;
-// INICIO PASO 2.1.9: recurso individual.
+// INICIO PASO 2.1.17: recurso individual.
 app.MapGet("/api/v1/ordenes/{id:guid}",async (Guid id,AceriaDbContext db)=>
 {
     var orden=await db.Ordenes.AsNoTracking().FirstOrDefaultAsync(x=>x.Id==id);
+    // PASO 2.1.18: 200 para orden presente; 404 si no existe.
     IResult response=orden is null ? Results.NotFound() : Results.Ok(OrdenDto.Desde(orden));
     return response;
 })
@@ -41,14 +44,18 @@ app.MapGet("/api/v1/ordenes/{id:guid}",async (Guid id,AceriaDbContext db)=>
 // INICIO PASO 2.2.5: crear una orden, persistirla, devolver 201 + Location.
 app.MapPost("/api/v1/ordenes",async (CrearOrdenRequest request,AceriaDbContext db)=>
 {
+    // PASO 2.2.9: validacion provisional.
     if(string.IsNullOrWhiteSpace(request.Cliente)||string.IsNullOrWhiteSpace(request.Material)||request.Cantidad<=0)
         return Results.BadRequest(new {error="Cliente, material y cantidad son obligatorios."});
+    // PASO 2.2.10: limite de capacidad.
     if(request.Cantidad>500)
         return Results.Problem(title:"El taller solo admite lotes de hasta 500.",
             statusCode:StatusCodes.Status422UnprocessableEntity);
+    // PASO 2.2.6: crear entidad y persistirla.
     var orden=new Orden{Cliente=request.Cliente,Material=request.Material,Cantidad=request.Cantidad};
     db.Ordenes.Add(orden);
     await db.SaveChangesAsync();
+    // PASO 2.2.7: devolver 201 con Location.
     return Results.CreatedAtRoute("ObtenerOrdenPorId",new{id=orden.Id},OrdenDto.Desde(orden));
 })
 .WithName("CrearOrden").WithTags("Ordenes")
@@ -57,7 +64,7 @@ app.MapPost("/api/v1/ordenes",async (CrearOrdenRequest request,AceriaDbContext d
 ;
 
 
-// INICIO PASO 2.2.7: sustitución completa de los campos editables.
+// INICIO PASO 2.2.11: sustitución completa de los campos editables.
 app.MapPut("/api/v1/ordenes/{id:guid}",async (Guid id,CrearOrdenRequest request,AceriaDbContext db)=>
 {
     if(string.IsNullOrWhiteSpace(request.Cliente)||string.IsNullOrWhiteSpace(request.Material)||request.Cantidad<=0)
@@ -79,7 +86,7 @@ app.MapPut("/api/v1/ordenes/{id:guid}",async (Guid id,CrearOrdenRequest request,
 ;
 
 
-// INICIO PASO 2.2.8: cambiar SOLO la cantidad.
+// INICIO PASO 2.2.14: cambiar SOLO la cantidad.
 app.MapPatch("/api/v1/ordenes/{id:guid}/cantidad",
     async (Guid id,ActualizarCantidadRequest request,AceriaDbContext db)=>
 {
@@ -100,7 +107,7 @@ app.MapPatch("/api/v1/ordenes/{id:guid}/cantidad",
 ;
 
 
-// INICIO PASO 2.2.9: eliminar recurso persistido.
+// INICIO PASO 2.2.16: eliminar recurso persistido.
 app.MapDelete("/api/v1/ordenes/{id:guid}",async (Guid id,AceriaDbContext db)=>
 {
     var orden=await db.Ordenes.FindAsync(id);
@@ -114,7 +121,7 @@ app.MapDelete("/api/v1/ordenes/{id:guid}",async (Guid id,AceriaDbContext db)=>
 .WithName("EliminarOrden").WithTags("Ordenes")
 
 ;
-// INICIO PASO 2.2.10: transición explícita del dominio.
+// INICIO PASO 2.2.18: transición explícita del dominio.
 app.MapPost("/api/v1/ordenes/{id:guid}/finalizar",async (Guid id,AceriaDbContext db)=>
 {
     var orden=await db.Ordenes.FindAsync(id);
