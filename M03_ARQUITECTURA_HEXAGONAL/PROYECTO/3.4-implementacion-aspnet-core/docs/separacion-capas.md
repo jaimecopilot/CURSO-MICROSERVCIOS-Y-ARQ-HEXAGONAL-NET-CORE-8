@@ -1,4 +1,3 @@
-<!-- Documento de trabajo M03. Adaptación a AceriaApp.Api desde la fuente original íntegra en FUENTE. -->
 # Separación entre dominio, aplicación e infraestructura — Punto 3.3
 
 ## Formas de separación

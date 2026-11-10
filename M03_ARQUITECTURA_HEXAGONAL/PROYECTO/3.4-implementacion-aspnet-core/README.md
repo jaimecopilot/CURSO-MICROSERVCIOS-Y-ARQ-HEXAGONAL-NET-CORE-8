@@ -9,7 +9,7 @@ el documento de implementación en ASP.NET Core es el artefacto de `docs` espec�
 
 ## Estado verificado del punto
 
-- 9 proyectos en la solución `AceriaApp.sln` al finalizar este punto; la fuente histórica contaba otros proyectos que no existen en el repositorio actual.
+- 9 proyectos en la solución `AceriaApp.sln` al finalizar este punto.
 - 50 pruebas xUnit acumuladas previstas (incluyendo las 16 de M02 y las nuevas del módulo 3).
 - Clases del catálogo `Implementacion` en `src/AceriaApp.Api/Implementacion`.
 - Documentación `docs/implementacion-aspnet-core.md` y decisión `docs/ADR-013-implementacion-aspnet-core.md`.
@@ -26,7 +26,3 @@ el documento de implementación en ASP.NET Core es el artefacto de `docs` espec�
 ## Qué se ha añadido
 
 la clase `RegistroServicio` modela un registro del contenedor de dependencias con el puerto, la implementación, el ciclo y si es adaptador de salida. Es la unidad de información del validador.
-
-## Nota de trazabilidad
-
-El laboratorio `../../PRACTICAS/M03_PRACTICAS.md` es la fuente ejecutable de las incorporaciones. La copia íntegra histórica está en `../../FUENTE/M03_3.4_ORIGINAL.md`.

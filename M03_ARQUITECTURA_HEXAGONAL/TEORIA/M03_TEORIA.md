@@ -2,11 +2,11 @@
 
 **Autor del curso: JAIME GALLO**
 
-## Criterios de edición
+## Cómo estudiar el módulo
 
-La parte teórica de los cuatro puntos se ha separado de las actividades del documento original. Se conservan los **40 bloques teóricos originales y sus explicaciones**, sin suprimir los conceptos desarrollados en la fuente. El texto histórico íntegro, incluidos ejercicios, código y correcciones posteriores, se conserva en `FUENTE/`. Se han eliminado las indicaciones de *minutos* de la versión para el alumno, porque las actividades se ejecutan al ritmo de la clase.
+Los cuatro puntos desarrollan la organización por capas, los puertos y adaptadores, la separación en proyectos y la composición de dependencias. Cada punto contiene diez bloques con explicaciones, ejemplos de código y su aplicación a AceriaApp.
 
-**Actualización técnica necesaria:** la fuente original llama `AceriaApp.Monolito.Api` al proyecto y presupone numerosos proyectos heredados; en nuestro curso vigente la etapa anterior es `M02_APIS_REST_ASPNET_CORE/PROYECTO/2.4-documentacion-openapi`, una **Minimal API ASP.NET Core 8 real**, con EF Core SQL Server, FluentValidation y OpenAPI. Las referencias a las antiguas carpetas son una descripción histórica, no instrucciones de ejecución. M03 construye las capas reales a partir de esta base, y muestra cuáles son modelos didácticos y cuáles son adaptadores efectivamente conectados.
+El punto de partida es `M02_APIS_REST_ASPNET_CORE/PROYECTO/2.4-documentacion-openapi`: una Minimal API ASP.NET Core 8 con EF Core SQL Server, FluentValidation y OpenAPI. Los ejemplos breves permiten estudiar cada concepto por separado; los apartados aplicados a AceriaApp y las prácticas muestran su incorporación al proyecto del curso. Los catálogos de relaciones arquitectónicas se distinguen de los adaptadores conectados a la API.
 
 ![Vista del núcleo y los adaptadores](../GRAFICOS/arquitectura_hexagonal.svg)
 
@@ -14,7 +14,9 @@ La parte teórica de los cuatro puntos se ha separado de las actividades del doc
 # Punto 3.1 — Capas de la aplicación
 
 **Módulo 3:** Arquitectura hexagonal
+
 **Objetivos de aprendizaje:**
+
 - Comprender el concepto de capa en una arquitectura de software.
 - Diferenciar las capas de dominio, aplicación, infraestructura y presentación.
 - Comprender la regla de dependencia entre capas.
@@ -38,17 +40,16 @@ Capas habituales en una aplicación:
 4. Infraestructura → persistencia, mensajería, servicios externos.
 ```
 
-**Línea 1:** `1. Presentación` → capa de interfaz con el exterior.
-**Línea 2:** `2. Aplicación` → capa de casos de uso y orquestación.
-**Línea 3:** `3. Dominio` → capa de entidades y reglas de negocio.
-**Línea 4:** `4. Infraestructura` → capa de persistencia y servicios externos.
+- **Línea 1:** `1. Presentación` → capa de interfaz con el exterior.
+- **Línea 2:** `2. Aplicación` → capa de casos de uso y orquestación.
+- **Línea 3:** `3. Dominio` → capa de entidades y reglas de negocio.
+- **Línea 4:** `4. Infraestructura` → capa de persistencia y servicios externos.
 
 La organización por capas produce cuatro beneficios medibles. El primero es la separación de responsabilidades: cada capa tiene una responsabilidad clara y delimitada. El segundo es la reutilización: una capa puede reutilizarse en distintos contextos. El tercero es la testabilidad: cada capa se puede probar de forma aislada. El cuarto es la mantenibilidad: los cambios se localizan en la capa correspondiente. Los cuatro beneficios justifican la adopción de la organización por capas en cualquier proyecto de tamaño medio o grande.
 
 La organización por capas no es una garantía automática de calidad. Una organización por capas mal aplicada produce capas que se conocen entre sí de forma desordenada, con dependencias cíclicas y con lógica duplicada. La calidad de la organización depende de la disciplina con la que se aplique la regla de dependencia. La regla de dependencia establece que las capas se conocen en una única dirección: las capas exteriores conocen a las interiores, pero las interiores no conocen a las exteriores. La aplicación estricta de la regla es lo que produce los beneficios de la organización por capas.
 
 ---
-
 
 
 #### Ampliación didáctica aplicada a AceriaApp
@@ -92,32 +93,31 @@ public class Orden
 }
 ```
 
-**Línea 1:** `namespace AceriaApp.Monolito.Api.Dominio;` → espacio de nombres de la capa de dominio.
-**Línea 2:** `public class Orden` → entidad del dominio.
-**Línea 3:** `{` → abre el cuerpo de la clase.
-**Línea 4:** `public Guid Id { get; private set; }` → identificador con setter privado.
-**Línea 5:** `public string Cliente { get; private set; } = string.Empty;` → cliente con setter privado.
-**Línea 6:** `public int Cantidad { get; private set; }` → cantidad con setter privado.
-**Línea 7:** `public Orden(Guid id, string cliente, int cantidad)` → constructor con validación.
-**Línea 8:** `{` → abre el cuerpo del constructor.
-**Línea 9:** `if (string.IsNullOrWhiteSpace(cliente))` → valida el cliente.
-**Línea 10:** `{` → abre el bloque de error.
-**Línea 11:** `throw new ArgumentException("El cliente es obligatorio.", nameof(cliente));` → lanza excepción.
-**Línea 12:** `}` → cierra el bloque de error.
-**Línea 13:** `if (cantidad <= 0)` → valida la cantidad.
-**Línea 14:** `{` → abre el bloque de error.
-**Línea 15:** `throw new ArgumentException("La cantidad debe ser mayor que cero.", nameof(cantidad));` → lanza excepción.
-**Línea 16:** `}` → cierra el bloque de error.
-**Línea 17:** `Id = id;` → asigna el identificador.
-**Línea 18:** `Cliente = cliente;` → asigna el cliente.
-**Línea 19:** `Cantidad = cantidad;` → asigna la cantidad.
-**Línea 20:** `}` → cierra el constructor.
-**Línea 21:** `}` → cierra la clase.
+- **Línea 1:** `namespace AceriaApp.Monolito.Api.Dominio;` → espacio de nombres de la capa de dominio.
+- **Línea 2:** `public class Orden` → entidad del dominio.
+- **Línea 3:** `{` → abre el cuerpo de la clase.
+- **Línea 4:** `public Guid Id { get; private set; }` → identificador con setter privado.
+- **Línea 5:** `public string Cliente { get; private set; } = string.Empty;` → cliente con setter privado.
+- **Línea 6:** `public int Cantidad { get; private set; }` → cantidad con setter privado.
+- **Línea 7:** `public Orden(Guid id, string cliente, int cantidad)` → constructor con validación.
+- **Línea 8:** `{` → abre el cuerpo del constructor.
+- **Línea 9:** `if (string.IsNullOrWhiteSpace(cliente))` → valida el cliente.
+- **Línea 10:** `{` → abre el bloque de error.
+- **Línea 11:** `throw new ArgumentException("El cliente es obligatorio.", nameof(cliente));` → lanza excepción.
+- **Línea 12:** `}` → cierra el bloque de error.
+- **Línea 13:** `if (cantidad <= 0)` → valida la cantidad.
+- **Línea 14:** `{` → abre el bloque de error.
+- **Línea 15:** `throw new ArgumentException("La cantidad debe ser mayor que cero.", nameof(cantidad));` → lanza excepción.
+- **Línea 16:** `}` → cierra el bloque de error.
+- **Línea 17:** `Id = id;` → asigna el identificador.
+- **Línea 18:** `Cliente = cliente;` → asigna el cliente.
+- **Línea 19:** `Cantidad = cantidad;` → asigna la cantidad.
+- **Línea 20:** `}` → cierra el constructor.
+- **Línea 21:** `}` → cierra la clase.
 
 La capa de dominio se caracteriza por tres propiedades. La primera es que no tiene dependencias externas: no referencia ningún paquete de infraestructura. La segunda es que expone sus invariantes: las reglas de negocio se validan en el constructor o en métodos específicos. La tercera es que es testeable de forma aislada: los tests no necesitan base de datos ni framework web. Las tres propiedades son la base para que el dominio sea estable y reutilizable en distintos contextos.
 
 ---
-
 
 
 #### Ampliación didáctica aplicada a AceriaApp
@@ -159,26 +159,25 @@ public class OrdenServicio
 }
 ```
 
-**Línea 1:** `namespace AceriaApp.Monolito.Api.Aplicacion;` → espacio de nombres de la capa de aplicación.
-**Línea 2:** `public class OrdenServicio` → servicio de aplicación.
-**Línea 3:** `{` → abre el cuerpo de la clase.
-**Línea 4:** `private readonly IOrdenRepositorio _repositorio;` → dependencia del repositorio.
-**Línea 5:** `public OrdenServicio(IOrdenRepositorio repositorio)` → constructor con inyección.
-**Línea 6:** `{` → abre el cuerpo del constructor.
-**Línea 7:** `_repositorio = repositorio;` → asigna el repositorio.
-**Línea 8:** `}` → cierra el constructor.
-**Línea 9:** `public async Task<Guid> CrearOrdenAsync(string cliente, int cantidad)` → caso de uso.
-**Línea 10:** `{` → abre el cuerpo del método.
-**Línea 11:** `var orden = new Orden(Guid.NewGuid(), cliente, cantidad);` → crea la entidad.
-**Línea 12:** `await _repositorio.AddAsync(orden);` → persiste la entidad.
-**Línea 13:** `return orden.Id;` → devuelve el identificador.
-**Línea 14:** `}` → cierra el método.
-**Línea 15:** `}` → cierra la clase.
+- **Línea 1:** `namespace AceriaApp.Monolito.Api.Aplicacion;` → espacio de nombres de la capa de aplicación.
+- **Línea 2:** `public class OrdenServicio` → servicio de aplicación.
+- **Línea 3:** `{` → abre el cuerpo de la clase.
+- **Línea 4:** `private readonly IOrdenRepositorio _repositorio;` → dependencia del repositorio.
+- **Línea 5:** `public OrdenServicio(IOrdenRepositorio repositorio)` → constructor con inyección.
+- **Línea 6:** `{` → abre el cuerpo del constructor.
+- **Línea 7:** `_repositorio = repositorio;` → asigna el repositorio.
+- **Línea 8:** `}` → cierra el constructor.
+- **Línea 9:** `public async Task<Guid> CrearOrdenAsync(string cliente, int cantidad)` → caso de uso.
+- **Línea 10:** `{` → abre el cuerpo del método.
+- **Línea 11:** `var orden = new Orden(Guid.NewGuid(), cliente, cantidad);` → crea la entidad.
+- **Línea 12:** `await _repositorio.AddAsync(orden);` → persiste la entidad.
+- **Línea 13:** `return orden.Id;` → devuelve el identificador.
+- **Línea 14:** `}` → cierra el método.
+- **Línea 15:** `}` → cierra la clase.
 
 La capa de aplicación se caracteriza por tres propiedades. La primera es que conoce la capa de dominio y depende de ella. La segunda es que no conoce la capa de infraestructura: depende de interfaces que la infraestructura implementa. La tercera es que es testeable con dobles de prueba: los tests pueden sustituir el repositorio por un mock. Las tres propiedades permiten que la lógica de orquestación se pruebe sin base de datos y sin framework web.
 
 ---
-
 
 
 #### Ampliación didáctica aplicada a AceriaApp
@@ -215,25 +214,24 @@ public class OrdenRepositorio : IOrdenRepositorio
 }
 ```
 
-**Línea 1:** `namespace AceriaApp.Monolito.Api.Infraestructura;` → espacio de nombres de la capa de infraestructura.
-**Línea 2:** `public class OrdenRepositorio : IOrdenRepositorio` → implementación del repositorio.
-**Línea 3:** `{` → abre el cuerpo de la clase.
-**Línea 4:** `private readonly AceriaDbContext _db;` → dependencia del contexto de EF Core.
-**Línea 5:** `public OrdenRepositorio(AceriaDbContext db)` → constructor con inyección.
-**Línea 6:** `{` → abre el cuerpo del constructor.
-**Línea 7:** `_db = db;` → asigna el contexto.
-**Línea 8:** `}` → cierra el constructor.
-**Línea 9:** `public async Task AddAsync(Orden orden)` → método del contrato.
-**Línea 10:** `{` → abre el cuerpo del método.
-**Línea 11:** `_db.Ordenes.Add(orden);` → añade la orden al contexto.
-**Línea 12:** `await _db.SaveChangesAsync();` → persiste los cambios.
-**Línea 13:** `}` → cierra el método.
-**Línea 14:** `}` → cierra la clase.
+- **Línea 1:** `namespace AceriaApp.Monolito.Api.Infraestructura;` → espacio de nombres de la capa de infraestructura.
+- **Línea 2:** `public class OrdenRepositorio : IOrdenRepositorio` → implementación del repositorio.
+- **Línea 3:** `{` → abre el cuerpo de la clase.
+- **Línea 4:** `private readonly AceriaDbContext _db;` → dependencia del contexto de EF Core.
+- **Línea 5:** `public OrdenRepositorio(AceriaDbContext db)` → constructor con inyección.
+- **Línea 6:** `{` → abre el cuerpo del constructor.
+- **Línea 7:** `_db = db;` → asigna el contexto.
+- **Línea 8:** `}` → cierra el constructor.
+- **Línea 9:** `public async Task AddAsync(Orden orden)` → método del contrato.
+- **Línea 10:** `{` → abre el cuerpo del método.
+- **Línea 11:** `_db.Ordenes.Add(orden);` → añade la orden al contexto.
+- **Línea 12:** `await _db.SaveChangesAsync();` → persiste los cambios.
+- **Línea 13:** `}` → cierra el método.
+- **Línea 14:** `}` → cierra la clase.
 
 La capa de infraestructura se caracteriza por tres propiedades. La primera es que implementa las interfaces definidas en las capas interiores. La segunda es que conoce el framework y la base de datos. La tercera es que puede sustituirse sin afectar a las capas interiores: la interfaz es la que garantiza el desacoplamiento. Las tres propiedades permiten que el sistema cambie de base de datos o de proveedor de servicios externos sin modificar el dominio ni la aplicación.
 
 ---
-
 
 
 #### Ampliación didáctica aplicada a AceriaApp
@@ -260,18 +258,17 @@ app.MapPost("/api/v1/ordenes", async (
 });
 ```
 
-**Línea 1:** `app.MapPost("/api/v1/ordenes", async (` → declara el endpoint.
-**Línea 2:** `CrearOrdenRequest request,` → recibe la petición.
-**Línea 3:** `OrdenServicio servicio) =>` → inyecta el servicio de aplicación.
-**Línea 4:** `{` → abre el cuerpo del lambda.
-**Línea 5:** `var id = await servicio.CrearOrdenAsync(request.Cliente, request.Cantidad);` → invoca el caso de uso.
-**Línea 6:** `return Results.Created($"/api/v1/ordenes/{id}", new { id });` → devuelve 201 con la ubicación.
-**Línea 7:** `});` → cierra el lambda.
+- **Línea 1:** `app.MapPost("/api/v1/ordenes", async (` → declara el endpoint.
+- **Línea 2:** `CrearOrdenRequest request,` → recibe la petición.
+- **Línea 3:** `OrdenServicio servicio) =>` → inyecta el servicio de aplicación.
+- **Línea 4:** `{` → abre el cuerpo del lambda.
+- **Línea 5:** `var id = await servicio.CrearOrdenAsync(request.Cliente, request.Cantidad);` → invoca el caso de uso.
+- **Línea 6:** `return Results.Created($"/api/v1/ordenes/{id}", new { id });` → devuelve 201 con la ubicación.
+- **Línea 7:** `});` → cierra el lambda.
 
 La capa de presentación se caracteriza por tres propiedades. La primera es que traduce entre HTTP y los casos de uso. La segunda es que no contiene reglas de negocio: delega en la capa de aplicación. La tercera es que puede cambiar de protocolo sin afectar a las capas interiores. Las tres propiedades permiten que el mismo sistema se exponga como API REST, como gRPC o como cola de mensajes sin modificar el dominio ni la aplicación.
 
 ---
-
 
 
 #### Ampliación didáctica aplicada a AceriaApp
@@ -298,15 +295,14 @@ Infraestructura → Dominio
 Dominio no depende de nadie.
 ```
 
-**Línea 1:** `Presentación → Aplicación → Dominio` → la presentación conoce a la aplicación y esta al dominio.
-**Línea 2:** `Infraestructura → Aplicación → Dominio` → la infraestructura conoce a la aplicación y esta al dominio.
-**Línea 3:** `Infraestructura → Dominio` → la infraestructura conoce directamente al dominio.
-**Línea 4:** `Dominio no depende de nadie.` → el dominio es la capa más interna.
+- **Línea 1:** `Presentación → Aplicación → Dominio` → la presentación conoce a la aplicación y esta al dominio.
+- **Línea 2:** `Infraestructura → Aplicación → Dominio` → la infraestructura conoce a la aplicación y esta al dominio.
+- **Línea 3:** `Infraestructura → Dominio` → la infraestructura conoce directamente al dominio.
+- **Línea 4:** `Dominio no depende de nadie.` → el dominio es la capa más interna.
 
 La regla de dependencia tiene dos consecuencias prácticas. La primera es que el dominio es independiente del framework y de la base de datos. La segunda es que las dependencias cíclicas entre capas son imposibles: si el dominio no conoce a la aplicación, la aplicación no puede depender del dominio y del dominio de la aplicación a la vez. La regla se aplica con revisiones de código y con tests automáticos que verifican las dependencias entre ensamblados.
 
 ---
-
 
 
 #### Ampliación didáctica aplicada a AceriaApp
@@ -344,24 +340,23 @@ public class OrdenRepositorio : IOrdenRepositorio
 }
 ```
 
-**Línea 1:** `// Definido en la capa de aplicación` → comentario de ubicación.
-**Línea 2:** `public interface IOrdenRepositorio` → interfaz del contrato.
-**Línea 3:** `{` → abre el cuerpo de la interfaz.
-**Línea 4:** `Task AddAsync(Orden orden);` → método del contrato.
-**Línea 5:** `}` → cierra la interfaz.
-**Línea 6:** `// Implementado en la capa de infraestructura` → comentario de ubicación.
-**Línea 7:** `public class OrdenRepositorio : IOrdenRepositorio` → implementación.
-**Línea 8:** `{` → abre el cuerpo de la clase.
-**Línea 9:** `public async Task AddAsync(Orden orden)` → implementación del método.
-**Línea 10:** `{` → abre el cuerpo del método.
-**Línea 11:** `// implementación` → comentario del cuerpo.
-**Línea 12:** `}` → cierra el método.
-**Línea 13:** `}` → cierra la clase.
+- **Línea 1:** `// Definido en la capa de aplicación` → comentario de ubicación.
+- **Línea 2:** `public interface IOrdenRepositorio` → interfaz del contrato.
+- **Línea 3:** `{` → abre el cuerpo de la interfaz.
+- **Línea 4:** `Task AddAsync(Orden orden);` → método del contrato.
+- **Línea 5:** `}` → cierra la interfaz.
+- **Línea 6:** `// Implementado en la capa de infraestructura` → comentario de ubicación.
+- **Línea 7:** `public class OrdenRepositorio : IOrdenRepositorio` → implementación.
+- **Línea 8:** `{` → abre el cuerpo de la clase.
+- **Línea 9:** `public async Task AddAsync(Orden orden)` → implementación del método.
+- **Línea 10:** `{` → abre el cuerpo del método.
+- **Línea 11:** `// implementación` → comentario del cuerpo.
+- **Línea 12:** `}` → cierra el método.
+- **Línea 13:** `}` → cierra la clase.
 
 La inversión de dependencias tiene dos consecuencias prácticas. La primera es que la capa de aplicación no conoce la implementación concreta: solo conoce la interfaz. La segunda es que la implementación puede sustituirse sin modificar la aplicación: por ejemplo, un repositorio en memoria para los tests. La inversión es la técnica que permite que la regla de dependencia se cumpla incluso cuando la aplicación necesita servicios de infraestructura.
 
 ---
-
 
 
 #### Ampliación didáctica aplicada a AceriaApp
@@ -401,24 +396,23 @@ Arquitectura hexagonal:
       [Adaptador BD]        [Adaptador mensajería]
 ```
 
-**Línea 1:** `[Adaptador HTTP]     [Adaptador CLI]` → dos adaptadores de entrada.
-**Línea 2:** `v                    v` → flechas hacia los puertos.
-**Línea 3:** `[Puerto de entrada]  [Puerto de entrada]` → puertos de entrada.
-**Línea 4:** `\          /` → convergencia hacia el núcleo.
-**Línea 5:** `v        v` → flechas hacia el núcleo.
-**Línea 6:** `[Núcleo]` → núcleo con dominio y aplicación.
-**Línea 7:** `(Dominio + Aplicación)` → contenido del núcleo.
-**Línea 8:** `|        |` → bifurcación hacia los puertos de salida.
-**Línea 9:** `v        v` → flechas hacia los puertos.
-**Línea 10:** `[Puerto de salida]  [Puerto de salida]` → puertos de salida.
-**Línea 11:** `|                    |` → flechas hacia los adaptadores.
-**Línea 12:** `v                    v` → flechas hacia los adaptadores.
-**Línea 13:** `[Adaptador BD]        [Adaptador mensajería]` → dos adaptadores de salida.
+- **Línea 1:** `[Adaptador HTTP]     [Adaptador CLI]` → dos adaptadores de entrada.
+- **Línea 2:** `v                    v` → flechas hacia los puertos.
+- **Línea 3:** `[Puerto de entrada]  [Puerto de entrada]` → puertos de entrada.
+- **Línea 4:** `\          /` → convergencia hacia el núcleo.
+- **Línea 5:** `v        v` → flechas hacia el núcleo.
+- **Línea 6:** `[Núcleo]` → núcleo con dominio y aplicación.
+- **Línea 7:** `(Dominio + Aplicación)` → contenido del núcleo.
+- **Línea 8:** `|        |` → bifurcación hacia los puertos de salida.
+- **Línea 9:** `v        v` → flechas hacia los puertos.
+- **Línea 10:** `[Puerto de salida]  [Puerto de salida]` → puertos de salida.
+- **Línea 11:** `|                    |` → flechas hacia los adaptadores.
+- **Línea 12:** `v                    v` → flechas hacia los adaptadores.
+- **Línea 13:** `[Adaptador BD]        [Adaptador mensajería]` → dos adaptadores de salida.
 
 La arquitectura hexagonal se caracteriza por tres propiedades. La primera es que el núcleo es independiente de los adaptadores. La segunda es que un mismo puerto puede tener varios adaptadores. La tercera es que los adaptadores se pueden sustituir sin modificar el núcleo. Las tres propiedades hacen que la arquitectura hexagonal sea especialmente adecuada para sistemas que deben exponerse en múltiples protocolos o que deben soportar múltiples mecanismos de persistencia.
 
 ---
-
 
 
 #### Ampliación didáctica aplicada a AceriaApp
@@ -444,15 +438,14 @@ Sistema grande       → capas completas con presentación separada.
 Sistema con múltiples protocolos → arquitectura hexagonal.
 ```
 
-**Línea 1:** `Sistema pequeño` → capas mínimas o sin capas.
-**Línea 2:** `Sistema mediano` → tres capas: dominio, aplicación e infraestructura.
-**Línea 3:** `Sistema grande` → capas completas con presentación separada.
-**Línea 4:** `Sistema con múltiples protocolos` → arquitectura hexagonal.
+- **Línea 1:** `Sistema pequeño` → capas mínimas o sin capas.
+- **Línea 2:** `Sistema mediano` → tres capas: dominio, aplicación e infraestructura.
+- **Línea 3:** `Sistema grande` → capas completas con presentación separada.
+- **Línea 4:** `Sistema con múltiples protocolos` → arquitectura hexagonal.
 
 La organización por capas no es una decisión binaria: es un espectro. Un sistema puede empezar con una sola capa y evolucionar hacia varias a medida que crece. La evolución se realiza extrayendo responsabilidades a medida que se identifican. El curso aplica este enfoque: el monolito de los módulos 1 y 2 tiene una organización mínima y en el módulo 3 se refactoriza hacia una organización por capas completa con arquitectura hexagonal.
 
 ---
-
 
 
 #### Ampliación didáctica aplicada a AceriaApp
@@ -480,12 +473,12 @@ Regla             → dependencias hacia el interior.
 Inversión         → interfaces en aplicación, implementación en infraestructura.
 ```
 
-**Línea 1:** `Dominio` → capa más interna con las entidades.
-**Línea 2:** `Aplicación` → casos de uso e interfaces.
-**Línea 3:** `Infraestructura` → implementaciones concretas.
-**Línea 4:** `Presentación` → endpoints de la API.
-**Línea 5:** `Regla` → dependencias hacia el interior.
-**Línea 6:** `Inversión` → interfaces en aplicación, implementación en infraestructura.
+- **Línea 1:** `Dominio` → capa más interna con las entidades.
+- **Línea 2:** `Aplicación` → casos de uso e interfaces.
+- **Línea 3:** `Infraestructura` → implementaciones concretas.
+- **Línea 4:** `Presentación` → endpoints de la API.
+- **Línea 5:** `Regla` → dependencias hacia el interior.
+- **Línea 6:** `Inversión` → interfaces en aplicación, implementación en infraestructura.
 
 La aplicación de la organización por capas prepara el proyecto para los puntos 3.2, 3.3 y 3.4. El punto 3.2 estudiará los puertos y adaptadores con detalle. El punto 3.3 estudiará la separación entre dominio, aplicación e infraestructura. El punto 3.4 estudiará la implementación en ASP.NET Core. El punto 3.1 establece los conceptos que se aplicarán en los tres puntos siguientes.
 
@@ -506,10 +499,9 @@ La aplicación de la organización por capas prepara el proyecto para los puntos
 ---
 
 
-
 #### Ampliación didáctica aplicada a AceriaApp
 
-**La decisión arquitectónica.** M03 comienza sobre la etapa 2.4 de M02, no sobre los proyectos históricos que aparecen en el ZIP. Ese punto de partida conserva GET, POST, PUT, PATCH, DELETE, FluentValidation, OpenAPI y los tests del módulo anterior. La operación de enseñanza es aditiva: antes de introducir una frontera se demuestra que la API funciona, y después se conserva su comportamiento mientras se desarrolla el diseño hexagonal.
+**La decisión arquitectónica.** M03 comienza sobre la etapa 2.4 de M02. Ese punto de partida conserva GET, POST, PUT, PATCH, DELETE, FluentValidation, OpenAPI y los tests del módulo anterior. La operación de enseñanza es aditiva: antes de introducir una frontera se demuestra que la API funciona, y después se conserva su comportamiento mientras se desarrolla el diseño hexagonal.
 
 **Ejemplo concreto en AceriaApp.** La primera etapa M03 no reemplaza los endpoints existentes. Añade un catálogo de capas y reglas de referencia, que ayuda a comprender por qué no deben existir dependencias circulares. En la etapa 3.3 se crean de verdad los proyectos de Dominio, Aplicación e Infraestructura; la etapa 3.4 agrega un grupo nuevo de rutas HTTP hexagonales para no destruir las rutas M02 que ya eran parte del contrato del curso.
 
@@ -544,9 +536,7 @@ Esta clasificación guiará 3.2 y 3.3: primero definiremos puertos como contrato
 
 #### Aplicación al repositorio vigente y corrección de alcance
 
-El contenido del punto 3.1 se aplica al servicio de órdenes que ya funciona en M02. **No se parte de la solución monolítica hipotética de la fuente**, sino de la Minimal API vigente. Los modelos que representan relaciones arquitectónicas son útiles para razonar y probar reglas; por sí solos no convierten el código en una arquitectura hexagonal. Por eso, las prácticas de este módulo también construyen interfaces de aplicación, implementaciones de infraestructura y conexión HTTP real. El proyecto compilado y los tests demuestran la diferencia entre declarar un puerto y utilizarlo en ejecución.
-
-**Fuente íntegra preservada:** [Punto 3.1 original](../FUENTE/M03_3.1_ORIGINAL.md). Las diferencias se identifican en [manifiesto de trazabilidad](../FUENTE/MANIFIESTO_FUENTE.json).
+El contenido del punto 3.1 se aplica al servicio de órdenes que ya funciona en M02. Se parte de la Minimal API construida en el módulo anterior. Los modelos que representan relaciones arquitectónicas son útiles para razonar y probar reglas; por sí solos no convierten el código en una arquitectura hexagonal. Por eso, las prácticas de este módulo también construyen interfaces de aplicación, implementaciones de infraestructura y conexión HTTP real. El proyecto compilado y los tests demuestran la diferencia entre declarar un puerto y utilizarlo en ejecución.
 
 
 ---
@@ -554,7 +544,9 @@ El contenido del punto 3.1 se aplica al servicio de órdenes que ya funciona en 
 # Punto 3.2 — Puertos y adaptadores
 
 **Módulo 3:** Arquitectura hexagonal
+
 **Objetivos de aprendizaje:**
+
 - Comprender el concepto de puerto en arquitectura hexagonal.
 - Comprender el concepto de adaptador y su relación con los puertos.
 - Diferenciar entre puertos de entrada y puertos de salida.
@@ -582,20 +574,19 @@ Puertos de salida (lo que el núcleo necesita):
 - IPublicadorEventos
 ```
 
-**Línea 1:** `Puertos de entrada (lo que el núcleo ofrece):` → título de los puertos de entrada.
-**Línea 2:** `- IOrdenServicio` → puerto de entrada del servicio de órdenes.
-**Línea 3:** `- IInventarioServicio` → puerto de entrada del servicio de inventario.
-**Línea 4:** `Puertos de salida (lo que el núcleo necesita):` → título de los puertos de salida.
-**Línea 5:** `- IOrdenRepositorio` → puerto de salida del repositorio de órdenes.
-**Línea 6:** `- IInventarioRepositorio` → puerto de salida del repositorio de inventario.
-**Línea 7:** `- IPublicadorEventos` → puerto de salida del publicador de eventos.
+- **Línea 1:** `Puertos de entrada (lo que el núcleo ofrece):` → título de los puertos de entrada.
+- **Línea 2:** `- IOrdenServicio` → puerto de entrada del servicio de órdenes.
+- **Línea 3:** `- IInventarioServicio` → puerto de entrada del servicio de inventario.
+- **Línea 4:** `Puertos de salida (lo que el núcleo necesita):` → título de los puertos de salida.
+- **Línea 5:** `- IOrdenRepositorio` → puerto de salida del repositorio de órdenes.
+- **Línea 6:** `- IInventarioRepositorio` → puerto de salida del repositorio de inventario.
+- **Línea 7:** `- IPublicadorEventos` → puerto de salida del publicador de eventos.
 
 El puerto es una frontera del núcleo. Su definición establece qué operaciones se ofrecen y qué operaciones se requieren. La frontera no depende del protocolo ni de la tecnología: un mismo puerto de entrada puede ser invocado desde HTTP, desde gRPC o desde una cola de mensajes. Un mismo puerto de salida puede ser implementado por un repositorio de base de datos, por un cliente HTTP o por un repositorio en memoria. La independencia entre puerto y tecnología es la que permite que el núcleo sea estable a lo largo del tiempo.
 
 La definición de puertos se realiza en las capas interiores. Los puertos de entrada se definen en la capa de aplicación, que es la que expone los casos de uso. Los puertos de salida también se definen en la capa de aplicación, porque son las operaciones que los casos de uso necesitan del exterior. El dominio no define puertos: el dominio solo contiene entidades, value objects y reglas de negocio. La separación entre dominio y puertos es la que garantiza que el dominio sea independiente de cualquier contrato de comunicación.
 
 ---
-
 
 
 #### Ampliación didáctica aplicada a AceriaApp
@@ -641,30 +632,29 @@ public class OrdenRepositorioSqlServer : IOrdenRepositorio
 }
 ```
 
-**Línea 1:** `// Puerto de salida definido en la aplicación` → comentario de ubicación.
-**Línea 2:** `public interface IOrdenRepositorio` → puerto de salida.
-**Línea 3:** `{` → abre el cuerpo.
-**Línea 4:** `Task AddAsync(Orden orden);` → método del puerto.
-**Línea 5:** `}` → cierra el cuerpo.
-**Línea 6:** `// Adaptador de salida en la infraestructura` → comentario de ubicación.
-**Línea 7:** `public class OrdenRepositorioSqlServer : IOrdenRepositorio` → adaptador concreto.
-**Línea 8:** `{` → abre el cuerpo.
-**Línea 9:** `private readonly AceriaDbContext _db;` → dependencia del contexto.
-**Línea 10:** `public OrdenRepositorioSqlServer(AceriaDbContext db)` → constructor.
-**Línea 11:** `{` → abre el cuerpo del constructor.
-**Línea 12:** `_db = db;` → asigna el contexto.
-**Línea 13:** `}` → cierra el constructor.
-**Línea 14:** `public async Task AddAsync(Orden orden)` → implementación del método.
-**Línea 15:** `{` → abre el cuerpo del método.
-**Línea 16:** `_db.Ordenes.Add(orden);` → añade al contexto.
-**Línea 17:** `await _db.SaveChangesAsync();` → persiste los cambios.
-**Línea 18:** `}` → cierra el método.
-**Línea 19:** `}` → cierra la clase.
+- **Línea 1:** `// Puerto de salida definido en la aplicación` → comentario de ubicación.
+- **Línea 2:** `public interface IOrdenRepositorio` → puerto de salida.
+- **Línea 3:** `{` → abre el cuerpo.
+- **Línea 4:** `Task AddAsync(Orden orden);` → método del puerto.
+- **Línea 5:** `}` → cierra el cuerpo.
+- **Línea 6:** `// Adaptador de salida en la infraestructura` → comentario de ubicación.
+- **Línea 7:** `public class OrdenRepositorioSqlServer : IOrdenRepositorio` → adaptador concreto.
+- **Línea 8:** `{` → abre el cuerpo.
+- **Línea 9:** `private readonly AceriaDbContext _db;` → dependencia del contexto.
+- **Línea 10:** `public OrdenRepositorioSqlServer(AceriaDbContext db)` → constructor.
+- **Línea 11:** `{` → abre el cuerpo del constructor.
+- **Línea 12:** `_db = db;` → asigna el contexto.
+- **Línea 13:** `}` → cierra el constructor.
+- **Línea 14:** `public async Task AddAsync(Orden orden)` → implementación del método.
+- **Línea 15:** `{` → abre el cuerpo del método.
+- **Línea 16:** `_db.Ordenes.Add(orden);` → añade al contexto.
+- **Línea 17:** `await _db.SaveChangesAsync();` → persiste los cambios.
+- **Línea 18:** `}` → cierra el método.
+- **Línea 19:** `}` → cierra la clase.
 
 El adaptador es la única pieza del sistema que conoce la tecnología concreta. El adaptador de base de datos conoce EF Core. El adaptador HTTP conoce HttpClient. El adaptador de mensajería conoce el broker. El núcleo no conoce ninguna de estas tecnologías. La separación permite que el núcleo se pruebe sin infraestructura y que la infraestructura se sustituya sin modificar el núcleo. La separación también permite que un mismo puerto tenga varios adaptadores según el contexto de ejecución.
 
 ---
-
 
 
 #### Ampliación didáctica aplicada a AceriaApp
@@ -690,17 +680,16 @@ public interface IOrdenServicio
 }
 ```
 
-**Línea 1:** `public interface IOrdenServicio` → puerto de entrada.
-**Línea 2:** `{` → abre el cuerpo.
-**Línea 3:** `Task<Guid> CrearOrdenAsync(string cliente, string material, int cantidad);` → caso de uso de creación.
-**Línea 4:** `Task<OrdenDto?> ObtenerOrdenAsync(Guid id);` → caso de uso de consulta.
-**Línea 5:** `Task CancelarOrdenAsync(Guid id);` → caso de uso de cancelación.
-**Línea 6:** `}` → cierra el cuerpo.
+- **Línea 1:** `public interface IOrdenServicio` → puerto de entrada.
+- **Línea 2:** `{` → abre el cuerpo.
+- **Línea 3:** `Task<Guid> CrearOrdenAsync(string cliente, string material, int cantidad);` → caso de uso de creación.
+- **Línea 4:** `Task<OrdenDto?> ObtenerOrdenAsync(Guid id);` → caso de uso de consulta.
+- **Línea 5:** `Task CancelarOrdenAsync(Guid id);` → caso de uso de cancelación.
+- **Línea 6:** `}` → cierra el cuerpo.
 
 Los puertos de entrada se caracterizan por tres propiedades. La primera es que describen operaciones en términos del negocio. La segunda es que no dependen del protocolo de comunicación. La tercera es que agrupan los casos de uso de una misma capacidad de negocio. Las tres propiedades permiten que el núcleo se exponga en distintos protocolos sin modificar su código. La definición de puertos de entrada es el primer paso para desacoplar el núcleo del exterior.
 
 ---
-
 
 
 #### Ampliación didáctica aplicada a AceriaApp
@@ -732,22 +721,21 @@ public interface IPublicadorEventos
 }
 ```
 
-**Línea 1:** `public interface IOrdenRepositorio` → puerto de salida del repositorio.
-**Línea 2:** `{` → abre el cuerpo.
-**Línea 3:** `Task AddAsync(Orden orden);` → añadir una orden.
-**Línea 4:** `Task<Orden?> GetByIdAsync(Guid id);` → obtener una orden por identificador.
-**Línea 5:** `Task UpdateAsync(Orden orden);` → actualizar una orden.
-**Línea 6:** `Task DeleteAsync(Guid id);` → eliminar una orden.
-**Línea 7:** `}` → cierra el cuerpo.
-**Línea 8:** `public interface IPublicadorEventos` → puerto de salida del publicador.
-**Línea 9:** `{` → abre el cuerpo.
-**Línea 10:** `Task PublicarAsync(string tipo, object contenido);` → publicar un evento.
-**Línea 11:** `}` → cierra el cuerpo.
+- **Línea 1:** `public interface IOrdenRepositorio` → puerto de salida del repositorio.
+- **Línea 2:** `{` → abre el cuerpo.
+- **Línea 3:** `Task AddAsync(Orden orden);` → añadir una orden.
+- **Línea 4:** `Task<Orden?> GetByIdAsync(Guid id);` → obtener una orden por identificador.
+- **Línea 5:** `Task UpdateAsync(Orden orden);` → actualizar una orden.
+- **Línea 6:** `Task DeleteAsync(Guid id);` → eliminar una orden.
+- **Línea 7:** `}` → cierra el cuerpo.
+- **Línea 8:** `public interface IPublicadorEventos` → puerto de salida del publicador.
+- **Línea 9:** `{` → abre el cuerpo.
+- **Línea 10:** `Task PublicarAsync(string tipo, object contenido);` → publicar un evento.
+- **Línea 11:** `}` → cierra el cuerpo.
 
 Los puertos de salida se caracterizan por tres propiedades. La primera es que describen operaciones técnicas que el núcleo necesita. La segunda es que no dependen de la tecnología concreta. La tercera es que agrupan las operaciones sobre un mismo recurso externo. Las tres propiedades permiten que el núcleo se pruebe con adaptadores en memoria y que la infraestructura se sustituya sin modificar el núcleo.
 
 ---
-
 
 
 #### Ampliación didáctica aplicada a AceriaApp
@@ -778,18 +766,17 @@ app.MapPost("/api/v1/ordenes", async (
 });
 ```
 
-**Línea 1:** `app.MapPost("/api/v1/ordenes", async (` → declara el endpoint HTTP.
-**Línea 2:** `CrearOrdenRequest request,` → recibe la petición.
-**Línea 3:** `IOrdenServicio servicio) =>` → inyecta el puerto de entrada.
-**Línea 4:** `{` → abre el cuerpo del lambda.
-**Línea 5:** `var id = await servicio.CrearOrdenAsync(request.Cliente, request.Material, request.Cantidad);` → invoca el caso de uso.
-**Línea 6:** `return Results.Created($"/api/v1/ordenes/{id}", new { id });` → devuelve 201 con la ubicación.
-**Línea 7:** `});` → cierra el lambda.
+- **Línea 1:** `app.MapPost("/api/v1/ordenes", async (` → declara el endpoint HTTP.
+- **Línea 2:** `CrearOrdenRequest request,` → recibe la petición.
+- **Línea 3:** `IOrdenServicio servicio) =>` → inyecta el puerto de entrada.
+- **Línea 4:** `{` → abre el cuerpo del lambda.
+- **Línea 5:** `var id = await servicio.CrearOrdenAsync(request.Cliente, request.Material, request.Cantidad);` → invoca el caso de uso.
+- **Línea 6:** `return Results.Created($"/api/v1/ordenes/{id}", new { id });` → devuelve 201 con la ubicación.
+- **Línea 7:** `});` → cierra el lambda.
 
 Los adaptadores de entrada se caracterizan por tres propiedades. La primera es que traducen entre el protocolo y los puertos de entrada. La segunda es que no contienen reglas de negocio. La tercera es que pueden coexistir varios adaptadores para el mismo puerto. Las tres propiedades permiten que el mismo caso de uso se exponga en HTTP, gRPC y mensajería sin modificar el núcleo.
 
 ---
-
 
 
 #### Ampliación didáctica aplicada a AceriaApp
@@ -834,30 +821,29 @@ public class PublicadorEventosRabbitMq : IPublicadorEventos
 }
 ```
 
-**Línea 1:** `public class PublicadorEventosRabbitMq : IPublicadorEventos` → adaptador concreto.
-**Línea 2:** `{` → abre el cuerpo.
-**Línea 3:** `private readonly IConnection _connection;` → dependencia de la conexión.
-**Línea 4:** `public PublicadorEventosRabbitMq(IConnection connection)` → constructor.
-**Línea 5:** `{` → abre el cuerpo del constructor.
-**Línea 6:** `_connection = connection;` → asigna la conexión.
-**Línea 7:** `}` → cierra el constructor.
-**Línea 8:** `public async Task PublicarAsync(string tipo, object contenido)` → implementación del método.
-**Línea 9:** `{` → abre el cuerpo del método.
-**Línea 10:** `using var canal = _connection.CreateModel();` → crea un canal.
-**Línea 11:** `var cuerpo = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(contenido));` → serializa el contenido.
-**Línea 12:** `canal.BasicPublish(` → publica el mensaje.
-**Línea 13:** `exchange: "acería.eventos",` → nombre del exchange.
-**Línea 14:** `routingKey: tipo,` → clave de enrutamiento.
-**Línea 15:** `basicProperties: null,` → propiedades por defecto.
-**Línea 16:** `body: cuerpo);` → cuerpo del mensaje.
-**Línea 17:** `await Task.CompletedTask;` → completa la tarea.
-**Línea 18:** `}` → cierra el método.
-**Línea 19:** `}` → cierra la clase.
+- **Línea 1:** `public class PublicadorEventosRabbitMq : IPublicadorEventos` → adaptador concreto.
+- **Línea 2:** `{` → abre el cuerpo.
+- **Línea 3:** `private readonly IConnection _connection;` → dependencia de la conexión.
+- **Línea 4:** `public PublicadorEventosRabbitMq(IConnection connection)` → constructor.
+- **Línea 5:** `{` → abre el cuerpo del constructor.
+- **Línea 6:** `_connection = connection;` → asigna la conexión.
+- **Línea 7:** `}` → cierra el constructor.
+- **Línea 8:** `public async Task PublicarAsync(string tipo, object contenido)` → implementación del método.
+- **Línea 9:** `{` → abre el cuerpo del método.
+- **Línea 10:** `using var canal = _connection.CreateModel();` → crea un canal.
+- **Línea 11:** `var cuerpo = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(contenido));` → serializa el contenido.
+- **Línea 12:** `canal.BasicPublish(` → publica el mensaje.
+- **Línea 13:** `exchange: "acería.eventos",` → nombre del exchange.
+- **Línea 14:** `routingKey: tipo,` → clave de enrutamiento.
+- **Línea 15:** `basicProperties: null,` → propiedades por defecto.
+- **Línea 16:** `body: cuerpo);` → cuerpo del mensaje.
+- **Línea 17:** `await Task.CompletedTask;` → completa la tarea.
+- **Línea 18:** `}` → cierra el método.
+- **Línea 19:** `}` → cierra la clase.
 
 Los adaptadores de salida se caracterizan por tres propiedades. La primera es que implementan un puerto de salida. La segunda es que conocen la tecnología concreta. La tercera es que pueden sustituirse sin modificar el núcleo. Las tres propiedades permiten que la infraestructura evolucione con independencia del núcleo y que el núcleo se pruebe con adaptadores en memoria.
 
 ---
-
 
 
 #### Ampliación didáctica aplicada a AceriaApp
@@ -879,13 +865,12 @@ builder.Services.AddScoped<IOrdenRepositorio, OrdenRepositorioSqlServer>();
 builder.Services.AddScoped<IOrdenServicio, OrdenServicio>();
 ```
 
-**Línea 1:** `builder.Services.AddScoped<IOrdenRepositorio, OrdenRepositorioSqlServer>();` → registra el adaptador de salida.
-**Línea 2:** `builder.Services.AddScoped<IOrdenServicio, OrdenServicio>();` → registra el puerto de entrada.
+- **Línea 1:** `builder.Services.AddScoped<IOrdenRepositorio, OrdenRepositorioSqlServer>();` → registra el adaptador de salida.
+- **Línea 2:** `builder.Services.AddScoped<IOrdenServicio, OrdenServicio>();` → registra el puerto de entrada.
 
 La inversión de dependencias tiene dos consecuencias prácticas. La primera es que el núcleo no conoce la implementación concreta. La segunda es que la implementación puede sustituirse sin modificar el núcleo. La combinación de ambas permite que el núcleo se pruebe con adaptadores en memoria y que la infraestructura evolucione con independencia del núcleo. La inversión es la técnica que hace posible la arquitectura hexagonal en la práctica.
 
 ---
-
 
 
 #### Ampliación didáctica aplicada a AceriaApp
@@ -914,17 +899,16 @@ Puertos secundarios (driven):
 - IPublicadorEventos (el núcleo lo invoca).
 ```
 
-**Línea 1:** `Puertos primarios (driving):` → título de los puertos primarios.
-**Línea 2:** `- IOrdenServicio (el exterior lo invoca).` → puerto de entrada.
-**Línea 3:** `- IInventarioServicio (el exterior lo invoca).` → puerto de entrada.
-**Línea 4:** `Puertos secundarios (driven):` → título de los puertos secundarios.
-**Línea 5:** `- IOrdenRepositorio (el núcleo lo invoca).` → puerto de salida.
-**Línea 6:** `- IPublicadorEventos (el núcleo lo invoca).` → puerto de salida.
+- **Línea 1:** `Puertos primarios (driving):` → título de los puertos primarios.
+- **Línea 2:** `- IOrdenServicio (el exterior lo invoca).` → puerto de entrada.
+- **Línea 3:** `- IInventarioServicio (el exterior lo invoca).` → puerto de entrada.
+- **Línea 4:** `Puertos secundarios (driven):` → título de los puertos secundarios.
+- **Línea 5:** `- IOrdenRepositorio (el núcleo lo invoca).` → puerto de salida.
+- **Línea 6:** `- IPublicadorEventos (el núcleo lo invoca).` → puerto de salida.
 
 La clasificación en primarios y secundarios tiene dos consecuencias prácticas. La primera es que ayuda a identificar qué puertos son invocados por el exterior y qué puertos son invocados por el núcleo. La segunda es que facilita la organización del código: los puertos primarios se agrupan con los casos de uso y los secundarios con los servicios externos. La clasificación es útil para comunicar la arquitectura entre los miembros del equipo.
 
 ---
-
 
 
 #### Ampliación didáctica aplicada a AceriaApp
@@ -952,17 +936,16 @@ Reloj del sistema       → puerto de salida.
 Clase interna del dominio → no se define puerto.
 ```
 
-**Línea 1:** `Base de datos` → puerto de salida.
-**Línea 2:** `Cliente HTTP` → puerto de salida.
-**Línea 3:** `Publicador de eventos` → puerto de salida.
-**Línea 4:** `Servicio de archivos` → puerto de salida.
-**Línea 5:** `Reloj del sistema` → puerto de salida.
-**Línea 6:** `Clase interna del dominio` → no se define puerto.
+- **Línea 1:** `Base de datos` → puerto de salida.
+- **Línea 2:** `Cliente HTTP` → puerto de salida.
+- **Línea 3:** `Publicador de eventos` → puerto de salida.
+- **Línea 4:** `Servicio de archivos` → puerto de salida.
+- **Línea 5:** `Reloj del sistema` → puerto de salida.
+- **Línea 6:** `Clase interna del dominio` → no se define puerto.
 
 La decisión de definir un puerto tiene dos consecuencias prácticas. La primera es que añade una interfaz y una indirección. La segunda es que facilita la sustitución y las pruebas. La combinación de ambas permite que el núcleo sea testeable y que la infraestructura evolucione con independencia del núcleo. La decisión se revisa al final de cada módulo para asegurar que los puertos siguen siendo necesarios.
 
 ---
-
 
 
 #### Ampliación didáctica aplicada a AceriaApp
@@ -989,11 +972,11 @@ Adaptadores salida   → repositorios SQL Server, publicador de eventos.
 Inversión            → registro en el contenedor de dependencias.
 ```
 
-**Línea 1:** `Puertos de entrada` → interfaces de casos de uso.
-**Línea 2:** `Puertos de salida` → interfaces de operaciones sobre recursos externos.
-**Línea 3:** `Adaptadores entrada` → endpoints de Minimal API.
-**Línea 4:** `Adaptadores salida` → repositorios SQL Server, publicador de eventos.
-**Línea 5:** `Inversión` → registro en el contenedor.
+- **Línea 1:** `Puertos de entrada` → interfaces de casos de uso.
+- **Línea 2:** `Puertos de salida` → interfaces de operaciones sobre recursos externos.
+- **Línea 3:** `Adaptadores entrada` → endpoints de Minimal API.
+- **Línea 4:** `Adaptadores salida` → repositorios SQL Server, publicador de eventos.
+- **Línea 5:** `Inversión` → registro en el contenedor.
 
 La aplicación de los puertos y adaptadores prepara el proyecto para los puntos 3.3 y 3.4. El punto 3.3 estudiará la separación entre dominio, aplicación e infraestructura con detalle. El punto 3.4 estudiará la implementación de la arquitectura hexagonal en ASP.NET Core. El punto 3.2 establece los conceptos que se aplicarán en los dos puntos siguientes.
 
@@ -1011,7 +994,6 @@ La aplicación de los puertos y adaptadores prepara el proyecto para los puntos 
 - Los puertos se definen en el núcleo y los adaptadores en el exterior.
 
 ---
-
 
 
 #### Ampliación didáctica aplicada a AceriaApp
@@ -1049,9 +1031,7 @@ Con esta tabla resulta más claro por qué un adaptador de entrada y uno de sali
 
 #### Aplicación al repositorio vigente y corrección de alcance
 
-El contenido del punto 3.2 se aplica al servicio de órdenes que ya funciona en M02. **No se parte de la solución monolítica hipotética de la fuente**, sino de la Minimal API vigente. Los modelos que representan relaciones arquitectónicas son útiles para razonar y probar reglas; por sí solos no convierten el código en una arquitectura hexagonal. Por eso, las prácticas de este módulo también construyen interfaces de aplicación, implementaciones de infraestructura y conexión HTTP real. El proyecto compilado y los tests demuestran la diferencia entre declarar un puerto y utilizarlo en ejecución.
-
-**Fuente íntegra preservada:** [Punto 3.2 original](../FUENTE/M03_3.2_ORIGINAL.md). Las diferencias se identifican en [manifiesto de trazabilidad](../FUENTE/MANIFIESTO_FUENTE.json).
+El contenido del punto 3.2 se aplica al servicio de órdenes que ya funciona en M02. Se parte de la Minimal API construida en el módulo anterior. Los modelos que representan relaciones arquitectónicas son útiles para razonar y probar reglas; por sí solos no convierten el código en una arquitectura hexagonal. Por eso, las prácticas de este módulo también construyen interfaces de aplicación, implementaciones de infraestructura y conexión HTTP real. El proyecto compilado y los tests demuestran la diferencia entre declarar un puerto y utilizarlo en ejecución.
 
 
 ---
@@ -1059,7 +1039,9 @@ El contenido del punto 3.2 se aplica al servicio de órdenes que ya funciona en 
 # Punto 3.3 — Separación entre dominio, aplicación e infraestructura
 
 **Módulo 3:** Arquitectura hexagonal
+
 **Objetivos de aprendizaje:**
+
 - Comprender la separación física entre dominio, aplicación e infraestructura.
 - Comprender las ventajas de la separación en proyectos independientes.
 - Comprender la relación entre la separación física y la regla de dependencia.
@@ -1088,21 +1070,20 @@ AceriaApp.Monolito.Infraestructura/
 AceriaApp.Monolito.Api/
 ```
 
-**Línea 1:** `Separación lógica:` → título de la primera forma.
-**Línea 2:** `AceriaApp.Monolito.Api/` → proyecto único.
-**Línea 3:** `├── Dominio/` → carpeta de dominio.
-**Línea 4:** `├── Aplicacion/` → carpeta de aplicación.
-**Línea 5:** `└── Infraestructura/` → carpeta de infraestructura.
-**Línea 6:** `Separación física:` → título de la segunda forma.
-**Línea 7:** `AceriaApp.Monolito.Dominio/` → proyecto de dominio.
-**Línea 8:** `AceriaApp.Monolito.Aplicacion/` → proyecto de aplicación.
-**Línea 9:** `AceriaApp.Monolito.Infraestructura/` → proyecto de infraestructura.
-**Línea 10:** `AceriaApp.Monolito.Api/` → proyecto de presentación.
+- **Línea 1:** `Separación lógica:` → título de la primera forma.
+- **Línea 2:** `AceriaApp.Monolito.Api/` → proyecto único.
+- **Línea 3:** `├── Dominio/` → carpeta de dominio.
+- **Línea 4:** `├── Aplicacion/` → carpeta de aplicación.
+- **Línea 5:** `└── Infraestructura/` → carpeta de infraestructura.
+- **Línea 6:** `Separación física:` → título de la segunda forma.
+- **Línea 7:** `AceriaApp.Monolito.Dominio/` → proyecto de dominio.
+- **Línea 8:** `AceriaApp.Monolito.Aplicacion/` → proyecto de aplicación.
+- **Línea 9:** `AceriaApp.Monolito.Infraestructura/` → proyecto de infraestructura.
+- **Línea 10:** `AceriaApp.Monolito.Api/` → proyecto de presentación.
 
 La separación física tiene tres ventajas medibles. La primera es que el compilador impide las violaciones de la regla de dependencia: si el dominio intenta referenciar la infraestructura, el proyecto no compila. La segunda es que las dependencias son visibles en el archivo `.csproj` de cada proyecto. La tercera es que los tests pueden referenciar solo los proyectos que necesitan. La separación lógica no ofrece estas ventajas porque todas las capas comparten el mismo proyecto y las violaciones solo se detectan con revisión manual.
 
 ---
-
 
 
 #### Ampliación didáctica aplicada a AceriaApp
@@ -1127,16 +1108,15 @@ AceriaApp.Monolito.Dominio/
 └── Cliente.cs
 ```
 
-**Línea 1:** `AceriaApp.Monolito.Dominio/` → proyecto de dominio.
-**Línea 2:** `Orden.cs` → entidad de orden.
-**Línea 3:** `LineaOrden.cs` → entidad de línea de orden.
-**Línea 4:** `Material.cs` → entidad de material.
-**Línea 5:** `Cliente.cs` → entidad de cliente.
+- **Línea 1:** `AceriaApp.Monolito.Dominio/` → proyecto de dominio.
+- **Línea 2:** `Orden.cs` → entidad de orden.
+- **Línea 3:** `LineaOrden.cs` → entidad de línea de orden.
+- **Línea 4:** `Material.cs` → entidad de material.
+- **Línea 5:** `Cliente.cs` → entidad de cliente.
 
 El proyecto de dominio se caracteriza por tres propiedades. La primera es que no referencia otros proyectos del sistema. La segunda es que no referencia paquetes de infraestructura. La tercera es que sus entidades no tienen dependencias externas. Las tres propiedades garantizan que el dominio sea independiente y reutilizable. La independencia permite que el dominio se pruebe sin base de datos ni framework web.
 
 ---
-
 
 
 #### Ampliación didáctica aplicada a AceriaApp
@@ -1165,20 +1145,19 @@ AceriaApp.Monolito.Aplicacion/
     └── OrdenServicio.cs
 ```
 
-**Línea 1:** `AceriaApp.Monolito.Aplicacion/` → proyecto de aplicación.
-**Línea 2:** `Puertos/` → carpeta de puertos.
-**Línea 3:** `Entrada/` → puertos de entrada.
-**Línea 4:** `IOrdenServicio.cs` → puerto de entrada del servicio de órdenes.
-**Línea 5:** `Salida/` → puertos de salida.
-**Línea 6:** `IOrdenRepositorio.cs` → puerto de salida del repositorio.
-**Línea 7:** `IPublicadorEventos.cs` → puerto de salida del publicador.
-**Línea 8:** `Servicios/` → carpeta de servicios.
-**Línea 9:** `OrdenServicio.cs` → implementación del puerto de entrada.
+- **Línea 1:** `AceriaApp.Monolito.Aplicacion/` → proyecto de aplicación.
+- **Línea 2:** `Puertos/` → carpeta de puertos.
+- **Línea 3:** `Entrada/` → puertos de entrada.
+- **Línea 4:** `IOrdenServicio.cs` → puerto de entrada del servicio de órdenes.
+- **Línea 5:** `Salida/` → puertos de salida.
+- **Línea 6:** `IOrdenRepositorio.cs` → puerto de salida del repositorio.
+- **Línea 7:** `IPublicadorEventos.cs` → puerto de salida del publicador.
+- **Línea 8:** `Servicios/` → carpeta de servicios.
+- **Línea 9:** `OrdenServicio.cs` → implementación del puerto de entrada.
 
 El proyecto de aplicación se caracteriza por tres propiedades. La primera es que referencia solo el proyecto de dominio. La segunda es que define las interfaces que la infraestructura implementa. La tercera es que no conoce la tecnología concreta. Las tres propiedades garantizan que la aplicación sea independiente de la infraestructura y de la presentación. La independencia permite que la aplicación se pruebe con adaptadores en memoria.
 
 ---
-
 
 
 #### Ampliación didáctica aplicada a AceriaApp
@@ -1206,19 +1185,18 @@ AceriaApp.Monolito.Infraestructura/
     └── ClienteInventarioHttp.cs
 ```
 
-**Línea 1:** `AceriaApp.Monolito.Infraestructura/` → proyecto de infraestructura.
-**Línea 2:** `Persistencia/` → carpeta de persistencia.
-**Línea 3:** `AceriaDbContext.cs` → contexto de EF Core.
-**Línea 4:** `OrdenRepositorioSqlServer.cs` → adaptador de repositorio.
-**Línea 5:** `Mensajeria/` → carpeta de mensajería.
-**Línea 6:** `PublicadorEventosRabbitMq.cs` → adaptador de publicador.
-**Línea 7:** `Clientes/` → carpeta de clientes HTTP.
-**Línea 8:** `ClienteInventarioHttp.cs` → adaptador de cliente HTTP.
+- **Línea 1:** `AceriaApp.Monolito.Infraestructura/` → proyecto de infraestructura.
+- **Línea 2:** `Persistencia/` → carpeta de persistencia.
+- **Línea 3:** `AceriaDbContext.cs` → contexto de EF Core.
+- **Línea 4:** `OrdenRepositorioSqlServer.cs` → adaptador de repositorio.
+- **Línea 5:** `Mensajeria/` → carpeta de mensajería.
+- **Línea 6:** `PublicadorEventosRabbitMq.cs` → adaptador de publicador.
+- **Línea 7:** `Clientes/` → carpeta de clientes HTTP.
+- **Línea 8:** `ClienteInventarioHttp.cs` → adaptador de cliente HTTP.
 
 El proyecto de infraestructura se caracteriza por tres propiedades. La primera es que referencia los proyectos de aplicación y dominio. La segunda es que implementa las interfaces definidas en la aplicación. La tercera es que conoce la tecnología concreta. Las tres propiedades permiten que la infraestructura se sustituya sin modificar el núcleo. La sustitución se realiza cambiando la implementación y el registro en el contenedor de dependencias.
 
 ---
-
 
 
 #### Ampliación didáctica aplicada a AceriaApp
@@ -1243,16 +1221,15 @@ AceriaApp.Monolito.Api/
 └── appsettings.json
 ```
 
-**Línea 1:** `AceriaApp.Monolito.Api/` → proyecto de presentación.
-**Línea 2:** `Program.cs` → punto de entrada y configuración.
-**Línea 3:** `Endpoints/` → carpeta de endpoints.
-**Línea 4:** `OrdenesEndpoints.cs` → endpoints de órdenes.
-**Línea 5:** `appsettings.json` → configuración.
+- **Línea 1:** `AceriaApp.Monolito.Api/` → proyecto de presentación.
+- **Línea 2:** `Program.cs` → punto de entrada y configuración.
+- **Línea 3:** `Endpoints/` → carpeta de endpoints.
+- **Línea 4:** `OrdenesEndpoints.cs` → endpoints de órdenes.
+- **Línea 5:** `appsettings.json` → configuración.
 
 El proyecto de presentación se caracteriza por tres propiedades. La primera es que referencia el proyecto de aplicación. La segunda es que registra la infraestructura en el contenedor de dependencias. La tercera es que expone los endpoints. Las tres propiedades permiten que el sistema se exponga en distintos protocolos sin modificar el núcleo. La presentación es el único proyecto que conoce el protocolo HTTP.
 
 ---
-
 
 
 #### Ampliación didáctica aplicada a AceriaApp
@@ -1278,15 +1255,14 @@ AceriaApp.Monolito.Infraestructura/ → referencia Aplicacion y Dominio.
 AceriaApp.Monolito.Api/             → referencia Aplicacion e Infraestructura.
 ```
 
-**Línea 1:** `AceriaApp.Monolito.Dominio/` → sin referencias.
-**Línea 2:** `AceriaApp.Monolito.Aplicacion/` → referencia Dominio.
-**Línea 3:** `AceriaApp.Monolito.Infraestructura/` → referencia Aplicacion y Dominio.
-**Línea 4:** `AceriaApp.Monolito.Api/` → referencia Aplicacion e Infraestructura.
+- **Línea 1:** `AceriaApp.Monolito.Dominio/` → sin referencias.
+- **Línea 2:** `AceriaApp.Monolito.Aplicacion/` → referencia Dominio.
+- **Línea 3:** `AceriaApp.Monolito.Infraestructura/` → referencia Aplicacion y Dominio.
+- **Línea 4:** `AceriaApp.Monolito.Api/` → referencia Aplicacion e Infraestructura.
 
 La configuración de referencias tiene dos consecuencias prácticas. La primera es que el compilador impide las violaciones de la regla. La segunda es que las dependencias son visibles en el archivo `.csproj`. La combinación de ambas permite que la separación física sea verificable de forma automática. El proyecto de presentación referencia la infraestructura porque necesita registrar las implementaciones en el contenedor de dependencias.
 
 ---
-
 
 
 #### Ampliación didáctica aplicada a AceriaApp
@@ -1315,16 +1291,15 @@ builder.Services.AddDbContext<AceriaDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("AceriaDb")));
 ```
 
-**Línea 1:** `// Program.cs del proyecto de presentación` → comentario de ubicación.
-**Línea 2:** `builder.Services.AddScoped<IOrdenRepositorio, OrdenRepositorioSqlServer>();` → registra el adaptador de salida.
-**Línea 3:** `builder.Services.AddScoped<IOrdenServicio, OrdenServicio>();` → registra el puerto de entrada.
-**Línea 4:** `builder.Services.AddDbContext<AceriaDbContext>(options =>` → registra el contexto de EF Core.
-**Línea 5:** `options.UseSqlServer(builder.Configuration.GetConnectionString("AceriaDb")));` → configura SQL Server Express.
+- **Línea 1:** `// Program.cs del proyecto de presentación` → comentario de ubicación.
+- **Línea 2:** `builder.Services.AddScoped<IOrdenRepositorio, OrdenRepositorioSqlServer>();` → registra el adaptador de salida.
+- **Línea 3:** `builder.Services.AddScoped<IOrdenServicio, OrdenServicio>();` → registra el puerto de entrada.
+- **Línea 4:** `builder.Services.AddDbContext<AceriaDbContext>(options =>` → registra el contexto de EF Core.
+- **Línea 5:** `options.UseSqlServer(builder.Configuration.GetConnectionString("AceriaDb")));` → configura SQL Server Express.
 
 El contenedor de dependencias tiene dos consecuencias prácticas. La primera es que el núcleo no conoce la implementación concreta. La segunda es que la implementación puede sustituirse cambiando el registro. La combinación de ambas permite que el núcleo se pruebe con adaptadores en memoria y que la infraestructura evolucione con independencia del núcleo. El contenedor es la pieza que materializa la inversión de dependencias.
 
 ---
-
 
 
 #### Ampliación didáctica aplicada a AceriaApp
@@ -1350,15 +1325,14 @@ AceriaApp.Infraestructura.Tests/ → referencia Infraestructura.
 AceriaApp.Api.Tests/             → referencia Api.
 ```
 
-**Línea 1:** `AceriaApp.Dominio.Tests/` → referencia el proyecto de dominio.
-**Línea 2:** `AceriaApp.Aplicacion.Tests/` → referencia aplicación y dominio.
-**Línea 3:** `AceriaApp.Infraestructura.Tests/` → referencia infraestructura.
-**Línea 4:** `AceriaApp.Api.Tests/` → referencia la API.
+- **Línea 1:** `AceriaApp.Dominio.Tests/` → referencia el proyecto de dominio.
+- **Línea 2:** `AceriaApp.Aplicacion.Tests/` → referencia aplicación y dominio.
+- **Línea 3:** `AceriaApp.Infraestructura.Tests/` → referencia infraestructura.
+- **Línea 4:** `AceriaApp.Api.Tests/` → referencia la API.
 
 La separación física tiene dos consecuencias prácticas para los tests. La primera es que cada proyecto de tests solo compila si sus dependencias están correctamente referenciadas. La segunda es que los tests del dominio no necesitan base de datos ni framework web. La combinación de ambas reduce el tiempo de ejecución de los tests y facilita su mantenimiento. La separación es una inversión que se recupera en cada ejecución de la suite.
 
 ---
-
 
 
 #### Ampliación didáctica aplicada a AceriaApp
@@ -1388,15 +1362,14 @@ Infraestructura/ → biblioteca reutilizable.
 Api/             → aplicación ejecutable.
 ```
 
-**Línea 1:** `Dominio/` → biblioteca reutilizable.
-**Línea 2:** `Aplicacion/` → biblioteca reutilizable.
-**Línea 3:** `Infraestructura/` → biblioteca reutilizable.
-**Línea 4:** `Api/` → aplicación ejecutable.
+- **Línea 1:** `Dominio/` → biblioteca reutilizable.
+- **Línea 2:** `Aplicacion/` → biblioteca reutilizable.
+- **Línea 3:** `Infraestructura/` → biblioteca reutilizable.
+- **Línea 4:** `Api/` → aplicación ejecutable.
 
 La separación física tiene dos consecuencias prácticas para el despliegue. La primera es que las bibliotecas pueden reutilizarse en distintas aplicaciones. La segunda es que la aplicación ejecutable solo contiene el código de arranque. La combinación de ambas reduce el tamaño del artefacto desplegable y facilita el despliegue. La separación es una inversión que se recupera en cada despliegue.
 
 ---
-
 
 
 #### Ampliación didáctica aplicada a AceriaApp
@@ -1428,12 +1401,12 @@ Regla            → referencias hacia el interior.
 Validación       → test de referencias entre proyectos.
 ```
 
-**Línea 1:** `Dominio/` → entidades y reglas de negocio.
-**Línea 2:** `Aplicacion/` → puertos y servicios.
-**Línea 3:** `Infraestructura/` → repositorios y adaptadores.
-**Línea 4:** `Api/` → endpoints y configuración.
-**Línea 5:** `Regla` → referencias hacia el interior.
-**Línea 6:** `Validación` → test de referencias entre proyectos.
+- **Línea 1:** `Dominio/` → entidades y reglas de negocio.
+- **Línea 2:** `Aplicacion/` → puertos y servicios.
+- **Línea 3:** `Infraestructura/` → repositorios y adaptadores.
+- **Línea 4:** `Api/` → endpoints y configuración.
+- **Línea 5:** `Regla` → referencias hacia el interior.
+- **Línea 6:** `Validación` → test de referencias entre proyectos.
 
 La aplicación de la separación física prepara el proyecto para el punto 3.4. El punto 3.4 estudiará la implementación de la arquitectura hexagonal en ASP.NET Core con proyectos separados. El punto 3.3 establece la base que se aplicará en el punto 3.4. La separación física es la estructura que soporta la arquitectura hexagonal.
 
@@ -1451,7 +1424,6 @@ La aplicación de la separación física prepara el proyecto para el punto 3.4. 
 - La separación física se verifica con tests que comprueban las referencias del archivo `.csproj`.
 
 ---
-
 
 
 #### Ampliación didáctica aplicada a AceriaApp
@@ -1489,9 +1461,7 @@ Además, compara el resultado final de la carpeta 3.3 con la base M02. Los endpo
 
 #### Aplicación al repositorio vigente y corrección de alcance
 
-El contenido del punto 3.3 se aplica al servicio de órdenes que ya funciona en M02. **No se parte de la solución monolítica hipotética de la fuente**, sino de la Minimal API vigente. Los modelos que representan relaciones arquitectónicas son útiles para razonar y probar reglas; por sí solos no convierten el código en una arquitectura hexagonal. Por eso, las prácticas de este módulo también construyen interfaces de aplicación, implementaciones de infraestructura y conexión HTTP real. El proyecto compilado y los tests demuestran la diferencia entre declarar un puerto y utilizarlo en ejecución.
-
-**Fuente íntegra preservada:** [Punto 3.3 original](../FUENTE/M03_3.3_ORIGINAL.md). Las diferencias se identifican en [manifiesto de trazabilidad](../FUENTE/MANIFIESTO_FUENTE.json).
+El contenido del punto 3.3 se aplica al servicio de órdenes que ya funciona en M02. Se parte de la Minimal API construida en el módulo anterior. Los modelos que representan relaciones arquitectónicas son útiles para razonar y probar reglas; por sí solos no convierten el código en una arquitectura hexagonal. Por eso, las prácticas de este módulo también construyen interfaces de aplicación, implementaciones de infraestructura y conexión HTTP real. El proyecto compilado y los tests demuestran la diferencia entre declarar un puerto y utilizarlo en ejecución.
 
 
 ---
@@ -1499,7 +1469,9 @@ El contenido del punto 3.3 se aplica al servicio de órdenes que ya funciona en 
 # Punto 3.4 — Implementación en ASP.NET Core
 
 **Módulo 3:** Arquitectura hexagonal
+
 **Objetivos de aprendizaje:**
+
 - Comprender cómo se implementa la arquitectura hexagonal en ASP.NET Core.
 - Comprender la configuración del contenedor de dependencias con puertos y adaptadores.
 - Comprender la organización de los endpoints como adaptadores de entrada.
@@ -1524,18 +1496,17 @@ app.MapPost("/api/v1/ordenes", async (
 });
 ```
 
-**Línea 1:** `app.MapPost("/api/v1/ordenes", async (` → declara el endpoint HTTP.
-**Línea 2:** `CrearOrdenRequest request,` → recibe la petición.
-**Línea 3:** `IOrdenServicio servicio) =>` → inyecta el puerto de entrada.
-**Línea 4:** `{` → abre el cuerpo del lambda.
-**Línea 5:** `var id = await servicio.CrearOrdenAsync(request.Cliente, request.Material, request.Cantidad);` → invoca el caso de uso.
-**Línea 6:** `return Results.Created($"/api/v1/ordenes/{id}", new { id });` → devuelve 201 con la ubicación.
-**Línea 7:** `});` → cierra el lambda.
+- **Línea 1:** `app.MapPost("/api/v1/ordenes", async (` → declara el endpoint HTTP.
+- **Línea 2:** `CrearOrdenRequest request,` → recibe la petición.
+- **Línea 3:** `IOrdenServicio servicio) =>` → inyecta el puerto de entrada.
+- **Línea 4:** `{` → abre el cuerpo del lambda.
+- **Línea 5:** `var id = await servicio.CrearOrdenAsync(request.Cliente, request.Material, request.Cantidad);` → invoca el caso de uso.
+- **Línea 6:** `return Results.Created($"/api/v1/ordenes/{id}", new { id });` → devuelve 201 con la ubicación.
+- **Línea 7:** `});` → cierra el lambda.
 
 El adaptador de entrada se caracteriza por tres propiedades. La primera es que traduce entre HTTP y los puertos de entrada. La segunda es que no contiene reglas de negocio. La tercera es que puede sustituirse por otro adaptador sin modificar el núcleo. Las tres propiedades permiten que el mismo caso de uso se exponga en HTTP, gRPC o mensajería.
 
 ---
-
 
 
 #### Ampliación didáctica aplicada a AceriaApp
@@ -1559,15 +1530,14 @@ builder.Services.AddDbContext<AceriaDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("AceriaDb")));
 ```
 
-**Línea 1:** `builder.Services.AddScoped<IOrdenRepositorio, OrdenRepositorioSqlServer>();` → registra el adaptador de salida con ciclo scoped.
-**Línea 2:** `builder.Services.AddScoped<IOrdenServicio, OrdenServicio>();` → registra el puerto de entrada con ciclo scoped.
-**Línea 3:** `builder.Services.AddDbContext<AceriaDbContext>(options =>` → registra el contexto de EF Core.
-**Línea 4:** `options.UseSqlServer(builder.Configuration.GetConnectionString("AceriaDb")));` → configura SQL Server Express.
+- **Línea 1:** `builder.Services.AddScoped<IOrdenRepositorio, OrdenRepositorioSqlServer>();` → registra el adaptador de salida con ciclo scoped.
+- **Línea 2:** `builder.Services.AddScoped<IOrdenServicio, OrdenServicio>();` → registra el puerto de entrada con ciclo scoped.
+- **Línea 3:** `builder.Services.AddDbContext<AceriaDbContext>(options =>` → registra el contexto de EF Core.
+- **Línea 4:** `options.UseSqlServer(builder.Configuration.GetConnectionString("AceriaDb")));` → configura SQL Server Express.
 
 El contenedor de dependencias tiene dos consecuencias prácticas. La primera es que el núcleo no conoce la implementación concreta. La segunda es que la implementación puede sustituirse cambiando el registro. La combinación de ambas permite que el núcleo se pruebe con adaptadores en memoria y que la infraestructura evolucione con independencia del núcleo.
 
 ---
-
 
 
 #### Ampliación didáctica aplicada a AceriaApp
@@ -1596,14 +1566,13 @@ Scoped    → una instancia por ámbito de petición.
 Singleton → una instancia por aplicación.
 ```
 
-**Línea 1:** `Transient` → nueva instancia en cada resolución.
-**Línea 2:** `Scoped` → una instancia por ámbito de petición.
-**Línea 3:** `Singleton` → una instancia por aplicación.
+- **Línea 1:** `Transient` → nueva instancia en cada resolución.
+- **Línea 2:** `Scoped` → una instancia por ámbito de petición.
+- **Línea 3:** `Singleton` → una instancia por aplicación.
 
 La elección del ciclo tiene dos consecuencias prácticas. La primera es que el ciclo incorrecto produce errores de concurrencia o de memoria. La segunda es que el ciclo correcto mantiene el rendimiento y la coherencia. La combinación de ambas permite que el contenedor gestione los recursos de forma eficiente. El curso usa `Scoped` para la mayoría de los servicios y `Singleton` para los adaptadores sin estado.
 
 ---
-
 
 
 #### Ampliación didáctica aplicada a AceriaApp
@@ -1630,18 +1599,17 @@ builder.Services.AddHttpClient<IClienteInventario, ClienteInventarioHttp>(client
 });
 ```
 
-**Línea 1:** `builder.Services.AddScoped<IOrdenRepositorio, OrdenRepositorioSqlServer>();` → repositorio con ciclo scoped.
-**Línea 2:** `builder.Services.AddScoped<IInventarioRepositorio, InventarioRepositorioSqlServer>();` → repositorio con ciclo scoped.
-**Línea 3:** `builder.Services.AddSingleton<IPublicadorEventos, PublicadorEventosRabbitMq>();` → publicador con ciclo singleton.
-**Línea 4:** `builder.Services.AddHttpClient<IClienteInventario, ClienteInventarioHttp>(client =>` → cliente HTTP tipado.
-**Línea 5:** `{` → abre el bloque de configuración.
-**Línea 6:** `client.BaseAddress = new Uri("http://acería-inventario");` → URL base del cliente.
-**Línea 7:** `});` → cierra el bloque.
+- **Línea 1:** `builder.Services.AddScoped<IOrdenRepositorio, OrdenRepositorioSqlServer>();` → repositorio con ciclo scoped.
+- **Línea 2:** `builder.Services.AddScoped<IInventarioRepositorio, InventarioRepositorioSqlServer>();` → repositorio con ciclo scoped.
+- **Línea 3:** `builder.Services.AddSingleton<IPublicadorEventos, PublicadorEventosRabbitMq>();` → publicador con ciclo singleton.
+- **Línea 4:** `builder.Services.AddHttpClient<IClienteInventario, ClienteInventarioHttp>(client =>` → cliente HTTP tipado.
+- **Línea 5:** `{` → abre el bloque de configuración.
+- **Línea 6:** `client.BaseAddress = new Uri("http://acería-inventario");` → URL base del cliente.
+- **Línea 7:** `});` → cierra el bloque.
 
 El registro de adaptadores tiene dos consecuencias prácticas. La primera es que cada adaptador tiene su ciclo adecuado. La segunda es que los adaptadores pueden sustituirse cambiando el registro. La combinación de ambas permite que la infraestructura evolucione con independencia del núcleo.
 
 ---
-
 
 
 #### Ampliación didáctica aplicada a AceriaApp
@@ -1677,26 +1645,25 @@ public static class OrdenesEndpoints
 }
 ```
 
-**Línea 1:** `public static class OrdenesEndpoints` → clase estática de endpoints.
-**Línea 2:** `{` → abre el cuerpo.
-**Línea 3:** `public static void MapOrdenesEndpoints(this WebApplication app)` → método de extensión.
-**Línea 4:** `{` → abre el cuerpo del método.
-**Línea 5:** `app.MapGet("/api/v1/ordenes", async (IOrdenServicio servicio) =>` → endpoint GET.
-**Línea 6:** `await servicio.ListarOrdenesAsync());` → invoca el puerto de entrada.
-**Línea 7:** `app.MapPost("/api/v1/ordenes", async (` → endpoint POST.
-**Línea 8:** `CrearOrdenRequest request,` → recibe la petición.
-**Línea 9:** `IOrdenServicio servicio) =>` → inyecta el puerto de entrada.
-**Línea 10:** `{` → abre el cuerpo del lambda.
-**Línea 11:** `var id = await servicio.CrearOrdenAsync(request.Cliente, request.Material, request.Cantidad);` → invoca el caso de uso.
-**Línea 12:** `return Results.Created($"/api/v1/ordenes/{id}", new { id });` → devuelve 201.
-**Línea 13:** `});` → cierra el lambda.
-**Línea 14:** `}` → cierra el método.
-**Línea 15:** `}` → cierra la clase.
+- **Línea 1:** `public static class OrdenesEndpoints` → clase estática de endpoints.
+- **Línea 2:** `{` → abre el cuerpo.
+- **Línea 3:** `public static void MapOrdenesEndpoints(this WebApplication app)` → método de extensión.
+- **Línea 4:** `{` → abre el cuerpo del método.
+- **Línea 5:** `app.MapGet("/api/v1/ordenes", async (IOrdenServicio servicio) =>` → endpoint GET.
+- **Línea 6:** `await servicio.ListarOrdenesAsync());` → invoca el puerto de entrada.
+- **Línea 7:** `app.MapPost("/api/v1/ordenes", async (` → endpoint POST.
+- **Línea 8:** `CrearOrdenRequest request,` → recibe la petición.
+- **Línea 9:** `IOrdenServicio servicio) =>` → inyecta el puerto de entrada.
+- **Línea 10:** `{` → abre el cuerpo del lambda.
+- **Línea 11:** `var id = await servicio.CrearOrdenAsync(request.Cliente, request.Material, request.Cantidad);` → invoca el caso de uso.
+- **Línea 12:** `return Results.Created($"/api/v1/ordenes/{id}", new { id });` → devuelve 201.
+- **Línea 13:** `});` → cierra el lambda.
+- **Línea 14:** `}` → cierra el método.
+- **Línea 15:** `}` → cierra la clase.
 
 La agrupación de endpoints tiene dos consecuencias prácticas. La primera es que la lectura del código mejora. La segunda es que la configuración del arranque se simplifica con una llamada por recurso. La combinación de ambas reduce el coste de mantenimiento y facilita la incorporación de nuevos miembros al equipo.
 
 ---
-
 
 
 #### Ampliación didáctica aplicada a AceriaApp
@@ -1745,32 +1712,31 @@ public class OrdenRepositorioSqlServer : IOrdenRepositorio
 }
 ```
 
-**Línea 1:** `public class OrdenRepositorioSqlServer : IOrdenRepositorio` → adaptador de salida.
-**Línea 2:** `{` → abre el cuerpo.
-**Línea 3:** `private readonly AceriaDbContext _db;` → dependencia del contexto.
-**Línea 4:** `public OrdenRepositorioSqlServer(AceriaDbContext db)` → constructor.
-**Línea 5:** `{` → abre el cuerpo del constructor.
-**Línea 6:** `_db = db;` → asigna el contexto.
-**Línea 7:** `}` → cierra el constructor.
-**Línea 8:** `public async Task AddAsync(Orden orden)` → implementación del método.
-**Línea 9:** `{` → abre el cuerpo.
-**Línea 10:** `_db.Ordenes.Add(orden);` → añade la orden.
-**Línea 11:** `await _db.SaveChangesAsync();` → persiste los cambios.
-**Línea 12:** `}` → cierra el método.
-**Línea 13:** `public async Task<Orden?> GetByIdAsync(Guid id)` → consulta por identificador.
-**Línea 14:** `{` → abre el cuerpo.
-**Línea 15:** `return await _db.Ordenes.AsNoTracking().FirstOrDefaultAsync(o => o.Id == id);` → devuelve la orden o null.
-**Línea 16:** `}` → cierra el método.
-**Línea 17:** `public async Task<List<Orden>> ListarAsync()` → lista todas las órdenes.
-**Línea 18:** `{` → abre el cuerpo.
-**Línea 19:** `return await _db.Ordenes.AsNoTracking().ToListAsync();` → devuelve la lista.
-**Línea 20:** `}` → cierra el método.
-**Línea 21:** `}` → cierra la clase.
+- **Línea 1:** `public class OrdenRepositorioSqlServer : IOrdenRepositorio` → adaptador de salida.
+- **Línea 2:** `{` → abre el cuerpo.
+- **Línea 3:** `private readonly AceriaDbContext _db;` → dependencia del contexto.
+- **Línea 4:** `public OrdenRepositorioSqlServer(AceriaDbContext db)` → constructor.
+- **Línea 5:** `{` → abre el cuerpo del constructor.
+- **Línea 6:** `_db = db;` → asigna el contexto.
+- **Línea 7:** `}` → cierra el constructor.
+- **Línea 8:** `public async Task AddAsync(Orden orden)` → implementación del método.
+- **Línea 9:** `{` → abre el cuerpo.
+- **Línea 10:** `_db.Ordenes.Add(orden);` → añade la orden.
+- **Línea 11:** `await _db.SaveChangesAsync();` → persiste los cambios.
+- **Línea 12:** `}` → cierra el método.
+- **Línea 13:** `public async Task<Orden?> GetByIdAsync(Guid id)` → consulta por identificador.
+- **Línea 14:** `{` → abre el cuerpo.
+- **Línea 15:** `return await _db.Ordenes.AsNoTracking().FirstOrDefaultAsync(o => o.Id == id);` → devuelve la orden o null.
+- **Línea 16:** `}` → cierra el método.
+- **Línea 17:** `public async Task<List<Orden>> ListarAsync()` → lista todas las órdenes.
+- **Línea 18:** `{` → abre el cuerpo.
+- **Línea 19:** `return await _db.Ordenes.AsNoTracking().ToListAsync();` → devuelve la lista.
+- **Línea 20:** `}` → cierra el método.
+- **Línea 21:** `}` → cierra la clase.
 
 El repositorio se caracteriza por tres propiedades. La primera es que implementa un puerto de salida. La segunda es que conoce EF Core y la base de datos. La tercera es que puede sustituirse por otro adaptador. Las tres propiedades permiten que el núcleo se pruebe con adaptadores en memoria y que la base de datos evolucione con independencia del núcleo.
 
 ---
-
 
 
 #### Ampliación didáctica aplicada a AceriaApp
@@ -1804,21 +1770,20 @@ app.MapOrdenesEndpoints();
 app.Run();
 ```
 
-**Línea 1:** `var builder = WebApplication.CreateBuilder(args);` → crea el constructor.
-**Línea 2:** `builder.Services.AddDocumentacionOpenApi(new MetadatosApi());` → registra la documentación.
-**Línea 3:** `builder.Services.AddValidacion();` → registra los validadores.
-**Línea 4:** `builder.Services.AddPersistencia(builder.Configuration);` → registra la persistencia.
-**Línea 5:** `builder.Services.AddRepositorios();` → registra los repositorios.
-**Línea 6:** `builder.Services.AddServiciosAplicacion();` → registra los servicios de aplicación.
-**Línea 7:** `var app = builder.Build();` → construye la aplicación.
-**Línea 8:** `app.UseDocumentacionOpenApi(new ConfiguracionOpenApi());` → habilita la documentación.
-**Línea 9:** `app.MapOrdenesEndpoints();` → registra los endpoints de órdenes.
-**Línea 10:** `app.Run();` → arranca el servidor.
+- **Línea 1:** `var builder = WebApplication.CreateBuilder(args);` → crea el constructor.
+- **Línea 2:** `builder.Services.AddDocumentacionOpenApi(new MetadatosApi());` → registra la documentación.
+- **Línea 3:** `builder.Services.AddValidacion();` → registra los validadores.
+- **Línea 4:** `builder.Services.AddPersistencia(builder.Configuration);` → registra la persistencia.
+- **Línea 5:** `builder.Services.AddRepositorios();` → registra los repositorios.
+- **Línea 6:** `builder.Services.AddServiciosAplicacion();` → registra los servicios de aplicación.
+- **Línea 7:** `var app = builder.Build();` → construye la aplicación.
+- **Línea 8:** `app.UseDocumentacionOpenApi(new ConfiguracionOpenApi());` → habilita la documentación.
+- **Línea 9:** `app.MapOrdenesEndpoints();` → registra los endpoints de órdenes.
+- **Línea 10:** `app.Run();` → arranca el servidor.
 
 La configuración del arranque tiene dos consecuencias prácticas. La primera es que el archivo `Program.cs` se mantiene corto y legible. La segunda es que cada grupo de servicios se registra en un método de extensión que puede probarse de forma aislada. La combinación de ambas reduce el coste de mantenimiento y facilita la incorporación de nuevos servicios.
 
 ---
-
 
 
 #### Ampliación didáctica aplicada a AceriaApp
@@ -1849,20 +1814,19 @@ public void Contenedor_TieneRegistradoIOrdenServicio()
 }
 ```
 
-**Línea 1:** `[Fact]` → marca el método como test.
-**Línea 2:** `public void Contenedor_TieneRegistradoIOrdenServicio()` → declara el test.
-**Línea 3:** `{` → abre el cuerpo.
-**Línea 4:** `var services = new ServiceCollection();` → crea una colección de servicios.
-**Línea 5:** `services.AddServiciosAplicacion();` → registra los servicios.
-**Línea 6:** `var descriptor = services.FirstOrDefault(s => s.ServiceType == typeof(IOrdenServicio));` → busca el descriptor.
-**Línea 7:** `descriptor.Should().NotBeNull();` → verifica que existe.
-**Línea 8:** `descriptor!.Lifetime.Should().Be(ServiceLifetime.Scoped);` → verifica el ciclo de vida.
-**Línea 9:** `}` → cierra el cuerpo.
+- **Línea 1:** `[Fact]` → marca el método como test.
+- **Línea 2:** `public void Contenedor_TieneRegistradoIOrdenServicio()` → declara el test.
+- **Línea 3:** `{` → abre el cuerpo.
+- **Línea 4:** `var services = new ServiceCollection();` → crea una colección de servicios.
+- **Línea 5:** `services.AddServiciosAplicacion();` → registra los servicios.
+- **Línea 6:** `var descriptor = services.FirstOrDefault(s => s.ServiceType == typeof(IOrdenServicio));` → busca el descriptor.
+- **Línea 7:** `descriptor.Should().NotBeNull();` → verifica que existe.
+- **Línea 8:** `descriptor!.Lifetime.Should().Be(ServiceLifetime.Scoped);` → verifica el ciclo de vida.
+- **Línea 9:** `}` → cierra el cuerpo.
 
 Los tests de configuración tienen dos consecuencias prácticas. La primera es que la configuración se verifica de forma automática. La segunda es que los errores de registro se detectan en la suite de tests. La combinación de ambas permite que la configuración evolucione con seguridad y que los errores se detecten antes de producción.
 
 ---
-
 
 
 #### Ampliación didáctica aplicada a AceriaApp
@@ -1897,20 +1861,19 @@ AceriaApp.Monolito.Api/
 └── appsettings.json
 ```
 
-**Línea 1:** `AceriaApp.Monolito.Api/` → proyecto de presentación.
-**Línea 2:** `Program.cs` → punto de entrada.
-**Línea 3:** `Endpoints/` → carpeta de endpoints.
-**Línea 4:** `OrdenesEndpoints.cs` → endpoints de órdenes.
-**Línea 5:** `Configuracion/` → carpeta de configuración.
-**Línea 6:** `PersistenciaExtensions.cs` → extensión de persistencia.
-**Línea 7:** `RepositoriosExtensions.cs` → extensión de repositorios.
-**Línea 8:** `ServiciosAplicacionExtensions.cs` → extensión de servicios.
-**Línea 9:** `appsettings.json` → configuración.
+- **Línea 1:** `AceriaApp.Monolito.Api/` → proyecto de presentación.
+- **Línea 2:** `Program.cs` → punto de entrada.
+- **Línea 3:** `Endpoints/` → carpeta de endpoints.
+- **Línea 4:** `OrdenesEndpoints.cs` → endpoints de órdenes.
+- **Línea 5:** `Configuracion/` → carpeta de configuración.
+- **Línea 6:** `PersistenciaExtensions.cs` → extensión de persistencia.
+- **Línea 7:** `RepositoriosExtensions.cs` → extensión de repositorios.
+- **Línea 8:** `ServiciosAplicacionExtensions.cs` → extensión de servicios.
+- **Línea 9:** `appsettings.json` → configuración.
 
 La organización de archivos tiene dos consecuencias prácticas. La primera es que cada grupo de funcionalidad tiene su archivo. La segunda es que el archivo `Program.cs` se mantiene corto. La combinación de ambas reduce el coste de mantenimiento y facilita la incorporación de nuevos miembros al equipo.
 
 ---
-
 
 
 #### Ampliación didáctica aplicada a AceriaApp
@@ -1938,12 +1901,12 @@ Validación        → tests de registros.
 Cierre del módulo → resumen del estado en docs.
 ```
 
-**Línea 1:** `Endpoints` → clases de extensión por recurso.
-**Línea 2:** `Repositorios` → adaptadores de salida.
-**Línea 3:** `Servicios` → puertos de entrada.
-**Línea 4:** `Contenedor` → configuración con métodos de extensión.
-**Línea 5:** `Validación` → tests de registros.
-**Línea 6:** `Cierre del módulo` → resumen del estado en `docs`.
+- **Línea 1:** `Endpoints` → clases de extensión por recurso.
+- **Línea 2:** `Repositorios` → adaptadores de salida.
+- **Línea 3:** `Servicios` → puertos de entrada.
+- **Línea 4:** `Contenedor` → configuración con métodos de extensión.
+- **Línea 5:** `Validación` → tests de registros.
+- **Línea 6:** `Cierre del módulo` → resumen del estado en `docs`.
 
 La implementación de la arquitectura hexagonal cierra el módulo 3 y prepara el terreno para el módulo 4. El módulo 4 estudiará los patrones de arquitectura: Repository, Unit of Work, Mediator y Result Pattern. La arquitectura hexagonal es la base sobre la que se aplican los patrones. El punto 3.4 cierra el módulo 3 con el resumen del estado del proyecto.
 
@@ -1963,14 +1926,13 @@ La implementación de la arquitectura hexagonal cierra el módulo 3 y prepara el
 ---
 
 
-
 #### Ampliación didáctica aplicada a AceriaApp
 
 **La decisión arquitectónica.** El resultado que queremos al finalizar M03 es una aplicación que conserva M02 y demuestra una ruta nueva verdaderamente hexagonal. La solución final contiene una entidad independiente de HTTP/SQL, un caso de uso de aplicación, un puerto de repositorio, un adaptador EF Core y endpoints Minimal API que consumen el caso de uso. La composición se establece por DI y los tests verifican su funcionamiento.
 
 **Ejemplo concreto en AceriaApp.** El alumno debe poder recorrer la teoría de los cuatro puntos para entender cada decisión y seguir las prácticas para escribir las piezas en su orden. Por eso cada fragmento del laboratorio tiene una ruta, un tipo de operación —crear, insertar o reemplazar— y un paso. El E2E aplica esos fragmentos sin copiar los archivos C# terminados y confirma compilación y pruebas. Solo entonces se publica la carpeta de referencia correspondiente.
 
-**Riesgo, alternativa y límite.** El conteo histórico de proyectos y tests del ZIP no coincide necesariamente con el repositorio real porque la base actual M02 es distinta. Inventar cantidades para hacerlas parecer iguales sería un error pedagógico. Se conserva la fuente original y se documentan los números reales observados por GitHub Actions, con trazabilidad de qué componentes nuevos aportó cada etapa.
+**Riesgo, alternativa y límite.** El número de proyectos y pruebas debe comprobarse sobre la solución de cada etapa. Un catálogo que enumera componentes no demuestra que estén implementados ni registrados. Ejecutar las pruebas y revisar las referencias permite identificar qué componentes incorpora cada punto y cuáles participan realmente en la aplicación.
 
 **Comprobación técnica y aprendizaje.** Como cierre, solicita tres demostraciones: ejecutar el GET viejo de M02, crear y recuperar una orden por el nuevo endpoint hexagonal, y explicar por qué `OrdenesCasoUso` no referencia `HexagonalDbContext`. Esa triangulación enlaza compatibilidad, comportamiento y arquitectura sin declarar terminado algo que solo compila.
 
@@ -2001,6 +1963,4 @@ Un módulo puede darse por reproducible cuando se cumplen cuatro condiciones ind
 
 #### Aplicación al repositorio vigente y corrección de alcance
 
-El contenido del punto 3.4 se aplica al servicio de órdenes que ya funciona en M02. **No se parte de la solución monolítica hipotética de la fuente**, sino de la Minimal API vigente. Los modelos que representan relaciones arquitectónicas son útiles para razonar y probar reglas; por sí solos no convierten el código en una arquitectura hexagonal. Por eso, las prácticas de este módulo también construyen interfaces de aplicación, implementaciones de infraestructura y conexión HTTP real. El proyecto compilado y los tests demuestran la diferencia entre declarar un puerto y utilizarlo en ejecución.
-
-**Fuente íntegra preservada:** [Punto 3.4 original](../FUENTE/M03_3.4_ORIGINAL.md). Las diferencias se identifican en [manifiesto de trazabilidad](../FUENTE/MANIFIESTO_FUENTE.json).
+El contenido del punto 3.4 se aplica al servicio de órdenes que ya funciona en M02. Se parte de la Minimal API construida en el módulo anterior. Los modelos que representan relaciones arquitectónicas son útiles para razonar y probar reglas; por sí solos no convierten el código en una arquitectura hexagonal. Por eso, las prácticas de este módulo también construyen interfaces de aplicación, implementaciones de infraestructura y conexión HTTP real. El proyecto compilado y los tests demuestran la diferencia entre declarar un puerto y utilizarlo en ejecución.

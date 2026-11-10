@@ -19,6 +19,6 @@ Se adopta la organización por capas: presentación, aplicación, dominio e infr
 - Negativas: la organización requiere disciplina en la aplicación de la regla.
 - Mitigación: validación automática de la regla con el validador.
 
-## Adaptación técnica verificada del curso (M03)
+## Aplicación en AceriaApp
 
-Se parte de la API real y probada de M02, se conservan sus endpoints y se añaden reglas de dependencia verificadas en código. Los proyectos de Dominio, Aplicación e Infraestructura deben obedecer la dirección de referencias; en 3.4 se expone un nuevo adaptador HTTP funcional. El catálogo original se preserva sin atribuirle implementaciones que todavía no existen.
+Se parte de la API real y probada de M02, se conservan sus endpoints y se añaden reglas de dependencia verificadas en código. Los proyectos de Dominio, Aplicación e Infraestructura deben obedecer la dirección de referencias; en 3.4 se expone un nuevo adaptador HTTP funcional. El catálogo describe las relaciones arquitectónicas; cada implementación se comprueba en su proyecto correspondiente.

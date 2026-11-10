@@ -44,20 +44,7 @@ jobs:
         run: python3 .github/scripts/m03_e2e_desde_practicas.py --out M03_ARQUITECTURA_HEXAGONAL/M03_E2E_RESULTADOS.json
       - name: Generar los PDF y comprobar todas las páginas y el contenido
         run: python3 .github/scripts/m03_generar_pdf.py
-      - name: Comprobar integridad de las cuatro fuentes originales
-        run: |
-          python - <<'PYTHON'
-          from pathlib import Path
-          import hashlib,json,re
-          root=Path('M03_ARQUITECTURA_HEXAGONAL')
-          manifest=json.loads((root/'FUENTE/MANIFIESTO_FUENTE.json').read_text())
-          for p in manifest['puntos']:
-              content=(root/p['original']).read_bytes()
-              assert hashlib.sha256(content).hexdigest()==p['sha256'],p
-              assert len(re.findall(rb'^### Paso \d+ ',content,re.M))==24,p
-              assert len(re.findall(rb'^### Bloque \d+ ',content,re.M))==10,p
-          PYTHON
-      - name: Publicar PDF, evidencia E2E y proyectos generados de la fuente
+      - name: Publicar PDF, evidencia E2E y proyectos generados desde las prácticas
         shell: bash
         run: |
           git config user.name 'github-actions[bot]'

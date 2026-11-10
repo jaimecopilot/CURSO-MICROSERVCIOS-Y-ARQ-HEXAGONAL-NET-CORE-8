@@ -1,4 +1,3 @@
-<!-- Documento de trabajo M03. Adaptación a AceriaApp.Api desde la fuente original íntegra en FUENTE. -->
 # Puertos y adaptadores — Punto 3.2
 
 ## Puerto

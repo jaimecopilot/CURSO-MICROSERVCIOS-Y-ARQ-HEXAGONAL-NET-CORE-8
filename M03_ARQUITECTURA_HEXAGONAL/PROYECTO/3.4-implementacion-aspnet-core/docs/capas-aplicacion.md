@@ -1,4 +1,3 @@
-<!-- Documento de trabajo M03. Adaptación a AceriaApp.Api desde la fuente original íntegra en FUENTE. -->
 # Capas de la aplicación — Punto 3.1
 
 ## Capas

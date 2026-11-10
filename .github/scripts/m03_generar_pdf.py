@@ -46,10 +46,18 @@ hr { border: none; border-top: 1pt solid #d0d9e2; margin: 14pt 0; }
 """
 
 def main():
+ if (M03/'FUENTE').exists():
+  raise ValueError('La carpeta FUENTE no forma parte del material docente M03')
  reports=[]
  for typ in ('TEORIA','PRACTICAS'):
   doc=M03/typ/f'M03_{typ}.md'
   source=doc.read_text(encoding='utf-8')
+  if re.search(r'\bfuentes?\b',source,re.I):
+   raise ValueError(f'Referencia editorial a fuentes en M03_{typ}.md')
+  if re.search(r'^\*\*Líneas? \d+',source,re.M):
+   raise ValueError(f'Explicaciones de código sin separar en M03_{typ}.md')
+  explanations=len(re.findall(r'^- \*\*Líneas? \d+',source,re.M))
+  assert explanations == {'TEORIA':340,'PRACTICAS':73}[typ], (typ,explanations)
   if typ=='TEORIA':
    assert len(re.findall(r'^### Bloque \d+ —',source,re.M))==40
    assert all(f'# Punto 3.{i}' in source for i in range(1,5))
@@ -60,6 +68,9 @@ def main():
   if re.search(r'^## Errores\s+comunes\s+del\s+ejercicio\s+completo\s*$',source,re.I|re.M):
    raise ValueError(f'La seccion global de errores no debe aparecer en M03_{typ}.md')
   html=tohtml(source)
+  separated=len(re.findall(r'<li>\s*(?:<p>)?\s*<strong>Líneas? \d+',html))
+  if separated!=explanations:
+   raise ValueError(f'Explicaciones unidas al convertir {typ}: {separated}/{explanations}')
   pdf=doc.with_suffix('.pdf')
   HTML(string="<html lang='es'><meta charset='utf-8'><body>"+html+'</body></html>',
        base_url=str(doc.parent.resolve())).write_pdf(str(pdf),stylesheets=[CSS(string=CSS_TEXT)])
@@ -67,6 +78,10 @@ def main():
   minpages=20 if typ=='TEORIA' else 40
   if len(document)<minpages:raise ValueError(f'PDF corto {typ}: {len(document)} páginas')
   text='\n'.join(page.get_text() for page in document)
+  if re.search(r'\bfuentes?\b',text,re.I):
+   raise ValueError(f'Referencia editorial a fuentes en el PDF {typ}')
+  if len(re.findall(r'Líneas? \d+:',text))!=explanations:
+   raise ValueError(f'Explicaciones omitidas al generar el PDF {typ}')
   for i in range(1,5):
    if f'Punto 3.{i}' not in text:raise ValueError(f'Sin punto 3.{i} en {typ}')
   blank=[];bounds=[]
@@ -81,6 +96,7 @@ def main():
   if blank or bounds:raise RuntimeError(f'Geometria PDF {typ}: vacias {blank}, fuera {bounds}')
   reports.append(dict(documento=typ,paginas=len(document),bytes=pdf.stat().st_size,
                       palabras=len(source.split()),pdf=str(pdf.relative_to(ROOT)),
+                      explicaciones_separadas=explanations,
                       paginas_blancas=blank,desbordamientos=bounds))
   print(json.dumps(reports[-1],ensure_ascii=False),flush=True)
  (M03/'REPORTE_PDF_M03.json').write_text(json.dumps(reports,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')

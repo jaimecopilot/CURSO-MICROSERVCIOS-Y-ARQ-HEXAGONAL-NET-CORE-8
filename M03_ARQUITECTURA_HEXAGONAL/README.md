@@ -7,14 +7,13 @@
 - [Teoría](TEORIA/M03_TEORIA.md) y [PDF](TEORIA/M03_TEORIA.pdf): 40 bloques, los diez de cada punto 3.1–3.4.
 - [Prácticas](PRACTICAS/M03_PRACTICAS.md) y [PDF](PRACTICAS/M03_PRACTICAS.pdf): 96 pasos detallados de construcción y pruebas.
 - [PROYECTO](PROYECTO): cuatro estados progresivos ejecutables de la API, generados desde los **bloques etiquetados del Markdown**, no de una segunda implementación manual.
-- [FUENTE](FUENTE): cuatro documentos originales íntegros del ZIP, su validación posterior, las correcciones y el manifiesto de hashes SHA-256.
 - [E2E](M03_E2E_RESULTADOS.json): evidencia de los 96 pasos, compilaciones, proyectos y pruebas acumuladas.
 
 ## Requisitos y arquitectura
 
 SDK .NET 8, Visual Studio con ASP.NET/web, SQL Server Express LocalDB para ejecutar las API en Windows. Los tests de integración usan EF Core InMemory, sin exigir SQL Server en CI. Se conservan los endpoints REST de M02; en 3.4 se añaden endpoints hexagonales con un puerto real, casos de uso y un repositorio EF Core separado en proyectos físicos.
 
-La fuente histórica describía otros proyectos y recuentos; esos datos **no** se presentan como estado actual. Los cuatro puntos de M03 usan las carpetas 3.1, 3.2, 3.3 y 3.4 autónomas, manteniendo el anterior como referencia sin sobrescribirlo.
+Los cuatro puntos de M03 usan las carpetas 3.1, 3.2, 3.3 y 3.4 autónomas, manteniendo el anterior como referencia sin sobrescribirlo.
 
 ## E2E
 

@@ -9,7 +9,7 @@ el documento de separación de capas es el artefacto de `docs` específico del p
 
 ## Estado verificado del punto
 
-- 8 proyectos en la solución `AceriaApp.sln` al finalizar este punto; la fuente histórica contaba otros proyectos que no existen en el repositorio actual.
+- 8 proyectos en la solución `AceriaApp.sln` al finalizar este punto.
 - 38 pruebas xUnit acumuladas previstas (incluyendo las 16 de M02 y las nuevas del módulo 3).
 - Clases del catálogo `SeparacionCapas` en `src/AceriaApp.Api/SeparacionCapas`.
 - Documentación `docs/separacion-capas.md` y decisión `docs/ADR-012-separacion-capas.md`.
@@ -26,7 +26,3 @@ el documento de separación de capas es el artefacto de `docs` específico del p
 ## Qué se ha añadido
 
 la clase `Proyecto` modela un proyecto con su nombre, capa y lista de referencias. Es la unidad de información del validador de separación.
-
-## Nota de trazabilidad
-
-El laboratorio `../../PRACTICAS/M03_PRACTICAS.md` es la fuente ejecutable de las incorporaciones. La copia íntegra histórica está en `../../FUENTE/M03_3.3_ORIGINAL.md`.

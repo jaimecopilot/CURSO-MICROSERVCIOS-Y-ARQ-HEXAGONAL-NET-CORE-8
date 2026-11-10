@@ -9,7 +9,7 @@ el documento de capas de la aplicación es el artefacto de `docs` específico de
 
 ## Estado verificado del punto
 
-- 3 proyectos en la solución `AceriaApp.sln` al finalizar este punto; la fuente histórica contaba otros proyectos que no existen en el repositorio actual.
+- 3 proyectos en la solución `AceriaApp.sln` al finalizar este punto.
 - 23 pruebas xUnit acumuladas previstas (incluyendo las 16 de M02 y las nuevas del módulo 3).
 - Clases del catálogo `Capas` en `src/AceriaApp.Api/Capas`.
 - Documentación `docs/capas-aplicacion.md` y decisión `docs/ADR-010-capas-aplicacion.md`.
@@ -26,7 +26,3 @@ el documento de capas de la aplicación es el artefacto de `docs` específico de
 ## Qué se ha añadido
 
 la clase `Capa` modela una capa con su nombre y las capas de las que puede depender. Es la unidad de información del validador de la regla de dependencia.
-
-## Nota de trazabilidad
-
-El laboratorio `../../PRACTICAS/M03_PRACTICAS.md` es la fuente ejecutable de las incorporaciones. La copia íntegra histórica está en `../../FUENTE/M03_3.1_ORIGINAL.md`.

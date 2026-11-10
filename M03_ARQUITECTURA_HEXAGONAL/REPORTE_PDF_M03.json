@@ -1,19 +1,21 @@
 [
   {
     "documento": "TEORIA",
-    "paginas": 52,
-    "bytes": 294339,
-    "palabras": 24333,
+    "paginas": 56,
+    "bytes": 295907,
+    "palabras": 24522,
     "pdf": "M03_ARQUITECTURA_HEXAGONAL/TEORIA/M03_TEORIA.pdf",
+    "explicaciones_separadas": 340,
     "paginas_blancas": [],
     "desbordamientos": []
   },
   {
     "documento": "PRACTICAS",
-    "paginas": 85,
-    "bytes": 283591,
-    "palabras": 29750,
+    "paginas": 83,
+    "bytes": 266704,
+    "palabras": 28752,
     "pdf": "M03_ARQUITECTURA_HEXAGONAL/PRACTICAS/M03_PRACTICAS.pdf",
+    "explicaciones_separadas": 73,
     "paginas_blancas": [],
     "desbordamientos": []
   }

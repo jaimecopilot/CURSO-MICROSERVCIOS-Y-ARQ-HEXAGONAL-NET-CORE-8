@@ -1,4 +1,3 @@
-<!-- Documento de trabajo M03. Adaptación a AceriaApp.Api desde la fuente original íntegra en FUENTE. -->
 # Implementación en ASP.NET Core — Punto 3.4
 
 ## ASP.NET Core como adaptador de entrada

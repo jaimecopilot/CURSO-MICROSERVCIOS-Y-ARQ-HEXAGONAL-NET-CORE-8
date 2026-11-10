@@ -9,7 +9,7 @@ el documento de puertos y adaptadores es el artefacto de `docs` específico del 
 
 ## Estado verificado del punto
 
-- 4 proyectos en la solución `AceriaApp.sln` al finalizar este punto; la fuente histórica contaba otros proyectos que no existen en el repositorio actual.
+- 4 proyectos en la solución `AceriaApp.sln` al finalizar este punto.
 - 31 pruebas xUnit acumuladas previstas (incluyendo las 16 de M02 y las nuevas del módulo 3).
 - Clases del catálogo `PuertosAdaptadores` en `src/AceriaApp.Api/PuertosAdaptadores`.
 - Documentación `docs/puertos-adaptadores.md` y decisión `docs/ADR-011-puertos-adaptadores.md`.
@@ -26,7 +26,3 @@ el documento de puertos y adaptadores es el artefacto de `docs` específico del 
 ## Qué se ha añadido
 
 la clase `Puerto` modela un puerto con su nombre, tipo y capa. Es la unidad de información del validador.
-
-## Nota de trazabilidad
-
-El laboratorio `../../PRACTICAS/M03_PRACTICAS.md` es la fuente ejecutable de las incorporaciones. La copia íntegra histórica está en `../../FUENTE/M03_3.2_ORIGINAL.md`.
