@@ -1,0 +1,50 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{0433B3E5-7815-4CB7-93B0-54B050BCD99E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AceriaApp.Api", "src\AceriaApp.Api\AceriaApp.Api.csproj", "{E08F0DA9-D815-44A5-89DE-DCFD84DD9297}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{96778649-0B0C-46E1-8174-4E87682FB731}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AceriaApp.Api.Tests", "tests\AceriaApp.Api.Tests\AceriaApp.Api.Tests.csproj", "{04E1D2CC-9733-4B87-B40E-D68648746875}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AceriaApp.Capas.Tests", "tests\AceriaApp.Capas.Tests\AceriaApp.Capas.Tests.csproj", "{F6FFAC77-4C7C-43BF-BED8-87DAB6686766}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AceriaApp.PuertosAdaptadores.Tests", "tests\AceriaApp.PuertosAdaptadores.Tests\AceriaApp.PuertosAdaptadores.Tests.csproj", "{37D55AB7-98CF-45A0-93AE-F58A6CCC9784}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E08F0DA9-D815-44A5-89DE-DCFD84DD9297}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E08F0DA9-D815-44A5-89DE-DCFD84DD9297}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E08F0DA9-D815-44A5-89DE-DCFD84DD9297}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E08F0DA9-D815-44A5-89DE-DCFD84DD9297}.Release|Any CPU.Build.0 = Release|Any CPU
+		{04E1D2CC-9733-4B87-B40E-D68648746875}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{04E1D2CC-9733-4B87-B40E-D68648746875}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{04E1D2CC-9733-4B87-B40E-D68648746875}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{04E1D2CC-9733-4B87-B40E-D68648746875}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F6FFAC77-4C7C-43BF-BED8-87DAB6686766}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F6FFAC77-4C7C-43BF-BED8-87DAB6686766}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F6FFAC77-4C7C-43BF-BED8-87DAB6686766}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F6FFAC77-4C7C-43BF-BED8-87DAB6686766}.Release|Any CPU.Build.0 = Release|Any CPU
+		{37D55AB7-98CF-45A0-93AE-F58A6CCC9784}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{37D55AB7-98CF-45A0-93AE-F58A6CCC9784}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{37D55AB7-98CF-45A0-93AE-F58A6CCC9784}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{37D55AB7-98CF-45A0-93AE-F58A6CCC9784}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{E08F0DA9-D815-44A5-89DE-DCFD84DD9297} = {0433B3E5-7815-4CB7-93B0-54B050BCD99E}
+		{04E1D2CC-9733-4B87-B40E-D68648746875} = {96778649-0B0C-46E1-8174-4E87682FB731}
+		{F6FFAC77-4C7C-43BF-BED8-87DAB6686766} = {96778649-0B0C-46E1-8174-4E87682FB731}
+		{37D55AB7-98CF-45A0-93AE-F58A6CCC9784} = {96778649-0B0C-46E1-8174-4E87682FB731}
+	EndGlobalSection
+EndGlobal

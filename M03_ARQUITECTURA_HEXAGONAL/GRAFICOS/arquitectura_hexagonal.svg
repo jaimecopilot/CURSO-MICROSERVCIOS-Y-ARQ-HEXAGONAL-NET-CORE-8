@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="445" viewBox="0 0 920 445">
+<rect width="920" height="445" rx="20" fill="#F8FAFC"/>
+<text x="460" y="35" text-anchor="middle" font-family="DejaVu Sans" font-weight="bold" font-size="21" fill="#18334F">Arquitectura hexagonal de AceriaApp</text>
+<rect x="25" y="105" rx="14" width="245" height="226" fill="#EAF2FA" stroke="#5B81A3" stroke-width="2"/>
+<text x="147" y="136" text-anchor="middle" font-family="DejaVu Sans" font-size="17" font-weight="bold" fill="#1E4569">Entrada ASP.NET Core</text>
+<text x="147" y="172" text-anchor="middle" font-family="DejaVu Sans" font-size="15" fill="#1E4569">Minimal API</text>
+<text x="147" y="202" text-anchor="middle" font-family="DejaVu Sans" font-size="15" fill="#1E4569">HTTP · JSON · Swagger</text>
+<text x="147" y="258" text-anchor="middle" font-family="DejaVu Sans" font-size="15" fill="#1E4569">Adaptador de entrada</text>
+<rect x="338" y="72" rx="18" width="265" height="290" fill="#E7F5EF" stroke="#39886A" stroke-width="3"/>
+<text x="470" y="108" text-anchor="middle" font-family="DejaVu Sans" font-size="18" font-weight="bold" fill="#176249">Aplicación</text>
+<text x="470" y="144" text-anchor="middle" font-family="DejaVu Sans" font-size="15" fill="#176249">Casos de uso</text>
+<text x="470" y="173" text-anchor="middle" font-family="DejaVu Sans" font-size="15" fill="#176249">Puertos (interfaces)</text>
+<rect x="363" y="202" rx="10" width="215" height="125" fill="#F1FDF4" stroke="#39886A" stroke-width="2"/>
+<text x="470" y="238" text-anchor="middle" font-family="DejaVu Sans" font-size="18" font-weight="bold" fill="#176249">Dominio</text>
+<text x="470" y="269" text-anchor="middle" font-family="DejaVu Sans" font-size="15" fill="#176249">Orden · reglas</text>
+<text x="470" y="296" text-anchor="middle" font-family="DejaVu Sans" font-size="15" fill="#176249">Sin dependencias externas</text>
+<rect x="667" y="105" rx="14" width="228" height="226" fill="#FFF1E7" stroke="#B4773E" stroke-width="2"/>
+<text x="781" y="137" text-anchor="middle" font-family="DejaVu Sans" font-size="17" font-weight="bold" fill="#885020">Infraestructura</text>
+<text x="781" y="174" text-anchor="middle" font-family="DejaVu Sans" font-size="15" fill="#885020">EF Core · SQL Server</text>
+<text x="781" y="202" text-anchor="middle" font-family="DejaVu Sans" font-size="15" fill="#885020">Repositorio</text>
+<text x="781" y="258" text-anchor="middle" font-family="DejaVu Sans" font-size="15" fill="#885020">Adaptador de salida</text>
+<path d="M272 215 L333 215" stroke="#527997" stroke-width="4"/>
+<path d="M329 208 L340 215 L329 222" fill="none" stroke="#527997" stroke-width="3"/>
+<path d="M607 215 L662 215" stroke="#B4773E" stroke-width="4" stroke-dasharray="8,5"/>
+<path d="M656 208 L667 215 L656 222" fill="none" stroke="#B4773E" stroke-width="3"/>
+<text x="470" y="407" font-family="DejaVu Sans" font-size="15" fill="#24344C" text-anchor="middle">Las dependencias de código de infraestructura apuntan a las interfaces de aplicación.</text>
+</svg>
