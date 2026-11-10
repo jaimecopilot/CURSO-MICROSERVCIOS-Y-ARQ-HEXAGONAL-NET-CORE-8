@@ -10,7 +10,7 @@ var builder=WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AceriaDbContext>(o=>
     o.UseSqlServer(builder.Configuration.GetConnectionString("AceriaApp")));
 // PASO 2.3.14: registrar validadores en el contenedor.
-builder.Services.AddValidatorsFromAssemblyContaining<CrearOrdenValidator>(); // PASO 2.3.5
+builder.Services.AddValidatorsFromAssemblyContaining<CrearOrdenValidator>(); // PASO 2.3.14
 
 var app=builder.Build();
 // EnsureCreated se utiliza SOLO como ayuda didáctica en Development.

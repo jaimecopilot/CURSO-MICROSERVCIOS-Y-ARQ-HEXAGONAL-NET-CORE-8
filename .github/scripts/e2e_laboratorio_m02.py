@@ -10,7 +10,7 @@ STAGES=["2.1-diseno-apis-rest","2.2-recursos-verbos-codigos","2.3-validacion-pet
 API=Path("src/AceriaApp.Api")
 TEST=Path("tests/AceriaApp.Api.Tests")
 PROG=API/"Program.cs"
-EXPECTED=[3,7,12,15]
+EXPECTED=[3,7,12,16]
 SOURCES=set(("2.1.4 2.1.6 2.1.7 2.1.9 2.1.10 2.1.12 2.1.13 2.1.14 2.1.15 2.1.17 2.1.22 2.1.23 "
 "2.2.4 2.2.5 2.2.11 2.2.14 2.2.16 2.2.18 2.2.21 2.2.22 2.2.23 "
 "2.3.4 2.3.5 2.3.6 2.3.8 2.3.14 2.3.15 2.3.16 2.3.17 2.3.22 "
@@ -50,7 +50,14 @@ def steps_from_md():
     for i,m in enumerate(matches):
         body=source[m.end():matches[i+1].start() if i+1<len(matches) else len(source)]
         csharp=re.findall(r'\x60{3}csharp\n([\s\S]*?)\n\x60{3}',body)
-        check("**Acción.**" in body and "**Verificación concreta.**" in body,m.group(1)+": texto no verificable")
+        check("**Procedimiento guiado.**" in body and "**Verificación concreta.**" in body,m.group(1)+": falta procedimiento o comprobacion")
+        guided=re.search(r'\*\*Procedimiento guiado\.\*\*\n\n((?:[1-9]\. [^\n]+\n){4,})',body)
+        check(guided is not None,m.group(1)+": se requieren cuatro acciones concretas numeradas")
+        items=[int(n) for n in re.findall(r'^([1-9])\. ',guided.group(1),re.M)]
+        check(items==[1,2,3,4],m.group(1)+": secuencia no es 1,2,3,4")
+        verification=re.search(r'\*\*Verificación concreta\.\*\* ([^\n]+)',body)
+        check(verification is not None and len(verification.group(1).split())>=9,m.group(1)+": verificacion sin detalle suficiente")
+        check("**Acción.**" not in body,m.group(1)+": queda plantilla antigua")
         for code in csharp:
             check(all(x==m.group(1) for x in re.findall(r'// INICIO PASO (2\.[1-4]\.\d+)',code)),m.group(1)+": marcador discordante")
         result[m.group(1)]={"title":m.group(2),"codes":csharp,"body":body}
@@ -139,7 +146,10 @@ def apply(key,steps,w):
         s=replace_once(s,"    });\n});","    });\n    options.SchemaFilter<EjemploCrearOrden>();\n});",key)
         write(w,f,s+"\n"+code())
     elif key=="2.4.20":write(w,TEST/"ContratoOpenApiTests.cs",code())
-    elif key in ("2.4.22","2.4.23"):insert_class(w,TEST/"ContratoOpenApiTests.cs",code())
+    elif key=="2.4.22":insert_class(w,TEST/"ContratoOpenApiTests.cs",code())
+    elif key=="2.4.23":
+        insert_class(w,TEST/"ContratoOpenApiTests.cs",code())
+        insert_class(w,TEST/"ContratoOpenApiTests.cs",code(1))
     elif key in SOURCES:raise Broken("No se ha implementado "+key)
     else:return False
     return True

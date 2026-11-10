@@ -4,6 +4,7 @@ on:
     branches:
       - 'verificacion/e2e-main-20261110'
       - 'main'
+      - 'correccion/m02-manual-autonomo-20261110'
     paths:
       - 'M02_APIS_REST_ASPNET_CORE/PRACTICAS/M02_PRACTICAS.md'
       - '.github/scripts/generar_pdf_m02.py'
@@ -12,7 +13,7 @@ on:
 permissions:
   contents: write
 concurrency:
-  group: m02-labs-pdf
+  group: m02-labs-pdf-${{ github.ref }}
   cancel-in-progress: false
 jobs:
   maquetar:
@@ -56,5 +57,15 @@ jobs:
           git add M02_APIS_REST_ASPNET_CORE/PRACTICAS/M02_PRACTICAS.pdf .github/m02-pdf-source.sha256
           if ! git diff --cached --quiet; then
             git commit -m "docs(m02): actualizar PDF de practicas desde Markdown validado"
-            git push
+            # La rama puede avanzar durante la maquetación. Nunca publicar
+            # un PDF generado desde un Markdown que ya no sea el más reciente.
+            git fetch origin "${GITHUB_REF_NAME}"
+            if git diff --quiet HEAD^ "origin/${GITHUB_REF_NAME}" -- \
+              M02_APIS_REST_ASPNET_CORE/PRACTICAS/M02_PRACTICAS.md \
+              .github/scripts/generar_pdf_m02.py; then
+              git rebase "origin/${GITHUB_REF_NAME}"
+              git push origin "HEAD:${GITHUB_REF_NAME}"
+            else
+              echo "La fuente avanzó durante la ejecución: el siguiente workflow regenerará el PDF."
+            fi
           fi
