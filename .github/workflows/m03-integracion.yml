@@ -1,0 +1,95 @@
+name: M03 - teoria practicas proyectos y E2E desde el laboratorio
+on:
+  push:
+    branches:
+      - 'desarrollo/m03-hexagonal-canonic-20261110'
+      - 'main'
+    paths:
+      - 'M03_ARQUITECTURA_HEXAGONAL/TEORIA/M03_TEORIA.md'
+      - 'M03_ARQUITECTURA_HEXAGONAL/PRACTICAS/M03_PRACTICAS.md'
+      - '.github/scripts/m03_e2e_desde_practicas.py'
+      - '.github/scripts/m03_generar_pdf.py'
+      - '.github/scripts/m03_crear_figuras.py'
+      - 'M03_ARQUITECTURA_HEXAGONAL/GRAFICOS/arquitectura_hexagonal.svg'
+      - '.github/workflows/m03-integracion.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: m03-e2e-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  integracion:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Preparar las dependencias PDF
+        run: python -m pip install markdown weasyprint pymupdf cairosvg
+      - name: Generar diagramas SVG y PNG originales para teoría
+        run: |
+          python3 .github/scripts/m03_crear_figuras.py
+          python3 - <<'PYTHON'
+          import cairosvg
+          from pathlib import Path
+          origin=Path('M03_ARQUITECTURA_HEXAGONAL/GRAFICOS/arquitectura_hexagonal.svg')
+          cairosvg.svg2png(url=str(origin),write_to=str(origin.with_suffix('.png')))
+          PYTHON
+      - name: Reconstruir y compilar los cuatro proyectos exclusivamente desde el manual
+        run: python3 .github/scripts/m03_e2e_desde_practicas.py --out M03_ARQUITECTURA_HEXAGONAL/M03_E2E_RESULTADOS.json
+      - name: Generar los PDF y comprobar todas las páginas y el contenido
+        run: python3 .github/scripts/m03_generar_pdf.py
+      - name: Comprobar integridad de las cuatro fuentes originales
+        run: |
+          python - <<'PYTHON'
+          from pathlib import Path
+          import hashlib,json,re
+          root=Path('M03_ARQUITECTURA_HEXAGONAL')
+          manifest=json.loads((root/'FUENTE/MANIFIESTO_FUENTE.json').read_text())
+          for p in manifest['puntos']:
+              content=(root/p['original']).read_bytes()
+              assert hashlib.sha256(content).hexdigest()==p['sha256'],p
+              assert len(re.findall(rb'^### Paso \d+ ',content,re.M))==24,p
+              assert len(re.findall(rb'^### Bloque \d+ ',content,re.M))==10,p
+          PYTHON
+      - name: Publicar PDF, evidencia E2E y proyectos generados de la fuente
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add M03_ARQUITECTURA_HEXAGONAL/TEORIA/IMAGENES \
+                  M03_ARQUITECTURA_HEXAGONAL/GRAFICOS/arquitectura_hexagonal.png \
+                  M03_ARQUITECTURA_HEXAGONAL/PROYECTO \
+                  M03_ARQUITECTURA_HEXAGONAL/TEORIA/M03_TEORIA.pdf \
+                  M03_ARQUITECTURA_HEXAGONAL/PRACTICAS/M03_PRACTICAS.pdf \
+                  M03_ARQUITECTURA_HEXAGONAL/M03_E2E_RESULTADOS.json \
+                  M03_ARQUITECTURA_HEXAGONAL/REPORTE_PDF_M03.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'docs(m03): PDF y proyectos reproducidos desde las prácticas con E2E PASS'
+            git fetch origin "${GITHUB_REF_NAME}"
+            if git diff --quiet HEAD^ "origin/${GITHUB_REF_NAME}" -- \
+              M03_ARQUITECTURA_HEXAGONAL/PRACTICAS/M03_PRACTICAS.md \
+              M03_ARQUITECTURA_HEXAGONAL/TEORIA/M03_TEORIA.md \
+              .github/scripts/m03_e2e_desde_practicas.py \
+              .github/scripts/m03_generar_pdf.py \
+              .github/scripts/m03_crear_figuras.py; then
+              git rebase "origin/${GITHUB_REF_NAME}"
+              git push origin "HEAD:${GITHUB_REF_NAME}"
+            else
+              echo 'El manual ha avanzado: no se publica un proyecto desactualizado.'
+              exit 1
+            fi
+          fi
+      - name: Adjuntar resultado detallado de los 96 pasos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: M03-trazabilidad-e2e
+          path: |
+            M03_ARQUITECTURA_HEXAGONAL/M03_E2E_RESULTADOS.json
+            M03_ARQUITECTURA_HEXAGONAL/REPORTE_PDF_M03.json
