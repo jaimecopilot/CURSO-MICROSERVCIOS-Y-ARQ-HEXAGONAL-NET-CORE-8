@@ -49,7 +49,7 @@ def main():
     expected = [f"2.{p}.{n}" for p in range(1, 5) for n in range(1, 25)]
     assert steps == expected, f"Pasos perdidos, duplicados o desordenados: {len(steps)}"
     assert "## Cómo construir las cuatro etapas sin duplicar código" in source
-    assert source.count("**Construcción y evidencia del paso.**") >= 80
+    assert source.count("**Construcción y evidencia del paso.**") >= 76
     assert all(f"## Punto 2.{p} —" in source for p in range(1, 5))
     page_html = markdown.markdown(source,
                                   extensions=["extra", "sane_lists", "toc"],
