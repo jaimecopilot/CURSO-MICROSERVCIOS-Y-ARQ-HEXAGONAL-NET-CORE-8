@@ -63,7 +63,7 @@ def main():
     matches=list(re.finditer(r"\*\*Procedimiento guiado\.\*\*\n\n((?:[1-9]\. [^\n]+\n){4,})",source))
     assert len(matches) == 96, len(matches)
     for match in matches:
-        assert len(re.findall(r"^[1-9]\\. ",match.group(1),flags=re.M)) == 4
+        assert len(re.findall(r"^[1-9]\. ",match.group(1),flags=re.M)) == 4
     assert all(f"## Punto 2.{p} —" in source for p in range(1, 5))
     page_html = markdown.markdown(source,
                                   extensions=["extra", "sane_lists", "toc"],
