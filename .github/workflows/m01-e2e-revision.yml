@@ -4,10 +4,12 @@ on:
   push:
     branches:
       - 'revision/e2e-m01-20261015'
+      - 'verificacion/e2e-main-20261110'
     paths:
       - '.github/scripts/e2e_m01.py'
       - '.github/workflows/m01-e2e-revision.yml'
       - 'M01_INTRODUCCION_MICROSERVICIOS/**'
+      - 'M02_APIS_REST_ASPNET_CORE/**'
   workflow_dispatch:
 
 permissions:
@@ -146,3 +148,19 @@ jobs:
           path: |
             e2e-express-${{ matrix.punto }}.json
             e2e-trx-${{ matrix.punto }}/
+
+  m02_proyectos:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        punto: ['2.1-diseno-apis-rest', '2.2-recursos-verbos-codigos', '2.3-validacion-peticiones', '2.4-documentacion-openapi']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Compilar proyecto Minimal API
+        run: dotnet build M02_APIS_REST_ASPNET_CORE/PROYECTO/${{ matrix.punto }}/src/AceriaApp.Api/AceriaApp.Api.csproj -c Release
+      - name: Ejecutar tests HTTP de la etapa
+        run: dotnet test M02_APIS_REST_ASPNET_CORE/PROYECTO/${{ matrix.punto }}/tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj -c Release
