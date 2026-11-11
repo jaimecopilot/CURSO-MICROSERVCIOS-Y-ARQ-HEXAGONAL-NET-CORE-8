@@ -39,5 +39,6 @@ jobs:
           print(json.dumps({'despues':after,'tcp_puerto_inicial':connects(configured)}),flush=True)
           subprocess.run(['docker','logs','--tail','80',cid])
           assert after['state']['Running'] and connects(configured),'El host deja de responder tras el reinicio'
+          subprocess.run(['python','.github/scripts/m07_http_real.py'],check=True)
           PY
           dotnet run --project tools/M07ValidationHost -c Release -- python .qa/m07_broker_probe.py
