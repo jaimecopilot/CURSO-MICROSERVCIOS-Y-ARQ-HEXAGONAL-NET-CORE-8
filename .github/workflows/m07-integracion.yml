@@ -1,0 +1,172 @@
+name: M07 - Observabilidad resiliencia SQL Server y RabbitMQ
+on:
+  push:
+    branches: [main, 'desarrollo/m07-observabilidad']
+    paths:
+      - 'M07_OBSERVABILIDAD_RESILIENCIA/**'
+      - '.github/scripts/m07_*.py'
+      - '.github/scripts/validar_sqlserver.py'
+      - '.github/scripts/m05_e2e_desde_practicas.py'
+      - '.github/tests/test_m07_*.py'
+      - '.github/workflows/m07-integracion.yml'
+      - 'tools/M07ValidationHost/**'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: m07-${{ github.ref }}-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      DOTNET_PROCESSOR_COUNT: '1'
+      DOTNET_CLI_UI_LANGUAGE: en
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with: {dotnet-version: '8.0.x'}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m unittest discover -s .github/tests
+      - name: Reconstruir cuatro etapas y retos con SQLServer RabbitMQ y HTTP reales
+        run: dotnet run --project tools/M07ValidationHost -c Release -- python .github/scripts/m07_validar.py
+      - name: Certificar artefacto Linux de la revisión comprobada
+        run: python .github/scripts/m07_empaquetar.py --tipo linux
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with: {name: m07-linux, path: '.qa/m07-artefactos/linux.tar.gz'}
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: m07-diagnostico-linux
+          path: |
+            M07_OBSERVABILIDAD_RESILIENCIA/*RESULTADOS.json
+            .qa/m07-http/**
+            .qa/m07-sql/**
+  windows:
+    runs-on: windows-2022
+    timeout-minutes: 45
+    env:
+      DOTNET_PROCESSOR_COUNT: '1'
+      DOTNET_CLI_UI_LANGUAGE: en
+      PYTHONUTF8: '1'
+    steps:
+      - run: git config --global core.longpaths true
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with: {dotnet-version: '8.0.x'}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Iniciar SQLServer Express LocalDB
+        shell: pwsh
+        run: |
+          $exe=Get-Command sqllocaldb.exe -ErrorAction SilentlyContinue
+          if(-not $exe){
+            $found=Get-ChildItem 'C:\Program Files\Microsoft SQL Server' -Filter sqllocaldb.exe -Recurse | Select-Object -First 1
+            if(-not $found){throw 'LocalDB no instalado'}
+            $env:PATH="$($found.DirectoryName);$env:PATH"
+          }
+          sqllocaldb info MSSQLLocalDB
+          if($LASTEXITCODE -ne 0){sqllocaldb create MSSQLLocalDB}
+          sqllocaldb start MSSQLLocalDB
+          if($LASTEXITCODE -ne 0){throw 'LocalDB no pudo arrancar'}
+      - name: Reconstruir el mismo código sin atribuir resultados de tests
+        run: python .github/scripts/m07_e2e_desde_practicas.py --no-tests --out .qa/m07-windows-reconstruccion.json
+      - name: Dos procesos HTTP sobre LocalDB con rutas cortas y workers desactivados
+        shell: pwsh
+        run: |
+          Copy-Item tools/M07ValidationHost "$env:RUNNER_TEMP\a7host" -Recurse
+          dotnet run --project "$env:RUNNER_TEMP\a7host" -c Release -- --localdb python .github/scripts/m07_http_real.py --windows
+          if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}
+      - run: python .github/scripts/m07_empaquetar.py --tipo windows
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with: {name: m07-windows, path: '.qa/m07-artefactos/windows.tar.gz'}
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: m07-diagnostico-windows
+          path: |
+            M07_OBSERVABILIDAD_RESILIENCIA/M07_WINDOWS_RESULTADOS.json
+            .qa/m07-windows-reconstruccion.json
+            .qa/m07-http/**
+  pdf:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Instalar las versiones utilizadas en la revisión PDF
+        run: >-
+          python -m pip install
+          Markdown==3.11.3 mistune==3.1.3 WeasyPrint==70.0 PyMuPDF==1.26.6
+          CairoSVG==2.9.1 beautifulsoup4==4.15.0 pydyf==0.13.0
+          tinycss2==1.5.1 tinyhtml5==2.1.0 cssselect2==0.10.1
+          fonttools==4.61.1 Pillow==13.0.0 cairocffi==1.7.1 cffi==2.1.1
+          brotli==1.2.1 zopfli==0.4.3 webencodings==0.6.1
+          defusedxml==0.7.1 soupsieve==4.1 pycparser==3.0
+      - name: Comprobar importaciones y motores PDF y SVG
+        run: |
+          python - <<'PY'
+          import markdown, mistune, fitz, cairosvg
+          from bs4 import BeautifulSoup
+          from weasyprint import HTML, CSS
+          html=markdown.markdown('# Comprobación PDF')
+          assert BeautifulSoup(html,'html.parser').find('h1')
+          assert mistune.create_markdown()('# Comprobación alternativa')
+          pdf=HTML(string=html).write_pdf()
+          assert fitz.open(stream=pdf,filetype='pdf').page_count==1
+          assert cairosvg.svg2png(bytestring=b'<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"><rect width="8" height="8"/></svg>')
+          PY
+      - run: python .github/scripts/m07_crear_figuras.py
+      - run: python .github/scripts/m07_generar_pdf.py
+      - run: python .github/scripts/m07_empaquetar.py --tipo pdf
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with: {name: m07-pdf, path: '.qa/m07-artefactos/pdf.tar.gz'}
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: m07-diagnostico-pdf
+          path: |
+            M07_OBSERVABILIDAD_RESILIENCIA/REPORTE_PDF_M07.json
+            M07_OBSERVABILIDAD_RESILIENCIA/TEORIA/*.pdf
+            M07_OBSERVABILIDAD_RESILIENCIA/PRACTICAS/*.pdf
+  publicar:
+    needs: [linux, windows, pdf]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: '${{ github.ref_name }}'}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - uses: actions/download-artifact@v4
+        with: {pattern: 'm07-*', path: '.qa/m07-publicar', merge-multiple: true}
+      - name: Comprobar la revisión y recuperar los tres artefactos certificados
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python - <<'PY'
+          import tarfile
+          from pathlib import Path
+          paths=sorted(Path('.qa/m07-publicar').glob('*.tar.gz'))
+          assert {p.name for p in paths}=={'linux.tar.gz','windows.tar.gz','pdf.tar.gz'}
+          for path in paths:
+              with tarfile.open(path) as tar:tar.extractall('.',filter='data')
+          PY
+      - name: Validar evidencia y hashes antes de publicar
+        run: python .github/scripts/m07_cerrar.py
+      - name: Publicar después de todas las verificaciones
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add M07_OBSERVABILIDAD_RESILIENCIA
+          if ! git diff --cached --quiet; then
+            git commit -m 'docs(m07): publicar proyectos y PDF con observabilidad resiliencia SQLServer RabbitMQ y Windows PASS'
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
