@@ -18,8 +18,8 @@ Aplicación y pruebas de integración usan SQL Server real. No se admite éxito 
 - [x] 09 CI obligatorio SQL Server, registros y evidencias.
 - [x] 10 Reconstrucción de las 18 etapas desde prácticas, pruebas y retos.
 - [x] 11 Windows LocalDB: cuatro proyectos finales, inicialización y HTTP.
-- [ ] 12 PDF regenerados y revisión visual.
-- [ ] 13 Informe de cierre, commits y ejecuciones verificadas.
+- [x] 12 PDF regenerados y revisión visual.
+- [x] 13 Informe de cierre, commits y ejecuciones verificadas.
 
 ## Decisiones de ejecución
 - Se trabaja en un clon aislado y rama de corrección; no se modifica M6.
@@ -34,4 +34,6 @@ Aplicación y pruebas de integración usan SQL Server real. No se admite éxito 
 
 Revisión independiente: se detectaron y corrigieron dos riesgos de falso cierre: vínculo del código comprobado en Windows con el publicado y eliminación de ejecutables obsoletos en la publicación de M02. Se añaden pruebas de regresión que fallaron antes de la corrección. Evidencia SQL/Windows sigue pendiente hasta CI.
 
-Comprobaciones automáticas completadas en https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/42986550628; las tareas 12 y 13 requieren además revisión visual y revisión final documentadas.
+
+
+11/11/2026: las 13 tareas están cerradas. CI 42986550628 terminó en SUCCESS sobre 54709859d231c8607ba0761a28f442fda285fd58. El commit 7fe7da90bab1d8e3ca6d45fc9395828b919b7555 contiene los artefactos de esa ejecución. Se verificaron sus manifiestos, las 18 etapas y 14 retos programados, los cuatro recorridos Windows y las 672 páginas renderizadas (idénticas a la revisión local). Los 12 controles de regresión del cierre vuelven a pasar. Véase REVISION_FINAL.md para alcance y observaciones menores. M6 queda habilitado; no se ha desarrollado como parte de esta corrección.

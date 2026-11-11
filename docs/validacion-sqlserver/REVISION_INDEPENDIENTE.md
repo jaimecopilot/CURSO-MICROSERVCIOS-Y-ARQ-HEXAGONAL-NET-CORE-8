@@ -41,3 +41,11 @@ Estado: comunicado al coordinador; pendiente de comprobar la corrección.
 ## Criterios todavía no acreditados
 
 Esta revisión estática no acredita el resultado de las 18 etapas sobre SQL Server Express real, las ejecuciones LocalDB/HTTP de Windows, la eliminación efectiva de todas las bases ni los ocho PDF finales. Deben aportarse las ejecuciones remotas y sus artefactos de la revisión corregida. Tampoco se acredita aquí la revisión visual del PDF ni el cierre de M6. No se identificó otro fallo de ejecución concreto en el código SQL inspeccionado; ello no reemplaza esas ejecuciones.
+
+## Verificación posterior de las correcciones — 11/11/2026
+
+Esta sección documenta la comprobación del coordinador sobre el código corregido y la evidencia de CI; no reescribe ni convierte la revisión inicial en una segunda revisión independiente.
+
+- **P1 resuelto.** `reconstruct_through` reconstruye desde M02 todas las bases necesarias. Windows llama a esa misma reconstrucción antes de compilar y ejecutar; `source_manifest` registra C#, proyectos y configuración normalizando los saltos de línea. El cierre contrasta su igualdad con el manifiesto Linux de la etapa final. Las contrapruebas de código antiguo y archivo omitido pasan. La copia Windows en una ruta corta preserva este manifiesto y excluye binarios anteriores. Los cuatro jobs Windows y los cuatro jobs SQL pasaron en CI 42986550628.
+- **P2 resuelto.** `publish` reemplaza la etapa completa y solo conserva README editorial cuando no viene en la reconstrucción. La regresión introduce `.cs`, proyectos, configuración y targets obsoletos, comprueba su desaparición y verifica idempotencia. Pasó de nuevo junto a los otros once controles.
+- La revisión visual y el contraste íntegro de los PDF publicados se documentan en `REVISION_FINAL.md`. El cierre automatizado volvió a verificar satisfactoriamente los hashes sobre los artefactos recuperados de GitHub.
