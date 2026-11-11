@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using Microsoft.Data.SqlClient;
 using Testcontainers.MsSql;
@@ -23,7 +25,13 @@ try
         await sql.StartAsync();
         connection = sql.GetConnectionString();
         databaseReady = true;
+        var rabbitPortListener = new TcpListener(IPAddress.Loopback, 0);
+        rabbitPortListener.Start();
+        var rabbitHostPort = ((IPEndPoint)rabbitPortListener.LocalEndpoint).Port;
+        rabbitPortListener.Stop();
+        // Docker puede reasignar un puerto aleatorio al reiniciar; el enlace explícito conserva la URI del smoke.
         rabbit = new RabbitMqBuilder().WithImage("rabbitmq:4.1.5-management")
+            .WithPortBinding(rabbitHostPort, RabbitMqBuilder.RabbitMqPort)
             .WithUsername("curso").WithPassword("curso-local").Build();
         await rabbit.StartAsync();
     }
