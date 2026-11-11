@@ -109,7 +109,7 @@ def ensure_solution(stage):
  # Always add all projects, including when the copied solution already exists.
  for project in files:command('dotnet','sln','AceriaApp.sln','add',str(project.relative_to(stage)),cwd=stage)
  listing=command('dotnet','sln','AceriaApp.sln','list',cwd=stage).replace('\\','/')
- for p in files:check(str(p.relative_to(stage)) in listing,f'La solución omite {p}')
+ for p in files:check(p.relative_to(stage).as_posix() in listing,f'La solución omite {p}')
  return len(files)
 
 def compare_inherited(previous,current):

@@ -114,6 +114,9 @@ def main():
         result.update(resultado='PASS', reinicio_con_persistencia='PASS', bases=list(databases.values()))
     except Exception as exc:
         result['error'] = str(exc)
+        if stream: stream.flush()
+        for logfile in sorted(logs.glob('api-*.log')):
+            print(logfile.name + ':\n' + logfile.read_text(encoding='utf-8', errors='replace')[-12000:], flush=True)
     finally:
         stop()
         if sys.platform == 'win32':

@@ -21,13 +21,14 @@ El punto de partida es `M04_PATRONES_ARQUITECTURA/PROYECTO/4.5-inyeccion-depende
 # Punto 5.1 — Conceptos básicos de Domain-Driven Design
 
 **Módulo 5:** Introducción a DDD y CQRS
+
 **Objetivos de aprendizaje:**
+
 - Comprender qué es Domain-Driven Design y por qué se aplica al diseño de microservicios.
 - Identificar los conceptos básicos de DDD: dominio, subdominio, contexto delimitado y lenguaje ubicuo.
 - Comprender la relación entre contexto delimitado y límite de servicio.
 - Comprender el papel del lenguaje ubicuo en la comunicación entre negocio y desarrollo.
 - Añadir al proyecto `AceriaApp` las clases de validación de contextos delimitados y un test unitario que verifique la validación.
-
 - Delimitar el contexto de Producción en un proyecto de dominio propio y comprobar sus primeras reglas.
 
 ---
@@ -456,13 +457,14 @@ La aplicación de DDD prepara el proyecto para los puntos 5.2 a 5.5. El punto 5.
 # Punto 5.2 — Entidades y Value Objects
 
 **Módulo 5:** Introducción a DDD y CQRS
+
 **Objetivos de aprendizaje:**
+
 - Comprender el concepto de entidad y su identidad propia.
 - Comprender el concepto de value object y su inmutabilidad.
 - Identificar las diferencias entre entidad y value object.
 - Comprender el papel de los invariantes en el modelo del dominio.
 - Añadir al proyecto `AceriaApp` las clases de validación de entidades y value objects y un test unitario que verifique la validación.
-
 - Implementar la raíz OrdenProduccion, LineaDeOrden y value objects con igualdad e invariantes verificadas.
 
 ---
@@ -1166,13 +1168,14 @@ La aplicación de entidades y value objects prepara el proyecto para los puntos 
 # Punto 5.3 — Casos de uso
 
 **Módulo 5:** Introducción a DDD y CQRS
+
 **Objetivos de aprendizaje:**
+
 - Comprender qué es un caso de uso en el contexto de DDD y CQRS.
 - Identificar la relación entre caso de uso, puerto de entrada y comando.
 - Comprender la orquestación de entidades y value objects en un caso de uso.
 - Comprender la coordinación de repositorios y unidad de trabajo en un caso de uso.
 - Añadir al proyecto `AceriaApp` las clases de validación de casos de uso y un test unitario que verifique la validación.
-
 - Ejecutar casos de uso con repositorio, unidad de trabajo y persistencia propia de Producción.
 
 ---
@@ -1684,13 +1687,14 @@ La aplicación de los casos de uso prepara el proyecto para los puntos 5.4 y 5.5
 # Punto 5.4 — Separación entre Commands y Queries
 
 **Módulo 5:** Introducción a DDD y CQRS
+
 **Objetivos de aprendizaje:**
+
 - Comprender el principio de separación entre comandos y consultas.
 - Identificar las diferencias entre el modelo de escritura y el modelo de lectura.
 - Comprender la relación entre CQRS y la separación de modelos.
 - Comprender los beneficios y los costes de aplicar CQRS.
 - Añadir al proyecto `AceriaApp` las clases de validación de la separación entre comandos y consultas y un test unitario que verifique la validación.
-
 - Separar comandos y consultas reales con MediatR y proyecciones a DTOs sin seguimiento.
 
 ---
@@ -2170,13 +2174,14 @@ Si en otro diseño se construye una base de lectura separada mediante eventos, a
 # Punto 5.5 — Aplicación al dominio de la acería
 
 **Módulo 5:** Introducción a DDD y CQRS
+
 **Objetivos de aprendizaje:**
+
 - Comprender cómo se aplican los conceptos de DDD al dominio concreto de la acería.
 - Identificar las entidades, los value objects y los agregados del dominio de la acería.
 - Comprender la relación entre contextos delimitados y servicios de la acería.
 - Comprender el papel de los casos de uso y CQRS en el dominio de la acería.
 - Añadir al proyecto `AceriaApp` las clases de validación del modelo del dominio de la acería y un test unitario que verifique la validación. Cerrar el módulo 5 con el resumen del estado del proyecto.
-
 - Completar el recorrido HTTP de creación, líneas y estados de Producción y comprobar éxitos y rechazos.
 
 ---
