@@ -53,6 +53,8 @@ Las dependencias del generador de figuras son CairoSVG y su soporte Cairo. El ge
 ## Identidad de los archivos revisados
 
 - SHA-256 Markdown: `490836081f31be85e6a929befccd3f832c1b94756720d8295482a0aa62a11ceb`.
-- SHA-256 PDF: `e2d2db90ff8bce8763472ed2b72f466069b9f8aac054bc79da3126ea7c892a05`.
+- SHA-256 PDF: `0469a4719619a5c1a6d38d3e0bb51118a542c6542e7eef82ec2d374bdff9b70d`.
 
 El informe automático de cobertura y geometría queda en `REPORTE_PDF_M06.json`.
+
+La copia generada por CI se cotejó con la copia revisada: todas sus páginas son idénticas píxel a píxel a 72 dpi. El hash anterior identifica el PDF publicado.

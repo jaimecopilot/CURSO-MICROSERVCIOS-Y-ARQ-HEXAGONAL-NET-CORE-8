@@ -60,6 +60,8 @@ El generador valida ambos Markdown, las explicaciones, la cobertura del PDF y la
 ## Identidad de los archivos revisados
 
 - SHA-256 Markdown: `b27b9d3a438691168e8f54694aeb98e6db38432709134540a3c1a6448e7f7751`.
-- SHA-256 PDF: `dc933176e0bb45c511e3c7bf9b1e4e5dfd152fbf9c0db45d4cb8e554283cde0b`.
+- SHA-256 PDF: `d996cab6be09c15f91ddb3a6cbb3c634a85cc4973c89dbef472fe200a927b510`.
 
 El informe automático de ambos documentos queda en `REPORTE_PDF_M06.json`.
+
+La copia generada por CI se cotejó con la copia revisada: todas sus páginas son idénticas píxel a píxel a 72 dpi. El hash anterior identifica el PDF publicado.

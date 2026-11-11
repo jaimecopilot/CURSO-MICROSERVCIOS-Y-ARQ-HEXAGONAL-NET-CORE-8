@@ -2,6 +2,8 @@
 
 **Curso JAIME GALLO · AceriaApp**
 
+**Módulo cerrado:** [revisión final y evidencia](REVISION_FINAL.md). La solución final contiene 29 proyectos y supera 283 pruebas; las tres etapas y los tres retos se han reconstruido desde el manual.
+
 - [Teoría](TEORIA/M06_TEORIA.md) · [PDF](TEORIA/M06_TEORIA.pdf): 30 bloques, 30 ampliaciones y 10 diagramas SVG/PNG.
 - [Prácticas](PRACTICAS/M06_PRACTICAS.md) · [PDF](PRACTICAS/M06_PRACTICAS.pdf): 72 pasos y 3 retos resueltos, con los archivos completos.
 - [Proyectos acumulativos](PROYECTO):tres etapas desde M05 5.5 corregido y probado con SQL Server.
