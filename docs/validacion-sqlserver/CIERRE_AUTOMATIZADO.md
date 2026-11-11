@@ -1,8 +1,8 @@
 # Validación SQL Server M02–M05
 
-Resultado automatizado: **PASS**. Revisión comprobada: `54709859d231c8607ba0761a28f442fda285fd58`.
+Resultado automatizado: **PASS**. Revisión comprobada: `602155220b7d4a043276d8c4cf0282e065baf87c`.
 
-Ejecución: https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/42986550628
+Ejecución: https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/42989271274
 
 | Módulo | Etapas reconstruidas | Pruebas por etapa | Bases SQL verificadas | Windows LocalDB y reinicio HTTP |
 |---|---:|---|---:|---|
