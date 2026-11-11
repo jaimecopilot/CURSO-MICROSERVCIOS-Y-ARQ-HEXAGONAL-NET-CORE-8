@@ -1,5 +1,5 @@
 {
-  "fecha": "2026-11-10T19:49:32.444309+00:00",
+  "fecha": "2026-11-11T08:23:36.545083+00:00",
   "origen": "M03_PRACTICAS.md",
   "etapas": [
     {
@@ -733,7 +733,8 @@
     }
   ],
   "construccion": "desde texto; nunca desde PROYECTO/M03",
-  "source_sha256": "d162347f2fa676a4f31355ce26909e2c3de103e3f3534f23a9965d7b45596c74",
+  "source_sha256": "c8d00432c2dda5a4d2523e50ba1d9b5075b9095611966e70ea676c22c13961b1",
+  "helper_sqlserver_sha256": "83366f0eaeda1b3fccbf5b7711925a3267fcb88560bea255cf25aad0b3eb78a2",
   "retos_optativos": {
     "resultado": "PASS",
     "etapas_obligatorias_intactas": true,

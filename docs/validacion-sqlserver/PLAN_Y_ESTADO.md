@@ -8,16 +8,16 @@ Aplicación y pruebas de integración usan SQL Server real. No se admite éxito 
 
 ## Tareas y estado
 - [x] 01 Matriz inicial: M1 SQL Server real (CI 42862047382); M2/M3 InMemory; M4/M5 SQLite más heredadas. Aplicaciones M1–M5 configuradas SQL Server.
-- [ ] 02 Entorno SQL Server Express/Testcontainers, bases aisladas, fallo obligatorio y limpieza.
-- [ ] 03 M02 cuatro etapas: API y persistencia SQL Server.
-- [ ] 04 M03 cuatro etapas: puertos/adaptadores y API SQL Server.
-- [ ] 05 M04 cinco etapas: Repository, Unit of Work y rollback SQL Server.
-- [ ] 06 M05 cinco etapas: dominio, casos de uso, CQRS, API y persistencia SQL Server.
-- [ ] 07 Teoría Docker/Testcontainers y diagramas.
-- [ ] 08 Prácticas reproducibles, sin referencias editoriales al material de partida.
-- [ ] 09 CI obligatorio SQL Server, registros y evidencias.
-- [ ] 10 Reconstrucción de las 18 etapas desde prácticas, pruebas y retos.
-- [ ] 11 Windows LocalDB: cuatro proyectos finales, inicialización y HTTP.
+- [x] 02 Entorno SQL Server Express/Testcontainers, bases aisladas, fallo obligatorio y limpieza.
+- [x] 03 M02 cuatro etapas: API y persistencia SQL Server.
+- [x] 04 M03 cuatro etapas: puertos/adaptadores y API SQL Server.
+- [x] 05 M04 cinco etapas: Repository, Unit of Work y rollback SQL Server.
+- [x] 06 M05 cinco etapas: dominio, casos de uso, CQRS, API y persistencia SQL Server.
+- [x] 07 Teoría Docker/Testcontainers y diagramas.
+- [x] 08 Prácticas reproducibles, sin referencias editoriales al material de partida.
+- [x] 09 CI obligatorio SQL Server, registros y evidencias.
+- [x] 10 Reconstrucción de las 18 etapas desde prácticas, pruebas y retos.
+- [x] 11 Windows LocalDB: cuatro proyectos finales, inicialización y HTTP.
 - [ ] 12 PDF regenerados y revisión visual.
 - [ ] 13 Informe de cierre, commits y ejecuciones verificadas.
 
@@ -33,3 +33,5 @@ Aplicación y pruebas de integración usan SQL Server real. No se admite éxito 
 11/11/2026: clon recuperado, base verificada; ejecución iniciada. Revisión paralela separada de M02/M03, M04/M05 y teoría; integración, CI y cierre a cargo del coordinador.
 
 Revisión independiente: se detectaron y corrigieron dos riesgos de falso cierre: vínculo del código comprobado en Windows con el publicado y eliminación de ejecutables obsoletos en la publicación de M02. Se añaden pruebas de regresión que fallaron antes de la corrección. Evidencia SQL/Windows sigue pendiente hasta CI.
+
+Comprobaciones automáticas completadas en https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/42986550628; las tareas 12 y 13 requieren además revisión visual y revisión final documentadas.

@@ -1,0 +1,457 @@
+{
+  "modulo": 2,
+  "fecha_utc": "2026-11-11T08:23:29.725578+00:00",
+  "commit_comprobado": "54709859d231c8607ba0761a28f442fda285fd58",
+  "run_url": "https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/42986550628",
+  "resultado": "PASS",
+  "proveedor": "Microsoft.EntityFrameworkCore.SqlServer",
+  "edicion": "SQL Server Express / LocalDB",
+  "bases_verificadas": 38,
+  "versiones": [
+    "16.0.4135.4"
+  ],
+  "origenes": [
+    "Testcontainers"
+  ],
+  "tests_por_etapa": [
+    3,
+    7,
+    12,
+    16
+  ],
+  "manual_sha256": "b1d8f64da63d67e7081b7d34e7bf81486dd6a10497fd521b7b2a9f4f4a4661cb",
+  "archivos_proyectos_sha256": {
+    "2.1-diseno-apis-rest/AceriaApp.http": "edea5bcfda92773df654a96f304fdbb91d5b0a47d264226d9a5abcd22270f9e9",
+    "2.1-diseno-apis-rest/README.md": "1ee4457548b0d6fe36b791cbd5fc04a5e55945a670f03520ce52330153199cc8",
+    "2.1-diseno-apis-rest/src/AceriaApp.Api/AceriaApp.Api.csproj": "3b19ce0ab5fa2a469b93c461a63b2f441e2d802f4845836e7c31478680ef98af",
+    "2.1-diseno-apis-rest/src/AceriaApp.Api/Datos/AceriaDbContext.cs": "9998eb2ce37d300b38dcabab756ba58e406023bd11d8dca289ffaea8b4d600c7",
+    "2.1-diseno-apis-rest/src/AceriaApp.Api/Modelo/Orden.cs": "7447c75a997009376b26949120a1f430bd85050992bb691a5ef432c753f4a8fe",
+    "2.1-diseno-apis-rest/src/AceriaApp.Api/Modelo/OrdenDto.cs": "05112bf2cb176e1b1acddef3f1b3ff360869031e52258a82668453958b250ab9",
+    "2.1-diseno-apis-rest/src/AceriaApp.Api/Program.cs": "66985796f5fe57dbc0646738313a3e5d69fdd2f1678ac6c9a41b801e38e2adc9",
+    "2.1-diseno-apis-rest/src/AceriaApp.Api/Properties/launchSettings.json": "94093d2875aed2a600943c1135b68dc86428aaae6e402350efcf85f8dd899115",
+    "2.1-diseno-apis-rest/src/AceriaApp.Api/appsettings.json": "722582daccb66c53ad0a8d7e9fee533b57685fa559076c5f85a322c07527c3dc",
+    "2.1-diseno-apis-rest/tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj": "86d1701f2083ef0361386127bf964723f4fed0456555004f4b71bf56784b9761",
+    "2.1-diseno-apis-rest/tests/AceriaApp.Api.Tests/ApiFactory.cs": "17ee8f1f86340aea84db5f46d235974910bb0cdd38e4115ac4f586d020e3bfae",
+    "2.1-diseno-apis-rest/tests/AceriaApp.Api.Tests/GetTests.cs": "500e9c4572aa78fcef4f789f956524db80610700000a220ea2fcca42ed387caa",
+    "2.1-diseno-apis-rest/tests/Compartido/SqlServerPruebas.cs": "83366f0eaeda1b3fccbf5b7711925a3267fcb88560bea255cf25aad0b3eb78a2",
+    "2.2-recursos-verbos-codigos/AceriaApp.http": "49f3dc944ee10b293fb33673d5e9d44d7fd182a23e01c4b0479d3eebc5a8dd15",
+    "2.2-recursos-verbos-codigos/README.md": "9f8e29618fae570c8bbba4639dabc4bb07dc57c3cb9a69af4dcd5eec54811887",
+    "2.2-recursos-verbos-codigos/src/AceriaApp.Api/AceriaApp.Api.csproj": "3b19ce0ab5fa2a469b93c461a63b2f441e2d802f4845836e7c31478680ef98af",
+    "2.2-recursos-verbos-codigos/src/AceriaApp.Api/Contratos/ContratosOrden.cs": "42e3d7e65ab430d4ce9e2c13766c21e0095f961ccea121d1ddee9ba23e668e44",
+    "2.2-recursos-verbos-codigos/src/AceriaApp.Api/Datos/AceriaDbContext.cs": "9998eb2ce37d300b38dcabab756ba58e406023bd11d8dca289ffaea8b4d600c7",
+    "2.2-recursos-verbos-codigos/src/AceriaApp.Api/Modelo/Orden.cs": "7447c75a997009376b26949120a1f430bd85050992bb691a5ef432c753f4a8fe",
+    "2.2-recursos-verbos-codigos/src/AceriaApp.Api/Modelo/OrdenDto.cs": "05112bf2cb176e1b1acddef3f1b3ff360869031e52258a82668453958b250ab9",
+    "2.2-recursos-verbos-codigos/src/AceriaApp.Api/Program.cs": "c445e963418fd3679e3f939e51b39f4583e19a8e7265fd47645025873eb77343",
+    "2.2-recursos-verbos-codigos/src/AceriaApp.Api/Properties/launchSettings.json": "94093d2875aed2a600943c1135b68dc86428aaae6e402350efcf85f8dd899115",
+    "2.2-recursos-verbos-codigos/src/AceriaApp.Api/appsettings.json": "722582daccb66c53ad0a8d7e9fee533b57685fa559076c5f85a322c07527c3dc",
+    "2.2-recursos-verbos-codigos/tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj": "86d1701f2083ef0361386127bf964723f4fed0456555004f4b71bf56784b9761",
+    "2.2-recursos-verbos-codigos/tests/AceriaApp.Api.Tests/ApiFactory.cs": "17ee8f1f86340aea84db5f46d235974910bb0cdd38e4115ac4f586d020e3bfae",
+    "2.2-recursos-verbos-codigos/tests/AceriaApp.Api.Tests/EscrituraTests.cs": "8bdd649c6dd2f1d845f224d4688dfe09cf6005e94eaa1ad8e08ae27b4edf275d",
+    "2.2-recursos-verbos-codigos/tests/AceriaApp.Api.Tests/GetTests.cs": "500e9c4572aa78fcef4f789f956524db80610700000a220ea2fcca42ed387caa",
+    "2.2-recursos-verbos-codigos/tests/Compartido/SqlServerPruebas.cs": "83366f0eaeda1b3fccbf5b7711925a3267fcb88560bea255cf25aad0b3eb78a2",
+    "2.3-validacion-peticiones/AceriaApp.http": "49f3dc944ee10b293fb33673d5e9d44d7fd182a23e01c4b0479d3eebc5a8dd15",
+    "2.3-validacion-peticiones/README.md": "5150803dbc9268ca54dba02efa28039a05bd996bf27b1f536c971a13b7ad2b79",
+    "2.3-validacion-peticiones/src/AceriaApp.Api/AceriaApp.Api.csproj": "6cbeaff73cf99f8f96b28eb35aa2e598b5f2a57a32c222840a34a4d26f192e77",
+    "2.3-validacion-peticiones/src/AceriaApp.Api/Contratos/ContratosOrden.cs": "42e3d7e65ab430d4ce9e2c13766c21e0095f961ccea121d1ddee9ba23e668e44",
+    "2.3-validacion-peticiones/src/AceriaApp.Api/Datos/AceriaDbContext.cs": "9998eb2ce37d300b38dcabab756ba58e406023bd11d8dca289ffaea8b4d600c7",
+    "2.3-validacion-peticiones/src/AceriaApp.Api/Modelo/Orden.cs": "7447c75a997009376b26949120a1f430bd85050992bb691a5ef432c753f4a8fe",
+    "2.3-validacion-peticiones/src/AceriaApp.Api/Modelo/OrdenDto.cs": "05112bf2cb176e1b1acddef3f1b3ff360869031e52258a82668453958b250ab9",
+    "2.3-validacion-peticiones/src/AceriaApp.Api/Program.cs": "5a38a44bd8506e5e265897249db2d04beaaac36e251a7d0c9ca7c16098364fdf",
+    "2.3-validacion-peticiones/src/AceriaApp.Api/Properties/launchSettings.json": "94093d2875aed2a600943c1135b68dc86428aaae6e402350efcf85f8dd899115",
+    "2.3-validacion-peticiones/src/AceriaApp.Api/Validacion/Validadores.cs": "36f715a82ec21b785c76c1f9cb2de328c91d2d5ef4fdb5e2f6bc17f333f06360",
+    "2.3-validacion-peticiones/src/AceriaApp.Api/Validacion/ValidationFilter.cs": "4dea0fc92fbf335c4e80677d07d436122d547a553d521d6d40d0d3339d5cafbc",
+    "2.3-validacion-peticiones/src/AceriaApp.Api/appsettings.json": "722582daccb66c53ad0a8d7e9fee533b57685fa559076c5f85a322c07527c3dc",
+    "2.3-validacion-peticiones/tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj": "86d1701f2083ef0361386127bf964723f4fed0456555004f4b71bf56784b9761",
+    "2.3-validacion-peticiones/tests/AceriaApp.Api.Tests/ApiFactory.cs": "17ee8f1f86340aea84db5f46d235974910bb0cdd38e4115ac4f586d020e3bfae",
+    "2.3-validacion-peticiones/tests/AceriaApp.Api.Tests/EscrituraTests.cs": "8bdd649c6dd2f1d845f224d4688dfe09cf6005e94eaa1ad8e08ae27b4edf275d",
+    "2.3-validacion-peticiones/tests/AceriaApp.Api.Tests/GetTests.cs": "500e9c4572aa78fcef4f789f956524db80610700000a220ea2fcca42ed387caa",
+    "2.3-validacion-peticiones/tests/AceriaApp.Api.Tests/ValidacionHttpTests.cs": "db4ffe012ac94e058c90af4b4b82d931b4645c68916779b5eb69e9975b33a279",
+    "2.3-validacion-peticiones/tests/Compartido/SqlServerPruebas.cs": "83366f0eaeda1b3fccbf5b7711925a3267fcb88560bea255cf25aad0b3eb78a2",
+    "2.4-documentacion-openapi/AceriaApp.http": "49f3dc944ee10b293fb33673d5e9d44d7fd182a23e01c4b0479d3eebc5a8dd15",
+    "2.4-documentacion-openapi/README.md": "29f51ef5f6859c2f93e0c887a12ab8e2c300f74a327ca88aa32f7cbc4df27238",
+    "2.4-documentacion-openapi/src/AceriaApp.Api/AceriaApp.Api.csproj": "d6aecc7c9c6a2fe9bb2062d1922c9e05f7b43bdbfd94f6d06069a70f2db520cc",
+    "2.4-documentacion-openapi/src/AceriaApp.Api/Contratos/ContratosOrden.cs": "42e3d7e65ab430d4ce9e2c13766c21e0095f961ccea121d1ddee9ba23e668e44",
+    "2.4-documentacion-openapi/src/AceriaApp.Api/Datos/AceriaDbContext.cs": "9998eb2ce37d300b38dcabab756ba58e406023bd11d8dca289ffaea8b4d600c7",
+    "2.4-documentacion-openapi/src/AceriaApp.Api/Documentacion/DocumentacionExtensions.cs": "ccb6488f32886e23d3c763197eb5218c436956aba96024a6b4d4b02984a8d5e4",
+    "2.4-documentacion-openapi/src/AceriaApp.Api/Modelo/Orden.cs": "7447c75a997009376b26949120a1f430bd85050992bb691a5ef432c753f4a8fe",
+    "2.4-documentacion-openapi/src/AceriaApp.Api/Modelo/OrdenDto.cs": "05112bf2cb176e1b1acddef3f1b3ff360869031e52258a82668453958b250ab9",
+    "2.4-documentacion-openapi/src/AceriaApp.Api/Program.cs": "6039ed3ba9f3ef8318b88809cfb2544936beac3e51338c209701e96e88b0436f",
+    "2.4-documentacion-openapi/src/AceriaApp.Api/Properties/launchSettings.json": "94093d2875aed2a600943c1135b68dc86428aaae6e402350efcf85f8dd899115",
+    "2.4-documentacion-openapi/src/AceriaApp.Api/Validacion/Validadores.cs": "36f715a82ec21b785c76c1f9cb2de328c91d2d5ef4fdb5e2f6bc17f333f06360",
+    "2.4-documentacion-openapi/src/AceriaApp.Api/Validacion/ValidationFilter.cs": "4dea0fc92fbf335c4e80677d07d436122d547a553d521d6d40d0d3339d5cafbc",
+    "2.4-documentacion-openapi/src/AceriaApp.Api/appsettings.json": "722582daccb66c53ad0a8d7e9fee533b57685fa559076c5f85a322c07527c3dc",
+    "2.4-documentacion-openapi/tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj": "86d1701f2083ef0361386127bf964723f4fed0456555004f4b71bf56784b9761",
+    "2.4-documentacion-openapi/tests/AceriaApp.Api.Tests/ApiFactory.cs": "17ee8f1f86340aea84db5f46d235974910bb0cdd38e4115ac4f586d020e3bfae",
+    "2.4-documentacion-openapi/tests/AceriaApp.Api.Tests/ContratoOpenApiTests.cs": "dd77934392cc6457019a6a1f264bf86d09bc1cb11f3bc5c18f278be0125c23db",
+    "2.4-documentacion-openapi/tests/AceriaApp.Api.Tests/EscrituraTests.cs": "8bdd649c6dd2f1d845f224d4688dfe09cf6005e94eaa1ad8e08ae27b4edf275d",
+    "2.4-documentacion-openapi/tests/AceriaApp.Api.Tests/GetTests.cs": "500e9c4572aa78fcef4f789f956524db80610700000a220ea2fcca42ed387caa",
+    "2.4-documentacion-openapi/tests/AceriaApp.Api.Tests/ValidacionHttpTests.cs": "db4ffe012ac94e058c90af4b4b82d931b4645c68916779b5eb69e9975b33a279",
+    "2.4-documentacion-openapi/tests/Compartido/SqlServerPruebas.cs": "83366f0eaeda1b3fccbf5b7711925a3267fcb88560bea255cf25aad0b3eb78a2"
+  },
+  "codigo_normalizado_sha256": {
+    "2.1-diseno-apis-rest/src/AceriaApp.Api/AceriaApp.Api.csproj": "3b19ce0ab5fa2a469b93c461a63b2f441e2d802f4845836e7c31478680ef98af",
+    "2.1-diseno-apis-rest/src/AceriaApp.Api/Datos/AceriaDbContext.cs": "9998eb2ce37d300b38dcabab756ba58e406023bd11d8dca289ffaea8b4d600c7",
+    "2.1-diseno-apis-rest/src/AceriaApp.Api/Modelo/Orden.cs": "7447c75a997009376b26949120a1f430bd85050992bb691a5ef432c753f4a8fe",
+    "2.1-diseno-apis-rest/src/AceriaApp.Api/Modelo/OrdenDto.cs": "05112bf2cb176e1b1acddef3f1b3ff360869031e52258a82668453958b250ab9",
+    "2.1-diseno-apis-rest/src/AceriaApp.Api/Program.cs": "66985796f5fe57dbc0646738313a3e5d69fdd2f1678ac6c9a41b801e38e2adc9",
+    "2.1-diseno-apis-rest/src/AceriaApp.Api/Properties/launchSettings.json": "94093d2875aed2a600943c1135b68dc86428aaae6e402350efcf85f8dd899115",
+    "2.1-diseno-apis-rest/src/AceriaApp.Api/appsettings.json": "722582daccb66c53ad0a8d7e9fee533b57685fa559076c5f85a322c07527c3dc",
+    "2.1-diseno-apis-rest/tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj": "86d1701f2083ef0361386127bf964723f4fed0456555004f4b71bf56784b9761",
+    "2.1-diseno-apis-rest/tests/AceriaApp.Api.Tests/ApiFactory.cs": "17ee8f1f86340aea84db5f46d235974910bb0cdd38e4115ac4f586d020e3bfae",
+    "2.1-diseno-apis-rest/tests/AceriaApp.Api.Tests/GetTests.cs": "500e9c4572aa78fcef4f789f956524db80610700000a220ea2fcca42ed387caa",
+    "2.1-diseno-apis-rest/tests/Compartido/SqlServerPruebas.cs": "83366f0eaeda1b3fccbf5b7711925a3267fcb88560bea255cf25aad0b3eb78a2",
+    "2.2-recursos-verbos-codigos/src/AceriaApp.Api/AceriaApp.Api.csproj": "3b19ce0ab5fa2a469b93c461a63b2f441e2d802f4845836e7c31478680ef98af",
+    "2.2-recursos-verbos-codigos/src/AceriaApp.Api/Contratos/ContratosOrden.cs": "42e3d7e65ab430d4ce9e2c13766c21e0095f961ccea121d1ddee9ba23e668e44",
+    "2.2-recursos-verbos-codigos/src/AceriaApp.Api/Datos/AceriaDbContext.cs": "9998eb2ce37d300b38dcabab756ba58e406023bd11d8dca289ffaea8b4d600c7",
+    "2.2-recursos-verbos-codigos/src/AceriaApp.Api/Modelo/Orden.cs": "7447c75a997009376b26949120a1f430bd85050992bb691a5ef432c753f4a8fe",
+    "2.2-recursos-verbos-codigos/src/AceriaApp.Api/Modelo/OrdenDto.cs": "05112bf2cb176e1b1acddef3f1b3ff360869031e52258a82668453958b250ab9",
+    "2.2-recursos-verbos-codigos/src/AceriaApp.Api/Program.cs": "c445e963418fd3679e3f939e51b39f4583e19a8e7265fd47645025873eb77343",
+    "2.2-recursos-verbos-codigos/src/AceriaApp.Api/Properties/launchSettings.json": "94093d2875aed2a600943c1135b68dc86428aaae6e402350efcf85f8dd899115",
+    "2.2-recursos-verbos-codigos/src/AceriaApp.Api/appsettings.json": "722582daccb66c53ad0a8d7e9fee533b57685fa559076c5f85a322c07527c3dc",
+    "2.2-recursos-verbos-codigos/tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj": "86d1701f2083ef0361386127bf964723f4fed0456555004f4b71bf56784b9761",
+    "2.2-recursos-verbos-codigos/tests/AceriaApp.Api.Tests/ApiFactory.cs": "17ee8f1f86340aea84db5f46d235974910bb0cdd38e4115ac4f586d020e3bfae",
+    "2.2-recursos-verbos-codigos/tests/AceriaApp.Api.Tests/EscrituraTests.cs": "8bdd649c6dd2f1d845f224d4688dfe09cf6005e94eaa1ad8e08ae27b4edf275d",
+    "2.2-recursos-verbos-codigos/tests/AceriaApp.Api.Tests/GetTests.cs": "500e9c4572aa78fcef4f789f956524db80610700000a220ea2fcca42ed387caa",
+    "2.2-recursos-verbos-codigos/tests/Compartido/SqlServerPruebas.cs": "83366f0eaeda1b3fccbf5b7711925a3267fcb88560bea255cf25aad0b3eb78a2",
+    "2.3-validacion-peticiones/src/AceriaApp.Api/AceriaApp.Api.csproj": "6cbeaff73cf99f8f96b28eb35aa2e598b5f2a57a32c222840a34a4d26f192e77",
+    "2.3-validacion-peticiones/src/AceriaApp.Api/Contratos/ContratosOrden.cs": "42e3d7e65ab430d4ce9e2c13766c21e0095f961ccea121d1ddee9ba23e668e44",
+    "2.3-validacion-peticiones/src/AceriaApp.Api/Datos/AceriaDbContext.cs": "9998eb2ce37d300b38dcabab756ba58e406023bd11d8dca289ffaea8b4d600c7",
+    "2.3-validacion-peticiones/src/AceriaApp.Api/Modelo/Orden.cs": "7447c75a997009376b26949120a1f430bd85050992bb691a5ef432c753f4a8fe",
+    "2.3-validacion-peticiones/src/AceriaApp.Api/Modelo/OrdenDto.cs": "05112bf2cb176e1b1acddef3f1b3ff360869031e52258a82668453958b250ab9",
+    "2.3-validacion-peticiones/src/AceriaApp.Api/Program.cs": "5a38a44bd8506e5e265897249db2d04beaaac36e251a7d0c9ca7c16098364fdf",
+    "2.3-validacion-peticiones/src/AceriaApp.Api/Properties/launchSettings.json": "94093d2875aed2a600943c1135b68dc86428aaae6e402350efcf85f8dd899115",
+    "2.3-validacion-peticiones/src/AceriaApp.Api/Validacion/Validadores.cs": "36f715a82ec21b785c76c1f9cb2de328c91d2d5ef4fdb5e2f6bc17f333f06360",
+    "2.3-validacion-peticiones/src/AceriaApp.Api/Validacion/ValidationFilter.cs": "4dea0fc92fbf335c4e80677d07d436122d547a553d521d6d40d0d3339d5cafbc",
+    "2.3-validacion-peticiones/src/AceriaApp.Api/appsettings.json": "722582daccb66c53ad0a8d7e9fee533b57685fa559076c5f85a322c07527c3dc",
+    "2.3-validacion-peticiones/tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj": "86d1701f2083ef0361386127bf964723f4fed0456555004f4b71bf56784b9761",
+    "2.3-validacion-peticiones/tests/AceriaApp.Api.Tests/ApiFactory.cs": "17ee8f1f86340aea84db5f46d235974910bb0cdd38e4115ac4f586d020e3bfae",
+    "2.3-validacion-peticiones/tests/AceriaApp.Api.Tests/EscrituraTests.cs": "8bdd649c6dd2f1d845f224d4688dfe09cf6005e94eaa1ad8e08ae27b4edf275d",
+    "2.3-validacion-peticiones/tests/AceriaApp.Api.Tests/GetTests.cs": "500e9c4572aa78fcef4f789f956524db80610700000a220ea2fcca42ed387caa",
+    "2.3-validacion-peticiones/tests/AceriaApp.Api.Tests/ValidacionHttpTests.cs": "db4ffe012ac94e058c90af4b4b82d931b4645c68916779b5eb69e9975b33a279",
+    "2.3-validacion-peticiones/tests/Compartido/SqlServerPruebas.cs": "83366f0eaeda1b3fccbf5b7711925a3267fcb88560bea255cf25aad0b3eb78a2",
+    "2.4-documentacion-openapi/src/AceriaApp.Api/AceriaApp.Api.csproj": "d6aecc7c9c6a2fe9bb2062d1922c9e05f7b43bdbfd94f6d06069a70f2db520cc",
+    "2.4-documentacion-openapi/src/AceriaApp.Api/Contratos/ContratosOrden.cs": "42e3d7e65ab430d4ce9e2c13766c21e0095f961ccea121d1ddee9ba23e668e44",
+    "2.4-documentacion-openapi/src/AceriaApp.Api/Datos/AceriaDbContext.cs": "9998eb2ce37d300b38dcabab756ba58e406023bd11d8dca289ffaea8b4d600c7",
+    "2.4-documentacion-openapi/src/AceriaApp.Api/Documentacion/DocumentacionExtensions.cs": "ccb6488f32886e23d3c763197eb5218c436956aba96024a6b4d4b02984a8d5e4",
+    "2.4-documentacion-openapi/src/AceriaApp.Api/Modelo/Orden.cs": "7447c75a997009376b26949120a1f430bd85050992bb691a5ef432c753f4a8fe",
+    "2.4-documentacion-openapi/src/AceriaApp.Api/Modelo/OrdenDto.cs": "05112bf2cb176e1b1acddef3f1b3ff360869031e52258a82668453958b250ab9",
+    "2.4-documentacion-openapi/src/AceriaApp.Api/Program.cs": "6039ed3ba9f3ef8318b88809cfb2544936beac3e51338c209701e96e88b0436f",
+    "2.4-documentacion-openapi/src/AceriaApp.Api/Properties/launchSettings.json": "94093d2875aed2a600943c1135b68dc86428aaae6e402350efcf85f8dd899115",
+    "2.4-documentacion-openapi/src/AceriaApp.Api/Validacion/Validadores.cs": "36f715a82ec21b785c76c1f9cb2de328c91d2d5ef4fdb5e2f6bc17f333f06360",
+    "2.4-documentacion-openapi/src/AceriaApp.Api/Validacion/ValidationFilter.cs": "4dea0fc92fbf335c4e80677d07d436122d547a553d521d6d40d0d3339d5cafbc",
+    "2.4-documentacion-openapi/src/AceriaApp.Api/appsettings.json": "722582daccb66c53ad0a8d7e9fee533b57685fa559076c5f85a322c07527c3dc",
+    "2.4-documentacion-openapi/tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj": "86d1701f2083ef0361386127bf964723f4fed0456555004f4b71bf56784b9761",
+    "2.4-documentacion-openapi/tests/AceriaApp.Api.Tests/ApiFactory.cs": "17ee8f1f86340aea84db5f46d235974910bb0cdd38e4115ac4f586d020e3bfae",
+    "2.4-documentacion-openapi/tests/AceriaApp.Api.Tests/ContratoOpenApiTests.cs": "dd77934392cc6457019a6a1f264bf86d09bc1cb11f3bc5c18f278be0125c23db",
+    "2.4-documentacion-openapi/tests/AceriaApp.Api.Tests/EscrituraTests.cs": "8bdd649c6dd2f1d845f224d4688dfe09cf6005e94eaa1ad8e08ae27b4edf275d",
+    "2.4-documentacion-openapi/tests/AceriaApp.Api.Tests/GetTests.cs": "500e9c4572aa78fcef4f789f956524db80610700000a220ea2fcca42ed387caa",
+    "2.4-documentacion-openapi/tests/AceriaApp.Api.Tests/ValidacionHttpTests.cs": "db4ffe012ac94e058c90af4b4b82d931b4645c68916779b5eb69e9975b33a279",
+    "2.4-documentacion-openapi/tests/Compartido/SqlServerPruebas.cs": "83366f0eaeda1b3fccbf5b7711925a3267fcb88560bea255cf25aad0b3eb78a2"
+  },
+  "evidencias_bd": [
+    {
+      "provider": "Microsoft.EntityFrameworkCore.SqlServer",
+      "engineEdition": 4,
+      "version": "16.0.4135.4",
+      "database": "AceriaTest_04eaf51ebe804636a05c17e127a6a5bc",
+      "modo": "conexion_externa",
+      "origen": "Testcontainers"
+    },
+    {
+      "provider": "Microsoft.EntityFrameworkCore.SqlServer",
+      "engineEdition": 4,
+      "version": "16.0.4135.4",
+      "database": "AceriaTest_088d68ea7e3440828e3461ec236d4e3e",
+      "modo": "conexion_externa",
+      "origen": "Testcontainers"
+    },
+    {
+      "provider": "Microsoft.EntityFrameworkCore.SqlServer",
+      "engineEdition": 4,
+      "version": "16.0.4135.4",
+      "database": "AceriaTest_0ce417025bba441198594c45470d0000",
+      "modo": "conexion_externa",
+      "origen": "Testcontainers"
+    },
+    {
+      "provider": "Microsoft.EntityFrameworkCore.SqlServer",
+      "engineEdition": 4,
+      "version": "16.0.4135.4",
+      "database": "AceriaTest_11d58102d88142c4925a997a05d7e552",
+      "modo": "conexion_externa",
+      "origen": "Testcontainers"
+    },
+    {
+      "provider": "Microsoft.EntityFrameworkCore.SqlServer",
+      "engineEdition": 4,
+      "version": "16.0.4135.4",
+      "database": "AceriaTest_1ba869e64f2c44a99d97ed95a70b5003",
+      "modo": "conexion_externa",
+      "origen": "Testcontainers"
+    },
+    {
+      "provider": "Microsoft.EntityFrameworkCore.SqlServer",
+      "engineEdition": 4,
+      "version": "16.0.4135.4",
+      "database": "AceriaTest_212a7058fd034ecc9fbc74656cf32040",
+      "modo": "conexion_externa",
+      "origen": "Testcontainers"
+    },
+    {
+      "provider": "Microsoft.EntityFrameworkCore.SqlServer",
+      "engineEdition": 4,
+      "version": "16.0.4135.4",
+      "database": "AceriaTest_242e82fc59f44506a545a7060388d01e",
+      "modo": "conexion_externa",
+      "origen": "Testcontainers"
+    },
+    {
+      "provider": "Microsoft.EntityFrameworkCore.SqlServer",
+      "engineEdition": 4,
+      "version": "16.0.4135.4",
+      "database": "AceriaTest_258cd80b01444a91876310ba28997fb4",
+      "modo": "conexion_externa",
+      "origen": "Testcontainers"
+    },
+    {
+      "provider": "Microsoft.EntityFrameworkCore.SqlServer",
+      "engineEdition": 4,
+      "version": "16.0.4135.4",
+      "database": "AceriaTest_36ea044dda4f45f3912393f42a2a34c9",
+      "modo": "conexion_externa",
+      "origen": "Testcontainers"
+    },
+    {
+      "provider": "Microsoft.EntityFrameworkCore.SqlServer",
+      "engineEdition": 4,
+      "version": "16.0.4135.4",
+      "database": "AceriaTest_382a2f8dcee74a91aeea3154edf76c48",
+      "modo": "conexion_externa",
+      "origen": "Testcontainers"
+    },
+    {
+      "provider": "Microsoft.EntityFrameworkCore.SqlServer",
+      "engineEdition": 4,
+      "version": "16.0.4135.4",
+      "database": "AceriaTest_4634e32df49642369d6638007c4c7a29",
+      "modo": "conexion_externa",
+      "origen": "Testcontainers"
+    },
+    {
+      "provider": "Microsoft.EntityFrameworkCore.SqlServer",
+      "engineEdition": 4,
+      "version": "16.0.4135.4",
+      "database": "AceriaTest_50173c159b0445a9b23e2a56ecf034b5",
+      "modo": "conexion_externa",
+      "origen": "Testcontainers"
+    },
+    {
+      "provider": "Microsoft.EntityFrameworkCore.SqlServer",
+      "engineEdition": 4,
+      "version": "16.0.4135.4",
+      "database": "AceriaTest_50e35dd3ea06465fb7fb0588282a5c12",
+      "modo": "conexion_externa",
+      "origen": "Testcontainers"
+    },
+    {
+      "provider": "Microsoft.EntityFrameworkCore.SqlServer",
+      "engineEdition": 4,
+      "version": "16.0.4135.4",
+      "database": "AceriaTest_5b766d5e558745e9b80d6b55596a171f",
+      "modo": "conexion_externa",
+      "origen": "Testcontainers"
+    },
+    {
+      "provider": "Microsoft.EntityFrameworkCore.SqlServer",
+      "engineEdition": 4,
+      "version": "16.0.4135.4",
+      "database": "AceriaTest_5e3b13632e014a2fa1d935ad6a4ac1a2",
+      "modo": "conexion_externa",
+      "origen": "Testcontainers"
+    },
+    {
+      "provider": "Microsoft.EntityFrameworkCore.SqlServer",
+      "engineEdition": 4,
+      "version": "16.0.4135.4",
+      "database": "AceriaTest_601a20721d3740e881275514385b0f64",
+      "modo": "conexion_externa",
+      "origen": "Testcontainers"
+    },
+    {
+      "provider": "Microsoft.EntityFrameworkCore.SqlServer",
+      "engineEdition": 4,
+      "version": "16.0.4135.4",
+      "database": "AceriaTest_659d975256bc42f68115c16f2535c6ae",
+      "modo": "conexion_externa",
+      "origen": "Testcontainers"
+    },
+    {
+      "provider": "Microsoft.EntityFrameworkCore.SqlServer",
+      "engineEdition": 4,
+      "version": "16.0.4135.4",
+      "database": "AceriaTest_6a37acb984d547ab84bc65df757b01a5",
+      "modo": "conexion_externa",
+      "origen": "Testcontainers"
+    },
+    {
+      "provider": "Microsoft.EntityFrameworkCore.SqlServer",
+      "engineEdition": 4,
+      "version": "16.0.4135.4",
+      "database": "AceriaTest_6e24161f67384aa7883a5ce0f0b7645b",
+      "modo": "conexion_externa",
+      "origen": "Testcontainers"
+    },
+    {
+      "provider": "Microsoft.EntityFrameworkCore.SqlServer",
+      "engineEdition": 4,
+      "version": "16.0.4135.4",
+      "database": "AceriaTest_71d94f63892b4faa9c6f780c6e3aa93c",
+      "modo": "conexion_externa",
+      "origen": "Testcontainers"
+    },
+    {
+      "provider": "Microsoft.EntityFrameworkCore.SqlServer",
+      "engineEdition": 4,
+      "version": "16.0.4135.4",
+      "database": "AceriaTest_766c28dd487949f8b4b1813e813b9a90",
+      "modo": "conexion_externa",
+      "origen": "Testcontainers"
+    },
+    {
+      "provider": "Microsoft.EntityFrameworkCore.SqlServer",
+      "engineEdition": 4,
+      "version": "16.0.4135.4",
+      "database": "AceriaTest_79af6df842dc4aadacea35531507c0c8",
+      "modo": "conexion_externa",
+      "origen": "Testcontainers"
+    },
+    {
+      "provider": "Microsoft.EntityFrameworkCore.SqlServer",
+      "engineEdition": 4,
+      "version": "16.0.4135.4",
+      "database": "AceriaTest_7b252c81b99e403f9a9ea7dd4294bb9b",
+      "modo": "conexion_externa",
+      "origen": "Testcontainers"
+    },
+    {
+      "provider": "Microsoft.EntityFrameworkCore.SqlServer",
+      "engineEdition": 4,
+      "version": "16.0.4135.4",
+      "database": "AceriaTest_7fbf146167464b9e960a8bb57125196a",
+      "modo": "conexion_externa",
+      "origen": "Testcontainers"
+    },
+    {
+      "provider": "Microsoft.EntityFrameworkCore.SqlServer",
+      "engineEdition": 4,
+      "version": "16.0.4135.4",
+      "database": "AceriaTest_84e40882ea774f0aa43325dfa55b5114",
+      "modo": "conexion_externa",
+      "origen": "Testcontainers"
+    },
+    {
+      "provider": "Microsoft.EntityFrameworkCore.SqlServer",
+      "engineEdition": 4,
+      "version": "16.0.4135.4",
+      "database": "AceriaTest_9728e30151bc4eb9982f333dbacf963e",
+      "modo": "conexion_externa",
+      "origen": "Testcontainers"
+    },
+    {
+      "provider": "Microsoft.EntityFrameworkCore.SqlServer",
+      "engineEdition": 4,
+      "version": "16.0.4135.4",
+      "database": "AceriaTest_9ace83666cb749f5a46cab8370d5545f",
+      "modo": "conexion_externa",
+      "origen": "Testcontainers"
+    },
+    {
+      "provider": "Microsoft.EntityFrameworkCore.SqlServer",
+      "engineEdition": 4,
+      "version": "16.0.4135.4",
+      "database": "AceriaTest_9bb4b545eae84f709ea940f665d804aa",
+      "modo": "conexion_externa",
+      "origen": "Testcontainers"
+    },
+    {
+      "provider": "Microsoft.EntityFrameworkCore.SqlServer",
+      "engineEdition": 4,
+      "version": "16.0.4135.4",
+      "database": "AceriaTest_ad99f39e1e8042f191ae9ba9fc45768b",
+      "modo": "conexion_externa",
+      "origen": "Testcontainers"
+    },
+    {
+      "provider": "Microsoft.EntityFrameworkCore.SqlServer",
+      "engineEdition": 4,
+      "version": "16.0.4135.4",
+      "database": "AceriaTest_b18106904e5c434892d64b1cb2463a53",
+      "modo": "conexion_externa",
+      "origen": "Testcontainers"
+    },
+    {
+      "provider": "Microsoft.EntityFrameworkCore.SqlServer",
+      "engineEdition": 4,
+      "version": "16.0.4135.4",
+      "database": "AceriaTest_b7d387be82664876a5683eed11009b87",
+      "modo": "conexion_externa",
+      "origen": "Testcontainers"
+    },
+    {
+      "provider": "Microsoft.EntityFrameworkCore.SqlServer",
+      "engineEdition": 4,
+      "version": "16.0.4135.4",
+      "database": "AceriaTest_bbecf44166a24431825ad36c53036d0d",
+      "modo": "conexion_externa",
+      "origen": "Testcontainers"
+    },
+    {
+      "provider": "Microsoft.EntityFrameworkCore.SqlServer",
+      "engineEdition": 4,
+      "version": "16.0.4135.4",
+      "database": "AceriaTest_cc4b537b2efa417d8e581cf0aa14aa43",
+      "modo": "conexion_externa",
+      "origen": "Testcontainers"
+    },
+    {
+      "provider": "Microsoft.EntityFrameworkCore.SqlServer",
+      "engineEdition": 4,
+      "version": "16.0.4135.4",
+      "database": "AceriaTest_cdb9e4b722464581aad56db7f906ecd7",
+      "modo": "conexion_externa",
+      "origen": "Testcontainers"
+    },
+    {
+      "provider": "Microsoft.EntityFrameworkCore.SqlServer",
+      "engineEdition": 4,
+      "version": "16.0.4135.4",
+      "database": "AceriaTest_d1345c2fc35b4f559cfbb5a861b34c1a",
+      "modo": "conexion_externa",
+      "origen": "Testcontainers"
+    },
+    {
+      "provider": "Microsoft.EntityFrameworkCore.SqlServer",
+      "engineEdition": 4,
+      "version": "16.0.4135.4",
+      "database": "AceriaTest_db55e79732a84185aebced2b11be1f26",
+      "modo": "conexion_externa",
+      "origen": "Testcontainers"
+    },
+    {
+      "provider": "Microsoft.EntityFrameworkCore.SqlServer",
+      "engineEdition": 4,
+      "version": "16.0.4135.4",
+      "database": "AceriaTest_dc8cae50afcb48cdbabce4a4defb24c6",
+      "modo": "conexion_externa",
+      "origen": "Testcontainers"
+    },
+    {
+      "provider": "Microsoft.EntityFrameworkCore.SqlServer",
+      "engineEdition": 4,
+      "version": "16.0.4135.4",
+      "database": "AceriaTest_eae1fb3aacd2493ea51d6de0daca4fc5",
+      "modo": "conexion_externa",
+      "origen": "Testcontainers"
+    }
+  ]
+}

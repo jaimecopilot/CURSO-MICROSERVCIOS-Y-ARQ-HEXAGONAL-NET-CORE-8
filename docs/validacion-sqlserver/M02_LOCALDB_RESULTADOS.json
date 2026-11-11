@@ -1,0 +1,48 @@
+{
+  "modulo": 2,
+  "resultado": "PASS",
+  "fecha_utc": "2026-11-11T08:23:38.864240+00:00",
+  "commit_comprobado": "54709859d231c8607ba0761a28f442fda285fd58",
+  "comprobaciones": [
+    {
+      "ruta": "/api/v1/ordenes",
+      "post_201_location": "PASS",
+      "get_200_404": "PASS",
+      "validacion_400": "PASS",
+      "finalizar_200_409": "PASS"
+    }
+  ],
+  "motor": {
+    "engineEdition": 4,
+    "modo": "LocalDB",
+    "version": "15.0.4382.1"
+  },
+  "codigo_normalizado_sha256": {
+    "src/AceriaApp.Api/AceriaApp.Api.csproj": "d6aecc7c9c6a2fe9bb2062d1922c9e05f7b43bdbfd94f6d06069a70f2db520cc",
+    "src/AceriaApp.Api/appsettings.json": "722582daccb66c53ad0a8d7e9fee533b57685fa559076c5f85a322c07527c3dc",
+    "src/AceriaApp.Api/Contratos/ContratosOrden.cs": "42e3d7e65ab430d4ce9e2c13766c21e0095f961ccea121d1ddee9ba23e668e44",
+    "src/AceriaApp.Api/Datos/AceriaDbContext.cs": "9998eb2ce37d300b38dcabab756ba58e406023bd11d8dca289ffaea8b4d600c7",
+    "src/AceriaApp.Api/Documentacion/DocumentacionExtensions.cs": "ccb6488f32886e23d3c763197eb5218c436956aba96024a6b4d4b02984a8d5e4",
+    "src/AceriaApp.Api/Modelo/Orden.cs": "7447c75a997009376b26949120a1f430bd85050992bb691a5ef432c753f4a8fe",
+    "src/AceriaApp.Api/Modelo/OrdenDto.cs": "05112bf2cb176e1b1acddef3f1b3ff360869031e52258a82668453958b250ab9",
+    "src/AceriaApp.Api/Program.cs": "6039ed3ba9f3ef8318b88809cfb2544936beac3e51338c209701e96e88b0436f",
+    "src/AceriaApp.Api/Properties/launchSettings.json": "94093d2875aed2a600943c1135b68dc86428aaae6e402350efcf85f8dd899115",
+    "src/AceriaApp.Api/Validacion/Validadores.cs": "36f715a82ec21b785c76c1f9cb2de328c91d2d5ef4fdb5e2f6bc17f333f06360",
+    "src/AceriaApp.Api/Validacion/ValidationFilter.cs": "4dea0fc92fbf335c4e80677d07d436122d547a553d521d6d40d0d3339d5cafbc",
+    "tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj": "86d1701f2083ef0361386127bf964723f4fed0456555004f4b71bf56784b9761",
+    "tests/AceriaApp.Api.Tests/ApiFactory.cs": "17ee8f1f86340aea84db5f46d235974910bb0cdd38e4115ac4f586d020e3bfae",
+    "tests/AceriaApp.Api.Tests/ContratoOpenApiTests.cs": "dd77934392cc6457019a6a1f264bf86d09bc1cb11f3bc5c18f278be0125c23db",
+    "tests/AceriaApp.Api.Tests/EscrituraTests.cs": "8bdd649c6dd2f1d845f224d4688dfe09cf6005e94eaa1ad8e08ae27b4edf275d",
+    "tests/AceriaApp.Api.Tests/GetTests.cs": "500e9c4572aa78fcef4f789f956524db80610700000a220ea2fcca42ed387caa",
+    "tests/AceriaApp.Api.Tests/ValidacionHttpTests.cs": "db4ffe012ac94e058c90af4b4b82d931b4645c68916779b5eb69e9975b33a279",
+    "tests/Compartido/SqlServerPruebas.cs": "83366f0eaeda1b3fccbf5b7711925a3267fcb88560bea255cf25aad0b3eb78a2"
+  },
+  "ruta_ejecucion_corta": "D:\\a\\_temp\\axia2-vwsc6q36\\etapa",
+  "reinicio_con_persistencia": "PASS",
+  "bases": [
+    "AceriaTest_a6f8ead6ce4f44509526236fabe42aff_AceriaApp",
+    "AceriaTest_a6f8ead6ce4f44509526236fabe42aff_AceriaHexagonal",
+    "AceriaTest_a6f8ead6ce4f44509526236fabe42aff_AceriaProduccion"
+  ],
+  "limpieza": "PASS"
+}
