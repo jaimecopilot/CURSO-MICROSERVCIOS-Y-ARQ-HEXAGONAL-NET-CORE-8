@@ -60,3 +60,9 @@ Cada módulo se organiza en las carpetas `TEORIA/`, `PRACTICAS/` y `PROYECTO/`. 
 - [Teoría](M06_COMUNICACION_MICROSERVICIOS/TEORIA/M06_TEORIA.md) · [PDF](M06_COMUNICACION_MICROSERVICIOS/TEORIA/M06_TEORIA.pdf).
 - [Prácticas guiadas](M06_COMUNICACION_MICROSERVICIOS/PRACTICAS/M06_PRACTICAS.md) · [PDF](M06_COMUNICACION_MICROSERVICIOS/PRACTICAS/M06_PRACTICAS.pdf).
 - [Proyectos y validación](M06_COMUNICACION_MICROSERVICIOS/README.md): tres etapas progresivas, 6.1–6.3, con HTTP real, RabbitMQ y outbox/inbox SQL Server.
+
+### Módulo 7 — Observabilidad y resiliencia
+
+- [Teoría](M07_OBSERVABILIDAD_RESILIENCIA/TEORIA/M07_TEORIA.md) · [PDF](M07_OBSERVABILIDAD_RESILIENCIA/TEORIA/M07_TEORIA.pdf).
+- [Prácticas guiadas](M07_OBSERVABILIDAD_RESILIENCIA/PRACTICAS/M07_PRACTICAS.md) · [PDF](M07_OBSERVABILIDAD_RESILIENCIA/PRACTICAS/M07_PRACTICAS.pdf).
+- [Proyectos y validación](M07_OBSERVABILIDAD_RESILIENCIA/README.md): cuatro etapas progresivas, 7.1–7.4, con correlación JSON, salud SQL/AMQP, ProblemDetails y resiliencia HTTP mediante Polly v8.
