@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../AceriaApp.Comunicacion.Aplicacion/AceriaApp.Comunicacion.Aplicacion.csproj" />
+    <ProjectReference Include="../AceriaApp.Produccion.Infraestructura/AceriaApp.Produccion.Infraestructura.csproj" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
+</ItemGroup>
+</Project>

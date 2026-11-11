@@ -54,3 +54,7 @@ Cada módulo se organiza en las carpetas `TEORIA/`, `PRACTICAS/` y `PROYECTO/`. 
 - [Teoría](M05_DDD_CQRS/TEORIA/M05_TEORIA.md) · [PDF](M05_DDD_CQRS/TEORIA/M05_TEORIA.pdf).
 - [Prácticas guiadas](M05_DDD_CQRS/PRACTICAS/M05_PRACTICAS.md) · [PDF](M05_DDD_CQRS/PRACTICAS/M05_PRACTICAS.pdf).
 - [Proyectos y validación](M05_DDD_CQRS/README.md): cinco etapas progresivas, 5.1–5.5.
+
+## Módulo 6: comunicación entre microservicios
+
+[Materiales y proyectos de M06](M06_COMUNICACION_MICROSERVICIOS/README.md): HTTP real, RabbitMQ, outbox/inbox SQL Server y recorrido híbrido.

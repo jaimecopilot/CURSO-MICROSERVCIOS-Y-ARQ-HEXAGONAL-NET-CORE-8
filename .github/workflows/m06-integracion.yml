@@ -1,0 +1,129 @@
+name: M06 - HTTP eventos SQL Server y RabbitMQ
+on:
+  push:
+    branches: [main, 'desarrollo/m06-*']
+    paths:
+      - 'M06_COMUNICACION_MICROSERVICIOS/**'
+      - '.github/scripts/m06_*.py'
+      - '.github/tests/test_m06_*.py'
+      - '.github/workflows/m06-integracion.yml'
+      - 'tools/M06ValidationHost/**'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: m06-${{ github.ref }}-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      DOTNET_PROCESSOR_COUNT: '1'
+      DOTNET_CLI_UI_LANGUAGE: en
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with: {dotnet-version: '8.0.x'}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m unittest discover -s .github/tests
+      - name: Reconstruir manual y ejecutar SQLServer RabbitMQ y HTTP reales
+        run: dotnet run --project tools/M06ValidationHost -c Release -- python .github/scripts/m06_validar.py
+      - run: python .github/scripts/m06_empaquetar.py --tipo linux
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with: {name: m06-linux, path: '.qa/m06-artefactos/linux.tar.gz'}
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: m06-diagnostico-linux
+          path: |
+            M06_COMUNICACION_MICROSERVICIOS/*RESULTADOS.json
+            .qa/m06-http/**
+            .qa/m06-sql/**
+  windows:
+    runs-on: windows-2022
+    timeout-minutes: 30
+    steps:
+      - run: git config --global core.longpaths true
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with: {dotnet-version: '8.0.x'}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Iniciar SQLServer Express LocalDB
+        shell: pwsh
+        run: |
+          $exe=Get-Command sqllocaldb.exe -ErrorAction SilentlyContinue
+          if(-not $exe){
+            $found=Get-ChildItem 'C:\Program Files\Microsoft SQL Server' -Filter sqllocaldb.exe -Recurse | Select-Object -First 1
+            if(-not $found){throw 'LocalDB no instalado'}
+            $env:PATH="$($found.DirectoryName);$env:PATH"
+          }
+          sqllocaldb info MSSQLLocalDB
+          if($LASTEXITCODE -ne 0){sqllocaldb create MSSQLLocalDB}
+          sqllocaldb start MSSQLLocalDB
+          if($LASTEXITCODE -ne 0){throw 'LocalDB no pudo arrancar'}
+      - run: python .github/scripts/m06_e2e_desde_practicas.py --no-tests --out .qa/m06-windows-reconstruccion.json
+      - name: Dos procesos HTTP sobre LocalDB y reinicio persistente
+        shell: pwsh
+        run: |
+          Copy-Item tools/M06ValidationHost "$env:RUNNER_TEMP\a6host" -Recurse
+          dotnet run --project "$env:RUNNER_TEMP\a6host" -c Release -- --localdb python .github/scripts/m06_http_real.py --windows
+          if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}
+      - run: python .github/scripts/m06_empaquetar.py --tipo windows
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with: {name: m06-windows, path: '.qa/m06-artefactos/windows.tar.gz'}
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: m06-diagnostico-windows
+          path: |
+            M06_COMUNICACION_MICROSERVICIOS/M06_WINDOWS_RESULTADOS.json
+            .qa/m06-http/**
+  pdf:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install markdown weasyprint pymupdf cairosvg beautifulsoup4
+      - run: python .github/scripts/m06_crear_figuras.py
+      - run: python .github/scripts/m06_generar_pdf.py
+      - run: python .github/scripts/m06_empaquetar.py --tipo pdf
+      - uses: actions/upload-artifact@v4
+        with: {name: m06-pdf, path: '.qa/m06-artefactos/pdf.tar.gz'}
+  publicar:
+    needs: [linux, windows, pdf]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: '${{ github.ref_name }}'}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - uses: actions/download-artifact@v4
+        with: {path: '.qa/m06-publicar', merge-multiple: true}
+      - name: Comprobar revisión y recuperar artefactos
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python - <<'PY'
+          import tarfile
+          from pathlib import Path
+          paths=list(Path('.qa/m06-publicar').glob('*.tar.gz'))
+          assert len(paths)==3
+          for p in paths:
+              with tarfile.open(p) as tar:tar.extractall('.',filter='data')
+          PY
+      - run: python .github/scripts/m06_cerrar.py
+      - name: Publicar solo después de todas las verificaciones
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add M06_COMUNICACION_MICROSERVICIOS
+          if ! git diff --cached --quiet; then
+            git commit -m 'docs(m06): publicar proyectos y PDF con E2E SQLServer RabbitMQ y Windows PASS'
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
