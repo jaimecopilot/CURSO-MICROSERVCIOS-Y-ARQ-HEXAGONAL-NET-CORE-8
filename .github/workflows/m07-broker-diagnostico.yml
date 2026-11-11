@@ -7,49 +7,37 @@ jobs:
   puerto:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      DOTNET_PROCESSOR_COUNT: '1'
     steps:
-      - name: Comparar mapeo automatico y explicito al reiniciar
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with: {dotnet-version: '8.0.x'}
+      - name: Reproducir con el host real y registrar puertos estado y permisos
         run: |
-          python - <<'PY'
-          import subprocess,json,socket,time
-          def cmd(*args):return subprocess.check_output(args,text=True).strip()
-          def info(cid):
-              data=json.loads(cmd('docker','inspect',cid))[0]
-              return {'running':data['State']['Running'],'state':data['State'],'binding':data['HostConfig']['PortBindings'].get('5672/tcp'),'published':data['NetworkSettings']['Ports'].get('5672/tcp')}
-          def port(data):return int(data['published'][0]['HostPort'])
-          def connects(p):
+          mkdir -p .qa
+          cat > .qa/m07_broker_probe.py <<'PY'
+          import os,subprocess,json,socket,time,urllib.parse
+          cid=os.environ['ACERIA_RABBIT_CONTAINER_ID']
+          configured=urllib.parse.urlsplit(os.environ['ACERIA_TEST_RABBITMQ']).port
+          def info():
+              data=json.loads(subprocess.check_output(['docker','inspect',cid],text=True))[0]
+              return {'state':data['State'],'binding':data['HostConfig']['PortBindings'],'published':data['NetworkSettings']['Ports'],'user':data['Config']['User'],'entrypoint':data['Config']['Entrypoint'],'cmd':data['Config']['Cmd']}
+          def connects(port):
               try:
-                  with socket.create_connection(('127.0.0.1',p),timeout=1):return True
+                  with socket.create_connection(('127.0.0.1',port),timeout=1):return True
               except OSError:return False
-          def ready(cid):
-              deadline=time.monotonic()+90
-              while time.monotonic()<deadline:
-                  data=info(cid)
-                  if not data['running']:
-                      print(json.dumps(data),flush=True)
-                      subprocess.run(['docker','logs','--tail','80',cid])
-                      raise RuntimeError('El contenedor termino durante el arranque')
-                  if data['running'] and data['published'] and connects(port(data)):
-                      if subprocess.run(['docker','exec',cid,'rabbitmq-diagnostics','-q','ping'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL).returncode==0:return data
-                  time.sleep(1)
-              print(json.dumps({'ultimo_estado':info(cid)}),flush=True)
-              raise TimeoutError('RabbitMQ no arranco')
-          results=[]
-          for kind in ('automatico','explicito'):
-              with socket.socket() as candidate:
-                  candidate.bind(('127.0.0.1',0));chosen=candidate.getsockname()[1]
-              mapping='127.0.0.1::5672' if kind=='automatico' else f'127.0.0.1:{chosen}:5672'
-              cid=cmd('docker','run','-d','-p',mapping,'-e','RABBITMQ_DEFAULT_USER=curso','-e','RABBITMQ_DEFAULT_PASS=curso-local','rabbitmq:4.1.5-management')
-              try:
-                  before=ready(cid)
-                  subprocess.run(['docker','stop','--time','3',cid],check=True)
-                  subprocess.run(['docker','start',cid],check=True)
-                  after=ready(cid)
-                  row={'caso':kind,'antes':before,'despues':after,'puerto_original_accesible':connects(port(before)),'puerto_actual_accesible':connects(port(after))}
-                  print(json.dumps(row),flush=True);results.append(row)
-              finally:subprocess.run(['docker','rm','-f',cid],check=True)
-          changed=port(results[0]['antes'])!=port(results[0]['despues'])
-          stable=port(results[1]['antes'])==port(results[1]['despues']) and results[1]['puerto_original_accesible']
-          print(json.dumps({'hipotesis_puerto_dinamico_confirmada':changed,'mapeo_explicito_estable':stable}),flush=True)
-          assert changed and stable
+          before=info();print(json.dumps({'antes':before,'puerto_configurado':configured,'tcp_inicial':connects(configured)}),flush=True)
+          subprocess.run(['docker','exec','--user','0',cid,'stat','-c','%u:%g %a %n','/var/lib/rabbitmq/.erlang.cookie'])
+          subprocess.run(['docker','stop','--time','3',cid],check=True)
+          subprocess.run(['docker','start',cid],check=True)
+          deadline=time.monotonic()+45
+          while time.monotonic()<deadline:
+              after=info()
+              if not after['state']['Running'] or connects(configured):break
+              time.sleep(1)
+          print(json.dumps({'despues':after,'tcp_puerto_inicial':connects(configured)}),flush=True)
+          subprocess.run(['docker','logs','--tail','80',cid])
+          assert after['state']['Running'] and connects(configured),'El host deja de responder tras el reinicio'
           PY
+          dotnet run --project tools/M07ValidationHost -c Release -- python .qa/m07_broker_probe.py
