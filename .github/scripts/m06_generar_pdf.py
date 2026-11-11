@@ -34,6 +34,7 @@ pre { break-inside: avoid; white-space: pre-wrap; overflow-wrap: anywhere; word-
   margin: 8pt 0 11pt; }
 code { font-family: "DejaVu Sans Mono", monospace; overflow-wrap: anywhere; font-size: .92em; }
 pre code { font-size: inherit; }
+pre.long-code { break-inside: auto; }
 table { width: 100%; border-collapse: collapse; margin: 11pt 0; table-layout: fixed;
   font-size: 8.15pt; line-height: 1.3; }
 thead { display: table-header-group; }
@@ -116,6 +117,13 @@ def main():
   invalid=sorted({tag.name for tag in BeautifulSoup(html,'html.parser').find_all() if tag.name not in allowed})
   if invalid:raise ValueError(f'HTML inesperado en {typ}; protege los tipos genéricos con comillas de código: {invalid}')
   soup=BeautifulSoup(html,'html.parser')
+  # A long listing must flow from the available space instead of moving in full
+  # to the next page and then splitting there anyway. Short examples stay united.
+  for listing in soup.find_all('pre'):
+   estimated_lines=sum(max(1,(len(line.expandtabs(4))+101)//102)
+                       for line in listing.get_text().splitlines())
+   if estimated_lines>65:
+    listing['class']=listing.get('class',[])+['long-code']
   for example in soup.select('pre > code.language-markdown'):
    inner=BeautifulSoup(tohtml(example.get_text()),'html.parser')
    invalid=sorted({tag.name for tag in inner.find_all() if tag.name not in allowed})

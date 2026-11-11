@@ -97,7 +97,7 @@ def main():
         for name in list(processes):stop(name)
         if temp:temp.cleanup()
         path=ROOT/'M06_COMUNICACION_MICROSERVICIOS'/('M06_WINDOWS_RESULTADOS.json' if args.windows else 'M06_HTTP_RESULTADOS.json')
-        path.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
+        path.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
     print(json.dumps({k:v for k,v in report.items() if k!='codigo_normalizado_sha256'},ensure_ascii=False))
     return 0 if report['resultado']=='PASS' else 1
 if __name__=='__main__':sys.exit(main())
