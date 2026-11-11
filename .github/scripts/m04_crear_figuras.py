@@ -35,7 +35,7 @@ def card(n):
  a.append(lines(x+w/2,detail_y,n['detail'],w-35,17,NAVY,step=24))
  return ''.join(a)
 
-def connector(ns,src,dst,label='',color='teal',side=None,dash=False):
+def connector(ns,src,dst,label='',color='teal',side=None,dash=False,label_y=None):
  a,b=ns[src],ns[dst]
  ax,ay=a['x']+a['w']/2,a['y']+a['h']/2
  bx,by=b['x']+b['w']/2,b['y']+b['h']/2
@@ -47,6 +47,7 @@ def connector(ns,src,dst,label='',color='teal',side=None,dash=False):
   x1=a['x']+a['w'] if bx>ax else a['x'];y1=ay;x2=b['x'] if bx>ax else b['x']+b['w'];y2=by
   mid=(x1+x2)/2;path=f'M{x1},{y1} H{mid} V{y2} H{x2}'
   lx=mid;ly=(y1+y2)/2-10
+ if label_y is not None:ly=label_y
  stroke=COL[color][0]
  s=f'<path d="{path}" fill="none" stroke="{stroke}" stroke-width="3" marker-end="url(#{color})"'+(' stroke-dasharray="8 6"' if dash else '')+'/>'
  if label:
@@ -115,7 +116,7 @@ for name,config in FIGURES.items():
 
 # General map: five roles and their semantic relationships, not five stages of every request.
 general=dict(title='Cinco patrones, cinco responsabilidades relacionadas',subtitle='Módulo 4 · ASP.NET Core 8 · AceriaApp',nodes=[
- N('di','Inyección de dependencias','Compone el grafo y sus ámbitos',60,190,330,150,'blue'),N('med','Mediator / MediatR','Despacha solicitudes y pipeline',445,190,330,150,'teal'),N('result','Result Pattern','Expresa éxito o fallo esperado',830,190,330,150,'green'),N('repo','Repository','Prepara y recupera entidades',250,465,330,150,'teal'),N('uow','Unit of Work','Confirma el trabajo compartido',640,465,330,150,'gold')],edges=[('di','med','conecta'),('med','result','responde'),('med','repo','caso de uso'),('repo','uow','commit')],footer='Los patrones colaboran dentro del proceso. La atomicidad local, los errores y la composición se verifican con pruebas distintas.')
+ N('di','Inyección de dependencias','Compone el grafo y sus ámbitos',60,190,330,150,'blue'),N('med','Mediator / MediatR','Despacha solicitudes y pipeline',445,190,330,150,'teal'),N('result','Result Pattern','Expresa éxito o fallo esperado',830,190,330,150,'green'),N('repo','Repository','Prepara y recupera entidades',250,465,330,150,'teal'),N('uow','Unit of Work','Confirma el trabajo compartido',640,465,330,150,'gold')],edges=[('di','med','conecta'),('med','result','responde','teal',None,False,178),('med','repo','caso de uso'),('repo','uow','commit')],footer='Los patrones colaboran dentro del proceso. La atomicidad local, los errores y la composición se verifican con pruebas distintas.')
 svg=draw(**general);folder=ROOT/'GRAFICOS';folder.mkdir(parents=True,exist_ok=True)
 target=folder/'patrones_arquitectura.svg';target.write_text(svg,encoding='utf-8');cairosvg.svg2png(bytestring=svg.encode(),write_to=str(target.with_suffix('.png')))
 print('patrones_arquitectura')

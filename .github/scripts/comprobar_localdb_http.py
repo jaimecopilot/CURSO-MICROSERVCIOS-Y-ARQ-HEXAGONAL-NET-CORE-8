@@ -5,6 +5,8 @@ import json
 import os
 from pathlib import Path
 import socket
+import shutil
+import tempfile
 import subprocess
 import sys
 import time
@@ -37,6 +39,12 @@ def sql(action, databases=''):
     if databases: command += ['-Databases', databases]
     return subprocess.check_output(command, text=True, encoding='utf-8').strip()
 
+def prepare_execution_stage(source, target):
+    shutil.copytree(source, target, ignore=shutil.ignore_patterns('bin', 'obj', 'TestResults', '.vs'))
+    if source_manifest(target) != source_manifest(source):
+        raise ValueError('La copia de ejecución cambió el código reconstruido')
+    return target
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--modulo', type=int, choices=FINAL, required=True)
@@ -50,6 +58,7 @@ def main():
     logs.mkdir(parents=True, exist_ok=True)
     process = None
     stream = None
+    workspace = None
     env = dict(os.environ, ASPNETCORE_ENVIRONMENT='Development', DOTNET_NOLOGO='true', DOTNET_PROCESSOR_COUNT='1')
     for key, database in databases.items():
         env['ConnectionStrings__' + key] = f'Server=(localdb)\\MSSQLLocalDB;Database={database};Trusted_Connection=True;TrustServerCertificate=True'
@@ -80,8 +89,12 @@ def main():
         if sys.platform != 'win32': raise RuntimeError('Esta comprobacion exige Windows y LocalDB')
         result['motor'] = json.loads(sql('info'))
         reconstruct_through(module)
-        result['codigo_normalizado_sha256'] = source_manifest(ROOT / FINAL[module])
-        subprocess.run(['dotnet', 'build', str(api / 'AceriaApp.Api.csproj'), '-c', 'Release', '-m:1'], cwd=api, env=env, check=True)
+        workspace = tempfile.TemporaryDirectory(prefix=f'axia{module}-', dir=os.environ.get('RUNNER_TEMP'))
+        executed = prepare_execution_stage(ROOT / FINAL[module], Path(workspace.name) / 'etapa')
+        api = executed / 'src/AceriaApp.Api'
+        result['codigo_normalizado_sha256'] = source_manifest(executed)
+        result['ruta_ejecucion_corta'] = str(executed)
+        subprocess.run(['dotnet', 'build', str(api / 'AceriaApp.Api.csproj'), '-c', 'Release', '-m:1', '--disable-build-servers'], cwd=api, env=env, check=True)
         base = start(1)
         routes = ['/api/v1/ordenes']
         if module >= 3: routes.append('/api/v1/hexagonal/ordenes')
@@ -122,6 +135,7 @@ def main():
         if sys.platform == 'win32':
             try: sql('drop', ','.join(databases.values())); result['limpieza'] = 'PASS'
             except Exception as exc: result.update(resultado='FAIL', error_limpieza=str(exc))
+        if workspace: workspace.cleanup()
         out = ROOT / 'docs/validacion-sqlserver' / f'M{module:02}_LOCALDB_RESULTADOS.json'
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
