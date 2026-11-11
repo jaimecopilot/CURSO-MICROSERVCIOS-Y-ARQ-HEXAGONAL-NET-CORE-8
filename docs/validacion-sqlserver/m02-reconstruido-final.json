@@ -1,0 +1,733 @@
+{
+  "fecha_utc": "2026-11-11T07:57:44.975175+00:00",
+  "pasos": [
+    {
+      "paso": "2.1.1",
+      "titulo": "Crear el proyecto ASP.NET Core Empty desde Visual Studio",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.1.2",
+      "titulo": "Explorar Program.cs, Kestrel y el perfil de arranque",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.1.3",
+      "titulo": "Dibujar los recursos y decidir las dos URIs GET",
+      "tipo": "verificacion_textual_o_manual",
+      "resultado": "NO_AUTOMATIZABLE",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.1.4",
+      "titulo": "Crear carpeta Modelo y entidad Orden",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 1
+    },
+    {
+      "paso": "2.1.5",
+      "titulo": "Explicar ID Guid, Estado y FechaCreacion de la entidad",
+      "tipo": "verificacion_textual_o_manual",
+      "resultado": "NO_AUTOMATIZABLE",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.1.6",
+      "titulo": "Crear OrdenDto como contrato de salida",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 1
+    },
+    {
+      "paso": "2.1.7",
+      "titulo": "Programar la conversión OrdenDto.Desde",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 1
+    },
+    {
+      "paso": "2.1.8",
+      "titulo": "Instalar EF Core 8 para SQL Server",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.1.9",
+      "titulo": "Crear AceriaDbContext y DbSet<Orden>",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 1
+    },
+    {
+      "paso": "2.1.10",
+      "titulo": "Configurar OnModelCreating, clave y longitudes",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 1
+    },
+    {
+      "paso": "2.1.11",
+      "titulo": "Configurar la cadena de conexión a LocalDB",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.1.12",
+      "titulo": "Registrar AceriaDbContext mediante AddDbContext",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 1
+    },
+    {
+      "paso": "2.1.13",
+      "titulo": "Crear la base didáctica solo en Development",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 1
+    },
+    {
+      "paso": "2.1.14",
+      "titulo": "Escribir el endpoint GET de colección",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 1
+    },
+    {
+      "paso": "2.1.15",
+      "titulo": "Utilizar AsNoTracking y proyectar a DTO",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 1
+    },
+    {
+      "paso": "2.1.16",
+      "titulo": "Ejecutar GET y verificar 200 con lista vacía",
+      "tipo": "verificacion_textual_o_manual",
+      "resultado": "NO_AUTOMATIZABLE",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.1.17",
+      "titulo": "Escribir el GET individual con {id:guid}",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 1
+    },
+    {
+      "paso": "2.1.18",
+      "titulo": "Devolver NotFound cuando no existe la orden",
+      "tipo": "verificacion_textual_o_manual",
+      "resultado": "NO_AUTOMATIZABLE",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.1.19",
+      "titulo": "Comprobar diferencias entre ruta incorrecta y recurso ausente",
+      "tipo": "verificacion_textual_o_manual",
+      "resultado": "NO_AUTOMATIZABLE",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.1.20",
+      "titulo": "Crear AceriaApp.http y enviar peticiones desde Visual Studio",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.1.21",
+      "titulo": "Crear el proyecto xUnit de pruebas HTTP",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.1.22",
+      "titulo": "Configurar WebApplicationFactory y base aislada para tests",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 1
+    },
+    {
+      "paso": "2.1.23",
+      "titulo": "Probar 200, 404 y DTO mediante GetTests",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 1
+    },
+    {
+      "paso": "2.1.24",
+      "titulo": "Reto: incorporar consulta por cliente y explicar su URI",
+      "tipo": "verificacion_textual_o_manual",
+      "resultado": "NO_AUTOMATIZABLE",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.2.1",
+      "titulo": "Recuperar el estado GET funcional sin modificarlo",
+      "tipo": "verificacion_textual_o_manual",
+      "resultado": "NO_AUTOMATIZABLE",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.2.2",
+      "titulo": "Diseñar la tabla verbo, URI, petición y respuesta",
+      "tipo": "verificacion_textual_o_manual",
+      "resultado": "NO_AUTOMATIZABLE",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.2.3",
+      "titulo": "Separar contrato de entrada y DTO de salida",
+      "tipo": "verificacion_textual_o_manual",
+      "resultado": "NO_AUTOMATIZABLE",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.2.4",
+      "titulo": "Crear CrearOrdenRequest y ActualizarCantidadRequest",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 1
+    },
+    {
+      "paso": "2.2.5",
+      "titulo": "Programar MapPost y recibir JSON de una orden",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 1
+    },
+    {
+      "paso": "2.2.6",
+      "titulo": "Persistir la orden con Add y SaveChangesAsync",
+      "tipo": "verificacion_textual_o_manual",
+      "resultado": "NO_AUTOMATIZABLE",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.2.7",
+      "titulo": "Devolver 201 y Location con CreatedAtRoute",
+      "tipo": "verificacion_textual_o_manual",
+      "resultado": "NO_AUTOMATIZABLE",
+      "bloques_csharp": 1
+    },
+    {
+      "paso": "2.2.8",
+      "titulo": "Enviar POST y consultar por GET la orden creada",
+      "tipo": "verificacion_textual_o_manual",
+      "resultado": "NO_AUTOMATIZABLE",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.2.9",
+      "titulo": "Rechazar provisionalmente peticiones sin datos",
+      "tipo": "verificacion_textual_o_manual",
+      "resultado": "NO_AUTOMATIZABLE",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.2.10",
+      "titulo": "Comprobar la política del taller y respuesta 422",
+      "tipo": "verificacion_textual_o_manual",
+      "resultado": "NO_AUTOMATIZABLE",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.2.11",
+      "titulo": "Programar MapPut con identificador Guid",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 1
+    },
+    {
+      "paso": "2.2.12",
+      "titulo": "Modificar Cliente, Material y Cantidad con PUT",
+      "tipo": "verificacion_textual_o_manual",
+      "resultado": "NO_AUTOMATIZABLE",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.2.13",
+      "titulo": "Comprobar 204 y consultar por GET los cambios",
+      "tipo": "verificacion_textual_o_manual",
+      "resultado": "NO_AUTOMATIZABLE",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.2.14",
+      "titulo": "Programar MapPatch para cambiar solo Cantidad",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 1
+    },
+    {
+      "paso": "2.2.15",
+      "titulo": "Comprobar que PATCH no modifica los demás campos",
+      "tipo": "verificacion_textual_o_manual",
+      "resultado": "NO_AUTOMATIZABLE",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.2.16",
+      "titulo": "Programar MapDelete para eliminar una orden",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 1
+    },
+    {
+      "paso": "2.2.17",
+      "titulo": "Verificar 204 seguido de GET 404",
+      "tipo": "verificacion_textual_o_manual",
+      "resultado": "NO_AUTOMATIZABLE",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.2.18",
+      "titulo": "Programar la transición de estado finalizar",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 1
+    },
+    {
+      "paso": "2.2.19",
+      "titulo": "Bloquear PUT y PATCH para órdenes finalizadas",
+      "tipo": "verificacion_textual_o_manual",
+      "resultado": "NO_AUTOMATIZABLE",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.2.20",
+      "titulo": "Bloquear DELETE y devolver conflicto 409",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.2.21",
+      "titulo": "Escribir pruebas HTTP POST y Location",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 1
+    },
+    {
+      "paso": "2.2.22",
+      "titulo": "Escribir pruebas HTTP PUT, PATCH y DELETE",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 1
+    },
+    {
+      "paso": "2.2.23",
+      "titulo": "Probar automáticamente 422 y 409",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 1
+    },
+    {
+      "paso": "2.2.24",
+      "titulo": "Reto: comprobar idempotencia y efecto persistente",
+      "tipo": "verificacion_textual_o_manual",
+      "resultado": "NO_AUTOMATIZABLE",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.3.1",
+      "titulo": "Comprobar endpoints anteriores y localizar sus contratos",
+      "tipo": "verificacion_textual_o_manual",
+      "resultado": "NO_AUTOMATIZABLE",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.3.2",
+      "titulo": "Distinguir JSON incorrecto, semántica y negocio",
+      "tipo": "verificacion_textual_o_manual",
+      "resultado": "NO_AUTOMATIZABLE",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.3.3",
+      "titulo": "Instalar FluentValidation.DependencyInjectionExtensions",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.3.4",
+      "titulo": "Crear CrearOrdenValidator y reglas de Cliente",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 1
+    },
+    {
+      "paso": "2.3.5",
+      "titulo": "Definir Material y rango válido de Cantidad",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 1
+    },
+    {
+      "paso": "2.3.6",
+      "titulo": "Crear ActualizarCantidadValidator para PATCH",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 1
+    },
+    {
+      "paso": "2.3.7",
+      "titulo": "Ejecutar validadores y estudiar ValidationResult",
+      "tipo": "verificacion_textual_o_manual",
+      "resultado": "NO_AUTOMATIZABLE",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.3.8",
+      "titulo": "Crear ValidationFilter genérico de Minimal API",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 1
+    },
+    {
+      "paso": "2.3.9",
+      "titulo": "Obtener la petición de EndpointFilterInvocationContext",
+      "tipo": "verificacion_textual_o_manual",
+      "resultado": "NO_AUTOMATIZABLE",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.3.10",
+      "titulo": "Ejecutar ValidateAsync y respetar RequestAborted",
+      "tipo": "verificacion_textual_o_manual",
+      "resultado": "NO_AUTOMATIZABLE",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.3.11",
+      "titulo": "Agrupar errores por campo con LINQ",
+      "tipo": "verificacion_textual_o_manual",
+      "resultado": "NO_AUTOMATIZABLE",
+      "bloques_csharp": 1
+    },
+    {
+      "paso": "2.3.12",
+      "titulo": "Responder mediante Results.ValidationProblem",
+      "tipo": "verificacion_textual_o_manual",
+      "resultado": "NO_AUTOMATIZABLE",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.3.13",
+      "titulo": "Permitir next(context) solo cuando IsValid",
+      "tipo": "verificacion_textual_o_manual",
+      "resultado": "NO_AUTOMATIZABLE",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.3.14",
+      "titulo": "Registrar validadores en el contenedor DI",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 1
+    },
+    {
+      "paso": "2.3.15",
+      "titulo": "Conectar filtro de CrearOrdenRequest al POST",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 1
+    },
+    {
+      "paso": "2.3.16",
+      "titulo": "Conectar filtro de CrearOrdenRequest al PUT",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 1
+    },
+    {
+      "paso": "2.3.17",
+      "titulo": "Conectar filtro de ActualizarCantidadRequest al PATCH",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 1
+    },
+    {
+      "paso": "2.3.18",
+      "titulo": "Enviar POST incorrecto y comprobar status 400",
+      "tipo": "verificacion_textual_o_manual",
+      "resultado": "NO_AUTOMATIZABLE",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.3.19",
+      "titulo": "Inspeccionar la propiedad errors del Problem Details",
+      "tipo": "verificacion_textual_o_manual",
+      "resultado": "NO_AUTOMATIZABLE",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.3.20",
+      "titulo": "Probar límite 10001 frente a la capacidad 501",
+      "tipo": "verificacion_textual_o_manual",
+      "resultado": "NO_AUTOMATIZABLE",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.3.21",
+      "titulo": "Reproducir 409 con orden ya finalizada",
+      "tipo": "verificacion_textual_o_manual",
+      "resultado": "NO_AUTOMATIZABLE",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.3.22",
+      "titulo": "Crear pruebas de validación mediante HTTP",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 1
+    },
+    {
+      "paso": "2.3.23",
+      "titulo": "Verificar que los GET siguen sin regresiones",
+      "tipo": "verificacion_textual_o_manual",
+      "resultado": "NO_AUTOMATIZABLE",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.3.24",
+      "titulo": "Reto: personalizar mensajes y comprobar errores",
+      "tipo": "verificacion_textual_o_manual",
+      "resultado": "NO_AUTOMATIZABLE",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.4.1",
+      "titulo": "Comprobar el contrato REST que se va a documentar",
+      "tipo": "verificacion_textual_o_manual",
+      "resultado": "NO_AUTOMATIZABLE",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.4.2",
+      "titulo": "Instalar Swashbuckle.AspNetCore compatible con .NET 8",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.4.3",
+      "titulo": "Crear carpeta Documentacion y extensiones de configuración",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 1
+    },
+    {
+      "paso": "2.4.4",
+      "titulo": "Registrar AddEndpointsApiExplorer y AddSwaggerGen",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 1
+    },
+    {
+      "paso": "2.4.5",
+      "titulo": "Configurar SwaggerDoc con información y versión v1",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 1
+    },
+    {
+      "paso": "2.4.6",
+      "titulo": "Conectar AddDocumentacion en Program.cs",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 1
+    },
+    {
+      "paso": "2.4.7",
+      "titulo": "Configurar UseSwagger y Swagger UI en Development",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 1
+    },
+    {
+      "paso": "2.4.8",
+      "titulo": "Conectar UseDocumentacion y abrir /swagger",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 1
+    },
+    {
+      "paso": "2.4.9",
+      "titulo": "Descargar el JSON real /swagger/v1/swagger.json",
+      "tipo": "verificacion_textual_o_manual",
+      "resultado": "NO_AUTOMATIZABLE",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.4.10",
+      "titulo": "Identificar info, paths, components y schemas",
+      "tipo": "verificacion_textual_o_manual",
+      "resultado": "NO_AUTOMATIZABLE",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.4.11",
+      "titulo": "Aplicar WithName y WithTags a los endpoints",
+      "tipo": "verificacion_textual_o_manual",
+      "resultado": "NO_AUTOMATIZABLE",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.4.12",
+      "titulo": "Documentar GET con WithSummary y Produces",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 2
+    },
+    {
+      "paso": "2.4.13",
+      "titulo": "Documentar POST con 201 y ValidationProblem 400",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 1
+    },
+    {
+      "paso": "2.4.14",
+      "titulo": "Documentar PUT y PATCH con códigos alternativos",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 2
+    },
+    {
+      "paso": "2.4.15",
+      "titulo": "Documentar DELETE y el conflicto 409",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 2
+    },
+    {
+      "paso": "2.4.16",
+      "titulo": "Crear SchemaFilter EjemploCrearOrden",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 2
+    },
+    {
+      "paso": "2.4.17",
+      "titulo": "Inspeccionar example de CrearOrdenRequest en Swagger",
+      "tipo": "verificacion_textual_o_manual",
+      "resultado": "NO_AUTOMATIZABLE",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.4.18",
+      "titulo": "Ejecutar un POST desde Swagger UI",
+      "tipo": "verificacion_textual_o_manual",
+      "resultado": "NO_AUTOMATIZABLE",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.4.19",
+      "titulo": "Consultar la orden creada desde la propia UI",
+      "tipo": "verificacion_textual_o_manual",
+      "resultado": "NO_AUTOMATIZABLE",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.4.20",
+      "titulo": "Crear tests HTTP del documento OpenAPI real",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 1
+    },
+    {
+      "paso": "2.4.21",
+      "titulo": "Comprobar rutas GET y POST en paths",
+      "tipo": "verificacion_textual_o_manual",
+      "resultado": "NO_AUTOMATIZABLE",
+      "bloques_csharp": 0
+    },
+    {
+      "paso": "2.4.22",
+      "titulo": "Comprobar schema y ejemplo de petición",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 1
+    },
+    {
+      "paso": "2.4.23",
+      "titulo": "Comprobar que Production responde 404 para Swagger",
+      "tipo": "codigo_reconstruido_desde_md",
+      "resultado": "RECONSTRUIDO",
+      "bloques_csharp": 2
+    },
+    {
+      "paso": "2.4.24",
+      "titulo": "Reto: documentar PATCH y verificar su summary en JSON",
+      "tipo": "verificacion_textual_o_manual",
+      "resultado": "NO_AUTOMATIZABLE",
+      "bloques_csharp": 0
+    }
+  ],
+  "etapas": [
+    {
+      "punto": "2.1",
+      "compilaciones": 0,
+      "tests": null,
+      "expected": 3,
+      "resultado": "SIN_EJECUTAR_TESTS",
+      "origen": "codigo, csproj y configuracion creados desde Markdown"
+    },
+    {
+      "punto": "2.2",
+      "compilaciones": 0,
+      "tests": null,
+      "expected": 7,
+      "resultado": "SIN_EJECUTAR_TESTS",
+      "origen": "codigo, csproj y configuracion creados desde Markdown"
+    },
+    {
+      "punto": "2.3",
+      "compilaciones": 0,
+      "tests": null,
+      "expected": 12,
+      "resultado": "SIN_EJECUTAR_TESTS",
+      "origen": "codigo, csproj y configuracion creados desde Markdown"
+    },
+    {
+      "punto": "2.4",
+      "compilaciones": 0,
+      "tests": null,
+      "expected": 16,
+      "resultado": "SIN_EJECUTAR_TESTS",
+      "origen": "codigo, csproj y configuracion creados desde Markdown"
+    }
+  ],
+  "resumen": {
+    "resultado": "SIN_TESTS",
+    "pasos": 96,
+    "pasos_codigo": 53,
+    "pasos_manual_o_verificacion": 43,
+    "tests_por_etapa": [
+      3,
+      7,
+      12,
+      16
+    ]
+  },
+  "retos_optativos": {
+    "resultado": "MANUAL_NO_EJECUTADO",
+    "motivo": "Los pasos 2.x.24 proponen cambios abiertos y no contienen archivos C# completos que puedan reconstruirse sin decidir la solución del alumno.",
+    "pasos": [
+      "2.1.24",
+      "2.2.24",
+      "2.3.24",
+      "2.4.24"
+    ]
+  }
+}

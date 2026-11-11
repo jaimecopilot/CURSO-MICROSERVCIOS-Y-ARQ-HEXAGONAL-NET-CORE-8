@@ -134,7 +134,7 @@ def main():
    raise ValueError(f'Explicaciones unidas al convertir {typ}: {separated}/{explanations}')
   figures=BeautifulSoup(html,'html.parser').find_all('img')
   if typ=='TEORIA':
-   assert len(figures)==16 and len({im.get('src') for im in figures})==16, 'Deben aparecer los 16 diagramas distintos'
+   assert len(figures)==17 and len({im.get('src') for im in figures})==17, 'Deben aparecer los 17 diagramas distintos'
   for image in figures:
    image_path=(doc.parent/image.get('src','')).resolve()
    if not image_path.is_file():raise ValueError(f'Imagen inexistente: {image_path}')
@@ -149,7 +149,7 @@ def main():
   text='\n'.join(page.get_text() for page in document)
   if re.search(r'\bfuentes?\b',text,re.I):
    raise ValueError(f'Referencia editorial a fuentes en el PDF {typ}')
-  if len(re.findall(r'Líneas? \d+:',text))!=explanations:
+  if len(re.findall(r'Líneas? \d+(?:-\d+)?:',text))!=explanations:
    raise ValueError(f'Explicaciones omitidas al generar el PDF {typ}')
   for i in range(1,6):
    if f'Punto 5.{i}' not in text:raise ValueError(f'Sin punto 5.{i} en {typ}')

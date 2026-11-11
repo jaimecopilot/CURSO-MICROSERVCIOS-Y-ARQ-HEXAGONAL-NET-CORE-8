@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""E2E M02: reconstruye C# EXCLUSIVAMENTE de fragmentos del Markdown."""
+"""E2E M02: reconstruye código, proyectos y configuración solo desde Markdown."""
 import argparse,json,os,re,shutil,subprocess,sys,tempfile
 from pathlib import Path
 from datetime import datetime,timezone
@@ -49,7 +49,14 @@ def steps_from_md():
     result={}
     for i,m in enumerate(matches):
         body=source[m.end():matches[i+1].start() if i+1<len(matches) else len(source)]
-        csharp=re.findall(r'\x60{3}csharp\n([\s\S]*?)\n\x60{3}',body)
+        artifact_pattern=r'<!-- M02_ARCHIVO (\{[^\n]+\}) -->\n```(csharp|xml|json|http|text)\n([\s\S]*?)\n```'
+        artifacts=[]
+        for tagged in re.finditer(artifact_pattern,body):
+            info=json.loads(tagged.group(1))
+            check(info['paso']==m.group(1),'Archivo fuera de su paso: '+str(info))
+            check(not Path(info['ruta']).is_absolute() and '..' not in Path(info['ruta']).parts,'Ruta insegura')
+            artifacts.append({**info,'codigo':tagged.group(3)})
+        csharp=re.findall(r'```csharp\n([\s\S]*?)\n```',re.sub(artifact_pattern,'',body))
         check("**Procedimiento guiado.**" in body and "**Verificación concreta.**" in body,m.group(1)+": falta procedimiento o comprobacion")
         guided=re.search(r'\*\*Procedimiento guiado\.\*\*\n\n((?:[1-9]\. [^\n]+\n){4,})',body)
         check(guided is not None,m.group(1)+": se requieren cuatro acciones concretas numeradas")
@@ -60,18 +67,51 @@ def steps_from_md():
         check("**Acción.**" not in body,m.group(1)+": queda plantilla antigua")
         for code in csharp:
             check(all(x==m.group(1) for x in re.findall(r'// INICIO PASO (2\.[1-4]\.\d+)',code)),m.group(1)+": marcador discordante")
-        result[m.group(1)]={"title":m.group(2),"codes":csharp,"body":body}
+        result[m.group(1)]={"title":m.group(2),"codes":csharp,"body":body,"archivos":artifacts}
     return result
 def prepare(tmp,index,prior):
-    ref=BASE/"PROYECTO"/STAGES[index];dest=tmp/STAGES[index]
-    for item in ref.rglob("*"):
-        if not item.is_file() or item.suffix==".cs" or any(x in ("obj","bin") for x in item.parts):continue
-        out=dest/item.relative_to(ref);out.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(item,out)
+    dest=tmp/STAGES[index]
     if prior:
-        for item in prior.rglob("*.cs"):
-            out=dest/item.relative_to(prior);out.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(item,out)
+        shutil.copytree(prior,dest,ignore=shutil.ignore_patterns("obj","bin","TestResults"))
+    else:
+        dest.mkdir(parents=True)
     return dest
+
+def publish(source,destination):
+    # Solo README.md es editorial y se conserva fuera de la reconstrucción.
+    # La etapa completa se reemplaza: ningún .cs, proyecto o ajuste anterior puede colarse.
+    check(not destination.is_symlink(),"El destino de publicación no puede ser un enlace")
+    source=source.resolve();destination=destination.resolve()
+    check(source.is_dir(),"No existe la etapa reconstruida: "+str(source))
+    check(source!=destination and source not in destination.parents and destination not in source.parents,
+          "Origen y destino de publicación deben ser carpetas independientes")
+    check(not destination.exists() or destination.is_dir(),"El destino no es una carpeta")
+    destination.parent.mkdir(parents=True,exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix="."+destination.name+"-publicacion-",dir=destination.parent) as tmp:
+        replacement=Path(tmp)/"nueva"
+        replacement.mkdir()
+        for item in source.rglob("*"):
+            relative=item.relative_to(source)
+            if not item.is_file() or any(x in ("obj","bin","TestResults") for x in relative.parts):continue
+            target=replacement/relative
+            target.parent.mkdir(parents=True,exist_ok=True)
+            shutil.copy2(item,target)
+        for relative in (Path("README.md"),):
+            editorial=destination/relative
+            if editorial.is_file() and not (replacement/relative).exists():
+                shutil.copy2(editorial,replacement/relative)
+        previous=Path(tmp)/"anterior"
+        if destination.exists():os.replace(destination,previous)
+        try:
+            os.replace(replacement,destination)
+        except OSError:
+            if previous.exists():os.replace(previous,destination)
+            raise
+
+
 def apply(key,steps,w):
+    for artifact in steps[key]["archivos"]:
+        write(w,Path(artifact["ruta"]),artifact["codigo"])
     cc=steps[key]["codes"]
     def code(n=0):
         check(len(cc)>n,key+": falta bloque C# "+str(n));return cc[n]
@@ -151,7 +191,7 @@ def apply(key,steps,w):
         insert_class(w,TEST/"ContratoOpenApiTests.cs",code())
         insert_class(w,TEST/"ContratoOpenApiTests.cs",code(1))
     elif key in SOURCES:raise Broken("No se ha implementado "+key)
-    else:return False
+    else:return bool(steps[key]["archivos"])
     return True
 def run(args,w,key):
     p=subprocess.run(args,cwd=w,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,
@@ -160,7 +200,7 @@ def run(args,w,key):
     return p.stdout
 def match_reference(stage,w):
     ref=BASE/"PROYECTO"/stage
-    expected={x.relative_to(ref) for x in ref.rglob("*.cs")}
+    expected={x.relative_to(ref) for x in ref.rglob("*.cs") if "obj" not in x.parts and "bin" not in x.parts}
     actual={x.relative_to(w) for x in w.rglob("*.cs") if "obj" not in x.parts and "bin" not in x.parts}
     check(expected==actual,f"{stage}: archivos fuente distintos: falta {expected-actual} sobra {actual-expected}")
     for rel in expected:
@@ -173,6 +213,9 @@ def match_reference(stage,w):
                 check(f'app.Map{method}("{route}"' in coded,f"{rel}: falta {method} {route}")
 def main():
     ap=argparse.ArgumentParser();ap.add_argument("--out",type=Path,default=Path("m02-e2e.json"))
+    ap.add_argument("--no-tests",action="store_true",help="Reconstruye sin compilar ni ejecutar pruebas")
+    ap.add_argument("--output-dir",type=Path,help="Publica las cuatro etapas reconstruidas en esta carpeta")
+    ap.add_argument("--compare-reference",action="store_true",help="Compara la estructura C# con PROYECTO tras reconstruir")
     args=ap.parse_args()
     report={"fecha_utc":datetime.now(timezone.utc).isoformat(),"pasos":[],"etapas":[]}
     try:
@@ -185,30 +228,39 @@ def main():
                     key=f"2.{index+1}.{number}";did=apply(key,steps,w)
                     row={"paso":key,"titulo":steps[key]["title"],
                          "tipo":"codigo_reconstruido_desde_md" if did else "verificacion_textual_o_manual",
-                         "resultado":"PASS" if did else "NO_AUTOMATIZABLE",
+                         "resultado":"RECONSTRUIDO" if did else "NO_AUTOMATIZABLE",
                          "bloques_csharp":len(steps[key]["codes"])}
-                    if key in BUILDS:
+                    if key in BUILDS and not args.no_tests:
                         run(["dotnet","build",str(w/API/"AceriaApp.Api.csproj"),"-c","Release"],w,key)
                         builds+=1;row["compilacion"]="PASS"
                     report["pasos"].append(row)
-                log=run(["dotnet","test",str(w/TEST/"AceriaApp.Api.Tests.csproj"),"-c","Release"],w,stage)
-                m=re.search(r'Passed:\s*(\d+).*?Total:\s*(\d+)',log)
-                check(m is not None and int(m.group(1))==EXPECTED[index] and int(m.group(2))==EXPECTED[index],
-                    "Conteo xUnit distinto en "+stage+": "+log[-1500:])
-                match_reference(stage,w)
+                tests=None
+                if not args.no_tests:
+                    log=run(["dotnet","test",str(w/TEST/"AceriaApp.Api.Tests.csproj"),"-c","Release"],w,stage)
+                    m=re.search(r'Passed:\s*(\d+).*?Total:\s*(\d+)',log)
+                    check(m is not None and int(m.group(1))==EXPECTED[index] and int(m.group(2))==EXPECTED[index],
+                        "Conteo xUnit distinto en "+stage+": "+log[-1500:])
+                    tests=int(m.group(1))
+                if args.compare_reference:match_reference(stage,w)
+                if args.output_dir:publish(w,args.output_dir.resolve()/stage)
                 report["etapas"].append({"punto":f"2.{index+1}","compilaciones":builds,
-                   "tests":EXPECTED[index],"resultado":"PASS","origen":"fuentes C# creadas desde Markdown"})
-                print(f"{stage}: {builds} compilaciones / {EXPECTED[index]} tests PASS",flush=True)
+                   "tests":tests,"expected":EXPECTED[index],
+                   "resultado":"SIN_EJECUTAR_TESTS" if args.no_tests else "PASS",
+                   "origen":"codigo, csproj y configuracion creados desde Markdown"})
+                print(f"{stage}: {builds} compilaciones / {tests} tests",flush=True)
                 previous=w
         check(len(report["pasos"])==96,"No hay evidencia de los 96 pasos")
-        report["resumen"]={"resultado":"PASS","pasos":96,
+        report["resumen"]={"resultado":"SIN_TESTS" if args.no_tests else "PASS","pasos":96,
             "pasos_codigo":sum(x["tipo"]=="codigo_reconstruido_desde_md" for x in report["pasos"]),
             "pasos_manual_o_verificacion":sum(x["tipo"]!="codigo_reconstruido_desde_md" for x in report["pasos"]),
             "tests_por_etapa":EXPECTED}
+        report["retos_optativos"]={"resultado":"MANUAL_NO_EJECUTADO",
+            "motivo":"Los pasos 2.x.24 proponen cambios abiertos y no contienen archivos C# completos que puedan reconstruirse sin decidir la solución del alumno.",
+            "pasos":["2.1.24","2.2.24","2.3.24","2.4.24"]}
     except Exception as exc:
         report["resumen"]={"resultado":"FAIL","detalle":str(exc)}
     args.out.parent.mkdir(parents=True,exist_ok=True)
     args.out.write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding="utf-8")
     print(json.dumps(report["resumen"],ensure_ascii=False),flush=True)
-    if report["resumen"]["resultado"]!="PASS":sys.exit(1)
+    if report["resumen"]["resultado"]=="FAIL":sys.exit(1)
 if __name__=="__main__":main()

@@ -1,0 +1,13 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  AceriaApp.Hexagonal.Dominio -> /workspace/scratch/83e6f215d657/curso/M03_ARQUITECTURA_HEXAGONAL/PROYECTO/3.4-implementacion-aspnet-core/src/AceriaApp.Hexagonal.Dominio/bin/Release/net8.0/AceriaApp.Hexagonal.Dominio.dll
+  AceriaApp.Hexagonal.Aplicacion -> /workspace/scratch/83e6f215d657/curso/M03_ARQUITECTURA_HEXAGONAL/PROYECTO/3.4-implementacion-aspnet-core/src/AceriaApp.Hexagonal.Aplicacion/bin/Release/net8.0/AceriaApp.Hexagonal.Aplicacion.dll
+  AceriaApp.Hexagonal.Infraestructura -> /workspace/scratch/83e6f215d657/curso/M03_ARQUITECTURA_HEXAGONAL/PROYECTO/3.4-implementacion-aspnet-core/src/AceriaApp.Hexagonal.Infraestructura/bin/Release/net8.0/AceriaApp.Hexagonal.Infraestructura.dll
+  AceriaApp.Api -> /workspace/scratch/83e6f215d657/curso/M03_ARQUITECTURA_HEXAGONAL/PROYECTO/3.4-implementacion-aspnet-core/src/AceriaApp.Api/bin/Release/net8.0/AceriaApp.Api.dll
+  AceriaApp.Api.Tests -> /workspace/scratch/83e6f215d657/curso/M03_ARQUITECTURA_HEXAGONAL/PROYECTO/3.4-implementacion-aspnet-core/tests/AceriaApp.Api.Tests/bin/Release/net8.0/AceriaApp.Api.Tests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:01.99

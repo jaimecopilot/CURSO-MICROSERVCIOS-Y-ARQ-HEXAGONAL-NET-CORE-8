@@ -1,50 +1,63 @@
 using AceriaApp.Api.Contratos;
 using Microsoft.OpenApi.Any;
-using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
+using Microsoft.OpenApi.Models;
+// Crea src/AceriaApp.Api/Documentacion/DocumentacionExtensions.cs:
 namespace AceriaApp.Api.Documentacion;
-// INICIO PASO 2.4.3
+
 public static class DocumentacionExtensions
 {
-    public static IServiceCollection AddDocumentacion(this IServiceCollection services)
+    // En 2.4.4 se añadirá AddDocumentacion.
+    // En 2.4.7 se añadirá UseDocumentacion.
+// Dentro de DocumentacionExtensions:
+public static IServiceCollection AddDocumentacion(
+    this IServiceCollection services)
+{
+    services.AddEndpointsApiExplorer();
+    // Sustituye services.AddSwaggerGen() dentro de AddDocumentacion:
+services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
     {
-        // PASO 2.4.4: explorador de endpoints y generador.
-        services.AddEndpointsApiExplorer();
-        services.AddSwaggerGen(options=>
+        Title = "AceriaApp — Órdenes de producción",
+        Version = "v1",
+        Description = "API REST educativa creada con ASP.NET Core 8.",
+        Contact = new OpenApiContact
         {
-            // PASO 2.4.5: documento unico v1.
-            options.SwaggerDoc("v1",new OpenApiInfo{
-                Title="AceriaApp — Órdenes de producción",Version="v1",
-                Description="API REST educativa creada con ASP.NET Core 8.",
-                Contact=new OpenApiContact{Name="Equipo AceriaApp",Email="equipo@acerialocal"}
-            });
-            options.SchemaFilter<EjemploCrearOrden>();
-        });
-        return services;
-    }
-    public static WebApplication UseDocumentacion(this WebApplication app)
-    {
-        if(app.Environment.IsDevelopment())
-        {
-            // PASO 2.4.7: interfaz disponible solo en Development.
-            app.UseSwagger();
-            app.UseSwaggerUI(o=>o.SwaggerEndpoint("/swagger/v1/swagger.json","AceriaApp v1"));
+            Name = "Equipo AceriaApp",
+            Email = "equipo@acerialocal"
         }
-        return app;
-    }
+    });
+    options.SchemaFilter<EjemploCrearOrden>();
+});
+    return services;
 }
-// FIN PASO 2.4.3
-// INICIO PASO 2.4.16
+
+// Añade a la misma clase DocumentacionExtensions:
+public static WebApplication UseDocumentacion(this WebApplication app)
+{
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI(o =>
+            o.SwaggerEndpoint("/swagger/v1/swagger.json", "AceriaApp v1"));
+    }
+    return app;
+}
+
+}
+
+// Añade al archivo, fuera de la clase DocumentacionExtensions:
 public sealed class EjemploCrearOrden : ISchemaFilter
 {
-    public void Apply(OpenApiSchema schema,SchemaFilterContext context)
+    public void Apply(OpenApiSchema schema, SchemaFilterContext context)
     {
-        if(context.Type!=typeof(CrearOrdenRequest)) return;
-        schema.Example=new OpenApiObject{
-            ["cliente"]=new OpenApiString("ACX-001"),
-            ["material"]=new OpenApiString("CHAPA-3MM"),
-            ["cantidad"]=new OpenApiInteger(10)
+        if (context.Type != typeof(CrearOrdenRequest)) return;
+        schema.Example = new OpenApiObject
+        {
+            ["cliente"] = new OpenApiString("ACX-001"),
+            ["material"] = new OpenApiString("CHAPA-3MM"),
+            ["cantidad"] = new OpenApiInteger(10)
         };
     }
 }
-// FIN PASO 2.4.16

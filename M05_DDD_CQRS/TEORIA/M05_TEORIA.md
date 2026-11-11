@@ -1615,9 +1615,9 @@ La gestión de transacciones tiene dos consecuencias prácticas. La primera es q
 
 **La decisión arquitectónica.** Distingue cambios en memoria, guardado y confirmación SQL. La garantía transaccional debe describir qué recursos incluye y qué fallos cubre.
 
-**Ejemplo concreto en AceriaApp.** La orden y sus líneas se guardan mediante el mismo contexto de Producción. La prueba relacional con SQLite permite verificar persistencia; SQL Server sigue siendo el proveedor del recorrido configurado de la API.
+**Ejemplo concreto en AceriaApp.** La orden y sus líneas se guardan mediante el mismo contexto de Producción. Las pruebas de persistencia usan `UseSqlServer` y una base SQL Server real aislada por caso, obtenida mediante `BaseSqlServer`. La lectura desde un contexto nuevo comprueba que tanto la raíz como sus líneas se han confirmado.
 
-**Riesgo, alternativa y límite.** SQLite no reproduce todos los tipos, bloqueos o comportamientos de concurrencia de SQL Server. EF InMemory tampoco demuestra atomicidad relacional. Revertir SQL no restaura automáticamente un objeto ya modificado en memoria.
+**Riesgo, alternativa y límite.** Un doble del repositorio sirve para comprobar decisiones del caso de uso, pero no demuestra los mapeos ni la atomicidad del motor. Por eso las pruebas de integración conservan SQL Server. Revertir SQL no restaura automáticamente un objeto ya modificado en memoria; la comprobación debe utilizar otro contexto.
 
 **Comprobación técnica y aprendizaje.** Fuerza un fallo antes del commit y comprueba que no aparecen filas nuevas. Si necesitas evitar actualizaciones perdidas entre dos peticiones, añade y prueba una política de concurrencia explícita; este flujo no la obtiene solo por usar UoW.
 
@@ -2093,6 +2093,79 @@ La aplicación de CQRS prepara el proyecto para el punto 5.5, donde se aplicará
 
 ---
 
+
+## Estudio integrador 5.4 — Consistencia de comandos y consultas sobre SQL Server
+
+### La separación de responsabilidades no exige dos bases
+
+En AceriaApp, un command expresa una intención de negocio y una query obtiene una representación de lectura. Ambos caminos llegan a la misma base de Producción. El command opera mediante el agregado y confirma sus cambios; la query construye un DTO sin modificar el agregado. Esta es una variante de CQRS con un almacén compartido. No necesita duplicar bases ni añadir una sincronización asíncrona para separar responsabilidades. [La descripción oficial del patrón distingue esta variante de la que utiliza almacenes separados](https://learn.microsoft.com/azure/architecture/patterns/cqrs).
+
+![Comando y consulta separados sobre una base SQL Server de Producción](IMAGENES/5-4-sqlserver-cqrs.svg)
+
+*Interpretación del gráfico:* La confirmación es la frontera entre modificar el agregado y poder observar el cambio persistido. La query recorre el camino de lectura y devuelve un DTO. En el test se utiliza un contexto nuevo para que la respuesta no proceda del objeto que acaba de escribir. La figura también se incluye en PNG.
+
+La base de la aplicación del alumno se llama `AceriaProduccion`. En las pruebas, la factoría utiliza una base con nombre único y conserva `UseSqlServer`. El servidor puede venir de Testcontainers o de `ACERIA_TEST_SQLSERVER`, igual que en M02–M04. El nombre de la base de pruebas cambia para aislar datos; los contratos de comandos, consultas y repositorios no necesitan saberlo.
+
+### Qué significa leer después de confirmar
+
+Un command satisfactorio debe haber terminado la confirmación prevista por su caso de uso antes de que el test lance la query de comprobación. La query posterior consulta la misma base y puede observar los datos confirmados. Esto comprueba la secuencia escrita en el test; no equivale a garantizar que dos operaciones concurrentes vean siempre el mismo estado bajo cualquier nivel de aislamiento.
+
+Tampoco debe confundirse `AsNoTracking` con «leer datos sin confirmar». Ese método evita que el contexto registre las entidades leídas para seguir sus cambios; no desactiva las reglas de transacción del motor. En esta aplicación, la proyección a DTO y la ausencia de guardado forman parte del contrato de lectura. Alterar un DTO recibido por el consumidor no debe modificar una orden persistida.
+
+### Una comprobación que atraviesa el límite de persistencia
+
+Este fragmento resume el recorrido del test con `ProduccionApiFactory`; requiere los namespaces habituales de pruebas, MediatR, aplicación e inyección de dependencias. No reemplaza el test completo del laboratorio.
+
+```csharp
+using var factory = new ProduccionApiFactory();
+Guid id;
+using (var escritura = factory.Services.CreateScope())
+{
+    var sender = escritura.ServiceProvider.GetRequiredService<ISender>();
+    var resultado = await sender.Send(new CrearOrdenProduccionCommand("Axia", "Acero", 40));
+    Assert.True(resultado.EsExito);
+    id = resultado.Valor;
+}
+using var lectura = factory.Services.CreateScope();
+var consultas = lectura.ServiceProvider.GetRequiredService<ISender>();
+var detalle = await consultas.Send(new ObtenerOrdenProduccionQuery(id));
+Assert.True(detalle.EsExito);
+Assert.Equal(40, detalle.Valor.CantidadTotal);
+```
+
+- **Línea 1:** Construye un host de prueba con SQL Server aislado y los registros de aplicación e infraestructura.
+- **Línea 2:** Reserva el identificador que permitirá leer la orden desde otro ámbito.
+- **Líneas 3-4:** Abren el ámbito de escritura; sus dependencias scoped comparten el ciclo de vida de esa operación.
+- **Línea 5:** Resuelve el mediador que localizará el manejador del command.
+- **Línea 6:** Solicita crear la orden y espera a que termine el caso de uso, incluida la confirmación prevista.
+- **Líneas 7-8:** Exigen éxito antes de utilizar el identificador devuelto.
+- **Línea 9:** Termina el ámbito de escritura. El siguiente paso no reutiliza su contexto seguido por EF Core.
+- **Líneas 10-11:** Crean otro ámbito y resuelven el mediador para el camino de lectura.
+- **Línea 12:** Ejecuta la query con el identificador de la orden confirmada; su manejador usa el puerto de lectura.
+- **Líneas 13-14:** Comprueban éxito y cantidad en la representación recuperada. La lectura constituye evidencia adicional al resultado del command.
+
+En el laboratorio también se comprueba directamente la base con `factory.NuevoContexto()`. Esa observación complementaria permite revisar la raíz y sus líneas, el estado confirmado y los valores normalizados. La comprobación de queries añade que el contexto no sigue entidades y que no se invoca `SaveChanges`. Son propiedades relacionadas, pero ninguna sustituye a las demás.
+
+### Mapeos del agregado que necesitan el proveedor real
+
+| Elemento del modelo | Decisión de persistencia | Comprobación esperada |
+|---|---|---|
+| Identidad de la orden | GUID generado por el dominio | El mismo identificador se recupera tras guardar. |
+| Líneas de la orden | Relación con clave foránea y colección del agregado | Se reconstruyen las líneas de esa orden. |
+| Nombre de material | Conversión entre value object y valor de columna | El valor normalizado vuelve al reconstruir el objeto. |
+| Cantidad | Conversión y reglas del dominio | El valor válido persiste y la regla rechaza una entrada inválida. |
+| Estado | Representación configurada por EF Core | Un contexto nuevo observa la transición confirmada. |
+| DTO de lectura | Proyección y ausencia de guardado | La query no muta el agregado ni añade una confirmación. |
+
+Una prueba que construye `OrdenProduccion` en memoria verifica sus invariantes. Para afirmar que EF Core puede reconstruir ese agregado se necesita además guardar y leer a través de `ProduccionDbContext`. Aquí SQL Server importa porque las conversiones, las relaciones y la traducción de consultas se ejecutan con su proveedor. Un resultado válido con otro motor no reemplaza esa comprobación.
+
+### Dónde termina esta garantía de consistencia
+
+Si en otro diseño se construye una base de lectura separada mediante eventos, aparecerá un intervalo entre la confirmación del command y la actualización de esa base. Habrá que definir cómo manejar retrasos, reintentos, duplicados y errores de sincronización. Ese es un problema adicional de la variante con almacenes separados; no se debe atribuir al CQRS del curso un mecanismo que todavía no tiene.
+
+**Comprobación de comprensión.** Sigue una orden desde `CrearOrdenProduccionCommand` hasta el DTO de su query. Identifica la validación del agregado, el momento de confirmación, el cambio de ámbito y la lectura SQL. Después explica por qué un handler que solo devuelve un GUID, sin persistir, haría fallar la segunda mitad del recorrido. Esa es la diferencia entre demostrar un resultado en memoria y demostrar el estado confirmado del sistema.
+
+---
 
 # Punto 5.5 — Aplicación al dominio de la acería
 

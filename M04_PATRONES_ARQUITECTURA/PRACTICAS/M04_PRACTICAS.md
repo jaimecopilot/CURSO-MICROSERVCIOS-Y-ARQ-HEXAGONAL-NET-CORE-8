@@ -6,7 +6,10 @@
 
 Continúa exactamente la etapa **M03 3.4**, que contiene nueve proyectos y cincuenta pruebas. Construye cada etapa en su propia carpeta a partir de la anterior. Los bloques de este manual contienen el código completo que se crea o modifica; no copies una etapa terminada para eludir los pasos. Los 120 pasos mantienen la construcción de los catálogos, validadores, documentación y pruebas, e incorporan la implementación ejecutable de los patrones en las capas hexagonales.
 
-**Requisitos:** Visual Studio con desarrollo ASP.NET, SDK .NET 8 y SQL Server para ejecutar los adaptadores de producción. Los tests sustituyen la persistencia cuando corresponda. Ejecuta los comandos desde la raíz de la etapa indicada. Para usar terminal Bash sustituye las barras inversas de las rutas Windows por barras normales.
+**Requisitos:** Visual Studio con desarrollo ASP.NET, SDK .NET 8 y SQL Server Express o LocalDB. Las pruebas de integración usan el proveedor SQL Server real; las pruebas unitarias de lógica pueden emplear dobles de sus puertos. Ejecuta los comandos desde la raíz de la etapa indicada. Para usar terminal Bash sustituye las barras inversas de las rutas Windows por barras normales.
+
+
+**SQL Server para las pruebas.** Conserva `tests/Compartido/SqlServerPruebas.cs` al copiar la etapa anterior. `BaseSqlServer.Crear()` toma la conexión de `ACERIA_TEST_SQLSERVER`, conecta a `master` y crea una base con nombre único por prueba; la cuenta necesita permiso para crear y eliminar esas bases. Al finalizar elimina solo la base que creó. Configura la variable antes de ejecutar `dotnet test`. Ejemplo PowerShell con LocalDB: `$env:ACERIA_TEST_SQLSERVER = "Server=(localdb)\MSSQLLocalDB;Database=master;Integrated Security=True;TrustServerCertificate=True"`. Para Express sustituye el servidor por `.\SQLEXPRESS` o el nombre de tu instancia. Si la variable no está definida, el helper necesita Docker y arranca SQL Server 2022 Express mediante `Testcontainers.MsSql` 3.10.0 y la imagen fija `mcr.microsoft.com/mssql/server:2022-CU14-ubuntu-22.04`. Una conexión errónea o un motor no disponible hacen fallar las pruebas; no se omiten ni se cambia a un proveedor en memoria.
 
 **Capas existentes:** `AceriaApp.Api` es la presentación; `AceriaApp.Hexagonal.Aplicacion` contiene puertos y casos de uso; `AceriaApp.Hexagonal.Dominio` contiene `OrdenHexagonal`; `AceriaApp.Hexagonal.Infraestructura` implementa los adaptadores. La API y los tests de M03 se conservan. Los registros de los catálogos son ejemplos de reglas de diseño; un nombre escrito en un catálogo no registra ni implementa un servicio en el contenedor.
 
@@ -738,7 +741,7 @@ public class CatalogoRepositoriosTests
 4. Verifica `Build succeeded.` y `0 Error(s)`. Si hay advertencias, revisa su causa; en el paso siguiente ejecutarás las pruebas del comportamiento completo.
 
 
-**Integración funcional.** Conserva las dependencias de los tests de catálogo y añade SQLite relacional y WebApplicationFactory para las pruebas funcionales.
+**Integración funcional.** Conserva las dependencias de los tests de catálogo y añade Testcontainers.MsSql, el helper compartido y WebApplicationFactory para las pruebas funcionales.
 
 **Archivo:** `tests/AceriaApp.Repository.Tests/AceriaApp.Repository.Tests.csproj`. **Operación:** Reemplazar el contenido completo.
 
@@ -751,27 +754,26 @@ public class CatalogoRepositoriosTests
     <PackageReference Include="FluentAssertions" Version="6.12.2" />
     <PackageReference Include="xunit" Version="2.9.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.21" />
+    <PackageReference Include="Testcontainers.MsSql" Version="3.10.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.21" />
     <ProjectReference Include="../../src/AceriaApp.Api/AceriaApp.Api.csproj" />
+    <Compile Include="../Compartido/SqlServerPruebas.cs" Link="SqlServerPruebas.cs" />
   </ItemGroup>
 </Project>
 ```
 
 **Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
 
-- **Línea 2:** Compila para .NET 8, igual que los proyectos heredados.
+- **Línea 2:** `<PropertyGroup><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><IsPackable>false</IsPackable><IsTestProject>true</IsTestProject></PropertyGroup>` → Compila para .NET 8, igual que los proyectos heredados.
 
-- **Línea 5:** Conserva la versión 6.12.2 de las aserciones de los tests de catálogo.
+- **Línea 8:** `<PackageReference Include="Testcontainers.MsSql" Version="3.10.0" />` → Fija el cliente de contenedores para SQL Server; el proveedor EF Core SQL Server llega mediante la referencia a la API.
 
-- **Línea 8:** Añade el proveedor SQLite relacional solo al proyecto de pruebas para comprobar persistencia y transacciones.
+- **Línea 9:** `<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.21" />` → Permite ejecutar peticiones HTTP contra el host real de la API.
 
-- **Línea 9:** Permite crear el host ASP.NET Core de pruebas y ejecutar peticiones HTTP contra la API real.
-
-- **Línea 10:** Mantiene la referencia a la capa necesaria; los tests pueden alcanzar la API y sus referencias transitivas.
+- **Línea 11:** `<Compile Include="../Compartido/SqlServerPruebas.cs" Link="SqlServerPruebas.cs" />` → Compila el helper heredado que crea y elimina únicamente la base aislada de cada prueba, sin añadir otro proyecto a la solución.
 
 
-**Integración funcional.** Ejecuta el mismo puerto con un doble sin EF y con el adaptador EF Core sobre SQLite. Comprueba normalización, capacidad, lectura entre contextos y persistencia de la transición de dominio. Son pruebas de caracterización del contrato real heredado de M3.
+**Integración funcional.** Ejecuta el mismo puerto con un doble sin EF y con el adaptador EF Core sobre SQL Server. Comprueba normalización, capacidad, lectura entre contextos y persistencia de la transición de dominio. Son pruebas de caracterización del contrato real heredado de M3.
 
 **Archivo:** `tests/AceriaApp.Repository.Tests/RepositoryFuncionalesTests.cs`. **Operación:** Crear.
 
@@ -782,7 +784,7 @@ using AceriaApp.Hexagonal.Aplicacion.Puertos;
 using AceriaApp.Hexagonal.Dominio;
 using AceriaApp.Hexagonal.Infraestructura.Adaptadores;
 using AceriaApp.Hexagonal.Infraestructura.Datos;
-using Microsoft.Data.Sqlite;
+using AceriaApp.PruebasSqlServer;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 
@@ -813,12 +815,12 @@ public sealed class RepositoryFuncionalesTests
     [Fact]
     public async Task Adaptador_relacional_cumple_contrato_crear_y_recuperar_en_otro_contexto()
     {
-        await using var cn = new SqliteConnection("Data Source=:memory:");
-        await cn.OpenAsync();
-        var options = new DbContextOptionsBuilder<HexagonalDbContext>().UseSqlite(cn).Options;
+        await using var store = BaseSqlServer.Crear();
+        var options = new DbContextOptionsBuilder<HexagonalDbContext>().UseSqlServer(store.ConnectionString).Options;
         var orden = new OrdenHexagonal("Axia", "Acero", 20);
         await using (var db = new HexagonalDbContext(options))
         {
+            Assert.Equal("Microsoft.EntityFrameworkCore.SqlServer", db.Database.ProviderName);
             await db.Database.EnsureCreatedAsync();
             await new OrdenRepositorioSqlServer(db).AgregarAsync(orden);
         }
@@ -833,12 +835,12 @@ public sealed class RepositoryFuncionalesTests
     [Fact]
     public async Task Adaptador_persiste_la_transicion_de_dominio()
     {
-        await using var cn = new SqliteConnection("Data Source=:memory:");
-        await cn.OpenAsync();
-        var options = new DbContextOptionsBuilder<HexagonalDbContext>().UseSqlite(cn).Options;
+        await using var store = BaseSqlServer.Crear();
+        var options = new DbContextOptionsBuilder<HexagonalDbContext>().UseSqlServer(store.ConnectionString).Options;
         Guid id;
         await using (var db = new HexagonalDbContext(options))
         {
+            Assert.Equal("Microsoft.EntityFrameworkCore.SqlServer", db.Database.ProviderName);
             await db.Database.EnsureCreatedAsync();
             var caso = new OrdenesCasoUso(new OrdenRepositorioSqlServer(db));
             id = (await caso.CrearAsync("Axia", "Acero", 20)).Id;
@@ -865,15 +867,19 @@ public sealed class RepositoryFuncionalesTests
 
 **Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
 
-- **Línea 15:** Demuestra que el caso de uso funciona con un doble del puerto y no necesita EF Core para aplicar su lógica.
+- **Línea 15:** `public async Task Caso_de_uso_funciona_con_un_doble_del_puerto_sin_EF()` → El doble del puerto comprueba lógica de aplicación sin conectarse a una base.
 
-- **Línea 26:** Comprueba que superar la capacidad rechaza la operación antes de persistir una orden.
+- **Línea 26:** `public async Task Caso_de_uso_no_persiste_lotes_que_superan_la_capacidad()` → Una cantidad fuera de capacidad se rechaza antes de persistir.
 
-- **Línea 35:** Utiliza SQLite relacional y un contexto de lectura nuevo para demostrar que los datos se guardaron fuera del seguimiento local.
+- **Línea 37:** `await using var store = BaseSqlServer.Crear();` → Crea una base SQL Server exclusiva de esta prueba y la elimina al abandonar el ámbito.
 
-- **Línea 39:** Configura SQLite con una conexión de pruebas controlada; la aplicación de producción mantiene SQL Server.
+- **Línea 38:** `var options = new DbContextOptionsBuilder<HexagonalDbContext>().UseSqlServer(store.ConnectionString).Options;` → Configura el mismo proveedor relacional que usa el adaptador en producción.
 
-- **Línea 55:** Ejecuta la transición y la lee desde otro contexto; detecta implementaciones que solo cambian el objeto en memoria.
+- **Línea 42:** `Assert.Equal("Microsoft.EntityFrameworkCore.SqlServer", db.Database.ProviderName);` → Comprueba explícitamente el proveedor de la prueba de integración.
+
+- **Línea 46:** `await using var lectura = new HexagonalDbContext(options);` → Una conexión y un contexto independientes comprueban persistencia real.
+
+- **Línea 66:** `await caso.FinalizarAsync(id);` → Ejecuta la transición de dominio antes de recuperarla desde otro contexto.
 
 
 **Por qué funciona así.** compilar la solución completa verifica que todos los proyectos, incluidos los nuevos, se resuelven correctamente.
@@ -2415,7 +2421,7 @@ public sealed class OrdenTrabajoRepositorio(HexagonalDbContext db) : IOrdenTraba
 - **Línea 12:** Añade la entidad al seguimiento sin llamar a SaveChanges. Un segundo contexto todavía no debe observarla antes del commit.
 
 
-**Integración funcional.** Conserva las dependencias de los tests de catálogo y añade SQLite relacional y WebApplicationFactory para las pruebas funcionales.
+**Integración funcional.** Conserva las dependencias de los tests de catálogo y añade Testcontainers.MsSql, el helper compartido y WebApplicationFactory para las pruebas funcionales.
 
 **Archivo:** `tests/AceriaApp.UnitOfWork.Tests/AceriaApp.UnitOfWork.Tests.csproj`. **Operación:** Reemplazar el contenido completo.
 
@@ -2428,27 +2434,26 @@ public sealed class OrdenTrabajoRepositorio(HexagonalDbContext db) : IOrdenTraba
     <PackageReference Include="FluentAssertions" Version="6.12.2" />
     <PackageReference Include="xunit" Version="2.9.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.21" />
+    <PackageReference Include="Testcontainers.MsSql" Version="3.10.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.21" />
     <ProjectReference Include="../../src/AceriaApp.Api/AceriaApp.Api.csproj" />
+    <Compile Include="../Compartido/SqlServerPruebas.cs" Link="SqlServerPruebas.cs" />
   </ItemGroup>
 </Project>
 ```
 
 **Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
 
-- **Línea 2:** Compila para .NET 8, igual que los proyectos heredados.
+- **Línea 2:** `<PropertyGroup><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><IsPackable>false</IsPackable><IsTestProject>true</IsTestProject></PropertyGroup>` → Compila para .NET 8, igual que los proyectos heredados.
 
-- **Línea 5:** Conserva la versión 6.12.2 de las aserciones de los tests de catálogo.
+- **Línea 8:** `<PackageReference Include="Testcontainers.MsSql" Version="3.10.0" />` → Fija el cliente de contenedores para SQL Server; el proveedor EF Core SQL Server llega mediante la referencia a la API.
 
-- **Línea 8:** Añade el proveedor SQLite relacional solo al proyecto de pruebas para comprobar persistencia y transacciones.
+- **Línea 9:** `<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.21" />` → Permite ejecutar peticiones HTTP contra el host real de la API.
 
-- **Línea 9:** Permite crear el host ASP.NET Core de pruebas y ejecutar peticiones HTTP contra la API real.
-
-- **Línea 10:** Mantiene la referencia a la capa necesaria; los tests pueden alcanzar la API y sus referencias transitivas.
+- **Línea 11:** `<Compile Include="../Compartido/SqlServerPruebas.cs" Link="SqlServerPruebas.cs" />` → Compila el helper heredado que crea y elimina únicamente la base aislada de cada prueba, sin añadir otro proyecto a la solución.
 
 
-**Integración funcional.** Prueba staging, confirmación, abandono del ámbito y persistencia entre contextos. La prueba de atomicidad fuerza un fallo antes del segundo INSERT después de verificar uno ejecutado. WhenNeeded deja cero filas; el control negativo Never deja una. Así se demuestra rollback después de una escritura real, sin EF InMemory.
+**Integración funcional.** Prueba staging, confirmación, abandono del ámbito y persistencia entre contextos. La prueba de atomicidad limita los lotes a un comando únicamente al inyectar el fallo y lo provoca antes del segundo INSERT, después de verificar uno ejecutado. WhenNeeded deja cero filas; el control negativo Never deja una. Así se demuestra rollback después de una escritura real, sin EF InMemory.
 
 **Archivo:** `tests/AceriaApp.UnitOfWork.Tests/UnitOfWorkFuncionalesTests.cs`. **Operación:** Crear.
 
@@ -2460,7 +2465,7 @@ using AceriaApp.Hexagonal.Aplicacion.Patrones;
 using AceriaApp.Hexagonal.Dominio;
 using AceriaApp.Hexagonal.Infraestructura.Datos;
 using AceriaApp.Hexagonal.Infraestructura.Patrones;
-using Microsoft.Data.Sqlite;
+using AceriaApp.PruebasSqlServer;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 namespace AceriaApp.UnitOfWork.Tests;
@@ -2470,14 +2475,15 @@ public sealed class UnitOfWorkFuncionalesTests
     [Fact]
     public async Task Agregar_solo_prepara_y_commit_persiste_todo()
     {
-        await using var store = await AlmacenSqlite.CrearAsync();
-        await using var db = store.Contexto();
+        await using var store = BaseSqlServer.Crear();
+        await using var db = Contexto(store);
+        await db.Database.EnsureCreatedAsync();
         var repo = new OrdenTrabajoRepositorio(db);
         await repo.AgregarAsync(new OrdenHexagonal("Axia", "Acero", 20));
         await repo.AgregarAsync(new OrdenHexagonal("Norte", "Chapa", 30));
-        await using (var antes = store.Contexto()) Assert.Empty(await antes.Ordenes.ToListAsync());
+        await using (var antes = Contexto(store)) Assert.Empty(await antes.Ordenes.ToListAsync());
         Assert.Equal(2, await new EfUnitOfWork(db).CommitAsync());
-        await using var despues = store.Contexto();
+        await using var despues = Contexto(store);
         Assert.Equal(2, await despues.Ordenes.CountAsync());
     }
 
@@ -2486,16 +2492,17 @@ public sealed class UnitOfWorkFuncionalesTests
     {
         foreach (var transacciones in new[] { AutoTransactionBehavior.WhenNeeded, AutoTransactionBehavior.Never })
         {
-            await using var store = await AlmacenSqlite.CrearAsync();
+            await using var store = BaseSqlServer.Crear();
             var fallo = new FalloSegundoInsert();
-            await using var db = store.Contexto(fallo);
+            await using var db = Contexto(store, fallo);
+            await db.Database.EnsureCreatedAsync();
             db.Database.AutoTransactionBehavior = transacciones;
             var repo = new OrdenTrabajoRepositorio(db);
             await repo.AgregarAsync(new OrdenHexagonal("Axia", "Acero", 20));
             await repo.AgregarAsync(new OrdenHexagonal("Norte", "Chapa", 30));
             await Assert.ThrowsAsync<DbUpdateException>(() => new EfUnitOfWork(db).CommitAsync());
             Assert.Equal(1, fallo.InsertsEjecutados);
-            await using var verificacion = store.Contexto();
+            await using var verificacion = Contexto(store);
             // Control negativo: Never deja la primera escritura. Producción usa WhenNeeded.
             var filasEsperadas = transacciones == AutoTransactionBehavior.Never ? 1 : 0;
             Assert.Equal(filasEsperadas, await verificacion.Ordenes.CountAsync());
@@ -2505,24 +2512,28 @@ public sealed class UnitOfWorkFuncionalesTests
     [Fact]
     public async Task Descartar_el_ambito_sin_commit_descarta_cambios()
     {
-        await using var store = await AlmacenSqlite.CrearAsync();
-        await using (var db = store.Contexto())
+        await using var store = BaseSqlServer.Crear();
+        await using (var db = Contexto(store))
+        {
+            await db.Database.EnsureCreatedAsync();
             await new OrdenTrabajoRepositorio(db).AgregarAsync(new OrdenHexagonal("Axia", "Acero", 20));
-        await using var verificacion = store.Contexto();
+        }
+        await using var verificacion = Contexto(store);
         Assert.Empty(await verificacion.Ordenes.ToListAsync());
     }
 
     [Fact]
     public async Task Caso_de_uso_confirma_y_permita_leer_desde_otro_contexto()
     {
-        await using var store = await AlmacenSqlite.CrearAsync();
+        await using var store = BaseSqlServer.Crear();
         Guid id;
-        await using (var db = store.Contexto())
+        await using (var db = Contexto(store))
         {
+            await db.Database.EnsureCreatedAsync();
             var caso = new OrdenesTransaccionales(new OrdenTrabajoRepositorio(db), new EfUnitOfWork(db));
             id = (await caso.CrearAsync("Axia", "Acero", 20)).Id;
         }
-        await using var verificacion = store.Contexto();
+        await using var verificacion = Contexto(store);
         Assert.Equal("Axia", (await verificacion.Ordenes.SingleAsync(x => x.Id == id)).Cliente);
     }
 
@@ -2532,51 +2543,49 @@ public sealed class UnitOfWorkFuncionalesTests
         public override ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(
             DbCommand command, CommandEventData data, InterceptionResult<DbDataReader> result, CancellationToken ct = default)
         {
-            if (command.CommandText.StartsWith("INSERT", StringComparison.OrdinalIgnoreCase) && InsertsEjecutados == 1)
+            if (command.CommandText.Contains("INSERT INTO", StringComparison.OrdinalIgnoreCase) && InsertsEjecutados == 1)
                 throw new InvalidOperationException("Fallo de prueba después de ejecutar el primer INSERT.");
             return ValueTask.FromResult(result);
         }
         public override ValueTask<DbDataReader> ReaderExecutedAsync(
             DbCommand command, CommandExecutedEventData data, DbDataReader result, CancellationToken ct = default)
         {
-            if (command.CommandText.StartsWith("INSERT", StringComparison.OrdinalIgnoreCase)) InsertsEjecutados++;
+            if (command.CommandText.Contains("INSERT INTO", StringComparison.OrdinalIgnoreCase)) InsertsEjecutados++;
             return ValueTask.FromResult(result);
         }
     }
 
-    private sealed class AlmacenSqlite(SqliteConnection conexion) : IAsyncDisposable
+    private static HexagonalDbContext Contexto(BaseSqlServer store, IInterceptor? fallo = null)
     {
-        public HexagonalDbContext Contexto(params IInterceptor[] interceptores) =>
-            new(new DbContextOptionsBuilder<HexagonalDbContext>().UseSqlite(conexion).AddInterceptors(interceptores).Options);
-        public static async Task<AlmacenSqlite> CrearAsync()
-        {
-            var cn = new SqliteConnection("Data Source=:memory:");
-            await cn.OpenAsync();
-            var store = new AlmacenSqlite(cn);
-            await using var db = store.Contexto();
-            await db.Database.EnsureCreatedAsync();
-            return store;
-        }
-        public ValueTask DisposeAsync() => conexion.DisposeAsync();
+        var options = new DbContextOptionsBuilder<HexagonalDbContext>();
+        if (fallo is null) options.UseSqlServer(store.ConnectionString);
+        else options.UseSqlServer(store.ConnectionString, sql => sql.MaxBatchSize(1)).AddInterceptors(fallo);
+        var db = new HexagonalDbContext(options.Options);
+        Assert.Equal("Microsoft.EntityFrameworkCore.SqlServer", db.Database.ProviderName);
+        return db;
     }
 }
 ```
 
 **Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
 
-- **Línea 15:** Comprueba que un contexto separado no ve los cambios preparados y que un único commit persiste el lote completo.
+- **Línea 15:** `public async Task Agregar_solo_prepara_y_commit_persiste_todo()` → Un contexto independiente no ve cambios preparados; el commit debe persistir ambas órdenes.
 
-- **Línea 29:** Provoca un fallo después de ejecutar una escritura: con transacción no queda ninguna fila; el control sin transacción deja una y prueba que la aserción detecta la pérdida de atomicidad.
+- **Línea 32:** `foreach (var transacciones in new[] { AutoTransactionBehavior.WhenNeeded, AutoTransactionBehavior.Never })` → Ejecuta la misma secuencia con transacción automática y con el control negativo sin transacción.
 
-- **Línea 31:** Construye el control negativo: al desactivar la transacción, el mismo fallo deja una escritura visible.
+- **Línea 36:** `await using var db = Contexto(store, fallo);` → Solo esta prueba separa los INSERT para provocar el error después de la primera escritura.
 
-- **Línea 41:** Cuenta las escrituras efectivamente ejecutadas para demostrar que el fallo no se produjo antes de escribir nada.
+- **Línea 43:** `Assert.Equal(1, fallo.InsertsEjecutados);` → Exige que una escritura se haya ejecutado antes de lanzar el fallo.
 
-- **Línea 50:** Descarta el contexto sin confirmar y comprueba desde otro contexto que no se guardaron cambios.
+- **Línea 44:** `await using var verificacion = Contexto(store);` → Un contexto independiente consulta el estado confirmado; Never deja una fila y WhenNeeded ninguna.
 
-- **Línea 60:** Invoca el caso de uso real y recupera su resultado desde otro contexto para comprobar la confirmación.
+- **Línea 52:** `public async Task Descartar_el_ambito_sin_commit_descarta_cambios()` → Desechar el contexto sin commit no escribe las entidades preparadas.
 
-- **Línea 94:** Configura SQLite con una conexión de pruebas controlada; la aplicación de producción mantiene SQL Server.
+- **Línea 85:** `if (command.CommandText.Contains("INSERT INTO", StringComparison.OrdinalIgnoreCase) && InsertsEjecutados == 1)` → Detecta el INSERT aunque SQL Server anteponga instrucciones SET al comando.
+
+- **Línea 101:** `else options.UseSqlServer(store.ConnectionString, sql => sql.MaxBatchSize(1)).AddInterceptors(fallo);` → Desactiva la agrupación solamente cuando se inyecta el fallo; las demás pruebas conservan la configuración habitual.
+
+- **Línea 103:** `Assert.Equal("Microsoft.EntityFrameworkCore.SqlServer", db.Database.ProviderName);` → Comprueba que todos los contextos de la prueba usan SQL Server.
 
 
 **Por qué funciona así.** compilar la solución completa verifica que todos los proyectos, incluidos los nuevos, se resuelven correctamente.
@@ -4068,7 +4077,7 @@ public sealed class ObtenerOrdenHandler(OrdenesTransaccionales caso) : IRequestH
 - **Línea 13:** MediatR asocia esta clase al contrato de consulta; su único trabajo es delegar la lectura.
 
 
-**Integración funcional.** Conserva las dependencias de los tests de catálogo y añade SQLite relacional y WebApplicationFactory para las pruebas funcionales.
+**Integración funcional.** Conserva las dependencias de los tests de catálogo y añade Testcontainers.MsSql, el helper compartido y WebApplicationFactory para las pruebas funcionales.
 
 **Archivo:** `tests/AceriaApp.Mediator.Tests/AceriaApp.Mediator.Tests.csproj`. **Operación:** Reemplazar el contenido completo.
 
@@ -4081,24 +4090,23 @@ public sealed class ObtenerOrdenHandler(OrdenesTransaccionales caso) : IRequestH
     <PackageReference Include="FluentAssertions" Version="6.12.2" />
     <PackageReference Include="xunit" Version="2.9.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.21" />
+    <PackageReference Include="Testcontainers.MsSql" Version="3.10.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.21" />
     <ProjectReference Include="../../src/AceriaApp.Api/AceriaApp.Api.csproj" />
+    <Compile Include="../Compartido/SqlServerPruebas.cs" Link="SqlServerPruebas.cs" />
   </ItemGroup>
 </Project>
 ```
 
 **Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
 
-- **Línea 2:** Compila para .NET 8, igual que los proyectos heredados.
+- **Línea 2:** `<PropertyGroup><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><IsPackable>false</IsPackable><IsTestProject>true</IsTestProject></PropertyGroup>` → Compila para .NET 8, igual que los proyectos heredados.
 
-- **Línea 5:** Conserva la versión 6.12.2 de las aserciones de los tests de catálogo.
+- **Línea 8:** `<PackageReference Include="Testcontainers.MsSql" Version="3.10.0" />` → Fija el cliente de contenedores para SQL Server; el proveedor EF Core SQL Server llega mediante la referencia a la API.
 
-- **Línea 8:** Añade el proveedor SQLite relacional solo al proyecto de pruebas para comprobar persistencia y transacciones.
+- **Línea 9:** `<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.21" />` → Permite ejecutar peticiones HTTP contra el host real de la API.
 
-- **Línea 9:** Permite crear el host ASP.NET Core de pruebas y ejecutar peticiones HTTP contra la API real.
-
-- **Línea 10:** Mantiene la referencia a la capa necesaria; los tests pueden alcanzar la API y sus referencias transitivas.
+- **Línea 11:** `<Compile Include="../Compartido/SqlServerPruebas.cs" Link="SqlServerPruebas.cs" />` → Compila el helper heredado que crea y elimina únicamente la base aislada de cada prueba, sin añadir otro proyecto a la solución.
 
 
 **Integración funcional.** Verifica persistencia y consulta mediante ISender, ejecución observable del pipeline sin payloads y cancelación sin efectos persistidos. En 4.4 adapta la lectura a Result.Valor y registra OrdenesConResultado.
@@ -4111,7 +4119,7 @@ using AceriaApp.Hexagonal.Aplicacion.Patrones;
 using AceriaApp.Hexagonal.Infraestructura.Datos;
 using AceriaApp.Hexagonal.Infraestructura.Patrones;
 using MediatR;
-using Microsoft.Data.Sqlite;
+using AceriaApp.PruebasSqlServer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -4159,18 +4167,18 @@ public sealed class MediatorFuncionalesTests
         Assert.Empty(await db.Ordenes.ToListAsync());
     }
 
-    private sealed class Entorno(SqliteConnection cn, ServiceProvider services, RegistroLogs logs) : IAsyncDisposable
+    private sealed class Entorno(BaseSqlServer store, ServiceProvider services, RegistroLogs logs) : IAsyncDisposable
     {
         public ServiceProvider Services => services;
         public RegistroLogs Logs => logs;
-        public HexagonalDbContext Contexto() => new(new DbContextOptionsBuilder<HexagonalDbContext>().UseSqlite(cn).Options);
+        public HexagonalDbContext Contexto() => new(new DbContextOptionsBuilder<HexagonalDbContext>().UseSqlServer(store.ConnectionString).Options);
         public static async Task<Entorno> CrearAsync()
         {
-            var cn = new SqliteConnection("Data Source=:memory:"); await cn.OpenAsync();
+            var store = BaseSqlServer.Crear();
             var logs = new RegistroLogs();
             var services = new ServiceCollection();
             services.AddLogging(builder => builder.AddProvider(logs));
-            services.AddDbContext<HexagonalDbContext>(o => o.UseSqlite(cn));
+            services.AddDbContext<HexagonalDbContext>(o => o.UseSqlServer(store.ConnectionString));
             services.AddScoped<IOrdenTrabajoRepositorio, OrdenTrabajoRepositorio>();
             services.AddScoped<IUnitOfWork, EfUnitOfWork>();
             services.AddScoped<OrdenesTransaccionales>();
@@ -4179,11 +4187,17 @@ public sealed class MediatorFuncionalesTests
                 cfg.Lifetime = ServiceLifetime.Scoped;
                 cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
             });
-            var fixture = new Entorno(cn, services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true }), logs);
-            await using var db = fixture.Contexto(); await db.Database.EnsureCreatedAsync();
+            var fixture = new Entorno(store, services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true }), logs);
+            try
+            {
+                await using var db = fixture.Contexto();
+                Assert.Equal("Microsoft.EntityFrameworkCore.SqlServer", db.Database.ProviderName);
+                await db.Database.EnsureCreatedAsync();
+            }
+            catch { await fixture.DisposeAsync(); throw; }
             return fixture;
         }
-        public async ValueTask DisposeAsync() { await services.DisposeAsync(); await cn.DisposeAsync(); }
+        public async ValueTask DisposeAsync() { await services.DisposeAsync(); await store.DisposeAsync(); }
     }
 
     private sealed class RegistroLogs : ILoggerProvider
@@ -4204,15 +4218,21 @@ public sealed class MediatorFuncionalesTests
 
 **Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
 
-- **Línea 15:** Envía un comando y una consulta mediante MediatR y comprueba los datos realmente persistidos.
+- **Línea 15:** `public async Task Command_y_query_ejecutan_el_caso_de_uso_y_devuelven_datos_persistidos()` → El mediador ejecuta el caso de uso y una lectura independiente verifica la orden persistida.
 
-- **Línea 29:** Comprueba las dos entradas de logging y verifica que ninguna contiene el dato confidencial de la petición.
+- **Línea 29:** `public async Task Pipeline_registra_inicio_y_fin_sin_datos_de_cliente()` → El pipeline registra inicio y fin sin incluir el nombre del cliente.
 
-- **Línea 41:** Envía una petición cancelada y verifica tanto la excepción de cancelación como la ausencia de escrituras.
+- **Línea 41:** `public async Task Cancelacion_del_command_no_persiste_la_orden()` → Una cancelación previa impide persistir una orden.
 
-- **Línea 57:** Configura SQLite con una conexión de pruebas controlada; la aplicación de producción mantiene SQL Server.
+- **Línea 60:** `var store = BaseSqlServer.Crear();` → Asigna una base SQL Server aislada al entorno de cada prueba.
 
-- **Línea 73:** Activa la validación de ámbitos para detectar dependencias con un ciclo de vida incompatible.
+- **Línea 64:** `services.AddDbContext<HexagonalDbContext>(o => o.UseSqlServer(store.ConnectionString));` → Los ámbitos de DI reciben contextos SQL Server sobre la misma base de esa prueba.
+
+- **Línea 77:** `Assert.Equal("Microsoft.EntityFrameworkCore.SqlServer", db.Database.ProviderName);` → Comprueba el proveedor antes de crear las tablas.
+
+- **Línea 80:** `catch { await fixture.DisposeAsync(); throw; }` → Si falla la inicialización, libera también la base temporal.
+
+- **Línea 83:** `public async ValueTask DisposeAsync() { await services.DisposeAsync(); await store.DisposeAsync(); }` → Libera los servicios antes de eliminar la base que les pertenece.
 
 
 **Por qué funciona así.** compilar la solución completa verifica que todos los proyectos, incluidos los nuevos, se resuelven correctamente.
@@ -5810,7 +5830,7 @@ using AceriaApp.Hexagonal.Aplicacion.Patrones;
 using AceriaApp.Hexagonal.Infraestructura.Datos;
 using AceriaApp.Hexagonal.Infraestructura.Patrones;
 using MediatR;
-using Microsoft.Data.Sqlite;
+using AceriaApp.PruebasSqlServer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -5858,18 +5878,18 @@ public sealed class MediatorFuncionalesTests
         Assert.Empty(await db.Ordenes.ToListAsync());
     }
 
-    private sealed class Entorno(SqliteConnection cn, ServiceProvider services, RegistroLogs logs) : IAsyncDisposable
+    private sealed class Entorno(BaseSqlServer store, ServiceProvider services, RegistroLogs logs) : IAsyncDisposable
     {
         public ServiceProvider Services => services;
         public RegistroLogs Logs => logs;
-        public HexagonalDbContext Contexto() => new(new DbContextOptionsBuilder<HexagonalDbContext>().UseSqlite(cn).Options);
+        public HexagonalDbContext Contexto() => new(new DbContextOptionsBuilder<HexagonalDbContext>().UseSqlServer(store.ConnectionString).Options);
         public static async Task<Entorno> CrearAsync()
         {
-            var cn = new SqliteConnection("Data Source=:memory:"); await cn.OpenAsync();
+            var store = BaseSqlServer.Crear();
             var logs = new RegistroLogs();
             var services = new ServiceCollection();
             services.AddLogging(builder => builder.AddProvider(logs));
-            services.AddDbContext<HexagonalDbContext>(o => o.UseSqlite(cn));
+            services.AddDbContext<HexagonalDbContext>(o => o.UseSqlServer(store.ConnectionString));
             services.AddScoped<IOrdenTrabajoRepositorio, OrdenTrabajoRepositorio>();
             services.AddScoped<IUnitOfWork, EfUnitOfWork>();
             services.AddScoped<OrdenesTransaccionales>();
@@ -5879,11 +5899,17 @@ public sealed class MediatorFuncionalesTests
                 cfg.Lifetime = ServiceLifetime.Scoped;
                 cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
             });
-            var fixture = new Entorno(cn, services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true }), logs);
-            await using var db = fixture.Contexto(); await db.Database.EnsureCreatedAsync();
+            var fixture = new Entorno(store, services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true }), logs);
+            try
+            {
+                await using var db = fixture.Contexto();
+                Assert.Equal("Microsoft.EntityFrameworkCore.SqlServer", db.Database.ProviderName);
+                await db.Database.EnsureCreatedAsync();
+            }
+            catch { await fixture.DisposeAsync(); throw; }
             return fixture;
         }
-        public async ValueTask DisposeAsync() { await services.DisposeAsync(); await cn.DisposeAsync(); }
+        public async ValueTask DisposeAsync() { await services.DisposeAsync(); await store.DisposeAsync(); }
     }
 
     private sealed class RegistroLogs : ILoggerProvider
@@ -5904,18 +5930,24 @@ public sealed class MediatorFuncionalesTests
 
 **Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
 
-- **Línea 15:** Envía un comando y una consulta mediante MediatR y comprueba los datos realmente persistidos.
+- **Línea 15:** `public async Task Command_y_query_ejecutan_el_caso_de_uso_y_devuelven_datos_persistidos()` → El mediador ejecuta el caso de uso y una lectura independiente verifica la orden persistida.
 
-- **Línea 29:** Comprueba las dos entradas de logging y verifica que ninguna contiene el dato confidencial de la petición.
+- **Línea 29:** `public async Task Pipeline_registra_inicio_y_fin_sin_datos_de_cliente()` → El pipeline registra inicio y fin sin incluir el nombre del cliente.
 
-- **Línea 41:** Envía una petición cancelada y verifica tanto la excepción de cancelación como la ausencia de escrituras.
+- **Línea 41:** `public async Task Cancelacion_del_command_no_persiste_la_orden()` → Una cancelación previa impide persistir una orden.
 
-- **Línea 57:** Configura SQLite con una conexión de pruebas controlada; la aplicación de producción mantiene SQL Server.
+- **Línea 60:** `var store = BaseSqlServer.Crear();` → Asigna una base SQL Server aislada al entorno de cada prueba.
 
-- **Línea 74:** Activa la validación de ámbitos para detectar dependencias con un ciclo de vida incompatible.
+- **Línea 64:** `services.AddDbContext<HexagonalDbContext>(o => o.UseSqlServer(store.ConnectionString));` → Los ámbitos de DI reciben contextos SQL Server sobre la misma base de esa prueba.
+
+- **Línea 78:** `Assert.Equal("Microsoft.EntityFrameworkCore.SqlServer", db.Database.ProviderName);` → Comprueba el proveedor antes de crear las tablas.
+
+- **Línea 81:** `catch { await fixture.DisposeAsync(); throw; }` → Si falla la inicialización, libera también la base temporal.
+
+- **Línea 84:** `public async ValueTask DisposeAsync() { await services.DisposeAsync(); await store.DisposeAsync(); }` → Libera los servicios antes de eliminar la base que les pertenece.
 
 
-**Integración funcional.** Conserva las dependencias de los tests de catálogo y añade SQLite relacional y WebApplicationFactory para las pruebas funcionales.
+**Integración funcional.** Conserva las dependencias de los tests de catálogo y añade Testcontainers.MsSql, el helper compartido y WebApplicationFactory para las pruebas funcionales.
 
 **Archivo:** `tests/AceriaApp.ResultPattern.Tests/AceriaApp.ResultPattern.Tests.csproj`. **Operación:** Reemplazar el contenido completo.
 
@@ -5928,27 +5960,26 @@ public sealed class MediatorFuncionalesTests
     <PackageReference Include="FluentAssertions" Version="6.12.2" />
     <PackageReference Include="xunit" Version="2.9.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.21" />
+    <PackageReference Include="Testcontainers.MsSql" Version="3.10.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.21" />
     <ProjectReference Include="../../src/AceriaApp.Api/AceriaApp.Api.csproj" />
+    <Compile Include="../Compartido/SqlServerPruebas.cs" Link="SqlServerPruebas.cs" />
   </ItemGroup>
 </Project>
 ```
 
 **Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
 
-- **Línea 2:** Compila para .NET 8, igual que los proyectos heredados.
+- **Línea 2:** `<PropertyGroup><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><IsPackable>false</IsPackable><IsTestProject>true</IsTestProject></PropertyGroup>` → Compila para .NET 8, igual que los proyectos heredados.
 
-- **Línea 5:** Conserva la versión 6.12.2 de las aserciones de los tests de catálogo.
+- **Línea 8:** `<PackageReference Include="Testcontainers.MsSql" Version="3.10.0" />` → Fija el cliente de contenedores para SQL Server; el proveedor EF Core SQL Server llega mediante la referencia a la API.
 
-- **Línea 8:** Añade el proveedor SQLite relacional solo al proyecto de pruebas para comprobar persistencia y transacciones.
+- **Línea 9:** `<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.21" />` → Permite ejecutar peticiones HTTP contra el host real de la API.
 
-- **Línea 9:** Permite crear el host ASP.NET Core de pruebas y ejecutar peticiones HTTP contra la API real.
-
-- **Línea 10:** Mantiene la referencia a la capa necesaria; los tests pueden alcanzar la API y sus referencias transitivas.
+- **Línea 11:** `<Compile Include="../Compartido/SqlServerPruebas.cs" Link="SqlServerPruebas.cs" />` → Compila el helper heredado que crea y elimina únicamente la base aislada de cada prueba, sin añadir otro proyecto a la solución.
 
 
-**Integración funcional.** Prueba invariantes de Result y flujo HTTP real con WebApplicationFactory y SQLite: 201 con Location, 400 sin persistencia, 404 de lectura y finalización, y 409 al repetir la transición.
+**Integración funcional.** Prueba invariantes de Result y flujo HTTP real con WebApplicationFactory y SQL Server: 201 con Location, 400 sin persistencia, 404 de lectura y finalización, y 409 al repetir la transición.
 
 **Archivo:** `tests/AceriaApp.ResultPattern.Tests/ResultFuncionalesTests.cs`. **Operación:** Crear.
 
@@ -5962,7 +5993,7 @@ using AceriaApp.Hexagonal.Infraestructura.Datos;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
-using Microsoft.Data.Sqlite;
+using AceriaApp.PruebasSqlServer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -6053,46 +6084,48 @@ public sealed class ResultFuncionalesTests
 
     private sealed class PatronesFactory : WebApplicationFactory<Program>
     {
-        private readonly SqliteConnection conexion = new("Data Source=:memory:");
+        private readonly BaseSqlServer store = BaseSqlServer.Crear();
         public PatronesFactory()
         {
-            conexion.Open();
-            using var db = new HexagonalDbContext(new DbContextOptionsBuilder<HexagonalDbContext>().UseSqlite(conexion).Options);
-            db.Database.EnsureCreated();
+            try
+            {
+                using var db = new HexagonalDbContext(new DbContextOptionsBuilder<HexagonalDbContext>().UseSqlServer(store.ConnectionString).Options);
+                Assert.Equal("Microsoft.EntityFrameworkCore.SqlServer", db.Database.ProviderName);
+                db.Database.EnsureCreated();
+            }
+            catch { store.Dispose(); throw; }
         }
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
             builder.UseEnvironment("Development"); builder.UseSetting("SkipDatabaseInitialization", "true");
             builder.ConfigureTestServices(services => {
                 services.RemoveAll<DbContextOptions<HexagonalDbContext>>();
-                services.AddDbContext<HexagonalDbContext>(o => o.UseSqlite(conexion));
+                services.AddDbContext<HexagonalDbContext>(o => o.UseSqlServer(store.ConnectionString));
             });
         }
         protected override void Dispose(bool disposing)
-        { base.Dispose(disposing); if (disposing) conexion.Dispose(); }
+        { base.Dispose(disposing); if (disposing) store.Dispose(); }
     }
 }
 ```
 
 **Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
 
-- **Línea 19:** Prueba las defensas de las fábricas y del contrato Error frente a valores nulos, textos vacíos y categorías inválidas.
+- **Línea 19:** `public void Factories_impiden_resultados_o_errores_incompletos()` → Comprueba las invariantes de los resultados y sus errores.
 
-- **Línea 29:** Prueba que cada resultado solo permite leer la rama que le corresponde y rechaza el acceso equivocado.
+- **Línea 40:** `public async Task Crear_devuelve_201_location_y_lectura_del_recurso_persistido()` → La creación HTTP devuelve un recurso persistido con Location.
 
-- **Línea 40:** Arranca el host HTTP de pruebas, crea una orden, sigue Location y comprueba el recurso guardado.
+- **Línea 53:** `public async Task Datos_invalidos_devuelven_400_sin_crear_ordenes()` → Los datos inválidos producen 400 y ninguna escritura.
 
-- **Línea 53:** Envía varios datos inválidos por HTTP y comprueba 400 junto con ausencia de registros en la base de pruebas.
+- **Línea 85:** `public async Task Finalizar_dos_veces_devuelve_409_y_conserva_la_primera_transicion()` → La segunda finalización devuelve conflicto y conserva el estado de la primera.
 
-- **Línea 68:** Comprueba 404 y el código estable del error al consultar un identificador inexistente.
+- **Línea 100:** `private readonly BaseSqlServer store = BaseSqlServer.Crear();` → Cada host de prueba es dueño de una base SQL Server distinta.
 
-- **Línea 77:** Comprueba que el comando de transición también informa de la ausencia con 404.
+- **Línea 106:** `Assert.Equal("Microsoft.EntityFrameworkCore.SqlServer", db.Database.ProviderName);` → La inicialización falla si no está activo el proveedor SQL Server.
 
-- **Línea 85:** Comprueba que la primera transición funciona, la segunda devuelve 409 y el estado final permanece coherente.
+- **Línea 116:** `services.AddDbContext<HexagonalDbContext>(o => o.UseSqlServer(store.ConnectionString));` → Sustituye la conexión del contexto por la base aislada de esta prueba.
 
-- **Línea 104:** Configura SQLite con una conexión de pruebas controlada; la aplicación de producción mantiene SQL Server.
-
-- **Línea 111:** Sustituye el registro de persistencia del host de pruebas sin cambiar el código de producción.
+- **Línea 120:** `{ base.Dispose(disposing); if (disposing) store.Dispose(); }` → Cierra el host antes de eliminar su base de prueba.
 
 
 **Por qué funciona así.** compilar la solución completa verifica que todos los proyectos, incluidos los nuevos, se resuelven correctamente.
@@ -7457,7 +7490,7 @@ public static class ServiciosPatrones
 - **Línea 19:** Añade el comportamiento genérico de logging alrededor de todos los manejadores compatibles.
 
 
-**Integración funcional.** Conserva las dependencias de los tests de catálogo y añade SQLite relacional y WebApplicationFactory para las pruebas funcionales.
+**Integración funcional.** Conserva las dependencias de los tests de catálogo y añade Testcontainers.MsSql, el helper compartido y WebApplicationFactory para las pruebas funcionales.
 
 **Archivo:** `tests/AceriaApp.InyeccionDependencias.Tests/AceriaApp.InyeccionDependencias.Tests.csproj`. **Operación:** Reemplazar el contenido completo.
 
@@ -7470,24 +7503,23 @@ public static class ServiciosPatrones
     <PackageReference Include="FluentAssertions" Version="6.12.2" />
     <PackageReference Include="xunit" Version="2.9.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.21" />
+    <PackageReference Include="Testcontainers.MsSql" Version="3.10.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.21" />
     <ProjectReference Include="../../src/AceriaApp.Api/AceriaApp.Api.csproj" />
+    <Compile Include="../Compartido/SqlServerPruebas.cs" Link="SqlServerPruebas.cs" />
   </ItemGroup>
 </Project>
 ```
 
 **Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
 
-- **Línea 2:** Compila para .NET 8, igual que los proyectos heredados.
+- **Línea 2:** `<PropertyGroup><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><IsPackable>false</IsPackable><IsTestProject>true</IsTestProject></PropertyGroup>` → Compila para .NET 8, igual que los proyectos heredados.
 
-- **Línea 5:** Conserva la versión 6.12.2 de las aserciones de los tests de catálogo.
+- **Línea 8:** `<PackageReference Include="Testcontainers.MsSql" Version="3.10.0" />` → Fija el cliente de contenedores para SQL Server; el proveedor EF Core SQL Server llega mediante la referencia a la API.
 
-- **Línea 8:** Añade el proveedor SQLite relacional solo al proyecto de pruebas para comprobar persistencia y transacciones.
+- **Línea 9:** `<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.21" />` → Permite ejecutar peticiones HTTP contra el host real de la API.
 
-- **Línea 9:** Permite crear el host ASP.NET Core de pruebas y ejecutar peticiones HTTP contra la API real.
-
-- **Línea 10:** Mantiene la referencia a la capa necesaria; los tests pueden alcanzar la API y sus referencias transitivas.
+- **Línea 11:** `<Compile Include="../Compartido/SqlServerPruebas.cs" Link="SqlServerPruebas.cs" />` → Compila el helper heredado que crea y elimina únicamente la base aislada de cada prueba, sin añadir otro proyecto a la solución.
 
 
 **Integración funcional.** Comprueba aislamiento entre ámbitos, ejecución del flujo con la extensión real y rechazo de resolución scoped desde raíz. Añade un singleton cautivo solo en la prueba y verifica que ValidateScopes junto a ValidateOnBuild lo detectan.
@@ -7501,7 +7533,7 @@ using AceriaApp.Hexagonal.Dominio;
 using AceriaApp.Hexagonal.Infraestructura.Datos;
 using AceriaApp.Hexagonal.Infraestructura.Patrones;
 using MediatR;
-using Microsoft.Data.Sqlite;
+using AceriaApp.PruebasSqlServer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -7512,10 +7544,11 @@ public sealed class InyeccionFuncionalesTests
     [Fact]
     public async Task Ambitos_distintos_no_confirman_cambios_pendientes_del_otro()
     {
-        await using var cn = new SqliteConnection("Data Source=:memory:"); await cn.OpenAsync();
-        await using var provider = CrearServicios(cn).BuildServiceProvider(Opciones());
+        await using var store = BaseSqlServer.Crear();
+        await using var provider = CrearServicios(store.ConnectionString).BuildServiceProvider(Opciones());
         using var primero = provider.CreateScope(); using var segundo = provider.CreateScope();
         var db = primero.ServiceProvider.GetRequiredService<HexagonalDbContext>();
+        Assert.Equal("Microsoft.EntityFrameworkCore.SqlServer", db.Database.ProviderName);
         await db.Database.EnsureCreatedAsync();
         var repo = primero.ServiceProvider.GetRequiredService<IOrdenTrabajoRepositorio>();
         Assert.Same(repo, primero.ServiceProvider.GetRequiredService<IOrdenTrabajoRepositorio>());
@@ -7529,10 +7562,12 @@ public sealed class InyeccionFuncionalesTests
     [Fact]
     public async Task Extension_resuelve_flujo_completo_en_un_ambito_valido()
     {
-        await using var cn = new SqliteConnection("Data Source=:memory:"); await cn.OpenAsync();
-        await using var provider = CrearServicios(cn).BuildServiceProvider(Opciones());
+        await using var store = BaseSqlServer.Crear();
+        await using var provider = CrearServicios(store.ConnectionString).BuildServiceProvider(Opciones());
         using var scope = provider.CreateScope();
-        await scope.ServiceProvider.GetRequiredService<HexagonalDbContext>().Database.EnsureCreatedAsync();
+        var db = scope.ServiceProvider.GetRequiredService<HexagonalDbContext>();
+        Assert.Equal("Microsoft.EntityFrameworkCore.SqlServer", db.Database.ProviderName);
+        await db.Database.EnsureCreatedAsync();
         var sender = scope.ServiceProvider.GetRequiredService<ISender>();
         var creada = await sender.Send(new CrearOrdenCommand("Axia", "Acero", 20));
         Assert.True(creada.EsExito);
@@ -7544,18 +7579,17 @@ public sealed class InyeccionFuncionalesTests
     [Fact]
     public void ValidateScopes_detecta_singleton_que_captura_unidad_de_trabajo_scoped()
     {
-        using var cn = new SqliteConnection("Data Source=:memory:");
-        var services = CrearServicios(cn);
+        var services = CrearServicios("Server=localhost;Database=ValidacionDi;Integrated Security=True;TrustServerCertificate=True");
         services.AddSingleton<ConsumidorCautivo>(); // Registro incorrecto solo en esta prueba.
         var error = Assert.Throws<AggregateException>(() => services.BuildServiceProvider(Opciones()));
         Assert.Contains(nameof(IUnitOfWork), error.ToString());
     }
 
     private static ServiceProviderOptions Opciones() => new() { ValidateOnBuild = true, ValidateScopes = true };
-    private static IServiceCollection CrearServicios(SqliteConnection cn)
+    private static IServiceCollection CrearServicios(string connectionString)
     {
         var services = new ServiceCollection();
-        services.AddDbContext<HexagonalDbContext>(o => o.UseSqlite(cn));
+        services.AddDbContext<HexagonalDbContext>(o => o.UseSqlServer(connectionString));
         services.AddPatronesOrdenes();
         return services;
     }
@@ -7568,15 +7602,19 @@ public sealed class InyeccionFuncionalesTests
 
 **Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
 
-- **Línea 15:** Compara instancias en dos ámbitos y demuestra que el commit de uno no guarda los cambios pendientes del otro.
+- **Línea 15:** `public async Task Ambitos_distintos_no_confirman_cambios_pendientes_del_otro()` → Dos ámbitos comparten la base de la prueba, pero tienen contextos y cambios pendientes independientes.
 
-- **Línea 32:** Resuelve el flujo completo desde un ámbito válido y comprueba que resolver un servicio Scoped desde la raíz se rechaza.
+- **Línea 21:** `Assert.Equal("Microsoft.EntityFrameworkCore.SqlServer", db.Database.ProviderName);` → Exige el proveedor SQL Server antes de crear y consultar tablas.
 
-- **Línea 47:** Introduce una dependencia cautiva deliberada y comprueba que la validación del contenedor la detecta al construirse.
+- **Línea 27:** `Assert.Equal(0, await segundo.ServiceProvider.GetRequiredService<IUnitOfWork>().CommitAsync());` → Confirmar el segundo ámbito no escribe los cambios preparados en el primero.
 
-- **Línea 56:** Activa la validación de ámbitos para detectar dependencias con un ciclo de vida incompatible.
+- **Línea 33:** `public async Task Extension_resuelve_flujo_completo_en_un_ambito_valido()` → Comprueba el flujo completo del mediador dentro de un ámbito válido.
 
-- **Línea 60:** Configura SQLite con una conexión de pruebas controlada; la aplicación de producción mantiene SQL Server.
+- **Línea 52:** `var services = CrearServicios("Server=localhost;Database=ValidacionDi;Integrated Security=True;TrustServerCertificate=True");` → La validación de DI no abre conexiones: la cadena solo permite construir las opciones del contexto.
+
+- **Línea 53:** `services.AddSingleton<ConsumidorCautivo>(); // Registro incorrecto solo en esta prueba.` → Introduce deliberadamente una dependencia Scoped cautiva para verificar el diagnóstico del contenedor.
+
+- **Línea 62:** `services.AddDbContext<HexagonalDbContext>(o => o.UseSqlServer(connectionString));` → Los contextos mantienen ciclo Scoped y el proveedor SQL Server.
 
 
 **Por qué funciona así.** compilar la solución completa verifica que todos los proyectos, incluidos los nuevos, se resuelven correctamente.

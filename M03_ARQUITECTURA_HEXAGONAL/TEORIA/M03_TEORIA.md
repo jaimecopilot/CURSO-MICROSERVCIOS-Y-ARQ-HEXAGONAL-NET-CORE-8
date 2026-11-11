@@ -854,7 +854,7 @@ Los adaptadores de salida se caracterizan por tres propiedades. La primera es qu
 
 **Riesgo, alternativa y límite.** Evita que el puerto exponga `DbContextOptions`, `EntityEntry` o `IQueryable`. Sería una abstracción nominal: las pruebas de aplicación volverían a requerir EF Core y el diseño no podría sustituir el motor SQL sin una revisión en cascada. El repositorio implementa el contrato, no lo define.
 
-**Comprobación técnica y aprendizaje.** Para verificar el adaptador, el test de integración levanta `HexagonalDbContext` con un proveedor InMemory en un host aislado y realiza POST→GET a través de la API. Esa prueba comprueba que la ruta, el caso de uso, el puerto y el adaptador se unen, aunque no sustituye una prueba específica de SQL Server en un entorno real.
+**Comprobación técnica y aprendizaje.** Para verificar el adaptador, el test de integración configura `HexagonalDbContext` con `UseSqlServer` y una base aislada obtenida mediante `BaseSqlServer`. El recorrido POST→GET une ruta, caso de uso, puerto, adaptador y motor SQL Server real. El entorno puede obtener el servidor mediante Testcontainers o mediante `ACERIA_TEST_SQLSERVER`; ninguno de esos caminos sustituye el proveedor por uno en memoria.
 
 ### Bloque 7 — Relación entre puertos, adaptadores e inversión de dependencias
 
@@ -1019,7 +1019,7 @@ La diferencia entre interfaces se ve al proponer una entrada alternativa. Un arc
 
 Para guardar la orden, el caso de uso solicita `IOrdenRepositorio.AgregarAsync`. Este contrato no expone métodos de EF Core. La implementación real `OrdenRepositorioSqlServer` conoce DbContext, tabla y conexión; una implementación de prueba puede conservar las órdenes en memoria. Ambas pueden usar GUID como identidad de la entidad. La aplicación no necesita decidir cómo se traduce una consulta a SQL.
 
-Conviene distinguir semántica y tecnología. Un repositorio InMemory puede guardar un objeto en una lista y uno SQL puede necesitar transacciones. Los dos deben cumplir que una orden agregada sea recuperable por su Id. No tienen por qué tener idénticas características de consistencia distribuida o de ejecución de consultas; una prueba de integración con SQL Server sería necesaria para validar particularidades del motor. La arquitectura desacopla, pero no suprime la obligación de probar el adaptador elegido.
+Conviene distinguir semántica y tecnología. Un repositorio de prueba puede guardar un objeto en una lista y uno SQL puede necesitar transacciones. Los dos deben cumplir que una orden agregada sea recuperable por su Id. No tienen por qué tener idénticas características de consistencia o de ejecución de consultas. Por eso las pruebas del adaptador elegido en el curso usan SQL Server real. La arquitectura desacopla, pero no suprime la obligación de comprobar el comportamiento de la infraestructura.
 
 ### Contratos que no deben crecer accidentalmente
 
@@ -1339,7 +1339,7 @@ La separación física tiene dos consecuencias prácticas para los tests. La pri
 
 **La decisión arquitectónica.** La separación física multiplica las fronteras que podemos probar. La entidad se verifica de forma aislada; el caso de uso se prueba con un repositorio falso; el adaptador EF Core se prueba con base controlada; el servidor se verifica con `WebApplicationFactory`. No todos los tests deben iniciar ASP.NET Core, porque eso haría las pruebas más lentas y dificultaría localizar el origen de un fallo.
 
-**Ejemplo concreto en AceriaApp.** En este módulo conservamos las pruebas HTTP de M02, añadimos pruebas de catálogos de 3.1–3.4 y cuatro pruebas nuevas de endpoints hexagonales. Los tests HTTP usan un `HexagonalFactory` con dos contextos InMemory independientes: uno para las rutas antiguas y otro para las nuevas. Así podemos comprobar la convivencia sin exigir un SQL Server externo en el runner.
+**Ejemplo concreto en AceriaApp.** En este módulo conservamos las pruebas HTTP de M02, añadimos pruebas de catálogos de 3.1–3.4 y pruebas de los endpoints hexagonales. `HexagonalFactory` obtiene dos bases SQL Server aisladas: una para `AceriaDbContext`, que atiende las rutas antiguas, y otra para `HexagonalDbContext`, que atiende las nuevas. Así comprobamos su convivencia sin mezclar sus datos ni sus esquemas.
 
 **Riesgo, alternativa y límite.** La cobertura debe medirse por propiedades verificadas y no solo por número de tests. Tres pruebas que llaman al mismo GET no compensan la falta de comprobación de dirección de referencias. Necesitamos pruebas de flujo, de estado, de errores y de arquitectura. El E2E también debe construir los proyectos desde el manual del alumno en lugar de compilar únicamente un resultado terminado.
 
@@ -1620,7 +1620,7 @@ El registro de adaptadores tiene dos consecuencias prácticas. La primera es que
 
 **Riesgo, alternativa y límite.** Si el equipo introdujera un adaptador de mensajería en lugar de repositorio, debería definir otro puerto y registrarlo sin obligar a `OrdenesCasoUso` a conocer la biblioteca del bus. No debemos registrar cualquier clase externa en dominio por comodidad: la raíz de composición es una frontera de infraestructura.
 
-**Comprobación técnica y aprendizaje.** La evidencia de corrección incluye resolver `IOrdenRepositorio` y comprobar que se obtiene `OrdenRepositorioSqlServer` en el host de producción, además de validar que los tests pueden sustituir el `DbContext` por InMemory sin recompilar el puerto.
+**Comprobación técnica y aprendizaje.** La evidencia de corrección incluye resolver `IOrdenRepositorio` y comprobar que se obtiene `OrdenRepositorioSqlServer`, además de validar que los tests pueden dirigir el contexto a otra base SQL Server sin recompilar el puerto. Un doble de repositorio puede comprobar orquestación, pero la prueba de infraestructura conserva el adaptador y su proveedor reales.
 
 ### Bloque 5 — Endpoints como adaptadores de entrada
 
@@ -1747,7 +1747,7 @@ El repositorio se caracteriza por tres propiedades. La primera es que implementa
 
 **Riesgo, alternativa y límite.** La semántica del contrato importa: un repositorio que devuelve datos obsoletos o no persiste los cambios aunque complete el `Task` rompe las expectativas de aplicación. Por eso conviene probar con un almacén temporal que se crea una orden y que sigue accesible en otra petición del mismo host. El contrato `IOrdenRepositorio` no puede garantizar por sí solo esa propiedad.
 
-**Comprobación técnica y aprendizaje.** Una prueba de infraestructura debe comprobar el mapeo y el comportamiento de guardado con un proveedor controlado. Si se desea certificar la compatibilidad con SQL Server real, también hay que ejecutar una prueba contra ese proveedor; InMemory no reproduce todos los comportamientos de un motor relacional.
+**Comprobación técnica y aprendizaje.** Una prueba de infraestructura comprueba el mapeo y el comportamiento de guardado con el proveedor SQL Server y una base controlada por el test. Una lectura desde un contexto nuevo verifica la persistencia. El éxito de esos casos no sustituye pruebas específicas de concurrencia, rendimiento o configuración de producción cuando sean necesarias.
 
 ### Bloque 7 — Configuración del arranque
 
@@ -1790,7 +1790,7 @@ La configuración del arranque tiene dos consecuencias prácticas. La primera es
 
 **La decisión arquitectónica.** El arranque de una aplicación bien organizada concentra las decisiones que necesitan conocer detalles concretos. En `Program.cs` los registros de servicios ocurren antes de `builder.Build()`, la configuración de middleware y endpoints después y finalmente `app.Run()` inicia el servidor. Este orden no es estilístico: el contenedor se construye al realizar `Build` y no admite añadir servicios del modo habitual después.
 
-**Ejemplo concreto en AceriaApp.** La incorporación de M03 es incremental. Se conservan los registros de M02, se llama a `AddServiciosHexagonales` y se mapea un grupo adicional de rutas. En Development, la inicialización de la base hexagonal se condiciona al entorno y a `SkipDatabaseInitialization` para no forzar SQL Server en las pruebas. En producción usaríamos migraciones y una política de despliegue controlada, no `EnsureCreated` en cada arranque.
+**Ejemplo concreto en AceriaApp.** La incorporación de M03 es incremental. Se conservan los registros de M02, se llama a `AddServiciosHexagonales` y se mapea un grupo adicional de rutas. En Development, la inicialización de la base hexagonal se condiciona al entorno y a `SkipDatabaseInitialization`. En los tests esta opción deja la creación del esquema a la factoría, después de configurar sus conexiones SQL Server aisladas. En producción usaríamos migraciones y una política de despliegue controlada, no `EnsureCreated` en cada arranque.
 
 **Riesgo, alternativa y límite.** Hay dos configuraciones de persistencia con fines didácticos, `AceriaApp` y `AceriaHexagonal`. Sus nombres deben coincidir exactamente con las claves de `appsettings.json`. Confundirlas puede causar errores de conexión o la creación de objetos en el almacén equivocado. La elección de conexiones no debe filtrarse al dominio ni a los puertos.
 
@@ -1833,9 +1833,9 @@ Los tests de configuración tienen dos consecuencias prácticas. La primera es q
 
 **La decisión arquitectónica.** Un test de configuración confirma que el sistema puede construir su grafo de dependencias y que se expone el adaptador esperado. Sin embargo, registrar servicios no garantiza que sus operaciones hagan lo correcto. Por eso el diseño de prueba debe combinar la validación de DI, la dirección de referencias y las peticiones HTTP que recorren aplicación y persistencia.
 
-**Ejemplo concreto en AceriaApp.** En los tests de M03 `HexagonalFactory` hereda de `WebApplicationFactory<Program>`, utiliza Development y desactiva la creación automática de bases reales. Sustituye los contextos EF Core por proveedores InMemory diferentes, evitando que los datos de rutas antiguas y hexagonales se mezclen. Con esa composición se verifica GET vacío, POST→GET, entrada inválida, capacidad y finalización doble.
+**Ejemplo concreto en AceriaApp.** En los tests de M03 `HexagonalFactory` hereda de `WebApplicationFactory<Program>`, utiliza Development y asume la inicialización del esquema. Configura los dos contextos EF Core con `UseSqlServer` y conexiones a bases diferentes, evitando que los datos de rutas antiguas y hexagonales se mezclen. Con esa composición se verifica GET vacío, POST→GET, entrada inválida, capacidad y finalización doble.
 
-**Riesgo, alternativa y límite.** La prueba de InMemory es una prueba funcional de integración del host, no una certificación completa de SQL Server. También puede ocurrir que todos los tests HTTP pasen aunque alguien añada una referencia indebida en un `.csproj`; por eso el E2E inspecciona las dependencias de ensamblados. La cobertura se define por preguntas independientes y no solo por el contador xUnit.
+**Riesgo, alternativa y límite.** La prueba HTTP sobre SQL Server comprueba un recorrido funcional, pero no todas las propiedades de la arquitectura. Los tests HTTP podrían pasar aunque alguien añadiera una referencia indebida en un `.csproj`; por eso el E2E también inspecciona las dependencias de ensamblados. La cobertura se define por preguntas independientes y no solo por el contador xUnit.
 
 **Comprobación técnica y aprendizaje.** La condición de aceptación del laboratorio es reproducir los proyectos desde fragmentos del manual y ejecutar las mismas pruebas sobre ese resultado. Si solo se compila el proyecto final del repositorio, no habremos demostrado que el alumno puede construirlo siguiendo la guía.
 
@@ -1953,9 +1953,65 @@ Con Cliente vacío o Cantidad no positiva, el adaptador HTTP devuelve **400** y 
 
 ### Dos modos de probar lo mismo
 
-En el puesto de trabajo del alumno, la API utiliza SQL Server Express LocalDB y puede comprobarse desde `AceriaApp.http`, Swagger UI y el Explorador de objetos de SQL Server. En GitHub Actions, la factoría de tests `HexagonalFactory` sustituye los contextos por bases InMemory aisladas para que el flujo HTTP sea reproducible sin un motor externo. Esta sustitución es útil, pero no prueba todas las características de SQL Server; para ello harían falta pruebas adicionales con el proveedor real.
+En el puesto de trabajo del alumno, la API utiliza SQL Server Express LocalDB y puede comprobarse desde `AceriaApp.http`, Swagger UI y el Explorador de objetos de SQL Server. En las pruebas automáticas, `HexagonalFactory` conserva el proveedor SQL Server y usa bases aisladas mediante `BaseSqlServer.Crear()`. El helper conecta al servidor indicado en `ACERIA_TEST_SQLSERVER` o inicia SQL Server con Testcontainers cuando la variable no está configurada. El recorrido necesita un motor real disponible; no cambia de proveedor para esconder un fallo del entorno.
 
 Existe otro eje de prueba: la guía pedagógica. Un CI que compila los cuatro proyectos finales puede demostrar que el software funciona y, aun así, dejar un manual imposible de seguir. En M03 el comprobador recorre los **96 pasos**, aplica los fragmentos de código marcados en las prácticas a una copia de M02 y construye sucesivamente las carpetas de 3.1 a 3.4. Después ejecuta los tests xUnit acumulados. No copia de antemano los `.cs` finales de M03, porque el objetivo es comprobar exactamente lo que el alumno debe escribir.
+
+### Separar puerto, adaptador, proveedor y motor
+
+El nombre `OrdenRepositorioSqlServer` puede llevar a pensar que el repositorio es la base de datos. Conviene separar cuatro responsabilidades. El **puerto** expresa lo que necesita la aplicación. El **adaptador** implementa ese contrato mediante EF Core. El **proveedor** de EF Core traduce el modelo y las consultas a operaciones de SQL Server. El **motor** es el proceso que ejecuta esas operaciones y conserva las filas. Docker y Testcontainers preparan ese último recurso para las pruebas; no forman parte del dominio.
+
+![Relación entre caso de uso, puerto, adaptador, proveedor y SQL Server](IMAGENES/3-4-sqlserver-adaptadores.svg)
+
+*Interpretación del gráfico:* La flecha discontinua representa la implementación del contrato. El recorrido de ejecución parte de HTTP y alcanza el motor mediante el adaptador. El dominio no necesita una referencia a Docker, Testcontainers, EF Core ni SQL Server. La figura está disponible en SVG y PNG.
+
+| Pieza de AceriaApp | Responsabilidad | Qué cambia al usar un servidor de pruebas |
+|---|---|---|
+| `IOrdenRepositorio` | Operaciones que necesita el caso de uso | Su contrato permanece. |
+| `OrdenRepositorioSqlServer` | Mapeo del puerto a operaciones de EF Core | Sigue siendo el adaptador utilizado. |
+| `HexagonalDbContext` + `UseSqlServer` | Modelo relacional y proveedor | Reciben otra cadena de conexión. |
+| LocalDB o contenedor de SQL Server | Ejecución de SQL y almacenamiento | Cambian instancia, dirección y bases aisladas. |
+| `HexagonalFactory` + `BaseSqlServer` | Composición y limpieza de la prueba | Controlan los recursos del caso. |
+
+Esta distinción evita una conclusión errónea: que poder sustituir una implementación elimina la necesidad de probarla. Un test de aplicación puede entregar un doble de `IOrdenRepositorio` para provocar «orden inexistente» sin abrir SQL. Ese test comprueba qué decide `OrdenesCasoUso` ante la respuesta del puerto. Un test del adaptador debe comprobar además que una consulta se traduce, que se guarda el estado correcto y que un contexto nuevo lo recupera. Ambos tests tienen valor y responden a preguntas diferentes.
+
+### Por qué la factoría reserva dos bases
+
+En M03 conviven el modelo heredado de M02 y el modelo hexagonal. Se conservan las rutas anteriores para que la reorganización sea incremental. Cada contexto controla su esquema, de modo que la factoría utiliza dos instancias del helper. Son dos bases, no necesariamente dos procesos de SQL Server. El aislamiento evita que un `EnsureCreated` de un contexto dé por preparado un destino que solo contiene las tablas del otro.
+
+El siguiente fragmento reúne los miembros y registros relevantes de `HexagonalFactory`. Los métodos completos, la retirada de registros anteriores y la inicialización están en las prácticas.
+
+```csharp
+private readonly BaseSqlServer _legacy = BaseSqlServer.Crear();
+private readonly BaseSqlServer _hexagonal = BaseSqlServer.Crear();
+services.AddDbContext<AceriaDbContext>(options =>
+    options.UseSqlServer(_legacy.ConnectionString));
+services.AddDbContext<HexagonalDbContext>(options =>
+    options.UseSqlServer(_hexagonal.ConnectionString));
+```
+
+- **Línea 1:** Obtiene una base única para el contexto de las rutas heredadas. Su nombre no coincide con la base del alumno.
+- **Línea 2:** Obtiene otra base para el contexto hexagonal. Un caso no comparte filas con otro por reutilizar una conexión global al mismo esquema.
+- **Línea 3:** Registra el contexto que consume la API construida en M02.
+- **Línea 4:** Mantiene SQL Server como proveedor y usa la conexión aislada heredada.
+- **Línea 5:** Registra el contexto que utiliza el adaptador hexagonal.
+- **Línea 6:** Conecta ese contexto a su propia base. No modifica el puerto ni las reglas de `OrdenHexagonal`.
+
+La opción `SkipDatabaseInitialization` no significa «ejecutar sin base de datos». Significa que la factoría asume la preparación del esquema sobre sus conexiones de pruebas. Primero se configura el host; después se resuelven los contextos correctos y se crean sus tablas. Al terminar, se liberan los contextos y el host antes de eliminar las bases. Ese orden permite que la limpieza encuentre recursos que ya no están en uso.
+
+### Evidencia que corresponde a cada frontera
+
+| Pregunta | Prueba pertinente | Observación que tiene valor |
+|---|---|---|
+| ¿El dominio rechaza una transición inválida? | Test de `OrdenHexagonal` sin infraestructura | La regla rechaza la operación y conserva el estado esperado. |
+| ¿El caso de uso consume su puerto? | Test de aplicación con un doble controlado | Se solicita la operación correcta y se trata su resultado. |
+| ¿El adaptador persiste con SQL Server? | Test con `UseSqlServer` y base aislada | Otro contexto recupera el valor confirmado. |
+| ¿La API está bien compuesta? | POST→GET mediante `HexagonalFactory` | Código HTTP, DTO y persistencia concuerdan. |
+| ¿Las referencias respetan las capas? | Inspección de proyectos y ensamblados | Dominio y aplicación no dependen de infraestructura. |
+
+Una respuesta **201** obtenida con un repositorio falso no demuestra que una restricción SQL sea correcta. Una fila guardada correctamente tampoco demuestra que el dominio esté libre de referencias a EF Core. El curso necesita ambas clases de evidencia. El diagrama de dependencias explica la decisión; la lectura de la base y la inspección de proyectos comprueban que se ha implementado.
+
+Para revisar el soporte técnico de estas decisiones, consulta [las estrategias de prueba de EF Core](https://learn.microsoft.com/ef/core/testing/choosing-a-testing-strategy) y [el módulo SQL Server de Testcontainers](https://dotnet.testcontainers.org/modules/mssql/). El estudio 2.1 introduce imagen, contenedor, puertos y la alternativa `ACERIA_TEST_SQLSERVER`; aquí esos conceptos se sitúan en la frontera de infraestructura.
 
 ### Cierre para el profesor y el alumno
 

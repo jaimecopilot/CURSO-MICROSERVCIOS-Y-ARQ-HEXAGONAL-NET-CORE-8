@@ -1,6 +1,10 @@
 using System.Net;
 using System.Net.Http.Json;
 using AceriaApp.Api.Hexagonal;
+using AceriaApp.Api.Datos;
+using AceriaApp.Hexagonal.Infraestructura.Datos;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace AceriaApp.Api.Tests;
@@ -20,6 +24,12 @@ public class HexagonalHttpTests
     {
         using var factory = new HexagonalFactory();
         var client = factory.CreateClient();
+        using var scope = factory.Services.CreateScope();
+        var legacy = scope.ServiceProvider.GetRequiredService<AceriaDbContext>();
+        var hexagonal = scope.ServiceProvider.GetRequiredService<HexagonalDbContext>();
+        Assert.Equal("Microsoft.EntityFrameworkCore.SqlServer", legacy.Database.ProviderName);
+        Assert.Equal("Microsoft.EntityFrameworkCore.SqlServer", hexagonal.Database.ProviderName);
+        Assert.NotEqual(legacy.Database.GetDbConnection().Database, hexagonal.Database.GetDbConnection().Database);
         var created = await client.PostAsJsonAsync("/api/v1/hexagonal/ordenes",
             new CrearOrdenHexagonalRequest("ACX-001", "CHAPA", 10));
         Assert.Equal(HttpStatusCode.Created, created.StatusCode);

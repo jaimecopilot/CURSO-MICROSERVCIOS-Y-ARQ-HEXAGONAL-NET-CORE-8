@@ -1,0 +1,42 @@
+[
+  {
+    "etapa": "2.1-diseno-apis-rest",
+    "exit_code": 0,
+    "log": "/tmp/2.1-diseno-apis-rest-sql-build.log"
+  },
+  {
+    "etapa": "2.2-recursos-verbos-codigos",
+    "exit_code": 0,
+    "log": "/tmp/2.2-recursos-verbos-codigos-sql-build.log"
+  },
+  {
+    "etapa": "2.3-validacion-peticiones",
+    "exit_code": 0,
+    "log": "/tmp/2.3-validacion-peticiones-sql-build.log"
+  },
+  {
+    "etapa": "2.4-documentacion-openapi",
+    "exit_code": 0,
+    "log": "/tmp/2.4-documentacion-openapi-sql-build.log"
+  },
+  {
+    "etapa": "3.1-capas-aplicacion",
+    "exit_code": 0,
+    "log": "/tmp/3.1-capas-aplicacion-sql-build.log"
+  },
+  {
+    "etapa": "3.2-puertos-adaptadores",
+    "exit_code": 0,
+    "log": "/tmp/3.2-puertos-adaptadores-sql-build.log"
+  },
+  {
+    "etapa": "3.3-separacion-capas",
+    "exit_code": 0,
+    "log": "/tmp/3.3-separacion-capas-sql-build.log"
+  },
+  {
+    "etapa": "3.4-implementacion-aspnet-core",
+    "exit_code": 0,
+    "log": "/tmp/3.4-implementacion-aspnet-core-sql-build.log"
+  }
+]

@@ -27,6 +27,7 @@ public class GetTests
         using(var scope=f.Services.CreateScope())
         {
             var db=scope.ServiceProvider.GetRequiredService<AceriaDbContext>();
+            Assert.Equal("Microsoft.EntityFrameworkCore.SqlServer", db.Database.ProviderName);
             db.Ordenes.Add(new Orden{Id=id,Cliente="ACX-001",Material="CHAPA",Cantidad=10});
             await db.SaveChangesAsync();
         }

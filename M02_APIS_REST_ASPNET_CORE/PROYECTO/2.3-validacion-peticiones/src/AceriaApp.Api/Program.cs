@@ -1,49 +1,49 @@
+using AceriaApp.Api.Validacion;
+using FluentValidation;
+using AceriaApp.Api.Contratos;
 using AceriaApp.Api.Datos;
 using AceriaApp.Api.Modelo;
 using Microsoft.EntityFrameworkCore;
-using AceriaApp.Api.Contratos;
-using AceriaApp.Api.Validacion;
-using FluentValidation;
 
 var builder=WebApplication.CreateBuilder(args);
-// INICIO PASO 2.1.12: SQL Server Express LocalDB, no SQLite.
-builder.Services.AddDbContext<AceriaDbContext>(o=>
-    o.UseSqlServer(builder.Configuration.GetConnectionString("AceriaApp")));
-// PASO 2.3.14: registrar validadores en el contenedor.
-builder.Services.AddValidatorsFromAssemblyContaining<CrearOrdenValidator>(); // PASO 2.3.14
+// En Program.cs, entre var builder = WebApplication.CreateBuilder(args)
+// y var app = builder.Build():
+builder.Services.AddDbContext<AceriaDbContext>(options =>
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("AceriaApp")));
+builder.Services.AddValidatorsFromAssemblyContaining<CrearOrdenValidator>();
 
 var app=builder.Build();
-// EnsureCreated se utiliza SOLO como ayuda didáctica en Development.
-// Para un sistema productivo se utilizarían migraciones controladas.
-// PASO 2.1.13: inicializar LocalDB solo en Development.
-if(app.Environment.IsDevelopment()&&!app.Configuration.GetValue<bool>("SkipDatabaseInitialization"))
+
+// En Program.cs, justo después de var app = builder.Build():
+if (app.Environment.IsDevelopment()
+    && !app.Configuration.GetValue<bool>("SkipDatabaseInitialization"))
 {
-    using var scope=app.Services.CreateScope();
-    await scope.ServiceProvider.GetRequiredService<AceriaDbContext>().Database.EnsureCreatedAsync();
+    using var scope = app.Services.CreateScope();
+    await scope.ServiceProvider.GetRequiredService<AceriaDbContext>()
+        .Database.EnsureCreatedAsync();
 }
 
-// INICIO PASO 2.1.14: colección de recursos, consulta real con EF Core.
-app.MapGet("/api/v1/ordenes",async (AceriaDbContext db,CancellationToken ct)=>
+app.MapGet("/api/v1/ordenes",
+    async (AceriaDbContext db, CancellationToken ct) =>
 {
-    // PASO 2.1.15: lectura sin tracking y proyeccion a DTO.
-    var ordenes=await db.Ordenes.AsNoTracking().OrderBy(x=>x.FechaCreacion).ToListAsync(ct);
+    var ordenes = await db.Ordenes.AsNoTracking()
+        .OrderBy(x => x.FechaCreacion).ToListAsync(ct);
     return Results.Ok(ordenes.Select(OrdenDto.Desde));
 })
-.WithName("ListarOrdenes").WithTags("Ordenes")
+.WithName("ListarOrdenes").WithTags("Ordenes");
 
-;
-// INICIO PASO 2.1.17: recurso individual.
-app.MapGet("/api/v1/ordenes/{id:guid}",async (Guid id,AceriaDbContext db)=>
+app.MapGet("/api/v1/ordenes/{id:guid}",
+    async (Guid id, AceriaDbContext db) =>
 {
-    var orden=await db.Ordenes.AsNoTracking().FirstOrDefaultAsync(x=>x.Id==id);
-    // PASO 2.1.18: 200 para orden presente; 404 si no existe.
-    IResult response=orden is null ? Results.NotFound() : Results.Ok(OrdenDto.Desde(orden));
+    var orden = await db.Ordenes.AsNoTracking()
+        .FirstOrDefaultAsync(x => x.Id == id);
+    IResult response = orden is null
+        ? Results.NotFound()
+        : Results.Ok(OrdenDto.Desde(orden));
     return response;
 })
-.WithName("ObtenerOrdenPorId").WithTags("Ordenes")
-
-;
-
+.WithName("ObtenerOrdenPorId").WithTags("Ordenes");
 
 // INICIO PASO 2.2.5: crear una orden, persistirla, devolver 201 + Location.
 app.MapPost("/api/v1/ordenes",async (CrearOrdenRequest request,AceriaDbContext db)=>
@@ -51,19 +51,15 @@ app.MapPost("/api/v1/ordenes",async (CrearOrdenRequest request,AceriaDbContext d
     if(request.Cantidad>500)
         return Results.Problem(title:"El taller solo admite lotes de hasta 500.",
             statusCode:StatusCodes.Status422UnprocessableEntity);
-    // PASO 2.2.6: crear entidad y persistirla.
     var orden=new Orden{Cliente=request.Cliente,Material=request.Material,Cantidad=request.Cantidad};
     db.Ordenes.Add(orden);
     await db.SaveChangesAsync();
-    // PASO 2.2.7: devolver 201 con Location.
     return Results.CreatedAtRoute("ObtenerOrdenPorId",new{id=orden.Id},OrdenDto.Desde(orden));
 })
 .WithName("CrearOrden").WithTags("Ordenes")
-// PASO 2.3.15: asociar filtro al POST.
 .AddEndpointFilter<ValidationFilter<CrearOrdenRequest>>()
 
 ;
-
 
 // INICIO PASO 2.2.11: sustitución completa de los campos editables.
 app.MapPut("/api/v1/ordenes/{id:guid}",async (Guid id,CrearOrdenRequest request,AceriaDbContext db)=>
@@ -80,10 +76,7 @@ app.MapPut("/api/v1/ordenes/{id:guid}",async (Guid id,CrearOrdenRequest request,
     return Results.NoContent();
 })
 .WithName("ReemplazarOrden").WithTags("Ordenes")
-.AddEndpointFilter<ValidationFilter<CrearOrdenRequest>>()
-
-;
-
+.AddEndpointFilter<ValidationFilter<CrearOrdenRequest>>();
 
 // INICIO PASO 2.2.14: cambiar SOLO la cantidad.
 app.MapPatch("/api/v1/ordenes/{id:guid}/cantidad",
@@ -100,11 +93,9 @@ app.MapPatch("/api/v1/ordenes/{id:guid}/cantidad",
     return Results.Ok(OrdenDto.Desde(orden));
 })
 .WithName("CambiarCantidad").WithTags("Ordenes")
-// PASO 2.3.17: asociar filtro al PATCH.
 .AddEndpointFilter<ValidationFilter<ActualizarCantidadRequest>>()
 
 ;
-
 
 // INICIO PASO 2.2.16: eliminar recurso persistido.
 app.MapDelete("/api/v1/ordenes/{id:guid}",async (Guid id,AceriaDbContext db)=>
@@ -120,6 +111,7 @@ app.MapDelete("/api/v1/ordenes/{id:guid}",async (Guid id,AceriaDbContext db)=>
 .WithName("EliminarOrden").WithTags("Ordenes")
 
 ;
+
 // INICIO PASO 2.2.18: transición explícita del dominio.
 app.MapPost("/api/v1/ordenes/{id:guid}/finalizar",async (Guid id,AceriaDbContext db)=>
 {
@@ -136,4 +128,4 @@ app.MapPost("/api/v1/ordenes/{id:guid}/finalizar",async (Guid id,AceriaDbContext
 ;
 
 app.Run();
-public partial class Program {} // permite WebApplicationFactory en tests
+public partial class Program {}

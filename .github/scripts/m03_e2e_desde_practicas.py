@@ -106,6 +106,21 @@ def ensure_solution(stage:Path):
   command('dotnet','sln','AceriaApp.sln','add',str(project.relative_to(stage)),cwd=stage)
  return len(files)
 
+def verify_sql_isolation(stage:Path):
+ helper=stage/'tests/Compartido/SqlServerPruebas.cs'
+ check(helper.is_file(),'Falta helper SQL Server heredado de M02 2.1.22')
+ project=stage/'tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj'
+ xml=project.read_text(encoding='utf-8')
+ check('Testcontainers.MsSql' in xml and '3.10.0' in xml,'Falta Testcontainers.MsSql 3.10.0')
+ check('../Compartido/SqlServerPruebas.cs' in xml and '<Compile ' in xml,'Falta enlace Compile al helper')
+ for path in list(stage.rglob('*.cs'))+list(stage.rglob('*.csproj')):
+  if any(x in path.parts for x in ('obj','bin')):continue
+  code=path.read_text(encoding='utf-8')
+  check('UseInMemoryDatabase' not in code and 'EntityFrameworkCore.InMemory' not in code,
+        'Proveedor no relacional en '+str(path))
+ return disk_sha(helper)
+
+
 def verify_architecture(stage:Path,n:int):
  if n<3:return
  domain=stage/'src/AceriaApp.Hexagonal.Dominio/AceriaApp.Hexagonal.Dominio.csproj'
@@ -216,20 +231,23 @@ def main():
  p.add_argument('--out',type=Path,default=BASE/'M03_E2E_RESULTADOS.json')
  p.add_argument('--no-tests',action='store_true',help='Solo reconstruye; útil para inspección local')
  p.add_argument('--output-dir',type=Path,default=BASE/'PROYECTO')
+ p.add_argument('--m02-base',type=Path,default=M02,help='Etapa 2.4 reconstruida desde M02_PRACTICAS.md')
  args=p.parse_args()
  report={'fecha':datetime.now(timezone.utc).isoformat(),'origen':'M03_PRACTICAS.md',
          'etapas':[],'pasos':[],'construccion':'desde texto; nunca desde PROYECTO/M03'}
  try:
   source,theory,codes=read_markdown()
   report['source_sha256']=text_sha(source)
-  check(M02.is_dir(),'No se encuentra M02 etapa 2.4 aprobada')
+  check(args.m02_base.is_dir(),'No se encuentra M02 etapa 2.4')
+  inherited_helper=verify_sql_isolation(args.m02_base)
+  report['helper_sqlserver_sha256']=inherited_helper
   output=args.output_dir
   output.mkdir(parents=True,exist_ok=True)
   previous=None
   for num,slug in enumerate(STAGES,1):
    stage=output/slug
    if stage.exists():shutil.rmtree(stage)
-   copy_project(M02 if num==1 else previous,stage)
+   copy_project(args.m02_base if num==1 else previous,stage)
    actions=0;builds=0;files=[]
    if num==1:
     check(not (stage/'AceriaApp.sln').exists(),'La base M02 debía carecer de solución de M03')
@@ -251,6 +269,7 @@ def main():
         x['ruta'] for x in batch],'resultado':'aplicado' if batch else 'guia_manual_verificable'})
    total_projects=ensure_solution(stage) if not args.no_tests else len(project_files(stage))
    verify_architecture(stage,num)
+   check(verify_sql_isolation(stage)==inherited_helper,'Se modificó el helper SQL Server heredado')
    inheritance=compare_inherited(previous,stage) if previous else 0
    outcome=build_and_test(stage,EXPECTED[num-1]) if not args.no_tests else {'tests':None,'test_projects':None}
    report['etapas'].append({'punto':f'3.{num}','carpeta':slug,'pasos':24,

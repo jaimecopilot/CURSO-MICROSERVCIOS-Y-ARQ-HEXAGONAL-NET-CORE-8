@@ -22,12 +22,17 @@ Cada punto conserva los catálogos de comprobación de decisiones arquitectónic
 
 ## Ejecución y comprobación
 
-El entorno de trabajo mantiene .NET 8, ASP.NET Core, EF Core 8 y SQL Server Express LocalDB en Windows. Producción utiliza su propio contexto de EF y la base de datos `AceriaProduccion`. Las pruebas automatizadas comprueban el dominio, los casos de uso, la persistencia relacional con SQLite y los contratos HTTP. Los resultados con SQLite no sustituyen una prueba específica del proveedor SQL Server.
+El entorno de trabajo mantiene .NET 8, ASP.NET Core, EF Core 8 y SQL Server Express LocalDB en Windows. Producción utiliza su propio contexto de EF y la base de datos `AceriaProduccion`. Las pruebas de integración mantienen **SQL Server real con `UseSqlServer`** y reservan una base única por caso mediante `BaseSqlServer.Crear()`. Comprueban persistencia del agregado y sus líneas, comandos, proyecciones de lectura y contratos HTTP; los tests del dominio conservan su independencia de la infraestructura.
+
+Las pruebas necesitan Docker Desktop con contenedores Linux, o `ACERIA_TEST_SQLSERVER` con una conexión a `master` en un SQL Server disponible, incluyendo LocalDB. Sin esa variable, Testcontainers 3.10.0 inicia la imagen fijada `mcr.microsoft.com/mssql/server:2022-CU14-ubuntu-22.04` con `MSSQL_PID=Express`. La cuenta crea y elimina bases aisladas. Si el entorno falla, la prueba falla: no pasa a SQLite o InMemory. El [README de M02](../M02_APIS_REST_ASPNET_CORE/README.md#comprobaciones-de-aprendizaje) incluye la configuración de PowerShell.
+
+El estudio integrador 5.4 de la teoría incorpora un diagrama SVG/PNG y un recorrido de command a query explicado por líneas. Muestra por qué leer desde un ámbito nuevo verifica la confirmación y por qué esta variante de CQRS comparte una base sin introducir sincronización asíncrona.
 
 Desde la raíz del repositorio:
 
 ```bash
 python3 .github/scripts/m05_crear_figuras.py
+python3 .github/scripts/figuras_sqlserver.py
 python3 .github/scripts/m05_e2e_desde_practicas.py --out M05_DDD_CQRS/M05_E2E_RESULTADOS.json
 python3 .github/scripts/m05_generar_pdf.py
 ```

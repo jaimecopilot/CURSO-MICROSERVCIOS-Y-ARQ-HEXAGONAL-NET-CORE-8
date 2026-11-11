@@ -1,0 +1,54 @@
+{
+  "etapas": [
+    {
+      "etapa": "2.1-diseno-apis-rest",
+      "helper_sha256": "83366f0eaeda1b3fccbf5b7711925a3267fcb88560bea255cf25aad0b3eb78a2",
+      "compilacion": "PASS",
+      "tests_http_sql": "PENDIENTE_CI"
+    },
+    {
+      "etapa": "2.2-recursos-verbos-codigos",
+      "helper_sha256": "83366f0eaeda1b3fccbf5b7711925a3267fcb88560bea255cf25aad0b3eb78a2",
+      "compilacion": "PASS",
+      "tests_http_sql": "PENDIENTE_CI"
+    },
+    {
+      "etapa": "2.3-validacion-peticiones",
+      "helper_sha256": "83366f0eaeda1b3fccbf5b7711925a3267fcb88560bea255cf25aad0b3eb78a2",
+      "compilacion": "PASS",
+      "tests_http_sql": "PENDIENTE_CI"
+    },
+    {
+      "etapa": "2.4-documentacion-openapi",
+      "helper_sha256": "83366f0eaeda1b3fccbf5b7711925a3267fcb88560bea255cf25aad0b3eb78a2",
+      "compilacion": "PASS",
+      "tests_http_sql": "PENDIENTE_CI"
+    },
+    {
+      "etapa": "3.1-capas-aplicacion",
+      "helper_sha256": "83366f0eaeda1b3fccbf5b7711925a3267fcb88560bea255cf25aad0b3eb78a2",
+      "compilacion": "PASS",
+      "tests_http_sql": "PENDIENTE_CI"
+    },
+    {
+      "etapa": "3.2-puertos-adaptadores",
+      "helper_sha256": "83366f0eaeda1b3fccbf5b7711925a3267fcb88560bea255cf25aad0b3eb78a2",
+      "compilacion": "PASS",
+      "tests_http_sql": "PENDIENTE_CI"
+    },
+    {
+      "etapa": "3.3-separacion-capas",
+      "helper_sha256": "83366f0eaeda1b3fccbf5b7711925a3267fcb88560bea255cf25aad0b3eb78a2",
+      "compilacion": "PASS",
+      "tests_http_sql": "PENDIENTE_CI"
+    },
+    {
+      "etapa": "3.4-implementacion-aspnet-core",
+      "helper_sha256": "83366f0eaeda1b3fccbf5b7711925a3267fcb88560bea255cf25aad0b3eb78a2",
+      "compilacion": "PASS",
+      "tests_http_sql": "PENDIENTE_CI"
+    }
+  ],
+  "pruebas_dominio": 30,
+  "pruebas_http_sql": "No ejecutadas: no hay Docker ni SQL Server en este entorno. Se ejecutan en CI."
+}

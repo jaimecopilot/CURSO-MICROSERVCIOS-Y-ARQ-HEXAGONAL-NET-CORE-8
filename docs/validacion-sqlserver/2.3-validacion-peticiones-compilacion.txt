@@ -1,0 +1,11 @@
+  Determining projects to restore...
+  Restored /workspace/scratch/83e6f215d657/curso/M02_APIS_REST_ASPNET_CORE/PROYECTO/2.3-validacion-peticiones/tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj (in 306 ms).
+  Restored /workspace/scratch/83e6f215d657/curso/M02_APIS_REST_ASPNET_CORE/PROYECTO/2.3-validacion-peticiones/src/AceriaApp.Api/AceriaApp.Api.csproj (in 312 ms).
+  AceriaApp.Api -> /workspace/scratch/83e6f215d657/curso/M02_APIS_REST_ASPNET_CORE/PROYECTO/2.3-validacion-peticiones/src/AceriaApp.Api/bin/Release/net8.0/AceriaApp.Api.dll
+  AceriaApp.Api.Tests -> /workspace/scratch/83e6f215d657/curso/M02_APIS_REST_ASPNET_CORE/PROYECTO/2.3-validacion-peticiones/tests/AceriaApp.Api.Tests/bin/Release/net8.0/AceriaApp.Api.Tests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.44

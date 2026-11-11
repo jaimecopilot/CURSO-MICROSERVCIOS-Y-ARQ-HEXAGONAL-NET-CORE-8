@@ -6,7 +6,10 @@
 
 Continúa exactamente la etapa **M04 4.5**, que contiene catorce proyectos y 118 pruebas. Construye cada etapa en su propia carpeta a partir de la anterior. Los bloques contienen el código completo que se crea o modifica; sigue los pasos para reconstruir el resultado. Los 120 pasos conservan los catálogos, validadores, documentación y pruebas del recorrido e incorporan un contexto de Producción ejecutable.
 
-**Requisitos:** Visual Studio con desarrollo ASP.NET, SDK .NET 8 y SQL Server para ejecutar los adaptadores heredados de producción. Las pruebas proporcionan su persistencia de prueba. Ejecuta los comandos desde la raíz de la etapa indicada salvo cuando se indique la raíz del curso. En Bash sustituye las barras inversas de las rutas Windows por barras normales.
+**Requisitos:** Visual Studio con desarrollo ASP.NET, SDK .NET 8 y SQL Server Express o LocalDB. Las pruebas de integración usan el proveedor SQL Server real; las pruebas unitarias de lógica pueden emplear dobles de sus puertos. Ejecuta los comandos desde la raíz de la etapa indicada salvo cuando se indique la raíz del curso. En Bash sustituye las barras inversas de las rutas Windows por barras normales.
+
+
+**SQL Server para las pruebas.** Conserva `tests/Compartido/SqlServerPruebas.cs` al copiar la etapa anterior. `BaseSqlServer.Crear()` toma la conexión de `ACERIA_TEST_SQLSERVER`, conecta a `master` y crea una base con nombre único por prueba; la cuenta necesita permiso para crear y eliminar esas bases. Al finalizar elimina solo la base que creó. Configura la variable antes de ejecutar `dotnet test`. Ejemplo PowerShell con LocalDB: `$env:ACERIA_TEST_SQLSERVER = "Server=(localdb)\MSSQLLocalDB;Database=master;Integrated Security=True;TrustServerCertificate=True"`. Para Express sustituye el servidor por `.\SQLEXPRESS` o el nombre de tu instancia. Si la variable no está definida, el helper necesita Docker y arranca SQL Server 2022 Express mediante `Testcontainers.MsSql` 3.10.0 y la imagen fija `mcr.microsoft.com/mssql/server:2022-CU14-ubuntu-22.04`. Una conexión errónea o un motor no disponible hacen fallar las pruebas; no se omiten ni se cambia a un proveedor en memoria.
 
 **Capas y frontera:** `AceriaApp.Api` compone los adaptadores de entrada. Los proyectos hexagonales de M03–M04 conservan sus contratos. `AceriaApp.Produccion.Dominio` expresa el modelo propio del contexto Producción; desde 5.3 se incorporan `AceriaApp.Produccion.Aplicacion` e `AceriaApp.Produccion.Infraestructura`. Los otros contextos de los catálogos son modelos de análisis, no servicios desplegados. Un nombre del catálogo no registra un manejador ni crea una entidad del dominio.
 
@@ -4292,7 +4295,7 @@ public static class RegistroProduccion
 
 **Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
 
-- **Línea 10:** `services.AddDbContext<ProduccionDbContext>(o => o.UseSqlServer(configuration.GetConnectionString("AceriaProduccion")));` → Configura SQL Server para ejecutar la aplicación; SQLite se sustituye exclusivamente en las pruebas.
+- **Línea 10:** `services.AddDbContext<ProduccionDbContext>(o => o.UseSqlServer(configuration.GetConnectionString("AceriaProduccion")));` → Configura SQL Server; las pruebas usan el mismo proveedor con una conexión a una base aislada.
 
 - **Línea 11:** `services.AddScoped<IOrdenProduccionRepositorio, OrdenProduccionRepositorio>();` → Usa una instancia por petición que comparte el DbContext con la unidad de trabajo.
 
@@ -4312,30 +4315,23 @@ public static class RegistroProduccion
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
     <ProjectReference Include="../../src/AceriaApp.Api/AceriaApp.Api.csproj" />
     <ProjectReference Include="../../src/AceriaApp.Produccion.Dominio/AceriaApp.Produccion.Dominio.csproj" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.21" />
+    <PackageReference Include="Testcontainers.MsSql" Version="3.10.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.21" />
     <Compile Include="../Compartido/ProduccionApiFactory.cs" Link="ProduccionApiFactory.cs" />
+    <Compile Include="../Compartido/SqlServerPruebas.cs" Link="SqlServerPruebas.cs" />
   </ItemGroup>
 </Project>
 ```
 
 **Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
 
-- **Línea 4:** `<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />` → Fija la versión del paquete usado por esta capa o por sus pruebas para hacer reproducible la compilación.
+- **Línea 2:** `<PropertyGroup><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><IsPackable>false</IsPackable><IsTestProject>true</IsTestProject></PropertyGroup>` → Compila para .NET 8, igual que los proyectos heredados.
 
-- **Línea 5:** `<PackageReference Include="FluentAssertions" Version="6.12.2" />` → Fija la versión del paquete usado por esta capa o por sus pruebas para hacer reproducible la compilación.
+- **Línea 10:** `<PackageReference Include="Testcontainers.MsSql" Version="3.10.0" />` → Fija el cliente de contenedores para SQL Server; el proveedor EF Core SQL Server llega mediante la referencia a la API.
 
-- **Línea 6:** `<PackageReference Include="xunit" Version="2.9.2" />` → Fija la versión del paquete usado por esta capa o por sus pruebas para hacer reproducible la compilación.
+- **Línea 11:** `<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.21" />` → Permite ejecutar peticiones HTTP contra el host real de la API.
 
-- **Línea 7:** `<PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />` → Fija la versión del paquete usado por esta capa o por sus pruebas para hacer reproducible la compilación.
-
-- **Línea 8:** `<ProjectReference Include="../../src/AceriaApp.Api/AceriaApp.Api.csproj" />` → Declara una dependencia de proyecto que el compilador necesita; no registra servicios en el contenedor.
-
-- **Línea 9:** `<ProjectReference Include="../../src/AceriaApp.Produccion.Dominio/AceriaApp.Produccion.Dominio.csproj" />` → Declara una dependencia de proyecto que el compilador necesita; no registra servicios en el contenedor.
-
-- **Línea 10:** `<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.21" />` → Fija la versión del paquete usado por esta capa o por sus pruebas para hacer reproducible la compilación.
-
-- **Línea 11:** `<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.21" />` → Fija la versión del paquete usado por esta capa o por sus pruebas para hacer reproducible la compilación.
+- **Línea 13:** `<Compile Include="../Compartido/SqlServerPruebas.cs" Link="SqlServerPruebas.cs" />` → Compila el helper heredado que crea y elimina únicamente la base aislada de cada prueba, sin añadir otro proyecto a la solución.
 
 
 **Integración funcional.** Añade 7 pruebas funcionales del punto 5.3, además del catálogo original; verifica comportamiento real y regresiones heredadas.
@@ -4480,7 +4476,7 @@ public sealed class CasosDeUsoFuncionalesTests
 - **Línea 104:** `public async Task Http_distingue_404_y_409_sin_alterar_el_estado()` → Comprueba el comportamiento observable: http distingue 404 y 409 sin alterar el estado. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
 
 
-**Integración funcional.** Sustituye solo ProduccionDbContext por SQLite relacional, conserva abierta su conexión y permite verificar datos con contextos independientes.
+**Integración funcional.** Configura ProduccionDbContext sobre una base SQL Server aislada y permite verificar los datos desde contextos con conexiones independientes.
 
 **Archivo:** `tests/Compartido/ProduccionApiFactory.cs`. **Operación:** Crear.
 
@@ -4490,24 +4486,28 @@ using AceriaApp.Produccion.Infraestructura;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
-using Microsoft.Data.Sqlite;
+using AceriaApp.PruebasSqlServer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 namespace AceriaApp.PruebasProduccion;
 
-// Una conexión abierta mantiene viva la base SQLite relacional de cada prueba.
+// Cada factory posee una base SQL Server aislada y la elimina al terminar.
 public sealed class ProduccionApiFactory : WebApplicationFactory<Program>
 {
-    private readonly SqliteConnection conexion = new("Data Source=:memory:");
+    private readonly BaseSqlServer store = BaseSqlServer.Crear();
     public ProduccionApiFactory()
     {
-        conexion.Open();
-        using var db = NuevoContexto();
-        db.Database.EnsureCreated();
+        try
+        {
+            using var db = NuevoContexto();
+            if (!db.Database.IsSqlServer()) throw new InvalidOperationException("La prueba exige SQL Server.");
+            db.Database.EnsureCreated();
+        }
+        catch { store.Dispose(); throw; }
     }
     public ProduccionDbContext NuevoContexto() => new(
-        new DbContextOptionsBuilder<ProduccionDbContext>().UseSqlite(conexion).Options);
+        new DbContextOptionsBuilder<ProduccionDbContext>().UseSqlServer(store.ConnectionString).Options);
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development");
@@ -4515,23 +4515,29 @@ public sealed class ProduccionApiFactory : WebApplicationFactory<Program>
         builder.ConfigureTestServices(services =>
         {
             services.RemoveAll<DbContextOptions<ProduccionDbContext>>();
-            services.AddDbContext<ProduccionDbContext>(o => o.UseSqlite(conexion));
+            services.AddDbContext<ProduccionDbContext>(o => o.UseSqlServer(store.ConnectionString));
         });
     }
     protected override void Dispose(bool disposing)
-    { base.Dispose(disposing); if (disposing) conexion.Dispose(); }
+    { base.Dispose(disposing); if (disposing) store.Dispose(); }
 }
 ```
 
 **Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
 
-- **Línea 14:** `private readonly SqliteConnection conexion = new("Data Source=:memory:");` → Mantiene una base relacional temporal aislada por fixture.
+- **Línea 14:** `private readonly BaseSqlServer store = BaseSqlServer.Crear();` → Crea una base SQL Server aislada para el host y las lecturas de esta prueba.
 
-- **Línea 18:** `using var db = NuevoContexto();` → Crea el esquema una vez y permite abrir otros contextos que comprueben la persistencia real.
+- **Línea 20:** `if (!db.Database.IsSqlServer()) throw new InvalidOperationException("La prueba exige SQL Server.");` → Rechaza una configuración que no use el proveedor exigido.
 
-- **Línea 29:** `services.RemoveAll<DbContextOptions<ProduccionDbContext>>();` → Retira las opciones SQL Server de Producción para configurar el proveedor de pruebas.
+- **Línea 21:** `db.Database.EnsureCreated();` → Crea las tablas de Producción antes de arrancar el host.
 
-- **Línea 30:** `services.AddDbContext<ProduccionDbContext>(o => o.UseSqlite(conexion));` → Ejecuta los mismos adaptadores y handlers sobre SQLite, no sobre un repositorio simulado.
+- **Línea 26:** `new DbContextOptionsBuilder<ProduccionDbContext>().UseSqlServer(store.ConnectionString).Options);` → Cada contexto independiente abre su conexión a la misma base de la prueba.
+
+- **Línea 30:** `builder.UseSetting("SkipDatabaseInitialization", "true");` → Evita inicializar las bases configuradas para la ejecución habitual de la API.
+
+- **Línea 34:** `services.AddDbContext<ProduccionDbContext>(o => o.UseSqlServer(store.ConnectionString));` → El host usa SQL Server con la conexión aislada de esta factory.
+
+- **Línea 38:** `{ base.Dispose(disposing); if (disposing) store.Dispose(); }` → Cierra el host antes de eliminar únicamente la base de esta prueba.
 
 
 **Por qué funciona así.** Los indicadores del catálogo permiten discutir el diseño. El código de este paso convierte las decisiones en contratos y comportamientos comprobables, respetando la frontera del contexto Producción y la dirección de dependencias.
@@ -4684,7 +4690,7 @@ Aceptado
 El proyecto AceriaApp ha adoptado DDD y ha definido entidades y value objects. Es necesario definir cómo se expresan las operaciones del dominio y cómo se coordinan los elementos del modelo.
 
 ## Decisión
-Se implementan casos de uso de Producción para crear, obtener, planificar y finalizar una orden. `AceriaApp.Produccion.Aplicacion` depende del dominio y declara `IOrdenProduccionRepositorio`, `IProduccionUnitOfWork` y `ResultadoProduccion<T>`. `AceriaApp.Produccion.Infraestructura` implementa la persistencia mediante `ProduccionDbContext`. La API traduce el resultado a HTTP y compone las dependencias. Los casos de uso orquestan la carga del agregado, sus operaciones y la confirmación; el agregado conserva las invariantes. Las pruebas sustituyen la persistencia o utilizan SQLite para comprobar el comportamiento relacional. MediatR se añade a este contexto en 5.4; los manejadores anteriores de M04 permanecen independientes.
+Se implementan casos de uso de Producción para crear, obtener, planificar y finalizar una orden. `AceriaApp.Produccion.Aplicacion` depende del dominio y declara `IOrdenProduccionRepositorio`, `IProduccionUnitOfWork` y `ResultadoProduccion<T>`. `AceriaApp.Produccion.Infraestructura` implementa la persistencia mediante `ProduccionDbContext`. La API traduce el resultado a HTTP y compone las dependencias. Los casos de uso orquestan la carga del agregado, sus operaciones y la confirmación; el agregado conserva las invariantes. Las pruebas de lógica emplean dobles de puertos y las de integración utilizan SQL Server para comprobar el comportamiento relacional. MediatR se añade a este contexto en 5.4; los manejadores anteriores de M04 permanecen independientes.
 
 ## Alternativas consideradas
 - Servicios de aplicación sin casos de uso explícitos: descartado por falta de intención.
@@ -5993,7 +5999,7 @@ public static class RegistroProduccion
 
 **Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
 
-- **Línea 10:** `services.AddDbContext<ProduccionDbContext>(o => o.UseSqlServer(configuration.GetConnectionString("AceriaProduccion")));` → Configura SQL Server para ejecutar la aplicación; SQLite se sustituye exclusivamente en las pruebas.
+- **Línea 10:** `services.AddDbContext<ProduccionDbContext>(o => o.UseSqlServer(configuration.GetConnectionString("AceriaProduccion")));` → Configura SQL Server; las pruebas usan el mismo proveedor con una conexión a una base aislada.
 
 - **Línea 11:** `services.AddScoped<IOrdenProduccionRepositorio, OrdenProduccionRepositorio>();` → Usa una instancia por petición que comparte el DbContext con la unidad de trabajo.
 
@@ -6015,30 +6021,23 @@ public static class RegistroProduccion
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
     <ProjectReference Include="../../src/AceriaApp.Api/AceriaApp.Api.csproj" />
     <ProjectReference Include="../../src/AceriaApp.Produccion.Dominio/AceriaApp.Produccion.Dominio.csproj" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.21" />
+    <PackageReference Include="Testcontainers.MsSql" Version="3.10.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.21" />
     <Compile Include="../Compartido/ProduccionApiFactory.cs" Link="ProduccionApiFactory.cs" />
+    <Compile Include="../Compartido/SqlServerPruebas.cs" Link="SqlServerPruebas.cs" />
   </ItemGroup>
 </Project>
 ```
 
 **Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
 
-- **Línea 4:** `<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />` → Fija la versión del paquete usado por esta capa o por sus pruebas para hacer reproducible la compilación.
+- **Línea 2:** `<PropertyGroup><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><IsPackable>false</IsPackable><IsTestProject>true</IsTestProject></PropertyGroup>` → Compila para .NET 8, igual que los proyectos heredados.
 
-- **Línea 5:** `<PackageReference Include="FluentAssertions" Version="6.12.2" />` → Fija la versión del paquete usado por esta capa o por sus pruebas para hacer reproducible la compilación.
+- **Línea 10:** `<PackageReference Include="Testcontainers.MsSql" Version="3.10.0" />` → Fija el cliente de contenedores para SQL Server; el proveedor EF Core SQL Server llega mediante la referencia a la API.
 
-- **Línea 6:** `<PackageReference Include="xunit" Version="2.9.2" />` → Fija la versión del paquete usado por esta capa o por sus pruebas para hacer reproducible la compilación.
+- **Línea 11:** `<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.21" />` → Permite ejecutar peticiones HTTP contra el host real de la API.
 
-- **Línea 7:** `<PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />` → Fija la versión del paquete usado por esta capa o por sus pruebas para hacer reproducible la compilación.
-
-- **Línea 8:** `<ProjectReference Include="../../src/AceriaApp.Api/AceriaApp.Api.csproj" />` → Declara una dependencia de proyecto que el compilador necesita; no registra servicios en el contenedor.
-
-- **Línea 9:** `<ProjectReference Include="../../src/AceriaApp.Produccion.Dominio/AceriaApp.Produccion.Dominio.csproj" />` → Declara una dependencia de proyecto que el compilador necesita; no registra servicios en el contenedor.
-
-- **Línea 10:** `<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.21" />` → Fija la versión del paquete usado por esta capa o por sus pruebas para hacer reproducible la compilación.
-
-- **Línea 11:** `<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.21" />` → Fija la versión del paquete usado por esta capa o por sus pruebas para hacer reproducible la compilación.
+- **Línea 13:** `<Compile Include="../Compartido/SqlServerPruebas.cs" Link="SqlServerPruebas.cs" />` → Compila el helper heredado que crea y elimina únicamente la base aislada de cada prueba, sin añadir otro proyecto a la solución.
 
 
 **Integración funcional.** Añade 6 pruebas funcionales del punto 5.4, además del catálogo original; verifica comportamiento real y regresiones heredadas.
@@ -6054,7 +6053,7 @@ using AceriaApp.Produccion.Aplicacion;
 using AceriaApp.Produccion.Infraestructura;
 using AceriaApp.PruebasProduccion;
 using MediatR;
-using Microsoft.Data.Sqlite;
+using AceriaApp.PruebasSqlServer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
@@ -6079,9 +6078,8 @@ public sealed class CqrsFuncionalesTests
     [Fact]
     public async Task Queries_proyectan_sin_tracking_ni_commit_y_los_DTO_no_mutan_el_dominio()
     {
-        await using var conexion = new SqliteConnection("Data Source=:memory:");
-        await conexion.OpenAsync();
-        var opciones = new DbContextOptionsBuilder<ProduccionDbContext>().UseSqlite(conexion).Options;
+        await using var store = BaseSqlServer.Crear();
+        var opciones = new DbContextOptionsBuilder<ProduccionDbContext>().UseSqlServer(store.ConnectionString).Options;
         Guid id;
         await using (var escritura = new ProduccionDbContext(opciones))
         {
@@ -6092,9 +6090,10 @@ public sealed class CqrsFuncionalesTests
             escritura.Ordenes.Add(orden);
             await escritura.SaveChangesAsync();
         }
-        var soloLectura = new DbContextOptionsBuilder<ProduccionDbContext>().UseSqlite(conexion)
+        var soloLectura = new DbContextOptionsBuilder<ProduccionDbContext>().UseSqlServer(store.ConnectionString)
             .AddInterceptors(new ProhibirGuardado()).Options;
         await using var db = new ProduccionDbContext(soloLectura);
+        Assert.Equal("Microsoft.EntityFrameworkCore.SqlServer", db.Database.ProviderName);
         var puerto = new OrdenProduccionLecturas(db);
         var detalle = await new ObtenerOrdenProduccionHandler(puerto).Handle(new(id), default);
         var lista = await new ListarOrdenesProduccionHandler(puerto).Handle(new(), default);
@@ -6167,17 +6166,21 @@ public sealed class CqrsFuncionalesTests
 
 **Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
 
-- **Línea 17:** `public async Task Mediador_resuelve_el_command_y_confirma_una_orden_real()` → Comprueba el comportamiento observable: mediador resuelve el command y confirma una orden real. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
+- **Línea 17:** `public async Task Mediador_resuelve_el_command_y_confirma_una_orden_real()` → El command confirma una orden real; un contexto independiente recupera el agregado.
 
-- **Línea 31:** `public async Task Queries_proyectan_sin_tracking_ni_commit_y_los_DTO_no_mutan_el_dominio()` → Comprueba el comportamiento observable: queries proyectan sin tracking ni commit y los dto no mutan el dominio. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
+- **Línea 33:** `await using var store = BaseSqlServer.Crear();` → Aísla los datos de las queries en una base SQL Server exclusiva.
 
-- **Línea 62:** `public async Task Query_inexistente_devuelve_error_tipado_y_la_lista_vacia_es_valida()` → Comprueba el comportamiento observable: query inexistente devuelve error tipado y la lista vacia es valida. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
+- **Línea 46:** `.AddInterceptors(new ProhibirGuardado()).Options;` → Las queries fallan si intentan llamar a SaveChanges.
 
-- **Línea 73:** `public async Task Command_invalido_no_elude_las_invariantes_del_agregado()` → Comprueba el comportamiento observable: command invalido no elude las invariantes del agregado. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
+- **Línea 48:** `Assert.Equal("Microsoft.EntityFrameworkCore.SqlServer", db.Database.ProviderName);` → Comprueba que la proyección se ejecuta con SQL Server.
 
-- **Línea 84:** `public async Task Commands_de_estado_usados_por_el_mediador_respetan_la_secuencia()` → Comprueba el comportamiento observable: commands de estado usados por el mediador respetan la secuencia. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
+- **Línea 55:** `Assert.Empty(db.ChangeTracker.Entries());` → Exige lecturas sin seguimiento y verifica que alterar un DTO no muta el agregado.
 
-- **Línea 98:** `public async Task Http_lista_proyecciones_de_las_ordenes_creadas()` → Comprueba el comportamiento observable: http lista proyecciones de las ordenes creadas. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
+- **Línea 62:** `public async Task Query_inexistente_devuelve_error_tipado_y_la_lista_vacia_es_valida()` → La ausencia se expresa mediante resultado tipado y la lista vacía es válida.
+
+- **Línea 84:** `public async Task Commands_de_estado_usados_por_el_mediador_respetan_la_secuencia()` → Comprueba planificación, finalización y rechazo de transiciones inválidas.
+
+- **Línea 98:** `public async Task Http_lista_proyecciones_de_las_ordenes_creadas()` → La API devuelve la proyección con las líneas persistidas.
 
 
 **Por qué funciona así.** Los indicadores del catálogo permiten discutir el diseño. El código de este paso convierte las decisiones en contratos y comportamientos comprobables, respetando la frontera del contexto Producción y la dirección de dependencias.
@@ -7598,30 +7601,23 @@ public sealed class OrdenesProduccionCasosUso(
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
     <ProjectReference Include="../../src/AceriaApp.Api/AceriaApp.Api.csproj" />
     <ProjectReference Include="../../src/AceriaApp.Produccion.Dominio/AceriaApp.Produccion.Dominio.csproj" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.21" />
+    <PackageReference Include="Testcontainers.MsSql" Version="3.10.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.21" />
     <Compile Include="../Compartido/ProduccionApiFactory.cs" Link="ProduccionApiFactory.cs" />
+    <Compile Include="../Compartido/SqlServerPruebas.cs" Link="SqlServerPruebas.cs" />
   </ItemGroup>
 </Project>
 ```
 
 **Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
 
-- **Línea 4:** `<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />` → Fija la versión del paquete usado por esta capa o por sus pruebas para hacer reproducible la compilación.
+- **Línea 2:** `<PropertyGroup><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><IsPackable>false</IsPackable><IsTestProject>true</IsTestProject></PropertyGroup>` → Compila para .NET 8, igual que los proyectos heredados.
 
-- **Línea 5:** `<PackageReference Include="FluentAssertions" Version="6.12.2" />` → Fija la versión del paquete usado por esta capa o por sus pruebas para hacer reproducible la compilación.
+- **Línea 10:** `<PackageReference Include="Testcontainers.MsSql" Version="3.10.0" />` → Fija el cliente de contenedores para SQL Server; el proveedor EF Core SQL Server llega mediante la referencia a la API.
 
-- **Línea 6:** `<PackageReference Include="xunit" Version="2.9.2" />` → Fija la versión del paquete usado por esta capa o por sus pruebas para hacer reproducible la compilación.
+- **Línea 11:** `<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.21" />` → Permite ejecutar peticiones HTTP contra el host real de la API.
 
-- **Línea 7:** `<PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />` → Fija la versión del paquete usado por esta capa o por sus pruebas para hacer reproducible la compilación.
-
-- **Línea 8:** `<ProjectReference Include="../../src/AceriaApp.Api/AceriaApp.Api.csproj" />` → Declara una dependencia de proyecto que el compilador necesita; no registra servicios en el contenedor.
-
-- **Línea 9:** `<ProjectReference Include="../../src/AceriaApp.Produccion.Dominio/AceriaApp.Produccion.Dominio.csproj" />` → Declara una dependencia de proyecto que el compilador necesita; no registra servicios en el contenedor.
-
-- **Línea 10:** `<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.21" />` → Fija la versión del paquete usado por esta capa o por sus pruebas para hacer reproducible la compilación.
-
-- **Línea 11:** `<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.21" />` → Fija la versión del paquete usado por esta capa o por sus pruebas para hacer reproducible la compilación.
+- **Línea 13:** `<Compile Include="../Compartido/SqlServerPruebas.cs" Link="SqlServerPruebas.cs" />` → Compila el helper heredado que crea y elimina únicamente la base aislada de cada prueba, sin añadir otro proyecto a la solución.
 
 
 **Integración funcional.** Añade 8 pruebas funcionales del punto 5.5, además del catálogo original; verifica comportamiento real y regresiones heredadas.

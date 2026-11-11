@@ -17,8 +17,9 @@ puede abrir por separado los proyectos de referencia. La copia no sustituye
 la escritura y comprensión de código.
 
 **Persistencia:** la API del alumno utiliza SQL Server Express LocalDB.
-Los tests de integración usan EF Core InMemory únicamente para ejecutarse
-de forma independiente en GitHub Actions. `EnsureCreated` se emplea en
+Los tests de integración también utilizan SQL Server real, con una base exclusiva
+por factoría y limpieza automática. Pueden usar una conexión externa o un
+contenedor de SQL Server Express 2022. `EnsureCreated` se emplea en
 desarrollo para simplificar el arranque del ejercicio; no se propone para
 despliegues productivos.
 
@@ -30,7 +31,7 @@ Cada punto tiene su **proyecto de referencia terminado** en `PROYECTO/2.1`, `PRO
 
 Los fragmentos se presentan según la etapa en la que el alumno debe introducirlos. El recorrido es **diseño → archivo → código → compilación → petición o prueba → resultado esperado**. Cuando un paso solo examina un comportamiento incorporado anteriormente, se indica expresamente y se evita volver a crear el código. Los retos son ampliaciones opcionales, no requisitos para que los proyectos de referencia compilen.
 
-**Criterio de finalización:** al completar cada punto, el código de los archivos indicados debe equivaler funcionalmente al proyecto correspondiente y superar sus pruebas. La aplicación local usa SQL Server Express LocalDB; solo los tests sustituyen ese proveedor por InMemory.
+**Criterio de finalización:** al completar cada punto, el código de los archivos indicados debe equivaler funcionalmente al proyecto correspondiente y superar sus pruebas. La aplicación local usa SQL Server Express LocalDB; los tests mantienen el proveedor SQL Server y cambian únicamente la base de datos.
 
 ---
 
@@ -62,6 +63,22 @@ Los fragmentos se presentan según la etapa en la que el alumno debe introducirl
 4. Ejecuta una compilación desde **Compilar > Compilar solución** o `dotnet build` en la carpeta del proyecto; identifica `Program.cs` como punto de entrada y guarda la solución de trabajo.
 
 
+**Archivo completo: `src/AceriaApp.Api/AceriaApp.Api.csproj`.**
+
+<!-- M02_ARCHIVO {"paso": "2.1.1", "ruta": "src/AceriaApp.Api/AceriaApp.Api.csproj"} -->
+```xml
+<Project Sdk="Microsoft.NET.Sdk.Web"><PropertyGroup><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup></Project>
+```
+
+**Archivo completo: `src/AceriaApp.Api/Program.cs`.**
+
+<!-- M02_ARCHIVO {"paso": "2.1.1", "ruta": "src/AceriaApp.Api/Program.cs"} -->
+```text
+var builder=WebApplication.CreateBuilder(args);
+var app=builder.Build();
+app.Run();
+```
+
 **Por qué funciona así.** El programa aún se está preparando: comprobar SDK, arranque y URI antes de introducir persistencia permite aislar errores de herramienta frente a errores de API.
 
 **Verificación concreta.** Debes disponer de `src/AceriaApp.Api/AceriaApp.Api.csproj` con `net8.0`, un `Program.cs` generado por la plantilla y una compilación sin errores. No debe existir aún ningún endpoint de órdenes.
@@ -79,6 +96,13 @@ Los fragmentos se presentan según la etapa en la que el alumno debe introducirl
 3. Observa en la ventana de salida la línea `Now listening on:` y copia la URL **real** (puerto incluido). Abre esa dirección en el navegador y distingue la ruta `/` de una ruta todavía inexistente.
 4. Detén Kestrel con el botón **Detener** o `Ctrl+C`. Si la plantilla incluye un `MapGet("/")` de ejemplo, identifícalo; se retirará cuando sustituyas `Program.cs` por la API del taller.
 
+
+**Archivo completo: `src/AceriaApp.Api/Properties/launchSettings.json`.**
+
+<!-- M02_ARCHIVO {"paso": "2.1.2", "ruta": "src/AceriaApp.Api/Properties/launchSettings.json"} -->
+```json
+{"profiles":{"AceriaApp.Api":{"commandName":"Project","launchBrowser":false,"applicationUrl":"http://localhost:5082","environmentVariables":{"ASPNETCORE_ENVIRONMENT":"Development"}}}}
+```
 
 **Por qué funciona así.** El programa aún se está preparando: comprobar SDK, arranque y URI antes de introducir persistencia permite aislar errores de herramienta frente a errores de API.
 
@@ -230,8 +254,15 @@ public sealed record OrdenDto(
 1. Sobre el proyecto `AceriaApp.Api` abre **Administrar paquetes NuGet** y busca `Microsoft.EntityFrameworkCore.SqlServer`.
 2. Selecciona una versión de la rama **8.0.x** compatible con el proyecto (la referencia utiliza `8.0.21`), acepta los cambios y deja que NuGet restaure dependencias.
 3. Comprueba en `AceriaApp.Api.csproj` que aparece el `PackageReference` a SQL Server. Como alternativa reproducible, desde la carpeta raíz de tu solución ejecuta `dotnet add src/AceriaApp.Api/AceriaApp.Api.csproj package Microsoft.EntityFrameworkCore.SqlServer --version 8.0.21`.
-4. Ejecuta `dotnet restore src/AceriaApp.Api/AceriaApp.Api.csproj`. No añadas SQLite ni InMemory a la aplicación principal; InMemory se reservará al proyecto de tests.
+4. Ejecuta `dotnet restore src/AceriaApp.Api/AceriaApp.Api.csproj`. La aplicación y las pruebas HTTP utilizan el mismo proveedor SQL Server; no añadas un proveedor alternativo.
 
+
+**Archivo completo: `src/AceriaApp.Api/AceriaApp.Api.csproj`.**
+
+<!-- M02_ARCHIVO {"paso": "2.1.8", "ruta": "src/AceriaApp.Api/AceriaApp.Api.csproj"} -->
+```xml
+<Project Sdk="Microsoft.NET.Sdk.Web"><PropertyGroup><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup><ItemGroup><PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.21" /></ItemGroup></Project>
+```
 
 **Por qué funciona así.** El acceso a datos se configura en infraestructura mediante EF Core y DI. LocalDB es la base efectiva de la API; EnsureCreated se usa solo durante el aprendizaje.
 
@@ -316,6 +347,13 @@ protected override void OnModelCreating(ModelBuilder b)
 3. Comprueba que SQL Server Express LocalDB está instalado. Desde una consola de Windows ejecuta `sqllocaldb info MSSQLLocalDB`; si no está iniciada, usa `sqllocaldb start MSSQLLocalDB`.
 4. Guarda el JSON, comprueba las comas y las comillas y no añadas usuarios ni contraseñas reales al repositorio.
 
+
+**Archivo completo: `src/AceriaApp.Api/appsettings.json`.**
+
+<!-- M02_ARCHIVO {"paso": "2.1.11", "ruta": "src/AceriaApp.Api/appsettings.json"} -->
+```json
+{"ConnectionStrings":{"AceriaApp":"Server=(localdb)\\MSSQLLocalDB;Database=AceriaAppM02;Trusted_Connection=True;TrustServerCertificate=True"}}
+```
 
 **Por qué funciona así.** El acceso a datos se configura en infraestructura mediante EF Core y DI. LocalDB es la base efectiva de la API; EnsureCreated se usa solo durante el aprendizaje.
 
@@ -544,6 +582,17 @@ app.MapGet("/api/v1/ordenes/{id:guid}",
 4. Abre `Program.cs` en el depurador y comprueba qué dependencia se inyecta; realiza el caso práctico completo de lectura EF Core situado después de esta actividad.
 
 
+**Archivo completo: `AceriaApp.http`.**
+
+<!-- M02_ARCHIVO {"paso": "2.1.20", "ruta": "AceriaApp.http"} -->
+```http
+@Host = http://localhost:5082
+GET {{Host}}/api/v1/ordenes
+
+### Detalle inexistente
+GET {{Host}}/api/v1/ordenes/00000000-0000-0000-0000-000000000001
+```
+
 **Por qué funciona así.** El verbo GET no modifica recursos. MapGet recibe dependencias y parámetros, consulta la orden y traduce el resultado a 200 o 404 con DTOs.
 
 **Verificación concreta.** El archivo `.http` queda guardado y reproduce dos respuestas observables de la API real, sin inventar un puerto ni pedir Swagger en una etapa que aún no lo incluye.
@@ -593,7 +642,7 @@ la petición anterior; restaura el código y vuelve a comprobarlo.
 
 1. En el Explorador de soluciones, crea un proyecto **xUnit Test Project** llamado `AceriaApp.Api.Tests` bajo `tests`, con destino .NET 8, o ejecuta los comandos PowerShell del bloque.
 2. Agrega una referencia **de proyecto** desde los tests a `src/AceriaApp.Api/AceriaApp.Api.csproj`, no una referencia a una DLL copiada.
-3. Instala en el proyecto de tests `Microsoft.AspNetCore.Mvc.Testing` y `Microsoft.EntityFrameworkCore.InMemory`, ambos 8.x. Comprueba que no se han añadido a la API de producción.
+3. Instala en el proyecto de tests `Microsoft.AspNetCore.Mvc.Testing` 8.0.21 y `Testcontainers.MsSql` 3.10.0. Comprueba que no se han añadido a la API de producción.
 4. Elimina el archivo `UnitTest1.cs` generado por defecto en la plantilla xUnit si existe, porque el laboratorio entregará después tres pruebas específicas. Añade el proyecto de tests a la solución y ejecuta `dotnet restore`.
 
 
@@ -605,14 +654,37 @@ la petición anterior; restaura el código y vuelve a comprobarlo.
 dotnet new xunit -n AceriaApp.Api.Tests -o tests/AceriaApp.Api.Tests --framework net8.0
 dotnet add tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj reference src/AceriaApp.Api/AceriaApp.Api.csproj
 dotnet add tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj package Microsoft.AspNetCore.Mvc.Testing --version 8.0.21
-dotnet add tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj package Microsoft.EntityFrameworkCore.InMemory --version 8.0.21
+dotnet add tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj package Testcontainers.MsSql --version 3.10.0
+```
+
+**Archivo completo: `tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj`.**
+
+<!-- M02_ARCHIVO {"paso": "2.1.21", "ruta": "tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj"} -->
+```xml
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.21" />
+    <PackageReference Include="Testcontainers.MsSql" Version="3.10.0" />
+    <ProjectReference Include="../../src/AceriaApp.Api/AceriaApp.Api.csproj" />
+  </ItemGroup>
+</Project>
 ```
 
 **Por qué funciona así.** WebApplicationFactory prueba la aplicación como servidor HTTP: permite distinguir compilación C# de comportamiento observable del enrutamiento y la serialización.
 
 **Verificación concreta.** Existe `tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj` con referencia a la API y los paquetes de integración. No debe quedar un test de plantilla que altere el recuento de 3 pruebas.
 
-**Si algo falla.** Si falla ApiFactory, comprueba Program partial y el registro de DbContext con InMemory solo para tests.
+**Si algo falla.** Si falla ApiFactory, comprueba Program partial y el registro de DbContext SQL Server, la conexión externa o Docker y la creación del esquema de prueba.
 
 ### PASO 2.1.22 — Configurar WebApplicationFactory y base aislada para tests
 
@@ -620,10 +692,10 @@ dotnet add tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj package Microsof
 
 **Procedimiento guiado.**
 
-1. En la carpeta del proyecto de tests, crea `ApiFactory.cs` y pega íntegro el código C# de este paso. Verifica que la clase hereda de `WebApplicationFactory<Program>`.
+1. Crea `tests/Compartido/SqlServerPruebas.cs`, completa el `.csproj` con el enlace `Compile` y crea `ApiFactory.cs` con los bloques de este paso. Verifica que la clase hereda de `WebApplicationFactory<Program>`.
 2. Abre el `Program.cs` de la API y, **después de `app.Run();`**, añade `public partial class Program {}` para que el host de pruebas pueda localizar el punto de entrada.
-3. En `ConfigureTestServices`, comprueba que se elimina `DbContextOptions<AceriaDbContext>` y se registra una base **InMemory** exclusiva de los tests, con un nombre aleatorio por factoría.
-4. Comprueba la opción `SkipDatabaseInitialization=true`: esta configuración debe evitar que los tests necesiten LocalDB. Guarda y compila el proyecto de tests.
+3. En `ConfigureTestServices`, comprueba que se elimina `DbContextOptions<AceriaDbContext>` y se registra `UseSqlServer` con la cadena exclusiva devuelta por `BaseSqlServer.Crear()`. El método `CreateHost` aplica `EnsureCreated` a esa base.
+4. Configura `ACERIA_TEST_SQLSERVER` con una conexión a `master` que permita crear y eliminar bases o inicia Docker para usar Testcontainers. `SkipDatabaseInitialization=true` evita inicializar la base habitual de la API; no omite el esquema de la base de prueba. Guarda y compila.
 
 
 **Archivo de trabajo: `tests/AceriaApp.Api.Tests/ApiFactory.cs`**.
@@ -631,36 +703,197 @@ dotnet add tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj package Microsof
 
 ```csharp
 using AceriaApp.Api.Datos;
+using AceriaApp.PruebasSqlServer;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 namespace AceriaApp.Api.Tests;
-// INICIO PASO 2.1.22: HTTP real; base en memoria SOLO en tests automatizados.
-public sealed class ApiFactory:WebApplicationFactory<Program>
+// INICIO PASO 2.1.22: HTTP y SQL Server reales; base exclusiva por factoría.
+public sealed class ApiFactory : WebApplicationFactory<Program>
 {
-    private readonly string _databaseName="Tests-"+Guid.NewGuid();
+    private readonly BaseSqlServer _base = BaseSqlServer.Crear();
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development");
-        builder.UseSetting("SkipDatabaseInitialization","true");
-        builder.ConfigureTestServices(services=>
+        builder.UseSetting("SkipDatabaseInitialization", "true");
+        builder.ConfigureTestServices(services =>
         {
             services.RemoveAll<DbContextOptions<AceriaDbContext>>();
-            services.AddDbContext<AceriaDbContext>(opt=>
-                opt.UseInMemoryDatabase(_databaseName));
+            services.AddDbContext<AceriaDbContext>(opt => opt.UseSqlServer(_base.ConnectionString));
         });
+    }
+    protected override IHost CreateHost(IHostBuilder builder)
+    {
+        var host = base.CreateHost(builder);
+        using var scope = host.Services.CreateScope();
+        // El esquema se crea explícitamente sobre la base SQL exclusiva de esta prueba.
+        scope.ServiceProvider.GetRequiredService<AceriaDbContext>().Database.EnsureCreated();
+        return host;
+    }
+    protected override void Dispose(bool disposing)
+    {
+        try { base.Dispose(disposing); }
+        finally { if (disposing) _base.Dispose(); }
+    }
+    public override async ValueTask DisposeAsync()
+    {
+        try { await base.DisposeAsync(); }
+        finally { await _base.DisposeAsync(); }
     }
 }
 ```
 
+**Archivo completo: `tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj`.**
+
+<!-- M02_ARCHIVO {"paso": "2.1.22", "ruta": "tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj"} -->
+```xml
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.21" />
+    <PackageReference Include="Testcontainers.MsSql" Version="3.10.0" />
+    <ProjectReference Include="../../src/AceriaApp.Api/AceriaApp.Api.csproj" />
+    <Compile Include="../Compartido/SqlServerPruebas.cs" Link="Compartido/SqlServerPruebas.cs" />
+  </ItemGroup>
+</Project>
+```
+
+**Archivo completo: `tests/Compartido/SqlServerPruebas.cs`.**
+
+<!-- M02_ARCHIVO {"paso": "2.1.22", "ruta": "tests/Compartido/SqlServerPruebas.cs"} -->
+```csharp
+using System.Security.Cryptography;
+using System.Text.Json;
+using Microsoft.Data.SqlClient;
+using Testcontainers.MsSql;
+
+namespace AceriaApp.PruebasSqlServer;
+
+// Una instancia de contenedor por proceso; cada prueba conserva su propia base.
+public sealed class BaseSqlServer : IDisposable, IAsyncDisposable
+{
+    private static readonly Lazy<MsSqlContainer> Servidor = new(() =>
+    {
+        var contenedor = new MsSqlBuilder()
+            .WithImage("mcr.microsoft.com/mssql/server:2022-CU14-ubuntu-22.04")
+            .WithEnvironment("MSSQL_PID", "Express")
+            .WithPassword("Axia!" + Convert.ToHexString(RandomNumberGenerator.GetBytes(24)))
+            .Build();
+        contenedor.StartAsync().GetAwaiter().GetResult();
+        // Ryuk retira el contenedor al finalizar el proceso de pruebas.
+        return contenedor;
+    });
+
+    private readonly string _master;
+    private readonly string _nombre = "AceriaTest_" + Guid.NewGuid().ToString("N");
+    private int _eliminada;
+    private bool _creada;
+    public string ConnectionString { get; }
+
+    private BaseSqlServer(string servidor)
+    {
+        var cadena = new SqlConnectionStringBuilder(servidor) { InitialCatalog = "master" };
+        _master = cadena.ConnectionString;
+        cadena.InitialCatalog = _nombre;
+        ConnectionString = cadena.ConnectionString;
+    }
+
+    public static BaseSqlServer Crear()
+    {
+        var externa = Environment.GetEnvironmentVariable("ACERIA_TEST_SQLSERVER");
+        var modo = string.IsNullOrWhiteSpace(externa) ? "testcontainers" : "conexion_externa";
+        var bd = new BaseSqlServer(modo == "testcontainers" ? Servidor.Value.GetConnectionString() : externa!);
+        try
+        {
+            using var conexion = new SqlConnection(bd._master);
+            conexion.Open();
+            using var crear = conexion.CreateCommand();
+            // El identificador procede únicamente de Guid, nunca de la conexión externa.
+            crear.CommandText = $"CREATE DATABASE [{bd._nombre}]";
+            crear.ExecuteNonQuery();
+            bd._creada = true;
+            bd.GuardarEvidencia(conexion, modo);
+            return bd;
+        }
+        catch
+        {
+            bd.Dispose();
+            throw;
+        }
+    }
+
+    private void GuardarEvidencia(SqlConnection conexion, string modo)
+    {
+        var carpeta = Environment.GetEnvironmentVariable("ACERIA_SQL_EVIDENCE_DIR");
+        if (string.IsNullOrWhiteSpace(carpeta)) return;
+        using var consulta = conexion.CreateCommand();
+        consulta.CommandText = "SELECT CONVERT(int, SERVERPROPERTY('EngineEdition')), " +
+            "CONVERT(nvarchar(128), SERVERPROPERTY('ProductVersion'))";
+        using var lector = consulta.ExecuteReader();
+        lector.Read();
+        var evidencia = new
+        {
+            provider = "Microsoft.EntityFrameworkCore.SqlServer",
+            engineEdition = lector.GetInt32(0),
+            version = lector.GetString(1),
+            database = _nombre,
+            modo,
+            origen = Environment.GetEnvironmentVariable("ACERIA_SQL_ORIGIN")
+                ?? (modo == "testcontainers" ? "Testcontainers" : "SQLServer")
+        };
+        Directory.CreateDirectory(carpeta);
+        // Solo se guardan datos de motor y de base: nunca credenciales ni cadenas.
+        File.WriteAllText(Path.Combine(carpeta, _nombre + ".json"),
+            JsonSerializer.Serialize(evidencia, new JsonSerializerOptions { WriteIndented = true }));
+    }
+
+    public void Dispose()
+    {
+        if (Interlocked.Exchange(ref _eliminada, 1) != 0 || !_creada) return;
+        // Vacía solo el pool de esta base; las demás factorías siguen funcionando.
+        using var propia = new SqlConnection(ConnectionString);
+        SqlConnection.ClearPool(propia);
+        using var conexion = new SqlConnection(_master);
+        conexion.Open();
+        using var borrar = conexion.CreateCommand();
+        borrar.CommandText = $"IF DB_ID(N'{_nombre}') IS NOT NULL BEGIN " +
+            $"ALTER DATABASE [{_nombre}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; " +
+            $"DROP DATABASE [{_nombre}]; END";
+        borrar.ExecuteNonQuery();
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        Dispose();
+        return ValueTask.CompletedTask;
+    }
+}
+```
+
+**Lectura del código de aislamiento.** `Lazy<MsSqlContainer>` arranca un único servidor por proceso y la contraseña se genera con aleatoriedad criptográfica. `InitialCatalog = "master"` reserva la conexión administrativa; `AceriaTest_` más un GUID forma el nombre de cada base. `CREATE DATABASE` crea únicamente esa base y `UseSqlServer` conecta el contexto a ella. `EnsureCreated` construye las tablas antes del primer HTTP. Al liberar la factoría se detiene el host, se vacía el pool de su base y se elimina exclusivamente el nombre generado; no se elimina la base indicada por una conexión del alumno. `Interlocked.Exchange` hace que la limpieza sea idempotente, tanto con `using` como con `await using`.
+
+**Configuración del motor.** En Windows, antes de `dotnet test`, puedes ejecutar `$env:ACERIA_TEST_SQLSERVER='Server=(localdb)\MSSQLLocalDB;Database=master;Trusted_Connection=True;TrustServerCertificate=True'` en PowerShell. En CI, utiliza una conexión al servidor de pruebas que tenga permiso para crear bases; guarda sus credenciales en secretos. Si omites la variable, Docker debe estar iniciado y poder descargar la imagen fijada `2022-CU14-ubuntu-22.04`. No establezcas `TESTCONTAINERS_RYUK_DISABLED`: Ryuk se encarga de retirar el contenedor compartido.
+
+**Evidencia opcional.** Si `ACERIA_SQL_EVIDENCE_DIR` indica una carpeta, cada base crea un JSON independiente con `provider`, `engineEdition`, `version`, `database`, `modo` y `origen`. `ACERIA_SQL_ORIGIN` permite etiquetar el servidor externo como `LocalDB` o `Testcontainers`. Los valores del motor se consultan mediante `SERVERPROPERTY`; nunca se guardan contraseñas ni cadenas de conexión. La aserción de `ProviderName` del test siguiente detecta un cambio accidental de proveedor.
+
 **Por qué funciona así.** WebApplicationFactory prueba la aplicación como servidor HTTP: permite distinguir compilación C# de comportamiento observable del enrutamiento y la serialización.
 
-**Verificación concreta.** `ApiFactory` compila y arranca el host de pruebas sin instalar SQL Server. La aplicación habitual sigue utilizando LocalDB; solo el host de tests sustituye el proveedor.
+**Verificación concreta.** `ApiFactory` compila; al ejecutar crea una base `AceriaTest_<GUID>` en SQL Server real, inicializa su esquema y la elimina al finalizar. La aplicación habitual sigue utilizando LocalDB.
 
-**Si algo falla.** Si falla ApiFactory, comprueba Program partial y el registro de DbContext con InMemory solo para tests.
+**Si algo falla.** Si falla ApiFactory, comprueba Program partial y el registro de DbContext SQL Server, la conexión externa o Docker y la creación del esquema de prueba.
 
 ### PASO 2.1.23 — Probar 200, 404 y DTO mediante GetTests
 
@@ -707,6 +940,7 @@ public class GetTests
         using(var scope=f.Services.CreateScope())
         {
             var db=scope.ServiceProvider.GetRequiredService<AceriaDbContext>();
+            Assert.Equal("Microsoft.EntityFrameworkCore.SqlServer", db.Database.ProviderName);
             db.Ordenes.Add(new Orden{Id=id,Cliente="ACX-001",Material="CHAPA",Cantidad=10});
             await db.SaveChangesAsync();
         }
@@ -720,9 +954,9 @@ public class GetTests
 
 **Por qué funciona así.** WebApplicationFactory prueba la aplicación como servidor HTTP: permite distinguir compilación C# de comportamiento observable del enrutamiento y la serialización.
 
-**Verificación concreta.** Debe indicar **3 tests superados, 0 fallidos**. Un fallo de `WebApplicationFactory` obliga a revisar `Program partial`, referencia de proyecto y configuración InMemory.
+**Verificación concreta.** Debe indicar **3 tests superados, 0 fallidos**. Un fallo de `WebApplicationFactory` obliga a revisar `Program partial`, referencia de proyecto y conexión SQL Server y creación del esquema.
 
-**Si algo falla.** Si falla ApiFactory, comprueba Program partial y el registro de DbContext con InMemory solo para tests.
+**Si algo falla.** Si falla ApiFactory, comprueba Program partial y el registro de DbContext SQL Server, la conexión externa o Docker y la creación del esquema de prueba.
 
 ### PASO 2.1.24 — Reto: incorporar consulta por cliente y explicar su URI
 
@@ -746,12 +980,14 @@ public class GetTests
 
 Abre el proyecto de pruebas y localiza `ApiFactory.cs`. Esta clase deriva
 de `WebApplicationFactory<Program>` y arranca una aplicación real de
-ASP.NET Core en memoria. La aplicación del alumno sigue conectándose a
-LocalDB cuando se ejecuta en Windows; exclusivamente dentro de la fábrica
-de tests se sustituye el proveedor por EF Core InMemory. Esa decisión
-mantiene las pruebas reproducibles y permite que se ejecuten en un runner
-Linux, pero no autoriza a utilizar InMemory como sustituto de SQL Server
-para verificar todo su comportamiento.
+ASP.NET Core alojada en el proceso de pruebas. La aplicación del alumno sigue
+conectándose a LocalDB cuando se ejecuta en Windows. La factoría mantiene el
+proveedor EF Core SQL Server y crea una base exclusiva por prueba; consulta,
+serialización y persistencia se verifican con el motor relacional real.
+`ACERIA_TEST_SQLSERVER` permite usar LocalDB, Express o un servidor de CI.
+Cuando no se define, Testcontainers arranca SQL Server Express 2022 mediante
+Docker y Ryuk retira el contenedor al finalizar el proceso. No hay alternativa
+automática en memoria: si no está disponible el motor, la prueba falla.
 
 El primer test consulta la colección vacía y espera 200; el segundo
 construye un Guid nuevo, lo incorpora a la ruta de detalle y espera 404.
@@ -1334,6 +1570,50 @@ app.MapPost("/api/v1/ordenes/{id:guid}/finalizar",async (Guid id,AceriaDbContext
 
 **Referencia de código:** `src/AceriaApp.Api/Program.cs`. Busca el método HTTP correspondiente y su llamada a `SaveChangesAsync`. Comprueba el comportamiento indicado en la acción antes de continuar.
 
+**Archivo completo: `AceriaApp.http`.**
+
+<!-- M02_ARCHIVO {"paso": "2.2.20", "ruta": "AceriaApp.http"} -->
+```http
+@Host = http://localhost:5082
+GET {{Host}}/api/v1/ordenes
+
+### Detalle inexistente
+GET {{Host}}/api/v1/ordenes/00000000-0000-0000-0000-000000000001
+
+### Crear 201 (guardar el ID del cuerpo y Location)
+POST {{Host}}/api/v1/ordenes
+Content-Type: application/json
+
+{"cliente":"ACX-001","material":"CHAPA-3MM","cantidad":10}
+
+### Validación 400 en 2.3
+POST {{Host}}/api/v1/ordenes
+Content-Type: application/json
+
+{"cliente":"","material":"CHAPA-3MM","cantidad":0}
+
+### Negocio 422
+POST {{Host}}/api/v1/ordenes
+Content-Type: application/json
+
+{"cliente":"ACX-001","material":"CHAPA-3MM","cantidad":501}
+
+### Sustituir {id} por ID real
+PUT {{Host}}/api/v1/ordenes/{id}
+Content-Type: application/json
+
+{"cliente":"ACX-002","material":"CHAPA-5MM","cantidad":14}
+
+PATCH {{Host}}/api/v1/ordenes/{id}/cantidad
+Content-Type: application/json
+
+{"cantidad":15}
+
+POST {{Host}}/api/v1/ordenes/{id}/finalizar
+
+DELETE {{Host}}/api/v1/ordenes/{id}
+```
+
 **Por qué funciona así.** La transición Finalizada cambia el estado de negocio. PUT, PATCH y DELETE deben respetarlo y producir 409 si se intenta una operación incompatible.
 
 **Verificación concreta.** El servicio diferencia 204, 404 y 409 según exista el recurso y esté permitido eliminarlo; 409 no altera datos.
@@ -1606,6 +1886,13 @@ solamente códigos 204.
 3. Abre el `.csproj` y comprueba la nueva dependencia. Ejecuta `dotnet restore` y revisa posibles conflictos de versiones.
 4. No elimines `Microsoft.EntityFrameworkCore.SqlServer`. Instalar el paquete no registra validadores ni convierte automáticamente los POST en validaciones.
 
+
+**Archivo completo: `src/AceriaApp.Api/AceriaApp.Api.csproj`.**
+
+<!-- M02_ARCHIVO {"paso": "2.3.3", "ruta": "src/AceriaApp.Api/AceriaApp.Api.csproj"} -->
+```xml
+<Project Sdk="Microsoft.NET.Sdk.Web"><PropertyGroup><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup><ItemGroup><PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.21" /><PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" /></ItemGroup></Project>
+```
 
 **Por qué funciona así.** La deserialización de un cuerpo JSON y la validación semántica no son lo mismo. Primero el framework interpreta el mensaje y después se comprueban las reglas de datos.
 
@@ -2291,6 +2578,13 @@ una lectura válida en un fallo de contrato.
 4. Restaura con `dotnet restore`. No instales Swashbuckle exclusivamente en el proyecto de tests ni añadas servicios Swagger antes de comprender cómo se registran.
 
 
+**Archivo completo: `src/AceriaApp.Api/AceriaApp.Api.csproj`.**
+
+<!-- M02_ARCHIVO {"paso": "2.4.2", "ruta": "src/AceriaApp.Api/AceriaApp.Api.csproj"} -->
+```xml
+<Project Sdk="Microsoft.NET.Sdk.Web"><PropertyGroup><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup><ItemGroup><PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.21" /><PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" /><PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" /></ItemGroup></Project>
+```
+
 **Por qué funciona así.** Swashbuckle descubre la API real desde ASP.NET Core: registrar AddSwaggerGen y definir SwaggerDoc produce un documento estándar a partir de rutas y tipos.
 
 **Verificación concreta.** El proyecto API tiene las tres dependencias necesarias y restaura NuGet. Todavía no debería responder `/swagger/v1/swagger.json` hasta configurar los servicios y el middleware.
@@ -2610,7 +2904,7 @@ independiente.
 
 En `Program.cs` revisa `WithSummary` y `Produces`. Añade o corrige
 el resumen del GET y vuelve a descargar el JSON: el metadato
-cambia porque la fuente de la documentación es el código. Esta
+cambia porque la documentación se genera a partir del código. Esta
 relación bidireccional entre implementar y documentar es precisamente
 el aprendizaje del punto 2.4.
 

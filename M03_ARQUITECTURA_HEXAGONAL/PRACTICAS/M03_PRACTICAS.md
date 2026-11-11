@@ -6,7 +6,7 @@
 
 El alumnado continúa el proyecto AceriaApp que culminó en **M02 2.4**. Cada apartado tiene 24 pasos y una carpeta de referencia autónoma. La práctica indica **dónde abrir o crear cada archivo, qué pegar o modificar, por qué, cómo compilar y qué comprobar**. El resultado no se obtiene copiando previamente una solución terminada.
 
-**Requisitos del puesto:** Visual Studio con el componente ASP.NET/web, SDK .NET 8, SQL Server Express LocalDB para ejecutar la API en Windows; los tests usan EF Core InMemory. La aplicación mantiene los endpoints de M02. En 3.3 aparecen proyectos de Dominio, Aplicación e Infraestructura con referencias físicas comprobables; en 3.4 el adaptador de ASP.NET Core y el adaptador EF Core utilizan un puerto real de repositorio.
+**Requisitos del puesto:** Visual Studio con el componente ASP.NET/web, SDK .NET 8, SQL Server Express LocalDB para ejecutar la API en Windows; los tests HTTP usan SQL Server real con `ACERIA_TEST_SQLSERVER` o Docker y Testcontainers. Conserva `tests/Compartido/SqlServerPruebas.cs`, el enlace `Compile` y `Testcontainers.MsSql` 3.10.0 heredados de M02 2.1.22. La aplicación mantiene los endpoints de M02. En 3.3 aparecen proyectos de Dominio, Aplicación e Infraestructura con referencias físicas comprobables; en 3.4 el adaptador de ASP.NET Core y el adaptador EF Core utilizan un puerto real de repositorio.
 
 **Secuencia de trabajo:** 3.1 capas y regla de dependencia → 3.2 puertos y adaptadores → 3.3 separación física de los proyectos → 3.4 registro de dependencias, repositorio SQL Server, endpoints HTTP y tests. Nunca mezcles el estado final de una etapa futura en el proyecto que estás construyendo.
 
@@ -735,7 +735,7 @@ el documento de capas de la aplicación es el artefacto de `docs` específico de
 1. Abrir el archivo `AceriaApp.sln` de esta carpeta en Visual Studio, con SDK .NET 8.
 2. Ejecutar `dotnet restore AceriaApp.sln` y después `dotnet build AceriaApp.sln -c Release`.
 3. Ejecutar `dotnet test AceriaApp.sln -c Release --no-build`. La suite M03 se construye por adición desde M02.
-4. La aplicación principal utiliza SQL Server Express LocalDB; los tests HTTP conectan proveedores InMemory independientes.
+4. La aplicación principal utiliza SQL Server Express LocalDB; los tests HTTP mantienen SQL Server y crean bases exclusivas independientes mediante `BaseSqlServer.Crear()`.
 5. En 3.4, los endpoints hexagonales reales están en `/api/v1/hexagonal/ordenes` y utilizan un repositorio EF Core a través de un puerto de aplicación.
 
 ## Qué se ha añadido
@@ -1788,7 +1788,7 @@ el documento de puertos y adaptadores es el artefacto de `docs` específico del 
 1. Abrir el archivo `AceriaApp.sln` de esta carpeta en Visual Studio, con SDK .NET 8.
 2. Ejecutar `dotnet restore AceriaApp.sln` y después `dotnet build AceriaApp.sln -c Release`.
 3. Ejecutar `dotnet test AceriaApp.sln -c Release --no-build`. La suite M03 se construye por adición desde M02.
-4. La aplicación principal utiliza SQL Server Express LocalDB; los tests HTTP conectan proveedores InMemory independientes.
+4. La aplicación principal utiliza SQL Server Express LocalDB; los tests HTTP mantienen SQL Server y crean bases exclusivas independientes mediante `BaseSqlServer.Crear()`.
 5. En 3.4, los endpoints hexagonales reales están en `/api/v1/hexagonal/ordenes` y utilizan un repositorio EF Core a través de un puerto de aplicación.
 
 ## Qué se ha añadido
@@ -3008,7 +3008,7 @@ el documento de separación de capas es el artefacto de `docs` específico del p
 1. Abrir el archivo `AceriaApp.sln` de esta carpeta en Visual Studio, con SDK .NET 8.
 2. Ejecutar `dotnet restore AceriaApp.sln` y después `dotnet build AceriaApp.sln -c Release`.
 3. Ejecutar `dotnet test AceriaApp.sln -c Release --no-build`. La suite M03 se construye por adición desde M02.
-4. La aplicación principal utiliza SQL Server Express LocalDB; los tests HTTP conectan proveedores InMemory independientes.
+4. La aplicación principal utiliza SQL Server Express LocalDB; los tests HTTP mantienen SQL Server y crean bases exclusivas independientes mediante `BaseSqlServer.Crear()`.
 5. En 3.4, los endpoints hexagonales reales están en `/api/v1/hexagonal/ordenes` y utilizan un repositorio EF Core a través de un puerto de aplicación.
 
 ## Qué se ha añadido
@@ -3707,7 +3707,7 @@ builder.Services.AddServiciosHexagonales(builder.Configuration);
 1. En `Program.cs`, antes de `app.Run();`, añade el bloque de inicialización del contexto hexagonal mostrado.
 2. Esta inicialización se ejecuta solo en Development y cuando `SkipDatabaseInitialization` no está activo.
 3. Comprueba que `HexagonalDbContext` utiliza su propia conexión de base de datos, separada de la inicialización M02.
-4. Conserva la inicialización de EF Core heredada de M02 y el flujo de tests InMemory; no borres rutas existentes.
+4. Conserva la inicialización de EF Core heredada de M02 y el flujo de tests SQL Server con base exclusiva; no borres rutas existentes.
 
 
 **Archivo que debe quedar tras este paso:** `src/AceriaApp.Api/Program.cs` (modificación; buscar `app.Run();`)
@@ -3813,7 +3813,7 @@ app.MapHexagonalOrdenes();
 1. Abre `src/AceriaApp.Api/appsettings.json` y conserva la conexión existente `AceriaApp` utilizada por la API de M02.
 2. Añade `ConnectionStrings:AceriaHexagonal` con LocalDB en la base `AceriaAppM03Hexagonal` como muestra el JSON completo del bloque.
 3. Valida la sintaxis del JSON, especialmente la doble barra invertida `\` en el nombre `(localdb)\MSSQLLocalDB`.
-4. Arranca en Development y comprueba que los dos contextos trabajan con bases independientes; los tests usan InMemory para ambos.
+4. Arranca en Development y comprueba que los dos contextos trabajan con bases independientes; los tests también usan SQL Server real para ambos, con dos bases exclusivas distintas.
 
 
 **Archivo que debe quedar tras este paso:** `src/AceriaApp.Api/appsettings.json`
@@ -4030,7 +4030,7 @@ public class CatalogoRegistrosTests
 **Procedimiento guiado.**
 
 1. En `tests/AceriaApp.Api.Tests` crea `HexagonalFactory.cs` y `HexagonalHttpTests.cs` con los dos fragmentos de código.
-2. La factoría sustituye los dos DbContext SQL Server por proveedores InMemory independientes, únicamente durante los tests.
+2. La factoría conserva SQL Server en los dos DbContext y asigna una base exclusiva a cada contexto. `CreateHost` crea ambos esquemas con `EnsureCreated`; la limpieza elimina únicamente esas dos bases.
 3. Ejecuta las cuatro pruebas HTTP: GET vacía, creación y consulta, errores 400/422, y finalización repetida 200/409.
 4. Comprueba que las pruebas de los catálogos siguen pasando junto a los tests nuevos: la validación ya no es solo nominal.
 
@@ -4041,18 +4041,26 @@ public class CatalogoRegistrosTests
 ```csharp
 using AceriaApp.Api.Datos;
 using AceriaApp.Hexagonal.Infraestructura.Datos;
+using AceriaApp.PruebasSqlServer;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 
 namespace AceriaApp.Api.Tests;
 
 public sealed class HexagonalFactory : WebApplicationFactory<Program>
 {
-    private readonly string _db = "hex-test-" + Guid.NewGuid();
+    private readonly BaseSqlServer _legacy = BaseSqlServer.Crear();
+    private readonly BaseSqlServer _hexagonal;
+    public HexagonalFactory()
+    {
+        try { _hexagonal = BaseSqlServer.Crear(); }
+        catch { _legacy.Dispose(); throw; }
+    }
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development");
@@ -4060,10 +4068,40 @@ public sealed class HexagonalFactory : WebApplicationFactory<Program>
         builder.ConfigureTestServices(services =>
         {
             services.RemoveAll<DbContextOptions<AceriaDbContext>>();
-            services.AddDbContext<AceriaDbContext>(o => o.UseInMemoryDatabase(_db + "-legacy"));
+            services.AddDbContext<AceriaDbContext>(o => o.UseSqlServer(_legacy.ConnectionString));
             services.RemoveAll<DbContextOptions<HexagonalDbContext>>();
-            services.AddDbContext<HexagonalDbContext>(o => o.UseInMemoryDatabase(_db + "-hex"));
+            services.AddDbContext<HexagonalDbContext>(o => o.UseSqlServer(_hexagonal.ConnectionString));
         });
+    }
+    protected override IHost CreateHost(IHostBuilder builder)
+    {
+        var host = base.CreateHost(builder);
+        using var scope = host.Services.CreateScope();
+        // Cada modelo crea sus tablas en una base distinta del mismo motor SQL Server.
+        scope.ServiceProvider.GetRequiredService<AceriaDbContext>().Database.EnsureCreated();
+        scope.ServiceProvider.GetRequiredService<HexagonalDbContext>().Database.EnsureCreated();
+        return host;
+    }
+    protected override void Dispose(bool disposing)
+    {
+        try { base.Dispose(disposing); }
+        finally
+        {
+            if (disposing)
+            {
+                try { _hexagonal.Dispose(); }
+                finally { _legacy.Dispose(); }
+            }
+        }
+    }
+    public override async ValueTask DisposeAsync()
+    {
+        try { await base.DisposeAsync(); }
+        finally
+        {
+            try { await _hexagonal.DisposeAsync(); }
+            finally { await _legacy.DisposeAsync(); }
+        }
     }
 }
 ```
@@ -4075,6 +4113,10 @@ public sealed class HexagonalFactory : WebApplicationFactory<Program>
 using System.Net;
 using System.Net.Http.Json;
 using AceriaApp.Api.Hexagonal;
+using AceriaApp.Api.Datos;
+using AceriaApp.Hexagonal.Infraestructura.Datos;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace AceriaApp.Api.Tests;
@@ -4094,6 +4136,12 @@ public class HexagonalHttpTests
     {
         using var factory = new HexagonalFactory();
         var client = factory.CreateClient();
+        using var scope = factory.Services.CreateScope();
+        var legacy = scope.ServiceProvider.GetRequiredService<AceriaDbContext>();
+        var hexagonal = scope.ServiceProvider.GetRequiredService<HexagonalDbContext>();
+        Assert.Equal("Microsoft.EntityFrameworkCore.SqlServer", legacy.Database.ProviderName);
+        Assert.Equal("Microsoft.EntityFrameworkCore.SqlServer", hexagonal.Database.ProviderName);
+        Assert.NotEqual(legacy.Database.GetDbConnection().Database, hexagonal.Database.GetDbConnection().Database);
         var created = await client.PostAsJsonAsync("/api/v1/hexagonal/ordenes",
             new CrearOrdenHexagonalRequest("ACX-001", "CHAPA", 10));
         Assert.Equal(HttpStatusCode.Created, created.StatusCode);
@@ -4134,9 +4182,11 @@ public class HexagonalHttpTests
 }
 ```
 
+**Lectura del aislamiento.** `_legacy` y `_hexagonal` llaman por separado a `BaseSqlServer.Crear()`: sus GUID impiden compartir tablas aunque los contextos se ejecuten en el mismo servidor. `SkipDatabaseInitialization` evita tocar las bases habituales de la aplicación. La factoría inicializa expresamente ambos esquemas tras crear el host y cierra el host antes de eliminar las dos bases. La prueba `Post_CreaYGetConsultaPorPuerto` verifica `ProviderName` en ambos contextos y que los nombres de base son distintos antes de recorrer POST → GET por el puerto de aplicación. El helper, el paquete de Testcontainers y su enlace `Compile` ya existen desde M02 2.1.22; no crees una segunda copia del helper dentro del proyecto xUnit.
+
 **Por qué funciona así.** ejecutar los tests del punto 3.4 verifica que las clases de implementación funcionan correctamente.
 
-**Verificación concreta.** Las cuatro pruebas HTTP hexagonales superan GET, POST→GET, 400/422 y finalizar 200/409 usando InMemory.
+**Verificación concreta.** Las cuatro pruebas HTTP hexagonales superan GET, POST→GET, 400/422 y finalizar 200/409 usando SQL Server real con bases separadas y comprobaciones del proveedor.
 
 **Diagnóstico si falla.**
 
@@ -4206,7 +4256,7 @@ el documento de implementación en ASP.NET Core es el artefacto de `docs` espec�
 1. Abrir el archivo `AceriaApp.sln` de esta carpeta en Visual Studio, con SDK .NET 8.
 2. Ejecutar `dotnet restore AceriaApp.sln` y después `dotnet build AceriaApp.sln -c Release`.
 3. Ejecutar `dotnet test AceriaApp.sln -c Release --no-build`. La suite M03 se construye por adición desde M02.
-4. La aplicación principal utiliza SQL Server Express LocalDB; los tests HTTP conectan proveedores InMemory independientes.
+4. La aplicación principal utiliza SQL Server Express LocalDB; los tests HTTP mantienen SQL Server y crean bases exclusivas independientes mediante `BaseSqlServer.Crear()`.
 5. En 3.4, los endpoints hexagonales reales están en `/api/v1/hexagonal/ordenes` y utilizan un repositorio EF Core a través de un puerto de aplicación.
 
 ## Qué se ha añadido

@@ -1,0 +1,161 @@
+name: SQL Server real - cierre M02 a M05
+on:
+  push:
+    branches: [main, 'correccion/sqlserver-*']
+    paths:
+      - 'M02_APIS_REST_ASPNET_CORE/**'
+      - 'M03_ARQUITECTURA_HEXAGONAL/**'
+      - 'M04_PATRONES_ARQUITECTURA/**'
+      - 'M05_DDD_CQRS/**'
+      - '.github/scripts/**'
+      - '.github/tests/**'
+      - '.github/workflows/sqlserver-modulos.yml'
+      - 'tools/SqlServerValidationHost/**'
+  workflow_dispatch:
+  workflow_call:
+permissions:
+  contents: write
+concurrency:
+  group: sqlserver-curso-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  sqlserver:
+    name: SQL Server Express - M0${{ matrix.modulo }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        modulo: [2, 3, 4, 5]
+    env:
+      DOTNET_PROCESSOR_COUNT: '1'
+      DOTNET_CLI_UI_LANGUAGE: en
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Comprobar que el cierre rechaza evidencia incompleta
+        run: python -m unittest discover -s .github/tests
+      - name: Reconstruir las prácticas y probar contra SQL Server Express real
+        run: dotnet run --project tools/SqlServerValidationHost -c Release -- python .github/scripts/validar_sqlserver.py --modulo ${{ matrix.modulo }}
+      - name: Empaquetar proyectos y evidencia verificados
+        run: python .github/scripts/empaquetar_validacion.py --tipo sql --modulo ${{ matrix.modulo }}
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: sqlserver-m0${{ matrix.modulo }}
+          path: .qa/empaquetados/*.tar.gz
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: diagnostico-sqlserver-m0${{ matrix.modulo }}
+          path: |
+            docs/validacion-sqlserver/*RESULTADOS.json
+            M0*/M0*_E2E_RESULTADOS.json
+            .qa/sqlserver/**
+  windows:
+    name: Windows LocalDB HTTP - M0${{ matrix.modulo }}
+    runs-on: windows-2022
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        modulo: [2, 3, 4, 5]
+    steps:
+      - name: Habilitar rutas largas
+        run: git config --global core.longpaths true
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Exigir LocalDB funcional
+        shell: pwsh
+        run: |
+          $exe = Get-Command sqllocaldb.exe -ErrorAction SilentlyContinue
+          if (-not $exe) {
+            $found = Get-ChildItem 'C:\Program Files\Microsoft SQL Server' -Filter sqllocaldb.exe -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+            if (-not $found) { throw 'SQL Server Express LocalDB no esta instalado' }
+            $env:PATH = "$($found.DirectoryName);$env:PATH"
+            $found.DirectoryName | Out-File -FilePath $env:GITHUB_PATH -Append
+          }
+          sqllocaldb info MSSQLLocalDB
+          if ($LASTEXITCODE -ne 0) { sqllocaldb create MSSQLLocalDB }
+          sqllocaldb start MSSQLLocalDB
+          if ($LASTEXITCODE -ne 0) { throw 'No se pudo iniciar LocalDB' }
+      - name: Arrancar la API, escribir, reiniciar y recuperar datos
+        run: python .github/scripts/comprobar_localdb_http.py --modulo ${{ matrix.modulo }}
+      - name: Empaquetar evidencia Windows
+        run: python .github/scripts/empaquetar_validacion.py --tipo windows --modulo ${{ matrix.modulo }}
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: localdb-m0${{ matrix.modulo }}
+          path: .qa/empaquetados/*.tar.gz
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: diagnostico-localdb-m0${{ matrix.modulo }}
+          path: |
+            docs/validacion-sqlserver/*LOCALDB_RESULTADOS.json
+            .qa/localdb/**
+  documentos:
+    name: PDF - teoria y practicas M02 a M05
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install markdown weasyprint pymupdf cairosvg beautifulsoup4
+      - run: python .github/scripts/generar_pdf_sqlserver.py
+      - run: python .github/scripts/empaquetar_validacion.py --tipo pdf
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pdf-m02-m05
+          path: .qa/empaquetados/*.tar.gz
+  cierre:
+    name: Publicar solo con todas las comprobaciones correctas
+    needs: [sqlserver, windows, documentos]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/download-artifact@v4
+        with:
+          path: .qa/artefactos
+          merge-multiple: true
+      - name: Exigir que la rama conserve la revision comprobada
+        run: test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+      - name: Recuperar artefactos verificados
+        run: |
+          python - <<'PY'
+          import tarfile
+          from pathlib import Path
+          files=list(Path('.qa/artefactos').glob('*.tar.gz'))
+          assert len(files)==9, f'Faltan artefactos: {len(files)}/9'
+          for file in files:
+              with tarfile.open(file) as tar: tar.extractall('.', filter='data')
+          PY
+      - name: Comprobar coherencia final y redactar cierre
+        run: python .github/scripts/cerrar_validacion_sqlserver.py
+      - name: Guardar proyectos, PDF e informes con todas las comprobaciones correctas
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add M02_APIS_REST_ASPNET_CORE M03_ARQUITECTURA_HEXAGONAL M04_PATRONES_ARQUITECTURA M05_DDD_CQRS docs/validacion-sqlserver
+          if ! git diff --cached --quiet; then
+            git commit -m 'docs: cerrar validacion SQL Server M02-M05 con evidencia y PDF sincronizados'
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi

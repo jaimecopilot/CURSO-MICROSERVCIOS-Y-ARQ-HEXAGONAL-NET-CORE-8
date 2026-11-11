@@ -1,0 +1,11 @@
+  Determining projects to restore...
+  Restored /workspace/scratch/83e6f215d657/curso/M02_APIS_REST_ASPNET_CORE/PROYECTO/2.1-diseno-apis-rest/tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj (in 385 ms).
+  1 of 2 projects are up-to-date for restore.
+  AceriaApp.Api -> /workspace/scratch/83e6f215d657/curso/M02_APIS_REST_ASPNET_CORE/PROYECTO/2.1-diseno-apis-rest/src/AceriaApp.Api/bin/Release/net8.0/AceriaApp.Api.dll
+  AceriaApp.Api.Tests -> /workspace/scratch/83e6f215d657/curso/M02_APIS_REST_ASPNET_CORE/PROYECTO/2.1-diseno-apis-rest/tests/AceriaApp.Api.Tests/bin/Release/net8.0/AceriaApp.Api.Tests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.48

@@ -136,6 +136,28 @@ def build_and_test(stage,expected):
  check(total==expected,f'Esperadas {expected} pruebas; ejecutadas {total}')
  return {'tests':total,'test_projects':len(results),'proyectos':results,'compilacion':'PASS','build_tail':build[-300:]}
 
+def verify_sql_server(stage):
+ helper=stage/'tests/Compartido/SqlServerPruebas.cs'
+ check(helper.is_file(),'Falta el helper SQL Server heredado de la etapa anterior')
+ forbidden=re.compile(r'\bUse(?:Sqlite|InMemoryDatabase)\s*\(|Microsoft\.EntityFrameworkCore\.(?:Sqlite|InMemory)|Microsoft\.Data\.Sqlite')
+ for path in stage.rglob('*'):
+  if path.suffix in ('.cs','.csproj') and not any(part in IGNORED for part in path.parts):
+   check(not forbidden.search(path.read_text(encoding='utf-8')),f'Proveedor de integración no permitido: {path}')
+ relational=[]
+ for project in projects(stage):
+  if 'tests' not in project.relative_to(stage).parts:continue
+  xml=ET.parse(project);includes=[element.get('Include','') for element in xml.findall('.//Compile')]
+  files=list(project.parent.glob('*.cs'))+[project.parent/include for include in includes]
+  uses_database=any(path.is_file() and ('BaseSqlServer.Crear()' in path.read_text(encoding='utf-8'))
+                    for path in files if path.name!='SqlServerPruebas.cs')
+  if not uses_database:continue
+  check('../Compartido/SqlServerPruebas.cs' in includes,f'Falta vincular el helper SQL Server: {project}')
+  packages={element.get('Include'):element.get('Version') for element in xml.findall('.//PackageReference')}
+  check(packages.get('Testcontainers.MsSql')=='3.10.0',f'Falta Testcontainers.MsSql 3.10.0: {project}')
+  relational.append(str(project.relative_to(stage)))
+ check(relational,'No se han encontrado proyectos de integración SQL Server')
+ return relational
+
 def verify_architecture(stage,number):
  app=stage/'src/AceriaApp.Hexagonal.Aplicacion/AceriaApp.Hexagonal.Aplicacion.csproj'
  domain=stage/'src/AceriaApp.Hexagonal.Dominio/AceriaApp.Hexagonal.Dominio.csproj'
@@ -206,13 +228,14 @@ def main():
         'resultado':'codigo_aplicado_y_verificado' if batch and not args.no_tests else 'codigo_aplicado' if batch else 'guia_manual_no_simulada'})
    total_projects=ensure_solution(stage)
    check(total_projects==9+i,f'Etapa {slug}: se esperaban {9+i} proyectos')
-   verify_architecture(stage,i);inherited=compare_inherited(previous,stage)
+   verify_architecture(stage,i);sql_projects=verify_sql_server(stage);inherited=compare_inherited(previous,stage)
    check(manifest(previous)==previous_manifest,'La etapa anterior se ha alterado')
    outcome=build_and_test(stage,EXPECTED[i-1]) if not args.no_tests else {'tests':None,'test_projects':None,'proyectos':[]}
    check(args.no_tests or outcome['test_projects']==5+i,'Falta un proyecto de tests en la solución')
    current_manifest=manifest(stage)
    report['etapas'].append({'punto':f'4.{i}','carpeta':slug,'pasos':24,'operaciones_codigo':actions,
        'n_proyectos':total_projects,'documentos_heredados_identicos':inherited,
+       'proveedor_configurado':'Microsoft.EntityFrameworkCore.SqlServer','proyectos_sql_server':sql_projects,
        'builds_intermedios':len(builds),'compilaciones':builds,'tests_acumulados':outcome['tests'],
        'tests_catalogo_nuevos':CATALOG_TESTS[i-1],'tests_funcionales_nuevos':FUNCTIONAL_TESTS[i-1],
        'expected':EXPECTED[i-1],'tests_proyectos':outcome['proyectos'],

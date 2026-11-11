@@ -2,7 +2,7 @@ using AceriaApp.Hexagonal.Aplicacion.Patrones;
 using AceriaApp.Hexagonal.Infraestructura.Datos;
 using AceriaApp.Hexagonal.Infraestructura.Patrones;
 using MediatR;
-using Microsoft.Data.Sqlite;
+using AceriaApp.PruebasSqlServer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -50,18 +50,18 @@ public sealed class MediatorFuncionalesTests
         Assert.Empty(await db.Ordenes.ToListAsync());
     }
 
-    private sealed class Entorno(SqliteConnection cn, ServiceProvider services, RegistroLogs logs) : IAsyncDisposable
+    private sealed class Entorno(BaseSqlServer store, ServiceProvider services, RegistroLogs logs) : IAsyncDisposable
     {
         public ServiceProvider Services => services;
         public RegistroLogs Logs => logs;
-        public HexagonalDbContext Contexto() => new(new DbContextOptionsBuilder<HexagonalDbContext>().UseSqlite(cn).Options);
+        public HexagonalDbContext Contexto() => new(new DbContextOptionsBuilder<HexagonalDbContext>().UseSqlServer(store.ConnectionString).Options);
         public static async Task<Entorno> CrearAsync()
         {
-            var cn = new SqliteConnection("Data Source=:memory:"); await cn.OpenAsync();
+            var store = BaseSqlServer.Crear();
             var logs = new RegistroLogs();
             var services = new ServiceCollection();
             services.AddLogging(builder => builder.AddProvider(logs));
-            services.AddDbContext<HexagonalDbContext>(o => o.UseSqlite(cn));
+            services.AddDbContext<HexagonalDbContext>(o => o.UseSqlServer(store.ConnectionString));
             services.AddScoped<IOrdenTrabajoRepositorio, OrdenTrabajoRepositorio>();
             services.AddScoped<IUnitOfWork, EfUnitOfWork>();
             services.AddScoped<OrdenesTransaccionales>();
@@ -70,11 +70,17 @@ public sealed class MediatorFuncionalesTests
                 cfg.Lifetime = ServiceLifetime.Scoped;
                 cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
             });
-            var fixture = new Entorno(cn, services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true }), logs);
-            await using var db = fixture.Contexto(); await db.Database.EnsureCreatedAsync();
+            var fixture = new Entorno(store, services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true }), logs);
+            try
+            {
+                await using var db = fixture.Contexto();
+                Assert.Equal("Microsoft.EntityFrameworkCore.SqlServer", db.Database.ProviderName);
+                await db.Database.EnsureCreatedAsync();
+            }
+            catch { await fixture.DisposeAsync(); throw; }
             return fixture;
         }
-        public async ValueTask DisposeAsync() { await services.DisposeAsync(); await cn.DisposeAsync(); }
+        public async ValueTask DisposeAsync() { await services.DisposeAsync(); await store.DisposeAsync(); }
     }
 
     private sealed class RegistroLogs : ILoggerProvider

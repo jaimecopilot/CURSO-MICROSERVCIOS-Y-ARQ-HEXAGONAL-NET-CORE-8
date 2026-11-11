@@ -7,8 +7,9 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
     <ProjectReference Include="../../src/AceriaApp.Api/AceriaApp.Api.csproj" />
     <ProjectReference Include="../../src/AceriaApp.Produccion.Dominio/AceriaApp.Produccion.Dominio.csproj" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.21" />
+    <PackageReference Include="Testcontainers.MsSql" Version="3.10.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.21" />
     <Compile Include="../Compartido/ProduccionApiFactory.cs" Link="ProduccionApiFactory.cs" />
+    <Compile Include="../Compartido/SqlServerPruebas.cs" Link="SqlServerPruebas.cs" />
   </ItemGroup>
 </Project>

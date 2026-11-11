@@ -1,0 +1,11 @@
+  Determining projects to restore...
+  Restored /workspace/scratch/83e6f215d657/curso/M03_ARQUITECTURA_HEXAGONAL/PROYECTO/3.1-capas-aplicacion/src/AceriaApp.Api/AceriaApp.Api.csproj (in 438 ms).
+  Restored /workspace/scratch/83e6f215d657/curso/M03_ARQUITECTURA_HEXAGONAL/PROYECTO/3.1-capas-aplicacion/tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj (in 438 ms).
+  AceriaApp.Api -> /workspace/scratch/83e6f215d657/curso/M03_ARQUITECTURA_HEXAGONAL/PROYECTO/3.1-capas-aplicacion/src/AceriaApp.Api/bin/Release/net8.0/AceriaApp.Api.dll
+  AceriaApp.Api.Tests -> /workspace/scratch/83e6f215d657/curso/M03_ARQUITECTURA_HEXAGONAL/PROYECTO/3.1-capas-aplicacion/tests/AceriaApp.Api.Tests/bin/Release/net8.0/AceriaApp.Api.Tests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.65

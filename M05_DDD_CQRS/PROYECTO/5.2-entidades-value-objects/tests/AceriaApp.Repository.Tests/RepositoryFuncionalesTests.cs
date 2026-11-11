@@ -3,7 +3,7 @@ using AceriaApp.Hexagonal.Aplicacion.Puertos;
 using AceriaApp.Hexagonal.Dominio;
 using AceriaApp.Hexagonal.Infraestructura.Adaptadores;
 using AceriaApp.Hexagonal.Infraestructura.Datos;
-using Microsoft.Data.Sqlite;
+using AceriaApp.PruebasSqlServer;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 
@@ -34,12 +34,12 @@ public sealed class RepositoryFuncionalesTests
     [Fact]
     public async Task Adaptador_relacional_cumple_contrato_crear_y_recuperar_en_otro_contexto()
     {
-        await using var cn = new SqliteConnection("Data Source=:memory:");
-        await cn.OpenAsync();
-        var options = new DbContextOptionsBuilder<HexagonalDbContext>().UseSqlite(cn).Options;
+        await using var store = BaseSqlServer.Crear();
+        var options = new DbContextOptionsBuilder<HexagonalDbContext>().UseSqlServer(store.ConnectionString).Options;
         var orden = new OrdenHexagonal("Axia", "Acero", 20);
         await using (var db = new HexagonalDbContext(options))
         {
+            Assert.Equal("Microsoft.EntityFrameworkCore.SqlServer", db.Database.ProviderName);
             await db.Database.EnsureCreatedAsync();
             await new OrdenRepositorioSqlServer(db).AgregarAsync(orden);
         }
@@ -54,12 +54,12 @@ public sealed class RepositoryFuncionalesTests
     [Fact]
     public async Task Adaptador_persiste_la_transicion_de_dominio()
     {
-        await using var cn = new SqliteConnection("Data Source=:memory:");
-        await cn.OpenAsync();
-        var options = new DbContextOptionsBuilder<HexagonalDbContext>().UseSqlite(cn).Options;
+        await using var store = BaseSqlServer.Crear();
+        var options = new DbContextOptionsBuilder<HexagonalDbContext>().UseSqlServer(store.ConnectionString).Options;
         Guid id;
         await using (var db = new HexagonalDbContext(options))
         {
+            Assert.Equal("Microsoft.EntityFrameworkCore.SqlServer", db.Database.ProviderName);
             await db.Database.EnsureCreatedAsync();
             var caso = new OrdenesCasoUso(new OrdenRepositorioSqlServer(db));
             id = (await caso.CrearAsync("Axia", "Acero", 20)).Id;

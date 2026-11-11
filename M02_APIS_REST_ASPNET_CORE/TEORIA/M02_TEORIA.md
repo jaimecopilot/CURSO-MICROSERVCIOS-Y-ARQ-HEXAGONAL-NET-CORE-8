@@ -221,7 +221,7 @@ Las cinco reglas se aplican de forma uniforme en toda la API. La uniformidad es 
 
 #### Del concepto a ASP.NET Core 8: Persistencia mediante EF Core
 
-El contexto contiene DbSet<Orden> y las restricciones de las columnas. La API se ejecuta sobre SQL Server Express LocalDB en el ordenador del alumno. Registrar AddDbContext permite que los endpoints reciban el contexto mediante inyección de dependencias: no hay que crear el contexto con new dentro de cada manejador. En tests se sustituye solamente el proveedor por InMemory para evitar depender de Windows.
+El contexto contiene DbSet<Orden> y las restricciones de las columnas. La API se ejecuta sobre SQL Server Express LocalDB en el ordenador del alumno. Registrar AddDbContext permite que los endpoints reciban el contexto mediante inyección de dependencias: no hay que crear el contexto con new dentro de cada manejador. Los tests conservan el proveedor SQL Server y cambian la conexión por la de una base aislada. El motor puede ser una instancia LocalDB configurada para pruebas o SQL Server en un contenedor administrado por Testcontainers. El estudio integrador de este punto explica ese recorrido.
 
 **Aplicación en el proyecto real.** Este comportamiento está materializado en `Datos/AceriaDbContext.cs` del estado `2.1-diseno-apis-rest`. Busca la instrucción `AceriaDbContext` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
 
@@ -407,6 +407,107 @@ La plantilla {id:guid} restringe el parámetro de ruta a GUID válidos. El manej
 **Aplicación en el proyecto real.** Este comportamiento está materializado en `Program.cs` del estado `2.1-diseno-apis-rest`. Busca la instrucción `ObtenerOrdenPorId` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
 
 **Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
+
+### Estudio integrador 2.1 — Probar HTTP y persistencia con SQL Server real
+
+#### Por qué el proveedor forma parte del comportamiento
+
+Una prueba que envía un POST y después recupera una orden mediante GET atraviesa varias piezas: enrutamiento, deserialización JSON, validación, contexto de EF Core y almacenamiento. Si cambia la pieza de almacenamiento, también puede cambiar lo que demuestra el resultado. En este curso la API usa `Microsoft.EntityFrameworkCore.SqlServer`; sus pruebas de integración conservan ese proveedor y ejecutan el SQL contra un motor SQL Server real.
+
+EF Core InMemory guarda datos sin ser un motor relacional. SQLite sí es relacional, pero tiene su propio dialecto, tipos y reglas de ejecución. Ninguno demuestra por sí solo que una consulta o restricción funcionará igual en SQL Server. Los dobles siguen siendo útiles para comprobar una regla de dominio o la coordinación de un caso de uso. La pregunta «¿se guardan y recuperan correctamente estos datos con nuestro proveedor?» necesita una prueba que llegue al motor elegido. [Microsoft explica estas diferencias al comparar estrategias de prueba de EF Core](https://learn.microsoft.com/ef/core/testing/choosing-a-testing-strategy).
+
+#### Cuatro conceptos de Docker sin cambiar la aplicación del alumno
+
+**Docker** permite ejecutar procesos en entornos aislados y gestionar sus archivos, red y ciclo de vida. **Una imagen** contiene el programa y los archivos necesarios para arrancarlo. **Un contenedor** es una instancia en ejecución creada a partir de esa imagen. **Un puerto publicado** enlaza un puerto accesible desde el proceso de pruebas con el puerto donde escucha el servidor dentro del contenedor. La imagen es el paquete; el contenedor ejecuta el programa.
+
+![Imagen, contenedor y conexión al SQL Server real de pruebas](IMAGENES/2-1-sqlserver-docker.svg)
+
+*Interpretación del gráfico:* La fila superior explica cómo aparece el servidor. La inferior muestra por dónde llega EF Core hasta él. El contenedor ejecuta SQL Server; Testcontainers no convierte SQL Server en una simulación. La figura también está disponible en PNG en la misma carpeta.
+
+Para el curso se fija la imagen `mcr.microsoft.com/mssql/server:2022-CU14-ubuntu-22.04` y la variable `MSSQL_PID=Express`. La etiqueta identifica la versión utilizada por el laboratorio; no significa «la versión más reciente». La edición Express se configura dentro del contenedor. LocalDB es otra forma de ejecutar SQL Server Express, orientada al desarrollo en Windows: no es el programa que arranca dentro de esta imagen Linux.
+
+La aplicación que el alumno abre en Visual Studio continúa utilizando LocalDB. Las pruebas pueden iniciar el contenedor con Docker Desktop en modo de contenedores Linux. Esta separación evita tener que modificar la conexión cotidiana de la API. El objetivo aquí es disponer de una dependencia real y desechable para probar persistencia, no empaquetar ni desplegar la API en Docker.
+
+#### Qué automatiza Testcontainers y qué escribe el test
+
+`Testcontainers.MsSql` es una biblioteca de .NET. Habla con Docker, prepara un contenedor de SQL Server, espera a que esté disponible y permite obtener su cadena de conexión. La versión fijada en el proyecto es **3.10.0**. El helper de pruebas `BaseSqlServer` encapsula esa preparación y el aislamiento de las bases. Conviene distinguirlo del `DbContext`: el helper consigue un destino de pruebas; el contexto mapea entidades y consulta ese destino.
+
+Este fragmento explicativo resume la rama Docker del helper. Su código completo y su limpieza se construyen en las prácticas; no es un archivo adicional que deba copiarse sobre ellas.
+
+```csharp
+var contenedor = new MsSqlBuilder()
+    .WithImage("mcr.microsoft.com/mssql/server:2022-CU14-ubuntu-22.04")
+    .WithEnvironment("MSSQL_PID", "Express")
+    .Build();
+await contenedor.StartAsync();
+var cadenaServidor = contenedor.GetConnectionString();
+```
+
+- **Línea 1:** `MsSqlBuilder` prepara la configuración de un contenedor SQL Server. Todavía no hay un servidor ejecutándose.
+- **Línea 2:** `WithImage` fija la imagen del laboratorio. Así, una ejecución posterior no adopta otra etiqueta por usar `latest`.
+- **Línea 3:** `MSSQL_PID` selecciona la edición Express del motor.
+- **Línea 4:** `Build` crea el objeto con el que se gestionará el contenedor; no equivale a arrancarlo.
+- **Línea 5:** `StartAsync` inicia el recurso y espera su disponibilidad. Si no hay un Docker utilizable o el motor no arranca, la preparación debe fallar.
+- **Línea 6:** `GetConnectionString` devuelve la dirección, el puerto publicado y las credenciales del servidor de pruebas. El test no debe inventar una conexión fija a `localhost,1433`.
+
+El puerto **1433** pertenece al servidor dentro del contenedor. Docker puede publicarlo en otro puerto libre del host. Dos ejecuciones no tienen que competir por un único puerto del ordenador. El alumno usa la cadena devuelta por el helper; modificar el puerto a mano rompe esa separación. [La documentación de Testcontainers detalla cómo obtener las direcciones y puertos asignados](https://dotnet.testcontainers.org/api/create_docker_network/).
+
+#### La variable de entorno es una alternativa de servidor
+
+`BaseSqlServer.Crear()` consulta `ACERIA_TEST_SQLSERVER`. Si existe, la interpreta como una conexión a `master` en un SQL Server disponible. Si no existe, usa Testcontainers. En ambos caminos crea una base de datos con nombre único basado en GUID y entrega la cadena de esa base mediante `ConnectionString`. La cuenta de pruebas necesita permisos para crear y eliminar sus bases aisladas. El helper no debe apuntar a una base de trabajo del alumno para vaciarla.
+
+![Selección del servidor y aislamiento por base de datos de prueba](IMAGENES/2-1-sqlserver-aislamiento.svg)
+
+*Interpretación del gráfico:* Se puede compartir el proceso servidor sin compartir las filas de cada caso. La variable de entorno cambia cómo se obtiene el servidor; el contrato de aislamiento de `BaseSqlServer` permanece.
+
+En PowerShell, esta alternativa usa la instancia LocalDB instalada en Windows:
+
+```powershell
+$env:ACERIA_TEST_SQLSERVER = 'Server=(localdb)\MSSQLLocalDB;Database=master;Trusted_Connection=True;TrustServerCertificate=True'
+dotnet test
+Remove-Item Env:ACERIA_TEST_SQLSERVER
+```
+
+- **Línea 1:** Define la conexión del servidor de pruebas en la sesión actual. `master` es el punto de entrada administrativo; los datos del caso se guardarán en otra base con nombre único.
+- **Línea 2:** Ejecuta las pruebas de la solución situada en el directorio actual. La factoría utiliza la base aislada creada por el helper.
+- **Línea 3:** Elimina la variable de esa sesión. La siguiente ejecución vuelve a la rama Docker si no recibe otra configuración.
+
+`TrustServerCertificate=True` corresponde aquí a una conexión de laboratorio. No describe por sí sola una política de certificados para producción. La alternativa LocalDB permite ejecutar estas pruebas en Windows sin arrancar Docker, pero sigue requiriendo un motor SQL Server operativo. Una configuración inválida, un servicio detenido o una descarga fallida no se transforman en pruebas omitidas ni activan InMemory como sustituto.
+
+#### Recorrido de una prueba desde la factoría hasta la limpieza
+
+La factoría hereda de `WebApplicationFactory<Program>`. Construye un host de ASP.NET Core para enviar solicitudes mediante `HttpClient`; no necesita abrir el navegador. Al configurar servicios reemplaza la conexión del contexto. El esquema se crea sobre la base de pruebas una vez aplicada esa configuración, nunca sobre la base local de la aplicación por accidente.
+
+```csharp
+private readonly BaseSqlServer _base = BaseSqlServer.Crear();
+services.AddDbContext<AceriaDbContext>(options =>
+    options.UseSqlServer(_base.ConnectionString));
+```
+
+- **Línea 1:** Reserva una base aislada mediante el helper del namespace `AceriaApp.PruebasSqlServer`. Su duración queda vinculada a la factoría.
+- **Línea 2:** Registra el contexto que recibirán los endpoints mediante inyección de dependencias. En la factoría se retira antes el registro de opciones que traía la aplicación.
+- **Línea 3:** Mantiene el proveedor `UseSqlServer` y cambia únicamente la conexión. El test ejercita traducción SQL, restricciones y persistencia del motor utilizado por el curso.
+
+| Momento | Qué sucede | Qué permite comprobar |
+|---|---|---|
+| Preparar | Obtener servidor y crear base con GUID | El caso empieza sin filas de otras pruebas. |
+| Componer | Configurar `UseSqlServer` y crear esquema | Los endpoints reciben el contexto correcto. |
+| Actuar | Enviar POST con datos válidos | La ruta y la escritura se ejecutan de extremo a extremo. |
+| Observar | Enviar GET o abrir otro contexto | El resultado procede de datos persistidos y no solo del objeto recién creado. |
+| Terminar | Liberar cliente, host y contextos; eliminar base | El siguiente caso no hereda datos ni conexiones del anterior. |
+
+El aislamiento tiene un coste: arrancar SQL Server tarda más que crear una lista en memoria. La primera ejecución también puede descargar la imagen. Ese tiempo compra una comprobación distinta y necesaria. Una prueba del dominio que no usa persistencia puede seguir ejecutándose sin SQL; una prueba de integración que lo necesita debe demostrarlo con SQL disponible. Un resultado satisfactorio verifica los escenarios ejecutados, no certifica por sí solo carga, alta disponibilidad ni todas las diferencias entre versiones del servidor.
+
+**Comprobación de comprensión.** Antes de continuar con los verbos HTTP, explica con tus palabras por qué imagen, contenedor y base de datos no son sinónimos; señala dónde cambia la conexión del test; y describe qué dato nuevo debería observar un GET después de un POST. Esa explicación enlaza el contrato REST con la persistencia que lo sostiene.
+
+#### Documentación de consulta de este estudio
+
+- [Imágenes de contenedor](https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-an-image/) y [publicación de puertos](https://docs.docker.com/get-started/docker-concepts/running-containers/publishing-ports/): paquete, proceso y acceso desde el host.
+- [Módulo SQL Server de Testcontainers](https://dotnet.testcontainers.org/modules/mssql/): configuración y ciclo de vida. Contrasta los ejemplos actuales con la versión 3.10.0 fijada en el curso.
+- [Variables de SQL Server en Linux](https://learn.microsoft.com/sql/linux/sql-server-linux-configure-environment-variables?view=sql-server-ver16): significado de `MSSQL_PID`.
+- [SQL Server Express LocalDB](https://learn.microsoft.com/sql/database-engine/configure-windows/sql-server-express-localdb?view=sql-server-ver16): entorno de desarrollo local en Windows.
+
+---
 
 ## Punto 2.2 — Recursos, verbos HTTP y códigos de respuesta
 

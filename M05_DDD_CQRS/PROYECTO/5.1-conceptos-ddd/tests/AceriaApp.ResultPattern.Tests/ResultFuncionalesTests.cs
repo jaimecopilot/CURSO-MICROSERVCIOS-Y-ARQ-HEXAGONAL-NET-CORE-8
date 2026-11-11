@@ -6,7 +6,7 @@ using AceriaApp.Hexagonal.Infraestructura.Datos;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
-using Microsoft.Data.Sqlite;
+using AceriaApp.PruebasSqlServer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -97,22 +97,26 @@ public sealed class ResultFuncionalesTests
 
     private sealed class PatronesFactory : WebApplicationFactory<Program>
     {
-        private readonly SqliteConnection conexion = new("Data Source=:memory:");
+        private readonly BaseSqlServer store = BaseSqlServer.Crear();
         public PatronesFactory()
         {
-            conexion.Open();
-            using var db = new HexagonalDbContext(new DbContextOptionsBuilder<HexagonalDbContext>().UseSqlite(conexion).Options);
-            db.Database.EnsureCreated();
+            try
+            {
+                using var db = new HexagonalDbContext(new DbContextOptionsBuilder<HexagonalDbContext>().UseSqlServer(store.ConnectionString).Options);
+                Assert.Equal("Microsoft.EntityFrameworkCore.SqlServer", db.Database.ProviderName);
+                db.Database.EnsureCreated();
+            }
+            catch { store.Dispose(); throw; }
         }
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
             builder.UseEnvironment("Development"); builder.UseSetting("SkipDatabaseInitialization", "true");
             builder.ConfigureTestServices(services => {
                 services.RemoveAll<DbContextOptions<HexagonalDbContext>>();
-                services.AddDbContext<HexagonalDbContext>(o => o.UseSqlite(conexion));
+                services.AddDbContext<HexagonalDbContext>(o => o.UseSqlServer(store.ConnectionString));
             });
         }
         protected override void Dispose(bool disposing)
-        { base.Dispose(disposing); if (disposing) conexion.Dispose(); }
+        { base.Dispose(disposing); if (disposing) store.Dispose(); }
     }
 }

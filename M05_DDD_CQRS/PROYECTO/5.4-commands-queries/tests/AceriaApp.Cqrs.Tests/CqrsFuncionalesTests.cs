@@ -5,7 +5,7 @@ using AceriaApp.Produccion.Aplicacion;
 using AceriaApp.Produccion.Infraestructura;
 using AceriaApp.PruebasProduccion;
 using MediatR;
-using Microsoft.Data.Sqlite;
+using AceriaApp.PruebasSqlServer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,9 +30,8 @@ public sealed class CqrsFuncionalesTests
     [Fact]
     public async Task Queries_proyectan_sin_tracking_ni_commit_y_los_DTO_no_mutan_el_dominio()
     {
-        await using var conexion = new SqliteConnection("Data Source=:memory:");
-        await conexion.OpenAsync();
-        var opciones = new DbContextOptionsBuilder<ProduccionDbContext>().UseSqlite(conexion).Options;
+        await using var store = BaseSqlServer.Crear();
+        var opciones = new DbContextOptionsBuilder<ProduccionDbContext>().UseSqlServer(store.ConnectionString).Options;
         Guid id;
         await using (var escritura = new ProduccionDbContext(opciones))
         {
@@ -43,9 +42,10 @@ public sealed class CqrsFuncionalesTests
             escritura.Ordenes.Add(orden);
             await escritura.SaveChangesAsync();
         }
-        var soloLectura = new DbContextOptionsBuilder<ProduccionDbContext>().UseSqlite(conexion)
+        var soloLectura = new DbContextOptionsBuilder<ProduccionDbContext>().UseSqlServer(store.ConnectionString)
             .AddInterceptors(new ProhibirGuardado()).Options;
         await using var db = new ProduccionDbContext(soloLectura);
+        Assert.Equal("Microsoft.EntityFrameworkCore.SqlServer", db.Database.ProviderName);
         var puerto = new OrdenProduccionLecturas(db);
         var detalle = await new ObtenerOrdenProduccionHandler(puerto).Handle(new(id), default);
         var lista = await new ListarOrdenesProduccionHandler(puerto).Handle(new(), default);

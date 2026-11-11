@@ -57,7 +57,7 @@ def main():
   if re.search(r'^\*\*Líneas? \d+',source,re.M):
    raise ValueError(f'Explicaciones de código sin separar en M03_{typ}.md')
   explanations=len(re.findall(r'^- \*\*Líneas? \d+',source,re.M))
-  assert explanations == {'TEORIA':340,'PRACTICAS':73}[typ], (typ,explanations)
+  assert explanations == {'TEORIA':346,'PRACTICAS':73}[typ], (typ,explanations)
   if typ=='TEORIA':
    assert len(re.findall(r'^### Bloque \d+ —',source,re.M))==40
    assert all(f'# Punto 3.{i}' in source for i in range(1,5))

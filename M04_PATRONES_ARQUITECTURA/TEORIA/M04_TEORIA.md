@@ -718,7 +718,7 @@ La implementación de EF Core tiene dos consecuencias prácticas. La primera es 
 
 **Riesgo, alternativa y límite.** SaveChanges dentro de una transacción abierta todavía no equivale a commit final. Reintentos configurados requieren ejecutar la transacción completa mediante la estrategia correspondiente.
 
-**Comprobación técnica y aprendizaje.** La práctica usa un proveedor relacional para comprobar restricciones y persistencia. EF Core InMemory no reproduce transacciones relacionales ni demuestra que el rollback SQL funcione.
+**Comprobación técnica y aprendizaje.** La práctica usa `UseSqlServer` y un motor SQL Server real para comprobar restricciones y persistencia. EF Core InMemory no reproduce transacciones relacionales ni demuestra que el rollback SQL funcione; SQLite tiene transacciones, pero no valida el comportamiento específico de SQL Server.
 
 ![Diagrama explicativo del punto 4.2, bloque 6](IMAGENES/4-2-transaccion.svg)
 
@@ -887,6 +887,67 @@ La aplicación del patrón Unit of Work prepara el proyecto para los puntos 4.3,
 
 ---
 
+
+## Estudio integrador 4.2 — Demostrar atomicidad en SQL Server
+
+### Preparar cambios, enviarlos y confirmarlos son momentos distintos
+
+Un repositorio de trabajo puede agregar dos órdenes al `DbContext` sin enviarlas todavía a la base. EF Core mantiene esas entidades en su seguimiento de cambios. En ese momento, cerrar el contexto descarta los cambios pendientes: no es un rollback de SQL porque aún no se ha ejecutado la escritura. Al llamar a `SaveChangesAsync`, el proveedor prepara y ejecuta los comandos necesarios. Si ese conjunto necesita una transacción, EF Core usa el comportamiento transaccional predeterminado del proveedor relacional.
+
+En la implementación de `EfUnitOfWork`, `CommitAsync` delega en un único `SaveChangesAsync`. Ese es el límite de confirmación elegido para el caso de uso. Si una operación requiriera varios `SaveChanges` dentro de una única unidad atómica, habría que diseñar una transacción explícita que los abarcase. Añadir un método llamado `RollbackAsync` que no accione una transacción no proporciona esa garantía. [La documentación de transacciones de EF Core explica el comportamiento de una confirmación y el control explícito](https://learn.microsoft.com/ef/core/saving/transactions).
+
+### Qué pregunta responde cada clase de prueba
+
+| Técnica | Sirve para observar | Límite de lo demostrado |
+|---|---|---|
+| Doble de `IUnitOfWork` | Si el caso de uso solicita confirmar | Contar llamadas no ejecuta ni revierte SQL. |
+| Contexto con EF InMemory | Operaciones sobre su almacenamiento no relacional | No demuestra una transacción relacional. |
+| SQLite | Transacciones y reglas de SQLite | Su comportamiento no certifica el proveedor SQL Server. |
+| SQL Server aislado | Escrituras, restricciones y rollback con `UseSqlServer` | Demuestra los escenarios ejecutados en esa configuración. |
+
+El laboratorio usa el último camino para comprobar persistencia y atomicidad. `BaseSqlServer.Crear()` devuelve una conexión a una base única; Testcontainers obtiene SQL Server real cuando no se proporciona `ACERIA_TEST_SQLSERVER`. La misma prueba puede usar LocalDB en Windows mediante esa variable. Cambiar el servidor no convierte una prueba de SQL en una prueba de dominio: sigue dependiendo de un recurso real y debe fallar si ese recurso no está disponible.
+
+### Por qué una excepción no basta para demostrar rollback
+
+Supongamos que se preparan dos órdenes y el test provoca un error antes de enviar la primera. Después consulta la base y encuentra cero filas. Ese resultado sería idéntico aunque no existiera transacción, porque nunca llegó a producirse una escritura. La prueba no ha demostrado que se deshaga nada.
+
+Para distinguir ambos casos se necesita **una escritura real anterior al fallo**. La prueba de `UnitOfWorkFuncionalesTests` provoca el error después de observar el primer INSERT y antes de completar la siguiente escritura. La configuración `sql.MaxBatchSize(1)` impide que el proveedor SQL Server agrupe ambas altas de una forma que impida observar ese punto. El interceptor busca `INSERT INTO` dentro del comando, porque SQL Server puede anteponer otras instrucciones como `SET`. Esta configuración pertenece al escenario de prueba; la aplicación no necesita usar ese tamaño de lote para funcionar correctamente.
+
+![Rollback sobre SQL Server con lectura nueva y control sin transacción](IMAGENES/4-2-sqlserver-rollback.svg)
+
+*Interpretación del gráfico:* Las dos ramas repiten el mismo fallo controlado. La rama transaccional deja cero filas; el control sin transacción conserva la primera. La diferencia demuestra que la prueba es capaz de detectar una persistencia parcial. La figura se distribuye en SVG y PNG.
+
+El test utiliza `AutoTransactionBehavior.WhenNeeded`, el comportamiento habitual, y lo contrasta con `AutoTransactionBehavior.Never` en una base independiente. La segunda variante es un **control negativo**: se elimina deliberadamente la protección que se está comprobando para ver si cambia el resultado. No es una recomendación para la configuración de la API.
+
+Este extracto muestra la parte que observa el resultado; el montaje de los repositorios y del interceptor aparece completo en las prácticas:
+
+```csharp
+db.Database.AutoTransactionBehavior = transacciones;
+await Assert.ThrowsAsync<DbUpdateException>(
+    () => new EfUnitOfWork(db).CommitAsync());
+Assert.Equal(1, fallo.InsertsEjecutados);
+await using var verificacion = Contexto(store);
+var filasEsperadas = transacciones == AutoTransactionBehavior.Never ? 1 : 0;
+Assert.Equal(filasEsperadas, await verificacion.Ordenes.CountAsync());
+```
+
+- **Línea 1:** Selecciona la política que se está examinando en ese caso aislado. Las entidades ya se han preparado en el contexto.
+- **Línea 2:** Exige que el fallo de persistencia se manifieste como la excepción esperada. Un test que no alcanza el error no debe pasar.
+- **Línea 3:** Invoca la misma implementación de unidad de trabajo que utiliza el caso de uso.
+- **Línea 4:** Comprueba que una escritura se ejecutó antes del fallo. Sin esta observación, cero filas no demostraría una reversión.
+- **Línea 5:** Abre otro contexto contra la misma base de ese caso. La comprobación no depende del seguimiento del contexto que falló.
+- **Línea 6:** Expresa la diferencia esperada: el control sin transacción conserva una fila; el caso protegido no conserva ninguna.
+- **Línea 7:** Consulta SQL Server y contrasta las filas persistidas con esa expectativa.
+
+### Recuperar la aplicación después de un fallo
+
+El rollback se refiere al estado de la base de datos. Las instancias de objetos que ya se han modificado en memoria pueden conservar esos valores después de la excepción. `ChangeTracker.Clear()` abandona el seguimiento de EF Core, pero tampoco rebobina las propiedades de los objetos que aún conserva el llamador. Tras un fallo, el curso termina el ámbito afectado y verifica el resultado con otro contexto. Ese procedimiento hace visible la diferencia entre memoria de aplicación y almacenamiento confirmado.
+
+También hay que situar la frontera: dos repositorios comparten atomicidad cuando participan en el mismo contexto y transacción. Tener dos objetos llamados `EfUnitOfWork` conectados a dos bases diferentes no crea una transacción distribuida. Enviar un mensaje o modificar un archivo tampoco se deshace por revertir SQL. Esos problemas requerirían otra coordinación y quedan fuera de la garantía que se prueba en este punto.
+
+**Comprobación de comprensión.** Explica por qué «no hice commit», «falló antes de escribir» y «escribí y se revirtió» son tres hechos distintos. Después identifica en el test la observación que descarta el segundo caso, la consulta que verifica el tercero y el control que haría visible la ausencia de transacción. Esa lectura permite defender el resultado sin apoyarse únicamente en un contador de pruebas.
+
+---
 
 # Punto 4.3 — Mediator (MediatR)
 

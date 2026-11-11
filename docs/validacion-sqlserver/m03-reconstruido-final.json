@@ -1,0 +1,750 @@
+{
+  "fecha": "2026-11-11T07:57:15.028020+00:00",
+  "origen": "M03_PRACTICAS.md",
+  "etapas": [
+    {
+      "punto": "3.1",
+      "carpeta": "3.1-capas-aplicacion",
+      "pasos": 24,
+      "archivos_creados_o_modificados": 11,
+      "n_proyectos": 3,
+      "documentos_heredados_identicos": 0,
+      "builds_intermedios": 0,
+      "tests_acumulados": null,
+      "expected": 23,
+      "estado": "SIN_EJECUTAR_TESTS"
+    },
+    {
+      "punto": "3.2",
+      "carpeta": "3.2-puertos-adaptadores",
+      "pasos": 24,
+      "archivos_creados_o_modificados": 10,
+      "n_proyectos": 4,
+      "documentos_heredados_identicos": 2,
+      "builds_intermedios": 0,
+      "tests_acumulados": null,
+      "expected": 31,
+      "estado": "SIN_EJECUTAR_TESTS"
+    },
+    {
+      "punto": "3.3",
+      "carpeta": "3.3-separacion-capas",
+      "pasos": 24,
+      "archivos_creados_o_modificados": 19,
+      "n_proyectos": 8,
+      "documentos_heredados_identicos": 4,
+      "builds_intermedios": 0,
+      "tests_acumulados": null,
+      "expected": 38,
+      "estado": "SIN_EJECUTAR_TESTS"
+    },
+    {
+      "punto": "3.4",
+      "carpeta": "3.4-implementacion-aspnet-core",
+      "pasos": 24,
+      "archivos_creados_o_modificados": 17,
+      "n_proyectos": 9,
+      "documentos_heredados_identicos": 6,
+      "builds_intermedios": 0,
+      "tests_acumulados": null,
+      "expected": 50,
+      "estado": "SIN_EJECUTAR_TESTS"
+    }
+  ],
+  "pasos": [
+    {
+      "paso": "3.1.1",
+      "codigo_escrito": 1,
+      "archivos": [
+        "global.json"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.1.2",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.1.3",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.1.4",
+      "codigo_escrito": 1,
+      "archivos": [
+        "docs/capas-aplicacion.md"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.1.5",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.1.6",
+      "codigo_escrito": 1,
+      "archivos": [
+        "src/AceriaApp.Api/Capas/Capa.cs"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.1.7",
+      "codigo_escrito": 1,
+      "archivos": [
+        "src/AceriaApp.Api/Capas/ValidadorReglaDependencia.cs"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.1.8",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.1.9",
+      "codigo_escrito": 1,
+      "archivos": [
+        "src/AceriaApp.Api/Capas/CatalogoCapas.cs"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.1.10",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.1.11",
+      "codigo_escrito": 1,
+      "archivos": [
+        "tests/AceriaApp.Capas.Tests/AceriaApp.Capas.Tests.csproj"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.1.12",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.1.13",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.1.14",
+      "codigo_escrito": 1,
+      "archivos": [
+        "tests/AceriaApp.Capas.Tests/ValidadorReglaDependenciaTests.cs"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.1.15",
+      "codigo_escrito": 1,
+      "archivos": [
+        "tests/AceriaApp.Capas.Tests/CatalogoCapasTests.cs"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.1.16",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.1.17",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.1.18",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.1.19",
+      "codigo_escrito": 1,
+      "archivos": [
+        "README.md"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.1.20",
+      "codigo_escrito": 1,
+      "archivos": [
+        "docs/ADR-010-capas-aplicacion.md"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.1.21",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.1.22",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.1.23",
+      "codigo_escrito": 1,
+      "archivos": [
+        ".gitignore"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.1.24",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.2.1",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.2.2",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.2.3",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.2.4",
+      "codigo_escrito": 1,
+      "archivos": [
+        "docs/puertos-adaptadores.md"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.2.5",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.2.6",
+      "codigo_escrito": 1,
+      "archivos": [
+        "src/AceriaApp.Api/PuertosAdaptadores/Puerto.cs"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.2.7",
+      "codigo_escrito": 1,
+      "archivos": [
+        "src/AceriaApp.Api/PuertosAdaptadores/Adaptador.cs"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.2.8",
+      "codigo_escrito": 1,
+      "archivos": [
+        "src/AceriaApp.Api/PuertosAdaptadores/ValidadorPuertosAdaptadores.cs"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.2.9",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.2.10",
+      "codigo_escrito": 1,
+      "archivos": [
+        "src/AceriaApp.Api/PuertosAdaptadores/CatalogoPuertosAdaptadores.cs"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.2.11",
+      "codigo_escrito": 1,
+      "archivos": [
+        "tests/AceriaApp.PuertosAdaptadores.Tests/AceriaApp.PuertosAdaptadores.Tests.csproj"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.2.12",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.2.13",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.2.14",
+      "codigo_escrito": 1,
+      "archivos": [
+        "tests/AceriaApp.PuertosAdaptadores.Tests/ValidadorPuertosAdaptadoresTests.cs"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.2.15",
+      "codigo_escrito": 1,
+      "archivos": [
+        "tests/AceriaApp.PuertosAdaptadores.Tests/CatalogoPuertosAdaptadoresTests.cs"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.2.16",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.2.17",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.2.18",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.2.19",
+      "codigo_escrito": 1,
+      "archivos": [
+        "README.md"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.2.20",
+      "codigo_escrito": 1,
+      "archivos": [
+        "docs/ADR-011-puertos-adaptadores.md"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.2.21",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.2.22",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.2.23",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.2.24",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.3.1",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.3.2",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.3.3",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.3.4",
+      "codigo_escrito": 1,
+      "archivos": [
+        "docs/separacion-capas.md"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.3.5",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.3.6",
+      "codigo_escrito": 3,
+      "archivos": [
+        "src/AceriaApp.Api/SeparacionCapas/Proyecto.cs",
+        "src/AceriaApp.Hexagonal.Dominio/AceriaApp.Hexagonal.Dominio.csproj",
+        "src/AceriaApp.Hexagonal.Dominio/Entidades/OrdenHexagonal.cs"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.3.7",
+      "codigo_escrito": 4,
+      "archivos": [
+        "src/AceriaApp.Api/SeparacionCapas/ValidadorSeparacionCapas.cs",
+        "src/AceriaApp.Hexagonal.Aplicacion/AceriaApp.Hexagonal.Aplicacion.csproj",
+        "src/AceriaApp.Hexagonal.Aplicacion/Puertos/IOrdenRepositorio.cs",
+        "src/AceriaApp.Hexagonal.Aplicacion/CasosUso/OrdenesCasoUso.cs"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.3.8",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.3.9",
+      "codigo_escrito": 5,
+      "archivos": [
+        "src/AceriaApp.Api/SeparacionCapas/CatalogoProyectos.cs",
+        "src/AceriaApp.Hexagonal.Infraestructura/AceriaApp.Hexagonal.Infraestructura.csproj",
+        "src/AceriaApp.Hexagonal.Infraestructura/Datos/HexagonalDbContext.cs",
+        "src/AceriaApp.Hexagonal.Infraestructura/Adaptadores/OrdenRepositorioSqlServer.cs",
+        "src/AceriaApp.Hexagonal.Infraestructura/ServiciosHexagonales.cs"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.3.10",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.3.11",
+      "codigo_escrito": 1,
+      "archivos": [
+        "tests/AceriaApp.SeparacionCapas.Tests/AceriaApp.SeparacionCapas.Tests.csproj"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.3.12",
+      "codigo_escrito": 1,
+      "archivos": [
+        "src/AceriaApp.Api/AceriaApp.Api.csproj"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.3.13",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.3.14",
+      "codigo_escrito": 1,
+      "archivos": [
+        "tests/AceriaApp.SeparacionCapas.Tests/ValidadorSeparacionCapasTests.cs"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.3.15",
+      "codigo_escrito": 1,
+      "archivos": [
+        "tests/AceriaApp.SeparacionCapas.Tests/CatalogoProyectosTests.cs"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.3.16",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.3.17",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.3.18",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.3.19",
+      "codigo_escrito": 1,
+      "archivos": [
+        "README.md"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.3.20",
+      "codigo_escrito": 1,
+      "archivos": [
+        "docs/ADR-012-separacion-capas.md"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.3.21",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.3.22",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.3.23",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.3.24",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.4.1",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.4.2",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.4.3",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.4.4",
+      "codigo_escrito": 1,
+      "archivos": [
+        "docs/implementacion-aspnet-core.md"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.4.5",
+      "codigo_escrito": 1,
+      "archivos": [
+        "src/AceriaApp.Api/Hexagonal/HexagonalOrdenesEndpoints.cs"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.4.6",
+      "codigo_escrito": 1,
+      "archivos": [
+        "src/AceriaApp.Api/Implementacion/RegistroServicio.cs"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.4.7",
+      "codigo_escrito": 1,
+      "archivos": [
+        "src/AceriaApp.Api/Implementacion/ValidadorRegistroServicios.cs"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.4.8",
+      "codigo_escrito": 1,
+      "archivos": [
+        "src/AceriaApp.Api/Program.cs"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.4.9",
+      "codigo_escrito": 2,
+      "archivos": [
+        "src/AceriaApp.Api/Implementacion/CatalogoRegistros.cs",
+        "src/AceriaApp.Api/Program.cs"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.4.10",
+      "codigo_escrito": 1,
+      "archivos": [
+        "src/AceriaApp.Api/Program.cs"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.4.11",
+      "codigo_escrito": 1,
+      "archivos": [
+        "tests/AceriaApp.Implementacion.Tests/AceriaApp.Implementacion.Tests.csproj"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.4.12",
+      "codigo_escrito": 1,
+      "archivos": [
+        "src/AceriaApp.Api/Program.cs"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.4.13",
+      "codigo_escrito": 1,
+      "archivos": [
+        "src/AceriaApp.Api/appsettings.json"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.4.14",
+      "codigo_escrito": 1,
+      "archivos": [
+        "tests/AceriaApp.Implementacion.Tests/ValidadorRegistroServiciosTests.cs"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.4.15",
+      "codigo_escrito": 1,
+      "archivos": [
+        "tests/AceriaApp.Implementacion.Tests/CatalogoRegistrosTests.cs"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.4.16",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.4.17",
+      "codigo_escrito": 2,
+      "archivos": [
+        "tests/AceriaApp.Api.Tests/HexagonalFactory.cs",
+        "tests/AceriaApp.Api.Tests/HexagonalHttpTests.cs"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.4.18",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.4.19",
+      "codigo_escrito": 1,
+      "archivos": [
+        "README.md"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.4.20",
+      "codigo_escrito": 1,
+      "archivos": [
+        "docs/ADR-013-implementacion-aspnet-core.md"
+      ],
+      "resultado": "aplicado"
+    },
+    {
+      "paso": "3.4.21",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.4.22",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.4.23",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    },
+    {
+      "paso": "3.4.24",
+      "codigo_escrito": 0,
+      "archivos": [],
+      "resultado": "guia_manual_verificable"
+    }
+  ],
+  "construccion": "desde texto; nunca desde PROYECTO/M03",
+  "source_sha256": "c8d00432c2dda5a4d2523e50ba1d9b5075b9095611966e70ea676c22c13961b1",
+  "helper_sqlserver_sha256": "83366f0eaeda1b3fccbf5b7711925a3267fcb88560bea255cf25aad0b3eb78a2",
+  "resumen": {
+    "resultado": "SIN_TESTS",
+    "pasos": 96,
+    "operaciones_codigo": 57,
+    "builds_intermedios": 0,
+    "tests_por_etapa": [
+      23,
+      31,
+      38,
+      50
+    ]
+  }
+}

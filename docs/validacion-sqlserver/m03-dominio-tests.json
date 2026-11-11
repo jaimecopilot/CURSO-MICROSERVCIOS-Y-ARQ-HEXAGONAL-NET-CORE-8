@@ -1,0 +1,22 @@
+[
+  {
+    "project": "AceriaApp.Capas.Tests",
+    "exit_code": 0,
+    "log": "/tmp/AceriaApp.Capas.Tests-sql-tests.log"
+  },
+  {
+    "project": "AceriaApp.Implementacion.Tests",
+    "exit_code": 0,
+    "log": "/tmp/AceriaApp.Implementacion.Tests-sql-tests.log"
+  },
+  {
+    "project": "AceriaApp.PuertosAdaptadores.Tests",
+    "exit_code": 0,
+    "log": "/tmp/AceriaApp.PuertosAdaptadores.Tests-sql-tests.log"
+  },
+  {
+    "project": "AceriaApp.SeparacionCapas.Tests",
+    "exit_code": 0,
+    "log": "/tmp/AceriaApp.SeparacionCapas.Tests-sql-tests.log"
+  }
+]

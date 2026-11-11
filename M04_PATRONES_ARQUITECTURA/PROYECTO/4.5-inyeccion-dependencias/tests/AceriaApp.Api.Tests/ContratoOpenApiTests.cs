@@ -2,33 +2,49 @@ using System.Net;
 using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Xunit;
+
 namespace AceriaApp.Api.Tests;
-// INICIO PASO 2.4.20: abrir OpenAPI JSON REAL mediante HTTP.
+
 public class ContratoOpenApiTests
 {
-    [Fact] public async Task OpenApi_ContieneRutasYVersion()
+    [Fact]
+    public async Task OpenApi_ContieneRutasYVersion()
     {
-        using var f=new ApiFactory();
-        var r=await f.CreateClient().GetAsync("/swagger/v1/swagger.json");
-        Assert.Equal(HttpStatusCode.OK,r.StatusCode);
-        using var json=JsonDocument.Parse(await r.Content.ReadAsStringAsync());
-        Assert.Equal("v1",json.RootElement.GetProperty("info").GetProperty("version").GetString());
-        var paths=json.RootElement.GetProperty("paths");
-        Assert.True(paths.TryGetProperty("/api/v1/ordenes",out var resource));
-        Assert.True(resource.TryGetProperty("get",out _));
-        Assert.True(resource.TryGetProperty("post",out _));
+        using var f = new ApiFactory();
+        var r = await f.CreateClient().GetAsync("/swagger/v1/swagger.json");
+        Assert.Equal(HttpStatusCode.OK, r.StatusCode);
+        using var json = JsonDocument.Parse(await r.Content.ReadAsStringAsync());
+        Assert.Equal("v1", json.RootElement.GetProperty("info")
+            .GetProperty("version").GetString());
+        var paths = json.RootElement.GetProperty("paths");
+        Assert.True(paths.TryGetProperty("/api/v1/ordenes", out var resource));
+        Assert.True(resource.TryGetProperty("get", out _));
+        Assert.True(resource.TryGetProperty("post", out _));
     }
-    // PASO 2.4.22: esquema y ejemplo.
-    [Fact] public async Task OpenApi_IncluyeEjemplo()
-    {
-        using var f=new ApiFactory();
-        var r=await f.CreateClient().GetAsync("/swagger/v1/swagger.json");
-        using var json=JsonDocument.Parse(await r.Content.ReadAsStringAsync());
-        var schemas=json.RootElement.GetProperty("components").GetProperty("schemas");
-        Assert.True(schemas.TryGetProperty("CrearOrdenRequest",out var schema));
-        Assert.True(schema.TryGetProperty("example",out _));
-    }
-    // PASO 2.4.23: comprobar que OpenAPI refleja las ramas HTTP del servidor.
+[Fact]
+public async Task OpenApi_IncluyeEjemplo()
+{
+    using var f = new ApiFactory();
+    var r = await f.CreateClient().GetAsync("/swagger/v1/swagger.json");
+    using var json = JsonDocument.Parse(await r.Content.ReadAsStringAsync());
+    var schemas = json.RootElement
+        .GetProperty("components").GetProperty("schemas");
+    Assert.True(schemas.TryGetProperty("CrearOrdenRequest", out var schema));
+    Assert.True(schema.TryGetProperty("example", out _));
+}
+
+[Fact]
+public async Task Produccion_NoExponeSwagger()
+{
+    using var f = new ApiFactory();
+    using var other = f.WithWebHostBuilder(
+        b => b.UseEnvironment("Production"));
+    var r = await other.CreateClient()
+        .GetAsync("/swagger/v1/swagger.json");
+    Assert.Equal(HttpStatusCode.NotFound, r.StatusCode);
+}
+
+// PASO 2.4.23: comprobar que OpenAPI refleja las ramas HTTP del servidor.
     [Fact] public async Task OpenApi_DeclaraErroresDeOperacionesReales()
     {
         using var factory = new ApiFactory();
@@ -62,12 +78,4 @@ public class ContratoOpenApiTests
             Assert.True(finishResponses.TryGetProperty(code, out _), $"Finalizar debe declarar {code}");
     }
 
-    // PASO 2.4.23: documentacion no publicada en Production.
-    [Fact] public async Task Produccion_NoExponeSwagger()
-    {
-        using var f=new ApiFactory();
-        using var other=f.WithWebHostBuilder(b=>b.UseEnvironment("Production"));
-        var r=await other.CreateClient().GetAsync("/swagger/v1/swagger.json");
-        Assert.Equal(HttpStatusCode.NotFound,r.StatusCode);
-    }
 }

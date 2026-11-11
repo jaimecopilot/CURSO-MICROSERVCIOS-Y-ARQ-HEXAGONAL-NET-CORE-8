@@ -1,0 +1,35 @@
+# Corrección SQL Server antes de M6
+
+Autorización: el usuario solicitó ejecutar todas las correcciones sin nuevas preguntas el 11/11/2026.
+Base: 41d37cb84f258dcfef7ad1e94b45571cbdcc76b8. Rama: correccion/sqlserver-m02-m05-20261111.
+
+## Criterio obligatorio
+Aplicación y pruebas de integración usan SQL Server real. No se admite éxito con SQLite/InMemory ni pruebas omitidas. Pruebas de dominio puro no requieren BD. M6 no empieza hasta completar evidencias.
+
+## Tareas y estado
+- [x] 01 Matriz inicial: M1 SQL Server real (CI 42862047382); M2/M3 InMemory; M4/M5 SQLite más heredadas. Aplicaciones M1–M5 configuradas SQL Server.
+- [ ] 02 Entorno SQL Server Express/Testcontainers, bases aisladas, fallo obligatorio y limpieza.
+- [ ] 03 M02 cuatro etapas: API y persistencia SQL Server.
+- [ ] 04 M03 cuatro etapas: puertos/adaptadores y API SQL Server.
+- [ ] 05 M04 cinco etapas: Repository, Unit of Work y rollback SQL Server.
+- [ ] 06 M05 cinco etapas: dominio, casos de uso, CQRS, API y persistencia SQL Server.
+- [ ] 07 Teoría Docker/Testcontainers y diagramas.
+- [ ] 08 Prácticas reproducibles, sin referencias editoriales al material de partida.
+- [ ] 09 CI obligatorio SQL Server, registros y evidencias.
+- [ ] 10 Reconstrucción de las 18 etapas desde prácticas, pruebas y retos.
+- [ ] 11 Windows LocalDB: cuatro proyectos finales, inicialización y HTTP.
+- [ ] 12 PDF regenerados y revisión visual.
+- [ ] 13 Informe de cierre, commits y ejecuciones verificadas.
+
+## Decisiones de ejecución
+- Se trabaja en un clon aislado y rama de corrección; no se modifica M6.
+- Una utilidad C# autocontenida se introduce en el manual M02 y se hereda. No se añade una dependencia oculta fuera de cada solución.
+- Cada prueba dispone de una base AceriaTest_<GUID>. Una conexión externa permite CI/LocalDB; sin ella Testcontainers inicia Express en Docker. Nunca se cambia de proveedor silenciosamente.
+- Imagen reproducible: mcr.microsoft.com/mssql/server:2022-CU14-ubuntu-22.04; Testcontainers.MsSql 3.10.0; SQL Express. Las versiones de EF existentes se conservan.
+- Las comprobaciones SQL reales se ejecutarán en GitHub Actions: este entorno no dispone de Docker ni Windows. La compilación y revisión documental se hacen también localmente.
+- La evidencia antigua se conserva como historial; los informes nuevos deben identificar proveedor y revisión comprobada.
+
+## Registro
+11/11/2026: clon recuperado, base verificada; ejecución iniciada. Revisión paralela separada de M02/M03, M04/M05 y teoría; integración, CI y cierre a cargo del coordinador.
+
+Revisión independiente: se detectaron y corrigieron dos riesgos de falso cierre: vínculo del código comprobado en Windows con el publicado y eliminación de ejecutables obsoletos en la publicación de M02. Se añaden pruebas de regresión que fallaron antes de la corrección. Evidencia SQL/Windows sigue pendiente hasta CI.

@@ -20,12 +20,17 @@ Cada punto conserva los catálogos de comprobación de las decisiones arquitect�
 
 ## Ejecución y comprobación
 
-El entorno de trabajo mantiene .NET 8, ASP.NET Core, EF Core 8 y SQL Server Express LocalDB en Windows. Las pruebas automatizadas usan dobles y proveedores de pruebas; las transacciones se comprueban con SQLite relacional. Los resultados con SQLite no sustituyen una prueba específica del proveedor SQL Server.
+El entorno de trabajo mantiene .NET 8, ASP.NET Core, EF Core 8 y SQL Server Express LocalDB en Windows. Las pruebas del dominio o de coordinación pueden usar dobles; las pruebas de persistencia y transacciones usan **SQL Server real con `UseSqlServer`** y bases aisladas creadas por `BaseSqlServer.Crear()`. La prueba de atomicidad provoca un fallo después de una escritura y verifica el resultado desde otro contexto, incluyendo un control sin transacción que detecta persistencia parcial.
+
+Las pruebas necesitan Docker Desktop con contenedores Linux, o `ACERIA_TEST_SQLSERVER` con una conexión a `master` en un SQL Server disponible, incluyendo LocalDB. Sin esa variable, Testcontainers 3.10.0 inicia la imagen fijada `mcr.microsoft.com/mssql/server:2022-CU14-ubuntu-22.04` con `MSSQL_PID=Express`. Un entorno no disponible produce un fallo; no se sustituye SQL Server por SQLite o InMemory. El [README de M02](../M02_APIS_REST_ASPNET_CORE/README.md#comprobaciones-de-aprendizaje) incluye la configuración de PowerShell.
+
+El estudio integrador 4.2 de la teoría explica preparación de cambios, confirmación y rollback, con un diagrama SVG/PNG y el análisis línea por línea de la comprobación. Distingue lo que demuestra un doble de lo que requiere el proveedor real.
 
 Desde la raíz del repositorio:
 
 ```bash
 python3 .github/scripts/m04_crear_figuras.py
+python3 .github/scripts/figuras_sqlserver.py
 python3 .github/scripts/m04_e2e_desde_practicas.py --out M04_PATRONES_ARQUITECTURA/M04_E2E_RESULTADOS.json
 python3 .github/scripts/m04_generar_pdf.py
 ```
