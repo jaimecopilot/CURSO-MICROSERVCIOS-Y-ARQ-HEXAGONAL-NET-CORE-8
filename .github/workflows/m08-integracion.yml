@@ -1,7 +1,7 @@
 name: M08 - API Gateway YARP SQL Server y RabbitMQ
 on:
   push:
-    branches: [main, 'desarrollo/m08-api-gateway']
+    branches: [main, 'desarrollo/m08-api-gateway', 'revision/editorial-m08-20261112']
     paths:
       - 'M08_API_GATEWAY/**'
       - '.github/scripts/m08_*.py'
