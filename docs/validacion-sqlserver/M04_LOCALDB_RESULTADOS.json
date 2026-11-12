@@ -1,8 +1,8 @@
 {
   "modulo": 4,
   "resultado": "PASS",
-  "fecha_utc": "2026-11-11T08:44:12.000203+00:00",
-  "commit_comprobado": "602155220b7d4a043276d8c4cf0282e065baf87c",
+  "fecha_utc": "2026-11-12T15:31:34.256436+00:00",
+  "commit_comprobado": "db31e371f08553d1af03d96e0a7732137117f282",
   "comprobaciones": [
     {
       "ruta": "/api/v1/ordenes",
@@ -136,12 +136,12 @@
     "tests/AceriaApp.UnitOfWork.Tests/ValidadorUnidadesDeTrabajoTests.cs": "20dad554c847967cf83129b8c125dc77438eadc07da81945f7c4700227e2b0cb",
     "tests/Compartido/SqlServerPruebas.cs": "83366f0eaeda1b3fccbf5b7711925a3267fcb88560bea255cf25aad0b3eb78a2"
   },
-  "ruta_ejecucion_corta": "D:\\a\\_temp\\axia4-lomi5hwc\\etapa",
+  "ruta_ejecucion_corta": "D:\\a\\_temp\\axia4-mevq497i\\etapa",
   "reinicio_con_persistencia": "PASS",
   "bases": [
-    "AceriaTest_dfe73755b5fc49e299a780dbb89c6dae_AceriaApp",
-    "AceriaTest_dfe73755b5fc49e299a780dbb89c6dae_AceriaHexagonal",
-    "AceriaTest_dfe73755b5fc49e299a780dbb89c6dae_AceriaProduccion"
+    "AceriaTest_495257f93c524a019a7f95f823349f4a_AceriaApp",
+    "AceriaTest_495257f93c524a019a7f95f823349f4a_AceriaHexagonal",
+    "AceriaTest_495257f93c524a019a7f95f823349f4a_AceriaProduccion"
   ],
   "limpieza": "PASS"
 }
