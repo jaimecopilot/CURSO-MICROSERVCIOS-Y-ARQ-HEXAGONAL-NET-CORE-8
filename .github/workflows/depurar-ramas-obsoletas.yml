@@ -1,0 +1,102 @@
+name: Archivo completo y depuración segura de ramas obsoletas
+on:
+  push:
+    branches:
+      - 'resguardo/tecnico-m01-m08-20261112'
+    paths:
+      - '.github/workflows/depurar-ramas-obsoletas.yml'
+permissions:
+  contents: write
+jobs:
+  prune:
+    name: Verificar resguardo y retirar 25 referencias antiguas
+    if: github.ref == 'refs/heads/resguardo/tecnico-m01-m08-20261112'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      ARCHIVE_SHA: '9c167dd39bff7313121b8fd0a503605c6aef19fe'
+    steps:
+      - name: Auditar integridad de las 25 referencias y su historia preservada
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > /tmp/poda_refs_20261112.txt <<'BRANCHES'
+          ci/sqlserver-triggers-especificos-20261112|e6ecc629f7c7a7c7238f325b5c8c2bd3a963c21a
+          correccion/m02-manual-autonomo-20261110|9a67b0f62ca360f46cf1a21b6ae8cf59c916da80
+          correccion/sqlserver-m02-m05-20261111|602155220b7d4a043276d8c4cf0282e065baf87c
+          correccion/sqlserver-sdk8-cierre-20261112|750b5ea6fff9c98b5513e3e09779a7a1ca67d397
+          desarrollo/m02-apis-rest-20261015|5b1c3031f79d8764b78ae75c4fd109e3d49709a1
+          desarrollo/m03-hexagonal-canonic-20261110|38cfe12d7579ff40f0a29be42ede8b32b2609b71
+          desarrollo/m06-comunicacion|25b8745fea66592680d49d33adf1c027294e4411
+          desarrollo/m07-observabilidad|16a1a0783e14eaf1c4cdb07f25a13d6719f286d2
+          desarrollo/m08-api-gateway|02d23b7d5ac7fb4ee0890888083ef8fcae287da1
+          desarrollo/m09-docker-windows-20261112|02d23b7d5ac7fb4ee0890888083ef8fcae287da1
+          diagnostico/m07-rabbit|4304c8a0b333767404ee0de3cb48d917fd89b63b
+          integracion/m02-ajuste-tablas-pdf-20261016|64c71defcf1391a610dfc136d709b8895804d3dd
+          integracion/m02-rest-validado-20261016|8ba4e767377493770dfd7402437e40ed98e12d6d
+          redisenio/m02-minimal-api-real-20261015|2bc2c2dec3becf7570fbbe5dd1ca39e11fddd524
+          resguardo/m02-ampliacion-minimal-api-20261015|b8bc22508f0d69dfc768f2eb5b7896ccbd292855
+          resguardo/m02-fuentes-cuatro-puntos-20261016|a45714dbb3489a6a36d6a71739540d4d8dd1d1e7
+          revision/cierre-editorial-m06-20261112|b09a3a9a6e2b4bb058c405883ec6a7736c0ab08e
+          revision/e2e-m01-20261015|5dff15c19054c4b44745857e3385616ea4cac082
+          revision/editorial-m06-20261112|8f6d6f35223d73a1dfd65fe55d14c646bc5664a7
+          revision/editorial-m07-20261112|62a58cada6fad2a8c2e27097789994b0e44a4d5d
+          revision/editorial-m08-20261112|9096cfdcf91818ac319fefd174e56e9c5a67542b
+          revision/m01-correccion-pedagogica-20261015|bc7b46bb781f7b46a5d429d4539ef5670a92908c
+          revision/m01-guia-autonoma-20261110|17ab185421a71022de827850ce541d058792a44b
+          revision/pdf-cierre-paralelo-20261112|cfdeceb9f239c648f99e81c7282b23c159945208
+          verificacion/e2e-main-20261110|ee484ed4e0955f68473fa1fdf15556ff63995296
+          BRANCHES
+          archive_tree="$(gh api "repos/${GH_REPO}/git/commits/${ARCHIVE_SHA}" --jq '.tree.sha')"
+          if [[ "$archive_tree" != "ebfe0639a919be7e4b7bfcb54ebc25fa5c5bbf3f" ]]; then
+            echo "::error::El archivo histórico técnico cambió. Prohibido borrar ramas."
+            exit 1
+          fi
+          parents="$(gh api "repos/${GH_REPO}/git/commits/${ARCHIVE_SHA}" --jq '.parents | length')"
+          if [[ "$parents" -ne 13 ]]; then
+            echo "::error::Resguardo incompleto: se esperaban 13 padres de commit."
+            exit 1
+          fi
+          lines="$(wc -l < /tmp/poda_refs_20261112.txt)"
+          if [[ "$lines" -ne 25 ]]; then
+            echo "::error::Se esperaban exactamente 25 ramas antiguas."
+            exit 1
+          fi
+          while IFS='|' read -r ref expected; do
+            actual="$(gh api "repos/${GH_REPO}/git/ref/heads/${ref}" --jq '.object.sha')"
+            if [[ "$actual" != "$expected" ]]; then
+              echo "::error::La rama ${ref} cambió; NO se borra ninguna."
+              exit 1
+            fi
+            status="$(gh api "repos/${GH_REPO}/compare/${expected}...${ARCHIVE_SHA}" --jq '.status')"
+            if [[ "$status" != "ahead" && "$status" != "identical" ]]; then
+              echo "::error::Historial de ${ref} no incluido en archivo (${status})."
+              exit 1
+            fi
+            echo "Resguardada: ${ref} (${expected:0:12})"
+          done < /tmp/poda_refs_20261112.txt
+
+      - name: Borrar exclusivamente ramas auditadas y conservar main, alumnos y revisiones abiertas
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS='|' read -r ref expected; do
+            actual="$(gh api "repos/${GH_REPO}/git/ref/heads/${ref}" --jq '.object.sha')"
+            if [[ "$actual" != "$expected" ]]; then
+              echo "::error::La referencia ${ref} cambió; se detiene la limpieza."
+              exit 1
+            fi
+            gh api -X DELETE "repos/${GH_REPO}/git/refs/heads/${ref}" >/dev/null
+            echo "Retirada: ${ref}"
+          done < /tmp/poda_refs_20261112.txt
+          echo "Comprobación final de ramas:"
+          names="$(gh api "repos/${GH_REPO}/branches?per_page=100" --jq '.[].name' | sort)"
+          echo "$names"
+          expected="$(printf '%s\n' 'main' 'alumnos/m01-m08-limpio-20261112' 'resguardo/tecnico-m01-m08-20261112' 'revision/cierre-windows-m01-m08-20261112' | sort)"
+          if [[ "$names" != "$expected" ]]; then
+            echo "::error::El inventario final no tiene exactamente cuatro ramas."
+            exit 1
+          fi
+          echo "PASS: 4 ramas conservadas, 25 retiradas, historias preservadas."
