@@ -25,7 +25,7 @@ for ($attempt = 1; $attempt -le 3; $attempt++) {
   if (@($available | ForEach-Object { "$_".Trim() }) -notcontains $instance) {
     $created = @(& $exe create $instance 2>&1)
     if ($LASTEXITCODE -ne 0) {
-      $lastMessage = "No se pudo crear $instance: $($created -join ' ')"
+      $lastMessage = "No se pudo crear ${instance}: $($created -join ' ')"
       Write-Warning $lastMessage
       Start-Sleep -Seconds 3
       continue
