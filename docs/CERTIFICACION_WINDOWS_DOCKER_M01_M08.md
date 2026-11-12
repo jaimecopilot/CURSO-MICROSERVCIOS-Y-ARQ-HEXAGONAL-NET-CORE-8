@@ -31,7 +31,7 @@ El *curso base* no necesita desplegar todas las APIs en Docker para ejecutar M06
 - SQL real + E2E en Linux sobre el código integrado de M06: [ejecución 43256618514](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43256618514), SUCCESS.
 - M07: [ejecución 43260520555](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43260520555), SUCCESS.
 - M08: [ejecución 43268192055](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43268192055), SUCCESS.
-- M01–M08 Windows 2022, LocalDB y RabbitMQ nativo cuando procede: [ejecución 43276348330](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43276348330). En el último corte **PASS M01–M07; M08 en curso**.
+- M01–M08 Windows 2022, LocalDB y RabbitMQ nativo cuando procede: [ejecución 43276348330](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43276348330). **PASS completo en Windows: M01–M08, 12 jobs correctos**, incluida la batería acumulativa de 491 pruebas de M08, con RabbitMQ nativo en M06–M08. El workflow 43276348330 cerró con SUCCESS sobre el commit técnico `707600d7e9126e74c8e6abd6f296a8af3d55c2f8`. La posterior integración de los PDF y de esta matriz no alteró proyectos C# ni la lógica de los test runners.
 - Fullstack con Docker real en Linux: [ejecución 43276348308](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43276348308), **SUCCESS** (SQL Express + RabbitMQ + Gateway + Producción + 2 Inventarios, HTTP/outbox/inbox/persistencia).
 - PDF de los manuales M02–M08 y de la práctica Docker: [ejecución 43280531243](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43280531243), SUCCESS. El PDF transversal incorpora 16 ejercicios, 11 páginas, cero páginas vacías y cero desbordamientos según su reporte de preflight.
 
@@ -48,7 +48,7 @@ Ubicación: [PRACTICA_TRANSVERSAL_DOCKER_WINDOWS](../PRACTICA_TRANSVERSAL_DOCKER
 
 ## Criterios antes de aprobar el curso
 
-1. Todas las entradas de la matriz M01–M08 deben mostrar PASS del E2E Windows con tests SQL y retos; no basta `--no-tests` o simplemente compilar.
+1. **Cumplido en el commit técnico:** M01–M08 muestran PASS del E2E Windows con tests SQL y retos (43276348330). En la rama editorial final se vuelve a lanzar CI sin alterar el código de prueba; no basta `--no-tests` o simplemente compilar.
 2. El Markdown de prácticas y su PDF deben coincidir, conservar el código y los marcadores de reconstrucción y carecer de páginas en blanco o desbordamientos.
 3. M02–M05 deben conservar la vía LocalDB sin Docker y la vía Testcontainers con Docker Desktop; M06–M08 deben tener instrucciones locales concretas de RabbitMQ, comprobación del broker y consumo desde las APIs.
 4. La certificación **Windows+Docker Desktop** necesita un equipo Windows real. Desde PowerShell 7, con Docker Desktop abierto y contenedores Linux:
