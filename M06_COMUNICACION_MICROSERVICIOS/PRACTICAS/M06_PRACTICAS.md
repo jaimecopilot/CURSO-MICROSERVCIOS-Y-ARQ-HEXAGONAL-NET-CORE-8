@@ -10,7 +10,7 @@ Continúa exactamente `M05_DDD_CQRS/PROYECTO/5.5-dominio-aceria`: 22 proyectos, 
 
 **SQL Server para las pruebas.** Conserva `tests/Compartido/SqlServerPruebas.cs`. El helper lee `ACERIA_TEST_SQLSERVER`, conecta a `master` y crea una base con nombre único para cada prueba; la cuenta necesita permiso para crearla y eliminarla. Ejemplo PowerShell con LocalDB: `$env:ACERIA_TEST_SQLSERVER = "Server=(localdb)\MSSQLLocalDB;Database=master;Integrated Security=True;TrustServerCertificate=True"`. Para Express sustituye el servidor por `.\SQLEXPRESS`. Si no defines la variable, el helper utiliza Docker y `Testcontainers.MsSql` 3.10.0 con SQL Server 2022 Express y la imagen fija `mcr.microsoft.com/mssql/server:2022-CU14-ubuntu-22.04`. Una conexión inválida hace fallar las pruebas; no se omiten ni se sustituyen por un proveedor en memoria.
 
-**Convención de código.** Cada bloque identifica archivo y operación. Crear exige un archivo nuevo; reemplazar exige un archivo existente; insertar exige una única coincidencia del ancla. Las rutas son relativas a la raíz de la etapa. Las explicaciones cuentan las líneas vacías. Los tres retos se aplican en copias optativas independientes y añaden una prueba cada uno; no se acumulan en las etapas obligatorias.
+**Convención de código.** Cada bloque identifica archivo y operación. Crear exige un archivo nuevo; reemplazar exige un archivo existente; insertar exige una única coincidencia del ancla. Las rutas son relativas a la raíz de la etapa. Se anotan solo decisiones y comprobaciones significativas, con referencia a su línea física; no se explican repetidamente las líneas vacías, los delimitadores o el código convencional. Los tres retos se aplican en copias optativas independientes y añaden una prueba cada uno; no se acumulan en las etapas obligatorias.
 
 ## Resultados de comprobación
 
@@ -246,7 +246,7 @@ volumes:
   rabbitmq-datos:
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 3:** `image: rabbitmq:4.1.5-management` → Define la forma pública o la configuración reproducible que usarán los archivos del mismo punto.
 
@@ -267,7 +267,7 @@ Este archivo completa el contrato, registro o prueba indicada por su nombre. Cr�
 </Project>
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 4:** `<ProjectReference Include="../AceriaApp.Comunicacion.Contratos/AceriaApp.Comunicacion.Contratos.csproj" />` → Declara una dependencia de compilación explícita; el ensamblado debe existir en la solución.
 
@@ -296,9 +296,8 @@ public sealed class InventarioNoDisponibleException(string mensaje, Exception? c
     : Exception(mensaje, causa);
 ```
 
-**Lectura de las líneas clave.**
 
-- **Línea 3:** `public interface IClienteInventario` → Define la forma pública o la configuración reproducible que usarán los archivos del mismo punto.
+
 
 
 #### Implementación funcional: `AceriaApp.Comunicacion.Contratos.csproj`
@@ -316,9 +315,8 @@ Este archivo completa el contrato, registro o prueba indicada por su nombre. Cr�
 </Project>
 ```
 
-**Lectura de las líneas clave.**
 
-- **Línea 2:** `<PropertyGroup><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>` → Define la forma pública o la configuración reproducible que usarán los archivos del mismo punto.
+
 
 Desde la carpeta de esta etapa, registra el proyecto:
 
@@ -339,9 +337,8 @@ namespace AceriaApp.Comunicacion.Contratos;
 public sealed record MaterialDto(string Material, int Stock);
 ```
 
-**Lectura de las líneas clave.**
 
-- **Línea 2:** `public sealed record MaterialDto(string Material, int Stock);` → Define la forma pública o la configuración reproducible que usarán los archivos del mismo punto.
+
 
 
 ### PASO 6.1.6 — Crear la clase `LlamadaSincrona`
@@ -373,7 +370,7 @@ public class LlamadaSincrona
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 1:** `namespace AceriaApp.Api.ComunicacionSincrona;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
@@ -385,17 +382,11 @@ public class LlamadaSincrona
 
 - **Línea 5:** `public string ServicioOrigen { get; init; } = string.Empty;` → Declara un dato del análisis que se fija al construir la entrada.
 
-- **Línea 6:** `public string ServicioDestino { get; init; } = string.Empty;` → Declara un dato del análisis que se fija al construir la entrada.
 
-- **Línea 7:** `public string Metodo { get; init; } = string.Empty;` → Declara un dato del análisis que se fija al construir la entrada.
 
-- **Línea 8:** `public bool TieneTimeout { get; init; }` → Declara un dato del análisis que se fija al construir la entrada.
 
-- **Línea 9:** `public bool TieneReintentos { get; init; }` → Declara un dato del análisis que se fija al construir la entrada.
 
-- **Línea 10:** `public bool TieneCircuitBreaker { get; init; }` → Declara un dato del análisis que se fija al construir la entrada.
 
-- **Línea 11:** `public bool TieneClaveIdempotencia { get; init; }` → Declara un dato del análisis que se fija al construir la entrada.
 
 - **Línea 12:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
@@ -481,115 +472,70 @@ public class ValidadorComunicacionSincrona
 public record ResultadoComunicacionSincrona(bool EsValida, IReadOnlyList<string> Errores);
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 1:** `namespace AceriaApp.Api.ComunicacionSincrona;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 2:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 3:** `public class ValidadorComunicacionSincrona` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 4:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 5:** `private static readonly string[] MetodosPermitidos = { "GET", "HEAD", "OPTIONS", "POST", "PUT", "PATCH", "DELETE" };` → Limita los valores de texto reconocidos por la política didáctica.
 
-- **Línea 6:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 7:** `public ResultadoComunicacionSincrona Validar(IEnumerable<LlamadaSincrona> llamadas)` → Expone la operación con el contrato que usan el catálogo o sus pruebas.
 
-- **Línea 8:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 9:** `var errores = new List<string>();` → Inicializa la colección de diagnósticos que se devolverá al finalizar.
 
 - **Línea 10:** `var lista = llamadas.ToList();` → Materializa una sola vez la secuencia recibida para recorrerla y contarla.
 
-- **Línea 11:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 12:** `if (lista.Count == 0)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 13:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 14:** `errores.Add("No hay llamadas declaradas.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 15:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 16:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 17:** `foreach (var llamada in lista)` → Revisa cada entrada; un catálogo puede acumular varios diagnósticos.
 
-- **Línea 18:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 19:** `if (string.IsNullOrWhiteSpace(llamada.ServicioOrigen))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 20:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 21:** `errores.Add("Una llamada no declara el servicio origen.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 22:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 23:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 24:** `if (string.IsNullOrWhiteSpace(llamada.ServicioDestino))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 25:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 26:** `errores.Add($"La llamada desde '{llamada.ServicioOrigen}' no declara el servicio destino.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 27:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 28:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 29:** `if (llamada.ServicioOrigen == llamada.ServicioDestino)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 30:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 31:** `errores.Add($"La llamada de '{llamada.ServicioOrigen}' apunta al mismo servicio.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 32:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 33:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 34:** `if (!MetodosPermitidos.Contains(llamada.Metodo))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 35:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 36:** `errores.Add($"Método no permitido en '{llamada.ServicioOrigen}': '{llamada.Metodo}'.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 37:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 38:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 39:** `if (!llamada.TieneTimeout)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 40:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 41:** `errores.Add($"La llamada desde '{llamada.ServicioOrigen}' no tiene timeout.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 42:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 43:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 44:** `if (llamada.TieneReintentos && (llamada.Metodo is "POST" or "PATCH")` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
 - **Línea 45:** `&& !llamada.TieneClaveIdempotencia)` → Completa la condición anterior; solo rechaza cuando también se cumple este término.
 
-- **Línea 46:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 47:** `errores.Add($"La llamada desde '{llamada.ServicioOrigen}' declara reintentos no seguros sin clave de idempotencia.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 48:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 49:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 50:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 51:** `return new ResultadoComunicacionSincrona(errores.Count == 0, errores);` → Devuelve validez y diagnósticos; no ejecuta ninguna comunicación remota.
 
-- **Línea 52:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 53:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 54:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 55:** `public record ResultadoComunicacionSincrona(bool EsValida, IReadOnlyList<string> Errores);` → Define el resultado inmutable que devuelve el validador o el resumen.
 
@@ -624,11 +570,10 @@ using System.Collections.Generic;
 using System.Linq;
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 1:** `using System.Collections.Generic;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 2:** `using System.Linq;` → Importa los tipos o extensiones utilizados por el archivo.
 
 
 **Por qué funciona así.** Las importaciones explícitas muestran dónde se declaran los tipos genéricos y las extensiones LINQ, aunque el proyecto tenga importaciones implícitas.
@@ -660,10 +605,8 @@ Este archivo completa el contrato, registro o prueba indicada por su nombre. Cr�
 </Project>
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 4:** `<ProjectReference Include="../AceriaApp.Comunicacion.Aplicacion/AceriaApp.Comunicacion.Aplicacion.csproj" />` → Declara una dependencia de compilación explícita; el ensamblado debe existir en la solución.
-- **Línea 5:** `<ProjectReference Include="../AceriaApp.Produccion.Infraestructura/AceriaApp.Produccion.Infraestructura.csproj" />` → Declara una dependencia de compilación explícita; el ensamblado debe existir en la solución.
 - **Línea 6:** `<PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />` → Fija la versión de la dependencia para reproducir la compilación y sus API.
 
 Desde la carpeta de esta etapa, registra el proyecto:
@@ -710,7 +653,7 @@ public sealed class ClienteInventarioHttp(HttpClient http) : IClienteInventario
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 11:** `ct.ThrowIfCancellationRequested();` → Detiene la operación si el llamador ya la canceló, antes de producir efectos.
 - **Línea 15:** `using var respuesta = await http.GetAsync("api/v1/materiales/" + Uri.EscapeDataString(material), ct);` → Codifica el material como un segmento de URL, evitando que sus caracteres cambien la consulta.
@@ -749,35 +692,24 @@ public class CatalogoLlamadas
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 1:** `namespace AceriaApp.Api.ComunicacionSincrona;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 2:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 3:** `public class CatalogoLlamadas` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 4:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 5:** `public static List<LlamadaSincrona> LlamadasPorDefecto()` → Expone la operación con el contrato que usan el catálogo o sus pruebas.
 
-- **Línea 6:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 7:** `return new List<LlamadaSincrona>` → Devuelve una lista nueva en cada llamada; modificarla no altera otros casos.
 
-- **Línea 8:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 9:** `new() { ServicioOrigen = "Ordenes.Api", ServicioDestino = "Inventario.Api", Metodo = "GET", TieneTimeout = true, TieneReintentos = true, TieneCircuitBreaker = true },` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 10:** `new() { ServicioOrigen = "Ordenes.Api", ServicioDestino = "Clientes.Api", Metodo = "GET", TieneTimeout = true, TieneReintentos = true, TieneCircuitBreaker = true },` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 11:** `new() { ServicioOrigen = "Facturacion.Api", ServicioDestino = "Ordenes.Api", Metodo = "GET", TieneTimeout = true, TieneReintentos = true, TieneCircuitBreaker = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
 - **Línea 12:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 13:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 14:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
 
 **Por qué funciona así.** Cada invocación devuelve una lista nueva con los ejemplos de análisis; cambiar una lista no modifica futuros catálogos.
@@ -809,9 +741,8 @@ public class CatalogoLlamadas
 using System.Collections.Generic;
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
 
-- **Línea 1:** `using System.Collections.Generic;` → Importa los tipos o extensiones utilizados por el archivo.
+
 
 
 **Por qué funciona así.** Las importaciones explícitas muestran dónde se declaran los tipos genéricos y las extensiones LINQ, aunque el proyecto tenga importaciones implícitas.
@@ -842,10 +773,8 @@ Este archivo completa el contrato, registro o prueba indicada por su nombre. Cr�
 </Project>
 ```
 
-**Lectura de las líneas clave.**
 
-- **Línea 4:** `<ProjectReference Include="../AceriaApp.Comunicacion.Contratos/AceriaApp.Comunicacion.Contratos.csproj" />` → Declara una dependencia de compilación explícita; el ensamblado debe existir en la solución.
-- **Línea 5:** `<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.21" />` → Fija la versión de la dependencia para reproducir la compilación y sus API.
+
 
 Desde la carpeta de esta etapa, registra el proyecto:
 
@@ -880,9 +809,8 @@ public sealed class InventarioDbContext(DbContextOptions<InventarioDbContext> op
 }
 ```
 
-**Lectura de las líneas clave.**
 
-- **Línea 3:** `public sealed class Existencia` → Define la forma pública o la configuración reproducible que usarán los archivos del mismo punto.
+
 
 
 #### Implementación funcional: `InventarioProgram.cs`
@@ -928,14 +856,13 @@ public sealed class InventarioProgram
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 9:** `builder.Services.AddDbContext<InventarioDbContext>(o => o.UseSqlServer(` → Mantiene SQL Server real como proveedor; no se sustituye por almacenamiento en memoria.
 - **Línea 15:** `using var scope = app.Services.CreateScope();` → Crea un ámbito por iteración o mensaje; el DbContext no se comparte entre trabajos concurrentes.
 - **Línea 17:** `await db.Database.EnsureCreatedAsync();` → Inicializa una base didáctica nueva. No migra un esquema existente: usa los nombres separados de cada etapa.
 - **Línea 22:** `await db.SaveChangesAsync();` → Guarda las existencias iniciales del laboratorio en la base propia de Inventario.
 - **Línea 25:** `app.MapGet("/health", () => Results.Ok(new { servicio = "Inventario" }));` → Publica una consulta HTTP con un contrato de respuesta verificable.
-- **Línea 26:** `app.MapGet("/api/v1/materiales/{material}", async (string material, InventarioDbContext db, CancellationToken ct) =>` → Publica una consulta HTTP con un contrato de respuesta verificable.
 - **Línea 28:** `var valor = await db.Existencias.AsNoTracking().SingleOrDefaultAsync(x => x.Material == material, ct);` → Obtiene datos para lectura sin incorporarlos al seguimiento de cambios.
 
 
@@ -1083,12 +1010,8 @@ Este archivo completa el contrato, registro o prueba indicada por su nombre. Cr�
 </Project>
 ```
 
-**Lectura de las líneas clave.**
 
-- **Línea 2:** `<ProjectReference Include="../AceriaApp.Hexagonal.Aplicacion/AceriaApp.Hexagonal.Aplicacion.csproj" />` → Declara una dependencia de compilación explícita; el ensamblado debe existir en la solución.
-- **Línea 3:** `<ProjectReference Include="../AceriaApp.Hexagonal.Infraestructura/AceriaApp.Hexagonal.Infraestructura.csproj" />` → Declara una dependencia de compilación explícita; el ensamblado debe existir en la solución.
-- **Línea 6:** `<ProjectReference Include="../AceriaApp.Produccion.Infraestructura/AceriaApp.Produccion.Infraestructura.csproj" />` → Declara una dependencia de compilación explícita; el ensamblado debe existir en la solución.
-- **Línea 8:** `<ItemGroup><ProjectReference Include="../AceriaApp.Comunicacion.Infraestructura/AceriaApp.Comunicacion.Infraestructura.csproj" /></ItemGroup>` → Declara una dependencia de compilación explícita; el ensamblado debe existir en la solución.
+
 
 Desde la carpeta de esta etapa, registra el proyecto:
 
@@ -1125,9 +1048,8 @@ public static class ComunicacionEndpoints
 }
 ```
 
-**Lectura de las líneas clave.**
 
-- **Línea 7:** `app.MapGet("/api/v1/comunicacion/materiales/{material}", async (string material, IClienteInventario inventario, CancellationToken ct) =>` → Publica una consulta HTTP con un contrato de respuesta verificable.
+
 
 
 #### Implementación funcional: `Program.cs`
@@ -1315,16 +1237,8 @@ app.Run();
 public partial class Program {} // permite WebApplicationFactory en tests
 ```
 
-**Lectura de las líneas clave.**
 
-- **Línea 21:** `o.UseSqlServer(builder.Configuration.GetConnectionString("AceriaApp")));` → Mantiene SQL Server real como proveedor; no se sustituye por almacenamiento en memoria.
-- **Línea 32:** `// EnsureCreated se utiliza SOLO como ayuda didáctica en Development.` → Inicializa una base didáctica nueva. No migra un esquema existente: usa los nombres separados de cada etapa.
-- **Línea 37:** `using var scope=app.Services.CreateScope();` → Crea un ámbito por iteración o mensaje; el DbContext no se comparte entre trabajos concurrentes.
-- **Línea 38:** `await scope.ServiceProvider.GetRequiredService<AceriaDbContext>().Database.EnsureCreatedAsync();` → Inicializa una base didáctica nueva. No migra un esquema existente: usa los nombres separados de cada etapa.
-- **Línea 42:** `app.MapGet("/api/v1/ordenes",async (AceriaDbContext db,CancellationToken ct)=>` → Publica una consulta HTTP con un contrato de respuesta verificable.
-- **Línea 45:** `var ordenes=await db.Ordenes.AsNoTracking().OrderBy(x=>x.FechaCreacion).ToListAsync(ct);` → Obtiene datos para lectura sin incorporarlos al seguimiento de cambios.
-- **Línea 52:** `app.MapGet("/api/v1/ordenes/{id:guid}",async (Guid id,AceriaDbContext db)=>` → Publica una consulta HTTP con un contrato de respuesta verificable.
-- **Línea 54:** `var orden=await db.Ordenes.AsNoTracking().FirstOrDefaultAsync(x=>x.Id==id);` → Obtiene datos para lectura sin incorporarlos al seguimiento de cambios.
+
 
 
 #### Implementación funcional: `appsettings.json`
@@ -1350,7 +1264,7 @@ Este archivo completa el contrato, registro o prueba indicada por su nombre. Cr�
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 2:** `"ConnectionStrings": {` → Separa los almacenes de esta etapa y conserva los de los módulos anteriores.
 
@@ -1381,7 +1295,7 @@ public static class RegistroComunicacion
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 9:** `services.AddHttpClient<IClienteInventario, ClienteInventarioHttp>(http =>` → Registra el cliente tipado y centraliza dirección y timeout; los handlers se administran mediante la factoría.
 
@@ -1407,9 +1321,8 @@ Este archivo completa el contrato, registro o prueba indicada por su nombre. Cr�
 }
 ```
 
-**Lectura de las líneas clave.**
 
-- **Línea 2:** `"ConnectionStrings": {` → Separa los almacenes de esta etapa y conserva los de los módulos anteriores.
+
 
 
 ### PASO 6.1.14 — Crear el archivo `ValidadorComunicacionSincronaTests.cs`
@@ -1540,229 +1453,127 @@ public class ValidadorComunicacionSincronaTests
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 1:** `using AceriaApp.Api.ComunicacionSincrona;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 2:** `using FluentAssertions;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 3:** `using Xunit;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 4:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 5:** `namespace AceriaApp.ComunicacionSincrona.Tests;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 6:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 7:** `public class ValidadorComunicacionSincronaTests` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 8:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 9:** `private readonly ValidadorComunicacionSincrona _validador = new();` → Crea la instancia del validador que utiliza cada prueba.
 
-- **Línea 10:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 11:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
 - **Línea 12:** `public void Validar_CatalogoPorDefecto_DevuelveValido()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 13:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 14:** `var resultado = _validador.Validar(CatalogoLlamadas.LlamadasPorDefecto());` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 15:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 16:** `resultado.EsValida.Should().BeTrue();` → Comprueba que la política acepta los datos de este caso.
 
 - **Línea 17:** `resultado.Errores.Should().BeEmpty();` → Comprueba que no se ha registrado ningún diagnóstico.
 
-- **Línea 18:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 19:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 20:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 21:** `public void Validar_SinLlamadas_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 22:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 23:** `var resultado = _validador.Validar(new List<LlamadaSincrona>());` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 24:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 25:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
 - **Línea 26:** `resultado.Errores.Should().Contain(e => e.Contains("No hay llamadas"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 27:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 28:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 29:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 30:** `public void Validar_MismoOrigenYDestino_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 31:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 32:** `var llamadas = new List<LlamadaSincrona>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 33:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 34:** `new() { ServicioOrigen = "Ordenes.Api", ServicioDestino = "Ordenes.Api", Metodo = "GET", TieneTimeout = true, TieneReintentos = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 35:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 36:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 37:** `var resultado = _validador.Validar(llamadas);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 38:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 39:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 40:** `resultado.Errores.Should().Contain(e => e.Contains("apunta al mismo servicio"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 41:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 42:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 43:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 44:** `public void Validar_MetodoNoPermitido_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 45:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 46:** `var llamadas = new List<LlamadaSincrona>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 47:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 48:** `new() { ServicioOrigen = "A", ServicioDestino = "B", Metodo = "CONNECT", TieneTimeout = true, TieneReintentos = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 49:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 50:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 51:** `var resultado = _validador.Validar(llamadas);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 52:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 53:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 54:** `resultado.Errores.Should().Contain(e => e.Contains("Método no permitido"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 55:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 56:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 57:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 58:** `public void Validar_SinTimeout_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 59:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 60:** `var llamadas = new List<LlamadaSincrona>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 61:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 62:** `new() { ServicioOrigen = "A", ServicioDestino = "B", Metodo = "GET", TieneTimeout = false, TieneReintentos = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 63:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 64:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 65:** `var resultado = _validador.Validar(llamadas);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 66:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 67:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 68:** `resultado.Errores.Should().Contain(e => e.Contains("no tiene timeout"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 69:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 70:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 71:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 72:** `public void Validar_PostSinReintentos_DevuelveValido()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 73:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 74:** `var llamadas = new List<LlamadaSincrona>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 75:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 76:** `new() { ServicioOrigen = "A", ServicioDestino = "B", Metodo = "POST", TieneTimeout = true, TieneReintentos = false }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 77:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 78:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 79:** `var resultado = _validador.Validar(llamadas);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 80:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 81:** `resultado.EsValida.Should().BeTrue();` → Comprueba que la política acepta los datos de este caso.
 
-- **Línea 82:** `resultado.Errores.Should().BeEmpty();` → Comprueba que no se ha registrado ningún diagnóstico.
 
-- **Línea 83:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 84:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 85:** `public void Validar_PostConReintentosSinIdempotencia_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 86:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 87:** `var llamadas = new List<LlamadaSincrona>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 88:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 89:** `new() { ServicioOrigen = "A", ServicioDestino = "B", Metodo = "POST", TieneTimeout = true, TieneReintentos = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 90:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 91:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 92:** `var resultado = _validador.Validar(llamadas);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 93:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 94:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 95:** `resultado.Errores.Should().Contain(e => e.Contains("reintentos no seguros"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 96:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 97:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 98:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 99:** `public void Validar_PostConReintentosYClaveIdempotente_DevuelveValido()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 100:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 101:** `var llamadas = new List<LlamadaSincrona>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 102:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 103:** `new() { ServicioOrigen = "A", ServicioDestino = "B", Metodo = "POST", TieneTimeout = true, TieneReintentos = true, TieneClaveIdempotencia = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 104:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 105:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 106:** `var resultado = _validador.Validar(llamadas);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 107:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 108:** `resultado.EsValida.Should().BeTrue();` → Comprueba que la política acepta los datos de este caso.
 
-- **Línea 109:** `resultado.Errores.Should().BeEmpty();` → Comprueba que no se ha registrado ningún diagnóstico.
 
-- **Línea 110:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 111:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
 
 **Por qué funciona así.** Las pruebas ejercitan aceptación y rechazos concretos del validador. Afirmar el diagnóstico evita un falso positivo por otro error.
@@ -1839,103 +1650,58 @@ public class CatalogoLlamadasTests
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 1:** `using AceriaApp.Api.ComunicacionSincrona;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 2:** `using FluentAssertions;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 3:** `using Xunit;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 4:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 5:** `namespace AceriaApp.ComunicacionSincrona.Tests;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 6:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 7:** `public class CatalogoLlamadasTests` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 8:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 9:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 10:** `public void LlamadasPorDefecto_ContieneTresLlamadas()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 11:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 12:** `var llamadas = CatalogoLlamadas.LlamadasPorDefecto();` → Obtiene los datos que se utilizarán en las comprobaciones siguientes.
 
-- **Línea 13:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 14:** `llamadas.Should().HaveCount(3);` → Comprueba el tamaño del catálogo sin inferir servicios o conexiones en ejecución.
 
-- **Línea 15:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 16:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 17:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 18:** `public void LlamadasPorDefecto_TodasUsanGet()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 19:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 20:** `var llamadas = CatalogoLlamadas.LlamadasPorDefecto();` → Obtiene los datos que se utilizarán en las comprobaciones siguientes.
 
-- **Línea 21:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 22:** `llamadas.Should().OnlyContain(l => l.Metodo == "GET");` → Comprueba la condición en cada entrada declarada del catálogo.
 
-- **Línea 23:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 24:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 25:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 26:** `public void LlamadasPorDefecto_TodasTienenTimeout()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 27:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 28:** `var llamadas = CatalogoLlamadas.LlamadasPorDefecto();` → Obtiene los datos que se utilizarán en las comprobaciones siguientes.
 
-- **Línea 29:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 30:** `llamadas.Should().OnlyContain(l => l.TieneTimeout);` → Comprueba la condición en cada entrada declarada del catálogo.
 
-- **Línea 31:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 32:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 33:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 34:** `public void LlamadasPorDefecto_TodasTienenReintentos()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 35:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 36:** `var llamadas = CatalogoLlamadas.LlamadasPorDefecto();` → Obtiene los datos que se utilizarán en las comprobaciones siguientes.
 
-- **Línea 37:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 38:** `llamadas.Should().OnlyContain(l => l.TieneReintentos);` → Comprueba la condición en cada entrada declarada del catálogo.
 
-- **Línea 39:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 40:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 41:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 42:** `public void LlamadasPorDefecto_NingunaApuntaASiMisma()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 43:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 44:** `var llamadas = CatalogoLlamadas.LlamadasPorDefecto();` → Obtiene los datos que se utilizarán en las comprobaciones siguientes.
 
-- **Línea 45:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 46:** `llamadas.Should().OnlyContain(l => l.ServicioOrigen != l.ServicioDestino);` → Comprueba la condición en cada entrada declarada del catálogo.
 
-- **Línea 47:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 48:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
 
 **Por qué funciona así.** Las pruebas del catálogo verifican cantidades y propiedades declaradas. No prueban que existan los servicios nombrados.
@@ -1973,16 +1739,8 @@ Este archivo completa el contrato, registro o prueba indicada por su nombre. Cr�
 </Project>
 ```
 
-**Lectura de las líneas clave.**
 
-- **Línea 4:** `<ProjectReference Include="../../src/AceriaApp.Api/AceriaApp.Api.csproj" />` → Declara una dependencia de compilación explícita; el ensamblado debe existir en la solución.
-- **Línea 5:** `<ProjectReference Include="../../src/AceriaApp.Inventario.Api/AceriaApp.Inventario.Api.csproj" />` → Declara una dependencia de compilación explícita; el ensamblado debe existir en la solución.
-- **Línea 6:** `<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />` → Fija la versión de la dependencia para reproducir la compilación y sus API.
-- **Línea 7:** `<PackageReference Include="xunit" Version="2.9.2" />` → Fija la versión de la dependencia para reproducir la compilación y sus API.
-- **Línea 8:** `<PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />` → Fija la versión de la dependencia para reproducir la compilación y sus API.
-- **Línea 9:** `<PackageReference Include="FluentAssertions" Version="6.12.2" />` → Fija la versión de la dependencia para reproducir la compilación y sus API.
-- **Línea 10:** `<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.21" />` → Fija la versión de la dependencia para reproducir la compilación y sus API.
-- **Línea 11:** `<PackageReference Include="Testcontainers.MsSql" Version="3.10.0" />` → Fija la versión de la dependencia para reproducir la compilación y sus API.
+
 
 
 #### Implementación funcional: `ClienteInventarioTests.cs`
@@ -2040,16 +1798,9 @@ public class ClienteInventarioTests
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 18:** `{ var r=await Cliente(HttpStatusCode.OK,"{\"material\":\"Acero\",\"stock\":80}").ObtenerAsync("Acero",default); Assert.Equal(80,r!.Stock); }` → Comprueba una consecuencia observable. Si cambia el comportamiento descrito por el nombre del test, esta aserción debe fallar.
-- **Línea 21:** `{ Assert.Null(await Cliente(HttpStatusCode.NotFound,"{}").ObtenerAsync("Acero",default)); }` → Comprueba una consecuencia observable. Si cambia el comportamiento descrito por el nombre del test, esta aserción debe fallar.
-- **Línea 24:** `{ await Assert.ThrowsAsync<InventarioNoDisponibleException>(()=>Cliente(HttpStatusCode.InternalServerError,"{}").ObtenerAsync("Acero",default)); }` → Comprueba una consecuencia observable. Si cambia el comportamiento descrito por el nombre del test, esta aserción debe fallar.
-- **Línea 27:** `{ await Assert.ThrowsAsync<InventarioNoDisponibleException>(()=>Cliente(HttpStatusCode.OK,"{").ObtenerAsync("Acero",default)); }` → Comprueba una consecuencia observable. Si cambia el comportamiento descrito por el nombre del test, esta aserción debe fallar.
-- **Línea 30:** `{ await Assert.ThrowsAsync<InventarioNoDisponibleException>(()=>Cliente(HttpStatusCode.OK,"null").ObtenerAsync("Acero",default)); }` → Comprueba una consecuencia observable. Si cambia el comportamiento descrito por el nombre del test, esta aserción debe fallar.
-- **Línea 33:** `{ await Assert.ThrowsAsync<InventarioNoDisponibleException>(()=>Cliente(HttpStatusCode.OK,"{\"material\":\"Acero\",\"stock\":-1}").ObtenerAsync("Acero",default)); }` → Comprueba una consecuencia observable. Si cambia el comportamiento descrito por el nombre del test, esta aserción debe fallar.
-- **Línea 36:** `{ using var ct=new CancellationTokenSource();ct.Cancel();await Assert.ThrowsAnyAsync<OperationCanceledException>(()=>Cliente(HttpStatusCode.OK,"{}").ObtenerAsync("Acero",ct.Token)); }` → Comprueba una consecuencia observable. Si cambia el comportamiento descrito por el nombre del test, esta aserción debe fallar.
-- **Línea 43:** `Assert.Equal("http://inventario/api/v1/materiales/Acero%20%3Fx%3D1",ruta);` → Comprueba una consecuencia observable. Si cambia el comportamiento descrito por el nombre del test, esta aserción debe fallar.
 
 
 #### Implementación funcional: `InventarioSqlTests.cs`
@@ -2103,13 +1854,9 @@ public class InventarioSqlTests
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 21:** `using var db=Nuevo();db.Database.EnsureCreated();` → Inicializa una base didáctica nueva. No migra un esquema existente: usa los nombres separados de cada etapa.
-- **Línea 24:** `public InventarioDbContext Nuevo()=>new(new DbContextOptionsBuilder<InventarioDbContext>().UseSqlServer(bd.ConnectionString).Options);` → Mantiene SQL Server real como proveedor; no se sustituye por almacenamiento en memoria.
-- **Línea 28:** `builder.ConfigureTestServices(s=>{s.RemoveAll<DbContextOptions<InventarioDbContext>>();s.AddDbContext<InventarioDbContext>(o=>o.UseSqlServer(bd.ConnectionString));});` → Mantiene SQL Server real como proveedor; no se sustituye por almacenamiento en memoria.
 - **Línea 30:** `protected override void Dispose(bool disposing){base.Dispose(disposing);if(disposing)bd.Dispose();}` → Libera recursos del adaptador o de la prueba al terminar su ámbito.
-- **Línea 37:** `{using var f=new Factory();using var http=f.CreateClient();Assert.Equal(HttpStatusCode.NotFound,(await http.GetAsync("/api/v1/materiales/NoExiste")).StatusCode);}` → Comprueba una consecuencia observable. Si cambia el comportamiento descrito por el nombre del test, esta aserción debe fallar.
 - **Línea 40:** `{using var f=new Factory();using(var db=f.Nuevo()){(await db.Existencias.SingleAsync()).Stock=70;await db.SaveChangesAsync();}using var otro=f.Nuevo();Assert.Equal(70,(await otro.Existencias.SingleAsync()).Stock);}` → Guarda los datos de preparación o la modificación que esta prueba comprobará desde SQL Server real.
 
 
@@ -2385,9 +2132,8 @@ Abre `src/AceriaApp.Api/ComunicacionSincrona/ValidadorComunicacionSincrona.cs` e
 public record ResumenLlamadas(int Total, int ConTimeout, int ConReintentos, int ConCircuitBreaker);
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
 
-- **Línea 1:** `public record ResumenLlamadas(int Total, int ConTimeout, int ConReintentos, int ConCircuitBreaker);` → Define el resultado inmutable que devuelve el validador o el resumen.
+
 
 
 ### Reto 6.1.3 — Calcular los recuentos
@@ -2410,23 +2156,17 @@ Inserta el método dentro de `ValidadorComunicacionSincrona`, antes del campo `p
     }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 1:** `public static ResumenLlamadas Resumen(IEnumerable<LlamadaSincrona> llamadas)` → Expone la operación con el contrato que usan el catálogo o sus pruebas.
 
-- **Línea 2:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 3:** `var lista = llamadas.ToList();` → Materializa una sola vez la secuencia recibida para recorrerla y contarla.
 
 - **Línea 4:** `var conTimeout = lista.Count(l => l.TieneTimeout);` → Cuenta las entradas que cumplen el criterio indicado.
 
-- **Línea 5:** `var conReintentos = lista.Count(l => l.TieneReintentos);` → Cuenta las entradas que cumplen el criterio indicado.
 
-- **Línea 6:** `var conCircuitBreaker = lista.Count(l => l.TieneCircuitBreaker);` → Cuenta las entradas que cumplen el criterio indicado.
 
 - **Línea 7:** `return new ResumenLlamadas(lista.Count, conTimeout, conReintentos, conCircuitBreaker);` → Devuelve los recuentos del catálogo sin modificar sus entradas.
 
-- **Línea 8:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
 
 ### Reto 6.1.6 — Verificar el catálogo por defecto
@@ -2451,27 +2191,19 @@ Inserta la prueba dentro de `ValidadorComunicacionSincronaTests`, antes del camp
     }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 1:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 2:** `public void Resumen_ConCatalogoPorDefecto_CalculaTotales()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 3:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 4:** `var resumen = ValidadorComunicacionSincrona.Resumen(CatalogoLlamadas.LlamadasPorDefecto());` → Calcula el resumen sobre el catálogo por defecto.
 
-- **Línea 5:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 6:** `resumen.Total.Should().Be(3);` → Compara el recuento obtenido con el valor esperado del catálogo.
 
-- **Línea 7:** `resumen.ConTimeout.Should().Be(3);` → Compara el recuento obtenido con el valor esperado del catálogo.
 
-- **Línea 8:** `resumen.ConReintentos.Should().Be(3);` → Compara el recuento obtenido con el valor esperado del catálogo.
 
-- **Línea 9:** `resumen.ConCircuitBreaker.Should().Be(3);` → Compara el recuento obtenido con el valor esperado del catálogo.
 
-- **Línea 10:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
 
 **Comprobación del reto.** Compila la copia optativa y ejecuta primero `dotnet test tests/AceriaApp.ComunicacionSincrona.Tests/AceriaApp.ComunicacionSincrona.Tests.csproj -c Release`, después `dotnet test AceriaApp.sln -c Release`. El catálogo pasa de 13 a 14 tests; la solución debe ejecutar 232 + 1 pruebas, todas aprobadas y ninguna omitida. Confirma en el TRX que se ejecutó `Resumen_ConCatalogoPorDefecto_CalculaTotales` y que la etapa obligatoria conserva sus hashes.
@@ -2665,7 +2397,7 @@ public interface ITransporteEventos
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 3:** `public enum EstadoPlanificacion { Aceptada, NoExiste, Conflicto, SinDisponibilidad }` → Define la forma pública o la configuración reproducible que usarán los archivos del mismo punto.
 
@@ -2694,7 +2426,7 @@ public sealed record OrdenPlanificadaV1(Guid EventoId, Guid OrdenId, DateTimeOff
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 3:** `public sealed record OrdenPlanificadaV1(Guid EventoId, Guid OrdenId, DateTimeOffset OcurridoEnUtc,` → Utiliza el contrato público versionado, sin serializar la entidad de dominio completa.
 - **Línea 12:** `throw new InvalidDataException("Evento de planificación incompatible o inválido.");` → Señala un contrato incompatible o un conflicto de identidad; el consumidor lo envía a fallidos.
@@ -2728,7 +2460,7 @@ public class Evento
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 1:** `namespace AceriaApp.Api.ComunicacionAsincrona;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
@@ -2740,15 +2472,10 @@ public class Evento
 
 - **Línea 5:** `public string Nombre { get; init; } = string.Empty;` → Declara un dato del análisis que se fija al construir la entrada.
 
-- **Línea 6:** `public string Tipo { get; init; } = string.Empty;` → Declara un dato del análisis que se fija al construir la entrada.
 
-- **Línea 7:** `public string Publicador { get; init; } = string.Empty;` → Declara un dato del análisis que se fija al construir la entrada.
 
-- **Línea 8:** `public int NumeroDeConsumidores { get; init; }` → Declara un dato del análisis que se fija al construir la entrada.
 
-- **Línea 9:** `public bool TieneIdempotencia { get; init; }` → Declara un dato del análisis que se fija al construir la entrada.
 
-- **Línea 10:** `public bool TieneReintentos { get; init; }` → Declara un dato del análisis que se fija al construir la entrada.
 
 - **Línea 11:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
@@ -2833,113 +2560,68 @@ public class ValidadorComunicacionAsincrona
 public record ResultadoComunicacionAsincrona(bool EsValida, IReadOnlyList<string> Errores);
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 1:** `namespace AceriaApp.Api.ComunicacionAsincrona;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 2:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 3:** `public class ValidadorComunicacionAsincrona` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 4:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 5:** `private static readonly string[] TiposPermitidos = { "Dominio", "Integracion" };` → Limita los valores de texto reconocidos por la política didáctica.
 
-- **Línea 6:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 7:** `public ResultadoComunicacionAsincrona Validar(IEnumerable<Evento> eventos)` → Expone la operación con el contrato que usan el catálogo o sus pruebas.
 
-- **Línea 8:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 9:** `var errores = new List<string>();` → Inicializa la colección de diagnósticos que se devolverá al finalizar.
 
 - **Línea 10:** `var lista = eventos.ToList();` → Materializa una sola vez la secuencia recibida para recorrerla y contarla.
 
-- **Línea 11:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 12:** `if (lista.Count == 0)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 13:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 14:** `errores.Add("No hay eventos declarados.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 15:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 16:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 17:** `foreach (var evento in lista)` → Revisa cada entrada; un catálogo puede acumular varios diagnósticos.
 
-- **Línea 18:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 19:** `if (string.IsNullOrWhiteSpace(evento.Nombre))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 20:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 21:** `errores.Add("Un evento no declara el nombre.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 22:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 23:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 24:** `if (!TiposPermitidos.Contains(evento.Tipo))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 25:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 26:** `errores.Add($"Tipo no permitido en '{evento.Nombre}': '{evento.Tipo}'.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 27:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 28:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 29:** `if (string.IsNullOrWhiteSpace(evento.Publicador))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 30:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 31:** `errores.Add($"El evento '{evento.Nombre}' no declara el publicador.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 32:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 33:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 34:** `if (evento.NumeroDeConsumidores < 0 || (evento.Tipo == "Integracion" && evento.NumeroDeConsumidores == 0))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 35:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 36:** `errores.Add($"El evento '{evento.Nombre}' no tiene consumidores válidos para la política de este catálogo.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 37:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 38:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 39:** `if (evento.Tipo == "Integracion" && !evento.TieneIdempotencia)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 40:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 41:** `errores.Add($"El evento '{evento.Nombre}' no declara idempotencia.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 42:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 43:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 44:** `if (evento.Tipo == "Integracion" && !evento.TieneReintentos)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 45:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 46:** `errores.Add($"El evento '{evento.Nombre}' no declara reintentos.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 47:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 48:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 49:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 50:** `return new ResultadoComunicacionAsincrona(errores.Count == 0, errores);` → Devuelve validez y diagnósticos; no ejecuta ninguna comunicación remota.
 
-- **Línea 51:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 52:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 53:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 54:** `public record ResultadoComunicacionAsincrona(bool EsValida, IReadOnlyList<string> Errores);` → Define el resultado inmutable que devuelve el validador o el resumen.
 
@@ -2974,11 +2656,10 @@ using System.Collections.Generic;
 using System.Linq;
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 1:** `using System.Collections.Generic;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 2:** `using System.Linq;` → Importa los tipos o extensiones utilizados por el archivo.
 
 
 **Por qué funciona así.** Las importaciones explícitas muestran dónde se declaran los tipos genéricos y las extensiones LINQ, aunque el proyecto tenga importaciones implícitas.
@@ -3010,12 +2691,10 @@ Este archivo completa el contrato, registro o prueba indicada por su nombre. Cr�
 </Project>
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 4:** `<ProjectReference Include="../AceriaApp.Comunicacion.Aplicacion/AceriaApp.Comunicacion.Aplicacion.csproj" />` → Declara una dependencia de compilación explícita; el ensamblado debe existir en la solución.
-- **Línea 5:** `<ProjectReference Include="../AceriaApp.Produccion.Infraestructura/AceriaApp.Produccion.Infraestructura.csproj" />` → Declara una dependencia de compilación explícita; el ensamblado debe existir en la solución.
 - **Línea 6:** `<PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />` → Fija la versión de la dependencia para reproducir la compilación y sus API.
-- **Línea 7:** `<PackageReference Include="RabbitMQ.Client" Version="7.1.2" /></ItemGroup>` → Fija la versión de la dependencia para reproducir la compilación y sus API.
 
 Desde la carpeta de esta etapa, registra el proyecto:
 
@@ -3082,14 +2761,12 @@ public sealed class DespachadorOutbox(ProduccionDbContext db, ITransporteEventos
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 13:** `var orden = await db.Ordenes.AsNoTracking().Include(x => x.Lineas).SingleOrDefaultAsync(x => x.Id == id, ct);` → Obtiene datos para lectura sin incorporarlos al seguimiento de cambios.
-- **Línea 22:** `var evento = new OrdenPlanificadaV1(Guid.NewGuid(), orden.Id, DateTimeOffset.UtcNow,` → Utiliza el contrato público versionado, sin serializar la entidad de dominio completa.
 - **Línea 27:** `try { await db.SaveChangesAsync(ct); }` → Confirma juntos el cambio de estado de la orden y el outbox en la transacción local de SQL; el broker participa después.
 - **Línea 29:** `catch (DbUpdateException ex) when (ex.InnerException is SqlException sql && (sql.Number == 2601 || sql.Number == 2627))` → Reconoce la carrera en la restricción única de SQL sin ocultar otros errores de persistencia.
 - **Línea 38:** `var pendientes = await db.MensajesSalida.Where(x => x.EnviadoEnUtc == null)` → Distingue una salida pendiente de una confirmada por el broker; el marcado posterior puede repetirse tras un fallo.
-- **Línea 43:** `mensaje.EnviadoEnUtc = DateTimeOffset.UtcNow;` → Distingue una salida pendiente de una confirmada por el broker; el marcado posterior puede repetirse tras un fallo.
 - **Línea 44:** `await db.SaveChangesAsync(ct);` → Persiste el marcado del outbox después de recibir confirmación del broker; un fallo antes de este guardado puede causar una nueva publicación.
 
 
@@ -3105,7 +2782,7 @@ namespace AceriaApp.Produccion.Aplicacion;
 public sealed class ConflictoProduccionException() : Exception("La orden cambió desde su lectura; vuelve a consultarla.");
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 2:** `public sealed class ConflictoProduccionException() : Exception("La orden cambió desde su lectura; vuelve a consultarla.");` → Expresa el conflicto de concurrencia sin exponer una excepción de EF a aplicación; el caso de uso lo traduce al resultado que la API devuelve como 409.
 
@@ -3170,9 +2847,8 @@ public sealed class OrdenesProduccionCasosUso(
 }
 ```
 
-**Lectura de las líneas clave.**
 
-- **Línea 43:** `catch (ConflictoProduccionException ex)` → Expresa el conflicto de concurrencia sin exponer una excepción de EF a aplicación; el caso de uso lo traduce al resultado que la API devuelve como 409.
+
 
 
 #### Implementación funcional: `OrdenProduccion.cs`
@@ -3260,12 +2936,9 @@ public sealed class OrdenProduccion : IEquatable<OrdenProduccion>
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 35:** `Revision++;` → Incrementa la versión de la raíz después de una mutación válida; así SQL puede detectar cambios concurrentes aunque el estado siga siendo Borrador.
-- **Línea 46:** `Revision++;` → Incrementa la versión de la raíz después de una mutación válida; así SQL puede detectar cambios concurrentes aunque el estado siga siendo Borrador.
-- **Línea 53:** `Revision++;` → Incrementa la versión de la raíz después de una mutación válida; así SQL puede detectar cambios concurrentes aunque el estado siga siendo Borrador.
-- **Línea 60:** `Revision++;` → Incrementa la versión de la raíz después de una mutación válida; así SQL puede detectar cambios concurrentes aunque el estado siga siendo Borrador.
 
 
 #### Implementación funcional: `MensajeSalida.cs`
@@ -3287,9 +2960,8 @@ public sealed class MensajeSalida
 }
 ```
 
-**Lectura de las líneas clave.**
 
-- **Línea 8:** `public DateTimeOffset? EnviadoEnUtc { get; set; }` → Distingue una salida pendiente de una confirmada por el broker; el marcado posterior puede repetirse tras un fallo.
+
 
 
 #### Implementación funcional: `PersistenciaProduccion.cs`
@@ -3325,10 +2997,9 @@ public sealed class ProduccionUnitOfWork(ProduccionDbContext db) : IProduccionUn
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 16:** `try { await db.SaveChangesAsync(ct); }` → Confirma los cambios pendientes en la transacción local de SQL; esta operación no incluye al broker.
-- **Línea 20:** `throw new ConflictoProduccionException();` → Expresa el conflicto de concurrencia sin exponer una excepción de EF a aplicación; el caso de uso lo traduce al resultado que la API devuelve como 409.
 
 
 #### Implementación funcional: `ProduccionDbContext.cs`
@@ -3375,7 +3046,7 @@ public sealed class ProduccionDbContext(DbContextOptions<ProduccionDbContext> op
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 13:** `salida.HasIndex(x => x.OrdenId).IsUnique();` → La restricción única de SQL protege la identidad también cuando dos operaciones concurrentes compiten.
 - **Línea 16:** `orden.Property(x => x.Revision).IsConcurrencyToken();` → EF compara la Revision original de la raíz al actualizar. Toda mutación, tanto de líneas como de estado, incrementa esa versión para rechazar escrituras basadas en una lectura antigua.
@@ -3413,37 +3084,25 @@ public class CatalogoEventos
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 1:** `namespace AceriaApp.Api.ComunicacionAsincrona;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 2:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 3:** `public class CatalogoEventos` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 4:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 5:** `public static List<Evento> EventosPorDefecto()` → Expone la operación con el contrato que usan el catálogo o sus pruebas.
 
-- **Línea 6:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 7:** `return new List<Evento>` → Devuelve una lista nueva en cada llamada; modificarla no altera otros casos.
 
-- **Línea 8:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 9:** `new() { Nombre = "OrdenCreada", Tipo = "Integracion", Publicador = "Ordenes.Api", NumeroDeConsumidores = 2, TieneIdempotencia = true, TieneReintentos = true },` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 10:** `new() { Nombre = "OrdenCancelada", Tipo = "Integracion", Publicador = "Ordenes.Api", NumeroDeConsumidores = 2, TieneIdempotencia = true, TieneReintentos = true },` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 11:** `new() { Nombre = "MaterialReservado", Tipo = "Integracion", Publicador = "Inventario.Api", NumeroDeConsumidores = 1, TieneIdempotencia = true, TieneReintentos = true },` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 12:** `new() { Nombre = "FacturaEmitida", Tipo = "Integracion", Publicador = "Facturacion.Api", NumeroDeConsumidores = 1, TieneIdempotencia = true, TieneReintentos = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
 - **Línea 13:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 14:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 15:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
 
 **Por qué funciona así.** Cada invocación devuelve una lista nueva con los ejemplos de análisis; cambiar una lista no modifica futuros catálogos.
@@ -3489,7 +3148,7 @@ public sealed class PublicadorOutboxWorker(IServiceScopeFactory scopes, ILogger<
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 13:** `using var scope = scopes.CreateScope();` → Crea un ámbito por iteración o mensaje; el DbContext no se comparte entre trabajos concurrentes.
 
@@ -3586,12 +3245,11 @@ public sealed class RabbitMqTransporte(RabbitMqOpciones opciones) : ITransporteE
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 21:** `if (conexion is not null) await conexion.DisposeAsync();` → Dispone la conexión existente antes de reemplazarla o de liberar definitivamente el adaptador.
 - **Línea 26:** `var canal = await conexion.CreateChannelAsync(new CreateChannelOptions(confirmar, confirmar), ct);` → Configura confirms y seguimiento según confirmar: la publicación usa true y el consumo usa false.
 - **Línea 28:** `await canal.QueueDeclareAsync(Cola + ".errores", durable: true, exclusive: false, autoDelete: false, cancellationToken: ct);` → Declara la topología durable usada por el publicador y el consumidor.
-- **Línea 29:** `await canal.QueueDeclareAsync(Cola, durable: true, exclusive: false, autoDelete: false,` → Declara la topología durable usada por el publicador y el consumidor.
 - **Línea 38:** `using var plazo = CancellationTokenSource.CreateLinkedTokenSource(ct);` → Combina la cancelación del solicitante con un límite propio de la operación remota.
 - **Línea 39:** `plazo.CancelAfter(TimeSpan.FromSeconds(10));` → Acota la espera de confirmación; un timeout puede dejar incierto si el broker recibió el mensaje.
 - **Línea 41:** `await canal.BasicPublishAsync(Exchange, Ruta, mandatory: true,` → Publica con confirmaciones activadas: esperar acredita aceptación del broker, no ejecución del consumidor.
@@ -3618,9 +3276,8 @@ public sealed class RabbitMqTransporte(RabbitMqOpciones opciones) : ITransporteE
 using System.Collections.Generic;
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
 
-- **Línea 1:** `using System.Collections.Generic;` → Importa los tipos o extensiones utilizados por el archivo.
+
 
 
 **Por qué funciona así.** Las importaciones explícitas muestran dónde se declaran los tipos genéricos y las extensiones LINQ, aunque el proyecto tenga importaciones implícitas.
@@ -3651,11 +3308,8 @@ Este archivo completa el contrato, registro o prueba indicada por su nombre. Cr�
 </Project>
 ```
 
-**Lectura de las líneas clave.**
 
-- **Línea 4:** `<ProjectReference Include="../AceriaApp.Comunicacion.Contratos/AceriaApp.Comunicacion.Contratos.csproj" />` → Declara una dependencia de compilación explícita; el ensamblado debe existir en la solución.
-- **Línea 5:** `<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.21" />` → Fija la versión de la dependencia para reproducir la compilación y sus API.
-- **Línea 6:** `<ProjectReference Include="../AceriaApp.Comunicacion.Infraestructura/AceriaApp.Comunicacion.Infraestructura.csproj" /></ItemGroup>` → Declara una dependencia de compilación explícita; el ensamblado debe existir en la solución.
+
 
 Desde la carpeta de esta etapa, registra el proyecto:
 
@@ -3702,11 +3356,8 @@ public sealed class ConsumidorPlanificacionWorker(RabbitMqTransporte bus, IServi
 }
 ```
 
-**Lectura de las líneas clave.**
 
-- **Línea 16:** `var evento = JsonSerializer.Deserialize<OrdenPlanificadaV1>(json)` → Utiliza el contrato público versionado, sin serializar la entidad de dominio completa.
-- **Línea 17:** `?? throw new InvalidDataException("Evento nulo.");` → Señala un contrato incompatible o un conflicto de identidad; el consumidor lo envía a fallidos.
-- **Línea 18:** `using var scope = scopes.CreateScope();` → Crea un ámbito por iteración o mensaje; el DbContext no se comparte entre trabajos concurrentes.
+
 
 
 #### Implementación funcional: `InventarioDbContext.cs`
@@ -3739,9 +3390,8 @@ public sealed class InventarioDbContext(DbContextOptions<InventarioDbContext> op
 }
 ```
 
-**Lectura de las líneas clave.**
 
-- **Línea 15:** `model.Entity<PlanificacionRecibida>().HasIndex(x => x.OrdenId).IsUnique();` → La restricción única de SQL protege la identidad también cuando dos operaciones concurrentes compiten.
+
 
 
 #### Implementación funcional: `InventarioProgram.cs`
@@ -3799,16 +3449,13 @@ public sealed class InventarioProgram
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 10:** `builder.Services.AddDbContext<InventarioDbContext>(o => o.UseSqlServer(` → Mantiene SQL Server real como proveedor; no se sustituye por almacenamiento en memoria.
 - **Línea 18:** `builder.Services.AddHostedService<ConsumidorPlanificacionWorker>();` → Habilita el proceso periódico únicamente cuando la configuración lo solicita.
-- **Línea 22:** `using var scope = app.Services.CreateScope();` → Crea un ámbito por iteración o mensaje; el DbContext no se comparte entre trabajos concurrentes.
 - **Línea 24:** `await db.Database.EnsureCreatedAsync();` → Inicializa una base didáctica nueva. No migra un esquema existente: usa los nombres separados de cada etapa.
 - **Línea 29:** `await db.SaveChangesAsync();` → Guarda las existencias iniciales del laboratorio en la base propia de Inventario.
 - **Línea 32:** `app.MapGet("/health", () => Results.Ok(new { servicio = "Inventario" }));` → Publica una consulta HTTP con un contrato de respuesta verificable.
-- **Línea 33:** `app.MapGet("/api/v1/materiales/{material}", async (string material, InventarioDbContext db, CancellationToken ct) =>` → Publica una consulta HTTP con un contrato de respuesta verificable.
-- **Línea 35:** `var valor = await db.Existencias.AsNoTracking().SingleOrDefaultAsync(x => x.Material == material, ct);` → Obtiene datos para lectura sin incorporarlos al seguimiento de cambios.
 
 
 #### Implementación funcional: `PlanificacionRecibida.cs`
@@ -3830,9 +3477,8 @@ public sealed class PlanificacionRecibida
 }
 ```
 
-**Lectura de las líneas clave.**
 
-- **Línea 2:** `public sealed class PlanificacionRecibida` → Define la forma pública o la configuración reproducible que usarán los archivos del mismo punto.
+
 
 
 #### Implementación funcional: `ReceptorPlanificacion.cs`
@@ -3876,16 +3522,10 @@ public sealed class ReceptorPlanificacion(InventarioDbContext db)
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 9:** `public async Task<bool> ProcesarAsync(OrdenPlanificadaV1 evento, CancellationToken ct)` → Utiliza el contrato público versionado, sin serializar la entidad de dominio completa.
 - **Línea 12:** `var huella = Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(evento)));` → Calcula una huella del contenido para distinguir un duplicado legítimo de una identidad reutilizada con otros datos.
-- **Línea 13:** `var previo = await db.Planificaciones.AsNoTracking().SingleOrDefaultAsync(x => x.EventoId == evento.EventoId, ct);` → Obtiene datos para lectura sin incorporarlos al seguimiento de cambios.
 - **Línea 17:** `try { await db.SaveChangesAsync(ct); return true; }` → Guarda la fila que representa inbox y proyección en la transacción SQL local; el transporte confirma la entrega después de que termine.
-- **Línea 18:** `catch (DbUpdateException ex) when (ex.InnerException is SqlException sql && (sql.Number == 2601 || sql.Number == 2627))` → Reconoce la carrera en la restricción única de SQL sin ocultar otros errores de persistencia.
-- **Línea 21:** `var guardado = await db.Planificaciones.AsNoTracking().SingleOrDefaultAsync(x => x.EventoId == evento.EventoId, ct);` → Obtiene datos para lectura sin incorporarlos al seguimiento de cambios.
-- **Línea 22:** `if (guardado is null) throw new InvalidDataException("La orden ya tiene otro evento de planificación.", ex);` → Señala un contrato incompatible o un conflicto de identidad; el consumidor lo envía a fallidos.
-- **Línea 28:** `if (anterior != nueva) throw new InvalidDataException("EventoId reutilizado con contenido diferente.");` → Señala un contrato incompatible o un conflicto de identidad; el consumidor lo envía a fallidos.
 
 
 ### PASO 6.2.11 — Crear el proyecto de tests del punto 6.2
@@ -4051,9 +3691,8 @@ public static class ComunicacionEndpoints
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 7:** `app.MapGet("/api/v1/comunicacion/materiales/{material}", async (string material, IClienteInventario inventario, CancellationToken ct) =>` → Publica una consulta HTTP con un contrato de respuesta verificable.
 - **Línea 17:** `app.MapPost("/api/v1/comunicacion/ordenes/{id:guid}/planificar", async (Guid id, IPlanificadorIntegrado planificador, CancellationToken ct) =>` → Publica la operación de planificación; el adaptador traduce el resultado del caso de uso a HTTP.
 - **Línea 24:** `_ => Results.Accepted($"/api/v1/produccion/ordenes/{id}", new { ordenId = id, estado = "Planificada", propagacion = "Pendiente" })` → Devuelve 202: la planificación local está confirmada y la propagación a Inventario es eventual.
 
@@ -4081,7 +3720,7 @@ Este archivo completa el contrato, registro o prueba indicada por su nombre. Cr�
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 2:** `"ConnectionStrings": {` → Separa los almacenes de esta etapa y conserva los de los módulos anteriores.
 
@@ -4119,10 +3758,9 @@ public static class RegistroComunicacion
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 9:** `services.AddHttpClient<IClienteInventario, ClienteInventarioHttp>(http =>` → Registra el cliente tipado y centraliza dirección y timeout; los handlers se administran mediante la factoría.
-- **Línea 20:** `if (config.GetValue<bool>("Comunicacion:WorkersActivos")) services.AddHostedService<PublicadorOutboxWorker>();` → Habilita el proceso periódico únicamente cuando la configuración lo solicita.
 
 
 #### Implementación funcional: `appsettings.json`
@@ -4146,9 +3784,8 @@ Este archivo completa el contrato, registro o prueba indicada por su nombre. Cr�
 }
 ```
 
-**Lectura de las líneas clave.**
 
-- **Línea 2:** `"ConnectionStrings": {` → Separa los almacenes de esta etapa y conserva los de los módulos anteriores.
+
 
 
 ### PASO 6.2.14 — Crear el archivo `ValidadorComunicacionAsincronaTests.cs`
@@ -4279,229 +3916,127 @@ public class ValidadorComunicacionAsincronaTests
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 1:** `using AceriaApp.Api.ComunicacionAsincrona;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 2:** `using FluentAssertions;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 3:** `using Xunit;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 4:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 5:** `namespace AceriaApp.ComunicacionAsincrona.Tests;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 6:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 7:** `public class ValidadorComunicacionAsincronaTests` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 8:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 9:** `private readonly ValidadorComunicacionAsincrona _validador = new();` → Crea la instancia del validador que utiliza cada prueba.
 
-- **Línea 10:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 11:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
 - **Línea 12:** `public void Validar_CatalogoPorDefecto_DevuelveValido()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 13:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 14:** `var resultado = _validador.Validar(CatalogoEventos.EventosPorDefecto());` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 15:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 16:** `resultado.EsValida.Should().BeTrue();` → Comprueba que la política acepta los datos de este caso.
 
 - **Línea 17:** `resultado.Errores.Should().BeEmpty();` → Comprueba que no se ha registrado ningún diagnóstico.
 
-- **Línea 18:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 19:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 20:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 21:** `public void Validar_SinEventos_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 22:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 23:** `var resultado = _validador.Validar(new List<Evento>());` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 24:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 25:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
 - **Línea 26:** `resultado.Errores.Should().Contain(e => e.Contains("No hay eventos"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 27:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 28:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 29:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 30:** `public void Validar_TipoNoPermitido_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 31:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 32:** `var eventos = new List<Evento>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 33:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 34:** `new() { Nombre = "X", Tipo = "TipoInventado", Publicador = "A", NumeroDeConsumidores = 1, TieneIdempotencia = true, TieneReintentos = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 35:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 36:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 37:** `var resultado = _validador.Validar(eventos);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 38:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 39:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 40:** `resultado.Errores.Should().Contain(e => e.Contains("Tipo no permitido"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 41:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 42:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 43:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 44:** `public void Validar_SinPublicador_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 45:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 46:** `var eventos = new List<Evento>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 47:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 48:** `new() { Nombre = "X", Tipo = "Integracion", Publicador = string.Empty, NumeroDeConsumidores = 1, TieneIdempotencia = true, TieneReintentos = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 49:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 50:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 51:** `var resultado = _validador.Validar(eventos);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 52:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 53:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 54:** `resultado.Errores.Should().Contain(e => e.Contains("no declara el publicador"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 55:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 56:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 57:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 58:** `public void Validar_SinConsumidores_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 59:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 60:** `var eventos = new List<Evento>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 61:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 62:** `new() { Nombre = "X", Tipo = "Integracion", Publicador = "A", NumeroDeConsumidores = 0, TieneIdempotencia = true, TieneReintentos = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 63:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 64:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 65:** `var resultado = _validador.Validar(eventos);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 66:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 67:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 68:** `resultado.Errores.Should().Contain(e => e.Contains("no tiene consumidores"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 69:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 70:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 71:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 72:** `public void Validar_SinIdempotencia_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 73:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 74:** `var eventos = new List<Evento>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 75:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 76:** `new() { Nombre = "X", Tipo = "Integracion", Publicador = "A", NumeroDeConsumidores = 1, TieneIdempotencia = false, TieneReintentos = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 77:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 78:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 79:** `var resultado = _validador.Validar(eventos);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 80:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 81:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 82:** `resultado.Errores.Should().Contain(e => e.Contains("no declara idempotencia"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 83:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 84:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 85:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 86:** `public void Validar_SinReintentos_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 87:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 88:** `var eventos = new List<Evento>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 89:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 90:** `new() { Nombre = "X", Tipo = "Integracion", Publicador = "A", NumeroDeConsumidores = 1, TieneIdempotencia = true, TieneReintentos = false }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 91:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 92:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 93:** `var resultado = _validador.Validar(eventos);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 94:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 95:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 96:** `resultado.Errores.Should().Contain(e => e.Contains("no declara reintentos"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 97:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 98:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 99:** `public void Validar_EventoDominioLocalSinPoliticasDeEntrega_DevuelveValido()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 100:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 101:** `var eventos = new List<Evento>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 102:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 103:** `new() { Nombre = "OrdenPlanificada", Tipo = "Dominio", Publicador = "Produccion", NumeroDeConsumidores = 0 }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 104:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 105:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 106:** `var resultado = _validador.Validar(eventos);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 107:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 108:** `resultado.EsValida.Should().BeTrue();` → Comprueba que la política acepta los datos de este caso.
 
-- **Línea 109:** `resultado.Errores.Should().BeEmpty();` → Comprueba que no se ha registrado ningún diagnóstico.
 
-- **Línea 110:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 111:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
 
 **Por qué funciona así.** Las pruebas ejercitan aceptación y rechazos concretos del validador. Afirmar el diagnóstico evita un falso positivo por otro error.
@@ -4578,103 +4113,58 @@ public class CatalogoEventosTests
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 1:** `using AceriaApp.Api.ComunicacionAsincrona;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 2:** `using FluentAssertions;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 3:** `using Xunit;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 4:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 5:** `namespace AceriaApp.ComunicacionAsincrona.Tests;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 6:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 7:** `public class CatalogoEventosTests` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 8:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 9:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 10:** `public void EventosPorDefecto_ContieneCuatroEventos()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 11:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 12:** `var eventos = CatalogoEventos.EventosPorDefecto();` → Obtiene los datos que se utilizarán en las comprobaciones siguientes.
 
-- **Línea 13:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 14:** `eventos.Should().HaveCount(4);` → Comprueba el tamaño del catálogo sin inferir servicios o conexiones en ejecución.
 
-- **Línea 15:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 16:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 17:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 18:** `public void EventosPorDefecto_TodosDeIntegracion()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 19:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 20:** `var eventos = CatalogoEventos.EventosPorDefecto();` → Obtiene los datos que se utilizarán en las comprobaciones siguientes.
 
-- **Línea 21:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 22:** `eventos.Should().OnlyContain(e => e.Tipo == "Integracion");` → Comprueba la condición en cada entrada declarada del catálogo.
 
-- **Línea 23:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 24:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 25:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 26:** `public void EventosPorDefecto_TodosTienenIdempotencia()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 27:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 28:** `var eventos = CatalogoEventos.EventosPorDefecto();` → Obtiene los datos que se utilizarán en las comprobaciones siguientes.
 
-- **Línea 29:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 30:** `eventos.Should().OnlyContain(e => e.TieneIdempotencia);` → Comprueba la condición en cada entrada declarada del catálogo.
 
-- **Línea 31:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 32:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 33:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 34:** `public void EventosPorDefecto_TodosTienenReintentos()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 35:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 36:** `var eventos = CatalogoEventos.EventosPorDefecto();` → Obtiene los datos que se utilizarán en las comprobaciones siguientes.
 
-- **Línea 37:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 38:** `eventos.Should().OnlyContain(e => e.TieneReintentos);` → Comprueba la condición en cada entrada declarada del catálogo.
 
-- **Línea 39:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 40:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 41:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 42:** `public void EventosPorDefecto_TodosTienenConsumidores()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 43:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 44:** `var eventos = CatalogoEventos.EventosPorDefecto();` → Obtiene los datos que se utilizarán en las comprobaciones siguientes.
 
-- **Línea 45:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 46:** `eventos.Should().OnlyContain(e => e.NumeroDeConsumidores >= 1);` → Comprueba la condición en cada entrada declarada del catálogo.
 
-- **Línea 47:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 48:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
 
 **Por qué funciona así.** Las pruebas del catálogo verifican cantidades y propiedades declaradas. No prueban que existan los servicios nombrados.
@@ -4713,16 +4203,8 @@ Este archivo completa el contrato, registro o prueba indicada por su nombre. Cr�
 </Project>
 ```
 
-**Lectura de las líneas clave.**
 
-- **Línea 4:** `<ProjectReference Include="../../src/AceriaApp.Api/AceriaApp.Api.csproj" />` → Declara una dependencia de compilación explícita; el ensamblado debe existir en la solución.
-- **Línea 5:** `<ProjectReference Include="../../src/AceriaApp.Inventario.Api/AceriaApp.Inventario.Api.csproj" />` → Declara una dependencia de compilación explícita; el ensamblado debe existir en la solución.
-- **Línea 6:** `<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />` → Fija la versión de la dependencia para reproducir la compilación y sus API.
-- **Línea 7:** `<PackageReference Include="xunit" Version="2.9.2" />` → Fija la versión de la dependencia para reproducir la compilación y sus API.
-- **Línea 8:** `<PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />` → Fija la versión de la dependencia para reproducir la compilación y sus API.
-- **Línea 9:** `<PackageReference Include="FluentAssertions" Version="6.12.2" />` → Fija la versión de la dependencia para reproducir la compilación y sus API.
-- **Línea 10:** `<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.21" />` → Fija la versión de la dependencia para reproducir la compilación y sus API.
-- **Línea 11:** `<PackageReference Include="Testcontainers.MsSql" Version="3.10.0" />` → Fija la versión de la dependencia para reproducir la compilación y sus API.
+
 
 
 #### Implementación funcional: `ContratoEventoTests.cs`
@@ -4750,11 +4232,9 @@ public class ContratoEventoTests
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 6:** `private static OrdenPlanificadaV1 Valido() => new(Guid.NewGuid(), Guid.NewGuid(), DateTimeOffset.UtcNow, new[] { new LineaPlanificadaV1("Acero", 20) });` → Utiliza el contrato público versionado, sin serializar la entidad de dominio completa.
 - **Línea 8:** `public void Evento_valido_preserva_identidad_y_datos() { var e=Valido(); e.Validar(); Assert.Equal(20,e.Lineas.Sum(x=>x.Cantidad)); }` → Comprueba una consecuencia observable. Si cambia el comportamiento descrito por el nombre del test, esta aserción debe fallar.
-- **Línea 10:** `public void Version_desconocida_se_rechaza() { Assert.Throws<InvalidDataException>(()=>(Valido() with { Version=2 }).Validar()); }` → Señala un contrato incompatible o un conflicto de identidad; el consumidor lo envía a fallidos.
 
 
 #### Implementación funcional: `OutboxInboxTests.cs`
@@ -4898,16 +4378,9 @@ public class OutboxInboxTests
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 15:** `private static ProduccionDbContext Produccion(BaseSqlServer bd) => new(new DbContextOptionsBuilder<ProduccionDbContext>().UseSqlServer(bd.ConnectionString).Options);` → Mantiene SQL Server real como proveedor; no se sustituye por almacenamiento en memoria.
-- **Línea 16:** `private static InventarioDbContext Inventario(BaseSqlServer bd) => new(new DbContextOptionsBuilder<InventarioDbContext>().UseSqlServer(bd.ConnectionString).Options);` → Mantiene SQL Server real como proveedor; no se sustituye por almacenamiento en memoria.
-- **Línea 17:** `private static OrdenPlanificadaV1 Evento() => new(Guid.NewGuid(),Guid.NewGuid(),DateTimeOffset.UtcNow,new[]{new LineaPlanificadaV1("Acero",20)});` → Utiliza el contrato público versionado, sin serializar la entidad de dominio completa.
-- **Línea 21:** `await using var bd=BaseSqlServer.Crear(); await using var db=Produccion(bd); await db.Database.EnsureCreatedAsync();` → Inicializa una base didáctica nueva. No migra un esquema existente: usa los nombres separados de cada etapa.
 - **Línea 22:** `var o=new OrdenProduccion("Axia","Acero",20);db.Ordenes.Add(o);await db.SaveChangesAsync();` → Guarda los datos de preparación o la modificación que esta prueba comprobará desde SQL Server real.
-- **Línea 23:** `var r=await new PlanificadorIntegrado(db).PlanificarAsync(o.Id,default);Assert.Equal(EstadoPlanificacion.Aceptada,r);` → Comprueba una consecuencia observable. Si cambia el comportamiento descrito por el nombre del test, esta aserción debe fallar.
-- **Línea 24:** `await using var leer=Produccion(bd);Assert.Equal(EstadoOrdenProduccion.Planificada,(await leer.Ordenes.SingleAsync()).Estado);` → Comprueba una consecuencia observable. Si cambia el comportamiento descrito por el nombre del test, esta aserción debe fallar.
-- **Línea 25:** `Assert.Single(await leer.MensajesSalida.ToListAsync());Assert.Equal("Microsoft.EntityFrameworkCore.SqlServer",leer.Database.ProviderName);` → Comprueba una consecuencia observable. Si cambia el comportamiento descrito por el nombre del test, esta aserción debe fallar.
 
 
 #### Implementación funcional: `RabbitMqTests.cs`
@@ -5088,16 +4561,8 @@ public class RabbitMqTests
 }
 ```
 
-**Lectura de las líneas clave.**
 
-- **Línea 23:** `var e=new OrdenPlanificadaV1(Guid.NewGuid(),Guid.NewGuid(),DateTimeOffset.UtcNow,new[]{new LineaPlanificadaV1("Acero",10)});` → Utiliza el contrato público versionado, sin serializar la entidad de dominio completa.
-- **Línea 26:** `Assert.True(await entorno.Bus.ConsumirUnoAsync((json,ct)=>{contenido=json;return Task.CompletedTask;},default));` → Comprueba una consecuencia observable. Si cambia el comportamiento descrito por el nombre del test, esta aserción debe fallar.
-- **Línea 27:** `Assert.Equal(e.EventoId,JsonSerializer.Deserialize<OrdenPlanificadaV1>(contenido!)!.EventoId);` → Utiliza el contrato público versionado, sin serializar la entidad de dominio completa.
-- **Línea 28:** `Assert.False(await entorno.Bus.ConsumirUnoAsync((_,_)=>Task.CompletedTask,default));` → Comprueba una consecuencia observable. Si cambia el comportamiento descrito por el nombre del test, esta aserción debe fallar.
-- **Línea 34:** `await Assert.ThrowsAsync<IOException>(()=>entorno.Bus.ConsumirUnoAsync((_,_)=>throw new IOException("SQL temporalmente no disponible"),default));` → Comprueba una consecuencia observable. Si cambia el comportamiento descrito por el nombre del test, esta aserción debe fallar.
-- **Línea 35:** `Assert.True(await entorno.Bus.ConsumirUnoAsync((_,_)=>Task.CompletedTask,default));` → Comprueba una consecuencia observable. Si cambia el comportamiento descrito por el nombre del test, esta aserción debe fallar.
-- **Línea 41:** `Assert.True(await entorno.Bus.ConsumirUnoAsync((_,_)=>throw new InvalidDataException("Version incompatible"),default));` → Señala un contrato incompatible o un conflicto de identidad; el consumidor lo envía a fallidos.
-- **Línea 42:** `Assert.False(await entorno.Bus.ConsumirUnoAsync((_,_)=>Task.CompletedTask,default));` → Comprueba una consecuencia observable. Si cambia el comportamiento descrito por el nombre del test, esta aserción debe fallar.
+
 
 
 #### Implementación funcional: `RabbitPruebas.cs`
@@ -5135,10 +4600,9 @@ public sealed class RabbitPruebas : IAsyncDisposable
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 20:** `public async ValueTask DisposeAsync()` → Libera recursos del adaptador o de la prueba al terminar su ámbito.
-- **Línea 23:** `finally { await Bus.DisposeAsync(); }` → Libera recursos del adaptador o de la prueba al terminar su ámbito.
 
 
 ### PASO 6.2.16 — Compilar la solución completa
@@ -5427,9 +4891,8 @@ Abre `src/AceriaApp.Api/ComunicacionAsincrona/ValidadorComunicacionAsincrona.cs`
 public record ResumenEventos(int Total, int DeIntegracion, int DeDominio, int TotalConsumidores);
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
 
-- **Línea 1:** `public record ResumenEventos(int Total, int DeIntegracion, int DeDominio, int TotalConsumidores);` → Define el resultado inmutable que devuelve el validador o el resumen.
+
 
 
 ### Reto 6.2.3 — Calcular los recuentos
@@ -5452,23 +4915,18 @@ Inserta el método dentro de `ValidadorComunicacionAsincrona`, antes del campo `
     }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 1:** `public static ResumenEventos Resumen(IEnumerable<Evento> eventos)` → Expone la operación con el contrato que usan el catálogo o sus pruebas.
 
-- **Línea 2:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 3:** `var lista = eventos.ToList();` → Materializa una sola vez la secuencia recibida para recorrerla y contarla.
 
 - **Línea 4:** `var integracion = lista.Count(e => e.Tipo == "Integracion");` → Cuenta las entradas que cumplen el criterio indicado.
 
-- **Línea 5:** `var dominio = lista.Count(e => e.Tipo == "Dominio");` → Cuenta las entradas que cumplen el criterio indicado.
 
 - **Línea 6:** `var consumidores = lista.Sum(e => e.NumeroDeConsumidores);` → Suma las suscripciones declaradas; un consumidor puede aparecer en varios eventos.
 
 - **Línea 7:** `return new ResumenEventos(lista.Count, integracion, dominio, consumidores);` → Devuelve los recuentos del catálogo sin modificar sus entradas.
 
-- **Línea 8:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
 
 ### Reto 6.2.6 — Verificar el catálogo por defecto
@@ -5493,27 +4951,19 @@ Inserta la prueba dentro de `ValidadorComunicacionAsincronaTests`, antes del cam
     }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 1:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 2:** `public void Resumen_ConCatalogoPorDefecto_CalculaTotales()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 3:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 4:** `var resumen = ValidadorComunicacionAsincrona.Resumen(CatalogoEventos.EventosPorDefecto());` → Calcula el resumen sobre el catálogo por defecto.
 
-- **Línea 5:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 6:** `resumen.Total.Should().Be(4);` → Compara el recuento obtenido con el valor esperado del catálogo.
 
-- **Línea 7:** `resumen.DeIntegracion.Should().Be(4);` → Compara el recuento obtenido con el valor esperado del catálogo.
 
-- **Línea 8:** `resumen.DeDominio.Should().Be(0);` → Compara el recuento obtenido con el valor esperado del catálogo.
 
-- **Línea 9:** `resumen.TotalConsumidores.Should().Be(6);` → Compara el recuento obtenido con el valor esperado del catálogo.
 
-- **Línea 10:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
 
 **Comprobación del reto.** Compila la copia optativa y ejecuta primero `dotnet test tests/AceriaApp.ComunicacionAsincrona.Tests/AceriaApp.ComunicacionAsincrona.Tests.csproj -c Release`, después `dotnet test AceriaApp.sln -c Release`. El catálogo pasa de 13 a 14 tests; la solución debe ejecutar 264 + 1 pruebas, todas aprobadas y ninguna omitida. Confirma en el TRX que se ejecutó `Resumen_ConCatalogoPorDefecto_CalculaTotales` y que la etapa obligatoria conserva sus hashes.
@@ -5715,7 +5165,7 @@ public class DecisionComunicacion
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 1:** `namespace AceriaApp.Api.Decisiones;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
@@ -5727,13 +5177,9 @@ public class DecisionComunicacion
 
 - **Línea 5:** `public string Interaccion { get; init; } = string.Empty;` → Declara un dato del análisis que se fija al construir la entrada.
 
-- **Línea 6:** `public string Enfoque { get; init; } = string.Empty;` → Declara un dato del análisis que se fija al construir la entrada.
 
-- **Línea 7:** `public bool RequiereRespuestaInmediata { get; init; }` → Declara un dato del análisis que se fija al construir la entrada.
 
-- **Línea 8:** `public bool ToleraConsistenciaEventual { get; init; }` → Declara un dato del análisis que se fija al construir la entrada.
 
-- **Línea 9:** `public bool TienePatronHibrido { get; init; }` → Declara un dato del análisis que se fija al construir la entrada.
 
 - **Línea 10:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
@@ -5813,103 +5259,63 @@ public class ValidadorDecisiones
 public record ResultadoDecisiones(bool EsValida, IReadOnlyList<string> Errores);
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 1:** `namespace AceriaApp.Api.Decisiones;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 2:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 3:** `public class ValidadorDecisiones` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 4:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 5:** `private static readonly string[] EnfoquesPermitidos = { "Sincrona", "Asincrona", "Hibrida" };` → Limita los valores de texto reconocidos por la política didáctica.
 
-- **Línea 6:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 7:** `public ResultadoDecisiones Validar(IEnumerable<DecisionComunicacion> decisiones)` → Expone la operación con el contrato que usan el catálogo o sus pruebas.
 
-- **Línea 8:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 9:** `var errores = new List<string>();` → Inicializa la colección de diagnósticos que se devolverá al finalizar.
 
 - **Línea 10:** `var lista = decisiones.ToList();` → Materializa una sola vez la secuencia recibida para recorrerla y contarla.
 
-- **Línea 11:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 12:** `if (lista.Count == 0)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 13:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 14:** `errores.Add("No hay decisiones declaradas.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 15:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 16:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 17:** `foreach (var decision in lista)` → Revisa cada entrada; un catálogo puede acumular varios diagnósticos.
 
-- **Línea 18:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 19:** `if (string.IsNullOrWhiteSpace(decision.Interaccion))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 20:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 21:** `errores.Add("Una decisión no declara la interacción.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 22:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 23:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 24:** `if (!EnfoquesPermitidos.Contains(decision.Enfoque))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 25:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 26:** `errores.Add($"Enfoque no permitido en '{decision.Interaccion}': '{decision.Enfoque}'.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 27:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 28:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 29:** `if (decision.Enfoque == "Asincrona" && decision.RequiereRespuestaInmediata)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 30:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 31:** `errores.Add($"La interacción '{decision.Interaccion}' es asíncrona pero requiere respuesta inmediata del consumidor.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 32:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 33:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 34:** `if (decision.Enfoque == "Asincrona" && !decision.ToleraConsistenciaEventual)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 35:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 36:** `errores.Add($"La interacción '{decision.Interaccion}' es asíncrona pero no tolera consistencia eventual.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 37:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 38:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 39:** `if (decision.Enfoque == "Hibrida" && !decision.TienePatronHibrido)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 40:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 41:** `errores.Add($"La interacción '{decision.Interaccion}' es híbrida pero no declara patrón híbrido.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 42:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 43:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 44:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 45:** `return new ResultadoDecisiones(errores.Count == 0, errores);` → Devuelve validez y diagnósticos; no ejecuta ninguna comunicación remota.
 
-- **Línea 46:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 47:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 48:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 49:** `public record ResultadoDecisiones(bool EsValida, IReadOnlyList<string> Errores);` → Define el resultado inmutable que devuelve el validador o el resumen.
 
@@ -5944,11 +5350,10 @@ using System.Collections.Generic;
 using System.Linq;
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 1:** `using System.Collections.Generic;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 2:** `using System.Linq;` → Importa los tipos o extensiones utilizados por el archivo.
 
 
 **Por qué funciona así.** Las importaciones explícitas muestran dónde se declaran los tipos genéricos y las extensiones LINQ, aunque el proyecto tenga importaciones implícitas.
@@ -5989,7 +5394,7 @@ public sealed class FlujoPlanificacion(IPlanificadorIntegrado planificador, ICli
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 6:** `ct.ThrowIfCancellationRequested();` → Detiene la operación si el llamador ya la canceló, antes de producir efectos.
 - **Línea 9:** `foreach (var grupo in lineas.GroupBy(x => x.Material, StringComparer.OrdinalIgnoreCase))` → Agrupa las líneas del mismo material antes de comparar el total solicitado con el stock informado.
@@ -6028,39 +5433,26 @@ public class CatalogoDecisiones
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 1:** `namespace AceriaApp.Api.Decisiones;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 2:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 3:** `public class CatalogoDecisiones` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 4:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 5:** `public static List<DecisionComunicacion> DecisionesPorDefecto()` → Expone la operación con el contrato que usan el catálogo o sus pruebas.
 
-- **Línea 6:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 7:** `return new List<DecisionComunicacion>` → Devuelve una lista nueva en cada llamada; modificarla no altera otros casos.
 
-- **Línea 8:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 9:** `new() { Interaccion = "Ordenes->Inventario consulta stock", Enfoque = "Sincrona", RequiereRespuestaInmediata = true, ToleraConsistenciaEventual = false, TienePatronHibrido = false },` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 10:** `new() { Interaccion = "Ordenes->Clientes consulta cliente", Enfoque = "Sincrona", RequiereRespuestaInmediata = true, ToleraConsistenciaEventual = false, TienePatronHibrido = false },` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 11:** `new() { Interaccion = "Ordenes->Inventario reserva material", Enfoque = "Asincrona", RequiereRespuestaInmediata = false, ToleraConsistenciaEventual = true, TienePatronHibrido = false },` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 12:** `new() { Interaccion = "Ordenes->Facturacion emision factura", Enfoque = "Asincrona", RequiereRespuestaInmediata = false, ToleraConsistenciaEventual = true, TienePatronHibrido = false },` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 13:** `new() { Interaccion = "Ordenes->Inventario notificacion y consulta", Enfoque = "Hibrida", RequiereRespuestaInmediata = true, ToleraConsistenciaEventual = true, TienePatronHibrido = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
 - **Línea 14:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 15:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 16:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
 
 **Por qué funciona así.** Cada invocación devuelve una lista nueva con los ejemplos de análisis; cambiar una lista no modifica futuros catálogos.
@@ -6092,9 +5484,8 @@ public class CatalogoDecisiones
 using System.Collections.Generic;
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
 
-- **Línea 1:** `using System.Collections.Generic;` → Importa los tipos o extensiones utilizados por el archivo.
+
 
 
 **Por qué funciona así.** Las importaciones explícitas muestran dónde se declaran los tipos genéricos y las extensiones LINQ, aunque el proyecto tenga importaciones implícitas.
@@ -6273,7 +5664,7 @@ public static class ComunicacionEndpoints
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 7:** `app.MapGet("/api/v1/comunicacion/materiales/{material}", async (string material, IClienteInventario inventario, CancellationToken ct) =>` → Publica una consulta HTTP con un contrato de respuesta verificable.
 - **Línea 17:** `app.MapPost("/api/v1/comunicacion/ordenes/{id:guid}/planificar", async (Guid id, FlujoPlanificacion flujo, CancellationToken ct) =>` → Publica la operación de planificación; el adaptador traduce el resultado del caso de uso a HTTP.
@@ -6303,7 +5694,7 @@ Este archivo completa el contrato, registro o prueba indicada por su nombre. Cr�
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 2:** `"ConnectionStrings": {` → Separa los almacenes de esta etapa y conserva los de los módulos anteriores.
 
@@ -6342,7 +5733,7 @@ public static class RegistroComunicacion
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 9:** `services.AddHttpClient<IClienteInventario, ClienteInventarioHttp>(http =>` → Registra el cliente tipado y centraliza dirección y timeout; los handlers se administran mediante la factoría.
 - **Línea 21:** `if (config.GetValue<bool>("Comunicacion:WorkersActivos")) services.AddHostedService<PublicadorOutboxWorker>();` → Habilita el proceso periódico únicamente cuando la configuración lo solicita.
@@ -6369,9 +5760,8 @@ Este archivo completa el contrato, registro o prueba indicada por su nombre. Cr�
 }
 ```
 
-**Lectura de las líneas clave.**
 
-- **Línea 2:** `"ConnectionStrings": {` → Separa los almacenes de esta etapa y conserva los de los módulos anteriores.
+
 
 
 ### PASO 6.3.14 — Crear el archivo `ValidadorDecisionesTests.cs`
@@ -6488,201 +5878,113 @@ public class ValidadorDecisionesTests
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 1:** `using AceriaApp.Api.Decisiones;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 2:** `using FluentAssertions;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 3:** `using Xunit;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 4:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 5:** `namespace AceriaApp.Decisiones.Tests;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 6:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 7:** `public class ValidadorDecisionesTests` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 8:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 9:** `private readonly ValidadorDecisiones _validador = new();` → Crea la instancia del validador que utiliza cada prueba.
 
-- **Línea 10:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 11:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
 - **Línea 12:** `public void Validar_CatalogoPorDefecto_DevuelveValido()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 13:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 14:** `var resultado = _validador.Validar(CatalogoDecisiones.DecisionesPorDefecto());` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 15:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 16:** `resultado.EsValida.Should().BeTrue();` → Comprueba que la política acepta los datos de este caso.
 
 - **Línea 17:** `resultado.Errores.Should().BeEmpty();` → Comprueba que no se ha registrado ningún diagnóstico.
 
-- **Línea 18:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 19:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 20:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 21:** `public void Validar_SinDecisiones_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 22:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 23:** `var resultado = _validador.Validar(new List<DecisionComunicacion>());` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 24:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 25:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
 - **Línea 26:** `resultado.Errores.Should().Contain(e => e.Contains("No hay decisiones"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 27:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 28:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 29:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 30:** `public void Validar_EnfoqueNoPermitido_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 31:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 32:** `var decisiones = new List<DecisionComunicacion>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 33:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 34:** `new() { Interaccion = "X", Enfoque = "EnfoqueInventado" }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 35:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 36:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 37:** `var resultado = _validador.Validar(decisiones);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 38:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 39:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 40:** `resultado.Errores.Should().Contain(e => e.Contains("Enfoque no permitido"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 41:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 42:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 43:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 44:** `public void Validar_SincronaSinRespuestaInmediata_DevuelveValido()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 45:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 46:** `var decisiones = new List<DecisionComunicacion>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 47:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 48:** `new() { Interaccion = "X", Enfoque = "Sincrona", RequiereRespuestaInmediata = false }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 49:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 50:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 51:** `var resultado = _validador.Validar(decisiones);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 52:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 53:** `resultado.EsValida.Should().BeTrue();` → Comprueba que la política acepta los datos de este caso.
 
-- **Línea 54:** `resultado.Errores.Should().BeEmpty();` → Comprueba que no se ha registrado ningún diagnóstico.
 
-- **Línea 55:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 56:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 57:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 58:** `public void Validar_AsincronaSinToleranciaEventual_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 59:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 60:** `var decisiones = new List<DecisionComunicacion>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 61:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 62:** `new() { Interaccion = "X", Enfoque = "Asincrona", ToleraConsistenciaEventual = false }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 63:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 64:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 65:** `var resultado = _validador.Validar(decisiones);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 66:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 67:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 68:** `resultado.Errores.Should().Contain(e => e.Contains("no tolera consistencia eventual"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 69:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 70:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 71:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 72:** `public void Validar_HibridaSinPatron_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 73:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 74:** `var decisiones = new List<DecisionComunicacion>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 75:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 76:** `new() { Interaccion = "X", Enfoque = "Hibrida", TienePatronHibrido = false }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 77:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 78:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 79:** `var resultado = _validador.Validar(decisiones);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 80:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 81:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 82:** `resultado.Errores.Should().Contain(e => e.Contains("no declara patrón híbrido"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 83:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 84:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 85:** `public void Validar_AsincronaConRespuestaInmediata_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 86:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 87:** `var decisiones = new List<DecisionComunicacion>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 88:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 89:** `new() { Interaccion = "X", Enfoque = "Asincrona", RequiereRespuestaInmediata = true, ToleraConsistenciaEventual = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 90:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 91:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 92:** `var resultado = _validador.Validar(decisiones);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 93:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 94:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 95:** `resultado.Errores.Should().Contain(e => e.Contains("requiere respuesta inmediata del consumidor"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 96:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 97:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
 
 **Por qué funciona así.** Las pruebas ejercitan aceptación y rechazos concretos del validador. Afirmar el diagnóstico evita un falso positivo por otro error.
@@ -6759,103 +6061,59 @@ public class CatalogoDecisionesTests
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 1:** `using AceriaApp.Api.Decisiones;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 2:** `using FluentAssertions;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 3:** `using Xunit;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 4:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 5:** `namespace AceriaApp.Decisiones.Tests;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 6:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 7:** `public class CatalogoDecisionesTests` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 8:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 9:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 10:** `public void DecisionesPorDefecto_ContieneCincoDecisiones()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 11:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 12:** `var decisiones = CatalogoDecisiones.DecisionesPorDefecto();` → Obtiene los datos que se utilizarán en las comprobaciones siguientes.
 
-- **Línea 13:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 14:** `decisiones.Should().HaveCount(5);` → Comprueba el tamaño del catálogo sin inferir servicios o conexiones en ejecución.
 
-- **Línea 15:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 16:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 17:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 18:** `public void DecisionesPorDefecto_ContieneDosSincronas()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 19:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 20:** `var decisiones = CatalogoDecisiones.DecisionesPorDefecto();` → Obtiene los datos que se utilizarán en las comprobaciones siguientes.
 
-- **Línea 21:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 22:** `decisiones.Count(d => d.Enfoque == "Sincrona").Should().Be(2);` → Compara el recuento obtenido con el valor esperado del catálogo.
 
-- **Línea 23:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 24:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 25:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 26:** `public void DecisionesPorDefecto_ContieneDosAsincronas()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 27:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 28:** `var decisiones = CatalogoDecisiones.DecisionesPorDefecto();` → Obtiene los datos que se utilizarán en las comprobaciones siguientes.
 
-- **Línea 29:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 30:** `decisiones.Count(d => d.Enfoque == "Asincrona").Should().Be(2);` → Compara el recuento obtenido con el valor esperado del catálogo.
 
-- **Línea 31:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 32:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 33:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 34:** `public void DecisionesPorDefecto_ContieneUnaHibrida()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 35:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 36:** `var decisiones = CatalogoDecisiones.DecisionesPorDefecto();` → Obtiene los datos que se utilizarán en las comprobaciones siguientes.
 
-- **Línea 37:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 38:** `decisiones.Count(d => d.Enfoque == "Hibrida").Should().Be(1);` → Compara el recuento obtenido con el valor esperado del catálogo.
 
-- **Línea 39:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 40:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 41:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 42:** `public void DecisionesPorDefecto_HibridaTienePatron()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 43:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 44:** `var decisiones = CatalogoDecisiones.DecisionesPorDefecto();` → Obtiene los datos que se utilizarán en las comprobaciones siguientes.
 
-- **Línea 45:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 46:** `decisiones.Where(d => d.Enfoque == "Hibrida").Should().OnlyContain(d => d.TienePatronHibrido);` → Comprueba la condición en cada entrada declarada del catálogo.
 
-- **Línea 47:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 48:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
 
 **Por qué funciona así.** Las pruebas del catálogo verifican cantidades y propiedades declaradas. No prueban que existan los servicios nombrados.
@@ -6893,16 +6151,10 @@ Este archivo completa el contrato, registro o prueba indicada por su nombre. Cr�
 </Project>
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 4:** `<ProjectReference Include="../../src/AceriaApp.Api/AceriaApp.Api.csproj" />` → Declara una dependencia de compilación explícita; el ensamblado debe existir en la solución.
-- **Línea 5:** `<ProjectReference Include="../../src/AceriaApp.Inventario.Api/AceriaApp.Inventario.Api.csproj" />` → Declara una dependencia de compilación explícita; el ensamblado debe existir en la solución.
 - **Línea 6:** `<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />` → Fija la versión de la dependencia para reproducir la compilación y sus API.
-- **Línea 7:** `<PackageReference Include="xunit" Version="2.9.2" />` → Fija la versión de la dependencia para reproducir la compilación y sus API.
-- **Línea 8:** `<PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />` → Fija la versión de la dependencia para reproducir la compilación y sus API.
-- **Línea 9:** `<PackageReference Include="FluentAssertions" Version="6.12.2" />` → Fija la versión de la dependencia para reproducir la compilación y sus API.
-- **Línea 10:** `<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.21" />` → Fija la versión de la dependencia para reproducir la compilación y sus API.
-- **Línea 11:** `<PackageReference Include="Testcontainers.MsSql" Version="3.10.0" />` → Fija la versión de la dependencia para reproducir la compilación y sus API.
 
 
 #### Implementación funcional: `FlujoHibridoTests.cs`
@@ -6952,13 +6204,9 @@ public class FlujoHibridoTests
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 18:** `{var p=new Planificador();Assert.Equal(EstadoPlanificacion.Aceptada,await new FlujoPlanificacion(p,new Inventario(new("Acero",100))).EjecutarAsync(Guid.NewGuid(),default));Assert.Equal(1,p.Escrituras);}` → Comprueba una consecuencia observable. Si cambia el comportamiento descrito por el nombre del test, esta aserción debe fallar.
-- **Línea 21:** `{var p=new Planificador();Assert.Equal(EstadoPlanificacion.SinDisponibilidad,await new FlujoPlanificacion(p,new Inventario(new("Acero",10))).EjecutarAsync(Guid.NewGuid(),default));Assert.Equal(0,p.Escrituras);}` → Comprueba una consecuencia observable. Si cambia el comportamiento descrito por el nombre del test, esta aserción debe fallar.
-- **Línea 24:** `{var p=new Planificador();Assert.Equal(EstadoPlanificacion.SinDisponibilidad,await new FlujoPlanificacion(p,new Inventario(null)).EjecutarAsync(Guid.NewGuid(),default));Assert.Equal(0,p.Escrituras);}` → Comprueba una consecuencia observable. Si cambia el comportamiento descrito por el nombre del test, esta aserción debe fallar.
-- **Línea 27:** `{var p=new Planificador();await Assert.ThrowsAsync<InventarioNoDisponibleException>(()=>new FlujoPlanificacion(p,new Inventario(null,true)).EjecutarAsync(Guid.NewGuid(),default));Assert.Equal(0,p.Escrituras);}` → Comprueba una consecuencia observable. Si cambia el comportamiento descrito por el nombre del test, esta aserción debe fallar.
-- **Línea 30:** `{var p=new Planificador{Lineas=null};Assert.Equal(EstadoPlanificacion.NoExiste,await new FlujoPlanificacion(p,new Inventario(null,true)).EjecutarAsync(Guid.NewGuid(),default));Assert.Equal(0,p.Escrituras);}` → Comprueba una consecuencia observable. Si cambia el comportamiento descrito por el nombre del test, esta aserción debe fallar.
 
 
 ### PASO 6.3.16 — Compilar la solución completa
@@ -7249,9 +6497,8 @@ Abre `src/AceriaApp.Api/Decisiones/ValidadorDecisiones.cs` e inserta el contrato
 public record ResumenDecisiones(int Total, int Sincronas, int Asincronas, int Hibridas);
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
 
-- **Línea 1:** `public record ResumenDecisiones(int Total, int Sincronas, int Asincronas, int Hibridas);` → Define el resultado inmutable que devuelve el validador o el resumen.
+
 
 
 ### Reto 6.3.3 — Calcular los recuentos
@@ -7274,23 +6521,17 @@ Inserta el método dentro de `ValidadorDecisiones`, antes del campo `private sta
     }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 1:** `public static ResumenDecisiones Resumen(IEnumerable<DecisionComunicacion> decisiones)` → Expone la operación con el contrato que usan el catálogo o sus pruebas.
 
-- **Línea 2:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 3:** `var lista = decisiones.ToList();` → Materializa una sola vez la secuencia recibida para recorrerla y contarla.
 
 - **Línea 4:** `var sincronas = lista.Count(d => d.Enfoque == "Sincrona");` → Cuenta las entradas que cumplen el criterio indicado.
 
-- **Línea 5:** `var asincronas = lista.Count(d => d.Enfoque == "Asincrona");` → Cuenta las entradas que cumplen el criterio indicado.
 
-- **Línea 6:** `var hibridas = lista.Count(d => d.Enfoque == "Hibrida");` → Cuenta las entradas que cumplen el criterio indicado.
 
 - **Línea 7:** `return new ResumenDecisiones(lista.Count, sincronas, asincronas, hibridas);` → Devuelve los recuentos del catálogo sin modificar sus entradas.
 
-- **Línea 8:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
 
 ### Reto 6.3.6 — Verificar el catálogo por defecto
@@ -7315,27 +6556,18 @@ Inserta la prueba dentro de `ValidadorDecisionesTests`, antes del campo `_valida
     }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 1:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 2:** `public void Resumen_ConCatalogoPorDefecto_CalculaTotales()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 3:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 4:** `var resumen = ValidadorDecisiones.Resumen(CatalogoDecisiones.DecisionesPorDefecto());` → Calcula el resumen sobre el catálogo por defecto.
 
-- **Línea 5:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 6:** `resumen.Total.Should().Be(5);` → Compara el recuento obtenido con el valor esperado del catálogo.
 
-- **Línea 7:** `resumen.Sincronas.Should().Be(2);` → Compara el recuento obtenido con el valor esperado del catálogo.
 
-- **Línea 8:** `resumen.Asincronas.Should().Be(2);` → Compara el recuento obtenido con el valor esperado del catálogo.
 
-- **Línea 9:** `resumen.Hibridas.Should().Be(1);` → Compara el recuento obtenido con el valor esperado del catálogo.
 
-- **Línea 10:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
 
 **Comprobación del reto.** Compila la copia optativa y ejecuta primero `dotnet test tests/AceriaApp.Decisiones.Tests/AceriaApp.Decisiones.Tests.csproj -c Release`, después `dotnet test AceriaApp.sln -c Release`. El catálogo pasa de 12 a 13 tests; la solución debe ejecutar 283 + 1 pruebas, todas aprobadas y ninguna omitida. Confirma en el TRX que se ejecutó `Resumen_ConCatalogoPorDefecto_CalculaTotales` y que la etapa obligatoria conserva sus hashes.
