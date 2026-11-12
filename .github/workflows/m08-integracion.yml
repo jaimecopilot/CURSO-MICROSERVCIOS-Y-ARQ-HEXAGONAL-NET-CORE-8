@@ -30,7 +30,7 @@ jobs:
         run: |
           printf '%s\n' '{"sdk":{"version":"8.0.400","rollForward":"latestPatch"}}' > global.json
           dotnet --version
-          dotnet --version | grep -E '^8\\.0\\.'
+          dotnet --version | grep -E '^8[.]0[.]'
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
       - run: python -m unittest discover -s .github/tests
@@ -67,7 +67,7 @@ jobs:
           '{"sdk":{"version":"8.0.400","rollForward":"latestPatch"}}' | Set-Content global.json -Encoding utf8
           $sdk = dotnet --version
           Write-Output $sdk
-          if ($sdk -notmatch '^8\\.0\\.') { throw "Se esperaba SDK de .NET 8, detectado $sdk" }
+          if ($sdk -notmatch '^8[.]0[.]') { throw "Se esperaba SDK de .NET 8, detectado $sdk" }
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
       - name: Iniciar SQLServer Express LocalDB
