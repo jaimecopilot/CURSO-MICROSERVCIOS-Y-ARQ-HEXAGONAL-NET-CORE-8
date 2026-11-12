@@ -60,7 +60,7 @@ services:
 
   inventario-2:
     build:
-      context: ../..
+      context: ../../..
       dockerfile: M09_DESPLIEGUE_DOCKER/PROYECTO/docker/Dockerfile.Servicio
       args:
         PROYECTO: AceriaApp.Inventario.Api
@@ -81,7 +81,7 @@ services:
 
   produccion:
     build:
-      context: ../..
+      context: ../../..
       dockerfile: M09_DESPLIEGUE_DOCKER/PROYECTO/docker/Dockerfile.Servicio
       args:
         PROYECTO: AceriaApp.Api
@@ -104,7 +104,7 @@ services:
 
   gateway:
     build:
-      context: ../..
+      context: ../../..
       dockerfile: M09_DESPLIEGUE_DOCKER/PROYECTO/docker/Dockerfile.Servicio
       args:
         PROYECTO: AceriaApp.Gateway
