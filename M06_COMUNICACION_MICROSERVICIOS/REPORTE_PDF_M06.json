@@ -20,7 +20,7 @@
   {
     "documento": "PRACTICAS",
     "paginas": 117,
-    "bytes": 340660,
+    "bytes": 340656,
     "palabras": 32713,
     "pdf": "M06_COMUNICACION_MICROSERVICIOS/PRACTICAS/M06_PRACTICAS.pdf",
     "explicaciones_separadas": 173,
@@ -28,7 +28,7 @@
     "ampliaciones": 0,
     "figuras": 0,
     "markdown_sha256": "b013e996b2500965c47af35a67610fc41f4ef2c7cbbaa565c92d2f2506c30110",
-    "pdf_sha256": "38ab8ac8ced01180556f0767124bd18af70af9ba1ea3a98b3fd6cd3f0c000219",
+    "pdf_sha256": "188268698e25e515c4b463331a846a62e56934409492a11faa55504a557b6965",
     "bloques_html": 1562,
     "bloques_pdf_verificados": 1562,
     "bloques_omitidos": 0,

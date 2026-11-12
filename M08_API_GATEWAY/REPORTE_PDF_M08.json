@@ -20,7 +20,7 @@
   {
     "documento": "PRACTICAS",
     "paginas": 145,
-    "bytes": 400266,
+    "bytes": 400258,
     "palabras": 42565,
     "pdf": "M08_API_GATEWAY/PRACTICAS/M08_PRACTICAS.pdf",
     "explicaciones_separadas": 360,
@@ -28,7 +28,7 @@
     "ampliaciones": 0,
     "figuras": 0,
     "markdown_sha256": "c9fa897df17913f4626dadc6a1b86c30be954595694870424c58958c8ee67233",
-    "pdf_sha256": "45d62c7f4016dd820369ae0e064b234c53bed71fcb3fa3cf3be53b0488609dd0",
+    "pdf_sha256": "9320004b139b85e76e93bf1132734481ce7d9c3707b0ed15129612945dfbe03f",
     "bloques_html": 1924,
     "bloques_pdf_verificados": 1924,
     "bloques_omitidos": 0,
