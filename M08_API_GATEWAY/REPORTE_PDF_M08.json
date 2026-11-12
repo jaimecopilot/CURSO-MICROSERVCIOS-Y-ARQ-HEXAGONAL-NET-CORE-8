@@ -1,0 +1,38 @@
+[
+  {
+    "documento": "TEORIA",
+    "paginas": 51,
+    "bytes": 319935,
+    "palabras": 20008,
+    "pdf": "M08_API_GATEWAY/TEORIA/M08_TEORIA.pdf",
+    "explicaciones_separadas": 280,
+    "citas_de_linea_comprobadas": 280,
+    "ampliaciones": 40,
+    "figuras": 12,
+    "markdown_sha256": "7fc505263d0b0f9a6703bb77e9e71ecd29d96c338ff5c8bb92737d45854d32e2",
+    "pdf_sha256": "1c39c05a193039a07fc911347da240ee666508036ecf48490f843437374178de",
+    "bloques_html": 754,
+    "bloques_pdf_verificados": 754,
+    "bloques_omitidos": 0,
+    "paginas_blancas": [],
+    "desbordamientos": []
+  },
+  {
+    "documento": "PRACTICAS",
+    "paginas": 145,
+    "bytes": 397767,
+    "palabras": 42145,
+    "pdf": "M08_API_GATEWAY/PRACTICAS/M08_PRACTICAS.pdf",
+    "explicaciones_separadas": 360,
+    "citas_de_linea_comprobadas": 360,
+    "ampliaciones": 0,
+    "figuras": 0,
+    "markdown_sha256": "6e0ff4cc267e1808ed4c07eb59e9f0a87a92da4fb791c6a1ada5e87bb4fe8b89",
+    "pdf_sha256": "0741bbba354a6ee6c6b4686fed6dac88b8375f434c5abaf2fd132c24fb31633a",
+    "bloques_html": 1914,
+    "bloques_pdf_verificados": 1914,
+    "bloques_omitidos": 0,
+    "paginas_blancas": [],
+    "desbordamientos": []
+  }
+]

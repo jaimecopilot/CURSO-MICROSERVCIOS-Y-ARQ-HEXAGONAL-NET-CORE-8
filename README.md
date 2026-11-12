@@ -66,3 +66,10 @@ Cada módulo se organiza en las carpetas `TEORIA/`, `PRACTICAS/` y `PROYECTO/`. 
 - [Teoría](M07_OBSERVABILIDAD_RESILIENCIA/TEORIA/M07_TEORIA.md) · [PDF](M07_OBSERVABILIDAD_RESILIENCIA/TEORIA/M07_TEORIA.pdf).
 - [Prácticas guiadas](M07_OBSERVABILIDAD_RESILIENCIA/PRACTICAS/M07_PRACTICAS.md) · [PDF](M07_OBSERVABILIDAD_RESILIENCIA/PRACTICAS/M07_PRACTICAS.pdf).
 - [Proyectos y validación](M07_OBSERVABILIDAD_RESILIENCIA/README.md): cuatro etapas progresivas, 7.1–7.4, con correlación JSON, salud SQL/AMQP, ProblemDetails y resiliencia HTTP mediante Polly v8.
+
+### Módulo 8 — Publicación mediante API Gateway
+
+- [Teoría](M08_API_GATEWAY/TEORIA/M08_TEORIA.md) · [PDF](M08_API_GATEWAY/TEORIA/M08_TEORIA.pdf).
+- [Prácticas guiadas](M08_API_GATEWAY/PRACTICAS/M08_PRACTICAS.md) · [PDF](M08_API_GATEWAY/PRACTICAS/M08_PRACTICAS.pdf): 96 pasos, 145 páginas revisadas y cuatro retos optativos.
+- [Proyectos y validación](M08_API_GATEWAY/README.md): cuatro etapas 8.1–8.4, gateway independiente con YARP, enrutamiento, transformaciones, balanceo, salud y recuperación de destinos, con SQL Server Express y RabbitMQ reales.
+- [Informe de cierre automatizado](M08_API_GATEWAY/CIERRE_AUTOMATIZADO.md) y [revisión editorial](M08_API_GATEWAY/REVISION_EDITORIAL_M08.md). La publicación definitiva se verifica mediante la automatización correspondiente al commit de `main`.
