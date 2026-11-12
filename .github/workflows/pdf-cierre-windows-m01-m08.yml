@@ -1,13 +1,6 @@
 name: PDF de cierre M02-M08 y Docker Windows
 on:
   workflow_dispatch:
-  push:
-    branches: ['revision/cierre-windows-m01-m08-*', 'revision/pdf-cierre-paralelo-*']
-    paths:
-      - '.github/workflows/pdf-cierre-windows-m01-m08.yml'
-      - 'M0*/PRACTICAS/*.md'
-      - 'PRACTICA_TRANSVERSAL_DOCKER_WINDOWS/PRACTICAS_DOCKER_WINDOWS.md'
-      - 'PRACTICA_TRANSVERSAL_DOCKER_WINDOWS/generar_pdf.py'
 permissions:
   contents: write
 concurrency:
