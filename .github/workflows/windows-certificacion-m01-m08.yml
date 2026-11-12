@@ -1,0 +1,165 @@
+name: Windows - certificacion E2E M01 a M08
+on:
+  workflow_dispatch:
+  push:
+    branches: ['revision/cierre-windows-m01-m08-*']
+permissions:
+  contents: read
+concurrency:
+  group: windows-certificacion-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  m01:
+    name: M01 Windows LocalDB punto ${{ matrix.punto }}
+    runs-on: windows-2022
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        punto: ['1.1', '1.2', '1.3', '1.4', '1.5']
+    steps:
+      - name: Habilitar rutas largas
+        run: git config --global core.longpaths true
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Fijar SDK 8 y dotnet-ef
+        shell: pwsh
+        run: |
+          '{"sdk":{"version":"8.0.400","rollForward":"latestPatch"}}' | Set-Content global.json -Encoding utf8
+          if ((dotnet --version) -notmatch '^8[.]0[.]') { throw 'Se exige .NET 8' }
+          dotnet tool install --global dotnet-ef --version 8.0.0
+      - name: Iniciar SQL Server LocalDB
+        shell: pwsh
+        run: |
+          if (-not (Get-Command sqllocaldb -ErrorAction SilentlyContinue)) {
+            $found = Get-ChildItem 'C:\Program Files\Microsoft SQL Server' -Recurse -Filter sqllocaldb.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+            if (-not $found) { throw 'LocalDB no está instalado' }
+            $found.DirectoryName | Out-File -Append -FilePath $env:GITHUB_PATH
+            $env:PATH = "$($found.DirectoryName);$env:PATH"
+          }
+          sqllocaldb info MSSQLLocalDB
+          if ($LASTEXITCODE -ne 0) { sqllocaldb create MSSQLLocalDB }
+          sqllocaldb start MSSQLLocalDB
+          if ($LASTEXITCODE -ne 0) { throw 'LocalDB no arrancó' }
+      - name: Ejecutar 24 pasos, pruebas, reto y SQL/HTTP reales
+        shell: pwsh
+        env:
+          M01_SQL_CONNECTION_STRING: 'Server=(localdb)\MSSQLLocalDB;Database=AceriaCertWin_${{ matrix.punto }}_${{ github.run_id }};Integrated Security=True;TrustServerCertificate=True'
+        run: |
+          New-Item -Type Directory -Force .qa/windows | Out-Null
+          python .github/scripts/e2e_m01.py --root . --point '${{ matrix.punto }}' --mode sql --reto --out ".qa/windows/m01-${{ matrix.punto }}.json"
+          if ($LASTEXITCODE -ne 0) { throw 'La prueba E2E M01 Windows falló' }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: windows-m01-${{ matrix.punto }}
+          path: |
+            .qa/windows/m01-${{ matrix.punto }}.json
+            e2e-trx-*/
+  m02_m05:
+    name: M0${{ matrix.modulo }} Windows - LocalDB y xUnit completos
+    runs-on: windows-2022
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        modulo: [2, 3, 4, 5]
+    steps:
+      - name: Habilitar rutas largas
+        run: git config --global core.longpaths true
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Fijar SDK .NET 8
+        shell: pwsh
+        run: |
+          '{"sdk":{"version":"8.0.400","rollForward":"latestPatch"}}' | Set-Content global.json -Encoding utf8
+          if ((dotnet --version) -notmatch '^8[.]0[.]') { throw 'Se exige .NET 8' }
+      - name: Iniciar LocalDB
+        shell: pwsh
+        run: |
+          if (-not (Get-Command sqllocaldb -ErrorAction SilentlyContinue)) {
+            $found = Get-ChildItem 'C:\Program Files\Microsoft SQL Server' -Recurse -Filter sqllocaldb.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+            if (-not $found) { throw 'LocalDB no está instalado' }
+            $found.DirectoryName | Out-File -Append -FilePath $env:GITHUB_PATH
+            $env:PATH = "$($found.DirectoryName);$env:PATH"
+          }
+          sqllocaldb info MSSQLLocalDB
+          if ($LASTEXITCODE -ne 0) { sqllocaldb create MSSQLLocalDB }
+          sqllocaldb start MSSQLLocalDB
+          if ($LASTEXITCODE -ne 0) { throw 'LocalDB no arrancó' }
+      - name: Reconstruir todo el módulo y ejecutar pruebas xUnit, SQL y retos
+        shell: pwsh
+        run: |
+          python .github/scripts/windows_certificar_e2e.py --modulo ${{ matrix.modulo }}
+          if ($LASTEXITCODE -ne 0) { throw 'Certificación E2E Windows fallida' }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: windows-m0${{ matrix.modulo }}-e2e
+          path: |
+            .qa/windows/*CERTIFICACION_WINDOWS.json
+            docs/validacion-sqlserver/M0${{ matrix.modulo }}_SQLSERVER_RESULTADOS.json
+            M0*/M0*_E2E_RESULTADOS.json
+  m06_m08:
+    name: M0${{ matrix.modulo }} Windows - LocalDB y RabbitMQ real
+    runs-on: windows-2022
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        modulo: [6, 7, 8]
+    steps:
+      - name: Habilitar rutas largas
+        run: git config --global core.longpaths true
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Fijar SDK .NET 8
+        shell: pwsh
+        run: |
+          '{"sdk":{"version":"8.0.400","rollForward":"latestPatch"}}' | Set-Content global.json -Encoding utf8
+          if ((dotnet --version) -notmatch '^8[.]0[.]') { throw 'Se exige .NET 8' }
+      - name: Iniciar LocalDB
+        shell: pwsh
+        run: |
+          if (-not (Get-Command sqllocaldb -ErrorAction SilentlyContinue)) {
+            $found = Get-ChildItem 'C:\Program Files\Microsoft SQL Server' -Recurse -Filter sqllocaldb.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+            if (-not $found) { throw 'LocalDB no está instalado' }
+            $found.DirectoryName | Out-File -Append -FilePath $env:GITHUB_PATH
+            $env:PATH = "$($found.DirectoryName);$env:PATH"
+          }
+          sqllocaldb info MSSQLLocalDB
+          if ($LASTEXITCODE -ne 0) { sqllocaldb create MSSQLLocalDB }
+          sqllocaldb start MSSQLLocalDB
+          if ($LASTEXITCODE -ne 0) { throw 'LocalDB no arrancó' }
+      - name: Instalar RabbitMQ real como servicio Windows
+        shell: pwsh
+        run: .github/scripts/windows_rabbitmq.ps1
+      - name: Ejecutar xUnit acumulativos completos con SQL y AMQP
+        shell: pwsh
+        run: |
+          python .github/scripts/windows_certificar_e2e.py --modulo ${{ matrix.modulo }}
+          if ($LASTEXITCODE -ne 0) { throw 'Certificación E2E Windows fallida' }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: windows-m0${{ matrix.modulo }}-e2e
+          path: |
+            .qa/windows/*E2E_RESULTADOS.json
+            .qa/windows/*CERTIFICACION_WINDOWS.json
