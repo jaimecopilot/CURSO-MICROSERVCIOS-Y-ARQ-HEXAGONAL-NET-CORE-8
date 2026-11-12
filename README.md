@@ -80,3 +80,8 @@ Cada módulo se organiza en las carpetas `TEORIA/`, `PRACTICAS/` y `PROYECTO/`. 
 - [Contenedores, Compose y scripts reproducibles](PRACTICA_TRANSVERSAL_DOCKER_WINDOWS/README.md)
 - El material distingue Docker usado en M02–M08 de una prueba integral opcional con todos los servicios en contenedores.
 - La certificación GitHub Actions Windows no se considera demostración de Docker Desktop/WSL2: esa prueba requiere un Windows con Docker Desktop y evidencias propias.
+
+### Certificación final Windows y Docker
+
+- [Matriz auditada de los ocho módulos y evidencias de certificación Windows/Docker](docs/CERTIFICACION_WINDOWS_DOCKER_M01_M08.md).
+- La práctica transversal Docker Windows es un complemento a M01–M08; **no es M09**. Las pruebas en Windows+Docker Desktop necesitan un equipo Windows con WSL2, distinto de CI Linux y de Windows con RabbitMQ nativo.
