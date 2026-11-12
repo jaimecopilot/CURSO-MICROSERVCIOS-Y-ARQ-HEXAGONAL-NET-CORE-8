@@ -2,7 +2,7 @@
 """Genera y audita el PDF de la práctica transversal Docker en formato A4."""
 from pathlib import Path
 from weasyprint import HTML, CSS
-import markdown, fitz, hashlib, json
+import markdown, fitz, hashlib, json, re
 BASE = Path(__file__).resolve().parent
 MD = BASE / 'PRACTICAS_DOCKER_WINDOWS.md'
 PDF = MD.with_suffix('.pdf')
@@ -26,11 +26,16 @@ hr{border:0;border-top:1pt solid #cbd5df;margin:14pt 0;}
 """
 text=MD.read_text(encoding='utf-8')
 assert all(x in text for x in ('Laboratorio A','Laboratorio B','Laboratorio C','SQL Server','RabbitMQ'))
+steps=re.findall(r'^### Paso (D\.\d+) —',text,flags=re.M)
+assert steps==[f'D.{i}' for i in range(1,17)], f'Pasos Docker faltantes o duplicados: {steps}'
 body=markdown.markdown(text,extensions=['extra','sane_lists','toc'],output_format='html5')
 HTML(string="<html lang='es'><meta charset='utf-8'><body>"+body+"</body></html>",
      base_url=str(BASE)).write_pdf(str(PDF),stylesheets=[CSS(string=CSS_TEXT)])
 pdf=fitz.open(PDF)
 blank=[];overs=[]
+fulltext='\n'.join(page.get_text() for page in pdf)
+for step in steps:
+    assert f'Paso {step}' in fulltext, f'El PDF ha omitido el {step}'
 for i,page in enumerate(pdf,1):
     if len(page.get_text().strip())<12:blank.append(i)
     for w in page.get_text('words'):
@@ -40,7 +45,7 @@ for i,page in enumerate(pdf,1):
             if len(overs)>20:break
 assert 5<=len(pdf)<=50 and not blank and not overs, (len(pdf),blank,overs)
 report={'resultado':'PASS','pdf':PDF.name,'paginas':len(pdf),
-    'palabras':len(text.split()),'sha_md':hashlib.sha256(text.encode()).hexdigest(),
+    'palabras':len(text.split()),'pasos_guiados':len(steps),'sha_md':hashlib.sha256(text.encode()).hexdigest(),
     'sha_pdf':hashlib.sha256(PDF.read_bytes()).hexdigest(),
     'paginas_blancas':blank,'desbordamientos':overs}
 (BASE/'REPORTE_PDF_DOCKER.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
