@@ -1,13 +1,29 @@
-# Práctica transversal — Docker Desktop para Windows y microservicios .NET 8
+# Práctica transversal Docker Desktop para Windows
 
-**No es M09.** Es un laboratorio práctico independiente de los ocho módulos que amplía los comandos Docker usados en M02–M08. No reemplaza ni altera las prácticas existentes ni el código de referencia de AceriaApp.
+**Complemento de M01–M08. No es M09.**
 
-- `PRACTICAS_DOCKER_WINDOWS.md`: itinerario completo con qué, cómo, para qué, pruebas y fallos habituales.
-- `docker/Dockerfile.Servicio`: compilación multietapa de .NET 8, parametrizada por proyecto.
-- `docker/compose.fullstack.yml`: SQL Server Express, RabbitMQ, Producción, Inventario x2 y YARP.
-- `.env.example`: credencial local de ejemplo; copiar como `.env` y no subir credenciales reales.
-- `EJECUTAR_DOCKER_WINDOWS.ps1`: verificación Windows, despliegue secuencial, flujo HTTP/outbox/inbox y persistencia.
+Este laboratorio utiliza **Windows, PowerShell 7 y Docker Desktop con WSL 2 (contenedores Linux)**. Distingue el uso de Docker como infraestructura (SQL Server de pruebas o RabbitMQ) del despliegue completo de las APIs .NET 8 y YARP.
 
-**Estado de la certificación:** los workflows Linux del curso ya verificaron E2E con SQL Server real y RabbitMQ. La rama de cierre añade pruebas Windows independientes; esta práctica integral Docker Desktop requiere además ejecutarse en un equipo Windows con WSL2/Docker Desktop, porque los runners Windows alojados de GitHub Actions no acreditan esa ejecución. No confundir evidencia estática o Linux con una certificación física de Docker Desktop en Windows.
+## Documentación y recursos
 
-La integración en `main` y el inicio de M09 quedan sujetos a cierre técnico, entrega editorial y revisión del usuario.
+- [Manual guiado en Markdown](PRACTICAS_DOCKER_WINDOWS.md) · [PDF](PRACTICAS_DOCKER_WINDOWS.pdf): instalación, imágenes, redes, volúmenes, bases de datos, mensajería, APIs, pruebas y recuperación.
+- [Dockerfile para aplicaciones .NET 8](docker/Dockerfile.Servicio).
+- [Compose del sistema completo](docker/compose.fullstack.yml): SQL Server Express, RabbitMQ, Producción, Inventario 1 y 2, YARP.
+- [Script PowerShell de despliegue y comprobación](EJECUTAR_DOCKER_WINDOWS.ps1).
+- [Ejemplo de variables del laboratorio](.env.example). Copia como `.env` y cambia su contraseña; el archivo real **no debe subirse al repositorio**.
+
+## Comenzar
+
+Desde la raíz del repositorio abre PowerShell 7:
+
+```powershell
+Set-Location .\PRACTICA_TRANSVERSAL_DOCKER_WINDOWS
+Copy-Item .\.env.example .\.env
+notepad .\.env
+.\EJECUTAR_DOCKER_WINDOWS.ps1 -Accion preparar
+.\EJECUTAR_DOCKER_WINDOWS.ps1 -Accion levantar
+```
+
+El script comprueba servicios reales, HTTP, RabbitMQ, SQL Server Express, YARP y persistencia. Los ejercicios de parada y recuperación se describen en el manual. Detener servicios no requiere borrar volúmenes.
+
+**Importante:** la certificación completa de Docker Desktop requiere ejecutar el laboratorio en un ordenador Windows real; una ejecución correcta del mismo Compose sobre Linux no demuestra que Docker Desktop funcione en tu PC. Las contraseñas y opciones de confianza de certificados del ejemplo son únicamente para formación local.

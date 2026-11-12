@@ -1,9 +1,0 @@
-name: M03 - teoria practicas proyectos y E2E desde el laboratorio
-# La validacion y publicacion pasan por el cierre comun obligatorio.
-on:
-  workflow_dispatch:
-permissions:
-  contents: write
-jobs:
-  validar:
-    uses: ./.github/workflows/sqlserver-modulos.yml

@@ -1,46 +1,26 @@
-# Módulo 7 — Observabilidad y resiliencia con .NET 8
+# M07 — Observabilidad y resiliencia
 
-**Curso JAIME GALLO · AceriaApp**
+**Autor del curso: JAIME GALLO · Proyecto acumulativo AceriaApp (.NET 8)**
 
-**Edición vigente:** [cierre y archivo histórico](REVISION_FINAL.md) · [optimización editorial](REVISION_EDITORIAL_M07.md) · [CI E2E/PDF aprobado](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43238328603). Las prácticas actuales contienen **174 páginas**, frente a 267 en la edición anterior.
+## Material del módulo
 
-Cuatro etapas acumulativas desde M06 6.3: logs y correlación, salud, excepciones y resiliencia HTTP mediante Polly v8. El cierre exige ejecución real de SQL Server, RabbitMQ y Windows/LocalDB, revisión de los PDF y coincidencia de hashes.
+- **[Teoría en Markdown](TEORIA/M07_TEORIA.md)** y **[PDF](TEORIA/M07_TEORIA.pdf)**: conceptos, explicaciones y figuras.
+- **[Prácticas guiadas en Markdown](PRACTICAS/M07_PRACTICAS.md)** y **[PDF](PRACTICAS/M07_PRACTICAS.pdf)**: pasos, ejemplos de código, comprobaciones y retos.
+- **[Proyectos de referencia](PROYECTO/)**: una solución completa por etapa, con código, tests y documentación necesaria.
 
-- [Teoría](TEORIA/M07_TEORIA.md) · [PDF](TEORIA/M07_TEORIA.pdf): 40 bloques, 40 ampliaciones y 12 diagramas SVG/PNG.
-- [Prácticas](PRACTICAS/M07_PRACTICAS.md) · [PDF](PRACTICAS/M07_PRACTICAS.pdf): 96 pasos, cuatro retos resueltos y cuatro recorridos ejecutables con PowerShell 7.
-- [Proyectos](PROYECTO): copias independientes de cada etapa; el código completo aparece en el manual.
+## Etapas
 
-| Punto | Comportamiento | Proyectos | Pruebas aprobadas |
-|---|---|---:|---:|
-| [7.1 Logging](PROYECTO/7.1-logging) | JSON, correlación validada y propagada entre API | 31 | 309 |
-| [7.2 Salud](PROYECTO/7.2-health-checks) | Liveness y readiness con SQL/AMQP reales | 32 | 331 |
-| [7.3 Excepciones](PROYECTO/7.3-gestion-excepciones) | ProblemDetails seguro y diagnóstico limitado a Development | 33 | 353 |
-| [7.4 Polly](PROYECTO/7.4-retry-circuit-breaker-polly) | Retry acotado, circuito compartido y recuperación observable | 34 | 403 |
+- **07.1** — [`7.1-logging`](PROYECTO/7.1-logging/)
+- **07.2** — [`7.2-health-checks`](PROYECTO/7.2-health-checks/)
+- **07.3** — [`7.3-gestion-excepciones`](PROYECTO/7.3-gestion-excepciones/)
+- **07.4** — [`7.4-retry-circuit-breaker-polly`](PROYECTO/7.4-retry-circuit-breaker-polly/)
 
-La base conserva las 283 pruebas de M6. M7 añade 56 de catálogos y 64 funcionales; los cuatro retos se ejecutan aparte y añaden una prueba a su etapa. Los catálogos son análisis, no sustituyen la ejecución de middleware, conexiones o políticas reales.
+El recuento acumulado previsto de pruebas por etapa es **309, 331, 353 y 403**. Sirve como orientación para contrastar la ejecución real: no equivale por sí solo a tener las pruebas aprobadas.
 
-## Arranque y comprobación
+## Trabajar en Windows
 
-Dentro de cada etapa, sigue «Recorrido funcional 7.x» de las prácticas: Producción escucha en 5105 e Inventario en 5106. Se utiliza SQL Server Express/LocalDB; el recorrido de salud habilita RabbitMQ con el Compose heredado. Cada etapa utiliza bases propias. Los workers están desactivados por defecto.
+Continúa el trabajo de M06. Las prácticas explican cómo arrancar RabbitMQ con Docker Desktop, comprobar `/health/live` y `/health/ready`, diagnosticar fallos y recuperar el servicio; la API sigue funcionando en Windows.
 
-Desde la raíz del repositorio, con .NET 8, Python y Docker, el host crea SQL Server Express y RabbitMQ temporales, reconstruye las cuatro etapas y ejecuta las pruebas:
+**Orden recomendado:** teoría → práctica en tu carpeta de trabajo → compilación y tests → contraste con `PROYECTO/`. Nunca comiences copiando la solución final que estás intentando construir. Las carpetas de `PROYECTO/` incluyen los archivos de código y pruebas necesarios para ejecutar cada etapa.
 
-```bash
-dotnet run --project tools/M07ValidationHost -c Release -- python .github/scripts/m07_validar.py
-```
-
-Para reconstruir sin afirmar que se han ejecutado pruebas:
-
-```bash
-python .github/scripts/m07_e2e_desde_practicas.py --no-tests --out .qa/m07-reconstruccion.json
-```
-
-El resultado de ese comando es `SIN_TESTS`. La validación completa exige 403 pruebas en la etapa final, cero omisiones, los cuatro retos y el recorrido entre procesos. Las pruebas temporales de Polly usan un reloj virtual y transporte controlado; el recorrido HTTP acredita caída y recuperación de Inventario real sin reiniciar Producción.
-
-## Alcance de las garantías
-
-La minimización de datos corresponde a los eventos propios de M7: resumen HTTP, manejador de excepciones y callbacks Polly. Se elimina también RequestPath de los scopes automáticos. Los logs heredados de workers y EF no se presentan como auditados ni exentos de información interna.
-
-Readiness confirma acceso a las dependencias, no que todos los mensajes estén procesados. El presupuesto HTTP es de seis segundos, con un segundo por intento y hasta dos reintentos solo para lecturas admitidas. La respuesta de indisponibilidad no inventa stock y la consulta GET no reserva material. El módulo conserva la semántica outbox/inbox y de planificación de M6.
-
-[E2E y retos](M07_E2E_RESULTADOS.json) · [SQL Server](M07_SQLSERVER_RESULTADOS.json) · [HTTP y broker](M07_HTTP_RESULTADOS.json) · [Windows/LocalDB](M07_WINDOWS_RESULTADOS.json).
+El laboratorio [Docker Desktop para Windows](../PRACTICA_TRANSVERSAL_DOCKER_WINDOWS/README.md) complementa las prácticas y detalla el despliegue de infraestructura y del sistema completo, sin reemplazar el recorrido de este módulo.

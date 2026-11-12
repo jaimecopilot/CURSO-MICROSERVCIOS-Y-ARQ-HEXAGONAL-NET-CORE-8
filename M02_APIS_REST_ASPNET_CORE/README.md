@@ -1,45 +1,26 @@
-# Módulo 2 — APIs REST con ASP.NET Core 8
+# M02 — APIs REST con ASP.NET Core 8
 
-**Autor: JAIME GALLO**
+**Autor del curso: JAIME GALLO · Proyecto acumulativo AceriaApp (.NET 8)**
 
-## Material canónico de aprendizaje
+## Material del módulo
 
-- [Teoría de M02](TEORIA/M02_TEORIA.md).
-- [Prácticas de M02](PRACTICAS/M02_PRACTICAS.md): **guion único del alumno**, con 96 pasos numerados de 2.1.1 a 2.4.24.
-- [Prácticas de M02 en PDF](PRACTICAS/M02_PRACTICAS.pdf): generado directamente desde el mismo Markdown, con la plantilla tipográfica del módulo 1.
+- **[Teoría en Markdown](TEORIA/M02_TEORIA.md)** y **[PDF](TEORIA/M02_TEORIA.pdf)**: conceptos, explicaciones y figuras.
+- **[Prácticas guiadas en Markdown](PRACTICAS/M02_PRACTICAS.md)** y **[PDF](PRACTICAS/M02_PRACTICAS.pdf)**: pasos, ejemplos de código, comprobaciones y retos.
+- **[Proyectos de referencia](PROYECTO/)**: una solución completa por etapa, con código, tests y documentación necesaria.
 
-## Cómo utilizar las prácticas
+## Etapas
 
-El alumno trabaja sobre su propia solución y sigue el **orden de los pasos**. El código fuente que aparece en el laboratorio debe escribirse en el archivo indicado. Cuando el ejercicio dice *ampliar*, debe modificar el archivo ya creado, no volver a copiar una versión completa ni declarar un segundo endpoint con la misma ruta.
+- **02.1** — [`2.1-diseno-apis-rest`](PROYECTO/2.1-diseno-apis-rest/)
+- **02.2** — [`2.2-recursos-verbos-codigos`](PROYECTO/2.2-recursos-verbos-codigos/)
+- **02.3** — [`2.3-validacion-peticiones`](PROYECTO/2.3-validacion-peticiones/)
+- **02.4** — [`2.4-documentacion-openapi`](PROYECTO/2.4-documentacion-openapi/)
 
-Cada carpeta de PROYECTO contiene el **estado final de referencia de su etapa**, no una aplicación que deba copiarse al principio:
+El recuento acumulado previsto de pruebas por etapa es **3, 7, 12 y 16**. Sirve como orientación para contrastar la ejecución real: no equivale por sí solo a tener las pruebas aprobadas.
 
-| Etapa | Carpeta | Resultado |
-| --- | --- | --- |
-| 2.1 | `PROYECTO/2.1-diseno-apis-rest` | GET, OrdenDto, EF Core 8, LocalDB y pruebas HTTP |
-| 2.2 | `PROYECTO/2.2-recursos-verbos-codigos` | POST, PUT, PATCH, DELETE y reglas de estado |
-| 2.3 | `PROYECTO/2.3-validacion-peticiones` | FluentValidation y filtros conectados a endpoints |
-| 2.4 | `PROYECTO/2.4-documentacion-openapi` | Documento Swagger/OpenAPI y pruebas de contrato |
+## Trabajar en Windows
 
-## Comprobaciones de aprendizaje
+En Windows, utiliza **SQL Server Express LocalDB**. Las pruebas de integración necesitan SQL Server real: configura `ACERIA_TEST_SQLSERVER` para apuntar a `master` con permisos de crear y eliminar bases, o utiliza la opción Docker Desktop/Testcontainers explicada en las prácticas. No se sustituye SQL Server por SQLite/InMemory.
 
-Las cuatro soluciones usan .NET 8 y se pueden compilar y probar de forma independiente. La aplicación local utiliza **SQL Server Express LocalDB** en Windows. Las pruebas de integración mantienen **EF Core SQL Server y un motor SQL Server real**: cada caso obtiene una base aislada mediante `BaseSqlServer.Crear()` y la elimina al terminar.
+**Orden recomendado:** teoría → práctica en tu carpeta de trabajo → compilación y tests → contraste con `PROYECTO/`. Nunca comiences copiando la solución final que estás intentando construir. Las carpetas de `PROYECTO/` incluyen los archivos de código y pruebas necesarios para ejecutar cada etapa.
 
-Para ejecutar las pruebas, elige uno de estos entornos:
-
-- **Docker Desktop con contenedores Linux**, sin definir `ACERIA_TEST_SQLSERVER`: `Testcontainers.MsSql` 3.10.0 inicia SQL Server con la imagen `mcr.microsoft.com/mssql/server:2022-CU14-ubuntu-22.04` y `MSSQL_PID=Express`.
-- **SQL Server disponible**, incluyendo LocalDB en Windows: define `ACERIA_TEST_SQLSERVER` con una conexión a `master` y una cuenta que pueda crear y eliminar bases de pruebas. El helper genera nombres únicos; no reutiliza la base cotidiana de la API.
-
-Ejemplo en PowerShell, desde la carpeta de una solución:
-
-```powershell
-$env:ACERIA_TEST_SQLSERVER = 'Server=(localdb)\MSSQLLocalDB;Database=master;Trusted_Connection=True;TrustServerCertificate=True'
-dotnet test
-Remove-Item Env:ACERIA_TEST_SQLSERVER
-```
-
-Un Docker inaccesible o un SQL Server no disponible hace fallar las pruebas que lo necesitan. No hay sustitución automática por InMemory o SQLite ni omisión silenciosa. La [teoría, estudio integrador 2.1](TEORIA/M02_TEORIA.md#estudio-integrador-21--probar-http-y-persistencia-con-sql-server-real) explica imagen, contenedor, puertos, cadenas de conexión y el recorrido completo del test, con diagramas SVG/PNG y explicaciones separadas de cada línea.
-
-El laboratorio se comprueba también con un **E2E de reconstrucción**: una copia temporal de las cuatro etapas se genera a partir de fragmentos C# del Markdown y se compila repetidamente hasta superar sus pruebas. Esta comprobación no automatiza las acciones exclusivamente manuales del IDE.
-
-Los PDFs se obtienen desde los Markdown mediante el flujo de generación del repositorio. El archivo MD es la fuente; el PDF es el material distribuible.
+El laboratorio [Docker Desktop para Windows](../PRACTICA_TRANSVERSAL_DOCKER_WINDOWS/README.md) complementa las prácticas y detalla el despliegue de infraestructura y del sistema completo, sin reemplazar el recorrido de este módulo.

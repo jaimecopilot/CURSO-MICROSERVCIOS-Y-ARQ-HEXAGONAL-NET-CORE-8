@@ -1,87 +1,40 @@
-# Curso Arquitectura Hexagonal y Microservicios Avanzados
+# Curso de arquitectura hexagonal y microservicios con .NET 8
 
-Curso teórico-práctico de **30 horas** dirigido a desarrolladores .NET con conocimientos de C# y ASP.NET Core.
+**Material para alumnos · Curso teórico-práctico (30 horas) · AceriaApp**
 
-## Objetivos
+Esta edición contiene solo lo necesario para estudiar los **ocho módulos**, realizar las prácticas y ejecutar sus proyectos de referencia en Windows. Los registros internos de revisión, generación y certificación del curso se conservan fuera de esta edición.
 
-- Comprender los fundamentos de una arquitectura basada en microservicios y su aplicación en entornos empresariales.
-- Diseñar e implementar microservicios utilizando ASP.NET Core y Arquitectura Hexagonal.
-- Aplicar patrones de diseño y arquitectura como Repository, Unit of Work, Mediator y CQRS para desarrollar aplicaciones desacopladas y mantenibles.
-- Implementar mecanismos básicos de comunicación entre servicios, resiliencia y publicación mediante un API Gateway.
+## Cómo estudiar
 
-## Temario
+1. Abre la **teoría** del módulo en Markdown o PDF; utiliza los diagramas y las imágenes incluidos.
+2. Sigue las **prácticas guiadas** en su orden: crea los archivos, incorpora el código y realiza cada verificación con Visual Studio o PowerShell.
+3. Utiliza **PROYECTO/** para comparar tu resultado **después** de completar una etapa. Cada subcarpeta representa un estado final independiente de AceriaApp; no copies la solución terminada al iniciar el ejercicio.
+4. Ejecuta los tests de la etapa con `dotnet test AceriaApp.sln -c Release` desde la carpeta que contiene esa solución, una vez preparadas sus dependencias SQL/RabbitMQ.
 
-1. Introducción a los microservicios.
-2. Desarrollo de APIs REST con ASP.NET Core.
-3. Arquitectura Hexagonal.
-4. Patrones de arquitectura.
-5. Introducción a DDD y CQRS.
-6. Comunicación entre microservicios.
-7. Observabilidad y resiliencia.
-8. Publicación mediante API Gateway.
+## Módulos
 
-## Organización del repositorio
+| Módulo | Contenido | Material |
+|---|---|---|
+| M01 | Introducción a los microservicios | [Abrir](./M01_INTRODUCCION_MICROSERVICIOS/README.md) |
+| M02 | APIs REST con ASP.NET Core 8 | [Abrir](./M02_APIS_REST_ASPNET_CORE/README.md) |
+| M03 | Arquitectura hexagonal | [Abrir](./M03_ARQUITECTURA_HEXAGONAL/README.md) |
+| M04 | Patrones de arquitectura | [Abrir](./M04_PATRONES_ARQUITECTURA/README.md) |
+| M05 | Introducción a DDD y CQRS | [Abrir](./M05_DDD_CQRS/README.md) |
+| M06 | Comunicación entre microservicios | [Abrir](./M06_COMUNICACION_MICROSERVICIOS/README.md) |
+| M07 | Observabilidad y resiliencia | [Abrir](./M07_OBSERVABILIDAD_RESILIENCIA/README.md) |
+| M08 | Publicación mediante API Gateway | [Abrir](./M08_API_GATEWAY/README.md) |
 
-Cada módulo se organiza en las carpetas `TEORIA/`, `PRACTICAS/` y `PROYECTO/`. Las carpetas docentes se incorporan con sus respectivos Markdown y PDF; los proyectos son estados reproducibles de AceriaApp por punto del temario.
+Cada módulo incluye `TEORIA/`, `PRACTICAS/`, `PROYECTO/` y `README.md`. Algunos también incluyen `GRAFICOS/`, necesario para las ilustraciones de su teoría.
 
-### Módulo 1
+## Preparar Windows
 
-- [Proyecto AceriaApp — puntos 1.1 a 1.5](M01_INTRODUCCION_MICROSERVICIOS/PROYECTO/)
-- Cada punto conserva `AceriaApp.sln`, `src/`, `tests/` y `docs/`.
-- Referencia de código: .NET 8, EF Core 8, SQL Server Express y xUnit.
-- Los retos de cada punto están identificados mediante comentarios para descomentarlos.
+- **.NET SDK 8**, Visual Studio con desarrollo ASP.NET Core y PowerShell 7.
+- **SQL Server Express LocalDB** para las APIs y pruebas locales en Windows. Los tests pueden utilizar una conexión SQL Server real mediante `ACERIA_TEST_SQLSERVER`.
+- **Docker Desktop con motor WSL 2 y contenedores Linux** solo cuando lo exija la práctica: opcional para SQL Server de pruebas con Testcontainers en M02–M05; necesario para RabbitMQ en los recorridos de M06–M08.
+- Las instrucciones específicas de cada etapa y los comandos de configuración están en su `PRACTICAS/Mxx_PRACTICAS.md`.
 
-### Módulo 2 — Desarrollo de APIs REST con ASP.NET Core
+## Práctica transversal Docker Desktop en Windows
 
-- [Teoría del módulo 2](M02_APIS_REST_ASPNET_CORE/TEORIA/M02_TEORIA.md) · [PDF](M02_APIS_REST_ASPNET_CORE/TEORIA/M02_TEORIA.pdf)
-- [Prácticas guiadas del módulo 2](M02_APIS_REST_ASPNET_CORE/PRACTICAS/M02_PRACTICAS.md) · [PDF](M02_APIS_REST_ASPNET_CORE/PRACTICAS/M02_PRACTICAS.pdf)
-- [Cuatro proyectos Minimal API progresivos (2.1–2.4)](M02_APIS_REST_ASPNET_CORE/PROYECTO/), .NET 8, EF Core 8 y SQL Server Express LocalDB.
+[Manual y recursos de Docker](./PRACTICA_TRANSVERSAL_DOCKER_WINDOWS/README.md): instalación, comprobaciones, SQL Server Express, RabbitMQ, Dockerfiles, Compose, PowerShell y despliegue de AceriaApp con YARP. **Complemento práctico de los módulos 1–8; no es el módulo 9**.
 
-### Módulo 3 — Arquitectura hexagonal
-
-- [Teoría](M03_ARQUITECTURA_HEXAGONAL/TEORIA/M03_TEORIA.md) · [PDF](M03_ARQUITECTURA_HEXAGONAL/TEORIA/M03_TEORIA.pdf).
-- [Prácticas guiadas](M03_ARQUITECTURA_HEXAGONAL/PRACTICAS/M03_PRACTICAS.md) · [PDF](M03_ARQUITECTURA_HEXAGONAL/PRACTICAS/M03_PRACTICAS.pdf).
-- [Proyectos y validación](M03_ARQUITECTURA_HEXAGONAL/README.md): cuatro etapas progresivas, 3.1–3.4.
-
-### Módulo 4 — Patrones de arquitectura
-
-- [Teoría](M04_PATRONES_ARQUITECTURA/TEORIA/M04_TEORIA.md) · [PDF](M04_PATRONES_ARQUITECTURA/TEORIA/M04_TEORIA.pdf).
-- [Prácticas guiadas](M04_PATRONES_ARQUITECTURA/PRACTICAS/M04_PRACTICAS.md) · [PDF](M04_PATRONES_ARQUITECTURA/PRACTICAS/M04_PRACTICAS.pdf).
-- [Proyectos y validación](M04_PATRONES_ARQUITECTURA/README.md): cinco etapas progresivas, 4.1–4.5.
-
-### Módulo 5 — Introducción a DDD y CQRS
-
-- [Teoría](M05_DDD_CQRS/TEORIA/M05_TEORIA.md) · [PDF](M05_DDD_CQRS/TEORIA/M05_TEORIA.pdf).
-- [Prácticas guiadas](M05_DDD_CQRS/PRACTICAS/M05_PRACTICAS.md) · [PDF](M05_DDD_CQRS/PRACTICAS/M05_PRACTICAS.pdf).
-- [Proyectos y validación](M05_DDD_CQRS/README.md): cinco etapas progresivas, 5.1–5.5.
-
-### Módulo 6 — Comunicación entre microservicios
-
-- [Teoría](M06_COMUNICACION_MICROSERVICIOS/TEORIA/M06_TEORIA.md) · [PDF](M06_COMUNICACION_MICROSERVICIOS/TEORIA/M06_TEORIA.pdf).
-- [Prácticas guiadas](M06_COMUNICACION_MICROSERVICIOS/PRACTICAS/M06_PRACTICAS.md) · [PDF](M06_COMUNICACION_MICROSERVICIOS/PRACTICAS/M06_PRACTICAS.pdf).
-- [Proyectos y validación](M06_COMUNICACION_MICROSERVICIOS/README.md): tres etapas progresivas, 6.1–6.3, con HTTP real, RabbitMQ y outbox/inbox SQL Server.
-
-### Módulo 7 — Observabilidad y resiliencia
-
-- [Teoría](M07_OBSERVABILIDAD_RESILIENCIA/TEORIA/M07_TEORIA.md) · [PDF](M07_OBSERVABILIDAD_RESILIENCIA/TEORIA/M07_TEORIA.pdf).
-- [Prácticas guiadas](M07_OBSERVABILIDAD_RESILIENCIA/PRACTICAS/M07_PRACTICAS.md) · [PDF](M07_OBSERVABILIDAD_RESILIENCIA/PRACTICAS/M07_PRACTICAS.pdf).
-- [Proyectos y validación](M07_OBSERVABILIDAD_RESILIENCIA/README.md): cuatro etapas progresivas, 7.1–7.4, con correlación JSON, salud SQL/AMQP, ProblemDetails y resiliencia HTTP mediante Polly v8.
-
-### Módulo 8 — Publicación mediante API Gateway
-
-- [Teoría](M08_API_GATEWAY/TEORIA/M08_TEORIA.md) · [PDF](M08_API_GATEWAY/TEORIA/M08_TEORIA.pdf).
-- [Prácticas guiadas](M08_API_GATEWAY/PRACTICAS/M08_PRACTICAS.md) · [PDF](M08_API_GATEWAY/PRACTICAS/M08_PRACTICAS.pdf): 96 pasos, 145 páginas revisadas y cuatro retos optativos.
-- [Proyectos y validación](M08_API_GATEWAY/README.md): cuatro etapas 8.1–8.4, gateway independiente con YARP, enrutamiento, transformaciones, balanceo, salud y recuperación de destinos, con SQL Server Express y RabbitMQ reales.
-- [Informe de cierre automatizado](M08_API_GATEWAY/CIERRE_AUTOMATIZADO.md) y [revisión editorial](M08_API_GATEWAY/REVISION_EDITORIAL_M08.md). La publicación definitiva se verifica mediante la automatización correspondiente al commit de `main`.
-
-### Práctica transversal Docker para Windows (complementaria; no es M09)
-
-- [Manual Docker Windows, SQL Server, RabbitMQ y despliegue completo](PRACTICA_TRANSVERSAL_DOCKER_WINDOWS/PRACTICAS_DOCKER_WINDOWS.md)
-- [Contenedores, Compose y scripts reproducibles](PRACTICA_TRANSVERSAL_DOCKER_WINDOWS/README.md)
-- El material distingue Docker usado en M02–M08 de una prueba integral opcional con todos los servicios en contenedores.
-- La certificación GitHub Actions Windows no se considera demostración de Docker Desktop/WSL2: esa prueba requiere un Windows con Docker Desktop y evidencias propias.
-
-### Certificación final Windows y Docker
-
-- [Matriz auditada de los ocho módulos y evidencias de certificación Windows/Docker](docs/CERTIFICACION_WINDOWS_DOCKER_M01_M08.md).
-- La práctica transversal Docker Windows es un complemento a M01–M08; **no es M09**. Las pruebas en Windows+Docker Desktop necesitan un equipo Windows con WSL2, distinto de CI Linux y de Windows con RabbitMQ nativo.
+Los ejemplos de contraseña y puertos son solo para un laboratorio local; no se deben reutilizar en producción.
