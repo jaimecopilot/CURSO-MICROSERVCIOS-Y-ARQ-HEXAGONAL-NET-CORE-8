@@ -1,0 +1,13 @@
+# Build desde la raíz del repositorio, nunca desde un proyecto aislado.
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS compilacion
+ARG PROYECTO
+WORKDIR /src
+COPY M08_API_GATEWAY/PROYECTO/8.4-balanceo-carga/ ./
+RUN test -n "$PROYECTO" && dotnet restore "src/$PROYECTO/$PROYECTO.csproj"
+RUN dotnet publish "src/$PROYECTO/$PROYECTO.csproj" -c Release --no-restore -o /publicado /p:UseAppHost=false
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
+WORKDIR /app
+COPY --from=compilacion /publicado/ ./
+ENV ASPNETCORE_URLS=http://+:8080
+EXPOSE 8080
+ENTRYPOINT ["dotnet"]
