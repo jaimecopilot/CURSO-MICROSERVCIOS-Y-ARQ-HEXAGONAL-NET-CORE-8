@@ -44,3 +44,5 @@ Comprobaciones automáticas completadas en https://github.com/jaimecopilot/CURSO
 Verificación complementaria del cierre antes de publicar M06: los ocho PDF regenerados en `aa7319c2c799b78710d4435aaca8ef4857da34cf` se compararon con la entrega revisada `7fe7da90bab1d8e3ca6d45fc9395828b919b7555`. Las 672 páginas son idénticas píxel a píxel a 72 dpi; los contenidos de código y Markdown no variaron en esa regeneración. Las 13 tareas del cierre SQL Server siguen completadas. M06 ya dispone de su propia evidencia y revisión final en `M06_COMUNICACION_MICROSERVICIOS/REVISION_FINAL.md`.
 
 Comprobaciones automáticas completadas en https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43248558074; las tareas 12 y 13 requieren además revisión visual y revisión final documentadas.
+
+Comprobaciones automáticas completadas en https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43251643708; las tareas 12 y 13 requieren además revisión visual y revisión final documentadas.

@@ -1,8 +1,8 @@
 {
   "modulo": 2,
-  "fecha_utc": "2026-11-12T15:31:24.329298+00:00",
-  "commit_comprobado": "db31e371f08553d1af03d96e0a7732137117f282",
-  "run_url": "https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43248558074",
+  "fecha_utc": "2026-11-12T15:48:41.216366+00:00",
+  "commit_comprobado": "a7e19d4b878cfb39d179e131f33b66a46f0cb886",
+  "run_url": "https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43251643708",
   "resultado": "PASS",
   "proveedor": "Microsoft.EntityFrameworkCore.SqlServer",
   "edicion": "SQL Server Express / LocalDB",
@@ -153,7 +153,7 @@
       "provider": "Microsoft.EntityFrameworkCore.SqlServer",
       "engineEdition": 4,
       "version": "16.0.4135.4",
-      "database": "AceriaTest_0449a9576eb34d7f9b30760682623edc",
+      "database": "AceriaTest_01744b17c2514ba096df0bed16ba3ee3",
       "modo": "conexion_externa",
       "origen": "Testcontainers"
     },
@@ -161,7 +161,7 @@
       "provider": "Microsoft.EntityFrameworkCore.SqlServer",
       "engineEdition": 4,
       "version": "16.0.4135.4",
-      "database": "AceriaTest_060ea6c224924e598438c2d4625fa473",
+      "database": "AceriaTest_0afe873076d74f17b60a8d3fe58592a1",
       "modo": "conexion_externa",
       "origen": "Testcontainers"
     },
@@ -169,7 +169,7 @@
       "provider": "Microsoft.EntityFrameworkCore.SqlServer",
       "engineEdition": 4,
       "version": "16.0.4135.4",
-      "database": "AceriaTest_0b9590d286ef4227898cefc9092e33d0",
+      "database": "AceriaTest_13e6ee09692e4807a2c17e492d5f76bc",
       "modo": "conexion_externa",
       "origen": "Testcontainers"
     },
@@ -177,7 +177,7 @@
       "provider": "Microsoft.EntityFrameworkCore.SqlServer",
       "engineEdition": 4,
       "version": "16.0.4135.4",
-      "database": "AceriaTest_0e22e67ae87f49d0b3052ef48ccf1a99",
+      "database": "AceriaTest_1e7ef01446474ca7a38e59b18fd9d4e0",
       "modo": "conexion_externa",
       "origen": "Testcontainers"
     },
@@ -185,7 +185,7 @@
       "provider": "Microsoft.EntityFrameworkCore.SqlServer",
       "engineEdition": 4,
       "version": "16.0.4135.4",
-      "database": "AceriaTest_11bac65b1ae4495185a148ba002555d3",
+      "database": "AceriaTest_272a0c5a04804ca08ed002539a68021e",
       "modo": "conexion_externa",
       "origen": "Testcontainers"
     },
@@ -193,7 +193,7 @@
       "provider": "Microsoft.EntityFrameworkCore.SqlServer",
       "engineEdition": 4,
       "version": "16.0.4135.4",
-      "database": "AceriaTest_1383cc9a707542e0ab6e2f90a1184b3b",
+      "database": "AceriaTest_32572a33ed5e41238a1f375a017db309",
       "modo": "conexion_externa",
       "origen": "Testcontainers"
     },
@@ -201,7 +201,7 @@
       "provider": "Microsoft.EntityFrameworkCore.SqlServer",
       "engineEdition": 4,
       "version": "16.0.4135.4",
-      "database": "AceriaTest_15826c0a0978446ca15b091d4ccb681b",
+      "database": "AceriaTest_391c75bbfba14ce1a28976509a02ccdc",
       "modo": "conexion_externa",
       "origen": "Testcontainers"
     },
@@ -209,7 +209,7 @@
       "provider": "Microsoft.EntityFrameworkCore.SqlServer",
       "engineEdition": 4,
       "version": "16.0.4135.4",
-      "database": "AceriaTest_220637df17994ee0909ddc6cea3a9224",
+      "database": "AceriaTest_446d9d9cdef84d0fad19e9c97c9c994b",
       "modo": "conexion_externa",
       "origen": "Testcontainers"
     },
@@ -217,7 +217,7 @@
       "provider": "Microsoft.EntityFrameworkCore.SqlServer",
       "engineEdition": 4,
       "version": "16.0.4135.4",
-      "database": "AceriaTest_2234cf997dbd4976afb1af70f795870f",
+      "database": "AceriaTest_4aa378297f6d4d9e9c24a09f7f20d796",
       "modo": "conexion_externa",
       "origen": "Testcontainers"
     },
@@ -225,7 +225,7 @@
       "provider": "Microsoft.EntityFrameworkCore.SqlServer",
       "engineEdition": 4,
       "version": "16.0.4135.4",
-      "database": "AceriaTest_2a804cfa447f4f5fa383d57f19e135c2",
+      "database": "AceriaTest_4ad06afdb2e947f5bedc943e8db484ec",
       "modo": "conexion_externa",
       "origen": "Testcontainers"
     },
@@ -233,7 +233,7 @@
       "provider": "Microsoft.EntityFrameworkCore.SqlServer",
       "engineEdition": 4,
       "version": "16.0.4135.4",
-      "database": "AceriaTest_2dc3390568c64b31aed09f13ca037663",
+      "database": "AceriaTest_5e38c72322524170af60e719af87ab4d",
       "modo": "conexion_externa",
       "origen": "Testcontainers"
     },
@@ -241,7 +241,7 @@
       "provider": "Microsoft.EntityFrameworkCore.SqlServer",
       "engineEdition": 4,
       "version": "16.0.4135.4",
-      "database": "AceriaTest_3708532b01cf43c7a331396c41b352b6",
+      "database": "AceriaTest_5f04a8a9041142a8835810a1004e7967",
       "modo": "conexion_externa",
       "origen": "Testcontainers"
     },
@@ -249,7 +249,7 @@
       "provider": "Microsoft.EntityFrameworkCore.SqlServer",
       "engineEdition": 4,
       "version": "16.0.4135.4",
-      "database": "AceriaTest_37971315504146ee83573c8b9b9e2f0c",
+      "database": "AceriaTest_6761ee4e77df4c8a81ca482cfb7edc52",
       "modo": "conexion_externa",
       "origen": "Testcontainers"
     },
@@ -257,7 +257,7 @@
       "provider": "Microsoft.EntityFrameworkCore.SqlServer",
       "engineEdition": 4,
       "version": "16.0.4135.4",
-      "database": "AceriaTest_382ff370b9ca44e0bd82bc80cafb6b8a",
+      "database": "AceriaTest_696af8d9014748cba1e17d7c27499985",
       "modo": "conexion_externa",
       "origen": "Testcontainers"
     },
@@ -265,7 +265,7 @@
       "provider": "Microsoft.EntityFrameworkCore.SqlServer",
       "engineEdition": 4,
       "version": "16.0.4135.4",
-      "database": "AceriaTest_3bda2ddbe06f43cd92fffae44cec9313",
+      "database": "AceriaTest_699c0399d68e42d69186831135788786",
       "modo": "conexion_externa",
       "origen": "Testcontainers"
     },
@@ -273,7 +273,7 @@
       "provider": "Microsoft.EntityFrameworkCore.SqlServer",
       "engineEdition": 4,
       "version": "16.0.4135.4",
-      "database": "AceriaTest_44239955ffa1402e9ab3f3823da274a5",
+      "database": "AceriaTest_6e15b100ffa348eda4482edcd673266e",
       "modo": "conexion_externa",
       "origen": "Testcontainers"
     },
@@ -281,7 +281,7 @@
       "provider": "Microsoft.EntityFrameworkCore.SqlServer",
       "engineEdition": 4,
       "version": "16.0.4135.4",
-      "database": "AceriaTest_4c89ed95b0914332b618144a9776d0a7",
+      "database": "AceriaTest_77ce63e426bd4c4f8d597183eb543657",
       "modo": "conexion_externa",
       "origen": "Testcontainers"
     },
@@ -289,7 +289,7 @@
       "provider": "Microsoft.EntityFrameworkCore.SqlServer",
       "engineEdition": 4,
       "version": "16.0.4135.4",
-      "database": "AceriaTest_4e9fedbea05e4c3b968f577c4e1e0730",
+      "database": "AceriaTest_79ff65dc2777407b80ff387abe87e319",
       "modo": "conexion_externa",
       "origen": "Testcontainers"
     },
@@ -297,7 +297,7 @@
       "provider": "Microsoft.EntityFrameworkCore.SqlServer",
       "engineEdition": 4,
       "version": "16.0.4135.4",
-      "database": "AceriaTest_521633fd435c434b808122b457c20ce7",
+      "database": "AceriaTest_7a123a73e9484b0aa6bd696a05cd644a",
       "modo": "conexion_externa",
       "origen": "Testcontainers"
     },
@@ -305,7 +305,7 @@
       "provider": "Microsoft.EntityFrameworkCore.SqlServer",
       "engineEdition": 4,
       "version": "16.0.4135.4",
-      "database": "AceriaTest_58078b77dd8a4cc5878a1ef0aff97895",
+      "database": "AceriaTest_848df62698f04ff8ad408feca37918a5",
       "modo": "conexion_externa",
       "origen": "Testcontainers"
     },
@@ -313,7 +313,7 @@
       "provider": "Microsoft.EntityFrameworkCore.SqlServer",
       "engineEdition": 4,
       "version": "16.0.4135.4",
-      "database": "AceriaTest_60158ba7e7cc4eb6880c0c117ea674ff",
+      "database": "AceriaTest_84b1cfa9f0084047902c5c132b850429",
       "modo": "conexion_externa",
       "origen": "Testcontainers"
     },
@@ -321,7 +321,7 @@
       "provider": "Microsoft.EntityFrameworkCore.SqlServer",
       "engineEdition": 4,
       "version": "16.0.4135.4",
-      "database": "AceriaTest_76923d4166654c49aa991e17d85678c8",
+      "database": "AceriaTest_8e46a9e8c25e4e9e84c15d961e433d03",
       "modo": "conexion_externa",
       "origen": "Testcontainers"
     },
@@ -329,7 +329,7 @@
       "provider": "Microsoft.EntityFrameworkCore.SqlServer",
       "engineEdition": 4,
       "version": "16.0.4135.4",
-      "database": "AceriaTest_796779bc46294f6bbc7718a31ff583ab",
+      "database": "AceriaTest_9b2864111130451d9dd6fe51f82d9c6d",
       "modo": "conexion_externa",
       "origen": "Testcontainers"
     },
@@ -337,7 +337,7 @@
       "provider": "Microsoft.EntityFrameworkCore.SqlServer",
       "engineEdition": 4,
       "version": "16.0.4135.4",
-      "database": "AceriaTest_7ad1afb4e0bb466eb422618d82fa6fb0",
+      "database": "AceriaTest_9f4200abcc414dd98a5742ee82eec2dc",
       "modo": "conexion_externa",
       "origen": "Testcontainers"
     },
@@ -345,7 +345,7 @@
       "provider": "Microsoft.EntityFrameworkCore.SqlServer",
       "engineEdition": 4,
       "version": "16.0.4135.4",
-      "database": "AceriaTest_8018a33e43374547b57b708424434340",
+      "database": "AceriaTest_a7d17dc209d444ef804700dbe297139c",
       "modo": "conexion_externa",
       "origen": "Testcontainers"
     },
@@ -353,7 +353,7 @@
       "provider": "Microsoft.EntityFrameworkCore.SqlServer",
       "engineEdition": 4,
       "version": "16.0.4135.4",
-      "database": "AceriaTest_9090e16e94384a8a84e0e6a3b8c77ca2",
+      "database": "AceriaTest_a9c67f1e6c494dab89de340713416322",
       "modo": "conexion_externa",
       "origen": "Testcontainers"
     },
@@ -361,7 +361,7 @@
       "provider": "Microsoft.EntityFrameworkCore.SqlServer",
       "engineEdition": 4,
       "version": "16.0.4135.4",
-      "database": "AceriaTest_9e06fe8db44f4947a82a0ce705b38e28",
+      "database": "AceriaTest_ada15113dd5447d3bd23528d233daa9d",
       "modo": "conexion_externa",
       "origen": "Testcontainers"
     },
@@ -369,7 +369,7 @@
       "provider": "Microsoft.EntityFrameworkCore.SqlServer",
       "engineEdition": 4,
       "version": "16.0.4135.4",
-      "database": "AceriaTest_9f5e1405ae4f4296877f10b06386047a",
+      "database": "AceriaTest_af0f3062ddb74f739ca8dd7622aa1bce",
       "modo": "conexion_externa",
       "origen": "Testcontainers"
     },
@@ -377,7 +377,7 @@
       "provider": "Microsoft.EntityFrameworkCore.SqlServer",
       "engineEdition": 4,
       "version": "16.0.4135.4",
-      "database": "AceriaTest_bb021eaa8a2547eb92457d46182dfaa2",
+      "database": "AceriaTest_b6a5475e861c4783bdeb0e8c40f7de12",
       "modo": "conexion_externa",
       "origen": "Testcontainers"
     },
@@ -385,7 +385,7 @@
       "provider": "Microsoft.EntityFrameworkCore.SqlServer",
       "engineEdition": 4,
       "version": "16.0.4135.4",
-      "database": "AceriaTest_bd3a3892077948e3801edd5521ac1fa1",
+      "database": "AceriaTest_cb3f39a4c0e945b6929871533108b326",
       "modo": "conexion_externa",
       "origen": "Testcontainers"
     },
@@ -393,7 +393,7 @@
       "provider": "Microsoft.EntityFrameworkCore.SqlServer",
       "engineEdition": 4,
       "version": "16.0.4135.4",
-      "database": "AceriaTest_c33e0616009d40a084852a0c2ea58058",
+      "database": "AceriaTest_ccdcd844946144a6a94316bb1a907602",
       "modo": "conexion_externa",
       "origen": "Testcontainers"
     },
@@ -401,7 +401,7 @@
       "provider": "Microsoft.EntityFrameworkCore.SqlServer",
       "engineEdition": 4,
       "version": "16.0.4135.4",
-      "database": "AceriaTest_d4b7c6ada9324653b74a60283319312f",
+      "database": "AceriaTest_cd8c7c39ef04466695e56f71f5b0e2cb",
       "modo": "conexion_externa",
       "origen": "Testcontainers"
     },
@@ -409,7 +409,7 @@
       "provider": "Microsoft.EntityFrameworkCore.SqlServer",
       "engineEdition": 4,
       "version": "16.0.4135.4",
-      "database": "AceriaTest_d926be92907f4368af4daa3f0bc9f06e",
+      "database": "AceriaTest_cfbad0a4413f42d884d9c8f5a7f61c30",
       "modo": "conexion_externa",
       "origen": "Testcontainers"
     },
@@ -417,7 +417,7 @@
       "provider": "Microsoft.EntityFrameworkCore.SqlServer",
       "engineEdition": 4,
       "version": "16.0.4135.4",
-      "database": "AceriaTest_e61f1984dc2748c680b370b3e68cf2c9",
+      "database": "AceriaTest_d9189cce23ca48c2a51849b0d5f6aec5",
       "modo": "conexion_externa",
       "origen": "Testcontainers"
     },
@@ -425,7 +425,7 @@
       "provider": "Microsoft.EntityFrameworkCore.SqlServer",
       "engineEdition": 4,
       "version": "16.0.4135.4",
-      "database": "AceriaTest_f04c4696a8da419c955fff36a19daafa",
+      "database": "AceriaTest_ddb39100f2484b1d81101c393585b6f4",
       "modo": "conexion_externa",
       "origen": "Testcontainers"
     },
@@ -433,7 +433,7 @@
       "provider": "Microsoft.EntityFrameworkCore.SqlServer",
       "engineEdition": 4,
       "version": "16.0.4135.4",
-      "database": "AceriaTest_f1db840079c0496a860385ab14cce650",
+      "database": "AceriaTest_e34052342ae146e8ae6bb2361d1974b9",
       "modo": "conexion_externa",
       "origen": "Testcontainers"
     },
@@ -441,7 +441,7 @@
       "provider": "Microsoft.EntityFrameworkCore.SqlServer",
       "engineEdition": 4,
       "version": "16.0.4135.4",
-      "database": "AceriaTest_f213dbdbb43640049f6ffdd80f53f1fc",
+      "database": "AceriaTest_f313f8b19a2f442c9739c11c946d858b",
       "modo": "conexion_externa",
       "origen": "Testcontainers"
     },
@@ -449,7 +449,7 @@
       "provider": "Microsoft.EntityFrameworkCore.SqlServer",
       "engineEdition": 4,
       "version": "16.0.4135.4",
-      "database": "AceriaTest_f30b3225e8bc47c79bc85d77f8d20687",
+      "database": "AceriaTest_f875a10998b1479fac267e8b318df376",
       "modo": "conexion_externa",
       "origen": "Testcontainers"
     }
