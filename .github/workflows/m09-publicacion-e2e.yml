@@ -1,0 +1,129 @@
+name: M09 - PDF y E2E Docker integral Linux (no certifica Windows Desktop)
+on:
+  push:
+    branches: ['resguardo/tecnico-m01-m08-20261112']
+    paths: ['.github/workflows/m09-publicacion-e2e.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  publicar_pdf:
+    name: Generar y auditar PDF M09 desde la práctica canónica
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: alumnos/m01-m08-limpio-20261112
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Instalar generador reproducible y validar PDF
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check "markdown==3.10.1" "weasyprint==67.0" "pymupdf==1.26.5"
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib, json, re
+          import markdown, fitz
+          from weasyprint import HTML, CSS
+          base=Path('M09_DESPLIEGUE_DOCKER/PRACTICAS')
+          md=base/'M09_PRACTICAS.md'
+          pdf=base/'M09_PRACTICAS.pdf'
+          data=md.read_text(encoding='utf8')
+          steps=re.findall(r'^### Paso (9\.\d+) —',data,flags=re.M)
+          assert steps==[f'9.{i}' for i in range(1,17)],f'M09 incompleto: {steps}'
+          assert 'No es el M09' not in data and 'PRACTICA_TRANSVERSAL_DOCKER_WINDOWS' not in data
+          css="""
+          @page {size:A4; margin:17mm 17mm 20mm 17mm; @bottom-center{content:counter(page); color:#667085; font-size:8pt;}}
+          html {font-family:"DejaVu Sans",sans-serif;color:#172331;font-size:9.3pt;}
+          body{line-height:1.42;} h1,h2,h3,h4 {color:#153553;line-height:1.25;break-after:avoid;}
+          h1{font-size:20pt;} h2{font-size:14.5pt;margin-top:15pt;} h3{font-size:11pt;margin-top:12pt;}
+          p{margin:5pt 0 8pt;orphans:2;widows:2;} ul,ol{padding-left:16pt;} li{margin:0 0 4pt;}
+          code,pre{font-family:"DejaVu Sans Mono",monospace;overflow-wrap:anywhere;} code{font-size:.9em;}
+          pre{white-space:pre-wrap;word-break:break-word;font-size:7.4pt;line-height:1.35;background:#f3f6f9;border-left:3pt solid #91a9bc;padding:7pt 8pt;margin:8pt 0 11pt;}
+          table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:7.5pt;line-height:1.26;}
+          thead{display:table-header-group;} th{background:#eaf1f7;}
+          td,th{border:.55pt solid #aebfce;padding:4.5pt 5pt;vertical-align:top;word-break:break-word;overflow-wrap:anywhere;}
+          tr{break-inside:avoid;} hr{border:0;border-top:1pt solid #cbd5df;margin:14pt 0;}
+          """
+          body=markdown.markdown(data,extensions=['extra','sane_lists','toc'],output_format='html5')
+          HTML(string="<html lang='es'><meta charset='utf-8'><body>"+body+"</body></html>",base_url=str(base.resolve())).write_pdf(str(pdf),stylesheets=[CSS(string=css)])
+          doc=fitz.open(pdf)
+          extracted='\n'.join(p.get_text() for p in doc)
+          assert all(f'Paso {s}' in extracted for s in steps),'Faltan etapas impresas'
+          blank=[];overflow=[]
+          for n,p in enumerate(doc,1):
+              if len(p.get_text().strip())<12:blank.append(n)
+              for w in p.get_text('words'):
+                  x0,y0,x1,y1=w[:4]
+                  if x0<-1 or y0<-1 or x1>p.rect.width+1 or y1>p.rect.height+1:overflow.append((n,w[4]))
+          assert 6<=len(doc)<=50 and not blank and not overflow,(len(doc),blank,overflow[:10])
+          report=dict(resultado='PASS',modulo='M09',paginas=len(doc),pasos=16,palabras=len(data.split()),paginas_blancas=blank,desbordamientos=overflow,sha_md=hashlib.sha256(data.encode()).hexdigest(),sha_pdf=hashlib.sha256(pdf.read_bytes()).hexdigest())
+          print(json.dumps(report,ensure_ascii=False,indent=2),flush=True)
+          (Path('/tmp/m09_pdf_resultados.json')).write_text(json.dumps(report,ensure_ascii=False,indent=2))
+          PY
+      - name: Publicar PDF verificado en rama de alumnos
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add M09_DESPLIEGUE_DOCKER/PRACTICAS/M09_PRACTICAS.pdf
+          if ! git diff --cached --quiet; then
+            git commit -m 'docs(m09): PDF A4 coherente con los 16 pasos de prácticas Docker'
+            git push origin HEAD:refs/heads/alumnos/m01-m08-limpio-20261112
+          else
+            echo 'PDF ya está sincronizado con la fuente Markdown.'
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: m09-pdf-audit
+          path: |
+            M09_DESPLIEGUE_DOCKER/PRACTICAS/M09_PRACTICAS.pdf
+            /tmp/m09_pdf_resultados.json
+
+  docker_linux_e2e:
+    name: SQL + RabbitMQ + APIs + YARP + eventos y persistencia
+    needs: publicar_pdf
+    runs-on: ubuntu-24.04
+    timeout-minutes: 85
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: alumnos/m01-m08-limpio-20261112
+      - name: Verificar motor Docker y PowerShell
+        run: |
+          docker version
+          docker compose version
+          pwsh -NoProfile -Command '$PSVersionTable.PSVersion'
+      - name: Despliegue real y prueba integral M09 (Linux, no Windows)
+        shell: pwsh
+        run: |
+          Set-Location M09_DESPLIEGUE_DOCKER/PROYECTO
+          Copy-Item .env.example .env
+          ./EJECUTAR_DOCKER_WINDOWS.ps1 -Accion preparar -PermitirLinuxEnCI
+          ./EJECUTAR_DOCKER_WINDOWS.ps1 -Accion levantar -PermitirLinuxEnCI
+          ./EJECUTAR_DOCKER_WINDOWS.ps1 -Accion verificar -PermitirLinuxEnCI
+      - name: Mostrar evidencias y diagnósticos cuando falle
+        if: always()
+        shell: bash
+        run: |
+          cd M09_DESPLIEGUE_DOCKER/PROYECTO
+          cat .qa/docker-windows-e2e.json || true
+          docker compose --env-file .env -f docker/compose.fullstack.yml ps || true
+          docker compose --env-file .env -f docker/compose.fullstack.yml logs --tail 80 || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: m09-docker-integral-e2e-linux
+          path: M09_DESPLIEGUE_DOCKER/PROYECTO/.qa/docker-windows-e2e.json
+      - name: Destruir únicamente el entorno efímero del runner Linux
+        if: always()
+        shell: bash
+        run: |
+          cd M09_DESPLIEGUE_DOCKER/PROYECTO
+          docker compose --env-file .env -f docker/compose.fullstack.yml down -v || true
