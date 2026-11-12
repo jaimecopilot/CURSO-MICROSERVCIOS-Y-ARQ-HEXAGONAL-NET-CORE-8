@@ -46,3 +46,5 @@ Verificación complementaria del cierre antes de publicar M06: los ocho PDF rege
 Comprobaciones automáticas completadas en https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43248558074; las tareas 12 y 13 requieren además revisión visual y revisión final documentadas.
 
 Comprobaciones automáticas completadas en https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43251643708; las tareas 12 y 13 requieren además revisión visual y revisión final documentadas.
+
+Comprobaciones automáticas completadas en https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43254244146; las tareas 12 y 13 requieren además revisión visual y revisión final documentadas.
