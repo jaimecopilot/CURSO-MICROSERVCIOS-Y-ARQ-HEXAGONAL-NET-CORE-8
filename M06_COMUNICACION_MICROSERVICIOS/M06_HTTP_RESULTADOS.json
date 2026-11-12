@@ -1,6 +1,6 @@
 {
   "resultado": "PASS",
-  "commit_comprobado": "5a3d469a87e78b19e65619e9798bcf8baaf213b7",
+  "commit_comprobado": "177bb5f096ecce08dcee15c744ed3876108c6806",
   "plataforma": "Linux SQL Server Express y RabbitMQ",
   "codigo_normalizado_sha256": {
     "global.json": "9ea63b9eab5c1fc7b0b5287623a64bba9cb6b374f499b14cb3199a23793aa590",
