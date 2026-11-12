@@ -1,5 +1,12 @@
 # Revisión visual de prácticas — M06
 
+**Actualización del 12/11/2026:** el PDF actual tiene **116 páginas**, 32.293 palabras, 72 pasos, 173 citas físicas verificadas y 1.552 bloques HTML cotejados con el PDF; no se han detectado bloques omitidos, páginas vacías ni desbordamientos. La revisión visual selectiva incluye portada, código, listado de pasos, procedimientos SQL/RabbitMQ y cierre. Consultar [reporte PDF actual](REPORTE_PDF_M06.json), [revisión editorial](REVISION_EDITORIAL_M06.md) y [CI 43248017123](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43248017123).
+
+> **Archivo histórico:** los recuentos, páginas ampliadas y hashes que siguen corresponden a la edición **anterior de 146 páginas**; no se utilizan para certificar el manual de 116 páginas actualmente publicado.
+
+## Inspección histórica de la edición anterior
+
+
 **Resultado:** revisión visual y documental satisfactoria de la versión final. Se inspeccionaron las 146 páginas del PDF en trece hojas de contacto y se ampliaron quince páginas para revisar las partes de mayor densidad o modificadas durante el cierre.
 
 ## Documentos revisados
