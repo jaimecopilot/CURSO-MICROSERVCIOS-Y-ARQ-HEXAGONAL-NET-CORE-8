@@ -1,9 +1,0 @@
-name: M02 - E2E codigo reconstruido paso a paso desde Markdown
-# La validacion y publicacion pasan por el cierre comun obligatorio.
-on:
-  workflow_dispatch:
-permissions:
-  contents: write
-jobs:
-  validar:
-    uses: ./.github/workflows/sqlserver-modulos.yml

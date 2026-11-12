@@ -1,40 +1,25 @@
-# Módulo 6 — Comunicación entre microservicios con .NET 8
+# M06 — Comunicación entre microservicios
 
-**Curso JAIME GALLO · AceriaApp**
+**Autor del curso: JAIME GALLO · Proyecto acumulativo AceriaApp (.NET 8)**
 
-**Edición vigente:** [revisión final y registro histórico](REVISION_FINAL.md) · [cierre editorial optimizado](REVISION_EDITORIAL_M06.md). Teoría: **41 páginas**; prácticas: **116 páginas** (frente a 146 en la edición anterior). La solución final contiene 29 proyectos y supera 283 pruebas; las tres etapas y los tres retos se han reconstruido desde el manual.
+## Material del módulo
 
-- [Teoría](TEORIA/M06_TEORIA.md) · [PDF](TEORIA/M06_TEORIA.pdf): 30 bloques, 30 ampliaciones y 10 diagramas SVG/PNG.
-- [Prácticas](PRACTICAS/M06_PRACTICAS.md) · [PDF](PRACTICAS/M06_PRACTICAS.pdf): 72 pasos y 3 retos resueltos, con los archivos completos.
-- [Proyectos acumulativos](PROYECTO): tres etapas desde M05 5.5 corregido y probado con SQL Server.
-- [Evidencia de reconstrucción](M06_E2E_RESULTADOS.json), [SQL Server y broker](M06_SQLSERVER_RESULTADOS.json), [dos procesos HTTP](M06_HTTP_RESULTADOS.json), [Windows/LocalDB](M06_WINDOWS_RESULTADOS.json).
+- **[Teoría en Markdown](TEORIA/M06_TEORIA.md)** y **[PDF](TEORIA/M06_TEORIA.pdf)**: conceptos, explicaciones y figuras.
+- **[Prácticas guiadas en Markdown](PRACTICAS/M06_PRACTICAS.md)** y **[PDF](PRACTICAS/M06_PRACTICAS.pdf)**: pasos, ejemplos de código, comprobaciones y retos.
+- **[Proyectos de referencia](PROYECTO/)**: una solución completa por etapa, con código, tests y documentación necesaria.
 
-| Punto | Comportamiento ejecutable | Etapa |
-|---|---|---|
-| 6.1 | Cliente tipado HTTP entre Producción e Inventario, contratos y fallos diferenciados | [6.1](PROYECTO/6.1-comunicacion-sincrona-http) |
-| 6.2 | Planificación y outbox atómicos, RabbitMQ real e inbox/proyección SQL idempotente | [6.2](PROYECTO/6.2-comunicacion-asincrona-eventos) |
-| 6.3 | Consulta de disponibilidad informativa, planificación local y propagación eventual | [6.3](PROYECTO/6.3-cuando-usar-cada-enfoque) |
+## Etapas
 
-El alumno mantiene LocalDB en Windows. Docker ejecuta RabbitMQ mediante el Compose incluido y Testcontainers permite ejecutar las pruebas con SQL Server Express y RabbitMQ en instancias temporales. No existe sustitución de SQL Server por SQLite/InMemory. Las credenciales Compose son de práctica local; los puertos están ligados a 127.0.0.1.
+- **06.1** — [`6.1-comunicacion-sincrona-http`](PROYECTO/6.1-comunicacion-sincrona-http/)
+- **06.2** — [`6.2-comunicacion-asincrona-eventos`](PROYECTO/6.2-comunicacion-asincrona-eventos/)
+- **06.3** — [`6.3-cuando-usar-cada-enfoque`](PROYECTO/6.3-cuando-usar-cada-enfoque/)
 
-Los catálogos de análisis no equivalen a tráfico de red. Las comprobaciones funcionales incluyen SQL Server, un broker RabbitMQ real y un recorrido entre dos procesos Kestrel. Windows verifica ambos procesos con LocalDB y persistencia tras reiniciar; la mensajería se ejecuta y se prueba en Linux con Docker.
+El recuento acumulado previsto de pruebas por etapa es **232, 264 y 283**. Sirve como orientación para contrastar la ejecución real: no equivale por sí solo a tener las pruebas aprobadas.
 
-## Arranque del laboratorio
+## Trabajar en Windows
 
-Consulta los apartados «Entorno para las comunicaciones reales» y «Arranque de los dos procesos» de las prácticas. Las dos API escuchan en 5105 y 5106. Los workers están desactivados por defecto: desde 6.2 se habilitan con `Comunicacion__WorkersActivos=true` en ambas terminales. Cada etapa dispone de bases y topología propias.
+Aquí aparece RabbitMQ: `compose.yml` se crea en la práctica 6.1 y las etapas posteriores lo heredan. El broker funciona en Docker Desktop; los procesos de Producción e Inventario se ejecutan con `dotnet run` en Windows. Sigue el manual para configurar puertos, credenciales, bases SQL y trabajadores outbox/inbox.
 
-El endpoint integrado es `POST /api/v1/comunicacion/ordenes/{id}/planificar`. La ruta de planificación local de M5 permanece como ejercicio independiente y no publica eventos. La consulta de stock es informativa: no reserva material ni constituye una transacción distribuida. La proyección de Inventario registra la planificación; no descuenta stock ni genera facturas.
+**Orden recomendado:** teoría → práctica en tu carpeta de trabajo → compilación y tests → contraste con `PROYECTO/`. Nunca comiences copiando la solución final que estás intentando construir. Las carpetas de `PROYECTO/` incluyen los archivos de código y pruebas necesarios para ejecutar cada etapa.
 
-## Reproducir la validación
-
-Desde la raíz del repositorio, con .NET 8, Python y Docker:
-
-```bash
-dotnet run --project tools/M06ValidationHost -c Release -- python .github/scripts/m06_validar.py
-python .github/scripts/m06_crear_figuras.py
-python .github/scripts/m06_generar_pdf.py
-```
-
-El E2E parte exclusivamente de M05 y del Markdown de prácticas. Compila estados intermedios, ejecuta todas las pruebas acumuladas y reconstruye los tres retos en copias separadas. El modo `--no-tests` produce un informe `SIN_TESTS`; no se utiliza como evidencia de ejecución. Los pasos manuales de Visual Studio no se simulan.
-
-El publicador conserva pendientes durante una caída del broker. Confirmación del broker, commit SQL y ACK son garantías distintas. Pueden existir duplicados; la recepción durable evita repetir el efecto de un evento ya registrado y rechaza una identidad con otro contenido. Los contratos incompatibles se envían a una cola de errores para inspección. BasicGet y el reintento periódico son mecanismos didácticos: el módulo no presenta este laboratorio como un despliegue de producción de alta carga.
+El laboratorio [Docker Desktop para Windows](../PRACTICA_TRANSVERSAL_DOCKER_WINDOWS/README.md) complementa las prácticas y detalla el despliegue de infraestructura y del sistema completo, sin reemplazar el recorrido de este módulo.
