@@ -73,3 +73,10 @@ Cada módulo se organiza en las carpetas `TEORIA/`, `PRACTICAS/` y `PROYECTO/`. 
 - [Prácticas guiadas](M08_API_GATEWAY/PRACTICAS/M08_PRACTICAS.md) · [PDF](M08_API_GATEWAY/PRACTICAS/M08_PRACTICAS.pdf): 96 pasos, 145 páginas revisadas y cuatro retos optativos.
 - [Proyectos y validación](M08_API_GATEWAY/README.md): cuatro etapas 8.1–8.4, gateway independiente con YARP, enrutamiento, transformaciones, balanceo, salud y recuperación de destinos, con SQL Server Express y RabbitMQ reales.
 - [Informe de cierre automatizado](M08_API_GATEWAY/CIERRE_AUTOMATIZADO.md) y [revisión editorial](M08_API_GATEWAY/REVISION_EDITORIAL_M08.md). La publicación definitiva se verifica mediante la automatización correspondiente al commit de `main`.
+
+### Práctica transversal Docker para Windows (complementaria; no es M09)
+
+- [Manual Docker Windows, SQL Server, RabbitMQ y despliegue completo](PRACTICA_TRANSVERSAL_DOCKER_WINDOWS/PRACTICAS_DOCKER_WINDOWS.md)
+- [Contenedores, Compose y scripts reproducibles](PRACTICA_TRANSVERSAL_DOCKER_WINDOWS/README.md)
+- El material distingue Docker usado en M02–M08 de una prueba integral opcional con todos los servicios en contenedores.
+- La certificación GitHub Actions Windows no se considera demostración de Docker Desktop/WSL2: esa prueba requiere un Windows con Docker Desktop y evidencias propias.

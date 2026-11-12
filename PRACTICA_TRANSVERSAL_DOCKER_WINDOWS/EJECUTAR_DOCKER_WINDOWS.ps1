@@ -7,10 +7,14 @@ No es un certificado hasta que todas las llamadas devuelvan PASS.
 param(
     [ValidateSet('preparar','levantar','verificar','detener','bajar','limpiar')]
     [string]$Accion = 'preparar',
-    [switch]$ConfirmarBorradoDatos
+    [switch]$ConfirmarBorradoDatos,
+    [switch]$PermitirLinuxEnCI
 )
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+if (-not $IsWindows -and -not $PermitirLinuxEnCI) {
+    throw 'Esta práctica certifica Docker Desktop en Windows. -PermitirLinuxEnCI solo es para la prueba técnica Linux (no certifica Windows).'
+}
 $lab = $PSScriptRoot
 $compose = Join-Path $lab 'docker/compose.fullstack.yml'
 $envfile = Join-Path $lab '.env'
@@ -104,7 +108,7 @@ if ($Accion -eq 'verificar') {
 }
 $reporte = [ordered]@{
     fecha_utc = [DateTime]::UtcNow.ToString('o')
-    anfitrion = 'Windows con Docker Desktop, contenedores Linux'
+    anfitrion = $(if ($IsWindows) { 'Windows + Docker Desktop (contenedores Linux)' } else { 'Linux GitHub Actions; NO certifica Docker Desktop Windows' })
     accion = $Accion
     resultado = 'FAIL'
     pruebas = [ordered]@{}

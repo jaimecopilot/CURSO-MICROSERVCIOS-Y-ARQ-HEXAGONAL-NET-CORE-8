@@ -1,0 +1,57 @@
+name: Docker fullstack - E2E tecnico Linux (no acredita Docker Desktop Windows)
+on:
+  workflow_dispatch:
+  push:
+    branches: ['revision/cierre-windows-m01-m08-*']
+    paths:
+      - 'PRACTICA_TRANSVERSAL_DOCKER_WINDOWS/**'
+      - '.github/workflows/docker-fullstack-smoke.yml'
+permissions:
+  contents: read
+concurrency:
+  group: docker-fullstack-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  docker_fullstack_linux:
+    name: SQL Express RabbitMQ API Inventario x2 YARP - E2E Linux
+    runs-on: ubuntu-22.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verificar Docker y PowerShell 7
+        run: |
+          docker version
+          docker compose version
+          pwsh --version
+      - name: Preparar credencial solo para CI efímero
+        shell: pwsh
+        working-directory: PRACTICA_TRANSVERSAL_DOCKER_WINDOWS
+        run: |
+          Copy-Item .env.example .env
+          if (-not (Test-Path .env)) { throw 'Falta .env' }
+      - name: Verificar Docker Compose y archivo de configuración
+        shell: pwsh
+        working-directory: PRACTICA_TRANSVERSAL_DOCKER_WINDOWS
+        run: ./EJECUTAR_DOCKER_WINDOWS.ps1 -Accion preparar -PermitirLinuxEnCI
+      - name: Desplegar y certificar HTTP SQL RabbitMQ YARP y persistencia
+        shell: pwsh
+        working-directory: PRACTICA_TRANSVERSAL_DOCKER_WINDOWS
+        run: ./EJECUTAR_DOCKER_WINDOWS.ps1 -Accion levantar -PermitirLinuxEnCI
+      - name: Publicar evidencia de resultado
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-fullstack-linux-e2e
+          path: PRACTICA_TRANSVERSAL_DOCKER_WINDOWS/.qa/docker-windows-e2e.json
+          if-no-files-found: warn
+      - name: Mostrar diagnóstico si falla
+        if: failure()
+        run: |
+          docker compose --env-file PRACTICA_TRANSVERSAL_DOCKER_WINDOWS/.env -f PRACTICA_TRANSVERSAL_DOCKER_WINDOWS/docker/compose.fullstack.yml ps
+          docker compose --env-file PRACTICA_TRANSVERSAL_DOCKER_WINDOWS/.env -f PRACTICA_TRANSVERSAL_DOCKER_WINDOWS/docker/compose.fullstack.yml logs --tail 150
+      - name: Detener contenedores del runner efímero
+        if: always()
+        run: |
+          if [ -f PRACTICA_TRANSVERSAL_DOCKER_WINDOWS/.env ]; then
+            docker compose --env-file PRACTICA_TRANSVERSAL_DOCKER_WINDOWS/.env -f PRACTICA_TRANSVERSAL_DOCKER_WINDOWS/docker/compose.fullstack.yml down || true
+          fi
