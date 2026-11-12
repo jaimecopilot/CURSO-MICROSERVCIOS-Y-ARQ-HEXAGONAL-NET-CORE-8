@@ -1,5 +1,5 @@
 <#
-Práctica Docker Windows (.NET 8): prepara, levanta, verifica, detiene o limpia.
+M09 - Despliegue Docker Windows (.NET 8): prepara, levanta, verifica, detiene o limpia.
 Ejecución real exige Docker Desktop con Linux containers sobre WSL 2.
 No es un certificado hasta que todas las llamadas devuelvan PASS.
 #>

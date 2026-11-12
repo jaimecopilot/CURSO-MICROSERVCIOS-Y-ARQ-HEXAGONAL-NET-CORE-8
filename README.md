@@ -1,8 +1,8 @@
 # Curso de arquitectura hexagonal y microservicios con .NET 8
 
-**Material para alumnos · Curso teórico-práctico (30 horas) · AceriaApp**
+**Material para alumnos · M01–M08 (teoría, prácticas y proyecto) + M09 (despliegue Docker) · AceriaApp**
 
-Esta edición contiene solo lo necesario para estudiar los **ocho módulos**, realizar las prácticas y ejecutar sus proyectos de referencia en Windows. Los registros internos de revisión, generación y certificación del curso se conservan fuera de esta edición.
+Esta edición contiene solo lo necesario para estudiar los **ocho módulos de arquitectura y el laboratorio práctico M09**, realizar las prácticas y ejecutar sus proyectos de referencia en Windows. Los registros internos de revisión, generación y certificación del curso se conservan fuera de esta edición.
 
 ## Cómo estudiar
 
@@ -23,8 +23,9 @@ Esta edición contiene solo lo necesario para estudiar los **ocho módulos**, re
 | M06 | Comunicación entre microservicios | [Abrir](./M06_COMUNICACION_MICROSERVICIOS/README.md) |
 | M07 | Observabilidad y resiliencia | [Abrir](./M07_OBSERVABILIDAD_RESILIENCIA/README.md) |
 | M08 | Publicación mediante API Gateway | [Abrir](./M08_API_GATEWAY/README.md) |
+| M09 | Práctica: despliegue integral en Docker | [Abrir](./M09_DESPLIEGUE_DOCKER/README.md) |
 
-Cada módulo incluye `TEORIA/`, `PRACTICAS/`, `PROYECTO/` y `README.md`. Algunos también incluyen `GRAFICOS/`, necesario para las ilustraciones de su teoría.
+M01–M08 incluyen `TEORIA/`, `PRACTICAS/`, `PROYECTO/` y `README.md`, con los gráficos necesarios para sus explicaciones. M09 es **solo práctico**, por lo que incluye `PRACTICAS/`, `PROYECTO/` y su README, pero no teoría adicional ni nuevas APIs C#.
 
 ## Preparar Windows
 
@@ -33,8 +34,8 @@ Cada módulo incluye `TEORIA/`, `PRACTICAS/`, `PROYECTO/` y `README.md`. Algunos
 - **Docker Desktop con motor WSL 2 y contenedores Linux** solo cuando lo exija la práctica: opcional para SQL Server de pruebas con Testcontainers en M02–M05; necesario para RabbitMQ en los recorridos de M06–M08.
 - Las instrucciones específicas de cada etapa y los comandos de configuración están en su `PRACTICAS/Mxx_PRACTICAS.md`.
 
-## Práctica transversal Docker Desktop en Windows
+## M09 — Despliegue integral Docker Desktop en Windows
 
-[Manual y recursos de Docker](./PRACTICA_TRANSVERSAL_DOCKER_WINDOWS/README.md): instalación, comprobaciones, SQL Server Express, RabbitMQ, Dockerfiles, Compose, PowerShell y despliegue de AceriaApp con YARP. **Complemento práctico de los módulos 1–8; no es el módulo 9**.
+[M09 — Prácticas y proyecto Docker](./M09_DESPLIEGUE_DOCKER/README.md): instalación, comprobaciones, SQL Server Express, RabbitMQ, Dockerfiles, Compose, PowerShell, seis contenedores y AceriaApp con YARP. **Es el módulo 9 y es exclusivamente práctico**.
 
 Los ejemplos de contraseña y puertos son solo para un laboratorio local; no se deben reutilizar en producción.

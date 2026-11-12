@@ -1,8 +1,8 @@
-# Práctica transversal — Docker para Windows y AceriaApp (.NET 8)
+# M09 — Prácticas: despliegue integral de AceriaApp en Docker Desktop para Windows
 
 **Autor del curso: JAIME GALLO**
 
-**Identificación.** Complemento práctico de M01–M08. No es el M09 y no introduce nuevas materias del temario. El alumno utiliza **Windows** como sistema operativo anfitrión, **Docker Desktop + WSL 2 con contenedores Linux** como motor y **PowerShell 7** como terminal. Los proyectos de los ocho módulos se mantienen intactos.
+**Identificación.** M09 es exclusivamente práctico: desplegar en Docker todos los componentes ejecutables de AceriaApp, reutilizando el código de M08 sin introducir una implementación C# alternativa. El alumno utiliza **Windows** como sistema operativo anfitrión, **Docker Desktop + WSL 2 con contenedores Linux** como motor y **PowerShell 7** como terminal. Los proyectos de los ocho módulos se mantienen intactos.
 
 ## 1. Qué hace Docker en cada módulo y por qué
 
@@ -108,10 +108,10 @@ Completa asimismo las cadenas LocalDB detalladas en M06–M08. Ejecuta `dotnet r
 
 ### 5.1 Preparar parámetros y construir las imágenes
 
-Desde la raíz del repositorio, entra en `PRACTICA_TRANSVERSAL_DOCKER_WINDOWS`:
+Desde la raíz del repositorio, entra en `M09_DESPLIEGUE_DOCKER\PROYECTO`:
 
 ```powershell
-Set-Location .\PRACTICA_TRANSVERSAL_DOCKER_WINDOWS
+Set-Location .\M09_DESPLIEGUE_DOCKER\PROYECTO
 Copy-Item .\.env.example .\.env
 notepad .\.env
 docker compose --env-file .\.env -f .\docker\compose.fullstack.yml config --quiet
@@ -167,7 +167,7 @@ Nunca ejecutes esa última operación cuando desees demostrar persistencia o ree
 
 El apartado anterior ofrece el procedimiento completo. Esta ampliación explica **cada decisión técnica** para que el alumno sea capaz de reconstruir el despliegue sin memorizar comandos. Se trabaja con PowerShell 7 sobre **Windows**; los contenedores usan Linux internamente gracias a Docker Desktop y WSL2.
 
-### Paso D.1 — Identificar cada proceso y su ubicación física
+### Paso 9.1 — Identificar cada proceso y su ubicación física
 
 Antes de ejecutar, dibuja esta distribución:
 
@@ -194,7 +194,7 @@ Red privada de Docker, llamada "aceria"
 
 **Verificación:** abre el Compose y encuentra seis entradas bajo `services`. Identifica el único contenedor que usa YARP y comprueba que SQL Server no publica un puerto al anfitrión.
 
-### Paso D.2 — Comprender qué se construye con el Dockerfile
+### Paso 9.2 — Comprender qué se construye con el Dockerfile
 
 Abre `docker/Dockerfile.Servicio`. Su primera etapa utiliza la imagen `mcr.microsoft.com/dotnet/sdk:8.0` y las instrucciones `COPY`, `dotnet restore` y `dotnet publish`. Esa etapa resuelve dependencias y compila el **código real de M08**. La segunda etapa utiliza `mcr.microsoft.com/dotnet/aspnet:8.0` y copia la salida publicada; no necesita instalar Visual Studio ni el SDK para ejecutar la API.
 
@@ -203,7 +203,7 @@ Abre `docker/Dockerfile.Servicio`. Su primera etapa utiliza la imagen `mcr.micro
 **Acción:**
 
 ```powershell
-Set-Location .\PRACTICA_TRANSVERSAL_DOCKER_WINDOWS
+Set-Location .\M09_DESPLIEGUE_DOCKER\PROYECTO
 docker compose --env-file .\.env -f .\docker\compose.fullstack.yml build produccion
 if ($LASTEXITCODE -ne 0) { throw 'Falló el build real de Producción.' }
 docker image ls
@@ -211,7 +211,7 @@ docker image ls
 
 **Resultado esperado:** aparece una imagen para Producción y la salida de compilación muestra que el proyecto `AceriaApp.Api` se publicó sobre .NET 8. Si falla un `ProjectReference`, diagnostica la ruta del contexto de construcción; no elimines proyectos heredados ni cambies el dominio para maquillar la compilación.
 
-### Paso D.3 — Diferenciar imagen, contenedor y servicio Compose
+### Paso 9.3 — Diferenciar imagen, contenedor y servicio Compose
 
 **Imagen:** resultado reutilizable de una compilación. **Contenedor:** proceso aislado creado a partir de la imagen. **Servicio Compose:** declaración de cómo construir, configurar, comunicar y reiniciar uno o varios contenedores. Los dos inventarios tienen el mismo proyecto y usan **el mismo puerto interno 8080**, pero dos nombres y dos puertos diferentes en Windows.
 
@@ -222,7 +222,7 @@ docker compose --env-file .\.env -f .\docker\compose.fullstack.yml ps
 
 La primera orden lista **seis servicios declarados**; la segunda solo presenta contenedores creados. Un servicio presente en el YAML no demuestra que esté ejecutándose, y un contenedor que indica `Up` no demuestra que su API ni su base de datos funcionen.
 
-### Paso D.4 — Seguir las variables de configuración hasta ASP.NET Core
+### Paso 9.4 — Seguir las variables de configuración hasta ASP.NET Core
 
 Las variables de `build.args` se usan **durante la compilación**; las variables de `environment` se inyectan **cuando arranca el proceso**. En ASP.NET Core, una doble barra baja en el nombre de variable representa una sección: `ConnectionStrings__AceriaProduccion` sustituye a `ConnectionStrings:AceriaProduccion` en la configuración.
 
@@ -236,7 +236,7 @@ Localiza estas cinco variables en el Compose y anota el servicio destinatario, s
 
 La configuración de los proyectos originales con `(localdb)\MSSQLLocalDB` sigue siendo correcta **cuando la API corre en Windows**. Dentro de un contenedor Linux no existe LocalDB; aquí se sustituye la conexión por `Server=sqlserver,1433`, sin cambiar las clases ni el proveedor EF Core SQL Server. **Nunca se debe describir LocalDB como un servicio que corre dentro del contenedor.**
 
-### Paso D.5 — Comprender redes, puertos y volúmenes
+### Paso 9.5 — Comprender redes, puertos y volúmenes
 
 En `compose.fullstack.yml`, `networks: aceria` proporciona resolución de nombres internos. `ports` establece un puente de **un puerto de Windows hacia el puerto 8080 del contenedor**, por ejemplo `127.0.0.1:5106:8080`. El primer número es el puerto del ordenador; el último es el puerto de Kestrel. SQL Server usa el puerto privado `1433`, no expuesto a Windows.
 
@@ -252,7 +252,7 @@ docker compose --env-file .\.env -f .\docker\compose.fullstack.yml ps
 
 No utilices `docker volume prune` ni `docker compose down -v` mientras debas demostrar persistencia. Si eliminas los volúmenes, puedes volver a construir un laboratorio vacío, pero habrás destruido las pruebas de conservación de datos del recorrido anterior.
 
-### Paso D.6 — Crear contraseñas de laboratorio y evitar exponer secretos
+### Paso 9.6 — Crear contraseñas de laboratorio y evitar exponer secretos
 
 `.env.example` proporciona un valor **solo demostrativo**. Cópialo como `.env` y modifica `ACERIA_SA_PASSWORD` antes de levantar SQL Server. El archivo real `.env` está ignorado por Git y no debe enviarse con el repositorio. El usuario RabbitMQ `curso` y su clave didáctica son también exclusivamente para pruebas locales. El Compose limita al loopback `127.0.0.1` los puertos publicados.
 
@@ -264,7 +264,7 @@ git status --short
 
 El archivo `.env` no debe aparecer como nuevo archivo listo para commit. No pegues en informes compartidos el resultado completo de `docker compose config` si contiene valores de configuración sensibles. La opción `TrustServerCertificate=True` de este laboratorio **no representa una configuración de TLS adecuada para producción**.
 
-### Paso D.7 — Entender las comprobaciones de salud reales
+### Paso 9.7 — Entender las comprobaciones de salud reales
 
 Un contenedor SQL en estado `running` todavía puede estar recuperando una base. El `healthcheck` consulta el motor SQL y evita que las APIs se inicien antes de que esté preparado. RabbitMQ usa `rabbitmq-diagnostics -q ping`. Los cuatro procesos .NET tienen comprobaciones de **readiness**, mientras `/health/live` de YARP solo acredita que el gateway está vivo.
 
@@ -283,7 +283,7 @@ Invoke-RestMethod 'http://localhost:5107/health/ready'
 
 En los siguientes pasos, el alumno **no cambia código de negocio**: ejecuta el sistema que ya construyó con las prácticas M02–M08 y comprueba por HTTP los mismos contratos de AceriaApp.
 
-### Paso D.8 — Comprobar que YARP realmente utiliza las dos instancias
+### Paso 9.8 — Comprobar que YARP realmente utiliza las dos instancias
 
 ```powershell
 $gateway = 'http://localhost:5100'
@@ -302,7 +302,7 @@ if (-not $instancias.ContainsKey('inventario-1') -or
 
 **Qué se prueba:** el proxy YARP reparte solicitudes entre destinos sanos y reenvía el contrato HTTP sin crear un inventario falso. Las dos respuestas deben consultar el mismo SQL Server y ofrecer el mismo stock. RoundRobin reparte solicitudes, no garantiza el mismo tiempo de trabajo para cada instancia.
 
-### Paso D.9 — Crear una orden persistente mediante la API real
+### Paso 9.9 — Crear una orden persistente mediante la API real
 
 ```powershell
 $cuerpo = @{ cliente='Axia Windows Docker'; material='Acero'; cantidad=20 } | ConvertTo-Json
@@ -321,7 +321,7 @@ if ($borrador.estado -ne 'Borrador' -or $borrador.cantidadTotal -ne 30) {
 
 **Para qué:** se comprueba el endpoint DDD, el contrato JSON, las dos líneas del agregado y la persistencia en SQL Express. Conserva `$ordenId` y `$ordenUri` durante el ejercicio; generar una orden nueva tras un fallo **no sustituye** la comprobación de la original.
 
-### Paso D.10 — Comprobar que planificar emite un evento y prohíbe una segunda transición
+### Paso 9.10 — Comprobar que planificar emite un evento y prohíbe una segunda transición
 
 ```powershell
 $plan = "$gateway/api/v1/comunicacion/ordenes/$ordenId/planificar"
@@ -333,7 +333,7 @@ if ($segunda.StatusCode -ne 409) { throw "Se esperaba 409: $($segunda.Content)" 
 
 **Interpretación:** `202` significa que se ha aceptado la transición de estado y la escritura de un evento outbox pendiente. **No** significa que el mensaje ya haya sido recibido por Inventario. El `409` protege la transición de una segunda planificación; no sustituye la deduplicación de mensajes en el receptor.
 
-### Paso D.11 — Acreditar la entrega asíncrona en el SQL de Inventario
+### Paso 9.11 — Acreditar la entrega asíncrona en el SQL de Inventario
 
 ```powershell
 $proyeccionUri = "$gateway/api/v1/planificaciones/$ordenId"
@@ -356,7 +356,7 @@ $eventoId = [string]$proyeccion.eventoId
 
 **Por qué:** la consulta devuelve `404` mientras el evento no haya llegado; cuando el consumidor lo registra, responde `200` con la proyección SQL de la misma orden y el ID del evento. Una cola vacía **no es una evidencia suficiente**: podría indicar entrega correcta o ausencia de publicaciones. El GET de la proyección desambigua el resultado.
 
-### Paso D.12 — Interpretar las colas y los logs de RabbitMQ
+### Paso 9.12 — Interpretar las colas y los logs de RabbitMQ
 
 Abre `http://localhost:15672/` con las credenciales didácticas. Localiza conexiones, canales y colas del prefijo `aceria-docker-integral`. Identifica el productor outbox y al menos un consumidor. Una vez procesados, los mensajes pueden desaparecer de la cola sin que se pierda su resultado SQL.
 
@@ -368,7 +368,7 @@ docker compose --env-file .\.env -f .\docker\compose.fullstack.yml logs --tail 1
 
 Explica por qué la topología de intercambio/cola permite desacoplar temporalmente productor y consumidor. Si la proyección no aparece, comprueba `WorkersActivos`, el mismo `Prefijo`, las credenciales AMQP y los logs; no insertes registros SQL de forma manual.
 
-### Paso D.13 — Simular la caída de Inventario 2 y la recuperación de YARP
+### Paso 9.13 — Simular la caída de Inventario 2 y la recuperación de YARP
 
 ```powershell
 docker compose --env-file .\.env -f .\docker\compose.fullstack.yml stop inventario-2
@@ -382,9 +382,9 @@ foreach ($intento in 1..10) {
 docker compose --env-file .\.env -f .\docker\compose.fullstack.yml start inventario-2
 ```
 
-**Qué se demuestra:** tras la convergencia de sus comprobaciones de salud, YARP sirve el recurso mediante el destino superviviente. Repite el Paso D.8 cuando `5107/health/ready` vuelva a responder `200`. No reinicies el gateway para forzar la recuperación: eso ocultaría una posible deficiencia de detección de destinos.
+**Qué se demuestra:** tras la convergencia de sus comprobaciones de salud, YARP sirve el recurso mediante el destino superviviente. Repite el Paso 9.8 cuando `5107/health/ready` vuelva a responder `200`. No reinicies el gateway para forzar la recuperación: eso ocultaría una posible deficiencia de detección de destinos.
 
-### Paso D.14 — Detener RabbitMQ sin borrar mensajes ni bases
+### Paso 9.14 — Detener RabbitMQ sin borrar mensajes ni bases
 
 ```powershell
 docker compose --env-file .\.env -f .\docker\compose.fullstack.yml stop rabbitmq
@@ -396,7 +396,7 @@ docker compose --env-file .\.env -f .\docker\compose.fullstack.yml exec -T rabbi
 
 Un proceso de aplicación puede seguir vivo aunque la dependencia AMQP esté caída. El volumen RabbitMQ se conserva. La recuperación del puerto `5672` por sí sola **no acredita reentrega**: repite el flujo de una orden nueva y exige de nuevo una proyección. Para escenarios más profundos de duplicados y reintentos consulta los tests E2E del M06.
 
-### Paso D.15 — Reiniciar aplicaciones y demostrar persistencia real
+### Paso 9.15 — Reiniciar aplicaciones y demostrar persistencia real
 
 ```powershell
 docker compose --env-file .\.env -f .\docker\compose.fullstack.yml restart inventario-1 inventario-2 produccion gateway
@@ -411,9 +411,9 @@ if ([string]$eventoDespues.eventoId -ne $eventoId) {
 }
 ```
 
-Si las APIs aún no responden después del reinicio, ejecuta primero los health checks del Paso D.7. No crees una nueva orden para reparar la prueba. La evidencia exige recuperar **el mismo identificador** de SQL, no un objeto recreado en memoria.
+Si las APIs aún no responden después del reinicio, ejecuta primero los health checks del Paso 9.7. No crees una nueva orden para reparar la prueba. La evidencia exige recuperar **el mismo identificador** de SQL, no un objeto recreado en memoria.
 
-### Paso D.16 — Detener con conservación o destruir datos conscientemente
+### Paso 9.16 — Detener con conservación o destruir datos conscientemente
 
 ```powershell
 .\EJECUTAR_DOCKER_WINDOWS.ps1 -Accion detener

@@ -1,4 +1,4 @@
-# Laboratorio docente Windows + Docker Desktop / motor Linux.
+# M09: despliegue integral docente Windows + Docker Desktop / motor Linux.
 # Se conserva el código .NET 8 del M08 y se empaqueta por servicio.
 # No se trata de una configuración segura para producción en Internet.
 name: aceria-curso-docker
@@ -39,8 +39,8 @@ services:
 
   inventario-1:
     build:
-      context: ../..
-      dockerfile: PRACTICA_TRANSVERSAL_DOCKER_WINDOWS/docker/Dockerfile.Servicio
+      context: ../../..
+      dockerfile: M09_DESPLIEGUE_DOCKER/PROYECTO/docker/Dockerfile.Servicio
       args:
         PROYECTO: AceriaApp.Inventario.Api
     command: ["AceriaApp.Inventario.Api.dll"]
@@ -61,7 +61,7 @@ services:
   inventario-2:
     build:
       context: ../..
-      dockerfile: PRACTICA_TRANSVERSAL_DOCKER_WINDOWS/docker/Dockerfile.Servicio
+      dockerfile: M09_DESPLIEGUE_DOCKER/PROYECTO/docker/Dockerfile.Servicio
       args:
         PROYECTO: AceriaApp.Inventario.Api
     command: ["AceriaApp.Inventario.Api.dll"]
@@ -82,7 +82,7 @@ services:
   produccion:
     build:
       context: ../..
-      dockerfile: PRACTICA_TRANSVERSAL_DOCKER_WINDOWS/docker/Dockerfile.Servicio
+      dockerfile: M09_DESPLIEGUE_DOCKER/PROYECTO/docker/Dockerfile.Servicio
       args:
         PROYECTO: AceriaApp.Api
     command: ["AceriaApp.Api.dll"]
@@ -105,7 +105,7 @@ services:
   gateway:
     build:
       context: ../..
-      dockerfile: PRACTICA_TRANSVERSAL_DOCKER_WINDOWS/docker/Dockerfile.Servicio
+      dockerfile: M09_DESPLIEGUE_DOCKER/PROYECTO/docker/Dockerfile.Servicio
       args:
         PROYECTO: AceriaApp.Gateway
     command: ["AceriaApp.Gateway.dll"]
