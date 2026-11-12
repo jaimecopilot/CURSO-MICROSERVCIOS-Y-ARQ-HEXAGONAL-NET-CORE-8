@@ -1,51 +1,46 @@
-# Certificación Windows: broker RabbitMQ NATIVO, no presupone Docker Desktop en runner alojado.
-# En el puesto del alumno se utiliza Docker Desktop y Compose según las prácticas.
+# RabbitMQ real en Windows nativo, no presupone Docker Desktop en runner alojado.
+# Chocolatey instala Erlang y RabbitMQ; crea el usuario didáctico vía API Management.
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 choco install rabbitmq --yes --no-progress --limit-output
-if ($LASTEXITCODE -notin @(0,3010)) { throw "Chocolatey no instaló RabbitMQ: $LASTEXITCODE" }
+if ($LASTEXITCODE -notin @(0,3010)) { throw "Chocolatey no pudo instalar RabbitMQ: $LASTEXITCODE" }
+
+$machineErlang = [Environment]::GetEnvironmentVariable('ERLANG_HOME','Machine')
+if ($machineErlang) { $env:ERLANG_HOME = $machineErlang }
 $service = Get-Service -Name RabbitMQ -ErrorAction SilentlyContinue
-if (-not $service) { throw 'No se instaló el servicio RabbitMQ en Windows.' }
-if ($service.Status -ne 'Running') { Start-Service -Name RabbitMQ }
-$tool = Get-ChildItem 'C:\Program Files\RabbitMQ Server' -Filter 'rabbitmqctl.bat' -Recurse -File -ErrorAction SilentlyContinue | Select-Object -First 1
-if (-not $tool) { throw 'No se localizó rabbitmqctl.bat tras la instalación.' }
-$cli = $tool.FullName
+if (-not $service) { throw 'No existe el servicio RabbitMQ en Windows.' }
+# Chocolatey habilita rabbitmq_management offline: reiniciar aplica el plugin.
+if ($service.Status -eq 'Running') { Restart-Service RabbitMQ -Force }
+else { Start-Service RabbitMQ }
 
-# Alinear la Erlang cookie del servicio y la sesión CLI, necesario en Windows.
-$userCookie = Join-Path $env:USERPROFILE '.erlang.cookie'
-if (-not (Test-Path $userCookie)) {
-    $sources = @('C:\Windows\System32\config\systemprofile\.erlang.cookie', 'C:\Windows\.erlang.cookie')
-    $source = $sources | Where-Object { Test-Path $_ } | Select-Object -First 1
-    if ($source) { Copy-Item $source $userCookie -Force }
-}
-
-$ready = $false
-for ($i=0; $i -lt 60; $i++) {
-    & $cli await_startup --timeout 5 *> $null
-    if ($LASTEXITCODE -eq 0) { $ready = $true; break }
-    Start-Sleep -Seconds 2
-}
-if (-not $ready) { throw 'RabbitMQ no arrancó o la CLI no autenticó con Erlang cookie.' }
-$users = (& $cli list_users --quiet | Out-String)
-if ($LASTEXITCODE -ne 0) { throw 'No se pueden listar los usuarios RabbitMQ.' }
-if ($users -notmatch '(?m)^curso\s') {
-    & $cli add_user curso curso-local
-    if ($LASTEXITCODE -ne 0) { throw 'No se pudo crear el usuario del laboratorio.' }
-} else {
-    & $cli change_password curso curso-local
-    if ($LASTEXITCODE -ne 0) { throw 'No se pudo ajustar la clave del usuario curso.' }
-}
-& $cli set_permissions -p / curso '.*' '.*' '.*'
-if ($LASTEXITCODE -ne 0) { throw 'No se pudieron asignar permisos RabbitMQ.' }
-$open = $false
-for ($i=0; $i -lt 40; $i++) {
+$broker = $false
+$management = $false
+$basicGuest = 'Basic ' + [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes('guest:guest'))
+$admin = @{ Authorization = $basicGuest }
+for ($i = 0; $i -lt 80; $i++) {
     $tcp = [System.Net.Sockets.TcpClient]::new()
     try {
-        $tcp.Connect('127.0.0.1',5672)
-        $open = $true
-        break
-    } catch { Start-Sleep -Seconds 2 }
-    finally { $tcp.Dispose() }
+        $tcp.Connect('127.0.0.1', 5672)
+        $broker = $true
+    } catch {} finally { $tcp.Dispose() }
+    if ($broker) {
+        try {
+            $response = Invoke-WebRequest -Uri 'http://127.0.0.1:15672/api/overview' -Headers $admin -TimeoutSec 5
+            if ($response.StatusCode -eq 200) { $management = $true; break }
+        } catch {}
+    }
+    Start-Sleep -Seconds 2
 }
-if (-not $open) { throw 'RabbitMQ no expuso el puerto AMQP 5672.' }
-Write-Host 'RabbitMQ nativo Windows listo en 127.0.0.1:5672.'
+if (-not $broker) { throw 'RabbitMQ no expuso el puerto AMQP 5672.' }
+if (-not $management) { throw 'RabbitMQ Management en localhost:15672 no está listo para guest.' }
+
+# guest solo puede autenticarse localmente, aquí se usa desde 127.0.0.1.
+# La API evita depender de la cookie Erlang de rabbitmqctl del servicio Windows.
+$user = @{ password = 'curso-local'; tags = 'management' } | ConvertTo-Json -Compress
+Invoke-RestMethod -Uri 'http://127.0.0.1:15672/api/users/curso' -Method Put -Headers $admin -Body $user -ContentType 'application/json' -TimeoutSec 15
+$perm = @{ configure = '.*'; write = '.*'; read = '.*' } | ConvertTo-Json -Compress
+Invoke-RestMethod -Uri 'http://127.0.0.1:15672/api/permissions/%2F/curso' -Method Put -Headers $admin -Body $perm -ContentType 'application/json' -TimeoutSec 15
+$courseAuth = 'Basic ' + [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes('curso:curso-local'))
+$overview = Invoke-RestMethod -Uri 'http://127.0.0.1:15672/api/overview' -Headers @{ Authorization = $courseAuth } -TimeoutSec 15
+if (-not $overview.rabbitmq_version) { throw 'RabbitMQ no devuelve una versión real.' }
+Write-Host "RabbitMQ $($overview.rabbitmq_version) operativo en Windows, puertos 5672 y 15672."
