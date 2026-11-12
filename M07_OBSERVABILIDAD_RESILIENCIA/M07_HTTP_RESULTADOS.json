@@ -1,7 +1,7 @@
 {
   "resultado": "PASS",
-  "ejecucion": "3cfc621c484140ca91932463a0cb12f4",
-  "commit_comprobado": "3afc0358fc7c5d9808ece39d8d6d67e1d82dbfb1",
+  "ejecucion": "f7788c9326264e2daaa2c27528b30372",
+  "commit_comprobado": "0f1ad3cb0b2517429adc53f8945791a088bba7e6",
   "plataforma": "Linux SQL Server Express y RabbitMQ",
   "codigo_normalizado_sha256": {
     "global.json": "9ea63b9eab5c1fc7b0b5287623a64bba9cb6b374f499b14cb3199a23793aa590",
@@ -266,7 +266,7 @@
   "health_checks": "PASS",
   "gestion_excepciones": "PASS",
   "resiliencia": "PASS",
-  "circuito_abierto_respuesta_segundos": 0.0019,
+  "circuito_abierto_respuesta_segundos": 0.0011,
   "reinicio_con_persistencia": "PASS",
   "mensajeria": "PASS"
 }
