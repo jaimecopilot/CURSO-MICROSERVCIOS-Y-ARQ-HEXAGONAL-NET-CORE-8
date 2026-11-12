@@ -10,7 +10,7 @@ Continúa exactamente `M06_COMUNICACION_MICROSERVICIOS/PROYECTO/6.3-cuando-usar-
 
 **SQL Server para las pruebas.** Conserva `tests/Compartido/SqlServerPruebas.cs`. El helper lee `ACERIA_TEST_SQLSERVER`, conecta a `master` y crea una base con nombre único por prueba; la cuenta necesita permiso para crearla y eliminarla. Ejemplo PowerShell con LocalDB: `$env:ACERIA_TEST_SQLSERVER = "Server=(localdb)\MSSQLLocalDB;Database=master;Integrated Security=True;TrustServerCertificate=True"`. Para Express sustituye el servidor por `.\SQLEXPRESS`. Sin variable, el helper utiliza Docker y `Testcontainers.MsSql` 3.10.0 con SQL Server 2022 Express y la imagen fija `mcr.microsoft.com/mssql/server:2022-CU14-ubuntu-22.04`. Una conexión inválida hace fallar las pruebas; no se omiten ni se sustituyen por memoria. RabbitMQ debe estar disponible para las pruebas heredadas y los recorridos funcionales de mensajería y readiness.
 
-**Convención de código.** Cada bloque identifica archivo y operación. Crear exige un archivo nuevo y reemplazar exige un archivo existente; el bloque muestra su contenido completo. Las rutas son relativas a la raíz de la etapa. Las explicaciones cuentan las líneas vacías. Los cuatro retos se aplican en copias optativas independientes y añaden una prueba cada uno; no se acumulan en las etapas obligatorias. Guarda todos los archivos e informes en UTF-8.
+**Convención de código.** Cada bloque identifica archivo y operación. Crear exige un archivo nuevo y reemplazar exige un archivo existente; el bloque muestra su contenido completo. Las rutas son relativas a la raíz de la etapa. Las anotaciones numeradas se reservan para decisiones significativas y remiten a las líneas físicas de los bloques; no se comentan de forma repetida llaves, importaciones habituales ni líneas vacías. Los cuatro retos se aplican en copias optativas independientes y añaden una prueba cada uno; no se acumulan en las etapas obligatorias. Guarda todos los archivos e informes en UTF-8.
 
 ## Resultados de comprobación
 
@@ -228,14 +228,10 @@ El archivo completo fija las referencias y versiones que utilizará la etapa; a�
 </Project>
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 1:** `<Project Sdk="Microsoft.NET.Sdk.Web"><PropertyGroup><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup><ItemGroup><PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.21" /><PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" /><PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" /></ItemGroup>  <ItemGroup>`. Fija la dependencia usada por esta etapa del ejercicio.
 - **Línea 2:** `<ProjectReference Include="../AceriaApp.Hexagonal.Aplicacion/AceriaApp.Hexagonal.Aplicacion.csproj" />`. Conecta este proyecto con otro proyecto real de la solución.
-- **Línea 3:** `<ProjectReference Include="../AceriaApp.Hexagonal.Infraestructura/AceriaApp.Hexagonal.Infraestructura.csproj" />`. Conecta este proyecto con otro proyecto real de la solución.
-- **Línea 6:** `<ProjectReference Include="../AceriaApp.Produccion.Infraestructura/AceriaApp.Produccion.Infraestructura.csproj" />`. Conecta este proyecto con otro proyecto real de la solución.
-- **Línea 8:** `<ItemGroup><ProjectReference Include="../AceriaApp.Comunicacion.Infraestructura/AceriaApp.Comunicacion.Infraestructura.csproj" /></ItemGroup>`. Conecta este proyecto con otro proyecto real de la solución.
-- **Línea 9:** `<ItemGroup><ProjectReference Include="../AceriaApp.Observabilidad/AceriaApp.Observabilidad.csproj" /></ItemGroup>`. Conecta este proyecto con otro proyecto real de la solución.
 
 
 **Integración funcional — `src/AceriaApp.Inventario.Api/AceriaApp.Inventario.Api.csproj`.**
@@ -256,12 +252,8 @@ El archivo completo fija las referencias y versiones que utilizará la etapa; a�
 </Project>
 ```
 
-**Lectura de las líneas clave.**
 
-- **Línea 4:** `<ProjectReference Include="../AceriaApp.Comunicacion.Contratos/AceriaApp.Comunicacion.Contratos.csproj" />`. Conecta este proyecto con otro proyecto real de la solución.
-- **Línea 5:** `<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.21" />`. Fija la dependencia usada por esta etapa del ejercicio.
-- **Línea 6:** `<ProjectReference Include="../AceriaApp.Comunicacion.Infraestructura/AceriaApp.Comunicacion.Infraestructura.csproj" /></ItemGroup>`. Conecta este proyecto con otro proyecto real de la solución.
-- **Línea 7:** `<ItemGroup><ProjectReference Include="../AceriaApp.Observabilidad/AceriaApp.Observabilidad.csproj" /></ItemGroup>`. Conecta este proyecto con otro proyecto real de la solución.
+
 
 
 **Integración funcional — `src/AceriaApp.Observabilidad/AceriaApp.Observabilidad.csproj`.**
@@ -281,9 +273,8 @@ El archivo completo fija las referencias y versiones que utilizará la etapa; a�
 </Project>
 ```
 
-**Lectura de las líneas clave.**
 
-- **Línea 5:** `<PackageReference Include="Serilog.AspNetCore" Version="8.0.3" />`. Fija la dependencia usada por esta etapa del ejercicio.
+
 
 ### PASO 7.1.6 — Crear la carpeta `Logging` en el proyecto API
 
@@ -332,7 +323,7 @@ public class ConfiguracionLogging
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 1:** `namespace AceriaApp.Api.Logging;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
@@ -344,13 +335,9 @@ public class ConfiguracionLogging
 
 - **Línea 5:** `public string NivelMinimo { get; init; } = string.Empty;` → Declara un dato del análisis que se fija al construir la entrada.
 
-- **Línea 6:** `public bool UsaLoggingEstructurado { get; init; }` → Declara un dato del análisis que se fija al construir la entrada.
 
-- **Línea 7:** `public bool TieneCorrelacion { get; init; }` → Declara un dato del análisis que se fija al construir la entrada.
 
-- **Línea 8:** `public bool EvitaDatosSensibles { get; init; }` → Declara un dato del análisis que se fija al construir la entrada.
 
-- **Línea 9:** `public bool ConfiguradoPorEntorno { get; init; }` → Declara un dato del análisis que se fija al construir la entrada.
 
 - **Línea 10:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
@@ -430,103 +417,63 @@ public class ValidadorLogging
 public record ResultadoLogging(bool EsValida, IReadOnlyList<string> Errores);
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 1:** `namespace AceriaApp.Api.Logging;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 2:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 3:** `public class ValidadorLogging` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 4:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 5:** `private static readonly string[] NivelesPermitidos = { "Trace", "Debug", "Information", "Warning", "Error", "Critical" };` → Limita los valores de texto reconocidos por la política didáctica.
 
-- **Línea 6:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 7:** `public ResultadoLogging Validar(IEnumerable<ConfiguracionLogging> configuraciones)` → Expone la operación con el contrato que usan el catálogo o sus pruebas.
 
-- **Línea 8:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 9:** `var errores = new List<string>();` → Inicializa la colección de diagnósticos que se devolverá al finalizar.
 
 - **Línea 10:** `var lista = configuraciones.ToList();` → Materializa una sola vez la secuencia recibida para recorrerla y contarla.
 
-- **Línea 11:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 12:** `if (lista.Count == 0)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 13:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 14:** `errores.Add("No hay configuraciones de logging declaradas.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 15:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 16:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 17:** `foreach (var configuracion in lista)` → Revisa cada entrada; un catálogo puede acumular varios diagnósticos.
 
-- **Línea 18:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 19:** `if (!NivelesPermitidos.Contains(configuracion.NivelMinimo))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 20:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 21:** `errores.Add($"Nivel mínimo no permitido: '{configuracion.NivelMinimo}'.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 22:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 23:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 24:** `if (!configuracion.UsaLoggingEstructurado)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 25:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 26:** `errores.Add($"La configuración con nivel '{configuracion.NivelMinimo}' no usa logging estructurado.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 27:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 28:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 29:** `if (!configuracion.TieneCorrelacion)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 30:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 31:** `errores.Add($"La configuración con nivel '{configuracion.NivelMinimo}' no tiene correlación.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 32:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 33:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 34:** `if (!configuracion.EvitaDatosSensibles)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 35:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 36:** `errores.Add($"La configuración con nivel '{configuracion.NivelMinimo}' no evita datos sensibles.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 37:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 38:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 39:** `if (!configuracion.ConfiguradoPorEntorno)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 40:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 41:** `errores.Add($"La configuración con nivel '{configuracion.NivelMinimo}' no está configurada por entorno.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 42:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 43:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 44:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 45:** `return new ResultadoLogging(errores.Count == 0, errores);` → Devuelve validez y diagnósticos; no instala middleware ni ejecuta llamadas remotas.
 
-- **Línea 46:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 47:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 48:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 49:** `public record ResultadoLogging(bool EsValida, IReadOnlyList<string> Errores);` → Define el resultado inmutable que devuelve el validador o el resumen.
 
@@ -584,12 +531,11 @@ public sealed class CorrelacionMiddleware(RequestDelegate next)
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 17:** `public async Task InvokeAsync(HttpContext context)`. Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre.
 - **Línea 22:** `context.Response.Headers[ContextoCorrelacion.Cabecera] = id;`. Devuelve al cliente el identificador aceptado o generado.
 - **Línea 23:** `context.Response.OnStarting(() =>`. Repone la cabecera justo antes de enviarla, también cuando el manejador limpió la respuesta tras un fallo.
-- **Línea 25:** `context.Response.Headers[ContextoCorrelacion.Cabecera] = id;`. Devuelve al cliente el identificador aceptado o generado.
 - **Línea 28:** `using (LogContext.PushProperty("CorrelationId", id))`. Añade propiedades solo durante el ámbito de esta petición.
 - **Línea 29:** `using (LogContext.PushProperty("TraceId", Activity.Current?.TraceId.ToString() ?? context.TraceIdentifier))`. Relaciona el evento con la traza técnica de la petición.
 
@@ -616,7 +562,7 @@ public sealed class PropagarCorrelacionHandler(IHttpContextAccessor accessor) : 
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 7:** `request.Headers.Remove(ContextoCorrelacion.Cabecera);`. Elimina un valor anterior antes de propagar la correlación actual.
 
@@ -665,7 +611,7 @@ public static class RegistroLogging
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 11:** `public static IServiceCollection AddLoggingAceria(this IServiceCollection services, string servicio, IConfiguration? config = null)`. Registra el logger JSON y los servicios que necesita la correlación.
 - **Línea 13:** `var nivel = config?.GetValue("Observabilidad:NivelMinimo", LogEventLevel.Information) ?? LogEventLevel.Information;`. Lee el umbral de logging configurado para el entorno.
@@ -711,9 +657,8 @@ public sealed class ResumenPeticionMiddleware(RequestDelegate next, ILogger<Resu
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 8:** `public async Task InvokeAsync(HttpContext context)`. Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre.
 - **Línea 10:** `var inicio = Stopwatch.GetTimestamp();`. Mide duración mediante un reloj monotónico.
 - **Línea 11:** `var ruta = (context.GetEndpoint() as RouteEndpoint)?.RoutePattern.RawText ?? "[sin-ruta]";`. Obtiene la plantilla del endpoint en lugar del valor concreto de la URL.
 - **Línea 19:** `var estado = context.RequestAborted.IsCancellationRequested ? 499 : fallo ? 500 : context.Response.StatusCode;`. Distingue una cancelación del cliente de un fallo de la dependencia.
@@ -787,111 +732,60 @@ public class ValidadorLogging
 public record ResultadoLogging(bool EsValida, IReadOnlyList<string> Errores);
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 1:** `using System.Collections.Generic;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 2:** `using System.Linq;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 3:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 4:** `namespace AceriaApp.Api.Logging;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 5:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 6:** `public class ValidadorLogging` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 7:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 8:** `private static readonly string[] NivelesPermitidos = { "Trace", "Debug", "Information", "Warning", "Error", "Critical" };` → Limita los valores de texto reconocidos por la política didáctica.
 
-- **Línea 9:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 10:** `public ResultadoLogging Validar(IEnumerable<ConfiguracionLogging> configuraciones)` → Expone la operación con el contrato que usan el catálogo o sus pruebas.
 
-- **Línea 11:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 12:** `var errores = new List<string>();` → Inicializa la colección de diagnósticos que se devolverá al finalizar.
 
-- **Línea 13:** `var lista = configuraciones.ToList();` → Materializa una sola vez la secuencia recibida para recorrerla y contarla.
 
-- **Línea 14:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 15:** `if (lista.Count == 0)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 16:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 17:** `errores.Add("No hay configuraciones de logging declaradas.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 18:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 19:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 20:** `foreach (var configuracion in lista)` → Revisa cada entrada; un catálogo puede acumular varios diagnósticos.
 
-- **Línea 21:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 22:** `if (!NivelesPermitidos.Contains(configuracion.NivelMinimo))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 23:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 24:** `errores.Add($"Nivel mínimo no permitido: '{configuracion.NivelMinimo}'.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 25:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 26:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 27:** `if (!configuracion.UsaLoggingEstructurado)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 28:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 29:** `errores.Add($"La configuración con nivel '{configuracion.NivelMinimo}' no usa logging estructurado.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 30:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 31:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 32:** `if (!configuracion.TieneCorrelacion)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 33:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 34:** `errores.Add($"La configuración con nivel '{configuracion.NivelMinimo}' no tiene correlación.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 35:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 36:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 37:** `if (!configuracion.EvitaDatosSensibles)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 38:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 39:** `errores.Add($"La configuración con nivel '{configuracion.NivelMinimo}' no evita datos sensibles.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 40:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 41:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 42:** `if (!configuracion.ConfiguradoPorEntorno)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 43:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 44:** `errores.Add($"La configuración con nivel '{configuracion.NivelMinimo}' no está configurada por entorno.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 45:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 46:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 47:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 48:** `return new ResultadoLogging(errores.Count == 0, errores);` → Devuelve validez y diagnósticos; no instala middleware ni ejecuta llamadas remotas.
 
-- **Línea 49:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 50:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 51:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 52:** `public record ResultadoLogging(bool EsValida, IReadOnlyList<string> Errores);` → Define el resultado inmutable que devuelve el validador o el resumen.
 
 
 **Por qué funciona así.** Las importaciones explícitas muestran dónde se declaran los tipos genéricos y las extensiones LINQ, aunque el proyecto tenga importaciones implícitas.
@@ -955,77 +849,45 @@ public class CatalogoLogging
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 1:** `namespace AceriaApp.Api.Logging;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 2:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 3:** `public class CatalogoLogging` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 4:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 5:** `public static List<ConfiguracionLogging> ConfiguracionesPorDefecto()` → Expone la operación con el contrato que usan el catálogo o sus pruebas.
 
-- **Línea 6:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 7:** `return new List<ConfiguracionLogging>` → Devuelve una lista nueva en cada llamada; modificarla no altera otros casos.
 
-- **Línea 8:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 9:** `new()` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 10:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 11:** `NivelMinimo = "Debug",` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 12:** `UsaLoggingEstructurado = true,` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 13:** `TieneCorrelacion = true,` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 14:** `EvitaDatosSensibles = true,` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 15:** `ConfiguradoPorEntorno = true` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 16:** `},` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 17:** `new()` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 18:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 19:** `NivelMinimo = "Information",` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 20:** `UsaLoggingEstructurado = true,` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 21:** `TieneCorrelacion = true,` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 22:** `EvitaDatosSensibles = true,` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 23:** `ConfiguradoPorEntorno = true` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 24:** `},` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 25:** `new()` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 26:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 27:** `NivelMinimo = "Warning",` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 28:** `UsaLoggingEstructurado = true,` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 29:** `TieneCorrelacion = true,` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 30:** `EvitaDatosSensibles = true,` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 31:** `ConfiguradoPorEntorno = true` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 32:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 33:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 34:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 35:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
 
 **Por qué funciona así.** Cada invocación devuelve una lista nueva con los ejemplos de análisis; cambiar una lista no modifica futuros catálogos.
@@ -1091,81 +953,44 @@ public class CatalogoLogging
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
 
-- **Línea 1:** `using System.Collections.Generic;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 2:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 3:** `namespace AceriaApp.Api.Logging;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 4:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 5:** `public class CatalogoLogging` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 6:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 7:** `public static List<ConfiguracionLogging> ConfiguracionesPorDefecto()` → Expone la operación con el contrato que usan el catálogo o sus pruebas.
 
-- **Línea 8:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 9:** `return new List<ConfiguracionLogging>` → Devuelve una lista nueva en cada llamada; modificarla no altera otros casos.
 
-- **Línea 10:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 11:** `new()` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 12:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 13:** `NivelMinimo = "Debug",` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 14:** `UsaLoggingEstructurado = true,` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 15:** `TieneCorrelacion = true,` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 16:** `EvitaDatosSensibles = true,` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 17:** `ConfiguradoPorEntorno = true` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 18:** `},` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 19:** `new()` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 20:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 21:** `NivelMinimo = "Information",` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 22:** `UsaLoggingEstructurado = true,` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 23:** `TieneCorrelacion = true,` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 24:** `EvitaDatosSensibles = true,` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 25:** `ConfiguradoPorEntorno = true` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 26:** `},` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 27:** `new()` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 28:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 29:** `NivelMinimo = "Warning",` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 30:** `UsaLoggingEstructurado = true,` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 31:** `TieneCorrelacion = true,` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 32:** `EvitaDatosSensibles = true,` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 33:** `ConfiguradoPorEntorno = true` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 34:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 35:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 36:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 37:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
+
 
 
 **Por qué funciona así.** Las importaciones explícitas muestran dónde se declaran los tipos genéricos y las extensiones LINQ, aunque el proyecto tenga importaciones implícitas.
@@ -1275,7 +1100,7 @@ La configuración usa bases y prefijos propios de esta etapa. Las variables de e
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 3:** `"NivelMinimo": "Warning"`. Fija el umbral propio de logging y admite sobreescritura por variables de entorno.
 
@@ -1307,11 +1132,10 @@ La configuración usa bases y prefijos propios de esta etapa. Las variables de e
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 2:** `"ConnectionStrings": {`. Agrupa las conexiones de laboratorio específicas de la etapa.
 - **Línea 11:** `"WorkersActivos": false`. Activa o desactiva los procesos de mensajería y su dependencia en readiness.
-- **Línea 14:** `"NivelMinimo": "Information",`. Fija el umbral propio de logging y admite sobreescritura por variables de entorno.
 - **Línea 15:** `"DiagnosticoActivo": false`. Mantiene el endpoint de fallo desactivado por defecto.
 
 
@@ -1330,9 +1154,8 @@ La configuración usa bases y prefijos propios de esta etapa. Las variables de e
 }
 ```
 
-**Lectura de las líneas clave.**
 
-- **Línea 3:** `"NivelMinimo": "Warning"`. Fija el umbral propio de logging y admite sobreescritura por variables de entorno.
+
 
 
 **Integración funcional — `src/AceriaApp.Inventario.Api/appsettings.json`.**
@@ -1360,12 +1183,8 @@ La configuración usa bases y prefijos propios de esta etapa. Las variables de e
 }
 ```
 
-**Lectura de las líneas clave.**
 
-- **Línea 2:** `"ConnectionStrings": {`. Agrupa las conexiones de laboratorio específicas de la etapa.
-- **Línea 9:** `"WorkersActivos": false`. Activa o desactiva los procesos de mensajería y su dependencia en readiness.
-- **Línea 12:** `"NivelMinimo": "Information",`. Fija el umbral propio de logging y admite sobreescritura por variables de entorno.
-- **Línea 13:** `"DiagnosticoActivo": false`. Mantiene el endpoint de fallo desactivado por defecto.
+
 
 ### PASO 7.1.14 — Añadir el paquete `FluentAssertions` al proyecto de tests
 
@@ -1524,203 +1343,115 @@ public class ValidadorLoggingTests
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 1:** `using AceriaApp.Api.Logging;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 2:** `using FluentAssertions;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 3:** `using Xunit;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 4:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 5:** `namespace AceriaApp.Logging.Tests;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 6:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 7:** `public class ValidadorLoggingTests` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 8:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 9:** `private readonly ValidadorLogging _validador = new();` → Crea la instancia del validador que utiliza cada prueba.
 
-- **Línea 10:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 11:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
 - **Línea 12:** `public void Validar_CatalogoPorDefecto_DevuelveValido()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 13:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 14:** `var resultado = _validador.Validar(CatalogoLogging.ConfiguracionesPorDefecto());` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 15:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 16:** `resultado.EsValida.Should().BeTrue();` → Comprueba que la política acepta los datos de este caso.
 
 - **Línea 17:** `resultado.Errores.Should().BeEmpty();` → Comprueba que no se ha registrado ningún diagnóstico.
 
-- **Línea 18:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 19:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 20:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 21:** `public void Validar_SinConfiguraciones_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 22:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 23:** `var resultado = _validador.Validar(new List<ConfiguracionLogging>());` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 24:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 25:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
 - **Línea 26:** `resultado.Errores.Should().Contain(e => e.Contains("No hay configuraciones"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 27:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 28:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 29:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 30:** `public void Validar_NivelNoPermitido_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 31:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 32:** `var configuraciones = new List<ConfiguracionLogging>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 33:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 34:** `new() { NivelMinimo = "NivelInventado", UsaLoggingEstructurado = true, TieneCorrelacion = true, EvitaDatosSensibles = true, ConfiguradoPorEntorno = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 35:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 36:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 37:** `var resultado = _validador.Validar(configuraciones);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 38:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 39:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 40:** `resultado.Errores.Should().Contain(e => e.Contains("Nivel mínimo no permitido"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 41:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 42:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 43:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 44:** `public void Validar_SinLoggingEstructurado_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 45:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 46:** `var configuraciones = new List<ConfiguracionLogging>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 47:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 48:** `new() { NivelMinimo = "Information", UsaLoggingEstructurado = false, TieneCorrelacion = true, EvitaDatosSensibles = true, ConfiguradoPorEntorno = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 49:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 50:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 51:** `var resultado = _validador.Validar(configuraciones);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 52:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 53:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 54:** `resultado.Errores.Should().Contain(e => e.Contains("no usa logging estructurado"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 55:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 56:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 57:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 58:** `public void Validar_SinCorrelacion_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 59:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 60:** `var configuraciones = new List<ConfiguracionLogging>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 61:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 62:** `new() { NivelMinimo = "Information", UsaLoggingEstructurado = true, TieneCorrelacion = false, EvitaDatosSensibles = true, ConfiguradoPorEntorno = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 63:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 64:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 65:** `var resultado = _validador.Validar(configuraciones);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 66:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 67:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 68:** `resultado.Errores.Should().Contain(e => e.Contains("no tiene correlación"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 69:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 70:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 71:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 72:** `public void Validar_DatosSensibles_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 73:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 74:** `var configuraciones = new List<ConfiguracionLogging>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 75:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 76:** `new() { NivelMinimo = "Information", UsaLoggingEstructurado = true, TieneCorrelacion = true, EvitaDatosSensibles = false, ConfiguradoPorEntorno = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 77:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 78:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 79:** `var resultado = _validador.Validar(configuraciones);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 80:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 81:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 82:** `resultado.Errores.Should().Contain(e => e.Contains("no evita datos sensibles"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 83:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 84:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 85:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 86:** `public void Validar_SinConfiguracionPorEntorno_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 87:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 88:** `var configuraciones = new List<ConfiguracionLogging>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 89:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 90:** `new() { NivelMinimo = "Information", UsaLoggingEstructurado = true, TieneCorrelacion = true, EvitaDatosSensibles = true, ConfiguradoPorEntorno = false }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 91:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 92:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 93:** `var resultado = _validador.Validar(configuraciones);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 94:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 95:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 96:** `resultado.Errores.Should().Contain(e => e.Contains("no está configurada por entorno"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 97:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 98:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
 
 **Por qué funciona así.** Las pruebas ejercitan aceptación y rechazos concretos del validador. Afirmar el diagnóstico evita un falso positivo por otro error.
@@ -1755,14 +1486,8 @@ El archivo completo fija las referencias y versiones que utilizará la etapa; a�
 </Project>
 ```
 
-**Lectura de las líneas clave.**
 
-- **Línea 4:** `<ProjectReference Include="../../src/AceriaApp.Api/AceriaApp.Api.csproj" />`. Conecta este proyecto con otro proyecto real de la solución.
-- **Línea 5:** `<ProjectReference Include="../../src/AceriaApp.Observabilidad/AceriaApp.Observabilidad.csproj" />`. Conecta este proyecto con otro proyecto real de la solución.
-- **Línea 6:** `<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />`. Fija la dependencia usada por esta etapa del ejercicio.
-- **Línea 7:** `<PackageReference Include="xunit" Version="2.9.2" />`. Fija la dependencia usada por esta etapa del ejercicio.
-- **Línea 8:** `<PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />`. Fija la dependencia usada por esta etapa del ejercicio.
-- **Línea 9:** `<PackageReference Include="FluentAssertions" Version="6.12.2" />`. Fija la dependencia usada por esta etapa del ejercicio.
+
 
 
 **Integración funcional — `tests/AceriaApp.Logging.Tests/LoggingFuncionalTests.cs`.**
@@ -1936,20 +1661,8 @@ public class LoggingFuncionalTests
 }
 ```
 
-**Lectura de las líneas clave.**
 
-- **Línea 22:** `public void Emit(LogEvent evento) => Eventos.Enqueue(evento);`. Define una comprobación síncrona del contrato indicado por el nombre.
-- **Línea 38:** `public async Task Correlacion_valida_se_conserva_en_respuesta_y_contexto()`. Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre.
-- **Línea 44:** `Assert.Equal("orden_123-A", ctx.Response.Headers["X-Correlation-ID"]);`. Devuelve al cliente el identificador aceptado o generado.
-- **Línea 52:** `public async Task Correlacion_invalida_se_sustituye_sin_propagar_la_entrada(string entrada)`. Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre.
-- **Línea 56:** `var id = ctx.Response.Headers["X-Correlation-ID"].ToString();`. Devuelve al cliente el identificador aceptado o generado.
-- **Línea 62:** `public async Task Correlacion_ausente_se_genera()`. Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre.
-- **Línea 69:** `public async Task Resumen_JSON_contiene_propiedades_tipadas_y_no_datos_de_la_peticion()`. Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre.
-- **Línea 85:** `Assert.False(string.IsNullOrWhiteSpace(props.GetProperty("TraceId").GetString()));`. Relaciona el evento con la traza técnica de la petición.
-- **Línea 90:** `public async Task Ruta_no_encontrada_no_registra_el_texto_libre_de_la_URL()`. Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre.
-- **Línea 102:** `public async Task Peticiones_concurrentes_no_mezclan_su_correlacion()`. Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre.
-- **Línea 122:** `public async Task Cliente_saliente_propaga_la_correlacion_validada()`. Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre.
-- **Línea 130:** `public async Task Cliente_sin_contexto_HTTP_no_reutiliza_correlacion_anterior()`. Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre.
+
 
 ### PASO 7.1.16 — Crear el archivo `CatalogoLoggingTests.cs`
 
@@ -2016,103 +1729,58 @@ public class CatalogoLoggingTests
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 1:** `using AceriaApp.Api.Logging;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 2:** `using FluentAssertions;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 3:** `using Xunit;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 4:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 5:** `namespace AceriaApp.Logging.Tests;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 6:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 7:** `public class CatalogoLoggingTests` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 8:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 9:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 10:** `public void ConfiguracionesPorDefecto_ContieneTresConfiguraciones()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 11:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 12:** `var configuraciones = CatalogoLogging.ConfiguracionesPorDefecto();` → Obtiene los datos que se utilizarán en las comprobaciones siguientes.
 
-- **Línea 13:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 14:** `configuraciones.Should().HaveCount(3);` → Comprueba el tamaño del catálogo sin inferir servicios o conexiones en ejecución.
 
-- **Línea 15:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 16:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 17:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 18:** `public void ConfiguracionesPorDefecto_TodasUsanLoggingEstructurado()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 19:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 20:** `var configuraciones = CatalogoLogging.ConfiguracionesPorDefecto();` → Obtiene los datos que se utilizarán en las comprobaciones siguientes.
 
-- **Línea 21:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 22:** `configuraciones.Should().OnlyContain(c => c.UsaLoggingEstructurado);` → Comprueba la condición en cada entrada declarada del catálogo.
 
-- **Línea 23:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 24:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 25:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 26:** `public void ConfiguracionesPorDefecto_TodasTienenCorrelacion()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 27:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 28:** `var configuraciones = CatalogoLogging.ConfiguracionesPorDefecto();` → Obtiene los datos que se utilizarán en las comprobaciones siguientes.
 
-- **Línea 29:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 30:** `configuraciones.Should().OnlyContain(c => c.TieneCorrelacion);` → Comprueba la condición en cada entrada declarada del catálogo.
 
-- **Línea 31:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 32:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 33:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 34:** `public void ConfiguracionesPorDefecto_TodasEvitanDatosSensibles()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 35:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 36:** `var configuraciones = CatalogoLogging.ConfiguracionesPorDefecto();` → Obtiene los datos que se utilizarán en las comprobaciones siguientes.
 
-- **Línea 37:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 38:** `configuraciones.Should().OnlyContain(c => c.EvitaDatosSensibles);` → Comprueba la condición en cada entrada declarada del catálogo.
 
-- **Línea 39:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 40:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 41:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 42:** `public void ConfiguracionesPorDefecto_TodasConfiguradasPorEntorno()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 43:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 44:** `var configuraciones = CatalogoLogging.ConfiguracionesPorDefecto();` → Obtiene los datos que se utilizarán en las comprobaciones siguientes.
 
-- **Línea 45:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 46:** `configuraciones.Should().OnlyContain(c => c.ConfiguradoPorEntorno);` → Comprueba la condición en cada entrada declarada del catálogo.
 
-- **Línea 47:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 48:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
 
 **Por qué funciona así.** Las pruebas del catálogo verifican cantidades y propiedades declaradas. No prueban que existan los servicios nombrados.
@@ -2344,11 +2012,9 @@ app.Run();
 public partial class Program {} // permite WebApplicationFactory en tests
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 21:** `builder.Services.AddLoggingAceria("Produccion", builder.Configuration);`. Registra el logger JSON y los servicios que necesita la correlación.
 - **Línea 38:** `}).AddHttpMessageHandler<PropagarCorrelacionHandler>();`. Propaga el identificador validado hacia Inventario.
-- **Línea 40:** `app.UseLoggingAceria();`. Abre la correlación y el resumen antes de ejecutar el resto del pipeline.
 
 
 **Integración funcional — `src/AceriaApp.Inventario.Api/InventarioProgram.cs`.**
@@ -2409,10 +2075,8 @@ public sealed class InventarioProgram
 }
 ```
 
-**Lectura de las líneas clave.**
 
-- **Línea 11:** `builder.Services.AddLoggingAceria("Inventario", builder.Configuration);`. Registra el logger JSON y los servicios que necesita la correlación.
-- **Línea 22:** `app.UseLoggingAceria();`. Abre la correlación y el resumen antes de ejecutar el resto del pipeline.
+
 
 
 ## Recorrido funcional 7.1 — correlación y logs JSON de las dos API
@@ -2817,115 +2481,61 @@ public record ResultadoLogging(bool EsValida, IReadOnlyList<string> Errores);
 public record ResumenLogging(int Total, int Estructurado, int ConCorrelacion, int PorEntorno);
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
 
-- **Línea 1:** `using System.Collections.Generic;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 2:** `using System.Linq;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 3:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 4:** `namespace AceriaApp.Api.Logging;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 5:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 6:** `public class ValidadorLogging` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 7:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 8:** `private static readonly string[] NivelesPermitidos = { "Trace", "Debug", "Information", "Warning", "Error", "Critical" };` → Limita los valores de texto reconocidos por la política didáctica.
 
-- **Línea 9:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 10:** `public ResultadoLogging Validar(IEnumerable<ConfiguracionLogging> configuraciones)` → Expone la operación con el contrato que usan el catálogo o sus pruebas.
 
-- **Línea 11:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 12:** `var errores = new List<string>();` → Inicializa la colección de diagnósticos que se devolverá al finalizar.
 
-- **Línea 13:** `var lista = configuraciones.ToList();` → Materializa una sola vez la secuencia recibida para recorrerla y contarla.
 
-- **Línea 14:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 15:** `if (lista.Count == 0)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 16:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 17:** `errores.Add("No hay configuraciones de logging declaradas.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 18:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 19:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 20:** `foreach (var configuracion in lista)` → Revisa cada entrada; un catálogo puede acumular varios diagnósticos.
 
-- **Línea 21:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 22:** `if (!NivelesPermitidos.Contains(configuracion.NivelMinimo))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 23:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 24:** `errores.Add($"Nivel mínimo no permitido: '{configuracion.NivelMinimo}'.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 25:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 26:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 27:** `if (!configuracion.UsaLoggingEstructurado)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 28:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 29:** `errores.Add($"La configuración con nivel '{configuracion.NivelMinimo}' no usa logging estructurado.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 30:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 31:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 32:** `if (!configuracion.TieneCorrelacion)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 33:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 34:** `errores.Add($"La configuración con nivel '{configuracion.NivelMinimo}' no tiene correlación.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 35:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 36:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 37:** `if (!configuracion.EvitaDatosSensibles)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 38:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 39:** `errores.Add($"La configuración con nivel '{configuracion.NivelMinimo}' no evita datos sensibles.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 40:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 41:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 42:** `if (!configuracion.ConfiguradoPorEntorno)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 43:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 44:** `errores.Add($"La configuración con nivel '{configuracion.NivelMinimo}' no está configurada por entorno.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 45:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 46:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 47:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 48:** `return new ResultadoLogging(errores.Count == 0, errores);` → Devuelve validez y diagnósticos; no instala middleware ni ejecuta llamadas remotas.
 
-- **Línea 49:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 50:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 51:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 52:** `public record ResultadoLogging(bool EsValida, IReadOnlyList<string> Errores);` → Define el resultado inmutable que devuelve el validador o el resumen.
 
-- **Línea 53:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 54:** `public record ResumenLogging(int Total, int Estructurado, int ConCorrelacion, int PorEntorno);` → Define el resultado inmutable que devuelve el validador o el resumen.
+
 
 
 ### Reto 7.1.3 — Calcular los recuentos
@@ -3001,133 +2611,72 @@ public record ResultadoLogging(bool EsValida, IReadOnlyList<string> Errores);
 public record ResumenLogging(int Total, int Estructurado, int ConCorrelacion, int PorEntorno);
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 1:** `using System.Collections.Generic;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 2:** `using System.Linq;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 3:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 4:** `namespace AceriaApp.Api.Logging;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 5:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 6:** `public class ValidadorLogging` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 7:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 8:** `public static ResumenLogging Resumen(IEnumerable<ConfiguracionLogging> configuraciones)` → Expone la operación con el contrato que usan el catálogo o sus pruebas.
 
-- **Línea 9:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 10:** `var lista = configuraciones.ToList();` → Materializa una sola vez la secuencia recibida para recorrerla y contarla.
 
 - **Línea 11:** `var estructurado = lista.Count(c => c.UsaLoggingEstructurado);` → Cuenta las entradas que cumplen el criterio indicado.
 
-- **Línea 12:** `var conCorrelacion = lista.Count(c => c.TieneCorrelacion);` → Cuenta las entradas que cumplen el criterio indicado.
 
-- **Línea 13:** `var porEntorno = lista.Count(c => c.ConfiguradoPorEntorno);` → Cuenta las entradas que cumplen el criterio indicado.
 
 - **Línea 14:** `return new ResumenLogging(lista.Count, estructurado, conCorrelacion, porEntorno);` → Devuelve los recuentos del catálogo sin modificar sus entradas.
 
-- **Línea 15:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 16:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 17:** `private static readonly string[] NivelesPermitidos = { "Trace", "Debug", "Information", "Warning", "Error", "Critical" };` → Limita los valores de texto reconocidos por la política didáctica.
 
-- **Línea 18:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 19:** `public ResultadoLogging Validar(IEnumerable<ConfiguracionLogging> configuraciones)` → Expone la operación con el contrato que usan el catálogo o sus pruebas.
 
-- **Línea 20:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 21:** `var errores = new List<string>();` → Inicializa la colección de diagnósticos que se devolverá al finalizar.
 
-- **Línea 22:** `var lista = configuraciones.ToList();` → Materializa una sola vez la secuencia recibida para recorrerla y contarla.
 
-- **Línea 23:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 24:** `if (lista.Count == 0)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 25:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 26:** `errores.Add("No hay configuraciones de logging declaradas.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 27:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 28:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 29:** `foreach (var configuracion in lista)` → Revisa cada entrada; un catálogo puede acumular varios diagnósticos.
 
-- **Línea 30:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 31:** `if (!NivelesPermitidos.Contains(configuracion.NivelMinimo))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 32:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 33:** `errores.Add($"Nivel mínimo no permitido: '{configuracion.NivelMinimo}'.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 34:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 35:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 36:** `if (!configuracion.UsaLoggingEstructurado)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 37:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 38:** `errores.Add($"La configuración con nivel '{configuracion.NivelMinimo}' no usa logging estructurado.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 39:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 40:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 41:** `if (!configuracion.TieneCorrelacion)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 42:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 43:** `errores.Add($"La configuración con nivel '{configuracion.NivelMinimo}' no tiene correlación.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 44:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 45:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 46:** `if (!configuracion.EvitaDatosSensibles)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 47:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 48:** `errores.Add($"La configuración con nivel '{configuracion.NivelMinimo}' no evita datos sensibles.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 49:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 50:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 51:** `if (!configuracion.ConfiguradoPorEntorno)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 52:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 53:** `errores.Add($"La configuración con nivel '{configuracion.NivelMinimo}' no está configurada por entorno.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 54:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 55:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 56:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 57:** `return new ResultadoLogging(errores.Count == 0, errores);` → Devuelve validez y diagnósticos; no instala middleware ni ejecuta llamadas remotas.
 
-- **Línea 58:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 59:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 60:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 61:** `public record ResultadoLogging(bool EsValida, IReadOnlyList<string> Errores);` → Define el resultado inmutable que devuelve el validador o el resumen.
 
-- **Línea 62:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 63:** `public record ResumenLogging(int Total, int Estructurado, int ConCorrelacion, int PorEntorno);` → Define el resultado inmutable que devuelve el validador o el resumen.
 
 
 ### Reto 7.1.6 — Verificar el catálogo por defecto
@@ -3248,223 +2797,117 @@ public class ValidadorLoggingTests
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 1:** `using AceriaApp.Api.Logging;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 2:** `using FluentAssertions;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 3:** `using Xunit;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 4:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 5:** `namespace AceriaApp.Logging.Tests;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 6:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 7:** `public class ValidadorLoggingTests` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 8:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 9:** `private readonly ValidadorLogging _validador = new();` → Crea la instancia del validador que utiliza cada prueba.
 
-- **Línea 10:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 11:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 12:** `public void Validar_CatalogoPorDefecto_DevuelveValido()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 13:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 14:** `var resultado = _validador.Validar(CatalogoLogging.ConfiguracionesPorDefecto());` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 15:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 16:** `resultado.EsValida.Should().BeTrue();` → Comprueba que la política acepta los datos de este caso.
 
-- **Línea 17:** `resultado.Errores.Should().BeEmpty();` → Comprueba que no se ha registrado ningún diagnóstico.
 
-- **Línea 18:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 19:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 20:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 21:** `public void Validar_SinConfiguraciones_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 22:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 23:** `var resultado = _validador.Validar(new List<ConfiguracionLogging>());` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 24:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 25:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 26:** `resultado.Errores.Should().Contain(e => e.Contains("No hay configuraciones"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 27:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 28:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 29:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 30:** `public void Validar_NivelNoPermitido_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 31:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 32:** `var configuraciones = new List<ConfiguracionLogging>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 33:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 34:** `new() { NivelMinimo = "NivelInventado", UsaLoggingEstructurado = true, TieneCorrelacion = true, EvitaDatosSensibles = true, ConfiguradoPorEntorno = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 35:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 36:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 37:** `var resultado = _validador.Validar(configuraciones);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 38:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 39:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 40:** `resultado.Errores.Should().Contain(e => e.Contains("Nivel mínimo no permitido"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 41:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 42:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 43:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 44:** `public void Validar_SinLoggingEstructurado_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 45:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 46:** `var configuraciones = new List<ConfiguracionLogging>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 47:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 48:** `new() { NivelMinimo = "Information", UsaLoggingEstructurado = false, TieneCorrelacion = true, EvitaDatosSensibles = true, ConfiguradoPorEntorno = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 49:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 50:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 51:** `var resultado = _validador.Validar(configuraciones);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 52:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 53:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 54:** `resultado.Errores.Should().Contain(e => e.Contains("no usa logging estructurado"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 55:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 56:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 57:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 58:** `public void Validar_SinCorrelacion_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 59:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 60:** `var configuraciones = new List<ConfiguracionLogging>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 61:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 62:** `new() { NivelMinimo = "Information", UsaLoggingEstructurado = true, TieneCorrelacion = false, EvitaDatosSensibles = true, ConfiguradoPorEntorno = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 63:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 64:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 65:** `var resultado = _validador.Validar(configuraciones);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 66:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 67:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 68:** `resultado.Errores.Should().Contain(e => e.Contains("no tiene correlación"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 69:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 70:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 71:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 72:** `public void Validar_DatosSensibles_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 73:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 74:** `var configuraciones = new List<ConfiguracionLogging>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 75:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 76:** `new() { NivelMinimo = "Information", UsaLoggingEstructurado = true, TieneCorrelacion = true, EvitaDatosSensibles = false, ConfiguradoPorEntorno = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 77:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 78:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 79:** `var resultado = _validador.Validar(configuraciones);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 80:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 81:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 82:** `resultado.Errores.Should().Contain(e => e.Contains("no evita datos sensibles"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 83:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 84:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 85:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 86:** `public void Validar_SinConfiguracionPorEntorno_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 87:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 88:** `var configuraciones = new List<ConfiguracionLogging>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 89:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 90:** `new() { NivelMinimo = "Information", UsaLoggingEstructurado = true, TieneCorrelacion = true, EvitaDatosSensibles = true, ConfiguradoPorEntorno = false }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 91:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 92:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 93:** `var resultado = _validador.Validar(configuraciones);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 94:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 95:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 96:** `resultado.Errores.Should().Contain(e => e.Contains("no está configurada por entorno"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 97:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 98:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 99:** `public void Resumen_ConCatalogoPorDefecto_CalculaTotales()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 100:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 101:** `var resumen = ValidadorLogging.Resumen(CatalogoLogging.ConfiguracionesPorDefecto());` → Calcula el resumen sobre el catálogo por defecto.
 
-- **Línea 102:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 103:** `resumen.Total.Should().Be(3);` → Compara el recuento obtenido con el valor esperado del catálogo.
 
-- **Línea 104:** `resumen.Estructurado.Should().Be(3);` → Compara el recuento obtenido con el valor esperado del catálogo.
 
-- **Línea 105:** `resumen.ConCorrelacion.Should().Be(3);` → Compara el recuento obtenido con el valor esperado del catálogo.
 
-- **Línea 106:** `resumen.PorEntorno.Should().Be(3);` → Compara el recuento obtenido con el valor esperado del catálogo.
 
-- **Línea 107:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 108:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
 
 **Comprobación del reto.** Guarda los archivos, compila la copia optativa y ejecuta primero `dotnet test tests/AceriaApp.Logging.Tests/AceriaApp.Logging.Tests.csproj -c Release`, después `dotnet test AceriaApp.sln -c Release`. El catálogo pasa de 12 a 13 tests; la solución debe ejecutar 309 + 1 pruebas, todas aprobadas y ninguna omitida. Confirma en el TRX que se ejecutó `Resumen_ConCatalogoPorDefecto_CalculaTotales` y compara los hashes de la etapa obligatoria: no debe haber cambiado. Revisa `git diff --check` y el índice antes de registrar el reto en un commit local separado.
@@ -3688,11 +3131,9 @@ El archivo completo fija las referencias y versiones que utilizará la etapa; a�
 </Project>
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 5:** `<PackageReference Include="Serilog.AspNetCore" Version="8.0.3" />`. Fija la dependencia usada por esta etapa del ejercicio.
-- **Línea 6:** `<PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" />`. Fija la dependencia usada por esta etapa del ejercicio.
-- **Línea 7:** `<PackageReference Include="RabbitMQ.Client" Version="7.1.2" />`. Fija la dependencia usada por esta etapa del ejercicio.
 
 ### PASO 7.2.6 — Crear la clase `HealthCheck`
 
@@ -3722,7 +3163,7 @@ public class HealthCheck
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 1:** `namespace AceriaApp.Api.HealthChecks;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
@@ -3734,15 +3175,10 @@ public class HealthCheck
 
 - **Línea 5:** `public string Nombre { get; init; } = string.Empty;` → Declara un dato del análisis que se fija al construir la entrada.
 
-- **Línea 6:** `public string Tipo { get; init; } = string.Empty;` → Declara un dato del análisis que se fija al construir la entrada.
 
-- **Línea 7:** `public string Recurso { get; init; } = string.Empty;` → Declara un dato del análisis que se fija al construir la entrada.
 
-- **Línea 8:** `public bool ConsultaDependenciaExterna { get; init; }` → Declara un dato del análisis que se fija al construir la entrada.
 
-- **Línea 9:** `public bool TieneTimeout { get; init; }` → Declara un dato del análisis que se fija al construir la entrada.
 
-- **Línea 10:** `public bool ExponeInformacionSensible { get; init; }` → Declara un dato del análisis que se fija al construir la entrada.
 
 - **Línea 11:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
@@ -3827,113 +3263,68 @@ public class ValidadorHealthChecks
 public record ResultadoHealthChecks(bool EsValida, IReadOnlyList<string> Errores);
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 1:** `namespace AceriaApp.Api.HealthChecks;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 2:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 3:** `public class ValidadorHealthChecks` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 4:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 5:** `private static readonly string[] TiposPermitidos = { "Liveness", "Readiness", "Startup" };` → Limita los valores de texto reconocidos por la política didáctica.
 
-- **Línea 6:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 7:** `public ResultadoHealthChecks Validar(IEnumerable<HealthCheck> healthChecks)` → Expone la operación con el contrato que usan el catálogo o sus pruebas.
 
-- **Línea 8:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 9:** `var errores = new List<string>();` → Inicializa la colección de diagnósticos que se devolverá al finalizar.
 
 - **Línea 10:** `var lista = healthChecks.ToList();` → Materializa una sola vez la secuencia recibida para recorrerla y contarla.
 
-- **Línea 11:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 12:** `if (lista.Count == 0)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 13:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 14:** `errores.Add("No hay health checks declarados.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 15:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 16:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 17:** `foreach (var healthCheck in lista)` → Revisa cada entrada; un catálogo puede acumular varios diagnósticos.
 
-- **Línea 18:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 19:** `if (string.IsNullOrWhiteSpace(healthCheck.Nombre))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 20:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 21:** `errores.Add("Un health check no declara el nombre.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 22:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 23:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 24:** `if (!TiposPermitidos.Contains(healthCheck.Tipo))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 25:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 26:** `errores.Add($"Tipo no permitido en '{healthCheck.Nombre}': '{healthCheck.Tipo}'.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 27:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 28:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 29:** `if (string.IsNullOrWhiteSpace(healthCheck.Recurso))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 30:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 31:** `errores.Add($"El health check '{healthCheck.Nombre}' no declara el recurso.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 32:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 33:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 34:** `if (healthCheck.Tipo == "Liveness" && healthCheck.ConsultaDependenciaExterna)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 35:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 36:** `errores.Add($"El liveness '{healthCheck.Nombre}' consulta una dependencia externa.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 37:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 38:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 39:** `if (!healthCheck.TieneTimeout)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 40:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 41:** `errores.Add($"El health check '{healthCheck.Nombre}' no tiene timeout.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 42:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 43:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 44:** `if (healthCheck.ExponeInformacionSensible)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 45:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 46:** `errores.Add($"El health check '{healthCheck.Nombre}' expone información sensible.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 47:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 48:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 49:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 50:** `return new ResultadoHealthChecks(errores.Count == 0, errores);` → Devuelve validez y diagnósticos; no instala middleware ni ejecuta llamadas remotas.
 
-- **Línea 51:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 52:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 53:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 54:** `public record ResultadoHealthChecks(bool EsValida, IReadOnlyList<string> Errores);` → Define el resultado inmutable que devuelve el validador o el resumen.
 
@@ -4021,121 +3412,65 @@ public class ValidadorHealthChecks
 public record ResultadoHealthChecks(bool EsValida, IReadOnlyList<string> Errores);
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 1:** `using System.Collections.Generic;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 2:** `using System.Linq;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 3:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 4:** `namespace AceriaApp.Api.HealthChecks;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 5:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 6:** `public class ValidadorHealthChecks` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 7:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 8:** `private static readonly string[] TiposPermitidos = { "Liveness", "Readiness", "Startup" };` → Limita los valores de texto reconocidos por la política didáctica.
 
-- **Línea 9:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 10:** `public ResultadoHealthChecks Validar(IEnumerable<HealthCheck> healthChecks)` → Expone la operación con el contrato que usan el catálogo o sus pruebas.
 
-- **Línea 11:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 12:** `var errores = new List<string>();` → Inicializa la colección de diagnósticos que se devolverá al finalizar.
 
-- **Línea 13:** `var lista = healthChecks.ToList();` → Materializa una sola vez la secuencia recibida para recorrerla y contarla.
 
-- **Línea 14:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 15:** `if (lista.Count == 0)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 16:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 17:** `errores.Add("No hay health checks declarados.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 18:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 19:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 20:** `foreach (var healthCheck in lista)` → Revisa cada entrada; un catálogo puede acumular varios diagnósticos.
 
-- **Línea 21:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 22:** `if (string.IsNullOrWhiteSpace(healthCheck.Nombre))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 23:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 24:** `errores.Add("Un health check no declara el nombre.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 25:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 26:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 27:** `if (!TiposPermitidos.Contains(healthCheck.Tipo))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 28:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 29:** `errores.Add($"Tipo no permitido en '{healthCheck.Nombre}': '{healthCheck.Tipo}'.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 30:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 31:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 32:** `if (string.IsNullOrWhiteSpace(healthCheck.Recurso))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 33:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 34:** `errores.Add($"El health check '{healthCheck.Nombre}' no declara el recurso.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 35:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 36:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 37:** `if (healthCheck.Tipo == "Liveness" && healthCheck.ConsultaDependenciaExterna)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 38:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 39:** `errores.Add($"El liveness '{healthCheck.Nombre}' consulta una dependencia externa.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 40:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 41:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 42:** `if (!healthCheck.TieneTimeout)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 43:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 44:** `errores.Add($"El health check '{healthCheck.Nombre}' no tiene timeout.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 45:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 46:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 47:** `if (healthCheck.ExponeInformacionSensible)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 48:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 49:** `errores.Add($"El health check '{healthCheck.Nombre}' expone información sensible.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 50:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 51:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 52:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 53:** `return new ResultadoHealthChecks(errores.Count == 0, errores);` → Devuelve validez y diagnósticos; no instala middleware ni ejecuta llamadas remotas.
 
-- **Línea 54:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 55:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 56:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 57:** `public record ResultadoHealthChecks(bool EsValida, IReadOnlyList<string> Errores);` → Define el resultado inmutable que devuelve el validador o el resumen.
 
 
 **Por qué funciona así.** Las importaciones explícitas muestran dónde se declaran los tipos genéricos y las extensiones LINQ, aunque el proyecto tenga importaciones implícitas.
@@ -4192,7 +3527,7 @@ public sealed class RabbitServicioHealthCheck(string uri) : IHealthCheck
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 9:** `using var plazo = CancellationTokenSource.CreateLinkedTokenSource(ct);`. Combina la cancelación del llamante con el límite propio de la sonda.
 - **Línea 16:** `conexion = await factory.CreateConnectionAsync(plazo.Token);`. Verifica el protocolo AMQP y la autenticación, no solo un puerto abierto.
@@ -4249,7 +3584,7 @@ public static class RegistroSalud
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 11:** `public static IServiceCollection AddSaludAceria(this IServiceCollection services, IConfiguration config, bool inventario)`. Registra las dependencias propias de este servicio para readiness.
 - **Línea 23:** `public static IEndpointRouteBuilder MapSaludAceria(this IEndpointRouteBuilder endpoints)`. Publica liveness y readiness como rutas independientes.
@@ -4296,9 +3631,8 @@ public sealed class SqlServicioHealthCheck(string cadena) : IHealthCheck
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 9:** `using var plazo = CancellationTokenSource.CreateLinkedTokenSource(ct);`. Combina la cancelación del llamante con el límite propio de la sonda.
 - **Línea 16:** `await conexion.OpenAsync(plazo.Token);`. Abre realmente la conexión a la base de datos seleccionada.
 - **Línea 19:** `var valor = await consulta.ExecuteScalarAsync(plazo.Token);`. Comprueba la ejecución SQL dentro de la dependencia.
 
@@ -4333,35 +3667,24 @@ public class CatalogoHealthChecks
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 1:** `namespace AceriaApp.Api.HealthChecks;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 2:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 3:** `public class CatalogoHealthChecks` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 4:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 5:** `public static List<HealthCheck> HealthChecksPorDefecto()` → Expone la operación con el contrato que usan el catálogo o sus pruebas.
 
-- **Línea 6:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 7:** `return new List<HealthCheck>` → Devuelve una lista nueva en cada llamada; modificarla no altera otros casos.
 
-- **Línea 8:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 9:** `new() { Nombre = "Self", Tipo = "Liveness", Recurso = "Aplicación", TieneTimeout = true, ExponeInformacionSensible = false },` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 10:** `new() { Nombre = "Database", Tipo = "Readiness", ConsultaDependenciaExterna = true, Recurso = "SQL Server Express", TieneTimeout = true, ExponeInformacionSensible = false },` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 11:** `new() { Nombre = "RabbitMQ", Tipo = "Readiness", ConsultaDependenciaExterna = true, Recurso = "Broker de mensajería", TieneTimeout = true, ExponeInformacionSensible = false }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
 - **Línea 12:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 13:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 14:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
 
 **Por qué funciona así.** Cada invocación devuelve una lista nueva con los ejemplos de análisis; cambiar una lista no modifica futuros catálogos.
@@ -4406,39 +3729,23 @@ public class CatalogoHealthChecks
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
 
-- **Línea 1:** `using System.Collections.Generic;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 2:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 3:** `namespace AceriaApp.Api.HealthChecks;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 4:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 5:** `public class CatalogoHealthChecks` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 6:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 7:** `public static List<HealthCheck> HealthChecksPorDefecto()` → Expone la operación con el contrato que usan el catálogo o sus pruebas.
 
-- **Línea 8:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 9:** `return new List<HealthCheck>` → Devuelve una lista nueva en cada llamada; modificarla no altera otros casos.
 
-- **Línea 10:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 11:** `new() { Nombre = "Self", Tipo = "Liveness", Recurso = "Aplicación", TieneTimeout = true, ExponeInformacionSensible = false },` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 12:** `new() { Nombre = "Database", Tipo = "Readiness", ConsultaDependenciaExterna = true, Recurso = "SQL Server Express", TieneTimeout = true, ExponeInformacionSensible = false },` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 13:** `new() { Nombre = "RabbitMQ", Tipo = "Readiness", ConsultaDependenciaExterna = true, Recurso = "Broker de mensajería", TieneTimeout = true, ExponeInformacionSensible = false }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 14:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 15:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 16:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
+
 
 
 **Por qué funciona así.** Las importaciones explícitas muestran dónde se declaran los tipos genéricos y las extensiones LINQ, aunque el proyecto tenga importaciones implícitas.
@@ -4602,7 +3909,7 @@ La configuración usa bases y prefijos propios de esta etapa. Las variables de e
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 2:** `"ConnectionStrings": {`. Agrupa las conexiones de laboratorio específicas de la etapa.
 - **Línea 11:** `"WorkersActivos": false`. Activa o desactiva los procesos de mensajería y su dependencia en readiness.
@@ -4635,12 +3942,8 @@ La configuración usa bases y prefijos propios de esta etapa. Las variables de e
 }
 ```
 
-**Lectura de las líneas clave.**
 
-- **Línea 2:** `"ConnectionStrings": {`. Agrupa las conexiones de laboratorio específicas de la etapa.
-- **Línea 9:** `"WorkersActivos": false`. Activa o desactiva los procesos de mensajería y su dependencia en readiness.
-- **Línea 12:** `"NivelMinimo": "Information",`. Fija el umbral propio de logging y admite sobreescritura por variables de entorno.
-- **Línea 13:** `"DiagnosticoActivo": false`. Mantiene el endpoint de fallo desactivado por defecto.
+
 
 ### PASO 7.2.14 — Crear el archivo `ValidadorHealthChecksTests.cs`
 
@@ -4770,229 +4073,127 @@ public class ValidadorHealthChecksTests
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 1:** `using AceriaApp.Api.HealthChecks;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 2:** `using FluentAssertions;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 3:** `using Xunit;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 4:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 5:** `namespace AceriaApp.HealthChecks.Tests;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 6:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 7:** `public class ValidadorHealthChecksTests` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 8:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 9:** `private readonly ValidadorHealthChecks _validador = new();` → Crea la instancia del validador que utiliza cada prueba.
 
-- **Línea 10:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 11:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
 - **Línea 12:** `public void Validar_CatalogoPorDefecto_DevuelveValido()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 13:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 14:** `var resultado = _validador.Validar(CatalogoHealthChecks.HealthChecksPorDefecto());` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 15:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 16:** `resultado.EsValida.Should().BeTrue();` → Comprueba que la política acepta los datos de este caso.
 
 - **Línea 17:** `resultado.Errores.Should().BeEmpty();` → Comprueba que no se ha registrado ningún diagnóstico.
 
-- **Línea 18:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 19:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 20:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 21:** `public void Validar_SinHealthChecks_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 22:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 23:** `var resultado = _validador.Validar(new List<HealthCheck>());` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 24:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 25:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
 - **Línea 26:** `resultado.Errores.Should().Contain(e => e.Contains("No hay health checks"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 27:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 28:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 29:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 30:** `public void Validar_TipoNoPermitido_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 31:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 32:** `var healthChecks = new List<HealthCheck>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 33:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 34:** `new() { Nombre = "X", Tipo = "TipoInventado", Recurso = "A", TieneTimeout = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 35:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 36:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 37:** `var resultado = _validador.Validar(healthChecks);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 38:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 39:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 40:** `resultado.Errores.Should().Contain(e => e.Contains("Tipo no permitido"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 41:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 42:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 43:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 44:** `public void Validar_SinRecurso_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 45:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 46:** `var healthChecks = new List<HealthCheck>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 47:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 48:** `new() { Nombre = "X", Tipo = "Readiness", Recurso = string.Empty, TieneTimeout = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 49:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 50:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 51:** `var resultado = _validador.Validar(healthChecks);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 52:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 53:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 54:** `resultado.Errores.Should().Contain(e => e.Contains("no declara el recurso"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 55:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 56:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 57:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 58:** `public void Validar_SinTimeout_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 59:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 60:** `var healthChecks = new List<HealthCheck>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 61:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 62:** `new() { Nombre = "X", Tipo = "Readiness", Recurso = "A", TieneTimeout = false }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 63:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 64:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 65:** `var resultado = _validador.Validar(healthChecks);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 66:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 67:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 68:** `resultado.Errores.Should().Contain(e => e.Contains("no tiene timeout"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 69:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 70:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 71:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 72:** `public void Validar_InformacionSensible_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 73:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 74:** `var healthChecks = new List<HealthCheck>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 75:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 76:** `new() { Nombre = "X", Tipo = "Readiness", Recurso = "A", TieneTimeout = true, ExponeInformacionSensible = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 77:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 78:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 79:** `var resultado = _validador.Validar(healthChecks);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 80:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 81:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 82:** `resultado.Errores.Should().Contain(e => e.Contains("expone información sensible"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 83:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 84:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 85:** `public void Validar_LivenessConDependenciaExterna_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 86:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 87:** `var checks = new List<HealthCheck>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 88:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 89:** `new() { Nombre = "Self", Tipo = "Liveness", Recurso = "SQL Server", ConsultaDependenciaExterna = true, TieneTimeout = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 90:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 91:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 92:** `var resultado = _validador.Validar(checks);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 93:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 94:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 95:** `resultado.Errores.Should().Contain(e => e.Contains("consulta una dependencia externa"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 96:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 97:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 98:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 99:** `public void Validar_ReadinessConDependenciaExterna_DevuelveValido()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 100:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 101:** `var checks = new List<HealthCheck>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 102:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 103:** `new() { Nombre = "SQL", Tipo = "Readiness", Recurso = "SQL Server", ConsultaDependenciaExterna = true, TieneTimeout = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 104:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 105:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 106:** `var resultado = _validador.Validar(checks);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 107:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 108:** `resultado.EsValida.Should().BeTrue();` → Comprueba que la política acepta los datos de este caso.
 
-- **Línea 109:** `resultado.Errores.Should().BeEmpty();` → Comprueba que no se ha registrado ningún diagnóstico.
 
-- **Línea 110:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 111:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
 
 **Por qué funciona así.** Las pruebas ejercitan aceptación y rechazos concretos del validador. Afirmar el diagnóstico evita un falso positivo por otro error.
@@ -5069,103 +4270,59 @@ public class CatalogoHealthChecksTests
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 1:** `using AceriaApp.Api.HealthChecks;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 2:** `using FluentAssertions;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 3:** `using Xunit;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 4:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 5:** `namespace AceriaApp.HealthChecks.Tests;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 6:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 7:** `public class CatalogoHealthChecksTests` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 8:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 9:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 10:** `public void HealthChecksPorDefecto_ContieneTresHealthChecks()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 11:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 12:** `var healthChecks = CatalogoHealthChecks.HealthChecksPorDefecto();` → Obtiene los datos que se utilizarán en las comprobaciones siguientes.
 
-- **Línea 13:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 14:** `healthChecks.Should().HaveCount(3);` → Comprueba el tamaño del catálogo sin inferir servicios o conexiones en ejecución.
 
-- **Línea 15:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 16:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 17:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 18:** `public void HealthChecksPorDefecto_ContieneUnLiveness()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 19:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 20:** `var healthChecks = CatalogoHealthChecks.HealthChecksPorDefecto();` → Obtiene los datos que se utilizarán en las comprobaciones siguientes.
 
-- **Línea 21:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 22:** `healthChecks.Count(h => h.Tipo == "Liveness").Should().Be(1);` → Compara el recuento obtenido con el valor esperado del catálogo.
 
-- **Línea 23:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 24:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 25:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 26:** `public void HealthChecksPorDefecto_ContieneDosReadiness()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 27:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 28:** `var healthChecks = CatalogoHealthChecks.HealthChecksPorDefecto();` → Obtiene los datos que se utilizarán en las comprobaciones siguientes.
 
-- **Línea 29:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 30:** `healthChecks.Count(h => h.Tipo == "Readiness").Should().Be(2);` → Compara el recuento obtenido con el valor esperado del catálogo.
 
-- **Línea 31:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 32:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 33:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 34:** `public void HealthChecksPorDefecto_TodosTienenTimeout()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 35:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 36:** `var healthChecks = CatalogoHealthChecks.HealthChecksPorDefecto();` → Obtiene los datos que se utilizarán en las comprobaciones siguientes.
 
-- **Línea 37:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 38:** `healthChecks.Should().OnlyContain(h => h.TieneTimeout);` → Comprueba la condición en cada entrada declarada del catálogo.
 
-- **Línea 39:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 40:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 41:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 42:** `public void HealthChecksPorDefecto_NingunoExponeInformacionSensible()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 43:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 44:** `var healthChecks = CatalogoHealthChecks.HealthChecksPorDefecto();` → Obtiene los datos que se utilizarán en las comprobaciones siguientes.
 
-- **Línea 45:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 46:** `healthChecks.Should().OnlyContain(h => !h.ExponeInformacionSensible);` → Comprueba la condición en cada entrada declarada del catálogo.
 
-- **Línea 47:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 48:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
 
 **Por qué funciona así.** Las pruebas del catálogo verifican cantidades y propiedades declaradas. No prueban que existan los servicios nombrados.
@@ -5205,17 +4362,9 @@ El archivo completo fija las referencias y versiones que utilizará la etapa; a�
 </Project>
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 4:** `<ProjectReference Include="../../src/AceriaApp.Api/AceriaApp.Api.csproj" />`. Conecta este proyecto con otro proyecto real de la solución.
-- **Línea 5:** `<ProjectReference Include="../../src/AceriaApp.Observabilidad/AceriaApp.Observabilidad.csproj" />`. Conecta este proyecto con otro proyecto real de la solución.
-- **Línea 6:** `<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />`. Fija la dependencia usada por esta etapa del ejercicio.
-- **Línea 7:** `<PackageReference Include="xunit" Version="2.9.2" />`. Fija la dependencia usada por esta etapa del ejercicio.
-- **Línea 8:** `<PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />`. Fija la dependencia usada por esta etapa del ejercicio.
-- **Línea 9:** `<PackageReference Include="FluentAssertions" Version="6.12.2" />`. Fija la dependencia usada por esta etapa del ejercicio.
-- **Línea 11:** `<PackageReference Include="Microsoft.AspNetCore.TestHost" Version="8.0.21" />`. Fija la dependencia usada por esta etapa del ejercicio.
-- **Línea 12:** `<PackageReference Include="Testcontainers.MsSql" Version="3.10.0" />`. Fija la dependencia usada por esta etapa del ejercicio.
-- **Línea 13:** `<PackageReference Include="Testcontainers.RabbitMq" Version="3.10.0" />`. Fija la dependencia usada por esta etapa del ejercicio.
 
 
 **Integración funcional — `tests/AceriaApp.HealthChecks.Tests/SaludFuncionalTests.cs`.**
@@ -5334,18 +4483,9 @@ public class SaludFuncionalTests
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 20:** `.Configure(app => { app.UseRouting(); app.UseEndpoints(endpoints => endpoints.MapSaludAceria()); }))`. Publica liveness y readiness como rutas independientes.
 - **Línea 23:** `public async Task Liveness_no_ejecuta_dependencias_y_readiness_si()`. Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre.
-- **Línea 34:** `public async Task Readiness_expone_estado_y_nombre_sin_credenciales_ni_excepcion()`. Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre.
-- **Línea 45:** `public async Task Readiness_sana_responde_200_y_JSON_comprobable()`. Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre.
-- **Línea 54:** `public async Task SQL_no_accesible_no_se_presenta_como_sano()`. Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre.
-- **Línea 62:** `public async Task SQL_cancelado_no_intenta_recuperarse_ni_inventa_resultado()`. Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre.
-- **Línea 68:** `public async Task Rabbit_no_accesible_devuelve_no_sano_sin_detalles_internos()`. Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre.
-- **Línea 75:** `public async Task Rabbit_cancelado_respeta_el_token_del_llamador()`. Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre.
-- **Línea 81:** `public async Task Sql_real_distingue_base_existente_y_nombre_inexistente()`. Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre.
-- **Línea 90:** `public async Task Rabbit_real_acredita_conexion_AMQP()`. Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre.
 
 ### PASO 7.2.16 — Compilar la solución completa
 
@@ -5569,13 +4709,11 @@ app.Run();
 public partial class Program {} // permite WebApplicationFactory en tests
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 21:** `builder.Services.AddLoggingAceria("Produccion", builder.Configuration);`. Registra el logger JSON y los servicios que necesita la correlación.
 - **Línea 38:** `}).AddHttpMessageHandler<PropagarCorrelacionHandler>();`. Propaga el identificador validado hacia Inventario.
-- **Línea 39:** `builder.Services.AddSaludAceria(builder.Configuration, inventario: false);`. Registra las dependencias propias de este servicio para readiness.
 - **Línea 41:** `app.UseLoggingAceria();`. Abre la correlación y el resumen antes de ejecutar el resto del pipeline.
-- **Línea 184:** `app.MapSaludAceria();`. Publica liveness y readiness como rutas independientes.
 
 
 **Integración funcional — `src/AceriaApp.Inventario.Api/InventarioProgram.cs`.**
@@ -5638,12 +4776,8 @@ public sealed class InventarioProgram
 }
 ```
 
-**Lectura de las líneas clave.**
 
-- **Línea 11:** `builder.Services.AddLoggingAceria("Inventario", builder.Configuration);`. Registra el logger JSON y los servicios que necesita la correlación.
-- **Línea 21:** `builder.Services.AddSaludAceria(builder.Configuration, inventario: true);`. Registra las dependencias propias de este servicio para readiness.
-- **Línea 23:** `app.UseLoggingAceria();`. Abre la correlación y el resumen antes de ejecutar el resto del pipeline.
-- **Línea 47:** `app.MapSaludAceria();`. Publica liveness y readiness como rutas independientes.
+
 
 
 ## Recorrido funcional 7.2 — proceso vivo y dependencias disponibles
@@ -6089,125 +5223,66 @@ public record ResultadoHealthChecks(bool EsValida, IReadOnlyList<string> Errores
 public record ResumenHealthChecks(int Total, int Liveness, int Readiness, int Startup);
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
 
-- **Línea 1:** `using System.Collections.Generic;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 2:** `using System.Linq;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 3:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 4:** `namespace AceriaApp.Api.HealthChecks;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 5:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 6:** `public class ValidadorHealthChecks` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 7:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 8:** `private static readonly string[] TiposPermitidos = { "Liveness", "Readiness", "Startup" };` → Limita los valores de texto reconocidos por la política didáctica.
 
-- **Línea 9:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 10:** `public ResultadoHealthChecks Validar(IEnumerable<HealthCheck> healthChecks)` → Expone la operación con el contrato que usan el catálogo o sus pruebas.
 
-- **Línea 11:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 12:** `var errores = new List<string>();` → Inicializa la colección de diagnósticos que se devolverá al finalizar.
 
-- **Línea 13:** `var lista = healthChecks.ToList();` → Materializa una sola vez la secuencia recibida para recorrerla y contarla.
 
-- **Línea 14:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 15:** `if (lista.Count == 0)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 16:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 17:** `errores.Add("No hay health checks declarados.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 18:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 19:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 20:** `foreach (var healthCheck in lista)` → Revisa cada entrada; un catálogo puede acumular varios diagnósticos.
 
-- **Línea 21:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 22:** `if (string.IsNullOrWhiteSpace(healthCheck.Nombre))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 23:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 24:** `errores.Add("Un health check no declara el nombre.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 25:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 26:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 27:** `if (!TiposPermitidos.Contains(healthCheck.Tipo))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 28:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 29:** `errores.Add($"Tipo no permitido en '{healthCheck.Nombre}': '{healthCheck.Tipo}'.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 30:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 31:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 32:** `if (string.IsNullOrWhiteSpace(healthCheck.Recurso))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 33:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 34:** `errores.Add($"El health check '{healthCheck.Nombre}' no declara el recurso.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 35:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 36:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 37:** `if (healthCheck.Tipo == "Liveness" && healthCheck.ConsultaDependenciaExterna)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 38:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 39:** `errores.Add($"El liveness '{healthCheck.Nombre}' consulta una dependencia externa.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 40:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 41:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 42:** `if (!healthCheck.TieneTimeout)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 43:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 44:** `errores.Add($"El health check '{healthCheck.Nombre}' no tiene timeout.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 45:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 46:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 47:** `if (healthCheck.ExponeInformacionSensible)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 48:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 49:** `errores.Add($"El health check '{healthCheck.Nombre}' expone información sensible.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 50:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 51:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 52:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 53:** `return new ResultadoHealthChecks(errores.Count == 0, errores);` → Devuelve validez y diagnósticos; no instala middleware ni ejecuta llamadas remotas.
 
-- **Línea 54:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 55:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 56:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 57:** `public record ResultadoHealthChecks(bool EsValida, IReadOnlyList<string> Errores);` → Define el resultado inmutable que devuelve el validador o el resumen.
 
-- **Línea 58:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 59:** `public record ResumenHealthChecks(int Total, int Liveness, int Readiness, int Startup);` → Define el resultado inmutable que devuelve el validador o el resumen.
+
 
 
 ### Reto 7.2.3 — Calcular los recuentos
@@ -6288,143 +5363,77 @@ public record ResultadoHealthChecks(bool EsValida, IReadOnlyList<string> Errores
 public record ResumenHealthChecks(int Total, int Liveness, int Readiness, int Startup);
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 1:** `using System.Collections.Generic;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 2:** `using System.Linq;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 3:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 4:** `namespace AceriaApp.Api.HealthChecks;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 5:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 6:** `public class ValidadorHealthChecks` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 7:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 8:** `public static ResumenHealthChecks Resumen(IEnumerable<HealthCheck> healthChecks)` → Expone la operación con el contrato que usan el catálogo o sus pruebas.
 
-- **Línea 9:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 10:** `var lista = healthChecks.ToList();` → Materializa una sola vez la secuencia recibida para recorrerla y contarla.
 
 - **Línea 11:** `var liveness = lista.Count(h => h.Tipo == "Liveness");` → Cuenta las entradas que cumplen el criterio indicado.
 
-- **Línea 12:** `var readiness = lista.Count(h => h.Tipo == "Readiness");` → Cuenta las entradas que cumplen el criterio indicado.
 
-- **Línea 13:** `var startup = lista.Count(h => h.Tipo == "Startup");` → Cuenta las entradas que cumplen el criterio indicado.
 
 - **Línea 14:** `return new ResumenHealthChecks(lista.Count, liveness, readiness, startup);` → Devuelve los recuentos del catálogo sin modificar sus entradas.
 
-- **Línea 15:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 16:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 17:** `private static readonly string[] TiposPermitidos = { "Liveness", "Readiness", "Startup" };` → Limita los valores de texto reconocidos por la política didáctica.
 
-- **Línea 18:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 19:** `public ResultadoHealthChecks Validar(IEnumerable<HealthCheck> healthChecks)` → Expone la operación con el contrato que usan el catálogo o sus pruebas.
 
-- **Línea 20:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 21:** `var errores = new List<string>();` → Inicializa la colección de diagnósticos que se devolverá al finalizar.
 
-- **Línea 22:** `var lista = healthChecks.ToList();` → Materializa una sola vez la secuencia recibida para recorrerla y contarla.
 
-- **Línea 23:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 24:** `if (lista.Count == 0)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 25:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 26:** `errores.Add("No hay health checks declarados.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 27:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 28:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 29:** `foreach (var healthCheck in lista)` → Revisa cada entrada; un catálogo puede acumular varios diagnósticos.
 
-- **Línea 30:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 31:** `if (string.IsNullOrWhiteSpace(healthCheck.Nombre))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 32:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 33:** `errores.Add("Un health check no declara el nombre.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 34:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 35:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 36:** `if (!TiposPermitidos.Contains(healthCheck.Tipo))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 37:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 38:** `errores.Add($"Tipo no permitido en '{healthCheck.Nombre}': '{healthCheck.Tipo}'.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 39:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 40:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 41:** `if (string.IsNullOrWhiteSpace(healthCheck.Recurso))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 42:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 43:** `errores.Add($"El health check '{healthCheck.Nombre}' no declara el recurso.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 44:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 45:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 46:** `if (healthCheck.Tipo == "Liveness" && healthCheck.ConsultaDependenciaExterna)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 47:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 48:** `errores.Add($"El liveness '{healthCheck.Nombre}' consulta una dependencia externa.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 49:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 50:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 51:** `if (!healthCheck.TieneTimeout)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 52:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 53:** `errores.Add($"El health check '{healthCheck.Nombre}' no tiene timeout.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 54:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 55:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 56:** `if (healthCheck.ExponeInformacionSensible)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 57:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 58:** `errores.Add($"El health check '{healthCheck.Nombre}' expone información sensible.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 59:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 60:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 61:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 62:** `return new ResultadoHealthChecks(errores.Count == 0, errores);` → Devuelve validez y diagnósticos; no instala middleware ni ejecuta llamadas remotas.
 
-- **Línea 63:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 64:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 65:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 66:** `public record ResultadoHealthChecks(bool EsValida, IReadOnlyList<string> Errores);` → Define el resultado inmutable que devuelve el validador o el resumen.
 
-- **Línea 67:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 68:** `public record ResumenHealthChecks(int Total, int Liveness, int Readiness, int Startup);` → Define el resultado inmutable que devuelve el validador o el resumen.
 
 
 ### Reto 7.2.6 — Verificar el catálogo por defecto
@@ -6558,249 +5567,129 @@ public class ValidadorHealthChecksTests
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 1:** `using AceriaApp.Api.HealthChecks;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 2:** `using FluentAssertions;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 3:** `using Xunit;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 4:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 5:** `namespace AceriaApp.HealthChecks.Tests;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 6:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 7:** `public class ValidadorHealthChecksTests` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 8:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 9:** `private readonly ValidadorHealthChecks _validador = new();` → Crea la instancia del validador que utiliza cada prueba.
 
-- **Línea 10:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 11:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 12:** `public void Validar_CatalogoPorDefecto_DevuelveValido()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 13:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 14:** `var resultado = _validador.Validar(CatalogoHealthChecks.HealthChecksPorDefecto());` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 15:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 16:** `resultado.EsValida.Should().BeTrue();` → Comprueba que la política acepta los datos de este caso.
 
-- **Línea 17:** `resultado.Errores.Should().BeEmpty();` → Comprueba que no se ha registrado ningún diagnóstico.
 
-- **Línea 18:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 19:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 20:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 21:** `public void Validar_SinHealthChecks_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 22:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 23:** `var resultado = _validador.Validar(new List<HealthCheck>());` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 24:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 25:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 26:** `resultado.Errores.Should().Contain(e => e.Contains("No hay health checks"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 27:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 28:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 29:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 30:** `public void Validar_TipoNoPermitido_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 31:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 32:** `var healthChecks = new List<HealthCheck>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 33:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 34:** `new() { Nombre = "X", Tipo = "TipoInventado", Recurso = "A", TieneTimeout = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 35:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 36:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 37:** `var resultado = _validador.Validar(healthChecks);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 38:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 39:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 40:** `resultado.Errores.Should().Contain(e => e.Contains("Tipo no permitido"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 41:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 42:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 43:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 44:** `public void Validar_SinRecurso_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 45:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 46:** `var healthChecks = new List<HealthCheck>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 47:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 48:** `new() { Nombre = "X", Tipo = "Readiness", Recurso = string.Empty, TieneTimeout = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 49:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 50:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 51:** `var resultado = _validador.Validar(healthChecks);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 52:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 53:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 54:** `resultado.Errores.Should().Contain(e => e.Contains("no declara el recurso"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 55:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 56:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 57:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 58:** `public void Validar_SinTimeout_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 59:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 60:** `var healthChecks = new List<HealthCheck>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 61:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 62:** `new() { Nombre = "X", Tipo = "Readiness", Recurso = "A", TieneTimeout = false }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 63:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 64:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 65:** `var resultado = _validador.Validar(healthChecks);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 66:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 67:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 68:** `resultado.Errores.Should().Contain(e => e.Contains("no tiene timeout"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 69:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 70:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 71:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 72:** `public void Validar_InformacionSensible_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 73:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 74:** `var healthChecks = new List<HealthCheck>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 75:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 76:** `new() { Nombre = "X", Tipo = "Readiness", Recurso = "A", TieneTimeout = true, ExponeInformacionSensible = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 77:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 78:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 79:** `var resultado = _validador.Validar(healthChecks);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 80:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 81:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 82:** `resultado.Errores.Should().Contain(e => e.Contains("expone información sensible"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 83:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 84:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 85:** `public void Validar_LivenessConDependenciaExterna_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 86:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 87:** `var checks = new List<HealthCheck>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 88:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 89:** `new() { Nombre = "Self", Tipo = "Liveness", Recurso = "SQL Server", ConsultaDependenciaExterna = true, TieneTimeout = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 90:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 91:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 92:** `var resultado = _validador.Validar(checks);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 93:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 94:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 95:** `resultado.Errores.Should().Contain(e => e.Contains("consulta una dependencia externa"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 96:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 97:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 98:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 99:** `public void Validar_ReadinessConDependenciaExterna_DevuelveValido()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 100:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 101:** `var checks = new List<HealthCheck>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 102:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 103:** `new() { Nombre = "SQL", Tipo = "Readiness", Recurso = "SQL Server", ConsultaDependenciaExterna = true, TieneTimeout = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 104:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 105:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 106:** `var resultado = _validador.Validar(checks);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 107:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 108:** `resultado.EsValida.Should().BeTrue();` → Comprueba que la política acepta los datos de este caso.
 
-- **Línea 109:** `resultado.Errores.Should().BeEmpty();` → Comprueba que no se ha registrado ningún diagnóstico.
 
-- **Línea 110:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 111:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 112:** `public void Resumen_ConCatalogoPorDefecto_CalculaTotales()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 113:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 114:** `var resumen = ValidadorHealthChecks.Resumen(CatalogoHealthChecks.HealthChecksPorDefecto());` → Calcula el resumen sobre el catálogo por defecto.
 
-- **Línea 115:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 116:** `resumen.Total.Should().Be(3);` → Compara el recuento obtenido con el valor esperado del catálogo.
 
-- **Línea 117:** `resumen.Liveness.Should().Be(1);` → Compara el recuento obtenido con el valor esperado del catálogo.
 
-- **Línea 118:** `resumen.Readiness.Should().Be(2);` → Compara el recuento obtenido con el valor esperado del catálogo.
 
-- **Línea 119:** `resumen.Startup.Should().Be(0);` → Compara el recuento obtenido con el valor esperado del catálogo.
 
-- **Línea 120:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 121:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
 
 **Comprobación del reto.** Guarda los archivos, compila la copia optativa y ejecuta primero `dotnet test tests/AceriaApp.HealthChecks.Tests/AceriaApp.HealthChecks.Tests.csproj -c Release`, después `dotnet test AceriaApp.sln -c Release`. El catálogo pasa de 13 a 14 tests; la solución debe ejecutar 331 + 1 pruebas, todas aprobadas y ninguna omitida. Confirma en el TRX que se ejecutó `Resumen_ConCatalogoPorDefecto_CalculaTotales` y compara los hashes de la etapa obligatoria: no debe haber cambiado. Revisa `git diff --check` y el índice antes de registrar el reto en un commit local separado.
@@ -7022,7 +5911,7 @@ public class ManejadorExcepcion
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 1:** `namespace AceriaApp.Api.GestionExcepciones;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
@@ -7034,13 +5923,9 @@ public class ManejadorExcepcion
 
 - **Línea 5:** `public string TipoExcepcion { get; init; } = string.Empty;` → Declara un dato del análisis que se fija al construir la entrada.
 
-- **Línea 6:** `public int CodigoHttp { get; init; }` → Declara un dato del análisis que se fija al construir la entrada.
 
-- **Línea 7:** `public string Titulo { get; init; } = string.Empty;` → Declara un dato del análisis que se fija al construir la entrada.
 
-- **Línea 8:** `public bool UsaProblemDetails { get; init; }` → Declara un dato del análisis que se fija al construir la entrada.
 
-- **Línea 9:** `public bool RegistraError { get; init; }` → Declara un dato del análisis que se fija al construir la entrada.
 
 - **Línea 10:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
@@ -7120,103 +6005,63 @@ public class ValidadorGestionExcepciones
 public record ResultadoGestionExcepciones(bool EsValida, IReadOnlyList<string> Errores);
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 1:** `namespace AceriaApp.Api.GestionExcepciones;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 2:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 3:** `public class ValidadorGestionExcepciones` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 4:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 5:** `private static readonly int[] CodigosPermitidos = { 400, 401, 403, 404, 409, 422, 500, 503 };` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 6:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 7:** `public ResultadoGestionExcepciones Validar(IEnumerable<ManejadorExcepcion> manejadores)` → Expone la operación con el contrato que usan el catálogo o sus pruebas.
 
-- **Línea 8:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 9:** `var errores = new List<string>();` → Inicializa la colección de diagnósticos que se devolverá al finalizar.
 
 - **Línea 10:** `var lista = manejadores.ToList();` → Materializa una sola vez la secuencia recibida para recorrerla y contarla.
 
-- **Línea 11:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 12:** `if (lista.Count == 0)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 13:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 14:** `errores.Add("No hay manejadores declarados.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 15:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 16:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 17:** `foreach (var manejador in lista)` → Revisa cada entrada; un catálogo puede acumular varios diagnósticos.
 
-- **Línea 18:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 19:** `if (string.IsNullOrWhiteSpace(manejador.TipoExcepcion))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 20:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 21:** `errores.Add("Un manejador no declara el tipo de excepción.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 22:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 23:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 24:** `if (!CodigosPermitidos.Contains(manejador.CodigoHttp))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 25:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 26:** `errores.Add($"Código HTTP no permitido en '{manejador.TipoExcepcion}': '{manejador.CodigoHttp}'.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 27:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 28:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 29:** `if (string.IsNullOrWhiteSpace(manejador.Titulo))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 30:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 31:** `errores.Add($"El manejador '{manejador.TipoExcepcion}' no declara título.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 32:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 33:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 34:** `if (!manejador.UsaProblemDetails)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 35:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 36:** `errores.Add($"El manejador '{manejador.TipoExcepcion}' no usa problem details.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 37:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 38:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 39:** `if (manejador.CodigoHttp >= 500 && !manejador.RegistraError)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 40:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 41:** `errores.Add($"El manejador '{manejador.TipoExcepcion}' no registra el error.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 42:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 43:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 44:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 45:** `return new ResultadoGestionExcepciones(errores.Count == 0, errores);` → Devuelve validez y diagnósticos; no instala middleware ni ejecuta llamadas remotas.
 
-- **Línea 46:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 47:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 48:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 49:** `public record ResultadoGestionExcepciones(bool EsValida, IReadOnlyList<string> Errores);` → Define el resultado inmutable que devuelve el validador o el resumen.
 
@@ -7299,111 +6144,60 @@ public class ValidadorGestionExcepciones
 public record ResultadoGestionExcepciones(bool EsValida, IReadOnlyList<string> Errores);
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 1:** `using System.Collections.Generic;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 2:** `using System.Linq;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 3:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 4:** `namespace AceriaApp.Api.GestionExcepciones;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 5:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 6:** `public class ValidadorGestionExcepciones` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 7:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 8:** `private static readonly int[] CodigosPermitidos = { 400, 401, 403, 404, 409, 422, 500, 503 };` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 9:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 10:** `public ResultadoGestionExcepciones Validar(IEnumerable<ManejadorExcepcion> manejadores)` → Expone la operación con el contrato que usan el catálogo o sus pruebas.
 
-- **Línea 11:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 12:** `var errores = new List<string>();` → Inicializa la colección de diagnósticos que se devolverá al finalizar.
 
-- **Línea 13:** `var lista = manejadores.ToList();` → Materializa una sola vez la secuencia recibida para recorrerla y contarla.
 
-- **Línea 14:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 15:** `if (lista.Count == 0)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 16:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 17:** `errores.Add("No hay manejadores declarados.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 18:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 19:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 20:** `foreach (var manejador in lista)` → Revisa cada entrada; un catálogo puede acumular varios diagnósticos.
 
-- **Línea 21:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 22:** `if (string.IsNullOrWhiteSpace(manejador.TipoExcepcion))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 23:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 24:** `errores.Add("Un manejador no declara el tipo de excepción.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 25:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 26:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 27:** `if (!CodigosPermitidos.Contains(manejador.CodigoHttp))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 28:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 29:** `errores.Add($"Código HTTP no permitido en '{manejador.TipoExcepcion}': '{manejador.CodigoHttp}'.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 30:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 31:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 32:** `if (string.IsNullOrWhiteSpace(manejador.Titulo))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 33:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 34:** `errores.Add($"El manejador '{manejador.TipoExcepcion}' no declara título.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 35:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 36:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 37:** `if (!manejador.UsaProblemDetails)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 38:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 39:** `errores.Add($"El manejador '{manejador.TipoExcepcion}' no usa problem details.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 40:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 41:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 42:** `if (manejador.CodigoHttp >= 500 && !manejador.RegistraError)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 43:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 44:** `errores.Add($"El manejador '{manejador.TipoExcepcion}' no registra el error.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 45:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 46:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 47:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 48:** `return new ResultadoGestionExcepciones(errores.Count == 0, errores);` → Devuelve validez y diagnósticos; no instala middleware ni ejecuta llamadas remotas.
 
-- **Línea 49:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 50:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 51:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 52:** `public record ResultadoGestionExcepciones(bool EsValida, IReadOnlyList<string> Errores);` → Define el resultado inmutable que devuelve el validador o el resumen.
 
 
 **Por qué funciona así.** Las importaciones explícitas muestran dónde se declaran los tipos genéricos y las extensiones LINQ, aunque el proyecto tenga importaciones implícitas.
@@ -7452,7 +6246,7 @@ public sealed class ManejadorExcepciones(IProblemDetailsService detalles, ILogge
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 11:** `if (context.Response.HasStarted) return false;`. Evita reemplazar una respuesta cuyas cabeceras ya se enviaron.
 - **Línea 12:** `if (exception is OperationCanceledException && context.RequestAborted.IsCancellationRequested)`. Distingue una cancelación del cliente de un fallo de la dependencia.
@@ -7499,7 +6293,7 @@ public static class RegistroErrores
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 11:** `public static IServiceCollection AddErroresAceria(this IServiceCollection services)`. Añade ProblemDetails y el manejador de excepciones al contenedor.
 - **Línea 19:** `problem.Extensions["traceId"] = Activity.Current?.Id ?? context.TraceIdentifier;`. Relaciona el evento con la traza técnica de la petición.
@@ -7539,39 +6333,26 @@ public class CatalogoExcepciones
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 1:** `namespace AceriaApp.Api.GestionExcepciones;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 2:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 3:** `public class CatalogoExcepciones` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 4:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 5:** `public static List<ManejadorExcepcion> ManejadoresPorDefecto()` → Expone la operación con el contrato que usan el catálogo o sus pruebas.
 
-- **Línea 6:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 7:** `return new List<ManejadorExcepcion>` → Devuelve una lista nueva en cada llamada; modificarla no altera otros casos.
 
-- **Línea 8:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 9:** `new() { TipoExcepcion = "OrdenNoEncontradaException", CodigoHttp = 404, Titulo = "Recurso no encontrado", UsaProblemDetails = true, RegistraError = true },` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 10:** `new() { TipoExcepcion = "ValidacionException", CodigoHttp = 400, Titulo = "Error de validación", UsaProblemDetails = true, RegistraError = true },` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 11:** `new() { TipoExcepcion = "ConflictoException", CodigoHttp = 409, Titulo = "Conflicto de estado", UsaProblemDetails = true, RegistraError = true },` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 12:** `new() { TipoExcepcion = "RecursoNoProcesableException", CodigoHttp = 422, Titulo = "Entidad no procesable", UsaProblemDetails = true, RegistraError = true },` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 13:** `new() { TipoExcepcion = "Exception", CodigoHttp = 500, Titulo = "Error interno", UsaProblemDetails = true, RegistraError = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
 - **Línea 14:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 15:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 16:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
 
 **Por qué funciona así.** Cada invocación devuelve una lista nueva con los ejemplos de análisis; cambiar una lista no modifica futuros catálogos.
@@ -7618,43 +6399,25 @@ public class CatalogoExcepciones
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
 
-- **Línea 1:** `using System.Collections.Generic;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 2:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 3:** `namespace AceriaApp.Api.GestionExcepciones;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 4:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 5:** `public class CatalogoExcepciones` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 6:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 7:** `public static List<ManejadorExcepcion> ManejadoresPorDefecto()` → Expone la operación con el contrato que usan el catálogo o sus pruebas.
 
-- **Línea 8:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 9:** `return new List<ManejadorExcepcion>` → Devuelve una lista nueva en cada llamada; modificarla no altera otros casos.
 
-- **Línea 10:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 11:** `new() { TipoExcepcion = "OrdenNoEncontradaException", CodigoHttp = 404, Titulo = "Recurso no encontrado", UsaProblemDetails = true, RegistraError = true },` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 12:** `new() { TipoExcepcion = "ValidacionException", CodigoHttp = 400, Titulo = "Error de validación", UsaProblemDetails = true, RegistraError = true },` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 13:** `new() { TipoExcepcion = "ConflictoException", CodigoHttp = 409, Titulo = "Conflicto de estado", UsaProblemDetails = true, RegistraError = true },` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 14:** `new() { TipoExcepcion = "RecursoNoProcesableException", CodigoHttp = 422, Titulo = "Entidad no procesable", UsaProblemDetails = true, RegistraError = true },` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 15:** `new() { TipoExcepcion = "Exception", CodigoHttp = 500, Titulo = "Error interno", UsaProblemDetails = true, RegistraError = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 16:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 17:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 18:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
+
 
 
 **Por qué funciona así.** Las importaciones explícitas muestran dónde se declaran los tipos genéricos y las extensiones LINQ, aunque el proyecto tenga importaciones implícitas.
@@ -7818,7 +6581,7 @@ La configuración usa bases y prefijos propios de esta etapa. Las variables de e
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 2:** `"ConnectionStrings": {`. Agrupa las conexiones de laboratorio específicas de la etapa.
 - **Línea 11:** `"WorkersActivos": false`. Activa o desactiva los procesos de mensajería y su dependencia en readiness.
@@ -7851,12 +6614,8 @@ La configuración usa bases y prefijos propios de esta etapa. Las variables de e
 }
 ```
 
-**Lectura de las líneas clave.**
 
-- **Línea 2:** `"ConnectionStrings": {`. Agrupa las conexiones de laboratorio específicas de la etapa.
-- **Línea 9:** `"WorkersActivos": false`. Activa o desactiva los procesos de mensajería y su dependencia en readiness.
-- **Línea 12:** `"NivelMinimo": "Information",`. Fija el umbral propio de logging y admite sobreescritura por variables de entorno.
-- **Línea 13:** `"DiagnosticoActivo": false`. Mantiene el endpoint de fallo desactivado por defecto.
+
 
 ### PASO 7.3.14 — Crear el archivo `ValidadorGestionExcepcionesTests.cs`
 
@@ -7986,229 +6745,127 @@ public class ValidadorGestionExcepcionesTests
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 1:** `using AceriaApp.Api.GestionExcepciones;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 2:** `using FluentAssertions;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 3:** `using Xunit;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 4:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 5:** `namespace AceriaApp.GestionExcepciones.Tests;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 6:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 7:** `public class ValidadorGestionExcepcionesTests` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 8:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 9:** `private readonly ValidadorGestionExcepciones _validador = new();` → Crea la instancia del validador que utiliza cada prueba.
 
-- **Línea 10:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 11:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
 - **Línea 12:** `public void Validar_CatalogoPorDefecto_DevuelveValido()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 13:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 14:** `var resultado = _validador.Validar(CatalogoExcepciones.ManejadoresPorDefecto());` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 15:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 16:** `resultado.EsValida.Should().BeTrue();` → Comprueba que la política acepta los datos de este caso.
 
 - **Línea 17:** `resultado.Errores.Should().BeEmpty();` → Comprueba que no se ha registrado ningún diagnóstico.
 
-- **Línea 18:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 19:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 20:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 21:** `public void Validar_SinManejadores_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 22:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 23:** `var resultado = _validador.Validar(new List<ManejadorExcepcion>());` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 24:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 25:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
 - **Línea 26:** `resultado.Errores.Should().Contain(e => e.Contains("No hay manejadores"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 27:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 28:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 29:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 30:** `public void Validar_CodigoNoPermitido_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 31:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 32:** `var manejadores = new List<ManejadorExcepcion>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 33:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 34:** `new() { TipoExcepcion = "X", CodigoHttp = 999, Titulo = "T", UsaProblemDetails = true, RegistraError = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 35:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 36:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 37:** `var resultado = _validador.Validar(manejadores);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 38:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 39:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 40:** `resultado.Errores.Should().Contain(e => e.Contains("Código HTTP no permitido"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 41:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 42:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 43:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 44:** `public void Validar_SinTitulo_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 45:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 46:** `var manejadores = new List<ManejadorExcepcion>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 47:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 48:** `new() { TipoExcepcion = "X", CodigoHttp = 404, Titulo = string.Empty, UsaProblemDetails = true, RegistraError = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 49:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 50:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 51:** `var resultado = _validador.Validar(manejadores);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 52:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 53:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 54:** `resultado.Errores.Should().Contain(e => e.Contains("no declara título"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 55:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 56:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 57:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 58:** `public void Validar_SinProblemDetails_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 59:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 60:** `var manejadores = new List<ManejadorExcepcion>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 61:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 62:** `new() { TipoExcepcion = "X", CodigoHttp = 404, Titulo = "T", UsaProblemDetails = false, RegistraError = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 63:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 64:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 65:** `var resultado = _validador.Validar(manejadores);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 66:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 67:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 68:** `resultado.Errores.Should().Contain(e => e.Contains("no usa problem details"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 69:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 70:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 71:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 72:** `public void Validar_ErrorServidorSinRegistro_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 73:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 74:** `var manejadores = new List<ManejadorExcepcion>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 75:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 76:** `new() { TipoExcepcion = "X", CodigoHttp = 500, Titulo = "T", UsaProblemDetails = true, RegistraError = false }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 77:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 78:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 79:** `var resultado = _validador.Validar(manejadores);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 80:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 81:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 82:** `resultado.Errores.Should().Contain(e => e.Contains("no registra el error"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 83:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 84:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 85:** `public void Validar_Indisponibilidad503_DevuelveValido()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 86:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 87:** `var manejadores = new List<ManejadorExcepcion>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 88:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 89:** `new() { TipoExcepcion = "InventarioNoDisponibleException", CodigoHttp = 503, Titulo = "Servicio no disponible", UsaProblemDetails = true, RegistraError = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 90:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 91:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 92:** `var resultado = _validador.Validar(manejadores);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 93:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 94:** `resultado.EsValida.Should().BeTrue();` → Comprueba que la política acepta los datos de este caso.
 
-- **Línea 95:** `resultado.Errores.Should().BeEmpty();` → Comprueba que no se ha registrado ningún diagnóstico.
 
-- **Línea 96:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 97:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 98:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 99:** `public void Validar_ErrorClienteSinNivelError_DevuelveValido()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 100:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 101:** `var manejadores = new List<ManejadorExcepcion>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 102:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 103:** `new() { TipoExcepcion = "ValidacionException", CodigoHttp = 400, Titulo = "Validación", UsaProblemDetails = true, RegistraError = false }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 104:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 105:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 106:** `var resultado = _validador.Validar(manejadores);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 107:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 108:** `resultado.EsValida.Should().BeTrue();` → Comprueba que la política acepta los datos de este caso.
 
-- **Línea 109:** `resultado.Errores.Should().BeEmpty();` → Comprueba que no se ha registrado ningún diagnóstico.
 
-- **Línea 110:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 111:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
 
 **Por qué funciona así.** Las pruebas ejercitan aceptación y rechazos concretos del validador. Afirmar el diagnóstico evita un falso positivo por otro error.
@@ -8286,105 +6943,60 @@ public class CatalogoExcepcionesTests
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 1:** `using AceriaApp.Api.GestionExcepciones;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 2:** `using FluentAssertions;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 3:** `using Xunit;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 4:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 5:** `namespace AceriaApp.GestionExcepciones.Tests;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 6:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 7:** `public class CatalogoExcepcionesTests` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 8:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 9:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 10:** `public void ManejadoresPorDefecto_ContieneCincoManejadores()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 11:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 12:** `var manejadores = CatalogoExcepciones.ManejadoresPorDefecto();` → Obtiene los datos que se utilizarán en las comprobaciones siguientes.
 
-- **Línea 13:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 14:** `manejadores.Should().HaveCount(5);` → Comprueba el tamaño del catálogo sin inferir servicios o conexiones en ejecución.
 
-- **Línea 15:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 16:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 17:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 18:** `public void ManejadoresPorDefecto_TodosUsanProblemDetails()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 19:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 20:** `var manejadores = CatalogoExcepciones.ManejadoresPorDefecto();` → Obtiene los datos que se utilizarán en las comprobaciones siguientes.
 
-- **Línea 21:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 22:** `manejadores.Should().OnlyContain(m => m.UsaProblemDetails);` → Comprueba la condición en cada entrada declarada del catálogo.
 
-- **Línea 23:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 24:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 25:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 26:** `public void ManejadoresPorDefecto_TodosRegistranError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 27:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 28:** `var manejadores = CatalogoExcepciones.ManejadoresPorDefecto();` → Obtiene los datos que se utilizarán en las comprobaciones siguientes.
 
-- **Línea 29:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 30:** `manejadores.Should().OnlyContain(m => m.RegistraError);` → Comprueba la condición en cada entrada declarada del catálogo.
 
-- **Línea 31:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 32:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 33:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 34:** `public void ManejadoresPorDefecto_ContieneCuatroErroresDelClienteYUnErrorDelServidor()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 35:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 36:** `var manejadores = CatalogoExcepciones.ManejadoresPorDefecto();` → Obtiene los datos que se utilizarán en las comprobaciones siguientes.
 
-- **Línea 37:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 38:** `manejadores.Count(m => m.CodigoHttp >= 400 && m.CodigoHttp < 500).Should().Be(4);` → Compara el recuento obtenido con el valor esperado del catálogo.
 
-- **Línea 39:** `manejadores.Count(m => m.CodigoHttp >= 500).Should().Be(1);` → Compara el recuento obtenido con el valor esperado del catálogo.
 
-- **Línea 40:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 41:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 42:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 43:** `public void ManejadoresPorDefecto_ContieneUnError500()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 44:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 45:** `var manejadores = CatalogoExcepciones.ManejadoresPorDefecto();` → Obtiene los datos que se utilizarán en las comprobaciones siguientes.
 
-- **Línea 46:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 47:** `manejadores.Count(m => m.CodigoHttp == 500).Should().Be(1);` → Compara el recuento obtenido con el valor esperado del catálogo.
 
-- **Línea 48:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 49:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
 
 **Por qué funciona así.** Las pruebas del catálogo verifican cantidades y propiedades declaradas. No prueban que existan los servicios nombrados.
@@ -8420,15 +7032,10 @@ El archivo completo fija las referencias y versiones que utilizará la etapa; a�
 </Project>
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 4:** `<ProjectReference Include="../../src/AceriaApp.Api/AceriaApp.Api.csproj" />`. Conecta este proyecto con otro proyecto real de la solución.
-- **Línea 5:** `<ProjectReference Include="../../src/AceriaApp.Observabilidad/AceriaApp.Observabilidad.csproj" />`. Conecta este proyecto con otro proyecto real de la solución.
 - **Línea 6:** `<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />`. Fija la dependencia usada por esta etapa del ejercicio.
-- **Línea 7:** `<PackageReference Include="xunit" Version="2.9.2" />`. Fija la dependencia usada por esta etapa del ejercicio.
-- **Línea 8:** `<PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />`. Fija la dependencia usada por esta etapa del ejercicio.
-- **Línea 9:** `<PackageReference Include="FluentAssertions" Version="6.12.2" />`. Fija la dependencia usada por esta etapa del ejercicio.
-- **Línea 10:** `<PackageReference Include="Microsoft.AspNetCore.TestHost" Version="8.0.21" />`. Fija la dependencia usada por esta etapa del ejercicio.
 
 
 **Integración funcional — `tests/AceriaApp.GestionExcepciones.Tests/ErroresFuncionalesTests.cs`.**
@@ -8559,20 +7166,12 @@ public class ErroresFuncionalesTests
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 22:** `public void Emit(LogEvent e) => Eventos.Enqueue(e);`. Define una comprobación síncrona del contrato indicado por el nombre.
 - **Línea 30:** `builder.Services.AddLoggingAceria("Prueba"); builder.Services.AddErroresAceria();`. Registra el logger JSON y los servicios que necesita la correlación.
 - **Línea 31:** `var app = builder.Build(); app.UseLoggingAceria(); app.UseErroresAceria(); app.MapDiagnosticoAceria();`. Abre la correlación y el resumen antes de ejecutar el resto del pipeline.
 - **Línea 38:** `public async Task Fallo_inesperado_devuelve_ProblemDetails_y_correlacion_sin_detalle_privado()`. Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre.
-- **Línea 53:** `public async Task Accept_no_compatible_con_writer_sigue_recibiendo_error_JSON_seguro()`. Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre.
-- **Línea 63:** `public async Task Result_esperado_conserva_su_409()`. Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre.
-- **Línea 75:** `public async Task Diagnostico_solo_se_habilita_en_Development_con_opcion(string entorno, bool activo, int status)`. Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre.
-- **Línea 82:** `public async Task Excepcion_registrada_no_incluye_mensaje_libre_ni_cuerpo()`. Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre.
-- **Línea 97:** `var services = new ServiceCollection(); services.AddLoggingAceria("Prueba"); services.AddErroresAceria();`. Registra el logger JSON y los servicios que necesita la correlación.
-- **Línea 101:** `public async Task Cancelacion_del_usuario_no_se_convierte_en_500()`. Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre.
-- **Línea 104:** `var ctx = new DefaultHttpContext { RequestServices = services, RequestAborted = cancelacion.Token };`. Distingue una cancelación del cliente de un fallo de la dependencia.
-- **Línea 109:** `private sealed class RespuestaIniciada : HttpResponseFeature { public override bool HasStarted => true; }`. Evita reemplazar una respuesta cuyas cabeceras ya se enviaron.
 
 ### PASO 7.3.16 — Compilar la solución completa
 
@@ -8799,15 +7398,10 @@ app.Run();
 public partial class Program {} // permite WebApplicationFactory en tests
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 21:** `builder.Services.AddLoggingAceria("Produccion", builder.Configuration);`. Registra el logger JSON y los servicios que necesita la correlación.
 - **Línea 38:** `}).AddHttpMessageHandler<PropagarCorrelacionHandler>();`. Propaga el identificador validado hacia Inventario.
 - **Línea 39:** `builder.Services.AddSaludAceria(builder.Configuration, inventario: false);`. Registra las dependencias propias de este servicio para readiness.
-- **Línea 40:** `builder.Services.AddErroresAceria();`. Añade ProblemDetails y el manejador de excepciones al contenedor.
-- **Línea 42:** `app.UseLoggingAceria();`. Abre la correlación y el resumen antes de ejecutar el resto del pipeline.
-- **Línea 43:** `app.UseErroresAceria();`. Sitúa el manejador dentro de los ámbitos de correlación y logging.
-- **Línea 44:** `app.MapDiagnosticoAceria();`. Aplica las dos condiciones de habilitación del diagnóstico.
 - **Línea 187:** `app.MapSaludAceria();`. Publica liveness y readiness como rutas independientes.
 
 
@@ -8874,15 +7468,8 @@ public sealed class InventarioProgram
 }
 ```
 
-**Lectura de las líneas clave.**
 
-- **Línea 11:** `builder.Services.AddLoggingAceria("Inventario", builder.Configuration);`. Registra el logger JSON y los servicios que necesita la correlación.
-- **Línea 21:** `builder.Services.AddSaludAceria(builder.Configuration, inventario: true);`. Registra las dependencias propias de este servicio para readiness.
-- **Línea 22:** `builder.Services.AddErroresAceria();`. Añade ProblemDetails y el manejador de excepciones al contenedor.
-- **Línea 24:** `app.UseLoggingAceria();`. Abre la correlación y el resumen antes de ejecutar el resto del pipeline.
-- **Línea 25:** `app.UseErroresAceria();`. Sitúa el manejador dentro de los ámbitos de correlación y logging.
-- **Línea 26:** `app.MapDiagnosticoAceria();`. Aplica las dos condiciones de habilitación del diagnóstico.
-- **Línea 50:** `app.MapSaludAceria();`. Publica liveness y readiness como rutas independientes.
+
 
 
 ## Recorrido funcional 7.3 — ProblemDetails seguro y diagnóstico restringido
@@ -9292,115 +7879,61 @@ public record ResultadoGestionExcepciones(bool EsValida, IReadOnlyList<string> E
 public record ResumenGestionExcepciones(int Total, int ErroresCliente, int ErroresServidor, int ConProblemDetails);
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
 
-- **Línea 1:** `using System.Collections.Generic;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 2:** `using System.Linq;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 3:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 4:** `namespace AceriaApp.Api.GestionExcepciones;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 5:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 6:** `public class ValidadorGestionExcepciones` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 7:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 8:** `private static readonly int[] CodigosPermitidos = { 400, 401, 403, 404, 409, 422, 500, 503 };` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 9:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 10:** `public ResultadoGestionExcepciones Validar(IEnumerable<ManejadorExcepcion> manejadores)` → Expone la operación con el contrato que usan el catálogo o sus pruebas.
 
-- **Línea 11:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 12:** `var errores = new List<string>();` → Inicializa la colección de diagnósticos que se devolverá al finalizar.
 
-- **Línea 13:** `var lista = manejadores.ToList();` → Materializa una sola vez la secuencia recibida para recorrerla y contarla.
 
-- **Línea 14:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 15:** `if (lista.Count == 0)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 16:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 17:** `errores.Add("No hay manejadores declarados.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 18:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 19:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 20:** `foreach (var manejador in lista)` → Revisa cada entrada; un catálogo puede acumular varios diagnósticos.
 
-- **Línea 21:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 22:** `if (string.IsNullOrWhiteSpace(manejador.TipoExcepcion))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 23:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 24:** `errores.Add("Un manejador no declara el tipo de excepción.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 25:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 26:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 27:** `if (!CodigosPermitidos.Contains(manejador.CodigoHttp))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 28:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 29:** `errores.Add($"Código HTTP no permitido en '{manejador.TipoExcepcion}': '{manejador.CodigoHttp}'.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 30:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 31:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 32:** `if (string.IsNullOrWhiteSpace(manejador.Titulo))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 33:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 34:** `errores.Add($"El manejador '{manejador.TipoExcepcion}' no declara título.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 35:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 36:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 37:** `if (!manejador.UsaProblemDetails)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 38:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 39:** `errores.Add($"El manejador '{manejador.TipoExcepcion}' no usa problem details.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 40:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 41:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 42:** `if (manejador.CodigoHttp >= 500 && !manejador.RegistraError)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 43:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 44:** `errores.Add($"El manejador '{manejador.TipoExcepcion}' no registra el error.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 45:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 46:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 47:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 48:** `return new ResultadoGestionExcepciones(errores.Count == 0, errores);` → Devuelve validez y diagnósticos; no instala middleware ni ejecuta llamadas remotas.
 
-- **Línea 49:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 50:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 51:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 52:** `public record ResultadoGestionExcepciones(bool EsValida, IReadOnlyList<string> Errores);` → Define el resultado inmutable que devuelve el validador o el resumen.
 
-- **Línea 53:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 54:** `public record ResumenGestionExcepciones(int Total, int ErroresCliente, int ErroresServidor, int ConProblemDetails);` → Define el resultado inmutable que devuelve el validador o el resumen.
+
 
 
 ### Reto 7.3.3 — Calcular los recuentos
@@ -9476,133 +8009,72 @@ public record ResultadoGestionExcepciones(bool EsValida, IReadOnlyList<string> E
 public record ResumenGestionExcepciones(int Total, int ErroresCliente, int ErroresServidor, int ConProblemDetails);
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 1:** `using System.Collections.Generic;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 2:** `using System.Linq;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 3:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 4:** `namespace AceriaApp.Api.GestionExcepciones;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 5:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 6:** `public class ValidadorGestionExcepciones` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 7:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 8:** `public static ResumenGestionExcepciones Resumen(IEnumerable<ManejadorExcepcion> manejadores)` → Expone la operación con el contrato que usan el catálogo o sus pruebas.
 
-- **Línea 9:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 10:** `var lista = manejadores.ToList();` → Materializa una sola vez la secuencia recibida para recorrerla y contarla.
 
 - **Línea 11:** `var erroresCliente = lista.Count(m => m.CodigoHttp >= 400 && m.CodigoHttp < 500);` → Cuenta las entradas que cumplen el criterio indicado.
 
-- **Línea 12:** `var erroresServidor = lista.Count(m => m.CodigoHttp >= 500);` → Cuenta las entradas que cumplen el criterio indicado.
 
-- **Línea 13:** `var conProblemDetails = lista.Count(m => m.UsaProblemDetails);` → Cuenta las entradas que cumplen el criterio indicado.
 
 - **Línea 14:** `return new ResumenGestionExcepciones(lista.Count, erroresCliente, erroresServidor, conProblemDetails);` → Devuelve los recuentos del catálogo sin modificar sus entradas.
 
-- **Línea 15:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 16:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 17:** `private static readonly int[] CodigosPermitidos = { 400, 401, 403, 404, 409, 422, 500, 503 };` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 18:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 19:** `public ResultadoGestionExcepciones Validar(IEnumerable<ManejadorExcepcion> manejadores)` → Expone la operación con el contrato que usan el catálogo o sus pruebas.
 
-- **Línea 20:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 21:** `var errores = new List<string>();` → Inicializa la colección de diagnósticos que se devolverá al finalizar.
 
-- **Línea 22:** `var lista = manejadores.ToList();` → Materializa una sola vez la secuencia recibida para recorrerla y contarla.
 
-- **Línea 23:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 24:** `if (lista.Count == 0)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 25:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 26:** `errores.Add("No hay manejadores declarados.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 27:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 28:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 29:** `foreach (var manejador in lista)` → Revisa cada entrada; un catálogo puede acumular varios diagnósticos.
 
-- **Línea 30:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 31:** `if (string.IsNullOrWhiteSpace(manejador.TipoExcepcion))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 32:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 33:** `errores.Add("Un manejador no declara el tipo de excepción.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 34:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 35:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 36:** `if (!CodigosPermitidos.Contains(manejador.CodigoHttp))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 37:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 38:** `errores.Add($"Código HTTP no permitido en '{manejador.TipoExcepcion}': '{manejador.CodigoHttp}'.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 39:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 40:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 41:** `if (string.IsNullOrWhiteSpace(manejador.Titulo))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 42:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 43:** `errores.Add($"El manejador '{manejador.TipoExcepcion}' no declara título.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 44:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 45:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 46:** `if (!manejador.UsaProblemDetails)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 47:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 48:** `errores.Add($"El manejador '{manejador.TipoExcepcion}' no usa problem details.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 49:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 50:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 51:** `if (manejador.CodigoHttp >= 500 && !manejador.RegistraError)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 52:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 53:** `errores.Add($"El manejador '{manejador.TipoExcepcion}' no registra el error.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 54:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 55:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 56:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 57:** `return new ResultadoGestionExcepciones(errores.Count == 0, errores);` → Devuelve validez y diagnósticos; no instala middleware ni ejecuta llamadas remotas.
 
-- **Línea 58:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 59:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 60:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 61:** `public record ResultadoGestionExcepciones(bool EsValida, IReadOnlyList<string> Errores);` → Define el resultado inmutable que devuelve el validador o el resumen.
 
-- **Línea 62:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 63:** `public record ResumenGestionExcepciones(int Total, int ErroresCliente, int ErroresServidor, int ConProblemDetails);` → Define el resultado inmutable que devuelve el validador o el resumen.
 
 
 ### Reto 7.3.6 — Verificar el catálogo por defecto
@@ -9736,249 +8208,129 @@ public class ValidadorGestionExcepcionesTests
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 1:** `using AceriaApp.Api.GestionExcepciones;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 2:** `using FluentAssertions;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 3:** `using Xunit;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 4:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 5:** `namespace AceriaApp.GestionExcepciones.Tests;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 6:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 7:** `public class ValidadorGestionExcepcionesTests` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 8:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 9:** `private readonly ValidadorGestionExcepciones _validador = new();` → Crea la instancia del validador que utiliza cada prueba.
 
-- **Línea 10:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 11:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 12:** `public void Validar_CatalogoPorDefecto_DevuelveValido()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 13:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 14:** `var resultado = _validador.Validar(CatalogoExcepciones.ManejadoresPorDefecto());` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 15:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 16:** `resultado.EsValida.Should().BeTrue();` → Comprueba que la política acepta los datos de este caso.
 
-- **Línea 17:** `resultado.Errores.Should().BeEmpty();` → Comprueba que no se ha registrado ningún diagnóstico.
 
-- **Línea 18:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 19:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 20:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 21:** `public void Validar_SinManejadores_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 22:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 23:** `var resultado = _validador.Validar(new List<ManejadorExcepcion>());` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 24:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 25:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 26:** `resultado.Errores.Should().Contain(e => e.Contains("No hay manejadores"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 27:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 28:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 29:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 30:** `public void Validar_CodigoNoPermitido_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 31:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 32:** `var manejadores = new List<ManejadorExcepcion>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 33:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 34:** `new() { TipoExcepcion = "X", CodigoHttp = 999, Titulo = "T", UsaProblemDetails = true, RegistraError = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 35:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 36:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 37:** `var resultado = _validador.Validar(manejadores);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 38:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 39:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 40:** `resultado.Errores.Should().Contain(e => e.Contains("Código HTTP no permitido"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 41:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 42:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 43:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 44:** `public void Validar_SinTitulo_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 45:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 46:** `var manejadores = new List<ManejadorExcepcion>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 47:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 48:** `new() { TipoExcepcion = "X", CodigoHttp = 404, Titulo = string.Empty, UsaProblemDetails = true, RegistraError = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 49:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 50:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 51:** `var resultado = _validador.Validar(manejadores);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 52:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 53:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 54:** `resultado.Errores.Should().Contain(e => e.Contains("no declara título"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 55:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 56:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 57:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 58:** `public void Validar_SinProblemDetails_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 59:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 60:** `var manejadores = new List<ManejadorExcepcion>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 61:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 62:** `new() { TipoExcepcion = "X", CodigoHttp = 404, Titulo = "T", UsaProblemDetails = false, RegistraError = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 63:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 64:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 65:** `var resultado = _validador.Validar(manejadores);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 66:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 67:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 68:** `resultado.Errores.Should().Contain(e => e.Contains("no usa problem details"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 69:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 70:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 71:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 72:** `public void Validar_ErrorServidorSinRegistro_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 73:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 74:** `var manejadores = new List<ManejadorExcepcion>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 75:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 76:** `new() { TipoExcepcion = "X", CodigoHttp = 500, Titulo = "T", UsaProblemDetails = true, RegistraError = false }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 77:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 78:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 79:** `var resultado = _validador.Validar(manejadores);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 80:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 81:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 82:** `resultado.Errores.Should().Contain(e => e.Contains("no registra el error"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 83:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 84:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 85:** `public void Validar_Indisponibilidad503_DevuelveValido()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 86:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 87:** `var manejadores = new List<ManejadorExcepcion>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 88:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 89:** `new() { TipoExcepcion = "InventarioNoDisponibleException", CodigoHttp = 503, Titulo = "Servicio no disponible", UsaProblemDetails = true, RegistraError = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 90:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 91:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 92:** `var resultado = _validador.Validar(manejadores);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 93:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 94:** `resultado.EsValida.Should().BeTrue();` → Comprueba que la política acepta los datos de este caso.
 
-- **Línea 95:** `resultado.Errores.Should().BeEmpty();` → Comprueba que no se ha registrado ningún diagnóstico.
 
-- **Línea 96:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 97:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 98:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 99:** `public void Validar_ErrorClienteSinNivelError_DevuelveValido()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 100:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 101:** `var manejadores = new List<ManejadorExcepcion>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 102:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 103:** `new() { TipoExcepcion = "ValidacionException", CodigoHttp = 400, Titulo = "Validación", UsaProblemDetails = true, RegistraError = false }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 104:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 105:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 106:** `var resultado = _validador.Validar(manejadores);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 107:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 108:** `resultado.EsValida.Should().BeTrue();` → Comprueba que la política acepta los datos de este caso.
 
-- **Línea 109:** `resultado.Errores.Should().BeEmpty();` → Comprueba que no se ha registrado ningún diagnóstico.
 
-- **Línea 110:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 111:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 112:** `public void Resumen_ConCatalogoPorDefecto_CalculaTotales()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 113:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 114:** `var resumen = ValidadorGestionExcepciones.Resumen(CatalogoExcepciones.ManejadoresPorDefecto());` → Calcula el resumen sobre el catálogo por defecto.
 
-- **Línea 115:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 116:** `resumen.Total.Should().Be(5);` → Compara el recuento obtenido con el valor esperado del catálogo.
 
-- **Línea 117:** `resumen.ErroresCliente.Should().Be(4);` → Compara el recuento obtenido con el valor esperado del catálogo.
 
-- **Línea 118:** `resumen.ErroresServidor.Should().Be(1);` → Compara el recuento obtenido con el valor esperado del catálogo.
 
-- **Línea 119:** `resumen.ConProblemDetails.Should().Be(5);` → Compara el recuento obtenido con el valor esperado del catálogo.
 
-- **Línea 120:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 121:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
 
 **Comprobación del reto.** Guarda los archivos, compila la copia optativa y ejecuta primero `dotnet test tests/AceriaApp.GestionExcepciones.Tests/AceriaApp.GestionExcepciones.Tests.csproj -c Release`, después `dotnet test AceriaApp.sln -c Release`. El catálogo pasa de 13 a 14 tests; la solución debe ejecutar 353 + 1 pruebas, todas aprobadas y ninguna omitida. Confirma en el TRX que se ejecutó `Resumen_ConCatalogoPorDefecto_CalculaTotales` y compara los hashes de la etapa obligatoria: no debe haber cambiado. Revisa `git diff --check` y el índice antes de registrar el reto en un commit local separado.
@@ -10220,13 +8572,10 @@ El archivo completo fija las referencias y versiones que utilizará la etapa; a�
 </Project>
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 5:** `<PackageReference Include="Serilog.AspNetCore" Version="8.0.3" />`. Fija la dependencia usada por esta etapa del ejercicio.
-- **Línea 6:** `<PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" />`. Fija la dependencia usada por esta etapa del ejercicio.
-- **Línea 7:** `<PackageReference Include="RabbitMQ.Client" Version="7.1.2" />`. Fija la dependencia usada por esta etapa del ejercicio.
 - **Línea 8:** `<ProjectReference Include="../AceriaApp.Comunicacion.Infraestructura/AceriaApp.Comunicacion.Infraestructura.csproj" />`. Conecta este proyecto con otro proyecto real de la solución.
-- **Línea 9:** `<PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="8.10.0" />`. Fija la dependencia usada por esta etapa del ejercicio.
 
 ### PASO 7.4.6 — Crear la carpeta `Resiliencia` en el proyecto API
 
@@ -10280,7 +8629,7 @@ public class PoliticaResiliencia
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 1:** `namespace AceriaApp.Api.Resiliencia;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
@@ -10292,23 +8641,14 @@ public class PoliticaResiliencia
 
 - **Línea 5:** `public string Nombre { get; init; } = string.Empty;` → Declara un dato del análisis que se fija al construir la entrada.
 
-- **Línea 6:** `public string Tipo { get; init; } = string.Empty;` → Declara un dato del análisis que se fija al construir la entrada.
 
-- **Línea 7:** `public int NumeroDeReintentos { get; init; }` → Declara un dato del análisis que se fija al construir la entrada.
 
-- **Línea 8:** `public int MinimoDeMuestras { get; init; }` → Declara un dato del análisis que se fija al construir la entrada.
 
-- **Línea 9:** `public double ProporcionDeFallos { get; init; } = 0.5;` → Declara un dato del análisis que se fija al construir la entrada.
 
-- **Línea 10:** `public int VentanaMuestreoSegundos { get; init; } = 10;` → Declara un dato del análisis que se fija al construir la entrada.
 
-- **Línea 11:** `public int DuracionAperturaSegundos { get; init; } = 5;` → Declara un dato del análisis que se fija al construir la entrada.
 
-- **Línea 12:** `public bool OperacionIdempotente { get; init; }` → Declara un dato del análisis que se fija al construir la entrada.
 
-- **Línea 13:** `public bool TieneTimeout { get; init; }` → Declara un dato del análisis que se fija al construir la entrada.
 
-- **Línea 14:** `public bool RegistraEventos { get; init; }` → Declara un dato del análisis que se fija al construir la entrada.
 
 - **Línea 15:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
@@ -10414,155 +8754,90 @@ public class ValidadorResiliencia
 public record ResultadoResiliencia(bool EsValida, IReadOnlyList<string> Errores);
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 1:** `namespace AceriaApp.Api.Resiliencia;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 2:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 3:** `public class ValidadorResiliencia` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 4:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 5:** `private static readonly string[] TiposPermitidos = { "Retry", "CircuitBreaker", "Timeout" };` → Limita los valores de texto reconocidos por la política didáctica.
 
-- **Línea 6:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 7:** `public ResultadoResiliencia Validar(IEnumerable<PoliticaResiliencia> politicas)` → Expone la operación con el contrato que usan el catálogo o sus pruebas.
 
-- **Línea 8:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 9:** `var errores = new List<string>();` → Inicializa la colección de diagnósticos que se devolverá al finalizar.
 
 - **Línea 10:** `var lista = politicas.ToList();` → Materializa una sola vez la secuencia recibida para recorrerla y contarla.
 
-- **Línea 11:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 12:** `if (lista.Count == 0)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 13:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 14:** `errores.Add("No hay políticas declaradas.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 15:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 16:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 17:** `foreach (var politica in lista)` → Revisa cada entrada; un catálogo puede acumular varios diagnósticos.
 
-- **Línea 18:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 19:** `if (string.IsNullOrWhiteSpace(politica.Nombre))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 20:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 21:** `errores.Add("Una política no declara el nombre.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 22:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 23:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 24:** `if (!TiposPermitidos.Contains(politica.Tipo))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 25:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 26:** `errores.Add($"Tipo no permitido en '{politica.Nombre}': '{politica.Tipo}'.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 27:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 28:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 29:** `if (politica.Tipo == "Retry" && politica.NumeroDeReintentos < 1)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 30:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 31:** `errores.Add($"La política de retry '{politica.Nombre}' no declara reintentos.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 32:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 33:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 34:** `if (politica.Tipo == "CircuitBreaker" && politica.MinimoDeMuestras < 2)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 35:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 36:** `errores.Add($"La política de circuit breaker '{politica.Nombre}' no declara mínimo de muestras.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 37:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 38:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 39:** `if (politica.Tipo == "Retry" && !politica.OperacionIdempotente)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 40:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 41:** `errores.Add($"La política de retry '{politica.Nombre}' no declara una operación idempotente.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 42:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 43:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 44:** `if (politica.Tipo == "CircuitBreaker" &&` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
 - **Línea 45:** `(!double.IsFinite(politica.ProporcionDeFallos) || politica.ProporcionDeFallos <= 0 || politica.ProporcionDeFallos > 1))` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 46:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 47:** `errores.Add($"La política de circuit breaker '{politica.Nombre}' tiene una proporción de fallos fuera de (0, 1].");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 48:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 49:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 50:** `if (politica.Tipo == "CircuitBreaker" && politica.VentanaMuestreoSegundos < 1)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 51:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 52:** `errores.Add($"La política de circuit breaker '{politica.Nombre}' no declara una ventana de muestreo positiva.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 53:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 54:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 55:** `if (politica.Tipo == "CircuitBreaker" && politica.DuracionAperturaSegundos < 1)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 56:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 57:** `errores.Add($"La política de circuit breaker '{politica.Nombre}' no declara una duración de apertura positiva.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 58:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 59:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 60:** `if (!politica.TieneTimeout)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 61:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 62:** `errores.Add($"La política '{politica.Nombre}' no tiene timeout.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 63:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 64:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 65:** `if (!politica.RegistraEventos)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 66:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 67:** `errores.Add($"La política '{politica.Nombre}' no registra eventos.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 68:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 69:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 70:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 71:** `return new ResultadoResiliencia(errores.Count == 0, errores);` → Devuelve validez y diagnósticos; no instala middleware ni ejecuta llamadas remotas.
 
-- **Línea 72:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 73:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 74:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 75:** `public record ResultadoResiliencia(bool EsValida, IReadOnlyList<string> Errores);` → Define el resultado inmutable que devuelve el validador o el resumen.
 
@@ -10609,10 +8884,9 @@ public sealed class ClienteInventarioResiliente(HttpClient http) : IClienteInven
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 8:** `public sealed class ClienteInventarioResiliente(HttpClient http) : IClienteInventario`. Sitúa esta responsabilidad dentro del proyecto de observabilidad.
-- **Línea 12:** `public async Task<MaterialDto?> ObtenerAsync(string material, CancellationToken ct)`. Sitúa esta responsabilidad dentro del proyecto de observabilidad.
 
 
 **Integración funcional — `src/AceriaApp.Observabilidad/ResilienciaInventario.cs`.**
@@ -10740,7 +9014,7 @@ public static class ResilienciaInventario
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 14:** `public static IServiceCollection AddResilienciaInventario(this IServiceCollection services, IConfiguration config)`. Selecciona el adaptador resiliente después de los registros heredados.
 - **Línea 28:** `cliente.Services.TryAddSingleton(TimeProvider.System);`. Permite aportar un reloj al contenedor sin imponer uno sobre el existente.
@@ -10751,7 +9025,6 @@ public static class ResilienciaInventario
 - **Línea 63:** `.AddCircuitBreaker(new HttpCircuitBreakerStrategyOptions`. Mantiene el estado del circuito y sus criterios de apertura.
 - **Línea 71:** `OnOpened = _ =>`. Emite el evento observable de apertura del circuito.
 - **Línea 76:** `OnClosed = _ =>`. Emite el evento observable de recuperación del circuito.
-- **Línea 82:** `.AddTimeout(TimeSpan.FromSeconds(1));`. Añade un límite temporal en esta posición de la composición.
 - **Línea 83:** `}).SelectPipelineByAuthority();`. Separa el estado del circuito por esquema, host y puerto.
 - **Línea 98:** `await respuesta.Content.ReadAsByteArrayAsync(ct);`. Incluye la lectura del cuerpo dentro del presupuesto y propaga cancelación.
 
@@ -10850,163 +9123,86 @@ public class ValidadorResiliencia
 public record ResultadoResiliencia(bool EsValida, IReadOnlyList<string> Errores);
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 1:** `using System.Collections.Generic;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 2:** `using System.Linq;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 3:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 4:** `namespace AceriaApp.Api.Resiliencia;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 5:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 6:** `public class ValidadorResiliencia` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 7:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 8:** `private static readonly string[] TiposPermitidos = { "Retry", "CircuitBreaker", "Timeout" };` → Limita los valores de texto reconocidos por la política didáctica.
 
-- **Línea 9:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 10:** `public ResultadoResiliencia Validar(IEnumerable<PoliticaResiliencia> politicas)` → Expone la operación con el contrato que usan el catálogo o sus pruebas.
 
-- **Línea 11:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 12:** `var errores = new List<string>();` → Inicializa la colección de diagnósticos que se devolverá al finalizar.
 
-- **Línea 13:** `var lista = politicas.ToList();` → Materializa una sola vez la secuencia recibida para recorrerla y contarla.
 
-- **Línea 14:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 15:** `if (lista.Count == 0)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 16:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 17:** `errores.Add("No hay políticas declaradas.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 18:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 19:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 20:** `foreach (var politica in lista)` → Revisa cada entrada; un catálogo puede acumular varios diagnósticos.
 
-- **Línea 21:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 22:** `if (string.IsNullOrWhiteSpace(politica.Nombre))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 23:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 24:** `errores.Add("Una política no declara el nombre.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 25:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 26:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 27:** `if (!TiposPermitidos.Contains(politica.Tipo))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 28:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 29:** `errores.Add($"Tipo no permitido en '{politica.Nombre}': '{politica.Tipo}'.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 30:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 31:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 32:** `if (politica.Tipo == "Retry" && politica.NumeroDeReintentos < 1)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 33:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 34:** `errores.Add($"La política de retry '{politica.Nombre}' no declara reintentos.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 35:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 36:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 37:** `if (politica.Tipo == "CircuitBreaker" && politica.MinimoDeMuestras < 2)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 38:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 39:** `errores.Add($"La política de circuit breaker '{politica.Nombre}' no declara mínimo de muestras.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 40:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 41:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 42:** `if (politica.Tipo == "Retry" && !politica.OperacionIdempotente)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 43:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 44:** `errores.Add($"La política de retry '{politica.Nombre}' no declara una operación idempotente.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 45:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 46:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 47:** `if (politica.Tipo == "CircuitBreaker" &&` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 48:** `(!double.IsFinite(politica.ProporcionDeFallos) || politica.ProporcionDeFallos <= 0 || politica.ProporcionDeFallos > 1))` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 49:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 50:** `errores.Add($"La política de circuit breaker '{politica.Nombre}' tiene una proporción de fallos fuera de (0, 1].");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 51:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 52:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 53:** `if (politica.Tipo == "CircuitBreaker" && politica.VentanaMuestreoSegundos < 1)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 54:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 55:** `errores.Add($"La política de circuit breaker '{politica.Nombre}' no declara una ventana de muestreo positiva.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 56:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 57:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 58:** `if (politica.Tipo == "CircuitBreaker" && politica.DuracionAperturaSegundos < 1)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 59:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 60:** `errores.Add($"La política de circuit breaker '{politica.Nombre}' no declara una duración de apertura positiva.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 61:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 62:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 63:** `if (!politica.TieneTimeout)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 64:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 65:** `errores.Add($"La política '{politica.Nombre}' no tiene timeout.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 66:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 67:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 68:** `if (!politica.RegistraEventos)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 69:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 70:** `errores.Add($"La política '{politica.Nombre}' no registra eventos.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 71:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 72:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 73:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 74:** `return new ResultadoResiliencia(errores.Count == 0, errores);` → Devuelve validez y diagnósticos; no instala middleware ni ejecuta llamadas remotas.
 
-- **Línea 75:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 76:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 77:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 78:** `public record ResultadoResiliencia(bool EsValida, IReadOnlyList<string> Errores);` → Define el resultado inmutable que devuelve el validador o el resumen.
 
 
 **Por qué funciona así.** Las importaciones explícitas muestran dónde se declaran los tipos genéricos y las extensiones LINQ, aunque el proyecto tenga importaciones implícitas.
@@ -11051,39 +9247,26 @@ public class CatalogoPoliticas
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 1:** `namespace AceriaApp.Api.Resiliencia;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 2:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 3:** `public class CatalogoPoliticas` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 4:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 5:** `public static List<PoliticaResiliencia> PoliticasPorDefecto()` → Expone la operación con el contrato que usan el catálogo o sus pruebas.
 
-- **Línea 6:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 7:** `return new List<PoliticaResiliencia>` → Devuelve una lista nueva en cada llamada; modificarla no altera otros casos.
 
-- **Línea 8:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 9:** `new() { Nombre = "RetryHttp", Tipo = "Retry", OperacionIdempotente = true, NumeroDeReintentos = 3, MinimoDeMuestras = 0, TieneTimeout = true, RegistraEventos = true },` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 10:** `new() { Nombre = "CircuitBreakerHttp", Tipo = "CircuitBreaker", NumeroDeReintentos = 0, MinimoDeMuestras = 5, TieneTimeout = true, RegistraEventos = true },` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 11:** `new() { Nombre = "TimeoutHttp", Tipo = "Timeout", NumeroDeReintentos = 0, MinimoDeMuestras = 0, TieneTimeout = true, RegistraEventos = true },` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 12:** `new() { Nombre = "RetryEventos", Tipo = "Retry", OperacionIdempotente = true, NumeroDeReintentos = 5, MinimoDeMuestras = 0, TieneTimeout = true, RegistraEventos = true },` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 13:** `new() { Nombre = "CircuitBreakerEventos", Tipo = "CircuitBreaker", NumeroDeReintentos = 0, MinimoDeMuestras = 3, TieneTimeout = true, RegistraEventos = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
 - **Línea 14:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 15:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 16:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
 
 **Por qué funciona así.** Cada invocación devuelve una lista nueva con los ejemplos de análisis; cambiar una lista no modifica futuros catálogos.
@@ -11130,43 +9313,25 @@ public class CatalogoPoliticas
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
 
-- **Línea 1:** `using System.Collections.Generic;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 2:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 3:** `namespace AceriaApp.Api.Resiliencia;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 4:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 5:** `public class CatalogoPoliticas` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 6:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 7:** `public static List<PoliticaResiliencia> PoliticasPorDefecto()` → Expone la operación con el contrato que usan el catálogo o sus pruebas.
 
-- **Línea 8:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 9:** `return new List<PoliticaResiliencia>` → Devuelve una lista nueva en cada llamada; modificarla no altera otros casos.
 
-- **Línea 10:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 11:** `new() { Nombre = "RetryHttp", Tipo = "Retry", OperacionIdempotente = true, NumeroDeReintentos = 3, MinimoDeMuestras = 0, TieneTimeout = true, RegistraEventos = true },` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 12:** `new() { Nombre = "CircuitBreakerHttp", Tipo = "CircuitBreaker", NumeroDeReintentos = 0, MinimoDeMuestras = 5, TieneTimeout = true, RegistraEventos = true },` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 13:** `new() { Nombre = "TimeoutHttp", Tipo = "Timeout", NumeroDeReintentos = 0, MinimoDeMuestras = 0, TieneTimeout = true, RegistraEventos = true },` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 14:** `new() { Nombre = "RetryEventos", Tipo = "Retry", OperacionIdempotente = true, NumeroDeReintentos = 5, MinimoDeMuestras = 0, TieneTimeout = true, RegistraEventos = true },` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 15:** `new() { Nombre = "CircuitBreakerEventos", Tipo = "CircuitBreaker", NumeroDeReintentos = 0, MinimoDeMuestras = 3, TieneTimeout = true, RegistraEventos = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 16:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 17:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 18:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
+
 
 
 **Por qué funciona así.** Las importaciones explícitas muestran dónde se declaran los tipos genéricos y las extensiones LINQ, aunque el proyecto tenga importaciones implícitas.
@@ -11288,7 +9453,7 @@ La configuración usa bases y prefijos propios de esta etapa. Las variables de e
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 2:** `"ConnectionStrings": {`. Agrupa las conexiones de laboratorio específicas de la etapa.
 - **Línea 11:** `"WorkersActivos": false`. Activa o desactiva los procesos de mensajería y su dependencia en readiness.
@@ -11321,12 +9486,8 @@ La configuración usa bases y prefijos propios de esta etapa. Las variables de e
 }
 ```
 
-**Lectura de las líneas clave.**
 
-- **Línea 2:** `"ConnectionStrings": {`. Agrupa las conexiones de laboratorio específicas de la etapa.
-- **Línea 9:** `"WorkersActivos": false`. Activa o desactiva los procesos de mensajería y su dependencia en readiness.
-- **Línea 12:** `"NivelMinimo": "Information",`. Fija el umbral propio de logging y admite sobreescritura por variables de entorno.
-- **Línea 13:** `"DiagnosticoActivo": false`. Mantiene el endpoint de fallo desactivado por defecto.
+
 
 ### PASO 7.4.14 — Añadir el paquete `FluentAssertions` al proyecto de tests
 
@@ -11566,365 +9727,195 @@ public class ValidadorResilienciaTests
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 1:** `using AceriaApp.Api.Resiliencia;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 2:** `using FluentAssertions;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 3:** `using Xunit;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 4:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 5:** `namespace AceriaApp.Resiliencia.Tests;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 6:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 7:** `public class ValidadorResilienciaTests` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 8:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 9:** `private readonly ValidadorResiliencia _validador = new();` → Crea la instancia del validador que utiliza cada prueba.
 
-- **Línea 10:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 11:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
 - **Línea 12:** `public void Validar_CatalogoPorDefecto_DevuelveValida()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 13:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 14:** `var resultado = _validador.Validar(CatalogoPoliticas.PoliticasPorDefecto());` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 15:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 16:** `resultado.EsValida.Should().BeTrue();` → Comprueba que la política acepta los datos de este caso.
 
 - **Línea 17:** `resultado.Errores.Should().BeEmpty();` → Comprueba que no se ha registrado ningún diagnóstico.
 
-- **Línea 18:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 19:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 20:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 21:** `public void Validar_SinPoliticas_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 22:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 23:** `var resultado = _validador.Validar(new List<PoliticaResiliencia>());` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 24:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 25:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
 - **Línea 26:** `resultado.Errores.Should().Contain(e => e.Contains("No hay políticas"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 27:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 28:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 29:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 30:** `public void Validar_TipoNoPermitido_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 31:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 32:** `var politicas = new List<PoliticaResiliencia>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 33:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 34:** `new() { Nombre = "X", Tipo = "TipoInventado", TieneTimeout = true, RegistraEventos = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 35:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 36:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 37:** `var resultado = _validador.Validar(politicas);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 38:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 39:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 40:** `resultado.Errores.Should().Contain(e => e.Contains("Tipo no permitido"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 41:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 42:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 43:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 44:** `public void Validar_RetrySinReintentos_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 45:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 46:** `var politicas = new List<PoliticaResiliencia>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 47:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 48:** `new() { Nombre = "X", Tipo = "Retry", NumeroDeReintentos = 0, TieneTimeout = true, RegistraEventos = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 49:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 50:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 51:** `var resultado = _validador.Validar(politicas);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 52:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 53:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 54:** `resultado.Errores.Should().Contain(e => e.Contains("no declara reintentos"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 55:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 56:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 57:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 58:** `public void Validar_CircuitBreakerSinMinimoDeMuestras_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 59:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 60:** `var politicas = new List<PoliticaResiliencia>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 61:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 62:** `new() { Nombre = "X", Tipo = "CircuitBreaker", MinimoDeMuestras = 0, TieneTimeout = true, RegistraEventos = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 63:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 64:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 65:** `var resultado = _validador.Validar(politicas);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 66:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 67:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 68:** `resultado.Errores.Should().Contain(e => e.Contains("no declara mínimo de muestras"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 69:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 70:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 71:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 72:** `public void Validar_SinTimeout_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 73:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 74:** `var politicas = new List<PoliticaResiliencia>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 75:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 76:** `new() { Nombre = "X", Tipo = "Timeout", TieneTimeout = false, RegistraEventos = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 77:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 78:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 79:** `var resultado = _validador.Validar(politicas);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 80:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 81:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 82:** `resultado.Errores.Should().Contain(e => e.Contains("no tiene timeout"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 83:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 84:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 85:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 86:** `public void Validar_SinRegistro_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 87:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 88:** `var politicas = new List<PoliticaResiliencia>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 89:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 90:** `new() { Nombre = "X", Tipo = "Timeout", TieneTimeout = true, RegistraEventos = false }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 91:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 92:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 93:** `var resultado = _validador.Validar(politicas);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 94:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 95:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 96:** `resultado.Errores.Should().Contain(e => e.Contains("no registra eventos"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 97:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 98:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 99:** `public void Validar_RetryNoIdempotente_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 100:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 101:** `var politicas = new List<PoliticaResiliencia>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 102:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 103:** `new() { Nombre = "X", Tipo = "Retry", NumeroDeReintentos = 2, OperacionIdempotente = false, TieneTimeout = true, RegistraEventos = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 104:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 105:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 106:** `var resultado = _validador.Validar(politicas);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 107:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 108:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 109:** `resultado.Errores.Should().Contain(e => e.Contains("no declara una operación idempotente"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 110:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 111:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 112:** `public void Validar_CircuitBreakerConUnaMuestra_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 113:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 114:** `var politicas = new List<PoliticaResiliencia>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 115:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 116:** `new() { Nombre = "X", Tipo = "CircuitBreaker", MinimoDeMuestras = 1, TieneTimeout = true, RegistraEventos = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 117:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 118:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 119:** `var resultado = _validador.Validar(politicas);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 120:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 121:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 122:** `resultado.Errores.Should().Contain(e => e.Contains("no declara mínimo de muestras"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 123:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 124:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 125:** `public void Validar_CircuitBreakerConProporcionCero_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 126:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 127:** `var politicas = new List<PoliticaResiliencia>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 128:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 129:** `new() { Nombre = "X", Tipo = "CircuitBreaker", MinimoDeMuestras = 4, ProporcionDeFallos = 0, TieneTimeout = true, RegistraEventos = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 130:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 131:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 132:** `var resultado = _validador.Validar(politicas);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 133:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 134:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 135:** `resultado.Errores.Should().Contain(e => e.Contains("proporción de fallos fuera"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 136:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 137:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 138:** `public void Validar_CircuitBreakerConProporcionInvalida_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 139:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 140:** `foreach (var proporcion in new[] { 1.1, double.NaN, double.PositiveInfinity, double.NegativeInfinity })` → Revisa cada entrada; un catálogo puede acumular varios diagnósticos.
 
-- **Línea 141:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 142:** `var politicas = new List<PoliticaResiliencia>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 143:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 144:** `new() { Nombre = "X", Tipo = "CircuitBreaker", MinimoDeMuestras = 4, ProporcionDeFallos = proporcion, TieneTimeout = true, RegistraEventos = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 145:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 146:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 147:** `var resultado = _validador.Validar(politicas);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 148:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 149:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 150:** `resultado.Errores.Should().Contain(e => e.Contains("proporción de fallos fuera"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 151:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 152:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 153:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 154:** `public void Validar_CircuitBreakerSinVentana_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 155:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 156:** `var politicas = new List<PoliticaResiliencia>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 157:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 158:** `new() { Nombre = "X", Tipo = "CircuitBreaker", MinimoDeMuestras = 4, VentanaMuestreoSegundos = 0, TieneTimeout = true, RegistraEventos = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 159:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 160:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 161:** `var resultado = _validador.Validar(politicas);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 162:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 163:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 164:** `resultado.Errores.Should().Contain(e => e.Contains("ventana de muestreo positiva"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 165:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 166:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 167:** `public void Validar_CircuitBreakerSinDuracionApertura_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 168:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 169:** `var politicas = new List<PoliticaResiliencia>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 170:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 171:** `new() { Nombre = "X", Tipo = "CircuitBreaker", MinimoDeMuestras = 4, DuracionAperturaSegundos = 0, TieneTimeout = true, RegistraEventos = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 172:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 173:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 174:** `var resultado = _validador.Validar(politicas);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 175:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 176:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 177:** `resultado.Errores.Should().Contain(e => e.Contains("duración de apertura positiva"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 178:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 179:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
 
 **Por qué funciona así.** Las pruebas ejercitan aceptación y rechazos concretos del validador. Afirmar el diagnóstico evita un falso positivo por otro error.
@@ -11960,15 +9951,8 @@ El archivo completo fija las referencias y versiones que utilizará la etapa; a�
 </Project>
 ```
 
-**Lectura de las líneas clave.**
 
-- **Línea 4:** `<ProjectReference Include="../../src/AceriaApp.Api/AceriaApp.Api.csproj" />`. Conecta este proyecto con otro proyecto real de la solución.
-- **Línea 5:** `<ProjectReference Include="../../src/AceriaApp.Observabilidad/AceriaApp.Observabilidad.csproj" />`. Conecta este proyecto con otro proyecto real de la solución.
-- **Línea 6:** `<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />`. Fija la dependencia usada por esta etapa del ejercicio.
-- **Línea 7:** `<PackageReference Include="xunit" Version="2.9.2" />`. Fija la dependencia usada por esta etapa del ejercicio.
-- **Línea 8:** `<PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />`. Fija la dependencia usada por esta etapa del ejercicio.
-- **Línea 9:** `<PackageReference Include="FluentAssertions" Version="6.12.2" />`. Fija la dependencia usada por esta etapa del ejercicio.
-- **Línea 10:** `<PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" Version="8.10.0" />`. Fija la dependencia usada por esta etapa del ejercicio.
+
 
 
 **Integración funcional — `tests/AceriaApp.Resiliencia.Tests/ResilienciaFuncionalTests.cs`.**
@@ -12380,20 +10364,9 @@ public sealed class ResilienciaFuncionalTests
 }
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 19:** `public async Task Un_503_se_reintenta_y_libera_su_respuesta_antes_del_200()`. Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre.
-- **Línea 40:** `public async Task Estados_transitorios_permiten_recuperar_la_lectura(int estado)`. Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre.
-- **Línea 51:** `public async Task Solo_los_metodos_de_lectura_permiten_reintento(string metodo)`. Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre.
-- **Línea 63:** `public async Task Errores_no_transitorios_no_se_reintentan(int estado)`. Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre.
-- **Línea 74:** `public async Task Un_metodo_mutante_no_repite_el_cuerpo_tras_un_503(string metodo)`. Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre.
-- **Línea 91:** `public async Task Una_lectura_agota_tres_intentos_y_conserva_la_ultima_respuesta()`. Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre.
-- **Línea 110:** `public async Task Un_error_de_transporte_se_reintenta()`. Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre.
-- **Línea 122:** `public async Task Cancelar_la_peticion_interrumpe_el_transporte_sin_reintentar()`. Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre.
-- **Línea 137:** `public async Task Cancelar_durante_retry_after_impide_un_segundo_envio()`. Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre.
-- **Línea 154:** `public async Task Un_timeout_de_intento_cancela_transporte_o_cuerpo_y_permite_recuperar()`. Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre.
-- **Línea 182:** `public async Task Tres_intentos_lentos_terminan_en_indisponibilidad_y_no_exponen_Polly_al_puerto()`. Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre.
-- **Línea 195:** `public async Task El_presupuesto_total_acota_retry_after_en_segundos_y_fecha(bool fecha)`. Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre.
 
 ### PASO 7.4.16 — Crear el archivo `CatalogoPoliticasTests.cs`
 
@@ -12461,105 +10434,60 @@ public class CatalogoPoliticasTests
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 1:** `using AceriaApp.Api.Resiliencia;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 2:** `using FluentAssertions;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 3:** `using Xunit;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 4:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 5:** `namespace AceriaApp.Resiliencia.Tests;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 6:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 7:** `public class CatalogoPoliticasTests` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 8:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 9:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 10:** `public void PoliticasPorDefecto_ContieneCincoPoliticas()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 11:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 12:** `var politicas = CatalogoPoliticas.PoliticasPorDefecto();` → Obtiene los datos que se utilizarán en las comprobaciones siguientes.
 
-- **Línea 13:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 14:** `politicas.Should().HaveCount(5);` → Comprueba el tamaño del catálogo sin inferir servicios o conexiones en ejecución.
 
-- **Línea 15:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 16:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 17:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 18:** `public void PoliticasPorDefecto_ContieneDosRetry()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 19:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 20:** `var politicas = CatalogoPoliticas.PoliticasPorDefecto();` → Obtiene los datos que se utilizarán en las comprobaciones siguientes.
 
-- **Línea 21:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 22:** `politicas.Count(p => p.Tipo == "Retry").Should().Be(2);` → Compara el recuento obtenido con el valor esperado del catálogo.
 
-- **Línea 23:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 24:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 25:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 26:** `public void PoliticasPorDefecto_ContieneDosCircuitBreaker()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 27:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 28:** `var politicas = CatalogoPoliticas.PoliticasPorDefecto();` → Obtiene los datos que se utilizarán en las comprobaciones siguientes.
 
-- **Línea 29:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 30:** `politicas.Count(p => p.Tipo == "CircuitBreaker").Should().Be(2);` → Compara el recuento obtenido con el valor esperado del catálogo.
 
-- **Línea 31:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 32:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 33:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 34:** `public void PoliticasPorDefecto_ContieneUnTimeout()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 35:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 36:** `var politicas = CatalogoPoliticas.PoliticasPorDefecto();` → Obtiene los datos que se utilizarán en las comprobaciones siguientes.
 
-- **Línea 37:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 38:** `politicas.Count(p => p.Tipo == "Timeout").Should().Be(1);` → Compara el recuento obtenido con el valor esperado del catálogo.
 
-- **Línea 39:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 40:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 41:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 42:** `public void PoliticasPorDefecto_TodasTienenTimeoutYRegistranEventos()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 43:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 44:** `var politicas = CatalogoPoliticas.PoliticasPorDefecto();` → Obtiene los datos que se utilizarán en las comprobaciones siguientes.
 
-- **Línea 45:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
 - **Línea 46:** `politicas.Should().OnlyContain(p => p.TieneTimeout);` → Comprueba la condición en cada entrada declarada del catálogo.
 
-- **Línea 47:** `politicas.Should().OnlyContain(p => p.RegistraEventos);` → Comprueba la condición en cada entrada declarada del catálogo.
 
-- **Línea 48:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 49:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
 
 **Por qué funciona así.** Las pruebas del catálogo verifican cantidades y propiedades declaradas. No prueban que existan los servicios nombrados.
@@ -12793,10 +10721,9 @@ app.Run();
 public partial class Program {} // permite WebApplicationFactory en tests
 ```
 
-**Lectura de las líneas clave.**
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
 - **Línea 21:** `builder.Services.AddLoggingAceria("Produccion", builder.Configuration);`. Registra el logger JSON y los servicios que necesita la correlación.
-- **Línea 34:** `builder.Services.AddResilienciaInventario(builder.Configuration);`. Selecciona el adaptador resiliente después de los registros heredados.
 - **Línea 35:** `builder.Services.AddHttpClient("inventario-resiliente").AddHttpMessageHandler<PropagarCorrelacionHandler>();`. Propaga el identificador validado hacia Inventario.
 - **Línea 36:** `builder.Services.AddSaludAceria(builder.Configuration, inventario: false);`. Registra las dependencias propias de este servicio para readiness.
 - **Línea 37:** `builder.Services.AddErroresAceria();`. Añade ProblemDetails y el manejador de excepciones al contenedor.
@@ -13256,167 +11183,87 @@ public record ResultadoResiliencia(bool EsValida, IReadOnlyList<string> Errores)
 public record ResumenResiliencia(int Total, int Retry, int CircuitBreaker, int Timeout, int TotalReintentos);
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
 
-- **Línea 1:** `using System.Collections.Generic;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 2:** `using System.Linq;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 3:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 4:** `namespace AceriaApp.Api.Resiliencia;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 5:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 6:** `public class ValidadorResiliencia` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 7:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 8:** `private static readonly string[] TiposPermitidos = { "Retry", "CircuitBreaker", "Timeout" };` → Limita los valores de texto reconocidos por la política didáctica.
 
-- **Línea 9:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 10:** `public ResultadoResiliencia Validar(IEnumerable<PoliticaResiliencia> politicas)` → Expone la operación con el contrato que usan el catálogo o sus pruebas.
 
-- **Línea 11:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 12:** `var errores = new List<string>();` → Inicializa la colección de diagnósticos que se devolverá al finalizar.
 
-- **Línea 13:** `var lista = politicas.ToList();` → Materializa una sola vez la secuencia recibida para recorrerla y contarla.
 
-- **Línea 14:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 15:** `if (lista.Count == 0)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 16:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 17:** `errores.Add("No hay políticas declaradas.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 18:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 19:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 20:** `foreach (var politica in lista)` → Revisa cada entrada; un catálogo puede acumular varios diagnósticos.
 
-- **Línea 21:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 22:** `if (string.IsNullOrWhiteSpace(politica.Nombre))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 23:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 24:** `errores.Add("Una política no declara el nombre.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 25:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 26:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 27:** `if (!TiposPermitidos.Contains(politica.Tipo))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 28:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 29:** `errores.Add($"Tipo no permitido en '{politica.Nombre}': '{politica.Tipo}'.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 30:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 31:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 32:** `if (politica.Tipo == "Retry" && politica.NumeroDeReintentos < 1)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 33:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 34:** `errores.Add($"La política de retry '{politica.Nombre}' no declara reintentos.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 35:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 36:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 37:** `if (politica.Tipo == "CircuitBreaker" && politica.MinimoDeMuestras < 2)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 38:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 39:** `errores.Add($"La política de circuit breaker '{politica.Nombre}' no declara mínimo de muestras.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 40:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 41:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 42:** `if (politica.Tipo == "Retry" && !politica.OperacionIdempotente)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 43:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 44:** `errores.Add($"La política de retry '{politica.Nombre}' no declara una operación idempotente.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 45:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 46:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 47:** `if (politica.Tipo == "CircuitBreaker" &&` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 48:** `(!double.IsFinite(politica.ProporcionDeFallos) || politica.ProporcionDeFallos <= 0 || politica.ProporcionDeFallos > 1))` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 49:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 50:** `errores.Add($"La política de circuit breaker '{politica.Nombre}' tiene una proporción de fallos fuera de (0, 1].");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 51:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 52:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 53:** `if (politica.Tipo == "CircuitBreaker" && politica.VentanaMuestreoSegundos < 1)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 54:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 55:** `errores.Add($"La política de circuit breaker '{politica.Nombre}' no declara una ventana de muestreo positiva.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 56:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 57:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 58:** `if (politica.Tipo == "CircuitBreaker" && politica.DuracionAperturaSegundos < 1)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 59:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 60:** `errores.Add($"La política de circuit breaker '{politica.Nombre}' no declara una duración de apertura positiva.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 61:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 62:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 63:** `if (!politica.TieneTimeout)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 64:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 65:** `errores.Add($"La política '{politica.Nombre}' no tiene timeout.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 66:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 67:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 68:** `if (!politica.RegistraEventos)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 69:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 70:** `errores.Add($"La política '{politica.Nombre}' no registra eventos.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 71:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 72:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 73:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 74:** `return new ResultadoResiliencia(errores.Count == 0, errores);` → Devuelve validez y diagnósticos; no instala middleware ni ejecuta llamadas remotas.
 
-- **Línea 75:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 76:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 77:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 78:** `public record ResultadoResiliencia(bool EsValida, IReadOnlyList<string> Errores);` → Define el resultado inmutable que devuelve el validador o el resumen.
 
-- **Línea 79:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 80:** `public record ResumenResiliencia(int Total, int Retry, int CircuitBreaker, int Timeout, int TotalReintentos);` → Define el resultado inmutable que devuelve el validador o el resumen.
+
 
 
 ### Reto 7.4.3 — Calcular los recuentos
@@ -13519,187 +11366,100 @@ public record ResultadoResiliencia(bool EsValida, IReadOnlyList<string> Errores)
 public record ResumenResiliencia(int Total, int Retry, int CircuitBreaker, int Timeout, int TotalReintentos);
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 1:** `using System.Collections.Generic;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 2:** `using System.Linq;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 3:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 4:** `namespace AceriaApp.Api.Resiliencia;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 5:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 6:** `public class ValidadorResiliencia` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 7:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 8:** `public static ResumenResiliencia Resumen(IEnumerable<PoliticaResiliencia> politicas)` → Expone la operación con el contrato que usan el catálogo o sus pruebas.
 
-- **Línea 9:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 10:** `var lista = politicas.ToList();` → Materializa una sola vez la secuencia recibida para recorrerla y contarla.
 
 - **Línea 11:** `var retry = lista.Count(p => p.Tipo == "Retry");` → Cuenta las entradas que cumplen el criterio indicado.
 
-- **Línea 12:** `var circuitBreaker = lista.Count(p => p.Tipo == "CircuitBreaker");` → Cuenta las entradas que cumplen el criterio indicado.
 
-- **Línea 13:** `var timeout = lista.Count(p => p.Tipo == "Timeout");` → Cuenta las entradas que cumplen el criterio indicado.
 
 - **Línea 14:** `var totalReintentos = lista.Sum(p => p.NumeroDeReintentos);` → Suma los reintentos declarados por las políticas del catálogo; no cuenta intentos reales de HTTP.
 
 - **Línea 15:** `return new ResumenResiliencia(lista.Count, retry, circuitBreaker, timeout, totalReintentos);` → Devuelve los recuentos del catálogo sin modificar sus entradas.
 
-- **Línea 16:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 17:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 18:** `private static readonly string[] TiposPermitidos = { "Retry", "CircuitBreaker", "Timeout" };` → Limita los valores de texto reconocidos por la política didáctica.
 
-- **Línea 19:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 20:** `public ResultadoResiliencia Validar(IEnumerable<PoliticaResiliencia> politicas)` → Expone la operación con el contrato que usan el catálogo o sus pruebas.
 
-- **Línea 21:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 22:** `var errores = new List<string>();` → Inicializa la colección de diagnósticos que se devolverá al finalizar.
 
-- **Línea 23:** `var lista = politicas.ToList();` → Materializa una sola vez la secuencia recibida para recorrerla y contarla.
 
-- **Línea 24:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 25:** `if (lista.Count == 0)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 26:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 27:** `errores.Add("No hay políticas declaradas.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 28:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 29:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 30:** `foreach (var politica in lista)` → Revisa cada entrada; un catálogo puede acumular varios diagnósticos.
 
-- **Línea 31:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 32:** `if (string.IsNullOrWhiteSpace(politica.Nombre))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 33:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 34:** `errores.Add("Una política no declara el nombre.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 35:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 36:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 37:** `if (!TiposPermitidos.Contains(politica.Tipo))` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 38:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 39:** `errores.Add($"Tipo no permitido en '{politica.Nombre}': '{politica.Tipo}'.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 40:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 41:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 42:** `if (politica.Tipo == "Retry" && politica.NumeroDeReintentos < 1)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 43:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 44:** `errores.Add($"La política de retry '{politica.Nombre}' no declara reintentos.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 45:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 46:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 47:** `if (politica.Tipo == "CircuitBreaker" && politica.MinimoDeMuestras < 2)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 48:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 49:** `errores.Add($"La política de circuit breaker '{politica.Nombre}' no declara mínimo de muestras.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 50:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 51:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 52:** `if (politica.Tipo == "Retry" && !politica.OperacionIdempotente)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 53:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 54:** `errores.Add($"La política de retry '{politica.Nombre}' no declara una operación idempotente.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 55:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 56:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 57:** `if (politica.Tipo == "CircuitBreaker" &&` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 58:** `(!double.IsFinite(politica.ProporcionDeFallos) || politica.ProporcionDeFallos <= 0 || politica.ProporcionDeFallos > 1))` → Completa la declaración o la operación mostrada en el bloque.
 
-- **Línea 59:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 60:** `errores.Add($"La política de circuit breaker '{politica.Nombre}' tiene una proporción de fallos fuera de (0, 1].");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 61:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 62:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 63:** `if (politica.Tipo == "CircuitBreaker" && politica.VentanaMuestreoSegundos < 1)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 64:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 65:** `errores.Add($"La política de circuit breaker '{politica.Nombre}' no declara una ventana de muestreo positiva.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 66:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 67:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 68:** `if (politica.Tipo == "CircuitBreaker" && politica.DuracionAperturaSegundos < 1)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 69:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 70:** `errores.Add($"La política de circuit breaker '{politica.Nombre}' no declara una duración de apertura positiva.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 71:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 72:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 73:** `if (!politica.TieneTimeout)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 74:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 75:** `errores.Add($"La política '{politica.Nombre}' no tiene timeout.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 76:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 77:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 78:** `if (!politica.RegistraEventos)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
 
-- **Línea 79:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 80:** `errores.Add($"La política '{politica.Nombre}' no registra eventos.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-- **Línea 81:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 82:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 83:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 84:** `return new ResultadoResiliencia(errores.Count == 0, errores);` → Devuelve validez y diagnósticos; no instala middleware ni ejecuta llamadas remotas.
 
-- **Línea 85:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 86:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 87:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 88:** `public record ResultadoResiliencia(bool EsValida, IReadOnlyList<string> Errores);` → Define el resultado inmutable que devuelve el validador o el resumen.
 
-- **Línea 89:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 90:** `public record ResumenResiliencia(int Total, int Retry, int CircuitBreaker, int Timeout, int TotalReintentos);` → Define el resultado inmutable que devuelve el validador o el resumen.
 
 
 ### Reto 7.4.6 — Verificar el catálogo por defecto
@@ -13902,387 +11662,198 @@ public class ValidadorResilienciaTests
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+**Lectura selectiva: decisiones y comprobaciones relevantes.**
 
-- **Línea 1:** `using AceriaApp.Api.Resiliencia;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 2:** `using FluentAssertions;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 3:** `using Xunit;` → Importa los tipos o extensiones utilizados por el archivo.
 
-- **Línea 4:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 5:** `namespace AceriaApp.Resiliencia.Tests;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
 
-- **Línea 6:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 7:** `public class ValidadorResilienciaTests` → Declara el tipo público del ejercicio de análisis.
 
-- **Línea 8:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 9:** `private readonly ValidadorResiliencia _validador = new();` → Crea la instancia del validador que utiliza cada prueba.
 
-- **Línea 10:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 11:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 12:** `public void Validar_CatalogoPorDefecto_DevuelveValida()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 13:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 14:** `var resultado = _validador.Validar(CatalogoPoliticas.PoliticasPorDefecto());` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 15:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 16:** `resultado.EsValida.Should().BeTrue();` → Comprueba que la política acepta los datos de este caso.
 
-- **Línea 17:** `resultado.Errores.Should().BeEmpty();` → Comprueba que no se ha registrado ningún diagnóstico.
 
-- **Línea 18:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 19:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 20:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 21:** `public void Validar_SinPoliticas_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 22:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 23:** `var resultado = _validador.Validar(new List<PoliticaResiliencia>());` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 24:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 25:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 26:** `resultado.Errores.Should().Contain(e => e.Contains("No hay políticas"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 27:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 28:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 29:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 30:** `public void Validar_TipoNoPermitido_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 31:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 32:** `var politicas = new List<PoliticaResiliencia>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 33:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 34:** `new() { Nombre = "X", Tipo = "TipoInventado", TieneTimeout = true, RegistraEventos = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 35:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 36:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 37:** `var resultado = _validador.Validar(politicas);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 38:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 39:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 40:** `resultado.Errores.Should().Contain(e => e.Contains("Tipo no permitido"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 41:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 42:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 43:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 44:** `public void Validar_RetrySinReintentos_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 45:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 46:** `var politicas = new List<PoliticaResiliencia>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 47:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 48:** `new() { Nombre = "X", Tipo = "Retry", NumeroDeReintentos = 0, TieneTimeout = true, RegistraEventos = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 49:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 50:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 51:** `var resultado = _validador.Validar(politicas);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 52:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 53:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 54:** `resultado.Errores.Should().Contain(e => e.Contains("no declara reintentos"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 55:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 56:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 57:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 58:** `public void Validar_CircuitBreakerSinMinimoDeMuestras_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 59:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 60:** `var politicas = new List<PoliticaResiliencia>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 61:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 62:** `new() { Nombre = "X", Tipo = "CircuitBreaker", MinimoDeMuestras = 0, TieneTimeout = true, RegistraEventos = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 63:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 64:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 65:** `var resultado = _validador.Validar(politicas);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 66:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 67:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 68:** `resultado.Errores.Should().Contain(e => e.Contains("no declara mínimo de muestras"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 69:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 70:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 71:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 72:** `public void Validar_SinTimeout_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 73:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 74:** `var politicas = new List<PoliticaResiliencia>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 75:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 76:** `new() { Nombre = "X", Tipo = "Timeout", TieneTimeout = false, RegistraEventos = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 77:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 78:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 79:** `var resultado = _validador.Validar(politicas);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 80:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 81:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 82:** `resultado.Errores.Should().Contain(e => e.Contains("no tiene timeout"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 83:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 84:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 85:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 86:** `public void Validar_SinRegistro_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 87:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 88:** `var politicas = new List<PoliticaResiliencia>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 89:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 90:** `new() { Nombre = "X", Tipo = "Timeout", TieneTimeout = true, RegistraEventos = false }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 91:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 92:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 93:** `var resultado = _validador.Validar(politicas);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 94:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 95:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 96:** `resultado.Errores.Should().Contain(e => e.Contains("no registra eventos"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 97:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 98:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 99:** `public void Validar_RetryNoIdempotente_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 100:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 101:** `var politicas = new List<PoliticaResiliencia>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 102:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 103:** `new() { Nombre = "X", Tipo = "Retry", NumeroDeReintentos = 2, OperacionIdempotente = false, TieneTimeout = true, RegistraEventos = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 104:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 105:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 106:** `var resultado = _validador.Validar(politicas);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 107:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 108:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 109:** `resultado.Errores.Should().Contain(e => e.Contains("no declara una operación idempotente"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 110:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 111:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 112:** `public void Validar_CircuitBreakerConUnaMuestra_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 113:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 114:** `var politicas = new List<PoliticaResiliencia>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 115:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 116:** `new() { Nombre = "X", Tipo = "CircuitBreaker", MinimoDeMuestras = 1, TieneTimeout = true, RegistraEventos = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 117:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 118:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 119:** `var resultado = _validador.Validar(politicas);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 120:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 121:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 122:** `resultado.Errores.Should().Contain(e => e.Contains("no declara mínimo de muestras"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 123:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 124:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 125:** `public void Validar_CircuitBreakerConProporcionCero_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 126:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 127:** `var politicas = new List<PoliticaResiliencia>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 128:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 129:** `new() { Nombre = "X", Tipo = "CircuitBreaker", MinimoDeMuestras = 4, ProporcionDeFallos = 0, TieneTimeout = true, RegistraEventos = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 130:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 131:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 132:** `var resultado = _validador.Validar(politicas);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 133:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 134:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 135:** `resultado.Errores.Should().Contain(e => e.Contains("proporción de fallos fuera"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 136:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 137:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 138:** `public void Validar_CircuitBreakerConProporcionInvalida_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 139:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 140:** `foreach (var proporcion in new[] { 1.1, double.NaN, double.PositiveInfinity, double.NegativeInfinity })` → Revisa cada entrada; un catálogo puede acumular varios diagnósticos.
 
-- **Línea 141:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 142:** `var politicas = new List<PoliticaResiliencia>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 143:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 144:** `new() { Nombre = "X", Tipo = "CircuitBreaker", MinimoDeMuestras = 4, ProporcionDeFallos = proporcion, TieneTimeout = true, RegistraEventos = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 145:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 146:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 147:** `var resultado = _validador.Validar(politicas);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 148:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 149:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 150:** `resultado.Errores.Should().Contain(e => e.Contains("proporción de fallos fuera"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 151:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 152:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 153:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 154:** `public void Validar_CircuitBreakerSinVentana_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 155:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 156:** `var politicas = new List<PoliticaResiliencia>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 157:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 158:** `new() { Nombre = "X", Tipo = "CircuitBreaker", MinimoDeMuestras = 4, VentanaMuestreoSegundos = 0, TieneTimeout = true, RegistraEventos = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 159:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 160:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 161:** `var resultado = _validador.Validar(politicas);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 162:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 163:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 164:** `resultado.Errores.Should().Contain(e => e.Contains("ventana de muestreo positiva"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 165:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 166:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 167:** `public void Validar_CircuitBreakerSinDuracionApertura_DevuelveError()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 168:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 169:** `var politicas = new List<PoliticaResiliencia>` → Prepara las entradas que se van a validar o devolver.
 
-- **Línea 170:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 171:** `new() { Nombre = "X", Tipo = "CircuitBreaker", MinimoDeMuestras = 4, DuracionAperturaSegundos = 0, TieneTimeout = true, RegistraEventos = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
-- **Línea 172:** `};` → Cierra la colección y termina su inicialización.
 
-- **Línea 173:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 174:** `var resultado = _validador.Validar(politicas);` → Ejecuta el validador sobre los datos preparados para este caso.
 
-- **Línea 175:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 176:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
 
-- **Línea 177:** `resultado.Errores.Should().Contain(e => e.Contains("duración de apertura positiva"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
 
-- **Línea 178:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 179:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
 
-- **Línea 180:** `public void Resumen_ConCatalogoPorDefecto_CalculaTotales()` → Nombra la condición de prueba y su resultado esperado.
 
-- **Línea 181:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
 
 - **Línea 182:** `var resumen = ValidadorResiliencia.Resumen(CatalogoPoliticas.PoliticasPorDefecto());` → Calcula el resumen sobre el catálogo por defecto.
 
-- **Línea 183:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
 
-- **Línea 184:** `resumen.Total.Should().Be(5);` → Compara el recuento obtenido con el valor esperado del catálogo.
 
-- **Línea 185:** `resumen.Retry.Should().Be(2);` → Compara el recuento obtenido con el valor esperado del catálogo.
 
-- **Línea 186:** `resumen.CircuitBreaker.Should().Be(2);` → Compara el recuento obtenido con el valor esperado del catálogo.
 
-- **Línea 187:** `resumen.Timeout.Should().Be(1);` → Compara el recuento obtenido con el valor esperado del catálogo.
 
-- **Línea 188:** `resumen.TotalReintentos.Should().Be(8);` → Compara el recuento obtenido con el valor esperado del catálogo.
 
-- **Línea 189:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
-- **Línea 190:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
 
 
 **Comprobación del reto.** Guarda los archivos, compila la copia optativa y ejecuta primero `dotnet test tests/AceriaApp.Resiliencia.Tests/AceriaApp.Resiliencia.Tests.csproj -c Release`, después `dotnet test AceriaApp.sln -c Release`. El catálogo pasa de 18 a 19 tests; la solución debe ejecutar 403 + 1 pruebas, todas aprobadas y ninguna omitida. Confirma en el TRX que se ejecutó `Resumen_ConCatalogoPorDefecto_CalculaTotales` y compara los hashes de la etapa obligatoria: no debe haber cambiado. Revisa `git diff --check` y el índice antes de registrar el reto en un commit local separado.
