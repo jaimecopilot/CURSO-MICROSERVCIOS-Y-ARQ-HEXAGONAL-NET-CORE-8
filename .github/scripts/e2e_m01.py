@@ -292,8 +292,10 @@ def sql_and_http(target,point,index,work,reto=False):
         s.bind(('127.0.0.1',0));port=s.getsockname()[1]
     host=f'http://127.0.0.1:{port}'
     env['ASPNETCORE_URLS']=host
-    app=subprocess.Popen(['dotnet','run','--no-build','--no-launch-profile','--configuration','Release',
-                          '--project',str(api)],cwd=str(target),env=env,
+    # Lanzar la DLL directamente evita mantener el apphost EXE bloqueado en Windows.
+    assembly=api/'bin'/'Release'/'net8.0'/'AceriaApp.Monolito.Api.dll'
+    check(assembly.is_file(),f'No existe el binario compilado: {assembly}')
+    app=subprocess.Popen(['dotnet',str(assembly)],cwd=str(target),env=env,
                          stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
     try:
         ready=False

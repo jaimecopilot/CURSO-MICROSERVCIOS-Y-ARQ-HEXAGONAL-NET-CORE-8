@@ -56,15 +56,24 @@ def read_json(path: Path) -> dict:
 def report_for(module: int, env: dict[str, str], temp: Path) -> dict:
     source = FOLDERS[module]
     if module <= 5:
-        call(sys.executable, ".github/scripts/validar_sqlserver.py", "--modulo", str(module), env=env)
-        result = read_json(ROOT / "docs/validacion-sqlserver" / f"M{module:02}_SQLSERVER_RESULTADOS.json")
+        # Windows SqlClient.SNI requiere ruta corta para los ensamblados nativos.
+        # Los proyectos se reconstruyen desde Markdown; no se copia una etapa final.
+        sys.path.insert(0, str(ROOT / ".github" / "scripts"))
+        from validar_sqlserver import MODULES, reconstruct_through, validate_evidence
+        reconstruct_through(module - 1)
+        out = ROOT / ".qa" / "windows" / f"M{module:02}_E2E_RESULTADOS.json"
+        short_stage = temp / f"m{module:02}-etapas"
+        script_name = MODULES[module][1]
+        call(sys.executable, f".github/scripts/{script_name}",
+             "--out", str(out), "--output-dir", str(short_stage), env=env)
+        e2e = read_json(out)
+        result = validate_evidence(e2e, module, temp / f"m{module:02}-bases")
         check(result.get("resultado") == "PASS", "La reconstrucción SQL+tests no ha pasado")
-        bases = result.get("evidencias_bd", [])
+        bases = [read_json(path) for path in sorted((temp / f"m{module:02}-bases").glob("*.json"))]
         check(bases, "No se han creado bases SQL Server reales")
         for evidence in bases:
             check(evidence.get("engineEdition") == 4, "El motor SQL no es Express/LocalDB")
             check(evidence.get("modo") == "conexion_externa", "Se ha usado Docker en lugar de LocalDB")
-        e2e = read_json(ROOT / source / f"M{module:02}_E2E_RESULTADOS.json")
         bases_count = len(bases)
     else:
         check(env.get("ACERIA_TEST_RABBITMQ"), "Falta URI al RabbitMQ Windows")
