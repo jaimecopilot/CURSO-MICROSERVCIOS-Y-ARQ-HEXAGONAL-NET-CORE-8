@@ -9,6 +9,7 @@ Este módulo añade un proceso YARP independiente delante de Producción e Inven
 - [Teoría en PDF](TEORIA/M08_TEORIA.pdf) y [Markdown](TEORIA/M08_TEORIA.md): 40 bloques ampliados, ejemplos explicados línea por línea y 12 diagramas disponibles en SVG y PNG.
 - [Prácticas en PDF](PRACTICAS/M08_PRACTICAS.pdf) y [Markdown](PRACTICAS/M08_PRACTICAS.md): 96 pasos, archivos completos, cuatro retos optativos resueltos y recorridos PowerShell con SQL Server LocalDB y RabbitMQ.
 - [Cobertura y correcciones](COBERTURA_Y_CORRECCIONES.md): trazabilidad del temario y correcciones técnicas aplicadas.
+- [Revisión editorial y E2E](REVISION_EDITORIAL_M08.md): edición optimizada (145 páginas de prácticas), pruebas Linux/Windows y alcance del cierre antes de integrar en `main`.
 
 ## Etapas acumulativas
 

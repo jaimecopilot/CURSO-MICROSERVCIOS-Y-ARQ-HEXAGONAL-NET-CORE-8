@@ -27,13 +27,16 @@
 
 ## Validación técnica y editorial
 
-Esta revisión **no se considera publicable** hasta contar con:
-- una nueva ejecución correcta de CI sobre esta rama para Linux SQL Server/RabbitMQ + YARP E2E + Windows LocalDB;
-- nuevos PDF y sus informes de páginas, geometría y cobertura;
-- evidencias con hashes de la revisión exacta;
-- inspección visual/manual de una muestra representativa de páginas y comparación pedagógica.
+**Cierre editorial y técnico de M08 (12/11/2026): PASS en rama de desarrollo.**
 
-Las pruebas automatizadas acreditan la equivalencia del código ejecutable; no sustituyen la revisión editorial de calidad o claridad por un docente.
+- [CI editorial 43237110128](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43237110128): **SUCCESS** en Linux, SQL Server Express real, RabbitMQ, HTTP YARP, Windows/LocalDB, PDF y publicación.
+- [CI integrada de desarrollo 43248689157](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43248689157): **SUCCESS** para los tres artefactos y el cierre automático, ejecutado después de fusionar la corrección editorial.
+- **Manual vigente:** prácticas de **145 páginas** y **42.145 palabras**, teoría de **51 páginas** con 12 diagramas. **360** citas de línea verificadas y **1.914** bloques de PDF cotejados; sin bloques omitidos, páginas vacías ni desbordamientos.
+- **Trazabilidad:** 96 pasos, 96 bloques de código y 78 marcadores intactos; regresión mediante huella Git `b4b1a4da0787fd175cf4f6625ce5be6548a7deca`.
+- **Pruebas acumuladas por etapa:** 415, 451, 476 y **491**; retos optativos aislados 416, 452, 477, 492; la evaluación de fiabilidad incluye destinos caídos y reincorporados.
+- **Inspección visual:** revisión selectiva de portada, instrucciones, código largo, tablas, capturas de páginas intermedias y cierre documentada en la PR #10.
+
+Esta aprobación corresponde a la rama de desarrollo; tras integrar en `main`, la cadena M06→M07→M08 debe recertificarse sobre el commit final, pues el M07 heredado puede haber cambiado de revisión.
 
 ## Criterio para extender a M07 y M06
 
