@@ -28,6 +28,12 @@ $platform = (& docker info --format '{{.OSType}}' 2>&1 | Out-String).Trim()
 if ($LASTEXITCODE -ne 0 -or $platform -ne 'linux') {
     throw 'Docker Desktop no expone un motor de contenedores Linux.'
 }
+$dockerOS = (& docker info --format '{{.OperatingSystem}}' 2>&1 | Out-String).Trim()
+if ($LASTEXITCODE -ne 0) { throw 'No se pudo comprobar el sistema del motor Docker.' }
+if ($IsWindows -and $dockerOS -notmatch 'Docker Desktop') {
+    throw "El motor Linux responde en Windows, pero no se ha acreditado Docker Desktop: $dockerOS"
+}
+
 function Compose([string[]]$argsList) {
     & docker compose --env-file $envfile -f $compose @argsList
     if ($LASTEXITCODE -ne 0) { throw "docker compose falló: $($argsList -join ' ')" }
@@ -109,6 +115,7 @@ if ($Accion -eq 'verificar') {
 $reporte = [ordered]@{
     fecha_utc = [DateTime]::UtcNow.ToString('o')
     anfitrion = $(if ($IsWindows) { 'Windows + Docker Desktop (contenedores Linux)' } else { 'Linux GitHub Actions; NO certifica Docker Desktop Windows' })
+    sistema_operativo_motor_docker = $dockerOS
     accion = $Accion
     resultado = 'FAIL'
     pruebas = [ordered]@{}
