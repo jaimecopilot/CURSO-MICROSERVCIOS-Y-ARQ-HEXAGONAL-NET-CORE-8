@@ -1,5 +1,12 @@
 # Revisión visual de prácticas — M07
 
+**Actualización del 12/11/2026:** el manual vigente tiene **174 páginas**, **47.160 palabras**, 96 pasos, 233 referencias de línea y 1.952 bloques HTML cotejados con el PDF, sin omisiones ni páginas vacías o desbordamientos. Se revisaron visualmente muestras de portada, bloques de código, secuencias prácticas, tablas y cierre. Consultar [informe editorial](REVISION_EDITORIAL_M07.md), [reporte PDF](REPORTE_PDF_M07.json) y [CI 43238328603](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43238328603).
+
+> **Histórico:** las comprobaciones de páginas y los hashes que siguen corresponden a una **edición anterior de 267 páginas**; no se utilizan para certificar el manual optimizado.
+
+## Inspección histórica de la edición anterior
+
+
 **Resultado:** revisión visual satisfactoria de las 267 páginas del manual identificado por las huellas de este informe. No se modificó el contenido del manual durante la revisión ni fue necesario regenerar los PDF después de la generación final.
 
 ## Documento y cobertura

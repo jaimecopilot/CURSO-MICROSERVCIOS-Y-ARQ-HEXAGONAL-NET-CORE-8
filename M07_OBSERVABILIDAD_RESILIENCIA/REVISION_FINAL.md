@@ -1,4 +1,15 @@
-# M07 — Revisión final y cierre
+# M07 — Cierre técnico y editorial actualizado
+
+**Edición vigente (12/11/2026):** teoría **51 páginas**, prácticas **174 páginas** (**47.160 palabras**), 96 pasos, 4 retos independientes. Las prácticas reducen el volumen de la edición anterior (267 páginas) sin alterar los 137 bloques de código ni los 105 marcadores de reconstrucción.
+
+**Validación editorial y E2E:** [GitHub Actions 43238328603](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43238328603) — **SUCCESS** en Linux con SQL Server Express y RabbitMQ reales, Windows/LocalDB, generación PDF y publicación. La etapa 7.4 superó **403 pruebas**, el reto aislado **404**. [Informe de revisión editorial vigente](REVISION_EDITORIAL_M07.md) y [reporte PDF](REPORTE_PDF_M07.json).
+
+El contenido que sigue documenta la **edición anterior de 267 páginas**; se conserva por trazabilidad histórica y no describe el PDF actualmente publicado.
+
+---
+
+## Registro histórico: edición anterior de 267 páginas
+
 
 **Resultado: PASS.** Módulo completo comprobado sobre la revisión `53286086bdc9de179af1329cf0b18d421415c71e`.
 
