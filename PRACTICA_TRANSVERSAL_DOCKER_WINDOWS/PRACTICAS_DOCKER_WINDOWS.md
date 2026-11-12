@@ -44,7 +44,7 @@ Abre **Docker Desktop** y activa el motor **WSL 2 / Linux containers**. La instr
 
 Este laboratorio **no** despliega la API. Testcontainers 3.10.0 prepara un SQL Server Express temporal y limpia recursos de pruebas. La imagen utilizada por el helper del curso es `mcr.microsoft.com/mssql/server:2022-CU14-ubuntu-22.04`. Se ejecuta en Linux containers sobre Windows.
 
-Desde la **raíz del proyecto terminado** de cada punto, por ejemplo `M02_APIS_REST_ASPNET_CORE/PROYECTO/2.4-documentacion-swagger` (consulta el nombre exacto de la etapa en el repositorio), ejecuta:
+Desde la **raíz del proyecto terminado** de cada punto, por ejemplo `M02_APIS_REST_ASPNET_CORE/PROYECTO/2.4-documentacion-openapi` (consulta el nombre exacto de la etapa en el repositorio), ejecuta:
 
 ```powershell
 Remove-Item Env:\ACERIA_TEST_SQLSERVER -ErrorAction SilentlyContinue
