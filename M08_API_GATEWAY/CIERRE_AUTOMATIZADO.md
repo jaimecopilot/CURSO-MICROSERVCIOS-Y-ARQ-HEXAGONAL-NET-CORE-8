@@ -1,8 +1,8 @@
 # M08: comprobación automatizada
 
-Resultado: PASS. Revisión `136932758d032be8888e26de95fa5f350eea3e6a`.
+Resultado: PASS. Revisión `56651d1a0c939c3bc9ecfb1a3e829ac0f8d9a163`.
 
-Ejecución: https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43248689157
+Ejecución: https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43255550693
 
 Cuatro etapas reconstruidas desde el Markdown: 415, 451, 476, 491 pruebas; cuatro retos ejecutados por separado con 416, 452, 477, 492 pruebas. Se comprobaron SQL Server Express real, RabbitMQ real, tráfico YARP hacia Producción e Inventario, contratos HTTP, correlación, transformaciones, balanceo entre dos instancias, pérdida y recuperación de destinos y persistencia LocalDB en Windows. Los hashes del manual, proyectos y PDF coinciden con los tres artefactos certificados para esta revisión.
 
