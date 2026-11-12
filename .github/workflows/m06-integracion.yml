@@ -1,7 +1,7 @@
 name: M06 - HTTP eventos SQL Server y RabbitMQ
 on:
   push:
-    branches: [main, 'desarrollo/m06-*']
+    branches: [main, 'desarrollo/m06-*', 'revision/editorial-m06-20261112']
     paths:
       - 'M06_COMUNICACION_MICROSERVICIOS/**'
       - '.github/scripts/m06_*.py'
@@ -25,6 +25,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with: {dotnet-version: '8.0.x'}
+      - name: Seleccionar SDK 8 en Linux para el validador
+        run: |
+          printf '%s\n' '{"sdk":{"version":"8.0.400","rollForward":"latestPatch"}}' > global.json
+          dotnet --version | grep -E '^8[.]0[.]'
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
       - run: python -m unittest discover -s .github/tests
@@ -50,6 +54,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with: {dotnet-version: '8.0.x'}
+      - name: Seleccionar SDK 8 en Windows para el validador
+        shell: pwsh
+        run: |
+          '{"sdk":{"version":"8.0.400","rollForward":"latestPatch"}}' | Set-Content global.json -Encoding utf8
+          $sdk = dotnet --version
+          if ($sdk -notmatch '^8[.]0[.]') { throw "Se esperaba .NET 8 y se encontró $sdk" }
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
       - name: Iniciar SQLServer Express LocalDB
