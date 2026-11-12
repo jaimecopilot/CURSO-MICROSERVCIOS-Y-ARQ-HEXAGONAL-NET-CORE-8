@@ -33,23 +33,13 @@ jobs:
           '{"sdk":{"version":"8.0.400","rollForward":"latestPatch"}}' | Set-Content global.json -Encoding utf8
           if ((dotnet --version) -notmatch '^8[.]0[.]') { throw 'Se exige .NET 8' }
           dotnet tool install --global dotnet-ef --version 8.0.0
-      - name: Iniciar SQL Server LocalDB
+      - name: Iniciar y verificar LocalDB explícita
         shell: pwsh
-        run: |
-          if (-not (Get-Command sqllocaldb -ErrorAction SilentlyContinue)) {
-            $found = Get-ChildItem 'C:\Program Files\Microsoft SQL Server' -Recurse -Filter sqllocaldb.exe -ErrorAction SilentlyContinue | Select-Object -First 1
-            if (-not $found) { throw 'LocalDB no está instalado' }
-            $found.DirectoryName | Out-File -Append -FilePath $env:GITHUB_PATH
-            $env:PATH = "$($found.DirectoryName);$env:PATH"
-          }
-          sqllocaldb info MSSQLLocalDB
-          if ($LASTEXITCODE -ne 0) { sqllocaldb create MSSQLLocalDB }
-          sqllocaldb start MSSQLLocalDB
-          if ($LASTEXITCODE -ne 0) { throw 'LocalDB no arrancó' }
+        run: .github/scripts/windows_localdb.ps1
       - name: Ejecutar 24 pasos, pruebas, reto y SQL/HTTP reales
         shell: pwsh
         env:
-          M01_SQL_CONNECTION_STRING: 'Server=(localdb)\MSSQLLocalDB;Database=AceriaCertWin_${{ matrix.punto }}_${{ github.run_id }};Integrated Security=True;TrustServerCertificate=True'
+          M01_SQL_CONNECTION_STRING: 'Server=(localdb)\AxiaCI;Database=AceriaCertWin_${{ matrix.punto }}_${{ github.run_id }};Integrated Security=True;TrustServerCertificate=True'
         run: |
           New-Item -Type Directory -Force .qa/windows | Out-Null
           python .github/scripts/e2e_m01.py --root . --point '${{ matrix.punto }}' --mode sql --reto --out ".qa/windows/m01-${{ matrix.punto }}.json"
@@ -85,19 +75,9 @@ jobs:
         run: |
           '{"sdk":{"version":"8.0.400","rollForward":"latestPatch"}}' | Set-Content global.json -Encoding utf8
           if ((dotnet --version) -notmatch '^8[.]0[.]') { throw 'Se exige .NET 8' }
-      - name: Iniciar LocalDB
+      - name: Iniciar y verificar LocalDB explícita
         shell: pwsh
-        run: |
-          if (-not (Get-Command sqllocaldb -ErrorAction SilentlyContinue)) {
-            $found = Get-ChildItem 'C:\Program Files\Microsoft SQL Server' -Recurse -Filter sqllocaldb.exe -ErrorAction SilentlyContinue | Select-Object -First 1
-            if (-not $found) { throw 'LocalDB no está instalado' }
-            $found.DirectoryName | Out-File -Append -FilePath $env:GITHUB_PATH
-            $env:PATH = "$($found.DirectoryName);$env:PATH"
-          }
-          sqllocaldb info MSSQLLocalDB
-          if ($LASTEXITCODE -ne 0) { sqllocaldb create MSSQLLocalDB }
-          sqllocaldb start MSSQLLocalDB
-          if ($LASTEXITCODE -ne 0) { throw 'LocalDB no arrancó' }
+        run: .github/scripts/windows_localdb.ps1
       - name: Reconstruir todo el módulo y ejecutar pruebas xUnit, SQL y retos
         shell: pwsh
         run: |
@@ -135,19 +115,9 @@ jobs:
         run: |
           '{"sdk":{"version":"8.0.400","rollForward":"latestPatch"}}' | Set-Content global.json -Encoding utf8
           if ((dotnet --version) -notmatch '^8[.]0[.]') { throw 'Se exige .NET 8' }
-      - name: Iniciar LocalDB
+      - name: Iniciar y verificar LocalDB explícita
         shell: pwsh
-        run: |
-          if (-not (Get-Command sqllocaldb -ErrorAction SilentlyContinue)) {
-            $found = Get-ChildItem 'C:\Program Files\Microsoft SQL Server' -Recurse -Filter sqllocaldb.exe -ErrorAction SilentlyContinue | Select-Object -First 1
-            if (-not $found) { throw 'LocalDB no está instalado' }
-            $found.DirectoryName | Out-File -Append -FilePath $env:GITHUB_PATH
-            $env:PATH = "$($found.DirectoryName);$env:PATH"
-          }
-          sqllocaldb info MSSQLLocalDB
-          if ($LASTEXITCODE -ne 0) { sqllocaldb create MSSQLLocalDB }
-          sqllocaldb start MSSQLLocalDB
-          if ($LASTEXITCODE -ne 0) { throw 'LocalDB no arrancó' }
+        run: .github/scripts/windows_localdb.ps1
       - name: Instalar RabbitMQ real como servicio Windows
         shell: pwsh
         run: .github/scripts/windows_rabbitmq.ps1
