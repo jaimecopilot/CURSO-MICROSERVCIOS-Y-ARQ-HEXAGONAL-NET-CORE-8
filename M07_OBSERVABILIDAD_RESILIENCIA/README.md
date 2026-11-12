@@ -2,7 +2,7 @@
 
 **Curso JAIME GALLO · AceriaApp**
 
-**Módulo cerrado:** [revisión final y evidencias](REVISION_FINAL.md). [CI completo aprobado](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43013439346).
+**Edición vigente:** [cierre y archivo histórico](REVISION_FINAL.md) · [optimización editorial](REVISION_EDITORIAL_M07.md) · [CI E2E/PDF aprobado](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43238328603). Las prácticas actuales contienen **174 páginas**, frente a 267 en la edición anterior.
 
 Cuatro etapas acumulativas desde M06 6.3: logs y correlación, salud, excepciones y resiliencia HTTP mediante Polly v8. El cierre exige ejecución real de SQL Server, RabbitMQ y Windows/LocalDB, revisión de los PDF y coincidencia de hashes.
 
