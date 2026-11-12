@@ -35,6 +35,10 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
+      - name: Usar SDK .NET 8 en la reconstrucción Linux
+        run: |
+          printf '%s\n' '{"sdk":{"version":"8.0.400","rollForward":"latestPatch"}}' > global.json
+          dotnet --version | grep -E '^8[.]0[.]'
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
@@ -72,6 +76,12 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
+      - name: Usar SDK .NET 8 en Windows
+        shell: pwsh
+        run: |
+          '{"sdk":{"version":"8.0.400","rollForward":"latestPatch"}}' | Set-Content global.json -Encoding utf8
+          $sdk = dotnet --version
+          if ($sdk -notmatch '^8[.]0[.]') { throw "Se esperaba SDK .NET 8; detectado $sdk" }
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
