@@ -1,7 +1,7 @@
 name: M08 - API Gateway YARP SQL Server y RabbitMQ
 on:
   push:
-    branches: [main, 'desarrollo/m08-api-gateway']
+    branches: [main, 'desarrollo/m08-api-gateway', 'revision/editorial-m08-20261112']
     paths:
       - 'M08_API_GATEWAY/**'
       - '.github/scripts/m08_*.py'
@@ -26,6 +26,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with: {dotnet-version: '8.0.x'}
+      - name: Fijar SDK 8 para ejecutar el host y las soluciones docentes
+        run: |
+          printf '%s\n' '{"sdk":{"version":"8.0.400","rollForward":"latestPatch"}}' > global.json
+          dotnet --version
+          dotnet --version | grep -E '^8[.]0[.]'
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
       - run: python -m unittest discover -s .github/tests
@@ -56,6 +61,13 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with: {dotnet-version: '8.0.x'}
+      - name: Fijar SDK 8 para ejecutar el host en Windows
+        shell: pwsh
+        run: |
+          '{"sdk":{"version":"8.0.400","rollForward":"latestPatch"}}' | Set-Content global.json -Encoding utf8
+          $sdk = dotnet --version
+          Write-Output $sdk
+          if ($sdk -notmatch '^8[.]0[.]') { throw "Se esperaba SDK de .NET 8, detectado $sdk" }
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
       - name: Iniciar SQLServer Express LocalDB
