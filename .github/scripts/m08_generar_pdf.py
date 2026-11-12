@@ -43,6 +43,8 @@ th { background: #eaf1f7; color: #10283e; font-weight: bold; }
 td,th { border: .55pt solid #aebfce; vertical-align: top; padding: 5pt 6pt;
   overflow-wrap: anywhere; word-break: break-word; }
 tr { break-inside: avoid; }
+table.inventory { table-layout: auto; }
+table.inventory th { overflow-wrap: normal; word-break: normal; }
 img { max-width: 100%; height: auto; object-fit: contain; }
 blockquote { border-left: 3pt solid #bacbd9; margin: 9pt 0; padding-left: 9pt; }
 .references, .point-intro { break-inside: avoid; }
@@ -124,6 +126,10 @@ def main():
   invalid=sorted({tag.name for tag in BeautifulSoup(html,'html.parser').find_all() if tag.name not in allowed})
   if invalid:raise ValueError(f'HTML inesperado en {typ}; protege los tipos genéricos con comillas de código: {invalid}')
   soup=BeautifulSoup(html,'html.parser')
+  if typ=='PRACTICAS':
+   for table in soup.find_all('table'):
+    if len(table.find_all('th'))==7:
+     table['class']=table.get('class',[])+['inventory']
   # A long listing must flow from the available space instead of moving in full
   # to the next page and then splitting there anyway. Short examples stay united.
   for listing in soup.find_all('pre'):
@@ -139,13 +145,19 @@ def main():
    if heading.get_text().startswith('Punto '):
     members=[heading]
     sibling=heading.find_next_sibling()
-    while sibling is not None and sibling.name not in ('hr','h1','h2'):
+    while sibling is not None and sibling.name not in ('hr','h1','h2','h3'):
      members.append(sibling)
      sibling=sibling.find_next_sibling()
     group=soup.new_tag('div',attrs={'class':'point-intro'})
     heading.insert_before(group)
     for member in members:group.append(member.extract())
   for heading in soup.find_all('h2'):
+   if typ=='PRACTICAS' and heading.get_text()=='Cierre del curso':
+    closing=heading.find_next_sibling('p')
+    if closing is not None:
+     section=soup.new_tag('div',attrs={'class':'point-intro'})
+     heading.insert_before(section)
+     section.append(heading.extract());section.append(closing.extract())
    if heading.get_text() in ('Documentación técnica de consulta','Bibliografía oficial y lecturas de ampliación'):
     listing=heading.find_next_sibling('ul')
     if listing is not None:
