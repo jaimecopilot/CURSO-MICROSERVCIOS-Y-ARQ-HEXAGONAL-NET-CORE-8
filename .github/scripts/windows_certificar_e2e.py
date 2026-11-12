@@ -35,7 +35,7 @@ FOLDERS = {
     7: "M07_OBSERVABILIDAD_RESILIENCIA",
     8: "M08_API_GATEWAY",
 }
-LOCALDB = r"Server=(localdb)\MSSQLLocalDB;Database=master;Integrated Security=True;TrustServerCertificate=True"
+LOCALDB = os.environ.get("ACERIA_CI_SQLSERVER", r"Server=(localdb)\AxiaCI;Database=master;Integrated Security=True;TrustServerCertificate=True")
 
 
 def check(condition: bool, message: str) -> None:
