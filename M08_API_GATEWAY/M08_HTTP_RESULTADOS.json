@@ -1,7 +1,7 @@
 {
   "resultado": "PASS",
-  "ejecucion": "7037dc7c06374ae0998b289cf555640e",
-  "commit_comprobado": "56651d1a0c939c3bc9ecfb1a3e829ac0f8d9a163",
+  "ejecucion": "8bd3d0b32502451bad27bc1ff4ceba62",
+  "commit_comprobado": "5e302fa736e66663fd814462f766d4335b85cb15",
   "plataforma": "Linux SQL Server Express y RabbitMQ",
   "codigo_normalizado_sha256": {
     "global.json": "9ea63b9eab5c1fc7b0b5287623a64bba9cb6b374f499b14cb3199a23793aa590",
@@ -304,7 +304,7 @@
     },
     {
       "metodo": "GET",
-      "ruta": "/api/v1/comunicacion/materiales/Acero?secreto=query-540d0706d8b04f048518ef17fde6de88",
+      "ruta": "/api/v1/comunicacion/materiales/Acero?secreto=query-360b44d1b0a240d4b6157fca1324db51",
       "estado": 200
     },
     {
@@ -319,7 +319,7 @@
     },
     {
       "metodo": "GET",
-      "ruta": "/api/v1/ordenes/92699232-f0d4-4df2-80ae-20e5c9598bea",
+      "ruta": "/api/v1/ordenes/fc9d8e01-7bc4-4e32-8891-452a634e856c",
       "estado": 200
     },
     {
@@ -334,17 +334,17 @@
     },
     {
       "metodo": "GET",
-      "ruta": "/api/v1/ordenes/15bceec7-63a7-4c77-bbed-47956a6c58e4",
+      "ruta": "/api/v1/ordenes/e0157d8a-3622-4b1a-bbf4-7939752f8c3b",
       "estado": 404
     },
     {
       "metodo": "POST",
-      "ruta": "/api/v1/ordenes/92699232-f0d4-4df2-80ae-20e5c9598bea/finalizar",
+      "ruta": "/api/v1/ordenes/fc9d8e01-7bc4-4e32-8891-452a634e856c/finalizar",
       "estado": 200
     },
     {
       "metodo": "POST",
-      "ruta": "/api/v1/ordenes/92699232-f0d4-4df2-80ae-20e5c9598bea/finalizar",
+      "ruta": "/api/v1/ordenes/fc9d8e01-7bc4-4e32-8891-452a634e856c/finalizar",
       "estado": 409
     },
     {
@@ -389,22 +389,22 @@
     },
     {
       "metodo": "POST",
-      "ruta": "/api/v1/produccion/ordenes/17b6784b-5945-4734-b37f-c6e97754b183/lineas",
+      "ruta": "/api/v1/produccion/ordenes/9fbfad1b-8d44-4cce-b461-df3defe7522e/lineas",
       "estado": 200
     },
     {
       "metodo": "POST",
-      "ruta": "/api/v1/comunicacion/ordenes/17b6784b-5945-4734-b37f-c6e97754b183/planificar",
+      "ruta": "/api/v1/comunicacion/ordenes/9fbfad1b-8d44-4cce-b461-df3defe7522e/planificar",
       "estado": 202
     },
     {
       "metodo": "POST",
-      "ruta": "/api/v1/comunicacion/ordenes/17b6784b-5945-4734-b37f-c6e97754b183/planificar",
+      "ruta": "/api/v1/comunicacion/ordenes/9fbfad1b-8d44-4cce-b461-df3defe7522e/planificar",
       "estado": 409
     },
     {
       "metodo": "HEAD",
-      "ruta": "/api/v1/planificaciones/17b6784b-5945-4734-b37f-c6e97754b183",
+      "ruta": "/api/v1/planificaciones/9fbfad1b-8d44-4cce-b461-df3defe7522e",
       "estado": 200
     }
   ],
@@ -428,8 +428,8 @@
     "inventario-2"
   ],
   "balanceo": "PASS",
-  "mensajeria_orden_id": "17b6784b-5945-4734-b37f-c6e97754b183",
-  "mensajeria_evento_id": "2488f09f-8cbc-4e55-bdb5-d54ecd110834",
+  "mensajeria_orden_id": "9fbfad1b-8d44-4cce-b461-df3defe7522e",
+  "mensajeria_evento_id": "e548d472-5600-48f9-b983-a13d73da2a44",
   "mensajeria_total": 30,
   "mensajeria": "PASS",
   "instancia_caida": [
@@ -442,11 +442,11 @@
   ],
   "todos_caidos_http": 503,
   "recuperacion_instancias": [
-    "inventario-2",
     "inventario-1",
-    "inventario-2",
     "inventario-1",
-    "inventario-2",
+    "inventario-1",
+    "inventario-1",
+    "inventario-1",
     "inventario-1",
     "inventario-2",
     "inventario-1",
@@ -456,6 +456,6 @@
     "inventario-1"
   ],
   "fallo_y_recuperacion": "PASS",
-  "persistencia_orden_id": "17b6784b-5945-4734-b37f-c6e97754b183",
+  "persistencia_orden_id": "9fbfad1b-8d44-4cce-b461-df3defe7522e",
   "reinicio_con_persistencia": "PASS"
 }
