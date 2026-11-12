@@ -1,4 +1,15 @@
-# Cierre de M06 — Comunicación entre microservicios
+# M06 — Cierre técnico y editorial vigente
+
+**Actualización del 12/11/2026:** teoría de **41 páginas**, prácticas de **116 páginas** (**32.293 palabras**, 72 pasos y 3 retos independientes). Se han conservado los 114 bloques de código y 101 marcadores de reconstrucción y se han eliminado únicamente explicaciones redundantes de líneas triviales.
+
+**Cierre automatizado de la edición optimizada:** [GitHub Actions 43248017123](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43248017123) — **SUCCESS** tras integrar en `main`, con SQL Server Express real, RabbitMQ, HTTP entre dos procesos, Windows/LocalDB y generación PDF. Etapas 232, 264, **283 pruebas**, con 233, 265 y 284 para retos aislados. [Informe PDF](REPORTE_PDF_M06.json) y [auditoría editorial](REVISION_EDITORIAL_M06.md).
+
+Los datos y recuentos que siguen son el **registro histórico de la edición anterior de 146 páginas**. No describen el PDF optimizado que se entrega actualmente.
+
+---
+
+## Registro histórico: cierre de la edición anterior
+
 
 **Resultado: completado y verificado.** Revisión ejecutable comprobada: `4236caf93137ad72bb5009ba2916be1c0a29ddbc`.
 

@@ -2,11 +2,11 @@
 
 **Curso JAIME GALLO · AceriaApp**
 
-**Módulo cerrado:** [revisión final y evidencia](REVISION_FINAL.md). La solución final contiene 29 proyectos y supera 283 pruebas; las tres etapas y los tres retos se han reconstruido desde el manual.
+**Edición vigente:** [revisión final y registro histórico](REVISION_FINAL.md) · [cierre editorial optimizado](REVISION_EDITORIAL_M06.md). Teoría: **41 páginas**; prácticas: **116 páginas** (frente a 146 en la edición anterior). La solución final contiene 29 proyectos y supera 283 pruebas; las tres etapas y los tres retos se han reconstruido desde el manual.
 
 - [Teoría](TEORIA/M06_TEORIA.md) · [PDF](TEORIA/M06_TEORIA.pdf): 30 bloques, 30 ampliaciones y 10 diagramas SVG/PNG.
 - [Prácticas](PRACTICAS/M06_PRACTICAS.md) · [PDF](PRACTICAS/M06_PRACTICAS.pdf): 72 pasos y 3 retos resueltos, con los archivos completos.
-- [Proyectos acumulativos](PROYECTO):tres etapas desde M05 5.5 corregido y probado con SQL Server.
+- [Proyectos acumulativos](PROYECTO): tres etapas desde M05 5.5 corregido y probado con SQL Server.
 - [Evidencia de reconstrucción](M06_E2E_RESULTADOS.json), [SQL Server y broker](M06_SQLSERVER_RESULTADOS.json), [dos procesos HTTP](M06_HTTP_RESULTADOS.json), [Windows/LocalDB](M06_WINDOWS_RESULTADOS.json).
 
 | Punto | Comportamiento ejecutable | Etapa |
@@ -23,16 +23,16 @@ Los catálogos de análisis no equivalen a tráfico de red. Las comprobaciones f
 
 Consulta los apartados «Entorno para las comunicaciones reales» y «Arranque de los dos procesos» de las prácticas. Las dos API escuchan en 5105 y 5106. Los workers están desactivados por defecto: desde 6.2 se habilitan con `Comunicacion__WorkersActivos=true` en ambas terminales. Cada etapa dispone de bases y topología propias.
 
-El endpoint integrado es `POST /api/v 1/comunicacion/ordenes/{id}/planificar`. La ruta de planificación local de M5 permanece como ejercicio independiente y no publica eventos. La consulta de stock es informativa: no reserva material ni constituye una transacción distribuida. La proyección de Inventario registra la planificación; no descuenta stock ni genera facturas.
+El endpoint integrado es `POST /api/v1/comunicacion/ordenes/{id}/planificar`. La ruta de planificación local de M5 permanece como ejercicio independiente y no publica eventos. La consulta de stock es informativa: no reserva material ni constituye una transacción distribuida. La proyección de Inventario registra la planificación; no descuenta stock ni genera facturas.
 
 ## Reproducir la validación
 
 Desde la raíz del repositorio, con .NET 8, Python y Docker:
 
 ```bash
-dotnet run --project tools/M06ValidationHost -c Release -- python .github/scripts/m 06_validar.py
-python .github/scripts/m 06_crear_figuras.py
-python .github/scripts/m 06_generar_pdf.py
+dotnet run --project tools/M06ValidationHost -c Release -- python .github/scripts/m06_validar.py
+python .github/scripts/m06_crear_figuras.py
+python .github/scripts/m06_generar_pdf.py
 ```
 
 El E2E parte exclusivamente de M05 y del Markdown de prácticas. Compila estados intermedios, ejecuta todas las pruebas acumuladas y reconstruye los tres retos en copias separadas. El modo `--no-tests` produce un informe `SIN_TESTS`; no se utiliza como evidencia de ejecución. Los pasos manuales de Visual Studio no se simulan.
