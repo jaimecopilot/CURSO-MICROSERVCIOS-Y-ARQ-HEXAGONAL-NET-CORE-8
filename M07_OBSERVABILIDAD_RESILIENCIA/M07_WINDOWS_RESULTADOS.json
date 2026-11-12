@@ -1,7 +1,7 @@
 {
   "resultado": "PASS",
-  "ejecucion": "3c743d90195345ddb52992a4c1be580e",
-  "commit_comprobado": "0f1ad3cb0b2517429adc53f8945791a088bba7e6",
+  "ejecucion": "88cb02d1560947b2bc93aa23d1eca0d0",
+  "commit_comprobado": "2fdd37a9e580625d0442f1271df13e8bd9f2d330",
   "plataforma": "Windows LocalDB",
   "codigo_normalizado_sha256": {
     "global.json": "9ea63b9eab5c1fc7b0b5287623a64bba9cb6b374f499b14cb3199a23793aa590",
@@ -265,7 +265,7 @@
   "health_checks": "PASS",
   "gestion_excepciones": "PASS",
   "resiliencia": "PASS",
-  "circuito_abierto_respuesta_segundos": 0.0,
+  "circuito_abierto_respuesta_segundos": 0.016,
   "reinicio_con_persistencia": "PASS",
   "mensajeria": "CUBIERTA_EN_LINUX"
 }
