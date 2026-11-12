@@ -20,7 +20,7 @@
   {
     "documento": "PRACTICAS",
     "paginas": 175,
-    "bytes": 484449,
+    "bytes": 484454,
     "palabras": 47580,
     "pdf": "M07_OBSERVABILIDAD_RESILIENCIA/PRACTICAS/M07_PRACTICAS.pdf",
     "explicaciones_separadas": 233,
@@ -28,7 +28,7 @@
     "ampliaciones": 0,
     "figuras": 0,
     "markdown_sha256": "6bcac7aa33ff331c5d3933e92b4ec154c6eae159dc0262295ffb92d52cd515a2",
-    "pdf_sha256": "0ad81acf2a28b6ef2154ae2bd8b40285a0eafc0f2bcbee8dee04ae6d8927a584",
+    "pdf_sha256": "9ad94b9d77d88d8287932fdf22077c9afb73131d4922625b79e8d9f4deb3b56e",
     "bloques_html": 1962,
     "bloques_pdf_verificados": 1962,
     "bloques_omitidos": 0,

@@ -1,10 +1,10 @@
 {
   "resultado": "PASS",
   "pdf": "PRACTICAS_DOCKER_WINDOWS.pdf",
-  "paginas": 5,
-  "palabras": 1958,
-  "sha_md": "444e6b5e442fce640d02cb7920c0ea56994cc4cc83fb62597a5eb0254025a083",
-  "sha_pdf": "7c3f1d52716fbe7e97363edec4595913b90113dec78d62651f81679e489b0fd4",
+  "paginas": 11,
+  "palabras": 4390,
+  "sha_md": "b6f657e5504d89d3b1f85d09dee613b0d75b49c00a42a57706eb8a8ffc8adf7b",
+  "sha_pdf": "7c758bdafa87a6a5803ec3799f246e3c8f8d55b528780f2d7b38aef68b92fc12",
   "paginas_blancas": [],
   "desbordamientos": []
 }
