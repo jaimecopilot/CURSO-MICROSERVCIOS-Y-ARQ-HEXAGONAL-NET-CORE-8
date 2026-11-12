@@ -1,0 +1,13 @@
+services:
+  rabbitmq:
+    image: rabbitmq:4.1.5-management
+    environment:
+      RABBITMQ_DEFAULT_USER: curso
+      RABBITMQ_DEFAULT_PASS: curso-local
+    ports:
+      - "127.0.0.1:5672:5672"
+      - "127.0.0.1:15672:15672"
+    volumes:
+      - rabbitmq-datos:/var/lib/rabbitmq
+volumes:
+  rabbitmq-datos:
