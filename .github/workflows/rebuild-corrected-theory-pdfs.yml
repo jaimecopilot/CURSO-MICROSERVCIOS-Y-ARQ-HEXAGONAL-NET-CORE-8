@@ -1,9 +1,10 @@
-name: Validar teorias y cabeceras de M01 a M08
+name: PDF corregidos y cabeceras del curso
 
 on:
   push:
     branches: [version-corregida]
     paths:
+      - 'M01_INTRODUCCION_MICROSERVICIOS/PRACTICAS/M01_PRACTICAS.md'
       - 'M06_COMUNICACION_MICROSERVICIOS/TEORIA/M06_TEORIA.md'
       - 'M07_OBSERVABILIDAD_RESILIENCIA/TEORIA/M07_TEORIA.md'
       - 'M08_API_GATEWAY/TEORIA/M08_TEORIA.md'
@@ -49,6 +50,7 @@ jobs:
               Path("M06_COMUNICACION_MICROSERVICIOS/TEORIA/M06_TEORIA.md"),
               Path("M07_OBSERVABILIDAD_RESILIENCIA/TEORIA/M07_TEORIA.md"),
               Path("M08_API_GATEWAY/TEORIA/M08_TEORIA.md"),
+              Path("M01_INTRODUCCION_MICROSERVICIOS/PRACTICAS/M01_PRACTICAS.md"),
           ]
           style = """
           @page {
@@ -102,6 +104,7 @@ jobs:
             "M06_COMUNICACION_MICROSERVICIOS/TEORIA/M06_TEORIA.pdf": ("Punto 6.1", "Punto 6.2", "Punto 6.3"),
             "M07_OBSERVABILIDAD_RESILIENCIA/TEORIA/M07_TEORIA.pdf": ("Punto 7.1", "Punto 7.2", "Punto 7.3", "Punto 7.4"),
             "M08_API_GATEWAY/TEORIA/M08_TEORIA.pdf": ("Punto 8.1", "Punto 8.2", "Punto 8.3", "Punto 8.4"),
+            "M01_INTRODUCCION_MICROSERVICIOS/PRACTICAS/M01_PRACTICAS.pdf": ("Punto 1.1", "Punto 1.2", "Punto 1.3", "Punto 1.4", "Punto 1.5"),
           }
           for file, headings in cases.items():
               doc = fitz.open(file)
@@ -118,11 +121,16 @@ jobs:
               print(f"VALIDADO: {file} | {len(doc)} paginas | {len(full_text.split()):,} palabras extraibles")
           PY
 
-      - name: Aplicar cabeceras del curso en todas las paginas de M01-M08
+      - name: Aplicar cabeceras de teoría en M01-M08
         run: python tools/pdf_running_headers.py
 
+      - name: Aplicar cabeceras de prácticas en M01
+        run: python tools/pdf_running_headers.py --practicas
+
       - name: Validar por separado todas las cabeceras
-        run: python tools/pdf_running_headers.py --check
+        run: |
+          python tools/pdf_running_headers.py --check
+          python tools/pdf_running_headers.py --practicas --check
 
       - name: Publicar los PDF en la misma rama
         run: |
@@ -136,7 +144,8 @@ jobs:
             M05_DDD_CQRS/TEORIA/M05_TEORIA.pdf \
             M06_COMUNICACION_MICROSERVICIOS/TEORIA/M06_TEORIA.pdf \
             M07_OBSERVABILIDAD_RESILIENCIA/TEORIA/M07_TEORIA.pdf \
-            M08_API_GATEWAY/TEORIA/M08_TEORIA.pdf
+            M08_API_GATEWAY/TEORIA/M08_TEORIA.pdf \
+            M01_INTRODUCCION_MICROSERVICIOS/PRACTICAS/M01_PRACTICAS.pdf
           if git diff --cached --quiet; then
             echo "No hay cambios de PDF"
           else
