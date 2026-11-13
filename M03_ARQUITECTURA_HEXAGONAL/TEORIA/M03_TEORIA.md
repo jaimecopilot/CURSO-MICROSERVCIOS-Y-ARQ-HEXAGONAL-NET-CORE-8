@@ -25,11 +25,15 @@ El punto de partida es `M02_APIS_REST_ASPNET_CORE/PROYECTO/2.4-documentacion-ope
 
 ---
 
-## Desarrollo teórico
+## Comprender las responsabilidades antes de separar proyectos
 
-### Bloque 1 — El concepto de capa
 
-Una capa es una unidad de organización del código que agrupa elementos con una responsabilidad común. La organización por capas es una de las técnicas más antiguas y más extendidas en el diseño de software. Su objetivo es separar las responsabilidades para reducir el acoplamiento y facilitar la evolución. Cada capa expone una interfaz estable al resto del sistema y oculta su implementación interna. La separación permite que una capa cambie sin afectar a las demás, siempre que se respete la interfaz. Las capas no son un fin en sí mismas: son un medio para gestionar la complejidad.
+
+Partiremos del recorrido de una orden en la API del módulo anterior. Cada frontera aparecerá cuando podamos explicar qué decisión pertenece a su núcleo, qué tarea corresponde al adaptador y qué test demostraría que ambas partes conservan su contrato.
+
+### El concepto de capa
+
+Hablar de capas significa organizar el código según la responsabilidad de cada componente y controlar cómo se relacionan esas responsabilidades. En AceriaApp ya disponemos de una Minimal API que atiende peticiones y utiliza EF Core, pero en ese primer diseño algunas decisiones de negocio conviven con el transporte y la persistencia. Antes de separarlas, conviene comprender qué debe permanecer estable si cambiamos un endpoint, introducimos otra base o reutilizamos el mismo caso de uso desde una tarea interna. Presentación, aplicación, dominio e infraestructura son nombres útiles para describir esas funciones, pero no imponen una estructura física única. Una carpeta denominada `Dominio` no garantiza que sus clases sean independientes de ASP.NET Core: la prueba está en sus referencias, sus tipos y las reglas que realmente contienen.
 
 ```text
 Capas habituales en una aplicación:
@@ -40,31 +44,26 @@ Capas habituales en una aplicación:
 4. Infraestructura → persistencia, mensajería, servicios externos.
 ```
 
-- **Línea 1:** `1. Presentación` → capa de interfaz con el exterior.
-- **Línea 2:** `2. Aplicación` → capa de casos de uso y orquestación.
-- **Línea 3:** `3. Dominio` → capa de entidades y reglas de negocio.
-- **Línea 4:** `4. Infraestructura` → capa de persistencia y servicios externos.
+
+La representación habitual de cuatro capas es una forma de clasificar responsabilidades: presentación interpreta el exterior, aplicación organiza acciones, dominio mantiene las reglas e infraestructura conecta con tecnologías. No debe confundirse el orden gráfico con una obligación de referencias desde cada capa hacia otra inmediatamente inferior. La frontera real se determina por los contratos y el sentido de sus dependencias.
+
 
 La organización por capas produce cuatro beneficios medibles. El primero es la separación de responsabilidades: cada capa tiene una responsabilidad clara y delimitada. El segundo es la reutilización: una capa puede reutilizarse en distintos contextos. El tercero es la testabilidad: cada capa se puede probar de forma aislada. El cuarto es la mantenibilidad: los cambios se localizan en la capa correspondiente. Los cuatro beneficios justifican la adopción de la organización por capas en cualquier proyecto de tamaño medio o grande.
 
 La organización por capas no es una garantía automática de calidad. Una organización por capas mal aplicada produce capas que se conocen entre sí de forma desordenada, con dependencias cíclicas y con lógica duplicada. La calidad de la organización depende de la disciplina con la que se aplique la regla de dependencia. La regla de dependencia establece que las capas se conocen en una única dirección: las capas exteriores conocen a las interiores, pero las interiores no conocen a las exteriores. La aplicación estricta de la regla es lo que produce los beneficios de la organización por capas.
 
----
 
+Una carpeta denominada «Dominio» no demuestra por sí misma que exista una capa de dominio. La capa se define por su responsabilidad y por el sentido de sus dependencias. En AceriaApp podemos colocar clases en cuatro carpetas y, aun así, seguir acoplando las reglas a una solicitud HTTP. La primera comprobación consiste en leer sus tipos públicos: ¿quién conoce `HttpContext`, quién usa `DbContext` y quién puede ejecutarse sin arrancar un servidor? La respuesta distingue una división estética de una frontera arquitectónica.
 
-#### Ampliación didáctica aplicada a AceriaApp
+En M02 el manejador de POST valida datos, decide si la cantidad excede 500, instancia la entidad y persiste con EF Core. Es útil para aprender Minimal APIs, pero junta responsabilidades distintas. En M03 proponemos que el adaptador HTTP traduzca el JSON, que `OrdenesCasoUso` coordine la operación, que `OrdenHexagonal` conserve invariantes y que `OrdenRepositorioSqlServer` ejecute la persistencia. Sigue habiendo un único proceso web; cambia la organización del código, no necesariamente la infraestructura de despliegue.
 
-**La decisión arquitectónica.** Una carpeta denominada «Dominio» no demuestra por sí misma que exista una capa de dominio. La capa se define por su responsabilidad y por el sentido de sus dependencias. En AceriaApp podemos colocar clases en cuatro carpetas y, aun así, seguir acoplando las reglas a una solicitud HTTP. La primera comprobación consiste en leer sus tipos públicos: ¿quién conoce `HttpContext`, quién usa `DbContext` y quién puede ejecutarse sin arrancar un servidor? La respuesta distingue una división estética de una frontera arquitectónica.
+Se suele dibujar una arquitectura de cuatro rectángulos y asumir que los cuatro son obligatorios. No lo son: una capa tiene sentido cuando expresa un límite cuyo coste de mantenimiento compensa la complejidad. Separar por nombres de clase no mejora la sustitución de tecnología; separar por dependencias y contratos sí permite comprobarla. En una aplicación minúscula un servicio adicional puede ser más costoso que un método bien cohesionado.
 
-**Ejemplo concreto en AceriaApp.** En M02 el manejador de POST valida datos, decide si la cantidad excede 500, instancia la entidad y persiste con EF Core. Es útil para aprender Minimal APIs, pero junta responsabilidades distintas. En M03 proponemos que el adaptador HTTP traduzca el JSON, que `OrdenesCasoUso` coordine la operación, que `OrdenHexagonal` conserve invariantes y que `OrdenRepositorioSqlServer` ejecute la persistencia. Sigue habiendo un único proceso web; cambia la organización del código, no necesariamente la infraestructura de despliegue.
+El alumno debe localizar en la solución `AceriaApp.Api`, `AceriaApp.Hexagonal.Aplicacion`, `AceriaApp.Hexagonal.Dominio` e `AceriaApp.Hexagonal.Infraestructura`. La evidencia no es solo que existan los nombres, sino que la referencia desde dominio hacia infraestructura sea inexistente y que el proyecto de dominio compile por separado.
 
-**Riesgo, alternativa y límite.** Se suele dibujar una arquitectura de cuatro rectángulos y asumir que los cuatro son obligatorios. No lo son: una capa tiene sentido cuando expresa un límite cuyo coste de mantenimiento compensa la complejidad. Separar por nombres de clase no mejora la sustitución de tecnología; separar por dependencias y contratos sí permite comprobarla. En una aplicación minúscula un servicio adicional puede ser más costoso que un método bien cohesionado.
+### Capa de dominio
 
-**Comprobación técnica y aprendizaje.** El alumno debe localizar en la solución `AceriaApp.Api`, `AceriaApp.Hexagonal.Aplicacion`, `AceriaApp.Hexagonal.Dominio` e `AceriaApp.Hexagonal.Infraestructura`. La evidencia no es solo que existan los nombres, sino que la referencia desde dominio hacia infraestructura sea inexistente y que el proyecto de dominio compile por separado.
-
-### Bloque 2 — Capa de dominio
-
-La capa de dominio contiene las entidades, los value objects, los agregados y las reglas de negocio. Es la capa más interna y la que tiene menos dependencias externas. Las entidades representan conceptos del negocio con identidad propia. Los value objects representan conceptos del negocio sin identidad propia. Los agregados agrupan entidades y value objects bajo una raíz común. Las reglas de negocio se expresan como invariantes que deben cumplirse en todo momento. La capa de dominio no conoce la base de datos, ni el framework web, ni la mensajería.
+El dominio contiene conceptos y reglas que seguirían siendo válidos aunque desapareciera la API HTTP. Una orden de fabricación tiene identidad, cliente, material, cantidad y estados permitidos; no debe aceptar una transición imposible simplemente porque el endpoint no la haya validado. Para lograrlo, la entidad debe mantener las invariantes mediante su propio comportamiento y ofrecer operaciones que expresen el lenguaje del negocio, en lugar de exponer setters indiscriminados. En AceriaApp, `OrdenHexagonal` permitirá representar esa idea con un estado controlado y una transición de finalización. La independencia del dominio se demuestra al ejecutar sus tests sin iniciar Kestrel ni disponer de una cadena SQL. Esta separación reduce la posibilidad de que otro canal de entrada pase por alto las reglas esenciales.
 
 ```csharp
 namespace AceriaApp.Monolito.Api.Dominio;
@@ -93,50 +92,28 @@ public class Orden
 }
 ```
 
-- **Línea 1:** `namespace AceriaApp.Monolito.Api.Dominio;` → espacio de nombres de la capa de dominio.
-- **Línea 2:** `public class Orden` → entidad del dominio.
-- **Línea 3:** `{` → abre el cuerpo de la clase.
-- **Línea 4:** `public Guid Id { get; private set; }` → identificador con setter privado.
-- **Línea 5:** `public string Cliente { get; private set; } = string.Empty;` → cliente con setter privado.
-- **Línea 6:** `public int Cantidad { get; private set; }` → cantidad con setter privado.
-- **Línea 7:** `public Orden(Guid id, string cliente, int cantidad)` → constructor con validación.
-- **Línea 8:** `{` → abre el cuerpo del constructor.
-- **Línea 9:** `if (string.IsNullOrWhiteSpace(cliente))` → valida el cliente.
-- **Línea 10:** `{` → abre el bloque de error.
-- **Línea 11:** `throw new ArgumentException("El cliente es obligatorio.", nameof(cliente));` → lanza excepción.
-- **Línea 12:** `}` → cierra el bloque de error.
-- **Línea 13:** `if (cantidad <= 0)` → valida la cantidad.
-- **Línea 14:** `{` → abre el bloque de error.
-- **Línea 15:** `throw new ArgumentException("La cantidad debe ser mayor que cero.", nameof(cantidad));` → lanza excepción.
-- **Línea 16:** `}` → cierra el bloque de error.
-- **Línea 17:** `Id = id;` → asigna el identificador.
-- **Línea 18:** `Cliente = cliente;` → asigna el cliente.
-- **Línea 19:** `Cantidad = cantidad;` → asigna la cantidad.
-- **Línea 20:** `}` → cierra el constructor.
-- **Línea 21:** `}` → cierra la clase.
+
+En la entidad de ejemplo destacan el identificador y los cambios controlados por métodos, en vez de un objeto que cualquier consumidor pueda modificar libremente. La validación del constructor permite crear una orden válida desde distintos canales sin copiar esa condición en cada endpoint. El test del dominio debe comprobar tanto el caso satisfactorio como el intento de construir un estado imposible.
+
 
 La capa de dominio se caracteriza por tres propiedades. La primera es que no tiene dependencias externas: no referencia ningún paquete de infraestructura. La segunda es que expone sus invariantes: las reglas de negocio se validan en el constructor o en métodos específicos. La tercera es que es testeable de forma aislada: los tests no necesitan base de datos ni framework web. Las tres propiedades son la base para que el dominio sea estable y reutilizable en distintos contextos.
 
----
 
+El dominio expresa hechos y reglas de la acería, no el protocolo por el que alguien solicita una orden. `OrdenHexagonal` contiene Id, cliente, material, cantidad y estado porque son conceptos de negocio. Cuando su método `Finalizar()` impide repetir la transición, la entidad garantiza una condición independientemente de si la llamada procede de HTTP, de una tarea programada o de una cola. Esto es más fiable que esconder el mismo `if` en cada controlador.
 
-#### Ampliación didáctica aplicada a AceriaApp
+La construcción de una orden exige cliente y material no vacíos y una cantidad positiva. El constructor también asigna el GUID y la fecha UTC, reservando esos datos al servidor. La capacidad máxima de 500 que comprueba el caso de uso es otra decisión: puede variar según contexto de operación, por lo que no todas las restricciones deben concentrarse obligatoriamente en la entidad. Diferenciamos invariantes propios del objeto de políticas de proceso.
 
-**La decisión arquitectónica.** El dominio expresa hechos y reglas de la acería, no el protocolo por el que alguien solicita una orden. `OrdenHexagonal` contiene Id, cliente, material, cantidad y estado porque son conceptos de negocio. Cuando su método `Finalizar()` impide repetir la transición, la entidad garantiza una condición independientemente de si la llamada procede de HTTP, de una tarea programada o de una cola. Esto es más fiable que esconder el mismo `if` en cada controlador.
+El riesgo central es filtrar dependencias externas hacia las clases del núcleo. Si una entidad recibe `DbContext`, implementa métodos `SaveChanges` o devuelve `IResult`, la regla de negocio necesita un servidor o un motor SQL incluso para ser probada. En el dominio tampoco deberían aparecer atributos cuyo único objetivo sea serializar JSON para una respuesta específica; el adaptador se encarga de esa transformación.
 
-**Ejemplo concreto en AceriaApp.** La construcción de una orden exige cliente y material no vacíos y una cantidad positiva. El constructor también asigna el GUID y la fecha UTC, reservando esos datos al servidor. La capacidad máxima de 500 que comprueba el caso de uso es otra decisión: puede variar según contexto de operación, por lo que no todas las restricciones deben concentrarse obligatoriamente en la entidad. Diferenciamos invariantes propios del objeto de políticas de proceso.
-
-**Riesgo, alternativa y límite.** El riesgo central es filtrar dependencias externas hacia las clases del núcleo. Si una entidad recibe `DbContext`, implementa métodos `SaveChanges` o devuelve `IResult`, la regla de negocio necesita un servidor o un motor SQL incluso para ser probada. En el dominio tampoco deberían aparecer atributos cuyo único objetivo sea serializar JSON para una respuesta específica; el adaptador se encarga de esa transformación.
-
-**Comprobación técnica y aprendizaje.** Una prueba del dominio puede crear `new OrdenHexagonal("ACX", "CHAPA", 10)`, llamar a `Finalizar()` y comprobar que el siguiente intento provoca `InvalidOperationException`. No requiere `WebApplicationFactory`, puerto HTTP, base de datos ni el contenedor de DI. Ese aislamiento es la señal práctica del valor de la capa.
+Una prueba del dominio puede crear `new OrdenHexagonal("ACX", "CHAPA", 10)`, llamar a `Finalizar()` y comprobar que el siguiente intento provoca `InvalidOperationException`. No requiere `WebApplicationFactory`, puerto HTTP, base de datos ni el contenedor de DI. Ese aislamiento es la señal práctica del valor de la capa.
 
 ![Diagrama explicativo del punto 3.1, bloque 2](IMAGENES/3-1-capas.svg)
 
-*Interpretación del gráfico:* identifica las referencias de código que admite el diseño y distingue esas relaciones de las llamadas en ejecución. La figura está disponible como SVG vectorial y como PNG para consulta externa.
+identifica las referencias de código que admite el diseño y distingue esas relaciones de las llamadas en ejecución. La figura está disponible como SVG vectorial y como PNG para consulta externa.
 
-### Bloque 3 — Capa de aplicación
+### Capa de aplicación
 
-La capa de aplicación contiene los casos de uso y la orquestación. Los casos de uso representan las operaciones que el sistema ofrece al exterior. La capa de aplicación conoce la capa de dominio y coordina sus operaciones. No contiene reglas de negocio: las reglas de negocio residen en el dominio. La capa de aplicación se encarga de recibir la petición, invocar el dominio y devolver la respuesta. También se encarga de la transacción, de la validación de entrada y de la traducción entre los DTOs y las entidades del dominio.
+La capa de aplicación coordina un caso de uso sin apropiarse de las reglas internas del dominio ni de los detalles técnicos de persistencia. Crear una orden puede requerir construir una entidad válida, solicitar su almacenamiento y devolver un identificador, pero no debería obligar al caso de uso a saber cómo EF Core abre una conexión. Una interfaz como `IOrdenRepositorio` expresa qué necesita la aplicación del exterior, mientras su implementación concreta pertenece a otra capa. Esta decisión facilita pruebas con dobles de repositorio que permitan comprobar el orden de las operaciones y el tratamiento de errores. En AceriaApp, `OrdenesCasoUso` representa esa coordinación: conoce el modelo y la abstracción de persistencia, pero no necesita clases de ASP.NET Core para funcionar.
 
 ```csharp
 namespace AceriaApp.Monolito.Api.Aplicacion;
@@ -159,40 +136,24 @@ public class OrdenServicio
 }
 ```
 
-- **Línea 1:** `namespace AceriaApp.Monolito.Api.Aplicacion;` → espacio de nombres de la capa de aplicación.
-- **Línea 2:** `public class OrdenServicio` → servicio de aplicación.
-- **Línea 3:** `{` → abre el cuerpo de la clase.
-- **Línea 4:** `private readonly IOrdenRepositorio _repositorio;` → dependencia del repositorio.
-- **Línea 5:** `public OrdenServicio(IOrdenRepositorio repositorio)` → constructor con inyección.
-- **Línea 6:** `{` → abre el cuerpo del constructor.
-- **Línea 7:** `_repositorio = repositorio;` → asigna el repositorio.
-- **Línea 8:** `}` → cierra el constructor.
-- **Línea 9:** `public async Task<Guid> CrearOrdenAsync(string cliente, int cantidad)` → caso de uso.
-- **Línea 10:** `{` → abre el cuerpo del método.
-- **Línea 11:** `var orden = new Orden(Guid.NewGuid(), cliente, cantidad);` → crea la entidad.
-- **Línea 12:** `await _repositorio.AddAsync(orden);` → persiste la entidad.
-- **Línea 13:** `return orden.Id;` → devuelve el identificador.
-- **Línea 14:** `}` → cierra el método.
-- **Línea 15:** `}` → cierra la clase.
+
+El servicio de aplicación recibe un repositorio mediante una abstracción y organiza una operación sobre `Orden`. Esta dependencia hace que el caso de uso pueda probarse con un doble y después ejecutarse con SQL Server sin cambiar su lógica. La tarea de la aplicación es coordinar; el repositorio se encarga de cómo se guardan los cambios.
+
 
 La capa de aplicación se caracteriza por tres propiedades. La primera es que conoce la capa de dominio y depende de ella. La segunda es que no conoce la capa de infraestructura: depende de interfaces que la infraestructura implementa. La tercera es que es testeable con dobles de prueba: los tests pueden sustituir el repositorio por un mock. Las tres propiedades permiten que la lógica de orquestación se pruebe sin base de datos y sin framework web.
 
----
 
+La aplicación coordina una intención del usuario y decide qué operaciones del dominio deben ejecutarse en qué secuencia. `OrdenesCasoUso.CrearAsync` no debería interpretar cabeceras HTTP ni formular consultas SQL; recibe cliente, material y cantidad como valores de negocio. Comprueba la capacidad admitida, construye una `OrdenHexagonal` y solicita guardar a través de `IOrdenRepositorio`. La coordinación es una responsabilidad distinta de la validación intrínseca de la entidad.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Cuando el usuario solicita finalizar, el caso de uso debe buscar la orden por identificador, distinguir ausencia y presencia, invocar `orden.Finalizar()` y pedir al puerto que persista el cambio. Si el repositorio devuelve `null`, el caso de uso no inventa una entidad. El traductor HTTP convertirá ese resultado en 404. Si el dominio lanza un conflicto de transición, el adaptador HTTP puede convertirlo en 409 sin obligar al dominio a mencionar los códigos 404 o 409.
 
-**La decisión arquitectónica.** La aplicación coordina una intención del usuario y decide qué operaciones del dominio deben ejecutarse en qué secuencia. `OrdenesCasoUso.CrearAsync` no debería interpretar cabeceras HTTP ni formular consultas SQL; recibe cliente, material y cantidad como valores de negocio. Comprueba la capacidad admitida, construye una `OrdenHexagonal` y solicita guardar a través de `IOrdenRepositorio`. La coordinación es una responsabilidad distinta de la validación intrínseca de la entidad.
+Un caso de uso demasiado amplio termina siendo un nuevo monolito escondido en una sola clase; uno demasiado pequeño y trivial solo reenvía llamadas sin aportar coordinación. El criterio no es su longitud, sino si representa una capacidad coherente y hace explícitos los efectos que necesita. El caso de uso debe ser determinista en sus decisiones para los mismos datos, dejando persistencia e infraestructura detrás de contratos.
 
-**Ejemplo concreto en AceriaApp.** Cuando el usuario solicita finalizar, el caso de uso debe buscar la orden por identificador, distinguir ausencia y presencia, invocar `orden.Finalizar()` y pedir al puerto que persista el cambio. Si el repositorio devuelve `null`, el caso de uso no inventa una entidad. El traductor HTTP convertirá ese resultado en 404. Si el dominio lanza un conflicto de transición, el adaptador HTTP puede convertirlo en 409 sin obligar al dominio a mencionar los códigos 404 o 409.
+La comprobación útil es construir un repositorio falso que registre cuándo se llama a `AgregarAsync` o `GuardarAsync`. Si `CrearAsync` puede ejercitarse sin EF Core y devuelve la entidad esperada, el caso de uso usa correctamente el puerto. Los tests HTTP posteriores aportan una evidencia distinta: que la composición real lo conecta con el servidor.
 
-**Riesgo, alternativa y límite.** Un caso de uso demasiado amplio termina siendo un nuevo monolito escondido en una sola clase; uno demasiado pequeño y trivial solo reenvía llamadas sin aportar coordinación. El criterio no es su longitud, sino si representa una capacidad coherente y hace explícitos los efectos que necesita. El caso de uso debe ser determinista en sus decisiones para los mismos datos, dejando persistencia e infraestructura detrás de contratos.
+### Capa de infraestructura
 
-**Comprobación técnica y aprendizaje.** La comprobación útil es construir un repositorio falso que registre cuándo se llama a `AgregarAsync` o `GuardarAsync`. Si `CrearAsync` puede ejercitarse sin EF Core y devuelve la entidad esperada, el caso de uso usa correctamente el puerto. Los tests HTTP posteriores aportan una evidencia distinta: que la composición real lo conecta con el servidor.
-
-### Bloque 4 — Capa de infraestructura
-
-La capa de infraestructura contiene las implementaciones concretas de las interfaces definidas en las capas interiores. Incluye los repositorios, los clientes HTTP, los publicadores de eventos y los adaptadores a servicios externos. La capa de infraestructura conoce el framework, la base de datos y los servicios externos. Depende de las interfaces definidas en el dominio y en la aplicación. No contiene reglas de negocio: solo implementa los contratos definidos por las capas interiores.
+La infraestructura reúne adaptadores que convierten necesidades abstractas de la aplicación en operaciones sobre tecnologías concretas. Un repositorio SQL Server recibe una petición de guardar una orden y la traduce a cambios de EF Core, conexiones y confirmación en la base. Esta capa puede depender de los contratos definidos por la aplicación, pero el núcleo no debería importar tipos de Entity Framework para declarar sus reglas. La dirección de la dependencia es importante: aunque una operación se invoque desde el caso de uso hacia el repositorio, la interfaz que describe esa operación sigue perteneciendo al núcleo. En AceriaApp, `OrdenRepositorioSqlServer` y el `HexagonalDbContext` permitirán observar esa separación de forma efectiva. Cambiar el adaptador no debe obligar a reescribir la entidad de dominio.
 
 ```csharp
 namespace AceriaApp.Monolito.Api.Infraestructura;
@@ -214,39 +175,24 @@ public class OrdenRepositorio : IOrdenRepositorio
 }
 ```
 
-- **Línea 1:** `namespace AceriaApp.Monolito.Api.Infraestructura;` → espacio de nombres de la capa de infraestructura.
-- **Línea 2:** `public class OrdenRepositorio : IOrdenRepositorio` → implementación del repositorio.
-- **Línea 3:** `{` → abre el cuerpo de la clase.
-- **Línea 4:** `private readonly AceriaDbContext _db;` → dependencia del contexto de EF Core.
-- **Línea 5:** `public OrdenRepositorio(AceriaDbContext db)` → constructor con inyección.
-- **Línea 6:** `{` → abre el cuerpo del constructor.
-- **Línea 7:** `_db = db;` → asigna el contexto.
-- **Línea 8:** `}` → cierra el constructor.
-- **Línea 9:** `public async Task AddAsync(Orden orden)` → método del contrato.
-- **Línea 10:** `{` → abre el cuerpo del método.
-- **Línea 11:** `_db.Ordenes.Add(orden);` → añade la orden al contexto.
-- **Línea 12:** `await _db.SaveChangesAsync();` → persiste los cambios.
-- **Línea 13:** `}` → cierra el método.
-- **Línea 14:** `}` → cierra la clase.
+
+El repositorio concreto conoce `AceriaDbContext` porque su tarea es traducir operaciones del puerto a EF Core. Lo relevante es que el caso de uso no declara una dependencia a ese contexto y no necesita usar `SaveChangesAsync` para expresar una regla de negocio. Esa separación se verifica leyendo las referencias de proyecto y ejecutando una prueba de integración.
+
 
 La capa de infraestructura se caracteriza por tres propiedades. La primera es que implementa las interfaces definidas en las capas interiores. La segunda es que conoce el framework y la base de datos. La tercera es que puede sustituirse sin afectar a las capas interiores: la interfaz es la que garantiza el desacoplamiento. Las tres propiedades permiten que el sistema cambie de base de datos o de proveedor de servicios externos sin modificar el dominio ni la aplicación.
 
----
 
+La infraestructura es la parte del sistema que sabe cómo se ejecutan efectos concretos. En AceriaApp, `HexagonalDbContext` conoce EF Core, asigna la entidad `OrdenHexagonal` a `OrdenesHexagonales` y configura tipos y restricciones de columnas. `OrdenRepositorioSqlServer` usa las operaciones `AsNoTracking`, `FirstOrDefaultAsync`, `AddAsync` y `SaveChangesAsync`. Nada de eso debería ser una obligación de la capa de aplicación.
 
-#### Ampliación didáctica aplicada a AceriaApp
+El adaptador realiza el contrato definido por la aplicación. Cuando `IOrdenRepositorio.ListarAsync` devuelve una lista de órdenes, el adaptador EF Core puede ordenar por fecha y materializar el resultado, sin entregar al caso de uso un `IQueryable` que permitiría construir consultas dependientes de EF. Esto impide que los detalles de seguimiento y proveedor invadan la orquestación del negocio.
 
-**La decisión arquitectónica.** La infraestructura es la parte del sistema que sabe cómo se ejecutan efectos concretos. En AceriaApp, `HexagonalDbContext` conoce EF Core, asigna la entidad `OrdenHexagonal` a `OrdenesHexagonales` y configura tipos y restricciones de columnas. `OrdenRepositorioSqlServer` usa las operaciones `AsNoTracking`, `FirstOrDefaultAsync`, `AddAsync` y `SaveChangesAsync`. Nada de eso debería ser una obligación de la capa de aplicación.
+Un error frecuente es suponer que separar la infraestructura consiste en mover el mismo `DbContext` a otro proyecto y referenciarlo desde todos. Si los casos de uso consumen el contexto directamente, la dependencia sigue orientada al detalle externo. La separación real requiere que la aplicación solo dependa de `IOrdenRepositorio`; la infraestructura debe implementar esa interfaz y referenciar el contrato.
 
-**Ejemplo concreto en AceriaApp.** El adaptador realiza el contrato definido por la aplicación. Cuando `IOrdenRepositorio.ListarAsync` devuelve una lista de órdenes, el adaptador EF Core puede ordenar por fecha y materializar el resultado, sin entregar al caso de uso un `IQueryable` que permitiría construir consultas dependientes de EF. Esto impide que los detalles de seguimiento y proveedor invadan la orquestación del negocio.
+Inspecciona los `.csproj`: el proyecto de infraestructura contiene `Microsoft.EntityFrameworkCore.SqlServer` y referencias a aplicación y dominio. Ni dominio ni aplicación deben declarar el paquete SQL Server. Un test de infraestructura necesita comprobar que el adaptador devuelve y guarda datos, mientras que una prueba de aplicación puede utilizar una implementación simulada.
 
-**Riesgo, alternativa y límite.** Un error frecuente es suponer que separar la infraestructura consiste en mover el mismo `DbContext` a otro proyecto y referenciarlo desde todos. Si los casos de uso consumen el contexto directamente, la dependencia sigue orientada al detalle externo. La separación real requiere que la aplicación solo dependa de `IOrdenRepositorio`; la infraestructura debe implementar esa interfaz y referenciar el contrato.
+### Capa de presentación
 
-**Comprobación técnica y aprendizaje.** Inspecciona los `.csproj`: el proyecto de infraestructura contiene `Microsoft.EntityFrameworkCore.SqlServer` y referencias a aplicación y dominio. Ni dominio ni aplicación deben declarar el paquete SQL Server. Un test de infraestructura necesita comprobar que el adaptador devuelve y guarda datos, mientras que una prueba de aplicación puede utilizar una implementación simulada.
-
-### Bloque 5 — Capa de presentación
-
-La capa de presentación contiene los endpoints, los controladores y los puntos de entrada al sistema. En una API REST, la capa de presentación contiene los endpoints de Minimal API o los controladores. La capa de presentación conoce la capa de aplicación y depende de ella. Convierte las peticiones HTTP en llamadas a los casos de uso y las respuestas de los casos de uso en respuestas HTTP. No contiene reglas de negocio: solo traduce entre el protocolo HTTP y los casos de uso.
+La presentación es la frontera que entiende cómo llega una petición y cómo se responde por un protocolo determinado. En una API ASP.NET Core le corresponde leer rutas, parámetros y cuerpos JSON, llamar a la aplicación y traducir el resultado a respuestas HTTP. No debería decidir si una orden puede finalizar según reglas del negocio ni gestionar directamente tablas SQL. Esta distinción no obliga a construir controladores extensos: Minimal APIs puede funcionar perfectamente como adaptador de entrada cuando sus handlers son delgados y las dependencias expresan casos de uso. En AceriaApp conservaremos los endpoints existentes de M02 y añadiremos un grupo hexagonal para comparar ambos recorridos sin presentar las rutas antiguas como si ya se hubieran refactorizado.
 
 ```csharp
 app.MapPost("/api/v1/ordenes", async (
@@ -258,32 +204,24 @@ app.MapPost("/api/v1/ordenes", async (
 });
 ```
 
-- **Línea 1:** `app.MapPost("/api/v1/ordenes", async (` → declara el endpoint.
-- **Línea 2:** `CrearOrdenRequest request,` → recibe la petición.
-- **Línea 3:** `OrdenServicio servicio) =>` → inyecta el servicio de aplicación.
-- **Línea 4:** `{` → abre el cuerpo del lambda.
-- **Línea 5:** `var id = await servicio.CrearOrdenAsync(request.Cliente, request.Cantidad);` → invoca el caso de uso.
-- **Línea 6:** `return Results.Created($"/api/v1/ordenes/{id}", new { id });` → devuelve 201 con la ubicación.
-- **Línea 7:** `});` → cierra el lambda.
+
+El endpoint recibe una petición HTTP y la convierte en una llamada al caso de uso. El método conserva responsabilidades de transporte y respuesta, sin reimplementar la política de construcción de la orden. Si el manejador vuelve a decidir todas las reglas de fabricación, el cambio de carpeta no habrá conseguido una frontera real.
+
 
 La capa de presentación se caracteriza por tres propiedades. La primera es que traduce entre HTTP y los casos de uso. La segunda es que no contiene reglas de negocio: delega en la capa de aplicación. La tercera es que puede cambiar de protocolo sin afectar a las capas interiores. Las tres propiedades permiten que el mismo sistema se exponga como API REST, como gRPC o como cola de mensajes sin modificar el dominio ni la aplicación.
 
----
 
+La presentación no es necesariamente una interfaz visual: una Minimal API también es una capa de entrada. Sus rutas traducen HTTP en llamadas al sistema y resultados del sistema en respuestas HTTP. En M03 el grupo `/api/v1/hexagonal/ordenes` recibe `CrearOrdenHexagonalRequest`, invoca `OrdenesCasoUso.CrearAsync` y produce `CreatedAtRoute`, sin conocer la conexión a SQL Server ni una entidad `DbContext`.
 
-#### Ampliación didáctica aplicada a AceriaApp
+La separación exige modelos de contrato externos. Un cliente envía `cliente`, `material` y `cantidad`; el adaptador convierte esos datos a argumentos del caso de uso. El DTO de salida incorpora Id, estado y fecha. Estos modelos se diseñan para la API, no deben añadirse como propiedades serializadas forzosamente a la entidad de dominio. El adaptador puede cambiar el formato HTTP sin reescribir la política de finalización.
 
-**La decisión arquitectónica.** La presentación no es necesariamente una interfaz visual: una Minimal API también es una capa de entrada. Sus rutas traducen HTTP en llamadas al sistema y resultados del sistema en respuestas HTTP. En M03 el grupo `/api/v1/hexagonal/ordenes` recibe `CrearOrdenHexagonalRequest`, invoca `OrdenesCasoUso.CrearAsync` y produce `CreatedAtRoute`, sin conocer la conexión a SQL Server ni una entidad `DbContext`.
+No es correcto asumir que toda validación pertenece a la presentación. La presentación controla forma y requisitos del contrato recibido; el dominio protege invariantes; la aplicación aplica políticas de proceso como la capacidad de 500. Si una solicitud contiene cantidad 501, HTTP traduce una restricción de negocio en 422. Ese número HTTP es responsabilidad de entrada, no de la entidad.
 
-**Ejemplo concreto en AceriaApp.** La separación exige modelos de contrato externos. Un cliente envía `cliente`, `material` y `cantidad`; el adaptador convierte esos datos a argumentos del caso de uso. El DTO de salida incorpora Id, estado y fecha. Estos modelos se diseñan para la API, no deben añadirse como propiedades serializadas forzosamente a la entidad de dominio. El adaptador puede cambiar el formato HTTP sin reescribir la política de finalización.
+En una prueba con `WebApplicationFactory`, envía POST al endpoint hexagonal y sigue la cabecera `Location` con GET. La creación 201 no es evidencia suficiente de persistencia. Comprueba después el valor del DTO, el código 200 y que la ruta invoca el caso de uso, no EF Core directamente.
 
-**Riesgo, alternativa y límite.** No es correcto asumir que toda validación pertenece a la presentación. La presentación controla forma y requisitos del contrato recibido; el dominio protege invariantes; la aplicación aplica políticas de proceso como la capacidad de 500. Si una solicitud contiene cantidad 501, HTTP traduce una restricción de negocio en 422. Ese número HTTP es responsabilidad de entrada, no de la entidad.
+### Regla de dependencia
 
-**Comprobación técnica y aprendizaje.** En una prueba con `WebApplicationFactory`, envía POST al endpoint hexagonal y sigue la cabecera `Location` con GET. La creación 201 no es evidencia suficiente de persistencia. Comprueba después el valor del DTO, el código 200 y que la ruta invoca el caso de uso, no EF Core directamente.
-
-### Bloque 6 — Regla de dependencia
-
-La regla de dependencia establece que las dependencias entre capas se dirigen hacia el interior. Las capas exteriores conocen a las interiores. Las capas interiores no conocen a las exteriores. La capa de presentación conoce a la capa de aplicación. La capa de aplicación conoce a la capa de dominio. La capa de infraestructura conoce a la capa de dominio y a la capa de aplicación. La capa de dominio no conoce a ninguna otra capa. La regla garantiza que el núcleo del sistema sea independiente de los detalles de implementación.
+La regla de dependencia orienta las referencias del código hacia las piezas más estables del sistema. El dominio no conoce presentación, infraestructura ni el contenedor de ASP.NET Core. La aplicación conoce el dominio y define las abstracciones que necesita; la infraestructura implementa esas abstracciones desde fuera. En una solución .NET esta relación puede comprobarse leyendo los `ProjectReference` de cada `.csproj`, porque una referencia invertida permite dependencias que acabarán introduciendo detalles externos en las reglas. La dirección de las llamadas en tiempo de ejecución no tiene por qué coincidir con la dirección de las referencias de compilación: la aplicación invoca una interfaz, pero es la infraestructura la que conoce esa interfaz para implementarla. Este matiz es fundamental para entender la arquitectura hexagonal.
 
 ```text
 Dirección de las dependencias:
@@ -295,33 +233,28 @@ Infraestructura → Dominio
 Dominio no depende de nadie.
 ```
 
-- **Línea 1:** `Presentación → Aplicación → Dominio` → la presentación conoce a la aplicación y esta al dominio.
-- **Línea 2:** `Infraestructura → Aplicación → Dominio` → la infraestructura conoce a la aplicación y esta al dominio.
-- **Línea 3:** `Infraestructura → Dominio` → la infraestructura conoce directamente al dominio.
-- **Línea 4:** `Dominio no depende de nadie.` → el dominio es la capa más interna.
+
+El diagrama muestra cómo las referencias deben apuntar hacia abstracciones del núcleo aunque los datos se muevan durante la ejecución entre presentación, aplicación y almacenamiento. Una referencia circular entre proyectos impide razonar con claridad sobre la autonomía de cada componente.
+
 
 La regla de dependencia tiene dos consecuencias prácticas. La primera es que el dominio es independiente del framework y de la base de datos. La segunda es que las dependencias cíclicas entre capas son imposibles: si el dominio no conoce a la aplicación, la aplicación no puede depender del dominio y del dominio de la aplicación a la vez. La regla se aplica con revisiones de código y con tests automáticos que verifican las dependencias entre ensamblados.
 
----
 
+La regla de dependencia habla de referencias de código: las políticas internas no deben importar detalles externos. Un proyecto independiente de dominio que compilase solo cuando se instala `Microsoft.AspNetCore.Http` violaría esa independencia, aunque no iniciara un servidor. La herramienta decisiva en .NET es la dirección de `ProjectReference` y también los `using` que se permiten en cada biblioteca.
 
-#### Ampliación didáctica aplicada a AceriaApp
+En la solución vigente, Aplicación referencia Dominio; Infraestructura referencia Aplicación y Dominio; API referencia Aplicación e Infraestructura para componer el sistema. La referencia de API hacia Infraestructura es admisible en el extremo de composición. Lo prohibido es que el dominio conozca `AceriaApp.Api` o que `OrdenesCasoUso` requiera una clase concreta `OrdenRepositorioSqlServer`.
 
-**La decisión arquitectónica.** La regla de dependencia habla de referencias de código: las políticas internas no deben importar detalles externos. Un proyecto independiente de dominio que compilase solo cuando se instala `Microsoft.AspNetCore.Http` violaría esa independencia, aunque no iniciara un servidor. La herramienta decisiva en .NET es la dirección de `ProjectReference` y también los `using` que se permiten en cada biblioteca.
+Esta regla no debe confundirse con el orden de las llamadas en tiempo de ejecución. El caso de uso invoca al repositorio, que vive físicamente en infraestructura; eso no obliga a compilar Aplicación contra Infraestructura. Se produce precisamente porque la interfaz del puerto está definida dentro de Aplicación y el adaptador implementa el contrato. El sentido de la llamada y el sentido de la importación no tienen por qué coincidir.
 
-**Ejemplo concreto en AceriaApp.** En la solución vigente, Aplicación referencia Dominio; Infraestructura referencia Aplicación y Dominio; API referencia Aplicación e Infraestructura para componer el sistema. La referencia de API hacia Infraestructura es admisible en el extremo de composición. Lo prohibido es que el dominio conozca `AceriaApp.Api` o que `OrdenesCasoUso` requiera una clase concreta `OrdenRepositorioSqlServer`.
-
-**Riesgo, alternativa y límite.** Esta regla no debe confundirse con el orden de las llamadas en tiempo de ejecución. El caso de uso invoca al repositorio, que vive físicamente en infraestructura; eso no obliga a compilar Aplicación contra Infraestructura. Se produce precisamente porque la interfaz del puerto está definida dentro de Aplicación y el adaptador implementa el contrato. El sentido de la llamada y el sentido de la importación no tienen por qué coincidir.
-
-**Comprobación técnica y aprendizaje.** El control es automático: examina el `.csproj` de dominio y exige cero `ProjectReference`; examina el de aplicación y exige referencia exclusiva a dominio. Un cambio posterior que incorpore infraestructura dentro de Aplicación debe hacer fallar el control arquitectónico, aunque el resto de los tests HTTP continúe pasando.
+El control es automático: examina el `.csproj` de dominio y exige cero `ProjectReference`; examina el de aplicación y exige referencia exclusiva a dominio. Un cambio posterior que incorpore infraestructura dentro de Aplicación debe hacer fallar el control arquitectónico, aunque el resto de los tests HTTP continúe pasando.
 
 ![Diagrama explicativo del punto 3.1, bloque 6](IMAGENES/3-1-regla.svg)
 
-*Interpretación del gráfico:* identifica las referencias de código que admite el diseño y distingue esas relaciones de las llamadas en ejecución. La figura está disponible como SVG vectorial y como PNG para consulta externa.
+identifica las referencias de código que admite el diseño y distingue esas relaciones de las llamadas en ejecución. La figura está disponible como SVG vectorial y como PNG para consulta externa.
 
-### Bloque 7 — Inversión de dependencias
+### Inversión de dependencias
 
-La inversión de dependencias es el mecanismo que permite que la capa de aplicación dependa de la infraestructura sin violar la regla de dependencia. La inversión se materializa en interfaces definidas en las capas interiores e implementadas en las capas exteriores. La capa de aplicación define la interfaz `IOrdenRepositorio`. La capa de infraestructura implementa `OrdenRepositorio` que cumple la interfaz. La capa de aplicación depende de la interfaz, no de la implementación. El contenedor de dependencias inyecta la implementación en tiempo de ejecución.
+La inversión de dependencias permite que una política de negocio utilice una capacidad técnica sin conocer su implementación. La aplicación declara que necesita recuperar y guardar órdenes mediante un puerto; el adaptador de SQL Server implementa ese puerto y el host decide qué instancia proporcionar al arrancar. El mecanismo suele apoyarse en inyección de dependencias, pero el principio arquitectónico es anterior al contenedor: el núcleo posee la abstracción y el detalle tecnológico depende de ella. Esta separación permite escribir un test del caso de uso con una implementación controlada del repositorio, mientras otro test comprueba las operaciones SQL reales. La primera prueba protege la coordinación y la segunda la persistencia; ambas son necesarias si queremos afirmar que AceriaApp funciona de principio a fin.
 
 ```csharp
 // Definido en la capa de aplicación
@@ -340,42 +273,28 @@ public class OrdenRepositorio : IOrdenRepositorio
 }
 ```
 
-- **Línea 1:** `// Definido en la capa de aplicación` → comentario de ubicación.
-- **Línea 2:** `public interface IOrdenRepositorio` → interfaz del contrato.
-- **Línea 3:** `{` → abre el cuerpo de la interfaz.
-- **Línea 4:** `Task AddAsync(Orden orden);` → método del contrato.
-- **Línea 5:** `}` → cierra la interfaz.
-- **Línea 6:** `// Implementado en la capa de infraestructura` → comentario de ubicación.
-- **Línea 7:** `public class OrdenRepositorio : IOrdenRepositorio` → implementación.
-- **Línea 8:** `{` → abre el cuerpo de la clase.
-- **Línea 9:** `public async Task AddAsync(Orden orden)` → implementación del método.
-- **Línea 10:** `{` → abre el cuerpo del método.
-- **Línea 11:** `// implementación` → comentario del cuerpo.
-- **Línea 12:** `}` → cierra el método.
-- **Línea 13:** `}` → cierra la clase.
+
+La interfaz de repositorio pertenece al núcleo mientras su implementación pertenece a infraestructura. La inyección de dependencias decide qué implementación utilizar, pero no cambia quién es propietario del contrato. Esa relación hace posible sustituir el almacenamiento en una prueba sin incorporar EF Core al modelo.
+
 
 La inversión de dependencias tiene dos consecuencias prácticas. La primera es que la capa de aplicación no conoce la implementación concreta: solo conoce la interfaz. La segunda es que la implementación puede sustituirse sin modificar la aplicación: por ejemplo, un repositorio en memoria para los tests. La inversión es la técnica que permite que la regla de dependencia se cumpla incluso cuando la aplicación necesita servicios de infraestructura.
 
----
 
+El principio de inversión de dependencias no significa que se invoque infraestructura desde el dominio mediante magia. Significa que ambos lados relevantes dependen de una abstracción situada donde conviene a la política del sistema. `IOrdenRepositorio` describe operaciones que la aplicación necesita, como listar, obtener, agregar y guardar, y no menciona el nombre de EF Core, SQL Server ni la forma de establecer una conexión.
 
-#### Ampliación didáctica aplicada a AceriaApp
+El caso de uso declara un parámetro de constructor de tipo `IOrdenRepositorio`. En el borde de arranque de ASP.NET Core se registra `services.AddScoped<IOrdenRepositorio, OrdenRepositorioSqlServer>()`. El contenedor crea el adaptador concreto y lo entrega donde se solicitó la interfaz. El caso de uso no usa `new OrdenRepositorioSqlServer`, de modo que se prueba sin SQL Server y el proveedor podría cambiar si otro adaptador respetase el contrato.
 
-**La decisión arquitectónica.** El principio de inversión de dependencias no significa que se invoque infraestructura desde el dominio mediante magia. Significa que ambos lados relevantes dependen de una abstracción situada donde conviene a la política del sistema. `IOrdenRepositorio` describe operaciones que la aplicación necesita, como listar, obtener, agregar y guardar, y no menciona el nombre de EF Core, SQL Server ni la forma de establecer una conexión.
+No debemos crear interfaces para cada clase sin una razón. Una interfaz puramente decorativa que reproduce cien métodos de EF Core no desacopla nada útil. Un buen puerto define las capacidades que usa el negocio, devuelve tipos del dominio y evita exponer tipos del proveedor. Cambiar un repositorio por otro no debería obligar a modificar los métodos de caso de uso.
 
-**Ejemplo concreto en AceriaApp.** El caso de uso declara un parámetro de constructor de tipo `IOrdenRepositorio`. En el borde de arranque de ASP.NET Core se registra `services.AddScoped<IOrdenRepositorio, OrdenRepositorioSqlServer>()`. El contenedor crea el adaptador concreto y lo entrega donde se solicitó la interfaz. El caso de uso no usa `new OrdenRepositorioSqlServer`, de modo que se prueba sin SQL Server y el proveedor podría cambiar si otro adaptador respetase el contrato.
-
-**Riesgo, alternativa y límite.** No debemos crear interfaces para cada clase sin una razón. Una interfaz puramente decorativa que reproduce cien métodos de EF Core no desacopla nada útil. Un buen puerto define las capacidades que usa el negocio, devuelve tipos del dominio y evita exponer tipos del proveedor. Cambiar un repositorio por otro no debería obligar a modificar los métodos de caso de uso.
-
-**Comprobación técnica y aprendizaje.** La evidencia combina dos verificaciones: inspección de dependencias (`AceriaApp.Hexagonal.Aplicacion.csproj` no referencia infraestructura) y prueba funcional (el endpoint POST resuelve el puerto por DI y consigue guardar la entidad). Una sin la otra deja un riesgo sin probar.
+La evidencia combina dos verificaciones: inspección de dependencias (`AceriaApp.Hexagonal.Aplicacion.csproj` no referencia infraestructura) y prueba funcional (el endpoint POST resuelve el puerto por DI y consigue guardar la entidad). Una sin la otra deja un riesgo sin probar.
 
 ![Diagrama explicativo del punto 3.1, bloque 7](IMAGENES/3-1-inversion.svg)
 
-*Interpretación del gráfico:* identifica las referencias de código que admite el diseño y distingue esas relaciones de las llamadas en ejecución. La figura está disponible como SVG vectorial y como PNG para consulta externa.
+identifica las referencias de código que admite el diseño y distingue esas relaciones de las llamadas en ejecución. La figura está disponible como SVG vectorial y como PNG para consulta externa.
 
-### Bloque 8 — Capas y arquitectura hexagonal
+### Capas y arquitectura hexagonal
 
-La arquitectura hexagonal aplica la organización por capas con un giro: en lugar de capas apiladas, propone un núcleo central rodeado de puertos y adaptadores. El núcleo contiene el dominio y la aplicación. Los puertos son las interfaces que el núcleo expone al exterior. Los adaptadores son las implementaciones concretas que conectan el núcleo con el mundo exterior. La arquitectura hexagonal mantiene la regla de dependencia: el núcleo no conoce a los adaptadores. La diferencia con las capas apiladas es que la arquitectura hexagonal permite múltiples adaptadores del mismo puerto, lo que facilita la exposición del mismo caso de uso en distintos protocolos.
+La arquitectura hexagonal reorganiza esas responsabilidades alrededor de un núcleo y de sus fronteras, no alrededor de una pila de tecnologías. Un adaptador HTTP y un adaptador de consola podrían llamar al mismo caso de uso; un repositorio EF Core y una implementación de prueba podrían responder al mismo puerto de salida. Esto no significa que todas las aplicaciones requieran seis proyectos o que cualquier interfaz merezca un nombre de puerto. El valor aparece cuando una responsabilidad puede probarse y modificarse sin arrastrar dependencias innecesarias. En AceriaApp mantendremos el proceso web como unidad desplegable durante M03; lo que cambia es la organización de sus componentes y la posibilidad de incorporar otro canal o proveedor sin alterar las reglas de órdenes.
 
 ```text
 Arquitectura hexagonal:
@@ -396,38 +315,24 @@ Arquitectura hexagonal:
       [Adaptador BD]        [Adaptador mensajería]
 ```
 
-- **Línea 1:** `[Adaptador HTTP]     [Adaptador CLI]` → dos adaptadores de entrada.
-- **Línea 2:** `v                    v` → flechas hacia los puertos.
-- **Línea 3:** `[Puerto de entrada]  [Puerto de entrada]` → puertos de entrada.
-- **Línea 4:** `\          /` → convergencia hacia el núcleo.
-- **Línea 5:** `v        v` → flechas hacia el núcleo.
-- **Línea 6:** `[Núcleo]` → núcleo con dominio y aplicación.
-- **Línea 7:** `(Dominio + Aplicación)` → contenido del núcleo.
-- **Línea 8:** `|        |` → bifurcación hacia los puertos de salida.
-- **Línea 9:** `v        v` → flechas hacia los puertos.
-- **Línea 10:** `[Puerto de salida]  [Puerto de salida]` → puertos de salida.
-- **Línea 11:** `|                    |` → flechas hacia los adaptadores.
-- **Línea 12:** `v                    v` → flechas hacia los adaptadores.
-- **Línea 13:** `[Adaptador BD]        [Adaptador mensajería]` → dos adaptadores de salida.
+
+El hexágono representa un núcleo al que pueden llegar distintos adaptadores de entrada y del que pueden salir dependencias hacia diversos proveedores. El propósito no es multiplicar entradas artificiales, sino conservar la misma regla de órdenes cuando cambia el mecanismo que la invoca o la persiste.
+
 
 La arquitectura hexagonal se caracteriza por tres propiedades. La primera es que el núcleo es independiente de los adaptadores. La segunda es que un mismo puerto puede tener varios adaptadores. La tercera es que los adaptadores se pueden sustituir sin modificar el núcleo. Las tres propiedades hacen que la arquitectura hexagonal sea especialmente adecuada para sistemas que deben exponerse en múltiples protocolos o que deben soportar múltiples mecanismos de persistencia.
 
----
 
+Los diagramas de capas organizan responsabilidades en niveles; la arquitectura hexagonal pone el énfasis en los límites de interacción y en la sustituibilidad de adaptadores. Son modelos complementarios: en nuestro diseño, Dominio y Aplicación constituyen el núcleo, mientras HTTP y SQL Server viven fuera como adaptadores. No existe obligación de dibujar físicamente un hexágono en cada clase.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Observa el recorrido de creación: un cliente HTTP entrega JSON, el adaptador lo interpreta, el caso de uso aplica la capacidad, la entidad verifica su invariantes y el puerto solicita guardar; por último, la implementación EF Core persiste. El diagrama muestra dos interfaces distintas de interacción y una entidad central; el código demuestra el aislamiento cuando las referencias hacia el núcleo no incluyen librerías de entrada o salida.
 
-**La decisión arquitectónica.** Los diagramas de capas organizan responsabilidades en niveles; la arquitectura hexagonal pone el énfasis en los límites de interacción y en la sustituibilidad de adaptadores. Son modelos complementarios: en nuestro diseño, Dominio y Aplicación constituyen el núcleo, mientras HTTP y SQL Server viven fuera como adaptadores. No existe obligación de dibujar físicamente un hexágono en cada clase.
+Una arquitectura puede ser de capas y continuar acoplada al servidor de datos; también puede usar puertos sin organizar bien responsabilidades de dominio. Por eso los nombres de carpeta no bastan y los proyectos de M03 incluyen tanto modelos ilustrativos de capas como un puerto real usado por una ruta. No deben confundirse las clases que catalogan reglas con la implementación de los casos de uso.
 
-**Ejemplo concreto en AceriaApp.** Observa el recorrido de creación: un cliente HTTP entrega JSON, el adaptador lo interpreta, el caso de uso aplica la capacidad, la entidad verifica su invariantes y el puerto solicita guardar; por último, la implementación EF Core persiste. El diagrama muestra dos interfaces distintas de interacción y una entidad central; el código demuestra el aislamiento cuando las referencias hacia el núcleo no incluyen librerías de entrada o salida.
+Representa en un diagrama las dependencias de compilación y, separadamente, el flujo de una petición HTTP. Identifica qué flechas cambian de sentido entre ambas vistas. Si ambos diagramas se parecen demasiado, comprueba que no has dibujado llamadas en lugar de referencias.
 
-**Riesgo, alternativa y límite.** Una arquitectura puede ser de capas y continuar acoplada al servidor de datos; también puede usar puertos sin organizar bien responsabilidades de dominio. Por eso los nombres de carpeta no bastan y los proyectos de M03 incluyen tanto modelos ilustrativos de capas como un puerto real usado por una ruta. No deben confundirse las clases que catalogan reglas con la implementación de los casos de uso.
+### Cuándo aplicar la organización por capas
 
-**Comprobación técnica y aprendizaje.** Representa en un diagrama las dependencias de compilación y, separadamente, el flujo de una petición HTTP. Identifica qué flechas cambian de sentido entre ambas vistas. Si ambos diagramas se parecen demasiado, comprueba que no has dibujado llamadas en lugar de referencias.
-
-### Bloque 9 — Cuándo aplicar la organización por capas
-
-La organización por capas se aplica cuando el sistema tiene una complejidad que justifica la separación. Un sistema pequeño con una sola funcionalidad no se beneficia de la separación en cuatro capas: añade complejidad sin aportar valor. Un sistema mediano o grande con varias funcionalidades se beneficia de la separación porque reduce el acoplamiento y facilita la evolución. La decisión de aplicar la organización por capas se basa en el tamaño del dominio, el número de equipos y la vida esperada del sistema.
+Separar capas tiene un coste: aparecen interfaces, proyectos, registros de dependencias y decisiones sobre qué datos cruzan cada frontera. En un prototipo diminuto puede ser suficiente un solo proyecto con funciones claras; la separación física resulta más útil cuando el dominio incorpora reglas duraderas o existen varias infraestructuras posibles. Conviene no confundir la calidad arquitectónica con el número de carpetas. Para AceriaApp la necesidad es pedagógica y técnica: queremos demostrar que una regla de producción puede probarse sin HTTP ni SQL, y que una API real sigue funcionando mediante adaptadores. Si crear una abstracción no mejora ninguna de esas propiedades, probablemente se está añadiendo complejidad accidental. La decisión debe revisarse conforme evolucionen los casos de uso.
 
 ```text
 Aplicación de la organización por capas:
@@ -438,29 +343,24 @@ Sistema grande       → capas completas con presentación separada.
 Sistema con múltiples protocolos → arquitectura hexagonal.
 ```
 
-- **Línea 1:** `Sistema pequeño` → capas mínimas o sin capas.
-- **Línea 2:** `Sistema mediano` → tres capas: dominio, aplicación e infraestructura.
-- **Línea 3:** `Sistema grande` → capas completas con presentación separada.
-- **Línea 4:** `Sistema con múltiples protocolos` → arquitectura hexagonal.
+
+La comparación entre sistemas pequeños, medianos y complejos ayuda a decidir cuánto aislamiento merece cada responsabilidad. No existe un número de capas obligatorio ni una proporción universal de proyectos y tests. El criterio es si una frontera permite localizar cambios y detectar errores con menor esfuerzo.
+
 
 La organización por capas no es una decisión binaria: es un espectro. Un sistema puede empezar con una sola capa y evolucionar hacia varias a medida que crece. La evolución se realiza extrayendo responsabilidades a medida que se identifican. El curso aplica este enfoque: el monolito de los módulos 1 y 2 tiene una organización mínima y en el módulo 3 se refactoriza hacia una organización por capas completa con arquitectura hexagonal.
 
----
 
+Aplicar cuatro capas introduce costes: nuevos proyectos, tipos de contrato, registros en DI y pruebas de integración. Ese coste se justifica cuando cambian con frecuencia interfaces externas, proveedores de persistencia o reglas del negocio y necesitamos controlar el impacto. En AceriaApp la separación permite explicar de forma observable cómo un servicio HTTP evoluciona sin mezclar cada regla con EF Core.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Antes de extraer una capa pregunta qué variación estamos protegiendo. ¿Podría cambiar la forma de exponer órdenes sin cambiar la política de finalización? ¿Podría utilizarse otro almacén sin rehacer el caso de uso? ¿Es necesario probar una transición de estado sin levantar el host? Si la respuesta es afirmativa, el límite aporta valor. Si nunca hay variación ni equipo responsable, quizá baste una organización modular más sencilla.
 
-**La decisión arquitectónica.** Aplicar cuatro capas introduce costes: nuevos proyectos, tipos de contrato, registros en DI y pruebas de integración. Ese coste se justifica cuando cambian con frecuencia interfaces externas, proveedores de persistencia o reglas del negocio y necesitamos controlar el impacto. En AceriaApp la separación permite explicar de forma observable cómo un servicio HTTP evoluciona sin mezclar cada regla con EF Core.
+Las capas no reducen por sí mismas la latencia, no convierten una API en distribuida y no sustituyen la observabilidad. Si el repositorio realiza consultas ineficientes seguirá siendo lento; si el caso de uso no gestiona errores, seguirá fallando. El beneficio de la separación es la claridad de responsabilidad y el coste acotado de cambiar un detalle, no una garantía de escalabilidad automática.
 
-**Ejemplo concreto en AceriaApp.** Antes de extraer una capa pregunta qué variación estamos protegiendo. ¿Podría cambiar la forma de exponer órdenes sin cambiar la política de finalización? ¿Podría utilizarse otro almacén sin rehacer el caso de uso? ¿Es necesario probar una transición de estado sin levantar el host? Si la respuesta es afirmativa, el límite aporta valor. Si nunca hay variación ni equipo responsable, quizá baste una organización modular más sencilla.
+Como ejercicio de decisión, compara la versión M02, donde `Program.cs` orquesta mucha lógica, con M03, donde `OrdenesCasoUso` coordina y el endpoint traduce. Anota qué archivo tocarías ante un cambio en formato JSON, un nuevo estado de negocio y un nuevo proveedor SQL.
 
-**Riesgo, alternativa y límite.** Las capas no reducen por sí mismas la latencia, no convierten una API en distribuida y no sustituyen la observabilidad. Si el repositorio realiza consultas ineficientes seguirá siendo lento; si el caso de uso no gestiona errores, seguirá fallando. El beneficio de la separación es la claridad de responsabilidad y el coste acotado de cambiar un detalle, no una garantía de escalabilidad automática.
+### Aplicación al proyecto del curso
 
-**Comprobación técnica y aprendizaje.** Como ejercicio de decisión, compara la versión M02, donde `Program.cs` orquesta mucha lógica, con M03, donde `OrdenesCasoUso` coordina y el endpoint traduce. Anota qué archivo tocarías ante un cambio en formato JSON, un nuevo estado de negocio y un nuevo proveedor SQL.
-
-### Bloque 10 — Aplicación al proyecto del curso
-
-El proyecto del curso aplica la organización por capas en el módulo 3. La capa de dominio contiene las entidades y las reglas de negocio. La capa de aplicación contiene los casos de uso y la orquestación. La capa de infraestructura contiene los repositorios y los adaptadores. La capa de presentación contiene los endpoints. La regla de dependencia se aplica de forma estricta: el dominio no conoce a las demás capas. La inversión de dependencias permite que la aplicación dependa de interfaces y que la infraestructura las implemente. La arquitectura hexagonal se aplica con puertos y adaptadores.
+El punto 3.1 establece el lenguaje con el que leeremos el código de M03, pero todavía no equivale a disponer de una aplicación hexagonal completa. Partimos de la etapa 2.4, que conserva las operaciones REST, validación y OpenAPI. Primero identificaremos qué responsabilidades tienen sus clases y después introduciremos el diseño que permite separarlas. En la secuencia del curso, las interfaces, los proyectos físicos y los endpoints hexagonales llegarán de manera progresiva; no eliminaremos el comportamiento anterior para simular una migración ya terminada. Al finalizar, el alumno debe poder señalar qué parte de la solución representa una regla de negocio, cuál coordina una operación, cuál traduce HTTP y cuál utiliza SQL Server. Esa explicación preparará pruebas verificables, no solo un dibujo de capas.
 
 ```text
 Aplicación al proyecto del curso:
@@ -473,18 +373,15 @@ Regla             → dependencias hacia el interior.
 Inversión         → interfaces en aplicación, implementación en infraestructura.
 ```
 
-- **Línea 1:** `Dominio` → capa más interna con las entidades.
-- **Línea 2:** `Aplicación` → casos de uso e interfaces.
-- **Línea 3:** `Infraestructura` → implementaciones concretas.
-- **Línea 4:** `Presentación` → endpoints de la API.
-- **Línea 5:** `Regla` → dependencias hacia el interior.
-- **Línea 6:** `Inversión` → interfaces en aplicación, implementación en infraestructura.
+
+El mapa final relaciona los tipos de componente con sus responsabilidades en AceriaApp. Más adelante deberán existir referencias concretas, registros de DI y pruebas que demuestren esa relación; un catálogo de capas, por sí solo, solo sirve para describir la decisión que se desea implementar.
+
 
 La aplicación de la organización por capas prepara el proyecto para los puntos 3.2, 3.3 y 3.4. El punto 3.2 estudiará los puertos y adaptadores con detalle. El punto 3.3 estudiará la separación entre dominio, aplicación e infraestructura. El punto 3.4 estudiará la implementación en ASP.NET Core. El punto 3.1 establece los conceptos que se aplicarán en los tres puntos siguientes.
 
 ---
 
-### Resumen rápido de la teoría
+### Lo esencial para continuar
 
 - Una capa es una unidad de organización del código con una responsabilidad común.
 - Las capas habituales son presentación, aplicación, dominio e infraestructura.
@@ -496,18 +393,14 @@ La aplicación de la organización por capas prepara el proyecto para los puntos
 - La inversión de dependencias permite que la aplicación dependa de interfaces y la infraestructura las implemente.
 - La arquitectura hexagonal sustituye las capas apiladas por un núcleo central rodeado de puertos y adaptadores.
 
----
 
+M03 comienza sobre la etapa 2.4 de M02. Ese punto de partida conserva GET, POST, PUT, PATCH, DELETE, FluentValidation, OpenAPI y los tests del módulo anterior. La operación de enseñanza es aditiva: antes de introducir una frontera se demuestra que la API funciona, y después se conserva su comportamiento mientras se desarrolla el diseño hexagonal.
 
-#### Ampliación didáctica aplicada a AceriaApp
+La primera etapa M03 no reemplaza los endpoints existentes. Añade un catálogo de capas y reglas de referencia, que ayuda a comprender por qué no deben existir dependencias circulares. En la etapa 3.3 se crean de verdad los proyectos de Dominio, Aplicación e Infraestructura; la etapa 3.4 agrega un grupo nuevo de rutas HTTP hexagonales para no destruir las rutas M02 que ya eran parte del contrato del curso.
 
-**La decisión arquitectónica.** M03 comienza sobre la etapa 2.4 de M02. Ese punto de partida conserva GET, POST, PUT, PATCH, DELETE, FluentValidation, OpenAPI y los tests del módulo anterior. La operación de enseñanza es aditiva: antes de introducir una frontera se demuestra que la API funciona, y después se conserva su comportamiento mientras se desarrolla el diseño hexagonal.
+Esta convivencia permite una migración por incorporación: la API antigua sigue sirviendo sus rutas mientras una nueva capacidad demuestra el patrón arquitectónico. No afirmamos que las rutas antiguas sean hexagonales simplemente por coexistir en la solución. La distinción es útil para una modernización progresiva de aplicaciones existentes, donde reescribir todo en un solo cambio aumentaría el riesgo.
 
-**Ejemplo concreto en AceriaApp.** La primera etapa M03 no reemplaza los endpoints existentes. Añade un catálogo de capas y reglas de referencia, que ayuda a comprender por qué no deben existir dependencias circulares. En la etapa 3.3 se crean de verdad los proyectos de Dominio, Aplicación e Infraestructura; la etapa 3.4 agrega un grupo nuevo de rutas HTTP hexagonales para no destruir las rutas M02 que ya eran parte del contrato del curso.
-
-**Riesgo, alternativa y límite.** Esta convivencia permite una migración por incorporación: la API antigua sigue sirviendo sus rutas mientras una nueva capacidad demuestra el patrón arquitectónico. No afirmamos que las rutas antiguas sean hexagonales simplemente por coexistir en la solución. La distinción es útil para una modernización progresiva de aplicaciones existentes, donde reescribir todo en un solo cambio aumentaría el riesgo.
-
-**Comprobación técnica y aprendizaje.** Verifica al final que los tests heredados de M02 continúan en verde y que los nuevos comprueban el diseño M03. El progreso del curso se mide por evidencia acumulada y no por sustituir artificialmente el proyecto anterior.
+Verifica al final que los tests heredados de M02 continúan en verde y que los nuevos comprueban el diseño M03. El progreso del curso se mide por evidencia acumulada y no por sustituir artificialmente el proyecto anterior.
 
 
 ## Estudio integrador 3.1 — De una Minimal API compacta a responsabilidades explícitas
