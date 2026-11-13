@@ -13,16 +13,16 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 35
     steps:
-      - name: Herramientas técnicas de generación
-        uses: actions/checkout@v4
-        with:
-          ref: resguardo/tecnico-m01-m08-20261112
-          path: _ci_tecnica
       - name: Teoría editorial sin las prácticas del profesor
         uses: actions/checkout@v4
         with:
           ref: version-corregida
           fetch-depth: 1
+      - name: Herramientas técnicas de generación
+        uses: actions/checkout@v4
+        with:
+          ref: resguardo/tecnico-m01-m08-20261112
+          path: _ci_tecnica
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
