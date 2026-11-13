@@ -1,0 +1,102 @@
+name: M09 - Sintaxis PowerShell y paridad de infraestructura
+
+on:
+  push:
+    branches: [version-corregida]
+    paths:
+      - 'M09_DESPLIEGUE_DOCKER/PRACTICAS/M09_PRACTICAS.md'
+      - 'M09_DESPLIEGUE_DOCKER/PROYECTO/**'
+      - '.github/workflows/m09-practicas-sintaxis-windows.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validar:
+    runs-on: windows-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Parsear todos los bloques PowerShell del manual M09
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $doc = Get-Content -Raw 'M09_DESPLIEGUE_DOCKER/PRACTICAS/M09_PRACTICAS.md'
+          $bloques = [regex]::Matches($doc, '(?ms)^```powershell[ \t]*\r?\n(.*?)^```')
+          if ($bloques.Count -lt 15) {
+            throw "Manual M09 incompleto: solo $($bloques.Count) bloques PowerShell."
+          }
+          $n = 0
+          foreach ($bloque in $bloques) {
+            $n++
+            $tokens = $null
+            $errores = $null
+            [void][System.Management.Automation.Language.Parser]::ParseInput(
+              $bloque.Groups[1].Value, [ref]$tokens, [ref]$errores
+            )
+            if (@($errores).Count -ne 0) {
+              $mensaje = (@($errores) | ForEach-Object { $_.Message }) -join '; '
+              throw "El bloque PowerShell $n no es sintacticamente valido: $mensaje"
+            }
+          }
+          $pasos = [regex]::Matches($doc, '(?m)^### Paso 9\.(\d+)\s')
+          if ($pasos.Count -ne 16) { throw "Se esperaban 16 pasos, encontrados: $($pasos.Count)" }
+          foreach ($i in 1..16) {
+            if (@($pasos | Where-Object { [int]$_.Groups[1].Value -eq $i }).Count -ne 1) {
+              throw "Paso 9.$i ausente o duplicado"
+            }
+          }
+          if ($doc -notmatch 'PENDIENTE WINDOWS \+ DOCKER DESKTOP') {
+            throw "Falta advertencia sobre ausencia de certificacion fisica Windows"
+          }
+          Write-Host "PASS: $($bloques.Count) bloques PowerShell parseados y 16 pasos presentes"
+
+      - name: Comprobar correspondencia con proyecto de despliegue real
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $root = 'M09_DESPLIEGUE_DOCKER/PROYECTO'
+          $compose = Get-Content -Raw "$root/docker/compose.fullstack.yml"
+          $script = Get-Content -Raw "$root/EJECUTAR_DOCKER_WINDOWS.ps1"
+          $doc = Get-Content -Raw 'M09_DESPLIEGUE_DOCKER/PRACTICAS/M09_PRACTICAS.md'
+          $referencia = 'M08_API_GATEWAY/PROYECTO/8.4-balanceo-carga'
+          if (-not (Test-Path $referencia)) { throw "Falta el codigo de M08: $referencia" }
+          foreach ($servicio in @('sqlserver','rabbitmq','inventario-1','inventario-2','produccion','gateway')) {
+            if ($compose -notmatch "(?m)^  $([regex]::Escape($servicio)):\s*$") {
+              throw "No existe el servicio Compose $servicio"
+            }
+            if ($doc -notmatch [regex]::Escape($servicio)) {
+              throw "La practica no explica el servicio $servicio"
+            }
+          }
+          foreach ($accion in @('preparar','levantar','verificar','detener','bajar','limpiar')) {
+            if ($script -notmatch "'$accion'") { throw "Accion no implementada: $accion" }
+          }
+          foreach ($identificador in @('sql-datos','rabbit-datos','ACERIA_SA_PASSWORD','Dockerfile.Servicio','compose.fullstack.yml')) {
+            if ($compose -notmatch [regex]::Escape($identificador) -and $doc -notmatch [regex]::Escape($identificador)) {
+              throw "No se localizo el elemento $identificador"
+            }
+          }
+          if ((Get-Content -Raw "$root/.gitignore") -notmatch '(?m)^\.env$') {
+            throw "El .env de laboratorio no esta ignorado por Git"
+          }
+          if ($doc -notmatch '-ConfirmarBorradoDatos') {
+            throw "No se explica la confirmacion destructiva"
+          }
+          Write-Host 'PASS: los seis servicios, seis acciones, codigo M08, volumenes y secretos son coherentes'
+
+      - name: Validar sintaxis del script de despliegue
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $code = Get-Content -Raw 'M09_DESPLIEGUE_DOCKER/PROYECTO/EJECUTAR_DOCKER_WINDOWS.ps1'
+          $tokens = $null
+          $errores = $null
+          [void][System.Management.Automation.Language.Parser]::ParseInput($code,[ref]$tokens,[ref]$errores)
+          if (@($errores).Count -ne 0) {
+            throw ((@($errores) | ForEach-Object { $_.Message }) -join '; ')
+          }
+          Write-Host 'PASS: script original de M09 sin errores de sintaxis'
