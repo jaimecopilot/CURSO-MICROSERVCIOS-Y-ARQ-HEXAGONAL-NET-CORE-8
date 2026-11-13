@@ -82,6 +82,12 @@ En una tercera terminal, consulta `http://localhost:5105/api/v1/comunicacion/mat
 
 # Punto 6.1 — Comunicación síncrona mediante HTTP
 
+## Comprender una consulta HTTP entre dos procesos independientes
+
+Producción necesita conocer la disponibilidad de un material, e Inventario ofrece esa información mediante HTTP. La llamada síncrona permite obtener una respuesta durante la petición original, pero también introduce dependencia temporal: si Inventario no responde, Producción tiene que decidir cómo comunicar ese fallo. Estudiaremos el contrato, el cliente HTTP y el comportamiento ante errores como una misma operación, no como configuraciones independientes.
+
+Partimos de la aplicación de M05, que ya incluye el dominio de Producción, y trabajamos sobre una copia para conservar su estado. Los catálogos de llamadas son material de análisis; tener una propiedad booleana que indique reintentos no activa automáticamente una política de resiliencia. La comprobación significativa consiste en ejecutar las dos API en Windows y observar una consulta real de Producción a Inventario.
+
 **Carpeta de trabajo:** `M06_COMUNICACION_MICROSERVICIOS/PROYECTO/6.1-comunicacion-sincrona-http`.
 
 **Objetivo:** completar los veinticuatro pasos, conservar la etapa anterior y comprobar por separado el análisis y la comunicación ejecutable. La etapa termina con 232 pruebas en 27 proyectos.
@@ -90,16 +96,13 @@ En una tercera terminal, consulta `http://localhost:5105/api/v1/comunicacion/mat
 
 ### PASO 6.1.1 — Crear la estructura del módulo 6 y del punto 6.1
 
-**Resultado de aprendizaje.** Crear la estructura del módulo 6 y del punto 6.1. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Al copiar la etapa final de M05 conservamos los contratos y las pruebas sobre los que se construye la comunicación. La copia permite contrastar cambios sin alterar el punto de partida ni arrastrar archivos temporales de compilación.
 
 1. Localiza la etapa completa `M05_DDD_CQRS/PROYECTO/5.5-dominio-aceria`; comprueba que contiene `AceriaApp.sln`.
 2. Crea `M06_COMUNICACION_MICROSERVICIOS/PROYECTO/6.1-comunicacion-sincrona-http` y copia en ella el contenido de `5.5-dominio-aceria`; en Windows usa `xcopy` con `/E /I /H /Y`.
 3. Excluye `bin`, `obj`, `TestResults` y `.vs`; trabaja solamente dentro de `6.1-comunicacion-sincrona-http`.
 4. Comprueba con `dir` que aparecen `AceriaApp.sln`, `README.md`, `src`, `tests`, `docs` y `global.json`.
 
-**Por qué funciona así.** La etapa autónoma continúa 22 proyectos y 208 pruebas antes de añadir los cambios del punto.
 
 **Verificación concreta.** La copia corresponde a `5.5-dominio-aceria` y conserva todas sus carpetas de código y documentación.
 
@@ -110,16 +113,13 @@ En una tercera terminal, consulta `http://localhost:5105/api/v1/comunicacion/mat
 
 ### PASO 6.1.2 — Abrir la solución copiada en Visual Studio con soporte .NET 8
 
-**Resultado de aprendizaje.** Abrir la solución copiada en Visual Studio con soporte .NET 8. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Compilar la copia detecta rutas y dependencias incompletas antes de añadir archivos.
 
 1. Abre el `AceriaApp.sln` de `6.1-comunicacion-sincrona-http` en Visual Studio.
 2. Ejecuta `dotnet sln AceriaApp.sln list` y comprueba los 22 proyectos heredados.
 3. Ejecuta `dotnet restore AceriaApp.sln` y `dotnet build AceriaApp.sln -c Release` desde la carpeta de esta etapa.
 4. Comprueba que la compilación termina sin errores; si hay DLL bloqueadas, detén los procesos que las utilizan.
 
-**Por qué funciona así.** Compilar la copia detecta rutas y dependencias incompletas antes de añadir archivos.
 
 **Verificación concreta.** La solución lista 22 proyectos y la compilación termina correctamente.
 
@@ -130,16 +130,13 @@ En una tercera terminal, consulta `http://localhost:5105/api/v1/comunicacion/mat
 
 ### PASO 6.1.3 — Verificar que la carpeta `docs` contiene los documentos del punto 5.5
 
-**Resultado de aprendizaje.** Verificar que la carpeta `docs` contiene los documentos del punto 5.5. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+El punto conserva 28 documentos reales y añadirá dos; el primer ADR disponible es ADR-010.
 
 1. Expande `docs` y comprueba sus 28 archivos Markdown.
 2. Localiza los ADR-010 a ADR-023 y las fichas temáticas heredadas.
 3. Compara nombres y contenido con `docs` de `M05_DDD_CQRS/PROYECTO/5.5-dominio-aceria`.
 4. Comprueba que aún no existen `docs/comunicacion-sincrona-http.md` ni `docs/ADR-024-comunicacion-sincrona-http.md`.
 
-**Por qué funciona así.** El punto conserva 28 documentos reales y añadirá dos; el primer ADR disponible es ADR-010.
 
 **Verificación concreta.** Hay 28 documentos heredados idénticos; todavía no existen los dos documentos del punto.
 
@@ -150,9 +147,7 @@ En una tercera terminal, consulta `http://localhost:5105/api/v1/comunicacion/mat
 
 ### PASO 6.1.4 — Crear el documento de comunicación síncrona en `docs`
 
-**Resultado de aprendizaje.** Crear el documento de comunicación síncrona en `docs`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La ficha separa el análisis de los contratos y la evidencia ejecutable.
 
 1. Crea `docs/comunicacion-sincrona-http.md` dentro de la copia de `6.1-comunicacion-sincrona-http`.
 2. Introduce el contenido completo del bloque siguiente.
@@ -206,7 +201,6 @@ Favorece HTTP cuando el flujo necesita el resultado actual, existe un contrato d
 `LlamadaSincrona`, `CatalogoLlamadas` y `ValidadorComunicacionSincrona` describen tres consultas GET entre nombres de servicios. Sus pruebas comprueban datos del análisis: no abren sockets ni prueban `HttpClient`, reintentos o circuit breakers. La implementación funcional separada comprueba tráfico HTTP y sus fallos controlados.
 ```
 
-**Por qué funciona así.** La ficha separa el análisis de los contratos y la evidencia ejecutable.
 
 **Verificación concreta.** `docs/comunicacion-sincrona-http.md` incluye todos los apartados del bloque mostrado.
 
@@ -217,16 +211,13 @@ Favorece HTTP cuando el flujo necesita el resultado actual, existe un contrato d
 
 ### PASO 6.1.5 — Crear la carpeta `ComunicacionSincrona` en el proyecto API
 
-**Resultado de aprendizaje.** Crear la carpeta `ComunicacionSincrona` en el proyecto API. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La carpeta de comunicación síncrona agrupa los modelos con los que describimos llamadas y políticas. Su presencia no crea un cliente HTTP; ese comportamiento se incorporará mediante contratos, servicios y rutas concretas.
 
 1. Expande el proyecto `AceriaApp.Api` y localiza `src/AceriaApp.Api`.
 2. Crea la carpeta `ComunicacionSincrona` directamente dentro del proyecto API.
 3. Comprueba que `src/AceriaApp.Api/ComunicacionSincrona` no está anidada dentro de otra carpeta temática.
 4. Conserva las carpetas y archivos heredados de `5.5-dominio-aceria`.
 
-**Por qué funciona así.** `ComunicacionSincrona` agrupa datos y reglas del ejercicio de análisis; los adaptadores de comunicación tienen sus propias responsabilidades.
 
 **Verificación concreta.** Existe `src/AceriaApp.Api/ComunicacionSincrona` sin alterar las carpetas previas.
 
@@ -234,8 +225,6 @@ Favorece HTTP cuando el flujo necesita el resultado actual, existe un contrato d
 
 - Crear la carpeta dentro de `tests` impide compilar los tipos con la API: comprueba la ruta física.
 - Renombrar una carpeta heredada rompe namespaces y enlaces: crea solo la carpeta nueva.
-
-
 
 #### Implementación funcional: `compose.yml`
 
@@ -260,10 +249,7 @@ volumes:
   rabbitmq-datos:
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 3:** `image: rabbitmq:4.1.5-management` → Define la forma pública o la configuración reproducible que usarán los archivos del mismo punto.
-
+Define la forma pública o la configuración reproducible que usarán los archivos del mismo punto.
 
 #### Implementación funcional: `AceriaApp.Comunicacion.Aplicacion.csproj`
 
@@ -281,9 +267,7 @@ Este archivo completa el contrato, registro o prueba indicada por su nombre. Cr�
 </Project>
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 4:** `<ProjectReference Include="../AceriaApp.Comunicacion.Contratos/AceriaApp.Comunicacion.Contratos.csproj" />` → Declara una dependencia de compilación explícita; el ensamblado debe existir en la solución.
+Declara una dependencia de compilación explícita; el ensamblado debe existir en la solución.
 
 Desde la carpeta de esta etapa, registra el proyecto:
 
@@ -310,10 +294,6 @@ public sealed class InventarioNoDisponibleException(string mensaje, Exception? c
     : Exception(mensaje, causa);
 ```
 
-
-
-
-
 #### Implementación funcional: `AceriaApp.Comunicacion.Contratos.csproj`
 
 Este archivo completa el contrato, registro o prueba indicada por su nombre. Créalo en la ruta exacta para que la solución resuelva las dependencias del punto. Las responsabilidades de dominio, aplicación y adaptadores se mantienen separadas.
@@ -328,9 +308,6 @@ Este archivo completa el contrato, registro o prueba indicada por su nombre. Cr�
 </ItemGroup>
 </Project>
 ```
-
-
-
 
 Desde la carpeta de esta etapa, registra el proyecto:
 
@@ -351,15 +328,9 @@ namespace AceriaApp.Comunicacion.Contratos;
 public sealed record MaterialDto(string Material, int Stock);
 ```
 
-
-
-
-
 ### PASO 6.1.6 — Crear la clase `LlamadaSincrona`
 
-**Resultado de aprendizaje.** Crear la clase `LlamadaSincrona`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+LlamadaSincrona contiene información sobre el origen, el destino, el método y las políticas esperadas. Es una descripción de diseño: sus propiedades no ponen en marcha un timeout, un reintento ni un circuit breaker.
 
 1. Crea `src/AceriaApp.Api/ComunicacionSincrona/LlamadaSincrona.cs` dentro del proyecto correspondiente.
 2. Copia el bloque completo siguiente respetando namespace, miembros y valores.
@@ -384,28 +355,7 @@ public class LlamadaSincrona
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 1:** `namespace AceriaApp.Api.ComunicacionSincrona;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
-
-- **Línea 2:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
-
-- **Línea 3:** `public class LlamadaSincrona` → Declara el tipo público del ejercicio de análisis.
-
-- **Línea 4:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
-
-- **Línea 5:** `public string ServicioOrigen { get; init; } = string.Empty;` → Declara un dato del análisis que se fija al construir la entrada.
-
-
-
-
-
-
-
-- **Línea 12:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
-
-
-**Por qué funciona así.** El modelo describe entradas de análisis. Sus indicadores no instalan políticas ni establecen conexiones.
+Sitúa el tipo en el espacio de nombres que importan las pruebas del punto. Declara el tipo público del ejercicio de análisis. Declara un dato del análisis que se fija al construir la entrada.
 
 **Verificación concreta.** `LlamadaSincrona` compila en el proyecto indicado; su contenido coincide con el bloque completo.
 
@@ -416,9 +366,7 @@ public class LlamadaSincrona
 
 ### PASO 6.1.7 — Crear la clase `ValidadorComunicacionSincrona`
 
-**Resultado de aprendizaje.** Crear la clase `ValidadorComunicacionSincrona`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+El validador comprueba si una descripción cumple las reglas declaradas para una llamada. Sus resultados no indican que Inventario esté disponible; esa garantía se verifica ejecutando peticiones reales entre los procesos.
 
 1. Crea `src/AceriaApp.Api/ComunicacionSincrona/ValidadorComunicacionSincrona.cs` dentro del proyecto correspondiente.
 2. Copia el bloque completo siguiente respetando namespace, miembros y valores.
@@ -486,75 +434,13 @@ public class ValidadorComunicacionSincrona
 public record ResultadoComunicacionSincrona(bool EsValida, IReadOnlyList<string> Errores);
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
+Limita los valores de texto reconocidos por la política didáctica. Expone la operación con el contrato que usan el catálogo o sus pruebas. Inicializa la colección de diagnósticos que se devolverá al finalizar.
 
+Materializa una sola vez la secuencia recibida para recorrerla y contarla. Evalúa una regla concreta antes de añadir el diagnóstico asociado. Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
+Revisa cada entrada; un catálogo puede acumular varios diagnósticos. Completa la condición anterior; solo rechaza cuando también se cumple este término. Devuelve validez y diagnósticos; no ejecuta ninguna comunicación remota.
 
-
-
-- **Línea 5:** `private static readonly string[] MetodosPermitidos = { "GET", "HEAD", "OPTIONS", "POST", "PUT", "PATCH", "DELETE" };` → Limita los valores de texto reconocidos por la política didáctica.
-
-
-- **Línea 7:** `public ResultadoComunicacionSincrona Validar(IEnumerable<LlamadaSincrona> llamadas)` → Expone la operación con el contrato que usan el catálogo o sus pruebas.
-
-
-- **Línea 9:** `var errores = new List<string>();` → Inicializa la colección de diagnósticos que se devolverá al finalizar.
-
-- **Línea 10:** `var lista = llamadas.ToList();` → Materializa una sola vez la secuencia recibida para recorrerla y contarla.
-
-
-- **Línea 12:** `if (lista.Count == 0)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
-
-
-- **Línea 14:** `errores.Add("No hay llamadas declaradas.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
-
-
-
-- **Línea 17:** `foreach (var llamada in lista)` → Revisa cada entrada; un catálogo puede acumular varios diagnósticos.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-- **Línea 45:** `&& !llamada.TieneClaveIdempotencia)` → Completa la condición anterior; solo rechaza cuando también se cumple este término.
-
-
-
-
-
-
-- **Línea 51:** `return new ResultadoComunicacionSincrona(errores.Count == 0, errores);` → Devuelve validez y diagnósticos; no ejecuta ninguna comunicación remota.
-
-
-
-
-- **Línea 55:** `public record ResultadoComunicacionSincrona(bool EsValida, IReadOnlyList<string> Errores);` → Define el resultado inmutable que devuelve el validador o el resumen.
-
-
-**Por qué funciona así.** El validador devuelve todos los incumplimientos de la política explícita; no implementa una llamada, publicación o decisión automática de producción. Un POST puede ser válido sin reintentos; repetir POST o PATCH exige declarar idempotencia del servidor, que tendrá que comprobarse con pruebas de comportamiento.
+Define el resultado inmutable que devuelve el validador o el resumen.
 
 **Verificación concreta.** `ValidadorComunicacionSincrona` compila en el proyecto indicado; su contenido coincide con el bloque completo.
 
@@ -565,9 +451,7 @@ public record ResultadoComunicacionSincrona(bool EsValida, IReadOnlyList<string>
 
 ### PASO 6.1.8 — Añadir los `using` necesarios en `ValidadorComunicacionSincrona`
 
-**Resultado de aprendizaje.** Añadir los `using` necesarios en `ValidadorComunicacionSincrona`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Las importaciones explícitas muestran dónde se declaran los tipos genéricos y las extensiones LINQ, aunque el proyecto tenga importaciones implícitas.
 
 1. Abre `src/AceriaApp.Api/ComunicacionSincrona/ValidadorComunicacionSincrona.cs`.
 2. Inserta el bloque de importaciones inmediatamente antes del namespace; comprueba que el ancla aparece una sola vez.
@@ -584,13 +468,7 @@ using System.Collections.Generic;
 using System.Linq;
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 1:** `using System.Collections.Generic;` → Importa los tipos o extensiones utilizados por el archivo.
-
-
-
-**Por qué funciona así.** Las importaciones explícitas muestran dónde se declaran los tipos genéricos y las extensiones LINQ, aunque el proyecto tenga importaciones implícitas.
+Importa los tipos o extensiones utilizados por el archivo.
 
 **Verificación concreta.** `ValidadorComunicacionSincrona.cs` conserva el contenido previo y añade solo las importaciones indicadas.
 
@@ -598,8 +476,6 @@ using System.Linq;
 
 - Pegar las importaciones dentro de una clase no es válido: insértalas antes del namespace.
 - Insertar dos veces el bloque produce importaciones duplicadas: comprueba el contenido antes de guardarlo.
-
-
 
 #### Implementación funcional: `AceriaApp.Comunicacion.Infraestructura.csproj`
 
@@ -619,9 +495,7 @@ Este archivo completa el contrato, registro o prueba indicada por su nombre. Cr�
 </Project>
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 6:** `<PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />` → Fija la versión de la dependencia para reproducir la compilación y sus API.
+Fija la versión de la dependencia para reproducir la compilación y sus API.
 
 Desde la carpeta de esta etapa, registra el proyecto:
 
@@ -667,19 +541,13 @@ public sealed class ClienteInventarioHttp(HttpClient http) : IClienteInventario
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
+Detiene la operación si el llamador ya la canceló, antes de producir efectos. Codifica el material como un segmento de URL, evitando que sus caracteres cambien la consulta. Hace observable un estado HTTP de error; solo el 404 tratado antes representa ausencia.
 
-- **Línea 11:** `ct.ThrowIfCancellationRequested();` → Detiene la operación si el llamador ya la canceló, antes de producir efectos.
-- **Línea 15:** `using var respuesta = await http.GetAsync("api/v1/materiales/" + Uri.EscapeDataString(material), ct);` → Codifica el material como un segmento de URL, evitando que sus caracteres cambien la consulta.
-- **Línea 17:** `respuesta.EnsureSuccessStatusCode();` → Hace observable un estado HTTP de error; solo el 404 tratado antes representa ausencia.
-- **Línea 18:** `var dto = await respuesta.Content.ReadFromJsonAsync<MaterialDto>(cancellationToken: ct);` → Deserializa el contrato remoto y propaga el token de cancelación.
-
+Deserializa el contrato remoto y propaga el token de cancelación.
 
 ### PASO 6.1.9 — Crear la clase `CatalogoLlamadas`
 
-**Resultado de aprendizaje.** Crear la clase `CatalogoLlamadas`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+El catálogo ofrece distintos ejemplos para analizar riesgos de una llamada. Editar esos datos no cambia el HttpClient de la aplicación ni su dirección de destino.
 
 1. Crea `src/AceriaApp.Api/ComunicacionSincrona/CatalogoLlamadas.cs` dentro del proyecto correspondiente.
 2. Copia el bloque completo siguiente respetando namespace, miembros y valores.
@@ -706,27 +574,7 @@ public class CatalogoLlamadas
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-
-
-
-
-
-
-- **Línea 7:** `return new List<LlamadaSincrona>` → Devuelve una lista nueva en cada llamada; modificarla no altera otros casos.
-
-
-- **Línea 9:** `new() { ServicioOrigen = "Ordenes.Api", ServicioDestino = "Inventario.Api", Metodo = "GET", TieneTimeout = true, TieneReintentos = true, TieneCircuitBreaker = true },` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
-
-
-
-- **Línea 12:** `};` → Cierra la colección y termina su inicialización.
-
-
-
-
-**Por qué funciona así.** Cada invocación devuelve una lista nueva con los ejemplos de análisis; cambiar una lista no modifica futuros catálogos.
+Devuelve una lista nueva en cada llamada; modificarla no altera otros casos. Construye una entrada del catálogo o del caso de prueba con valores explícitos. Cierra la colección y termina su inicialización.
 
 **Verificación concreta.** `CatalogoLlamadas` compila en el proyecto indicado; su contenido coincide con el bloque completo.
 
@@ -737,9 +585,7 @@ public class CatalogoLlamadas
 
 ### PASO 6.1.10 — Añadir el `using` necesario en `CatalogoLlamadas`
 
-**Resultado de aprendizaje.** Añadir el `using` necesario en `CatalogoLlamadas`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Las importaciones explícitas muestran dónde se declaran los tipos genéricos y las extensiones LINQ, aunque el proyecto tenga importaciones implícitas.
 
 1. Abre `src/AceriaApp.Api/ComunicacionSincrona/CatalogoLlamadas.cs`.
 2. Inserta el bloque de importaciones inmediatamente antes del namespace; comprueba que el ancla aparece una sola vez.
@@ -755,20 +601,12 @@ public class CatalogoLlamadas
 using System.Collections.Generic;
 ```
 
-
-
-
-
-**Por qué funciona así.** Las importaciones explícitas muestran dónde se declaran los tipos genéricos y las extensiones LINQ, aunque el proyecto tenga importaciones implícitas.
-
 **Verificación concreta.** `CatalogoLlamadas.cs` conserva el contenido previo y añade solo las importaciones indicadas.
 
 **Diagnóstico si falla.**
 
 - Pegar las importaciones dentro de una clase no es válido: insértalas antes del namespace.
 - Insertar dos veces el bloque produce importaciones duplicadas: comprueba el contenido antes de guardarlo.
-
-
 
 #### Implementación funcional: `AceriaApp.Inventario.Api.csproj`
 
@@ -786,9 +624,6 @@ Este archivo completa el contrato, registro o prueba indicada por su nombre. Cr�
 </ItemGroup>
 </Project>
 ```
-
-
-
 
 Desde la carpeta de esta etapa, registra el proyecto:
 
@@ -822,10 +657,6 @@ public sealed class InventarioDbContext(DbContextOptions<InventarioDbContext> op
     }
 }
 ```
-
-
-
-
 
 #### Implementación funcional: `InventarioProgram.cs`
 
@@ -870,21 +701,13 @@ public sealed class InventarioProgram
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
+Mantiene SQL Server real como proveedor; no se sustituye por almacenamiento en memoria. Crea un ámbito por iteración o mensaje; el DbContext no se comparte entre trabajos concurrentes. Inicializa una base didáctica nueva. No migra un esquema existente: usa los nombres separados de cada etapa.
 
-- **Línea 9:** `builder.Services.AddDbContext<InventarioDbContext>(o => o.UseSqlServer(` → Mantiene SQL Server real como proveedor; no se sustituye por almacenamiento en memoria.
-- **Línea 15:** `using var scope = app.Services.CreateScope();` → Crea un ámbito por iteración o mensaje; el DbContext no se comparte entre trabajos concurrentes.
-- **Línea 17:** `await db.Database.EnsureCreatedAsync();` → Inicializa una base didáctica nueva. No migra un esquema existente: usa los nombres separados de cada etapa.
-- **Línea 22:** `await db.SaveChangesAsync();` → Guarda las existencias iniciales del laboratorio en la base propia de Inventario.
-- **Línea 25:** `app.MapGet("/health", () => Results.Ok(new { servicio = "Inventario" }));` → Publica una consulta HTTP con un contrato de respuesta verificable.
-- **Línea 28:** `var valor = await db.Existencias.AsNoTracking().SingleOrDefaultAsync(x => x.Material == material, ct);` → Obtiene datos para lectura sin incorporarlos al seguimiento de cambios.
-
+Guarda las existencias iniciales del laboratorio en la base propia de Inventario. Publica una consulta HTTP con un contrato de respuesta verificable. Obtiene datos para lectura sin incorporarlos al seguimiento de cambios.
 
 ### PASO 6.1.11 — Crear el proyecto de tests del punto 6.1
 
-**Resultado de aprendizaje.** Crear el proyecto de tests del punto 6.1. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Definir el proyecto completo fija .NET 8 y las versiones del runner sin depender de la versión local de la plantilla.
 
 1. Crea la carpeta `tests/AceriaApp.ComunicacionSincrona.Tests` y el `.csproj` completo del bloque siguiente.
 2. No generes `UnitTest1.cs`; los pasos 14 y 15 incluyen las clases de prueba completas.
@@ -911,7 +734,6 @@ public sealed class InventarioProgram
 </Project>
 ```
 
-**Por qué funciona así.** Definir el proyecto completo fija .NET 8 y las versiones del runner sin depender de la versión local de la plantilla.
 
 **Verificación concreta.** Existe `tests/AceriaApp.ComunicacionSincrona.Tests/AceriaApp.ComunicacionSincrona.Tests.csproj` y la solución lo incluye una sola vez.
 
@@ -922,9 +744,7 @@ public sealed class InventarioProgram
 
 ### PASO 6.1.12 — Añadir la referencia del proyecto de tests a la API
 
-**Resultado de aprendizaje.** Añadir la referencia del proyecto de tests a la API. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Las pruebas consumen los tipos de análisis de la API; la API no debe depender de su proyecto de pruebas.
 
 1. Abre `tests/AceriaApp.ComunicacionSincrona.Tests/AceriaApp.ComunicacionSincrona.Tests.csproj`.
 2. Reemplaza su contenido completo por el bloque siguiente, que incorpora la referencia a la API.
@@ -952,7 +772,6 @@ public sealed class InventarioProgram
 </Project>
 ```
 
-**Por qué funciona así.** Las pruebas consumen los tipos de análisis de la API; la API no debe depender de su proyecto de pruebas.
 
 **Verificación concreta.** El proyecto resuelve la referencia a la API y compila sin dependencias circulares.
 
@@ -963,9 +782,7 @@ public sealed class InventarioProgram
 
 ### PASO 6.1.13 — Añadir el paquete `FluentAssertions` al proyecto de tests
 
-**Resultado de aprendizaje.** Añadir el paquete `FluentAssertions` al proyecto de tests. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La versión fijada mantiene reproducibles las aserciones `Should()` de los catálogos.
 
 1. Abre `tests/AceriaApp.ComunicacionSincrona.Tests/AceriaApp.ComunicacionSincrona.Tests.csproj` y conserva las versiones de los paquetes existentes.
 2. Reemplaza su contenido por el bloque completo que añade `FluentAssertions` 6.12.2.
@@ -994,7 +811,6 @@ public sealed class InventarioProgram
 </Project>
 ```
 
-**Por qué funciona así.** La versión fijada mantiene reproducibles las aserciones `Should()` de los catálogos.
 
 **Verificación concreta.** El listado de paquetes muestra FluentAssertions 6.12.2 y el proyecto compila.
 
@@ -1002,8 +818,6 @@ public sealed class InventarioProgram
 
 - Instalar una versión sin fijarla puede cambiar la API y las condiciones de uso: conserva 6.12.2.
 - Añadir el paquete a la API no establece la referencia del test: modifica el proyecto de pruebas indicado.
-
-
 
 #### Implementación funcional: `AceriaApp.Api.csproj`
 
@@ -1023,9 +837,6 @@ Este archivo completa el contrato, registro o prueba indicada por su nombre. Cr�
   <ItemGroup><ProjectReference Include="../AceriaApp.Comunicacion.Infraestructura/AceriaApp.Comunicacion.Infraestructura.csproj" /></ItemGroup>
 </Project>
 ```
-
-
-
 
 Desde la carpeta de esta etapa, registra el proyecto:
 
@@ -1061,10 +872,6 @@ public static class ComunicacionEndpoints
     }
 }
 ```
-
-
-
-
 
 #### Implementación funcional: `Program.cs`
 
@@ -1251,10 +1058,6 @@ app.Run();
 public partial class Program {} // permite WebApplicationFactory en tests
 ```
 
-
-
-
-
 #### Implementación funcional: `appsettings.json`
 
 Este archivo completa el contrato, registro o prueba indicada por su nombre. Créalo en la ruta exacta para que la solución resuelva las dependencias del punto. Las responsabilidades de dominio, aplicación y adaptadores se mantienen separadas.
@@ -1278,10 +1081,7 @@ Este archivo completa el contrato, registro o prueba indicada por su nombre. Cr�
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 2:** `"ConnectionStrings": {` → Separa los almacenes de esta etapa y conserva los de los módulos anteriores.
-
+Separa los almacenes de esta etapa y conserva los de los módulos anteriores.
 
 #### Implementación funcional: `RegistroComunicacion.cs`
 
@@ -1309,10 +1109,7 @@ public static class RegistroComunicacion
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 9:** `services.AddHttpClient<IClienteInventario, ClienteInventarioHttp>(http =>` → Registra el cliente tipado y centraliza dirección y timeout; los handlers se administran mediante la factoría.
-
+Registra el cliente tipado y centraliza dirección y timeout; los handlers se administran mediante la factoría.
 
 #### Implementación funcional: `appsettings.json`
 
@@ -1335,15 +1132,9 @@ Este archivo completa el contrato, registro o prueba indicada por su nombre. Cr�
 }
 ```
 
-
-
-
-
 ### PASO 6.1.14 — Crear el archivo `ValidadorComunicacionSincronaTests.cs`
 
-**Resultado de aprendizaje.** Crear el archivo `ValidadorComunicacionSincronaTests.cs`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Las pruebas ejercitan aceptación y rechazos concretos del validador. Afirmar el diagnóstico evita un falso positivo por otro error.
 
 1. Crea `tests/AceriaApp.ComunicacionSincrona.Tests/ValidadorComunicacionSincronaTests.cs` dentro del proyecto correspondiente.
 2. Copia el bloque completo siguiente respetando namespace, miembros y valores.
@@ -1467,130 +1258,11 @@ public class ValidadorComunicacionSincronaTests
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
+Crea la instancia del validador que utiliza cada prueba. Registra un caso ejecutable independiente en xUnit. Nombra la condición de prueba y su resultado esperado.
 
+Ejecuta el validador sobre los datos preparados para este caso. Comprueba que la política acepta los datos de este caso. Comprueba que no se ha registrado ningún diagnóstico.
 
-
-
-
-
-
-
-
-- **Línea 9:** `private readonly ValidadorComunicacionSincrona _validador = new();` → Crea la instancia del validador que utiliza cada prueba.
-
-
-- **Línea 11:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
-
-- **Línea 12:** `public void Validar_CatalogoPorDefecto_DevuelveValido()` → Nombra la condición de prueba y su resultado esperado.
-
-
-- **Línea 14:** `var resultado = _validador.Validar(CatalogoLlamadas.LlamadasPorDefecto());` → Ejecuta el validador sobre los datos preparados para este caso.
-
-
-- **Línea 16:** `resultado.EsValida.Should().BeTrue();` → Comprueba que la política acepta los datos de este caso.
-
-- **Línea 17:** `resultado.Errores.Should().BeEmpty();` → Comprueba que no se ha registrado ningún diagnóstico.
-
-
-
-
-
-
-
-
-- **Línea 25:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
-
-- **Línea 26:** `resultado.Errores.Should().Contain(e => e.Contains("No hay llamadas"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
-
-
-
-
-
-
-- **Línea 32:** `var llamadas = new List<LlamadaSincrona>` → Prepara las entradas que se van a validar o devolver.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-**Por qué funciona así.** Las pruebas ejercitan aceptación y rechazos concretos del validador. Afirmar el diagnóstico evita un falso positivo por otro error.
+Comprueba que la política rechaza los datos de este caso. Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla. Prepara las entradas que se van a validar o devolver.
 
 **Verificación concreta.** `ValidadorComunicacionSincronaTests` compila en el proyecto indicado; su contenido coincide con el bloque completo.
 
@@ -1601,9 +1273,7 @@ public class ValidadorComunicacionSincronaTests
 
 ### PASO 6.1.15 — Crear el archivo `CatalogoLlamadasTests.cs`
 
-**Resultado de aprendizaje.** Crear el archivo `CatalogoLlamadasTests.cs`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Las pruebas del catálogo verifican cantidades y propiedades declaradas. No prueban que existan los servicios nombrados.
 
 1. Crea `tests/AceriaApp.ComunicacionSincrona.Tests/CatalogoLlamadasTests.cs` dentro del proyecto correspondiente.
 2. Copia el bloque completo siguiente respetando namespace, miembros y valores.
@@ -1664,61 +1334,7 @@ public class CatalogoLlamadasTests
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-
-
-
-
-
-
-
-
-
-
-
-- **Línea 12:** `var llamadas = CatalogoLlamadas.LlamadasPorDefecto();` → Obtiene los datos que se utilizarán en las comprobaciones siguientes.
-
-
-- **Línea 14:** `llamadas.Should().HaveCount(3);` → Comprueba el tamaño del catálogo sin inferir servicios o conexiones en ejecución.
-
-
-
-
-
-
-
-
-- **Línea 22:** `llamadas.Should().OnlyContain(l => l.Metodo == "GET");` → Comprueba la condición en cada entrada declarada del catálogo.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-**Por qué funciona así.** Las pruebas del catálogo verifican cantidades y propiedades declaradas. No prueban que existan los servicios nombrados.
+Obtiene los datos que se utilizarán en las comprobaciones siguientes. Comprueba el tamaño del catálogo sin inferir servicios o conexiones en ejecución. Comprueba la condición en cada entrada declarada del catálogo.
 
 **Verificación concreta.** `CatalogoLlamadasTests` compila en el proyecto indicado; su contenido coincide con el bloque completo.
 
@@ -1726,8 +1342,6 @@ public class CatalogoLlamadasTests
 
 - Un test sin `[Fact]` compila pero no se descubre: revisa los atributos del bloque.
 - Añadir el archivo al proyecto anterior modifica su suite: crea el test en la ruta de este punto.
-
-
 
 #### Implementación funcional: `AceriaApp.ComunicacionSincrona.Tests.csproj`
 
@@ -1752,10 +1366,6 @@ Este archivo completa el contrato, registro o prueba indicada por su nombre. Cr�
 <ItemGroup><Compile Include="../Compartido/SqlServerPruebas.cs" Link="SqlServerPruebas.cs" /></ItemGroup>
 </Project>
 ```
-
-
-
-
 
 #### Implementación funcional: `ClienteInventarioTests.cs`
 
@@ -1812,10 +1422,7 @@ public class ClienteInventarioTests
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 18:** `{ var r=await Cliente(HttpStatusCode.OK,"{\"material\":\"Acero\",\"stock\":80}").ObtenerAsync("Acero",default); Assert.Equal(80,r!.Stock); }` → Comprueba una consecuencia observable. Si cambia el comportamiento descrito por el nombre del test, esta aserción debe fallar.
-
+Comprueba una consecuencia observable. Si cambia el comportamiento descrito por el nombre del test, esta aserción debe fallar.
 
 #### Implementación funcional: `InventarioSqlTests.cs`
 
@@ -1868,17 +1475,11 @@ public class InventarioSqlTests
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 30:** `protected override void Dispose(bool disposing){base.Dispose(disposing);if(disposing)bd.Dispose();}` → Libera recursos del adaptador o de la prueba al terminar su ámbito.
-- **Línea 40:** `{using var f=new Factory();using(var db=f.Nuevo()){(await db.Existencias.SingleAsync()).Stock=70;await db.SaveChangesAsync();}using var otro=f.Nuevo();Assert.Equal(70,(await otro.Existencias.SingleAsync()).Stock);}` → Guarda los datos de preparación o la modificación que esta prueba comprobará desde SQL Server real.
-
+Libera recursos del adaptador o de la prueba al terminar su ámbito. Guarda los datos de preparación o la modificación que esta prueba comprobará desde SQL Server real.
 
 ### PASO 6.1.16 — Compilar la solución completa
 
-**Resultado de aprendizaje.** Compilar la solución completa. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La compilación acredita que se resuelven los nuevos proyectos y contratos, pero no demuestra que los dos procesos puedan comunicarse. El ensayo funcional debe iniciar Producción e Inventario y comprobar sus respuestas.
 
 1. Aplica los bloques de integración funcional de este paso en el orden mostrado.
 2. Añade a `AceriaApp.sln` todos los nuevos proyectos `.csproj` indicados por esos bloques.
@@ -1887,7 +1488,6 @@ public class InventarioSqlTests
 
 Los archivos funcionales de este punto se han incorporado en los pasos 5, 8, 9, 10, 13 y 15. Antes de compilar, agrega todos los proyectos nuevos a la solución con los comandos indicados y guarda los archivos completos.
 
-**Por qué funciona así.** Los adaptadores ejecutables hacen observable la comunicación; el catálogo por sí solo analiza entradas.
 
 **Verificación concreta.** La solución de la etapa compila con 27 proyectos.
 
@@ -1898,16 +1498,13 @@ Los archivos funcionales de este punto se han incorporado en los pasos 5, 8, 9, 
 
 ### PASO 6.1.17 — Ejecutar todos los tests del punto 6.1
 
-**Resultado de aprendizaje.** Ejecutar todos los tests del punto 6.1. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La prueba del punto distingue reglas de análisis y comportamiento de sus adaptadores.
 
 1. Ejecuta `dotnet test tests/AceriaApp.ComunicacionSincrona.Tests/AceriaApp.ComunicacionSincrona.Tests.csproj -c Release --no-build --no-restore`.
 2. Comprueba que se ejecutan los 13 tests de catálogo y las pruebas funcionales añadidas al proyecto hasta el paso 15.
 3. Revisa que cada prueba figure como aprobada, sin errores ni omisiones.
 4. Conserva el resultado de ejecución para compararlo con la suite completa del paso siguiente.
 
-**Por qué funciona así.** La prueba del punto distingue reglas de análisis y comportamiento de sus adaptadores.
 
 **Verificación concreta.** Los 13 casos de catálogo se descubren y pasan junto con la integración del punto.
 
@@ -1918,16 +1515,13 @@ Los archivos funcionales de este punto se han incorporado en los pasos 5, 8, 9, 
 
 ### PASO 6.1.18 — Ejecutar todos los tests de la solución
 
-**Resultado de aprendizaje.** Ejecutar todos los tests de la solución. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La suite completa detecta regresiones de dominio, persistencia y comunicación. Cada proyecto produce su propio resumen; una sola línea de salida no es el total de la solución.
 
 1. Configura `ACERIA_TEST_SQLSERVER` para SQL Server Express o LocalDB y comprueba la disponibilidad de los servicios de integración.
 2. Ejecuta `dotnet test AceriaApp.sln -c Release --no-build --no-restore --logger trx --results-directory TestResults`.
 3. Suma los resultados de los archivos TRX y verifica 232 pruebas aprobadas, cero fallos y cero omisiones.
 4. Revisa las pruebas heredadas de M03, M04 y M05: deben seguir formando parte de la solución.
 
-**Por qué funciona así.** La suite completa detecta regresiones de dominio, persistencia y comunicación. Cada proyecto produce su propio resumen; una sola línea de salida no es el total de la solución.
 
 **Verificación concreta.** Los TRX suman 232 pruebas aprobadas sin omitir integración con SQL Server.
 
@@ -1936,17 +1530,13 @@ Los archivos funcionales de este punto se han incorporado en los pasos 5, 8, 9, 
 - Un error de conexión SQL Server no autoriza sustituirlo por memoria: comprueba instancia, credenciales y permiso para crear bases de prueba.
 - Comparar solo el último resumen de `dotnet test` infracuenta la solución: suma todos los TRX.
 
-
-
 #### Comprobación con procesos reales
 
 Utiliza las dos terminales y las direcciones del apartado «Arranque de los dos procesos». Comprueba que Inventario escucha en 5106 y Producción en 5105. Los tests de cliente con un handler controlado y los de WebApplicationFactory no reemplazan este recorrido por sockets.
 
 ### PASO 6.1.19 — Actualizar el README del punto 6.1
 
-**Resultado de aprendizaje.** Actualizar el README del punto 6.1. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+El README de la copia debe describir el estado actual y la evidencia disponible, no acumular instrucciones obsoletas.
 
 1. Abre el `README.md` copiado dentro de `6.1-comunicacion-sincrona-http`.
 2. Reemplaza su contenido completo por el bloque siguiente.
@@ -1989,7 +1579,6 @@ El catálogo del punto, su proyecto de pruebas, `docs/comunicacion-sincrona-http
 - Los 28 documentos anteriores, incluidos los ADR-010 a ADR-023, permanecen disponibles en `docs`.
 ```
 
-**Por qué funciona así.** El README de la copia debe describir el estado actual y la evidencia disponible, no acumular instrucciones obsoletas.
 
 **Verificación concreta.** El README identifica 27 proyectos, 232 pruebas y 13 tests nuevos de catálogo.
 
@@ -2000,9 +1589,7 @@ El catálogo del punto, su proyecto de pruebas, `docs/comunicacion-sincrona-http
 
 ### PASO 6.1.20 — Crear el ADR-024 del punto 6.1
 
-**Resultado de aprendizaje.** Crear el ADR-024 del punto 6.1. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+El ADR registra la decisión, alternativas y consecuencias sin reescribir decisiones anteriores.
 
 1. Crea `docs/ADR-024-comunicacion-sincrona-http.md` dentro de la copia de `6.1-comunicacion-sincrona-http`.
 2. Introduce el contenido completo del bloque siguiente.
@@ -2040,7 +1627,6 @@ Registrar las llamadas, validar destinos, métodos y timeout, y revisar la segur
 - Mitigación: distinguir pruebas de análisis y pruebas funcionales, mantener límites claros y revisar las decisiones con evidencia operativa.
 ```
 
-**Por qué funciona así.** El ADR registra la decisión, alternativas y consecuencias sin reescribir decisiones anteriores.
 
 **Verificación concreta.** `docs/ADR-024-comunicacion-sincrona-http.md` incluye todos los apartados del bloque mostrado.
 
@@ -2051,16 +1637,13 @@ Registrar las llamadas, validar destinos, métodos y timeout, y revisar la segur
 
 ### PASO 6.1.21 — Verificar que no se ha modificado ningún archivo del punto 5.5
 
-**Resultado de aprendizaje.** Verificar que no se ha modificado ningún archivo del punto 5.5. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Los archivos nuevos se añaden en la copia actual; los documentos y tests heredados siguen siendo la base de regresión.
 
 1. Abre PowerShell en la raíz del curso y define las carpetas anterior `M05_DDD_CQRS/PROYECTO/5.5-dominio-aceria` y actual `M06_COMUNICACION_MICROSERVICIOS/PROYECTO/6.1-comunicacion-sincrona-http`.
 2. Enumera los archivos heredados de `docs` y de `tests` terminados en `.cs` en la etapa anterior.
 3. Compara cada archivo con su copia actual mediante `Get-FileHash`; el mismo camino relativo debe tener el mismo SHA-256.
 4. Comprueba 28 documentos idénticos y restaura únicamente cualquier documento o prueba heredada que se haya alterado por error.
 
-**Por qué funciona así.** Los archivos nuevos se añaden en la copia actual; los documentos y tests heredados siguen siendo la base de regresión.
 
 **Verificación concreta.** Los 28 documentos y todas las pruebas heredadas tienen el mismo SHA-256; los archivos nuevos del punto no se comparan como heredados.
 
@@ -2071,16 +1654,13 @@ Registrar las llamadas, validar destinos, métodos y timeout, y revisar la segur
 
 ### PASO 6.1.22 — Verificar la estructura del punto 6.1
 
-**Resultado de aprendizaje.** Verificar la estructura del punto 6.1. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La estructura debe permitir reconstruir y ejecutar el punto desde sus archivos y referencias, sin proyectos ocultos fuera de la etapa.
 
 1. Ejecuta `tree /F` en Windows desde la carpeta de la etapa.
 2. Localiza las tres clases de `src/AceriaApp.Api/ComunicacionSincrona` y las dos clases de tests en `tests/AceriaApp.ComunicacionSincrona.Tests`.
 3. Comprueba los 30 documentos de `docs`, incluida la ficha del punto y el ADR-024.
 4. Ejecuta `dotnet sln AceriaApp.sln list` y contrasta sus 27 proyectos con los `.csproj` presentes.
 
-**Por qué funciona así.** La estructura debe permitir reconstruir y ejecutar el punto desde sus archivos y referencias, sin proyectos ocultos fuera de la etapa.
 
 **Verificación concreta.** Las rutas del catálogo, documentación e integración están presentes y la solución incluye 27 proyectos.
 
@@ -2091,16 +1671,13 @@ Registrar las llamadas, validar destinos, métodos y timeout, y revisar la segur
 
 ### PASO 6.1.23 — Verificar el `.gitignore` del punto 6.1
 
-**Resultado de aprendizaje.** Verificar el `.gitignore` del punto 6.1. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Las exclusiones se aplican desde la raíz a las etapas; no es necesario inventar un `.gitignore` propio dentro de cada copia.
 
 1. Abre el `.gitignore` de la raíz del repositorio del curso.
 2. Comprueba las reglas `**/bin/`, `**/obj/` y `**/TestResults/` que ya excluyen los artefactos de todas las etapas.
 3. Ejecuta `git status --short` y revisa que no aparezcan binarios, cachés ni resultados temporales.
 4. Conserva las exclusiones existentes; si aparecen archivos locales de Visual Studio, excluye `.vs/`, `*.user` y `*.suo` mediante `.git/info/exclude`, sin ignorar código ni configuración entregable.
 
-**Por qué funciona así.** Las exclusiones se aplican desde la raíz a las etapas; no es necesario inventar un `.gitignore` propio dentro de cada copia.
 
 **Verificación concreta.** Los archivos compilados y resultados de tests están excluidos; los archivos del punto siguen visibles para Git.
 
@@ -2111,16 +1688,13 @@ Registrar las llamadas, validar destinos, métodos y timeout, y revisar la segur
 
 ### PASO 6.1.24 — Hacer el commit del punto 6.1 y verificar el estado final
 
-**Resultado de aprendizaje.** Hacer el commit del punto 6.1 y verificar el estado final. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Un commit local identifica el estado comprobado del punto; su número depende de la historia real y no se deduce del temario.
 
 1. Ejecuta `git diff --check` y revisa `git status --short` desde la raíz del curso.
 2. Añade los archivos revisados de `M06_COMUNICACION_MICROSERVICIOS/PROYECTO/6.1-comunicacion-sincrona-http` con `git add` y comprueba el resumen de `git diff --cached --stat`.
 3. Cuando las pruebas hayan pasado, crea el commit local con el mensaje `Punto 6.1: comunicación síncrona mediante http`.
 4. Comprueba `git log -1 --oneline` y `git status --short`; no incluyas cambios ajenos al punto.
 
-**Por qué funciona así.** Un commit local identifica el estado comprobado del punto; su número depende de la historia real y no se deduce del temario.
 
 **Verificación concreta.** El commit local contiene solo los cambios revisados de 6.1 y los archivos esperados quedan registrados.
 
@@ -2146,10 +1720,6 @@ Abre `src/AceriaApp.Api/ComunicacionSincrona/ValidadorComunicacionSincrona.cs` e
 public record ResumenLlamadas(int Total, int ConTimeout, int ConReintentos, int ConCircuitBreaker);
 ```
 
-
-
-
-
 ### Reto 6.1.3 — Calcular los recuentos
 
 Inserta el método dentro de `ValidadorComunicacionSincrona`, antes del campo `private static readonly string[]`; conserva las cuatro posiciones del constructor del resumen.
@@ -2170,18 +1740,7 @@ Inserta el método dentro de `ValidadorComunicacionSincrona`, antes del campo `p
     }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-
-
-
-- **Línea 4:** `var conTimeout = lista.Count(l => l.TieneTimeout);` → Cuenta las entradas que cumplen el criterio indicado.
-
-
-
-- **Línea 7:** `return new ResumenLlamadas(lista.Count, conTimeout, conReintentos, conCircuitBreaker);` → Devuelve los recuentos del catálogo sin modificar sus entradas.
-
-
+Cuenta las entradas que cumplen el criterio indicado. Devuelve los recuentos del catálogo sin modificar sus entradas.
 
 ### Reto 6.1.6 — Verificar el catálogo por defecto
 
@@ -2205,24 +1764,10 @@ Inserta la prueba dentro de `ValidadorComunicacionSincronaTests`, antes del camp
     }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-
-
-
-- **Línea 4:** `var resumen = ValidadorComunicacionSincrona.Resumen(CatalogoLlamadas.LlamadasPorDefecto());` → Calcula el resumen sobre el catálogo por defecto.
-
-
-- **Línea 6:** `resumen.Total.Should().Be(3);` → Compara el recuento obtenido con el valor esperado del catálogo.
-
-
-
-
-
+Calcula el resumen sobre el catálogo por defecto. Compara el recuento obtenido con el valor esperado del catálogo.
 
 **Comprobación del reto.** Compila la copia optativa y ejecuta primero `dotnet test tests/AceriaApp.ComunicacionSincrona.Tests/AceriaApp.ComunicacionSincrona.Tests.csproj -c Release`, después `dotnet test AceriaApp.sln -c Release`. El catálogo pasa de 13 a 14 tests; la solución debe ejecutar 232 + 1 pruebas, todas aprobadas y ninguna omitida. Confirma en el TRX que se ejecutó `Resumen_ConCatalogoPorDefecto_CalculaTotales` y que la etapa obligatoria conserva sus hashes.
 
-**Por qué funciona así.** El resumen materializa la secuencia una sola vez y calcula sobre ella; no altera los datos ni configura la infraestructura.
 
 **Diagnóstico si falla.** Si el método queda fuera de la clase, mueve solo el fragmento al ancla señalada. Si el total no coincide, revisa las entradas del catálogo antes de cambiar la expectativa. No acumules los retos al construir la siguiente etapa.
 
@@ -2234,6 +1779,12 @@ La etapa contiene las tres clases del análisis, sus 13 pruebas de catálogo, lo
 
 # Punto 6.2 — Comunicación asíncrona basada en eventos
 
+## Comunicar hechos mediante eventos y comprobar su recepción
+
+Cuando un servicio anuncia un hecho de negocio, el destinatario no siempre tiene que estar disponible en ese mismo instante. RabbitMQ permite desacoplar temporalmente la publicación y el consumo, pero obliga a tratar explícitamente fallos, reentregas y la posibilidad de efectos duplicados. En esta etapa distinguiremos guardar la operación, publicar el evento y confirmar que el consumidor aplicó su cambio.
+
+El proyecto conserva el recorrido HTTP anterior y añade publicación, consumidores, outbox e inbox. RabbitMQ se ejecutará en Docker Desktop, mientras las API siguen funcionando como procesos Windows. Las pruebas deben observar la cola y el estado persistido: crear un objeto llamado Evento o registrar un catálogo de mensajes no demuestra que el intercambio haya tenido lugar.
+
 **Carpeta de trabajo:** `M06_COMUNICACION_MICROSERVICIOS/PROYECTO/6.2-comunicacion-asincrona-eventos`.
 
 **Objetivo:** completar los veinticuatro pasos, conservar la etapa anterior y comprobar por separado el análisis y la comunicación ejecutable. La etapa termina con 264 pruebas en 28 proyectos.
@@ -2242,16 +1793,13 @@ La etapa contiene las tres clases del análisis, sus 13 pruebas de catálogo, lo
 
 ### PASO 6.2.1 — Crear la carpeta del punto 6.2 a partir del punto 6.1
 
-**Resultado de aprendizaje.** Crear la carpeta del punto 6.2 a partir del punto 6.1. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La segunda etapa conserva las llamadas HTTP que ya funcionan y añade una vía de eventos. Esta copia evita modificar la referencia 6.1 y permite atribuir cualquier fallo nuevo a la incorporación de la mensajería.
 
 1. Localiza la etapa completa `M06_COMUNICACION_MICROSERVICIOS/PROYECTO/6.1-comunicacion-sincrona-http`; comprueba que contiene `AceriaApp.sln`.
 2. Crea `M06_COMUNICACION_MICROSERVICIOS/PROYECTO/6.2-comunicacion-asincrona-eventos` y copia en ella el contenido de `6.1-comunicacion-sincrona-http`; en Windows usa `xcopy` con `/E /I /H /Y`.
 3. Excluye `bin`, `obj`, `TestResults` y `.vs`; trabaja solamente dentro de `6.2-comunicacion-asincrona-eventos`.
 4. Comprueba con `dir` que aparecen `AceriaApp.sln`, `README.md`, `src`, `tests`, `docs` y `global.json`.
 
-**Por qué funciona así.** La etapa autónoma continúa 27 proyectos y 232 pruebas antes de añadir los cambios del punto.
 
 **Verificación concreta.** La copia corresponde a `6.1-comunicacion-sincrona-http` y conserva todas sus carpetas de código y documentación.
 
@@ -2262,16 +1810,13 @@ La etapa contiene las tres clases del análisis, sus 13 pruebas de catálogo, lo
 
 ### PASO 6.2.2 — Abrir la solución copiada en Visual Studio con soporte .NET 8
 
-**Resultado de aprendizaje.** Abrir la solución copiada en Visual Studio con soporte .NET 8. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Compilar la copia detecta rutas y dependencias incompletas antes de añadir archivos.
 
 1. Abre el `AceriaApp.sln` de `6.2-comunicacion-asincrona-eventos` en Visual Studio.
 2. Ejecuta `dotnet sln AceriaApp.sln list` y comprueba los 27 proyectos heredados.
 3. Ejecuta `dotnet restore AceriaApp.sln` y `dotnet build AceriaApp.sln -c Release` desde la carpeta de esta etapa.
 4. Comprueba que la compilación termina sin errores; si hay DLL bloqueadas, detén los procesos que las utilizan.
 
-**Por qué funciona así.** Compilar la copia detecta rutas y dependencias incompletas antes de añadir archivos.
 
 **Verificación concreta.** La solución lista 27 proyectos y la compilación termina correctamente.
 
@@ -2282,16 +1827,13 @@ La etapa contiene las tres clases del análisis, sus 13 pruebas de catálogo, lo
 
 ### PASO 6.2.3 — Verificar que la carpeta `docs` contiene los documentos del punto 6.1
 
-**Resultado de aprendizaje.** Verificar que la carpeta `docs` contiene los documentos del punto 6.1. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+El punto conserva 30 documentos reales y añadirá dos; el primer ADR disponible es ADR-010.
 
 1. Expande `docs` y comprueba sus 30 archivos Markdown.
 2. Localiza los ADR-010 a ADR-024 y las fichas temáticas heredadas.
 3. Compara nombres y contenido con `docs` de `M06_COMUNICACION_MICROSERVICIOS/PROYECTO/6.1-comunicacion-sincrona-http`.
 4. Comprueba que aún no existen `docs/comunicacion-asincrona-eventos.md` ni `docs/ADR-025-comunicacion-asincrona-eventos.md`.
 
-**Por qué funciona así.** El punto conserva 30 documentos reales y añadirá dos; el primer ADR disponible es ADR-010.
 
 **Verificación concreta.** Hay 30 documentos heredados idénticos; todavía no existen los dos documentos del punto.
 
@@ -2302,9 +1844,7 @@ La etapa contiene las tres clases del análisis, sus 13 pruebas de catálogo, lo
 
 ### PASO 6.2.4 — Crear el documento de comunicación asíncrona en `docs`
 
-**Resultado de aprendizaje.** Crear el documento de comunicación asíncrona en `docs`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La ficha separa el análisis de los contratos y la evidencia ejecutable.
 
 1. Crea `docs/comunicacion-asincrona-eventos.md` dentro de la copia de `6.2-comunicacion-asincrona-eventos`.
 2. Introduce el contenido completo del bloque siguiente.
@@ -2358,7 +1898,6 @@ Guardar datos y publicar son dos operaciones. El patrón outbox registra el camb
 La implementación funcional de mensajería debe comprobar publicación, consumo, persistencia del efecto e idempotencia. Los tests del catálogo solo demuestran coherencia de sus entradas; no sustituyen esa comprobación.
 ```
 
-**Por qué funciona así.** La ficha separa el análisis de los contratos y la evidencia ejecutable.
 
 **Verificación concreta.** `docs/comunicacion-asincrona-eventos.md` incluye todos los apartados del bloque mostrado.
 
@@ -2369,16 +1908,13 @@ La implementación funcional de mensajería debe comprobar publicación, consumo
 
 ### PASO 6.2.5 — Crear la carpeta `ComunicacionAsincrona` en el proyecto API
 
-**Resultado de aprendizaje.** Crear la carpeta `ComunicacionAsincrona` en el proyecto API. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+ComunicacionAsincrona aloja las descripciones de eventos y sus reglas. La publicación y el consumo se ejecutan en los componentes que se conectan realmente con RabbitMQ, no en el catálogo.
 
 1. Expande el proyecto `AceriaApp.Api` y localiza `src/AceriaApp.Api`.
 2. Crea la carpeta `ComunicacionAsincrona` directamente dentro del proyecto API.
 3. Comprueba que `src/AceriaApp.Api/ComunicacionAsincrona` no está anidada dentro de otra carpeta temática.
 4. Conserva las carpetas y archivos heredados de `6.1-comunicacion-sincrona-http`.
 
-**Por qué funciona así.** `ComunicacionAsincrona` agrupa datos y reglas del ejercicio de análisis; los adaptadores de comunicación tienen sus propias responsabilidades.
 
 **Verificación concreta.** Existe `src/AceriaApp.Api/ComunicacionAsincrona` sin alterar las carpetas previas.
 
@@ -2386,8 +1922,6 @@ La implementación funcional de mensajería debe comprobar publicación, consumo
 
 - Crear la carpeta dentro de `tests` impide compilar los tipos con la API: comprueba la ruta física.
 - Renombrar una carpeta heredada rompe namespaces y enlaces: crea solo la carpeta nueva.
-
-
 
 #### Implementación funcional: `PuertosPlanificacion.cs`
 
@@ -2411,10 +1945,7 @@ public interface ITransporteEventos
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 3:** `public enum EstadoPlanificacion { Aceptada, NoExiste, Conflicto, SinDisponibilidad }` → Define la forma pública o la configuración reproducible que usarán los archivos del mismo punto.
-
+Define la forma pública o la configuración reproducible que usarán los archivos del mismo punto.
 
 #### Implementación funcional: `OrdenPlanificadaV1.cs`
 
@@ -2440,17 +1971,11 @@ public sealed record OrdenPlanificadaV1(Guid EventoId, Guid OrdenId, DateTimeOff
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 3:** `public sealed record OrdenPlanificadaV1(Guid EventoId, Guid OrdenId, DateTimeOffset OcurridoEnUtc,` → Utiliza el contrato público versionado, sin serializar la entidad de dominio completa.
-- **Línea 12:** `throw new InvalidDataException("Evento de planificación incompatible o inválido.");` → Señala un contrato incompatible o un conflicto de identidad; el consumidor lo envía a fallidos.
-
+Utiliza el contrato público versionado, sin serializar la entidad de dominio completa. Señala un contrato incompatible o un conflicto de identidad; el consumidor lo envía a fallidos.
 
 ### PASO 6.2.6 — Crear la clase `Evento`
 
-**Resultado de aprendizaje.** Crear la clase `Evento`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Evento describe un hecho con información sobre productor y consumidor. Crear una instancia no equivale a publicarla; habrá que comprobar después que el broker recibe el mensaje.
 
 1. Crea `src/AceriaApp.Api/ComunicacionAsincrona/Evento.cs` dentro del proyecto correspondiente.
 2. Copia el bloque completo siguiente respetando namespace, miembros y valores.
@@ -2474,27 +1999,7 @@ public class Evento
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 1:** `namespace AceriaApp.Api.ComunicacionAsincrona;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
-
-- **Línea 2:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
-
-- **Línea 3:** `public class Evento` → Declara el tipo público del ejercicio de análisis.
-
-- **Línea 4:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
-
-- **Línea 5:** `public string Nombre { get; init; } = string.Empty;` → Declara un dato del análisis que se fija al construir la entrada.
-
-
-
-
-
-
-- **Línea 11:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
-
-
-**Por qué funciona así.** El modelo describe entradas de análisis. Sus indicadores no instalan políticas ni establecen conexiones.
+Sitúa el tipo en el espacio de nombres que importan las pruebas del punto. Declara el tipo público del ejercicio de análisis. Declara un dato del análisis que se fija al construir la entrada.
 
 **Verificación concreta.** `Evento` compila en el proyecto indicado; su contenido coincide con el bloque completo.
 
@@ -2505,9 +2010,7 @@ public class Evento
 
 ### PASO 6.2.7 — Crear la clase `ValidadorComunicacionAsincrona`
 
-**Resultado de aprendizaje.** Crear la clase `ValidadorComunicacionAsincrona`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La validez de un evento declarado no garantiza que se entregue ni que se procese una sola vez. El flujo real debe ejercitar el broker, el consumidor y la persistencia outbox/inbox.
 
 1. Crea `src/AceriaApp.Api/ComunicacionAsincrona/ValidadorComunicacionAsincrona.cs` dentro del proyecto correspondiente.
 2. Copia el bloque completo siguiente respetando namespace, miembros y valores.
@@ -2574,73 +2077,11 @@ public class ValidadorComunicacionAsincrona
 public record ResultadoComunicacionAsincrona(bool EsValida, IReadOnlyList<string> Errores);
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
+Limita los valores de texto reconocidos por la política didáctica. Expone la operación con el contrato que usan el catálogo o sus pruebas. Inicializa la colección de diagnósticos que se devolverá al finalizar.
 
+Materializa una sola vez la secuencia recibida para recorrerla y contarla. Evalúa una regla concreta antes de añadir el diagnóstico asociado. Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-
-
-
-- **Línea 5:** `private static readonly string[] TiposPermitidos = { "Dominio", "Integracion" };` → Limita los valores de texto reconocidos por la política didáctica.
-
-
-- **Línea 7:** `public ResultadoComunicacionAsincrona Validar(IEnumerable<Evento> eventos)` → Expone la operación con el contrato que usan el catálogo o sus pruebas.
-
-
-- **Línea 9:** `var errores = new List<string>();` → Inicializa la colección de diagnósticos que se devolverá al finalizar.
-
-- **Línea 10:** `var lista = eventos.ToList();` → Materializa una sola vez la secuencia recibida para recorrerla y contarla.
-
-
-- **Línea 12:** `if (lista.Count == 0)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
-
-
-- **Línea 14:** `errores.Add("No hay eventos declarados.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
-
-
-
-- **Línea 17:** `foreach (var evento in lista)` → Revisa cada entrada; un catálogo puede acumular varios diagnósticos.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-- **Línea 50:** `return new ResultadoComunicacionAsincrona(errores.Count == 0, errores);` → Devuelve validez y diagnósticos; no ejecuta ninguna comunicación remota.
-
-
-
-
-- **Línea 54:** `public record ResultadoComunicacionAsincrona(bool EsValida, IReadOnlyList<string> Errores);` → Define el resultado inmutable que devuelve el validador o el resumen.
-
-
-**Por qué funciona así.** El validador devuelve todos los incumplimientos de la política explícita; no implementa una llamada, publicación o decisión automática de producción. Los requisitos de entrega del catálogo se aplican a eventos de integración; no a eventos locales de dominio.
+Revisa cada entrada; un catálogo puede acumular varios diagnósticos. Devuelve validez y diagnósticos; no ejecuta ninguna comunicación remota. Define el resultado inmutable que devuelve el validador o el resumen.
 
 **Verificación concreta.** `ValidadorComunicacionAsincrona` compila en el proyecto indicado; su contenido coincide con el bloque completo.
 
@@ -2651,9 +2092,7 @@ public record ResultadoComunicacionAsincrona(bool EsValida, IReadOnlyList<string
 
 ### PASO 6.2.8 — Añadir los `using` necesarios en `ValidadorComunicacionAsincrona`
 
-**Resultado de aprendizaje.** Añadir los `using` necesarios en `ValidadorComunicacionAsincrona`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Las importaciones explícitas muestran dónde se declaran los tipos genéricos y las extensiones LINQ, aunque el proyecto tenga importaciones implícitas.
 
 1. Abre `src/AceriaApp.Api/ComunicacionAsincrona/ValidadorComunicacionAsincrona.cs`.
 2. Inserta el bloque de importaciones inmediatamente antes del namespace; comprueba que el ancla aparece una sola vez.
@@ -2670,13 +2109,7 @@ using System.Collections.Generic;
 using System.Linq;
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 1:** `using System.Collections.Generic;` → Importa los tipos o extensiones utilizados por el archivo.
-
-
-
-**Por qué funciona así.** Las importaciones explícitas muestran dónde se declaran los tipos genéricos y las extensiones LINQ, aunque el proyecto tenga importaciones implícitas.
+Importa los tipos o extensiones utilizados por el archivo.
 
 **Verificación concreta.** `ValidadorComunicacionAsincrona.cs` conserva el contenido previo y añade solo las importaciones indicadas.
 
@@ -2684,8 +2117,6 @@ using System.Linq;
 
 - Pegar las importaciones dentro de una clase no es válido: insértalas antes del namespace.
 - Insertar dos veces el bloque produce importaciones duplicadas: comprueba el contenido antes de guardarlo.
-
-
 
 #### Implementación funcional: `AceriaApp.Comunicacion.Infraestructura.csproj`
 
@@ -2705,10 +2136,7 @@ Este archivo completa el contrato, registro o prueba indicada por su nombre. Cr�
 </Project>
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 4:** `<ProjectReference Include="../AceriaApp.Comunicacion.Aplicacion/AceriaApp.Comunicacion.Aplicacion.csproj" />` → Declara una dependencia de compilación explícita; el ensamblado debe existir en la solución.
-- **Línea 6:** `<PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />` → Fija la versión de la dependencia para reproducir la compilación y sus API.
+Declara una dependencia de compilación explícita; el ensamblado debe existir en la solución. Fija la versión de la dependencia para reproducir la compilación y sus API.
 
 Desde la carpeta de esta etapa, registra el proyecto:
 
@@ -2775,14 +2203,9 @@ public sealed class DespachadorOutbox(ProduccionDbContext db, ITransporteEventos
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
+Obtiene datos para lectura sin incorporarlos al seguimiento de cambios. Confirma juntos el cambio de estado de la orden y el outbox en la transacción local de SQL; el broker participa después. Reconoce la carrera en la restricción única de SQL sin ocultar otros errores de persistencia.
 
-- **Línea 13:** `var orden = await db.Ordenes.AsNoTracking().Include(x => x.Lineas).SingleOrDefaultAsync(x => x.Id == id, ct);` → Obtiene datos para lectura sin incorporarlos al seguimiento de cambios.
-- **Línea 27:** `try { await db.SaveChangesAsync(ct); }` → Confirma juntos el cambio de estado de la orden y el outbox en la transacción local de SQL; el broker participa después.
-- **Línea 29:** `catch (DbUpdateException ex) when (ex.InnerException is SqlException sql && (sql.Number == 2601 || sql.Number == 2627))` → Reconoce la carrera en la restricción única de SQL sin ocultar otros errores de persistencia.
-- **Línea 38:** `var pendientes = await db.MensajesSalida.Where(x => x.EnviadoEnUtc == null)` → Distingue una salida pendiente de una confirmada por el broker; el marcado posterior puede repetirse tras un fallo.
-- **Línea 44:** `await db.SaveChangesAsync(ct);` → Persiste el marcado del outbox después de recibir confirmación del broker; un fallo antes de este guardado puede causar una nueva publicación.
-
+Distingue una salida pendiente de una confirmada por el broker; el marcado posterior puede repetirse tras un fallo. Persiste el marcado del outbox después de recibir confirmación del broker; un fallo antes de este guardado puede causar una nueva publicación.
 
 #### Implementación funcional: `ConflictoProduccionException.cs`
 
@@ -2796,10 +2219,7 @@ namespace AceriaApp.Produccion.Aplicacion;
 public sealed class ConflictoProduccionException() : Exception("La orden cambió desde su lectura; vuelve a consultarla.");
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 2:** `public sealed class ConflictoProduccionException() : Exception("La orden cambió desde su lectura; vuelve a consultarla.");` → Expresa el conflicto de concurrencia sin exponer una excepción de EF a aplicación; el caso de uso lo traduce al resultado que la API devuelve como 409.
-
+Expresa el conflicto de concurrencia sin exponer una excepción de EF a aplicación; el caso de uso lo traduce al resultado que la API devuelve como 409.
 
 #### Implementación funcional: `OrdenesProduccionCasosUso.cs`
 
@@ -2860,10 +2280,6 @@ public sealed class OrdenesProduccionCasosUso(
         ex.Codigo == "estado.invalido" ? TipoErrorProduccion.Conflicto : TipoErrorProduccion.Validacion);
 }
 ```
-
-
-
-
 
 #### Implementación funcional: `OrdenProduccion.cs`
 
@@ -2950,10 +2366,7 @@ public sealed class OrdenProduccion : IEquatable<OrdenProduccion>
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 35:** `Revision++;` → Incrementa la versión de la raíz después de una mutación válida; así SQL puede detectar cambios concurrentes aunque el estado siga siendo Borrador.
-
+Incrementa la versión de la raíz después de una mutación válida; así SQL puede detectar cambios concurrentes aunque el estado siga siendo Borrador.
 
 #### Implementación funcional: `MensajeSalida.cs`
 
@@ -2973,10 +2386,6 @@ public sealed class MensajeSalida
     public DateTimeOffset? EnviadoEnUtc { get; set; }
 }
 ```
-
-
-
-
 
 #### Implementación funcional: `PersistenciaProduccion.cs`
 
@@ -3011,10 +2420,7 @@ public sealed class ProduccionUnitOfWork(ProduccionDbContext db) : IProduccionUn
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 16:** `try { await db.SaveChangesAsync(ct); }` → Confirma los cambios pendientes en la transacción local de SQL; esta operación no incluye al broker.
-
+Confirma los cambios pendientes en la transacción local de SQL; esta operación no incluye al broker.
 
 #### Implementación funcional: `ProduccionDbContext.cs`
 
@@ -3060,17 +2466,11 @@ public sealed class ProduccionDbContext(DbContextOptions<ProduccionDbContext> op
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 13:** `salida.HasIndex(x => x.OrdenId).IsUnique();` → La restricción única de SQL protege la identidad también cuando dos operaciones concurrentes compiten.
-- **Línea 16:** `orden.Property(x => x.Revision).IsConcurrencyToken();` → EF compara la Revision original de la raíz al actualizar. Toda mutación, tanto de líneas como de estado, incrementa esa versión para rechazar escrituras basadas en una lectura antigua.
-
+La restricción única de SQL protege la identidad también cuando dos operaciones concurrentes compiten. EF compara la Revision original de la raíz al actualizar. Toda mutación, tanto de líneas como de estado, incrementa esa versión para rechazar escrituras basadas en una lectura antigua.
 
 ### PASO 6.2.9 — Crear la clase `CatalogoEventos`
 
-**Resultado de aprendizaje.** Crear la clase `CatalogoEventos`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Un catálogo en memoria sirve para comparar ejemplos, pero no es una cola AMQP. Los mensajes y las reentregas se observan con RabbitMQ y los cambios de Inventario.
 
 1. Crea `src/AceriaApp.Api/ComunicacionAsincrona/CatalogoEventos.cs` dentro del proyecto correspondiente.
 2. Copia el bloque completo siguiente respetando namespace, miembros y valores.
@@ -3098,28 +2498,7 @@ public class CatalogoEventos
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-
-
-
-
-
-
-- **Línea 7:** `return new List<Evento>` → Devuelve una lista nueva en cada llamada; modificarla no altera otros casos.
-
-
-- **Línea 9:** `new() { Nombre = "OrdenCreada", Tipo = "Integracion", Publicador = "Ordenes.Api", NumeroDeConsumidores = 2, TieneIdempotencia = true, TieneReintentos = true },` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
-
-
-
-
-- **Línea 13:** `};` → Cierra la colección y termina su inicialización.
-
-
-
-
-**Por qué funciona así.** Cada invocación devuelve una lista nueva con los ejemplos de análisis; cambiar una lista no modifica futuros catálogos.
+Devuelve una lista nueva en cada llamada; modificarla no altera otros casos. Construye una entrada del catálogo o del caso de prueba con valores explícitos. Cierra la colección y termina su inicialización.
 
 **Verificación concreta.** `CatalogoEventos` compila en el proyecto indicado; su contenido coincide con el bloque completo.
 
@@ -3127,8 +2506,6 @@ public class CatalogoEventos
 
 - Un namespace diferente de `AceriaApp.Api.ComunicacionAsincrona` en las clases impide resolverlas desde las pruebas: usa el indicado.
 - Confundir un booleano con una política ejecutada lleva a conclusiones incorrectas: limita la verificación a los datos que recorre el validador.
-
-
 
 #### Implementación funcional: `PublicadorOutboxWorker.cs`
 
@@ -3162,10 +2539,7 @@ public sealed class PublicadorOutboxWorker(IServiceScopeFactory scopes, ILogger<
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 13:** `using var scope = scopes.CreateScope();` → Crea un ámbito por iteración o mensaje; el DbContext no se comparte entre trabajos concurrentes.
-
+Crea un ámbito por iteración o mensaje; el DbContext no se comparte entre trabajos concurrentes.
 
 #### Implementación funcional: `RabbitMqTransporte.cs`
 
@@ -3259,22 +2633,15 @@ public sealed class RabbitMqTransporte(RabbitMqOpciones opciones) : ITransporteE
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
+Dispone la conexión existente antes de reemplazarla o de liberar definitivamente el adaptador. Configura confirms y seguimiento según confirmar: la publicación usa true y el consumo usa false. Declara la topología durable usada por el publicador y el consumidor.
 
-- **Línea 21:** `if (conexion is not null) await conexion.DisposeAsync();` → Dispone la conexión existente antes de reemplazarla o de liberar definitivamente el adaptador.
-- **Línea 26:** `var canal = await conexion.CreateChannelAsync(new CreateChannelOptions(confirmar, confirmar), ct);` → Configura confirms y seguimiento según confirmar: la publicación usa true y el consumo usa false.
-- **Línea 28:** `await canal.QueueDeclareAsync(Cola + ".errores", durable: true, exclusive: false, autoDelete: false, cancellationToken: ct);` → Declara la topología durable usada por el publicador y el consumidor.
-- **Línea 38:** `using var plazo = CancellationTokenSource.CreateLinkedTokenSource(ct);` → Combina la cancelación del solicitante con un límite propio de la operación remota.
-- **Línea 39:** `plazo.CancelAfter(TimeSpan.FromSeconds(10));` → Acota la espera de confirmación; un timeout puede dejar incierto si el broker recibió el mensaje.
-- **Línea 41:** `await canal.BasicPublishAsync(Exchange, Ruta, mandatory: true,` → Publica con confirmaciones activadas: esperar acredita aceptación del broker, no ejecución del consumidor.
-- **Línea 48:** `var entrega = await canal.BasicGetAsync(Cola, autoAck: false, cancellationToken: ct);` → Extrae una entrega sin confirmación automática; es polling didáctico, no suscripción push.
+Combina la cancelación del solicitante con un límite propio de la operación remota. Acota la espera de confirmación; un timeout puede dejar incierto si el broker recibió el mensaje. Publica con confirmaciones activadas: esperar acredita aceptación del broker, no ejecución del consumidor.
 
+Extrae una entrega sin confirmación automática; es polling didáctico, no suscripción push.
 
 ### PASO 6.2.10 — Añadir el `using` necesario en `CatalogoEventos`
 
-**Resultado de aprendizaje.** Añadir el `using` necesario en `CatalogoEventos`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Las importaciones explícitas muestran dónde se declaran los tipos genéricos y las extensiones LINQ, aunque el proyecto tenga importaciones implícitas.
 
 1. Abre `src/AceriaApp.Api/ComunicacionAsincrona/CatalogoEventos.cs`.
 2. Inserta el bloque de importaciones inmediatamente antes del namespace; comprueba que el ancla aparece una sola vez.
@@ -3290,20 +2657,12 @@ public sealed class RabbitMqTransporte(RabbitMqOpciones opciones) : ITransporteE
 using System.Collections.Generic;
 ```
 
-
-
-
-
-**Por qué funciona así.** Las importaciones explícitas muestran dónde se declaran los tipos genéricos y las extensiones LINQ, aunque el proyecto tenga importaciones implícitas.
-
 **Verificación concreta.** `CatalogoEventos.cs` conserva el contenido previo y añade solo las importaciones indicadas.
 
 **Diagnóstico si falla.**
 
 - Pegar las importaciones dentro de una clase no es válido: insértalas antes del namespace.
 - Insertar dos veces el bloque produce importaciones duplicadas: comprueba el contenido antes de guardarlo.
-
-
 
 #### Implementación funcional: `AceriaApp.Inventario.Api.csproj`
 
@@ -3321,9 +2680,6 @@ Este archivo completa el contrato, registro o prueba indicada por su nombre. Cr�
 <ProjectReference Include="../AceriaApp.Comunicacion.Infraestructura/AceriaApp.Comunicacion.Infraestructura.csproj" /></ItemGroup>
 </Project>
 ```
-
-
-
 
 Desde la carpeta de esta etapa, registra el proyecto:
 
@@ -3370,10 +2726,6 @@ public sealed class ConsumidorPlanificacionWorker(RabbitMqTransporte bus, IServi
 }
 ```
 
-
-
-
-
 #### Implementación funcional: `InventarioDbContext.cs`
 
 Este archivo completa el contrato, registro o prueba indicada por su nombre. Créalo en la ruta exacta para que la solución resuelva las dependencias del punto. Las responsabilidades de dominio, aplicación y adaptadores se mantienen separadas.
@@ -3403,10 +2755,6 @@ public sealed class InventarioDbContext(DbContextOptions<InventarioDbContext> op
     }
 }
 ```
-
-
-
-
 
 #### Implementación funcional: `InventarioProgram.cs`
 
@@ -3463,14 +2811,9 @@ public sealed class InventarioProgram
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
+Mantiene SQL Server real como proveedor; no se sustituye por almacenamiento en memoria. Habilita el proceso periódico únicamente cuando la configuración lo solicita. Inicializa una base didáctica nueva. No migra un esquema existente: usa los nombres separados de cada etapa.
 
-- **Línea 10:** `builder.Services.AddDbContext<InventarioDbContext>(o => o.UseSqlServer(` → Mantiene SQL Server real como proveedor; no se sustituye por almacenamiento en memoria.
-- **Línea 18:** `builder.Services.AddHostedService<ConsumidorPlanificacionWorker>();` → Habilita el proceso periódico únicamente cuando la configuración lo solicita.
-- **Línea 24:** `await db.Database.EnsureCreatedAsync();` → Inicializa una base didáctica nueva. No migra un esquema existente: usa los nombres separados de cada etapa.
-- **Línea 29:** `await db.SaveChangesAsync();` → Guarda las existencias iniciales del laboratorio en la base propia de Inventario.
-- **Línea 32:** `app.MapGet("/health", () => Results.Ok(new { servicio = "Inventario" }));` → Publica una consulta HTTP con un contrato de respuesta verificable.
-
+Guarda las existencias iniciales del laboratorio en la base propia de Inventario. Publica una consulta HTTP con un contrato de respuesta verificable.
 
 #### Implementación funcional: `PlanificacionRecibida.cs`
 
@@ -3490,10 +2833,6 @@ public sealed class PlanificacionRecibida
     public DateTimeOffset RecibidoEnUtc { get; set; }
 }
 ```
-
-
-
-
 
 #### Implementación funcional: `ReceptorPlanificacion.cs`
 
@@ -3536,17 +2875,11 @@ public sealed class ReceptorPlanificacion(InventarioDbContext db)
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 12:** `var huella = Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(evento)));` → Calcula una huella del contenido para distinguir un duplicado legítimo de una identidad reutilizada con otros datos.
-- **Línea 17:** `try { await db.SaveChangesAsync(ct); return true; }` → Guarda la fila que representa inbox y proyección en la transacción SQL local; el transporte confirma la entrega después de que termine.
-
+Calcula una huella del contenido para distinguir un duplicado legítimo de una identidad reutilizada con otros datos. Guarda la fila que representa inbox y proyección en la transacción SQL local; el transporte confirma la entrega después de que termine.
 
 ### PASO 6.2.11 — Crear el proyecto de tests del punto 6.2
 
-**Resultado de aprendizaje.** Crear el proyecto de tests del punto 6.2. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Definir el proyecto completo fija .NET 8 y las versiones del runner sin depender de la versión local de la plantilla.
 
 1. Crea la carpeta `tests/AceriaApp.ComunicacionAsincrona.Tests` y el `.csproj` completo del bloque siguiente.
 2. No generes `UnitTest1.cs`; los pasos 14 y 15 incluyen las clases de prueba completas.
@@ -3573,7 +2906,6 @@ public sealed class ReceptorPlanificacion(InventarioDbContext db)
 </Project>
 ```
 
-**Por qué funciona así.** Definir el proyecto completo fija .NET 8 y las versiones del runner sin depender de la versión local de la plantilla.
 
 **Verificación concreta.** Existe `tests/AceriaApp.ComunicacionAsincrona.Tests/AceriaApp.ComunicacionAsincrona.Tests.csproj` y la solución lo incluye una sola vez.
 
@@ -3584,9 +2916,7 @@ public sealed class ReceptorPlanificacion(InventarioDbContext db)
 
 ### PASO 6.2.12 — Añadir la referencia del proyecto de tests a la API
 
-**Resultado de aprendizaje.** Añadir la referencia del proyecto de tests a la API. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Las pruebas consumen los tipos de análisis de la API; la API no debe depender de su proyecto de pruebas.
 
 1. Abre `tests/AceriaApp.ComunicacionAsincrona.Tests/AceriaApp.ComunicacionAsincrona.Tests.csproj`.
 2. Reemplaza su contenido completo por el bloque siguiente, que incorpora la referencia a la API.
@@ -3614,7 +2944,6 @@ public sealed class ReceptorPlanificacion(InventarioDbContext db)
 </Project>
 ```
 
-**Por qué funciona así.** Las pruebas consumen los tipos de análisis de la API; la API no debe depender de su proyecto de pruebas.
 
 **Verificación concreta.** El proyecto resuelve la referencia a la API y compila sin dependencias circulares.
 
@@ -3625,9 +2954,7 @@ public sealed class ReceptorPlanificacion(InventarioDbContext db)
 
 ### PASO 6.2.13 — Añadir el paquete `FluentAssertions` al proyecto de tests
 
-**Resultado de aprendizaje.** Añadir el paquete `FluentAssertions` al proyecto de tests. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La versión fijada mantiene reproducibles las aserciones `Should()` de los catálogos.
 
 1. Abre `tests/AceriaApp.ComunicacionAsincrona.Tests/AceriaApp.ComunicacionAsincrona.Tests.csproj` y conserva las versiones de los paquetes existentes.
 2. Reemplaza su contenido por el bloque completo que añade `FluentAssertions` 6.12.2.
@@ -3656,7 +2983,6 @@ public sealed class ReceptorPlanificacion(InventarioDbContext db)
 </Project>
 ```
 
-**Por qué funciona así.** La versión fijada mantiene reproducibles las aserciones `Should()` de los catálogos.
 
 **Verificación concreta.** El listado de paquetes muestra FluentAssertions 6.12.2 y el proyecto compila.
 
@@ -3664,8 +2990,6 @@ public sealed class ReceptorPlanificacion(InventarioDbContext db)
 
 - Instalar una versión sin fijarla puede cambiar la API y las condiciones de uso: conserva 6.12.2.
 - Añadir el paquete a la API no establece la referencia del test: modifica el proyecto de pruebas indicado.
-
-
 
 #### Implementación funcional: `ComunicacionEndpoints.cs`
 
@@ -3705,11 +3029,7 @@ public static class ComunicacionEndpoints
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 17:** `app.MapPost("/api/v1/comunicacion/ordenes/{id:guid}/planificar", async (Guid id, IPlanificadorIntegrado planificador, CancellationToken ct) =>` → Publica la operación de planificación; el adaptador traduce el resultado del caso de uso a HTTP.
-- **Línea 24:** `_ => Results.Accepted($"/api/v1/produccion/ordenes/{id}", new { ordenId = id, estado = "Planificada", propagacion = "Pendiente" })` → Devuelve 202: la planificación local está confirmada y la propagación a Inventario es eventual.
-
+Publica la operación de planificación; el adaptador traduce el resultado del caso de uso a HTTP. Devuelve 202: la planificación local está confirmada y la propagación a Inventario es eventual.
 
 #### Implementación funcional: `appsettings.json`
 
@@ -3734,10 +3054,7 @@ Este archivo completa el contrato, registro o prueba indicada por su nombre. Cr�
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 2:** `"ConnectionStrings": {` → Separa los almacenes de esta etapa y conserva los de los módulos anteriores.
-
+Separa los almacenes de esta etapa y conserva los de los módulos anteriores.
 
 #### Implementación funcional: `RegistroComunicacion.cs`
 
@@ -3772,10 +3089,7 @@ public static class RegistroComunicacion
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 9:** `services.AddHttpClient<IClienteInventario, ClienteInventarioHttp>(http =>` → Registra el cliente tipado y centraliza dirección y timeout; los handlers se administran mediante la factoría.
-
+Registra el cliente tipado y centraliza dirección y timeout; los handlers se administran mediante la factoría.
 
 #### Implementación funcional: `appsettings.json`
 
@@ -3798,15 +3112,9 @@ Este archivo completa el contrato, registro o prueba indicada por su nombre. Cr�
 }
 ```
 
-
-
-
-
 ### PASO 6.2.14 — Crear el archivo `ValidadorComunicacionAsincronaTests.cs`
 
-**Resultado de aprendizaje.** Crear el archivo `ValidadorComunicacionAsincronaTests.cs`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Las pruebas ejercitan aceptación y rechazos concretos del validador. Afirmar el diagnóstico evita un falso positivo por otro error.
 
 1. Crea `tests/AceriaApp.ComunicacionAsincrona.Tests/ValidadorComunicacionAsincronaTests.cs` dentro del proyecto correspondiente.
 2. Copia el bloque completo siguiente respetando namespace, miembros y valores.
@@ -3930,130 +3238,11 @@ public class ValidadorComunicacionAsincronaTests
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
+Crea la instancia del validador que utiliza cada prueba. Registra un caso ejecutable independiente en xUnit. Nombra la condición de prueba y su resultado esperado.
 
+Ejecuta el validador sobre los datos preparados para este caso. Comprueba que la política acepta los datos de este caso. Comprueba que no se ha registrado ningún diagnóstico.
 
-
-
-
-
-
-
-
-- **Línea 9:** `private readonly ValidadorComunicacionAsincrona _validador = new();` → Crea la instancia del validador que utiliza cada prueba.
-
-
-- **Línea 11:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
-
-- **Línea 12:** `public void Validar_CatalogoPorDefecto_DevuelveValido()` → Nombra la condición de prueba y su resultado esperado.
-
-
-- **Línea 14:** `var resultado = _validador.Validar(CatalogoEventos.EventosPorDefecto());` → Ejecuta el validador sobre los datos preparados para este caso.
-
-
-- **Línea 16:** `resultado.EsValida.Should().BeTrue();` → Comprueba que la política acepta los datos de este caso.
-
-- **Línea 17:** `resultado.Errores.Should().BeEmpty();` → Comprueba que no se ha registrado ningún diagnóstico.
-
-
-
-
-
-
-
-
-- **Línea 25:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
-
-- **Línea 26:** `resultado.Errores.Should().Contain(e => e.Contains("No hay eventos"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
-
-
-
-
-
-
-- **Línea 32:** `var eventos = new List<Evento>` → Prepara las entradas que se van a validar o devolver.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-**Por qué funciona así.** Las pruebas ejercitan aceptación y rechazos concretos del validador. Afirmar el diagnóstico evita un falso positivo por otro error.
+Comprueba que la política rechaza los datos de este caso. Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla. Prepara las entradas que se van a validar o devolver.
 
 **Verificación concreta.** `ValidadorComunicacionAsincronaTests` compila en el proyecto indicado; su contenido coincide con el bloque completo.
 
@@ -4064,9 +3253,7 @@ public class ValidadorComunicacionAsincronaTests
 
 ### PASO 6.2.15 — Crear el archivo `CatalogoEventosTests.cs`
 
-**Resultado de aprendizaje.** Crear el archivo `CatalogoEventosTests.cs`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Las pruebas del catálogo verifican cantidades y propiedades declaradas. No prueban que existan los servicios nombrados.
 
 1. Crea `tests/AceriaApp.ComunicacionAsincrona.Tests/CatalogoEventosTests.cs` dentro del proyecto correspondiente.
 2. Copia el bloque completo siguiente respetando namespace, miembros y valores.
@@ -4127,61 +3314,7 @@ public class CatalogoEventosTests
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-
-
-
-
-
-
-
-
-
-
-
-- **Línea 12:** `var eventos = CatalogoEventos.EventosPorDefecto();` → Obtiene los datos que se utilizarán en las comprobaciones siguientes.
-
-
-- **Línea 14:** `eventos.Should().HaveCount(4);` → Comprueba el tamaño del catálogo sin inferir servicios o conexiones en ejecución.
-
-
-
-
-
-
-
-
-- **Línea 22:** `eventos.Should().OnlyContain(e => e.Tipo == "Integracion");` → Comprueba la condición en cada entrada declarada del catálogo.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-**Por qué funciona así.** Las pruebas del catálogo verifican cantidades y propiedades declaradas. No prueban que existan los servicios nombrados.
+Obtiene los datos que se utilizarán en las comprobaciones siguientes. Comprueba el tamaño del catálogo sin inferir servicios o conexiones en ejecución. Comprueba la condición en cada entrada declarada del catálogo.
 
 **Verificación concreta.** `CatalogoEventosTests` compila en el proyecto indicado; su contenido coincide con el bloque completo.
 
@@ -4189,8 +3322,6 @@ public class CatalogoEventosTests
 
 - Un test sin `[Fact]` compila pero no se descubre: revisa los atributos del bloque.
 - Añadir el archivo al proyecto anterior modifica su suite: crea el test en la ruta de este punto.
-
-
 
 #### Implementación funcional: `AceriaApp.ComunicacionAsincrona.Tests.csproj`
 
@@ -4217,10 +3348,6 @@ Este archivo completa el contrato, registro o prueba indicada por su nombre. Cr�
 </Project>
 ```
 
-
-
-
-
 #### Implementación funcional: `ContratoEventoTests.cs`
 
 Este archivo completa el contrato, registro o prueba indicada por su nombre. Créalo en la ruta exacta para que la solución resuelva las dependencias del punto. Las responsabilidades de dominio, aplicación y adaptadores se mantienen separadas.
@@ -4246,10 +3373,7 @@ public class ContratoEventoTests
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 8:** `public void Evento_valido_preserva_identidad_y_datos() { var e=Valido(); e.Validar(); Assert.Equal(20,e.Lineas.Sum(x=>x.Cantidad)); }` → Comprueba una consecuencia observable. Si cambia el comportamiento descrito por el nombre del test, esta aserción debe fallar.
-
+Comprueba una consecuencia observable. Si cambia el comportamiento descrito por el nombre del test, esta aserción debe fallar.
 
 #### Implementación funcional: `OutboxInboxTests.cs`
 
@@ -4392,10 +3516,7 @@ public class OutboxInboxTests
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 22:** `var o=new OrdenProduccion("Axia","Acero",20);db.Ordenes.Add(o);await db.SaveChangesAsync();` → Guarda los datos de preparación o la modificación que esta prueba comprobará desde SQL Server real.
-
+Guarda los datos de preparación o la modificación que esta prueba comprobará desde SQL Server real.
 
 #### Implementación funcional: `RabbitMqTests.cs`
 
@@ -4575,10 +3696,6 @@ public class RabbitMqTests
 }
 ```
 
-
-
-
-
 #### Implementación funcional: `RabbitPruebas.cs`
 
 Este archivo completa el contrato, registro o prueba indicada por su nombre. Créalo en la ruta exacta para que la solución resuelva las dependencias del punto. Las responsabilidades de dominio, aplicación y adaptadores se mantienen separadas.
@@ -4614,16 +3731,11 @@ public sealed class RabbitPruebas : IAsyncDisposable
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 20:** `public async ValueTask DisposeAsync()` → Libera recursos del adaptador o de la prueba al terminar su ámbito.
-
+Libera recursos del adaptador o de la prueba al terminar su ámbito.
 
 ### PASO 6.2.16 — Compilar la solución completa
 
-**Resultado de aprendizaje.** Compilar la solución completa. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+En esta etapa el resultado debe compilar y superar las pruebas de mensajería con un broker accesible. Sin procesar eventos y comprobar sus efectos no consideraremos demostrado el recorrido asíncrono.
 
 1. Aplica los bloques de integración funcional de este paso en el orden mostrado.
 2. Añade a `AceriaApp.sln` todos los nuevos proyectos `.csproj` indicados por esos bloques.
@@ -4632,7 +3744,6 @@ public sealed class RabbitPruebas : IAsyncDisposable
 
 Los archivos funcionales de este punto se han incorporado en los pasos 5, 8, 9, 10, 13 y 15. Antes de compilar, agrega todos los proyectos nuevos a la solución con los comandos indicados y guarda los archivos completos.
 
-**Por qué funciona así.** Los adaptadores ejecutables hacen observable la comunicación; el catálogo por sí solo analiza entradas.
 
 **Verificación concreta.** La solución de la etapa compila con 28 proyectos.
 
@@ -4643,16 +3754,13 @@ Los archivos funcionales de este punto se han incorporado en los pasos 5, 8, 9, 
 
 ### PASO 6.2.17 — Ejecutar todos los tests del punto 6.2
 
-**Resultado de aprendizaje.** Ejecutar todos los tests del punto 6.2. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La prueba del punto distingue reglas de análisis y comportamiento de sus adaptadores.
 
 1. Ejecuta `dotnet test tests/AceriaApp.ComunicacionAsincrona.Tests/AceriaApp.ComunicacionAsincrona.Tests.csproj -c Release --no-build --no-restore`.
 2. Comprueba que se ejecutan los 13 tests de catálogo y las pruebas funcionales añadidas al proyecto hasta el paso 15.
 3. Revisa que cada prueba figure como aprobada, sin errores ni omisiones.
 4. Conserva el resultado de ejecución para compararlo con la suite completa del paso siguiente.
 
-**Por qué funciona así.** La prueba del punto distingue reglas de análisis y comportamiento de sus adaptadores.
 
 **Verificación concreta.** Los 13 casos de catálogo se descubren y pasan junto con la integración del punto.
 
@@ -4663,16 +3771,13 @@ Los archivos funcionales de este punto se han incorporado en los pasos 5, 8, 9, 
 
 ### PASO 6.2.18 — Ejecutar todos los tests de la solución
 
-**Resultado de aprendizaje.** Ejecutar todos los tests de la solución. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La suite completa detecta regresiones de dominio, persistencia y comunicación. Cada proyecto produce su propio resumen; una sola línea de salida no es el total de la solución.
 
 1. Configura `ACERIA_TEST_SQLSERVER` para SQL Server Express o LocalDB y comprueba la disponibilidad de los servicios de integración.
 2. Ejecuta `dotnet test AceriaApp.sln -c Release --no-build --no-restore --logger trx --results-directory TestResults`.
 3. Suma los resultados de los archivos TRX y verifica 264 pruebas aprobadas, cero fallos y cero omisiones.
 4. Revisa las pruebas heredadas de M03, M04 y M05: deben seguir formando parte de la solución.
 
-**Por qué funciona así.** La suite completa detecta regresiones de dominio, persistencia y comunicación. Cada proyecto produce su propio resumen; una sola línea de salida no es el total de la solución.
 
 **Verificación concreta.** Los TRX suman 264 pruebas aprobadas sin omitir integración con SQL Server.
 
@@ -4680,8 +3785,6 @@ Los archivos funcionales de este punto se han incorporado en los pasos 5, 8, 9, 
 
 - Un error de conexión SQL Server no autoriza sustituirlo por memoria: comprueba instancia, credenciales y permiso para crear bases de prueba.
 - Comparar solo el último resumen de `dotnet test` infracuenta la solución: suma todos los TRX.
-
-
 
 #### Comprobación con procesos reales
 
@@ -4703,9 +3806,7 @@ La llamada a `/api/v1/produccion/ordenes/{id}/planificar` sigue siendo el ejerci
 
 ### PASO 6.2.19 — Actualizar el README del punto 6.2
 
-**Resultado de aprendizaje.** Actualizar el README del punto 6.2. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+El README de la copia debe describir el estado actual y la evidencia disponible, no acumular instrucciones obsoletas.
 
 1. Abre el `README.md` copiado dentro de `6.2-comunicacion-asincrona-eventos`.
 2. Reemplaza su contenido completo por el bloque siguiente.
@@ -4748,7 +3849,6 @@ El catálogo del punto, su proyecto de pruebas, `docs/comunicacion-asincrona-eve
 - Los 30 documentos anteriores, incluidos los ADR-010 a ADR-024, permanecen disponibles en `docs`.
 ```
 
-**Por qué funciona así.** El README de la copia debe describir el estado actual y la evidencia disponible, no acumular instrucciones obsoletas.
 
 **Verificación concreta.** El README identifica 28 proyectos, 264 pruebas y 13 tests nuevos de catálogo.
 
@@ -4759,9 +3859,7 @@ El catálogo del punto, su proyecto de pruebas, `docs/comunicacion-asincrona-eve
 
 ### PASO 6.2.20 — Crear el ADR-025 del punto 6.2
 
-**Resultado de aprendizaje.** Crear el ADR-025 del punto 6.2. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+El ADR registra la decisión, alternativas y consecuencias sin reescribir decisiones anteriores.
 
 1. Crea `docs/ADR-025-comunicacion-asincrona-eventos.md` dentro de la copia de `6.2-comunicacion-asincrona-eventos`.
 2. Introduce el contenido completo del bloque siguiente.
@@ -4799,7 +3897,6 @@ Separar eventos locales de dominio de contratos de integración. Para el catálo
 - Mitigación: distinguir pruebas de análisis y pruebas funcionales, mantener límites claros y revisar las decisiones con evidencia operativa.
 ```
 
-**Por qué funciona así.** El ADR registra la decisión, alternativas y consecuencias sin reescribir decisiones anteriores.
 
 **Verificación concreta.** `docs/ADR-025-comunicacion-asincrona-eventos.md` incluye todos los apartados del bloque mostrado.
 
@@ -4810,16 +3907,13 @@ Separar eventos locales de dominio de contratos de integración. Para el catálo
 
 ### PASO 6.2.21 — Verificar que no se ha modificado ningún archivo del punto 6.1
 
-**Resultado de aprendizaje.** Verificar que no se ha modificado ningún archivo del punto 6.1. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Los archivos nuevos se añaden en la copia actual; los documentos y tests heredados siguen siendo la base de regresión.
 
 1. Abre PowerShell en la raíz del curso y define las carpetas anterior `M06_COMUNICACION_MICROSERVICIOS/PROYECTO/6.1-comunicacion-sincrona-http` y actual `M06_COMUNICACION_MICROSERVICIOS/PROYECTO/6.2-comunicacion-asincrona-eventos`.
 2. Enumera los archivos heredados de `docs` y de `tests` terminados en `.cs` en la etapa anterior.
 3. Compara cada archivo con su copia actual mediante `Get-FileHash`; el mismo camino relativo debe tener el mismo SHA-256.
 4. Comprueba 30 documentos idénticos y restaura únicamente cualquier documento o prueba heredada que se haya alterado por error.
 
-**Por qué funciona así.** Los archivos nuevos se añaden en la copia actual; los documentos y tests heredados siguen siendo la base de regresión.
 
 **Verificación concreta.** Los 30 documentos y todas las pruebas heredadas tienen el mismo SHA-256; los archivos nuevos del punto no se comparan como heredados.
 
@@ -4830,16 +3924,13 @@ Separar eventos locales de dominio de contratos de integración. Para el catálo
 
 ### PASO 6.2.22 — Verificar la estructura del punto 6.2
 
-**Resultado de aprendizaje.** Verificar la estructura del punto 6.2. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La estructura debe permitir reconstruir y ejecutar el punto desde sus archivos y referencias, sin proyectos ocultos fuera de la etapa.
 
 1. Ejecuta `tree /F` en Windows desde la carpeta de la etapa.
 2. Localiza las tres clases de `src/AceriaApp.Api/ComunicacionAsincrona` y las dos clases de tests en `tests/AceriaApp.ComunicacionAsincrona.Tests`.
 3. Comprueba los 32 documentos de `docs`, incluida la ficha del punto y el ADR-025.
 4. Ejecuta `dotnet sln AceriaApp.sln list` y contrasta sus 28 proyectos con los `.csproj` presentes.
 
-**Por qué funciona así.** La estructura debe permitir reconstruir y ejecutar el punto desde sus archivos y referencias, sin proyectos ocultos fuera de la etapa.
 
 **Verificación concreta.** Las rutas del catálogo, documentación e integración están presentes y la solución incluye 28 proyectos.
 
@@ -4850,16 +3941,13 @@ Separar eventos locales de dominio de contratos de integración. Para el catálo
 
 ### PASO 6.2.23 — Verificar el `.gitignore` del punto 6.2
 
-**Resultado de aprendizaje.** Verificar el `.gitignore` del punto 6.2. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Las exclusiones se aplican desde la raíz a las etapas; no es necesario inventar un `.gitignore` propio dentro de cada copia.
 
 1. Abre el `.gitignore` de la raíz del repositorio del curso.
 2. Comprueba las reglas `**/bin/`, `**/obj/` y `**/TestResults/` que ya excluyen los artefactos de todas las etapas.
 3. Ejecuta `git status --short` y revisa que no aparezcan binarios, cachés ni resultados temporales.
 4. Conserva las exclusiones existentes; si aparecen archivos locales de Visual Studio, excluye `.vs/`, `*.user` y `*.suo` mediante `.git/info/exclude`, sin ignorar código ni configuración entregable.
 
-**Por qué funciona así.** Las exclusiones se aplican desde la raíz a las etapas; no es necesario inventar un `.gitignore` propio dentro de cada copia.
 
 **Verificación concreta.** Los archivos compilados y resultados de tests están excluidos; los archivos del punto siguen visibles para Git.
 
@@ -4870,16 +3958,13 @@ Separar eventos locales de dominio de contratos de integración. Para el catálo
 
 ### PASO 6.2.24 — Hacer el commit del punto 6.2 y verificar el estado final
 
-**Resultado de aprendizaje.** Hacer el commit del punto 6.2 y verificar el estado final. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Un commit local identifica el estado comprobado del punto; su número depende de la historia real y no se deduce del temario.
 
 1. Ejecuta `git diff --check` y revisa `git status --short` desde la raíz del curso.
 2. Añade los archivos revisados de `M06_COMUNICACION_MICROSERVICIOS/PROYECTO/6.2-comunicacion-asincrona-eventos` con `git add` y comprueba el resumen de `git diff --cached --stat`.
 3. Cuando las pruebas hayan pasado, crea el commit local con el mensaje `Punto 6.2: comunicación asíncrona basada en eventos`.
 4. Comprueba `git log -1 --oneline` y `git status --short`; no incluyas cambios ajenos al punto.
 
-**Por qué funciona así.** Un commit local identifica el estado comprobado del punto; su número depende de la historia real y no se deduce del temario.
 
 **Verificación concreta.** El commit local contiene solo los cambios revisados de 6.2 y los archivos esperados quedan registrados.
 
@@ -4905,10 +3990,6 @@ Abre `src/AceriaApp.Api/ComunicacionAsincrona/ValidadorComunicacionAsincrona.cs`
 public record ResumenEventos(int Total, int DeIntegracion, int DeDominio, int TotalConsumidores);
 ```
 
-
-
-
-
 ### Reto 6.2.3 — Calcular los recuentos
 
 Inserta el método dentro de `ValidadorComunicacionAsincrona`, antes del campo `private static readonly string[]`; conserva las cuatro posiciones del constructor del resumen.
@@ -4929,19 +4010,7 @@ Inserta el método dentro de `ValidadorComunicacionAsincrona`, antes del campo `
     }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-
-
-
-- **Línea 4:** `var integracion = lista.Count(e => e.Tipo == "Integracion");` → Cuenta las entradas que cumplen el criterio indicado.
-
-
-- **Línea 6:** `var consumidores = lista.Sum(e => e.NumeroDeConsumidores);` → Suma las suscripciones declaradas; un consumidor puede aparecer en varios eventos.
-
-- **Línea 7:** `return new ResumenEventos(lista.Count, integracion, dominio, consumidores);` → Devuelve los recuentos del catálogo sin modificar sus entradas.
-
-
+Cuenta las entradas que cumplen el criterio indicado. Suma las suscripciones declaradas; un consumidor puede aparecer en varios eventos. Devuelve los recuentos del catálogo sin modificar sus entradas.
 
 ### Reto 6.2.6 — Verificar el catálogo por defecto
 
@@ -4965,24 +4034,10 @@ Inserta la prueba dentro de `ValidadorComunicacionAsincronaTests`, antes del cam
     }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-
-
-
-- **Línea 4:** `var resumen = ValidadorComunicacionAsincrona.Resumen(CatalogoEventos.EventosPorDefecto());` → Calcula el resumen sobre el catálogo por defecto.
-
-
-- **Línea 6:** `resumen.Total.Should().Be(4);` → Compara el recuento obtenido con el valor esperado del catálogo.
-
-
-
-
-
+Calcula el resumen sobre el catálogo por defecto. Compara el recuento obtenido con el valor esperado del catálogo.
 
 **Comprobación del reto.** Compila la copia optativa y ejecuta primero `dotnet test tests/AceriaApp.ComunicacionAsincrona.Tests/AceriaApp.ComunicacionAsincrona.Tests.csproj -c Release`, después `dotnet test AceriaApp.sln -c Release`. El catálogo pasa de 13 a 14 tests; la solución debe ejecutar 264 + 1 pruebas, todas aprobadas y ninguna omitida. Confirma en el TRX que se ejecutó `Resumen_ConCatalogoPorDefecto_CalculaTotales` y que la etapa obligatoria conserva sus hashes.
 
-**Por qué funciona así.** El resumen materializa la secuencia una sola vez y calcula sobre ella; no altera los datos ni configura la infraestructura.
 
 **Diagnóstico si falla.** Si el método queda fuera de la clase, mueve solo el fragmento al ancla señalada. Si el total no coincide, revisa las entradas del catálogo antes de cambiar la expectativa. No acumules los retos al construir la siguiente etapa.
 
@@ -4994,6 +4049,12 @@ La etapa contiene las tres clases del análisis, sus 13 pruebas de catálogo, lo
 
 # Punto 6.3 — Cuándo utilizar cada enfoque
 
+## Seleccionar HTTP o eventos a partir de una necesidad concreta
+
+La comunicación síncrona y la asíncrona resuelven problemas diferentes. Una consulta que necesita respuesta inmediata puede requerir HTTP; un cambio de estado que puede procesarse más tarde encaja en un evento cuando existe una estrategia de entrega e idempotencia. Para decidir tendremos en cuenta latencia, disponibilidad, consistencia y recuperación ante errores.
+
+El catálogo de decisiones del punto recoge escenarios de AceriaApp y permite justificar cada elección, sin convertir sus indicadores en medidas automáticas del sistema desplegado. La conclusión se contrasta con los recorridos reales construidos en 6.1 y 6.2, de modo que los criterios de diseño no sustituyen la evidencia de HTTP, RabbitMQ y SQL Server.
+
 **Carpeta de trabajo:** `M06_COMUNICACION_MICROSERVICIOS/PROYECTO/6.3-cuando-usar-cada-enfoque`.
 
 **Objetivo:** completar los veinticuatro pasos, conservar la etapa anterior y comprobar por separado el análisis y la comunicación ejecutable. La etapa termina con 283 pruebas en 29 proyectos.
@@ -5002,16 +4063,13 @@ La etapa contiene las tres clases del análisis, sus 13 pruebas de catálogo, lo
 
 ### PASO 6.3.1 — Crear la carpeta del punto 6.3 a partir del punto 6.2
 
-**Resultado de aprendizaje.** Crear la carpeta del punto 6.3 a partir del punto 6.2. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La etapa autónoma continúa 28 proyectos y 264 pruebas antes de añadir los cambios del punto.
 
 1. Localiza la etapa completa `M06_COMUNICACION_MICROSERVICIOS/PROYECTO/6.2-comunicacion-asincrona-eventos`; comprueba que contiene `AceriaApp.sln`.
 2. Crea `M06_COMUNICACION_MICROSERVICIOS/PROYECTO/6.3-cuando-usar-cada-enfoque` y copia en ella el contenido de `6.2-comunicacion-asincrona-eventos`; en Windows usa `xcopy` con `/E /I /H /Y`.
 3. Excluye `bin`, `obj`, `TestResults` y `.vs`; trabaja solamente dentro de `6.3-cuando-usar-cada-enfoque`.
 4. Comprueba con `dir` que aparecen `AceriaApp.sln`, `README.md`, `src`, `tests`, `docs` y `global.json`.
 
-**Por qué funciona así.** La etapa autónoma continúa 28 proyectos y 264 pruebas antes de añadir los cambios del punto.
 
 **Verificación concreta.** La copia corresponde a `6.2-comunicacion-asincrona-eventos` y conserva todas sus carpetas de código y documentación.
 
@@ -5022,16 +4080,13 @@ La etapa contiene las tres clases del análisis, sus 13 pruebas de catálogo, lo
 
 ### PASO 6.3.2 — Abrir la solución copiada en Visual Studio con soporte .NET 8
 
-**Resultado de aprendizaje.** Abrir la solución copiada en Visual Studio con soporte .NET 8. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Compilar la copia detecta rutas y dependencias incompletas antes de añadir archivos.
 
 1. Abre el `AceriaApp.sln` de `6.3-cuando-usar-cada-enfoque` en Visual Studio.
 2. Ejecuta `dotnet sln AceriaApp.sln list` y comprueba los 28 proyectos heredados.
 3. Ejecuta `dotnet restore AceriaApp.sln` y `dotnet build AceriaApp.sln -c Release` desde la carpeta de esta etapa.
 4. Comprueba que la compilación termina sin errores; si hay DLL bloqueadas, detén los procesos que las utilizan.
 
-**Por qué funciona así.** Compilar la copia detecta rutas y dependencias incompletas antes de añadir archivos.
 
 **Verificación concreta.** La solución lista 28 proyectos y la compilación termina correctamente.
 
@@ -5042,16 +4097,13 @@ La etapa contiene las tres clases del análisis, sus 13 pruebas de catálogo, lo
 
 ### PASO 6.3.3 — Verificar que la carpeta `docs` contiene los documentos del punto 6.2
 
-**Resultado de aprendizaje.** Verificar que la carpeta `docs` contiene los documentos del punto 6.2. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+El punto conserva 32 documentos reales y añadirá dos; el primer ADR disponible es ADR-010.
 
 1. Expande `docs` y comprueba sus 32 archivos Markdown.
 2. Localiza los ADR-010 a ADR-025 y las fichas temáticas heredadas.
 3. Compara nombres y contenido con `docs` de `M06_COMUNICACION_MICROSERVICIOS/PROYECTO/6.2-comunicacion-asincrona-eventos`.
 4. Comprueba que aún no existen `docs/cuando-usar-cada-enfoque.md` ni `docs/ADR-026-cuando-usar-cada-enfoque.md`.
 
-**Por qué funciona así.** El punto conserva 32 documentos reales y añadirá dos; el primer ADR disponible es ADR-010.
 
 **Verificación concreta.** Hay 32 documentos heredados idénticos; todavía no existen los dos documentos del punto.
 
@@ -5062,9 +4114,7 @@ La etapa contiene las tres clases del análisis, sus 13 pruebas de catálogo, lo
 
 ### PASO 6.3.4 — Crear el documento de criterios de decisión en `docs`
 
-**Resultado de aprendizaje.** Crear el documento de criterios de decisión en `docs`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Antes de elegir el transporte conviene escribir qué tolera el negocio: latencia, indisponibilidad, consistencia eventual y necesidad de respuesta. La decisión se justifica con esos requisitos, no por preferir una tecnología.
 
 1. Crea `docs/cuando-usar-cada-enfoque.md` dentro de la copia de `6.3-cuando-usar-cada-enfoque`.
 2. Introduce el contenido completo del bloque siguiente.
@@ -5123,7 +4173,6 @@ Se describen dos interacciones síncronas, dos asíncronas y una híbrida. Una i
 Los catálogos de llamadas, eventos y decisiones verifican datos de análisis. La integración funcional de HTTP y mensajería aporta pruebas separadas de comportamiento. Ni los nombres de servicios ni los booleanos del catálogo demuestran tráfico, colas, reintentos o transacciones distribuidas.
 ```
 
-**Por qué funciona así.** La ficha separa el análisis de los contratos y la evidencia ejecutable.
 
 **Verificación concreta.** `docs/cuando-usar-cada-enfoque.md` incluye todos los apartados del bloque mostrado.
 
@@ -5134,16 +4183,13 @@ Los catálogos de llamadas, eventos y decisiones verifican datos de análisis. L
 
 ### PASO 6.3.5 — Crear la carpeta `Decisiones` en el proyecto API
 
-**Resultado de aprendizaje.** Crear la carpeta `Decisiones` en el proyecto API. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+`Decisiones` agrupa datos y reglas del ejercicio de análisis; los adaptadores de comunicación tienen sus propias responsabilidades.
 
 1. Expande el proyecto `AceriaApp.Api` y localiza `src/AceriaApp.Api`.
 2. Crea la carpeta `Decisiones` directamente dentro del proyecto API.
 3. Comprueba que `src/AceriaApp.Api/Decisiones` no está anidada dentro de otra carpeta temática.
 4. Conserva las carpetas y archivos heredados de `6.2-comunicacion-asincrona-eventos`.
 
-**Por qué funciona así.** `Decisiones` agrupa datos y reglas del ejercicio de análisis; los adaptadores de comunicación tienen sus propias responsabilidades.
 
 **Verificación concreta.** Existe `src/AceriaApp.Api/Decisiones` sin alterar las carpetas previas.
 
@@ -5154,9 +4200,7 @@ Los catálogos de llamadas, eventos y decisiones verifican datos de análisis. L
 
 ### PASO 6.3.6 — Crear la clase `DecisionComunicacion`
 
-**Resultado de aprendizaje.** Crear la clase `DecisionComunicacion`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+DecisionComunicacion reúne los criterios sobre una colaboración. Es un modelo para analizar alternativas y no inicia por sí solo un consumidor ni establece una conexión remota.
 
 1. Crea `src/AceriaApp.Api/Decisiones/DecisionComunicacion.cs` dentro del proyecto correspondiente.
 2. Copia el bloque completo siguiente respetando namespace, miembros y valores.
@@ -5179,26 +4223,7 @@ public class DecisionComunicacion
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 1:** `namespace AceriaApp.Api.Decisiones;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
-
-- **Línea 2:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
-
-- **Línea 3:** `public class DecisionComunicacion` → Declara el tipo público del ejercicio de análisis.
-
-- **Línea 4:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
-
-- **Línea 5:** `public string Interaccion { get; init; } = string.Empty;` → Declara un dato del análisis que se fija al construir la entrada.
-
-
-
-
-
-- **Línea 10:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
-
-
-**Por qué funciona así.** El modelo describe entradas de análisis. Sus indicadores no instalan políticas ni establecen conexiones.
+Sitúa el tipo en el espacio de nombres que importan las pruebas del punto. Declara el tipo público del ejercicio de análisis. Declara un dato del análisis que se fija al construir la entrada.
 
 **Verificación concreta.** `DecisionComunicacion` compila en el proyecto indicado; su contenido coincide con el bloque completo.
 
@@ -5209,9 +4234,7 @@ public class DecisionComunicacion
 
 ### PASO 6.3.7 — Crear la clase `ValidadorDecisiones`
 
-**Resultado de aprendizaje.** Crear la clase `ValidadorDecisiones`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La clasificación del validador depende de los umbrales definidos para el ejercicio. Es necesario explicar por qué recomienda cada enfoque y reconocer los casos que quedan fuera del modelo.
 
 1. Crea `src/AceriaApp.Api/Decisiones/ValidadorDecisiones.cs` dentro del proyecto correspondiente.
 2. Copia el bloque completo siguiente respetando namespace, miembros y valores.
@@ -5273,68 +4296,11 @@ public class ValidadorDecisiones
 public record ResultadoDecisiones(bool EsValida, IReadOnlyList<string> Errores);
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
+Limita los valores de texto reconocidos por la política didáctica. Expone la operación con el contrato que usan el catálogo o sus pruebas. Inicializa la colección de diagnósticos que se devolverá al finalizar.
 
+Materializa una sola vez la secuencia recibida para recorrerla y contarla. Evalúa una regla concreta antes de añadir el diagnóstico asociado. Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-
-
-
-- **Línea 5:** `private static readonly string[] EnfoquesPermitidos = { "Sincrona", "Asincrona", "Hibrida" };` → Limita los valores de texto reconocidos por la política didáctica.
-
-
-- **Línea 7:** `public ResultadoDecisiones Validar(IEnumerable<DecisionComunicacion> decisiones)` → Expone la operación con el contrato que usan el catálogo o sus pruebas.
-
-
-- **Línea 9:** `var errores = new List<string>();` → Inicializa la colección de diagnósticos que se devolverá al finalizar.
-
-- **Línea 10:** `var lista = decisiones.ToList();` → Materializa una sola vez la secuencia recibida para recorrerla y contarla.
-
-
-- **Línea 12:** `if (lista.Count == 0)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
-
-
-- **Línea 14:** `errores.Add("No hay decisiones declaradas.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
-
-
-
-- **Línea 17:** `foreach (var decision in lista)` → Revisa cada entrada; un catálogo puede acumular varios diagnósticos.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-- **Línea 45:** `return new ResultadoDecisiones(errores.Count == 0, errores);` → Devuelve validez y diagnósticos; no ejecuta ninguna comunicación remota.
-
-
-
-
-- **Línea 49:** `public record ResultadoDecisiones(bool EsValida, IReadOnlyList<string> Errores);` → Define el resultado inmutable que devuelve el validador o el resumen.
-
-
-**Por qué funciona así.** El validador devuelve todos los incumplimientos de la política explícita; no implementa una llamada, publicación o decisión automática de producción. No necesitar respuesta inmediata no vuelve incorrecta una opción síncrona. Una notificación asíncrona no promete resultado inmediato del consumidor.
+Revisa cada entrada; un catálogo puede acumular varios diagnósticos. Devuelve validez y diagnósticos; no ejecuta ninguna comunicación remota. Define el resultado inmutable que devuelve el validador o el resumen.
 
 **Verificación concreta.** `ValidadorDecisiones` compila en el proyecto indicado; su contenido coincide con el bloque completo.
 
@@ -5345,9 +4311,7 @@ public record ResultadoDecisiones(bool EsValida, IReadOnlyList<string> Errores);
 
 ### PASO 6.3.8 — Añadir los `using` necesarios en `ValidadorDecisiones`
 
-**Resultado de aprendizaje.** Añadir los `using` necesarios en `ValidadorDecisiones`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Las importaciones explícitas muestran dónde se declaran los tipos genéricos y las extensiones LINQ, aunque el proyecto tenga importaciones implícitas.
 
 1. Abre `src/AceriaApp.Api/Decisiones/ValidadorDecisiones.cs`.
 2. Inserta el bloque de importaciones inmediatamente antes del namespace; comprueba que el ancla aparece una sola vez.
@@ -5364,13 +4328,7 @@ using System.Collections.Generic;
 using System.Linq;
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 1:** `using System.Collections.Generic;` → Importa los tipos o extensiones utilizados por el archivo.
-
-
-
-**Por qué funciona así.** Las importaciones explícitas muestran dónde se declaran los tipos genéricos y las extensiones LINQ, aunque el proyecto tenga importaciones implícitas.
+Importa los tipos o extensiones utilizados por el archivo.
 
 **Verificación concreta.** `ValidadorDecisiones.cs` conserva el contenido previo y añade solo las importaciones indicadas.
 
@@ -5378,8 +4336,6 @@ using System.Linq;
 
 - Pegar las importaciones dentro de una clase no es válido: insértalas antes del namespace.
 - Insertar dos veces el bloque produce importaciones duplicadas: comprueba el contenido antes de guardarlo.
-
-
 
 #### Implementación funcional: `FlujoPlanificacion.cs`
 
@@ -5408,17 +4364,11 @@ public sealed class FlujoPlanificacion(IPlanificadorIntegrado planificador, ICli
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 6:** `ct.ThrowIfCancellationRequested();` → Detiene la operación si el llamador ya la canceló, antes de producir efectos.
-- **Línea 9:** `foreach (var grupo in lineas.GroupBy(x => x.Material, StringComparer.OrdinalIgnoreCase))` → Agrupa las líneas del mismo material antes de comparar el total solicitado con el stock informado.
-
+Detiene la operación si el llamador ya la canceló, antes de producir efectos. Agrupa las líneas del mismo material antes de comparar el total solicitado con el stock informado.
 
 ### PASO 6.3.9 — Crear la clase `CatalogoDecisiones`
 
-**Resultado de aprendizaje.** Crear la clase `CatalogoDecisiones`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+CatalogoDecisiones agrupa escenarios para compararlos de forma consistente. Sus conclusiones no reemplazan las métricas ni los resultados observados en los ensayos de los servicios.
 
 1. Crea `src/AceriaApp.Api/Decisiones/CatalogoDecisiones.cs` dentro del proyecto correspondiente.
 2. Copia el bloque completo siguiente respetando namespace, miembros y valores.
@@ -5447,29 +4397,7 @@ public class CatalogoDecisiones
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-
-
-
-
-
-
-- **Línea 7:** `return new List<DecisionComunicacion>` → Devuelve una lista nueva en cada llamada; modificarla no altera otros casos.
-
-
-- **Línea 9:** `new() { Interaccion = "Ordenes->Inventario consulta stock", Enfoque = "Sincrona", RequiereRespuestaInmediata = true, ToleraConsistenciaEventual = false, TienePatronHibrido = false },` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
-
-
-
-
-
-- **Línea 14:** `};` → Cierra la colección y termina su inicialización.
-
-
-
-
-**Por qué funciona así.** Cada invocación devuelve una lista nueva con los ejemplos de análisis; cambiar una lista no modifica futuros catálogos.
+Devuelve una lista nueva en cada llamada; modificarla no altera otros casos. Construye una entrada del catálogo o del caso de prueba con valores explícitos. Cierra la colección y termina su inicialización.
 
 **Verificación concreta.** `CatalogoDecisiones` compila en el proyecto indicado; su contenido coincide con el bloque completo.
 
@@ -5480,9 +4408,7 @@ public class CatalogoDecisiones
 
 ### PASO 6.3.10 — Añadir el `using` necesario en `CatalogoDecisiones`
 
-**Resultado de aprendizaje.** Añadir el `using` necesario en `CatalogoDecisiones`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Las importaciones explícitas muestran dónde se declaran los tipos genéricos y las extensiones LINQ, aunque el proyecto tenga importaciones implícitas.
 
 1. Abre `src/AceriaApp.Api/Decisiones/CatalogoDecisiones.cs`.
 2. Inserta el bloque de importaciones inmediatamente antes del namespace; comprueba que el ancla aparece una sola vez.
@@ -5498,12 +4424,6 @@ public class CatalogoDecisiones
 using System.Collections.Generic;
 ```
 
-
-
-
-
-**Por qué funciona así.** Las importaciones explícitas muestran dónde se declaran los tipos genéricos y las extensiones LINQ, aunque el proyecto tenga importaciones implícitas.
-
 **Verificación concreta.** `CatalogoDecisiones.cs` conserva el contenido previo y añade solo las importaciones indicadas.
 
 **Diagnóstico si falla.**
@@ -5513,9 +4433,7 @@ using System.Collections.Generic;
 
 ### PASO 6.3.11 — Crear el proyecto de tests del punto 6.3
 
-**Resultado de aprendizaje.** Crear el proyecto de tests del punto 6.3. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Definir el proyecto completo fija .NET 8 y las versiones del runner sin depender de la versión local de la plantilla.
 
 1. Crea la carpeta `tests/AceriaApp.Decisiones.Tests` y el `.csproj` completo del bloque siguiente.
 2. No generes `UnitTest1.cs`; los pasos 14 y 15 incluyen las clases de prueba completas.
@@ -5542,7 +4460,6 @@ using System.Collections.Generic;
 </Project>
 ```
 
-**Por qué funciona así.** Definir el proyecto completo fija .NET 8 y las versiones del runner sin depender de la versión local de la plantilla.
 
 **Verificación concreta.** Existe `tests/AceriaApp.Decisiones.Tests/AceriaApp.Decisiones.Tests.csproj` y la solución lo incluye una sola vez.
 
@@ -5553,9 +4470,7 @@ using System.Collections.Generic;
 
 ### PASO 6.3.12 — Añadir la referencia del proyecto de tests a la API
 
-**Resultado de aprendizaje.** Añadir la referencia del proyecto de tests a la API. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Las pruebas consumen los tipos de análisis de la API; la API no debe depender de su proyecto de pruebas.
 
 1. Abre `tests/AceriaApp.Decisiones.Tests/AceriaApp.Decisiones.Tests.csproj`.
 2. Reemplaza su contenido completo por el bloque siguiente, que incorpora la referencia a la API.
@@ -5583,7 +4498,6 @@ using System.Collections.Generic;
 </Project>
 ```
 
-**Por qué funciona así.** Las pruebas consumen los tipos de análisis de la API; la API no debe depender de su proyecto de pruebas.
 
 **Verificación concreta.** El proyecto resuelve la referencia a la API y compila sin dependencias circulares.
 
@@ -5594,9 +4508,7 @@ using System.Collections.Generic;
 
 ### PASO 6.3.13 — Añadir el paquete `FluentAssertions` al proyecto de tests
 
-**Resultado de aprendizaje.** Añadir el paquete `FluentAssertions` al proyecto de tests. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La versión fijada mantiene reproducibles las aserciones `Should()` de los catálogos.
 
 1. Abre `tests/AceriaApp.Decisiones.Tests/AceriaApp.Decisiones.Tests.csproj` y conserva las versiones de los paquetes existentes.
 2. Reemplaza su contenido por el bloque completo que añade `FluentAssertions` 6.12.2.
@@ -5625,7 +4537,6 @@ using System.Collections.Generic;
 </Project>
 ```
 
-**Por qué funciona así.** La versión fijada mantiene reproducibles las aserciones `Should()` de los catálogos.
 
 **Verificación concreta.** El listado de paquetes muestra FluentAssertions 6.12.2 y el proyecto compila.
 
@@ -5633,8 +4544,6 @@ using System.Collections.Generic;
 
 - Instalar una versión sin fijarla puede cambiar la API y las condiciones de uso: conserva 6.12.2.
 - Añadir el paquete a la API no establece la referencia del test: modifica el proyecto de pruebas indicado.
-
-
 
 #### Implementación funcional: `ComunicacionEndpoints.cs`
 
@@ -5678,12 +4587,7 @@ public static class ComunicacionEndpoints
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 7:** `app.MapGet("/api/v1/comunicacion/materiales/{material}", async (string material, IClienteInventario inventario, CancellationToken ct) =>` → Publica una consulta HTTP con un contrato de respuesta verificable.
-- **Línea 17:** `app.MapPost("/api/v1/comunicacion/ordenes/{id:guid}/planificar", async (Guid id, FlujoPlanificacion flujo, CancellationToken ct) =>` → Publica la operación de planificación; el adaptador traduce el resultado del caso de uso a HTTP.
-- **Línea 28:** `_ => Results.Accepted($"/api/v1/produccion/ordenes/{id}", new { ordenId = id, estado = "Planificada", propagacion = "Pendiente" })` → Devuelve 202: la planificación local está confirmada y la propagación a Inventario es eventual.
-
+Publica una consulta HTTP con un contrato de respuesta verificable. Publica la operación de planificación; el adaptador traduce el resultado del caso de uso a HTTP. Devuelve 202: la planificación local está confirmada y la propagación a Inventario es eventual.
 
 #### Implementación funcional: `appsettings.json`
 
@@ -5708,10 +4612,7 @@ Este archivo completa el contrato, registro o prueba indicada por su nombre. Cr�
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 2:** `"ConnectionStrings": {` → Separa los almacenes de esta etapa y conserva los de los módulos anteriores.
-
+Separa los almacenes de esta etapa y conserva los de los módulos anteriores.
 
 #### Implementación funcional: `RegistroComunicacion.cs`
 
@@ -5747,11 +4648,7 @@ public static class RegistroComunicacion
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 9:** `services.AddHttpClient<IClienteInventario, ClienteInventarioHttp>(http =>` → Registra el cliente tipado y centraliza dirección y timeout; los handlers se administran mediante la factoría.
-- **Línea 21:** `if (config.GetValue<bool>("Comunicacion:WorkersActivos")) services.AddHostedService<PublicadorOutboxWorker>();` → Habilita el proceso periódico únicamente cuando la configuración lo solicita.
-
+Registra el cliente tipado y centraliza dirección y timeout; los handlers se administran mediante la factoría. Habilita el proceso periódico únicamente cuando la configuración lo solicita.
 
 #### Implementación funcional: `appsettings.json`
 
@@ -5774,15 +4671,9 @@ Este archivo completa el contrato, registro o prueba indicada por su nombre. Cr�
 }
 ```
 
-
-
-
-
 ### PASO 6.3.14 — Crear el archivo `ValidadorDecisionesTests.cs`
 
-**Resultado de aprendizaje.** Crear el archivo `ValidadorDecisionesTests.cs`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Las pruebas ejercitan aceptación y rechazos concretos del validador. Afirmar el diagnóstico evita un falso positivo por otro error.
 
 1. Crea `tests/AceriaApp.Decisiones.Tests/ValidadorDecisionesTests.cs` dentro del proyecto correspondiente.
 2. Copia el bloque completo siguiente respetando namespace, miembros y valores.
@@ -5892,116 +4783,11 @@ public class ValidadorDecisionesTests
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
+Crea la instancia del validador que utiliza cada prueba. Registra un caso ejecutable independiente en xUnit. Nombra la condición de prueba y su resultado esperado.
 
+Ejecuta el validador sobre los datos preparados para este caso. Comprueba que la política acepta los datos de este caso. Comprueba que no se ha registrado ningún diagnóstico.
 
-
-
-
-
-
-
-
-- **Línea 9:** `private readonly ValidadorDecisiones _validador = new();` → Crea la instancia del validador que utiliza cada prueba.
-
-
-- **Línea 11:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
-
-- **Línea 12:** `public void Validar_CatalogoPorDefecto_DevuelveValido()` → Nombra la condición de prueba y su resultado esperado.
-
-
-- **Línea 14:** `var resultado = _validador.Validar(CatalogoDecisiones.DecisionesPorDefecto());` → Ejecuta el validador sobre los datos preparados para este caso.
-
-
-- **Línea 16:** `resultado.EsValida.Should().BeTrue();` → Comprueba que la política acepta los datos de este caso.
-
-- **Línea 17:** `resultado.Errores.Should().BeEmpty();` → Comprueba que no se ha registrado ningún diagnóstico.
-
-
-
-
-
-
-
-
-- **Línea 25:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
-
-- **Línea 26:** `resultado.Errores.Should().Contain(e => e.Contains("No hay decisiones"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
-
-
-
-
-
-
-- **Línea 32:** `var decisiones = new List<DecisionComunicacion>` → Prepara las entradas que se van a validar o devolver.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-**Por qué funciona así.** Las pruebas ejercitan aceptación y rechazos concretos del validador. Afirmar el diagnóstico evita un falso positivo por otro error.
+Comprueba que la política rechaza los datos de este caso. Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla. Prepara las entradas que se van a validar o devolver.
 
 **Verificación concreta.** `ValidadorDecisionesTests` compila en el proyecto indicado; su contenido coincide con el bloque completo.
 
@@ -6012,9 +4798,7 @@ public class ValidadorDecisionesTests
 
 ### PASO 6.3.15 — Crear el archivo `CatalogoDecisionesTests.cs`
 
-**Resultado de aprendizaje.** Crear el archivo `CatalogoDecisionesTests.cs`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Las pruebas del catálogo verifican cantidades y propiedades declaradas. No prueban que existan los servicios nombrados.
 
 1. Crea `tests/AceriaApp.Decisiones.Tests/CatalogoDecisionesTests.cs` dentro del proyecto correspondiente.
 2. Copia el bloque completo siguiente respetando namespace, miembros y valores.
@@ -6075,62 +4859,9 @@ public class CatalogoDecisionesTests
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
+Obtiene los datos que se utilizarán en las comprobaciones siguientes. Comprueba el tamaño del catálogo sin inferir servicios o conexiones en ejecución. Compara el recuento obtenido con el valor esperado del catálogo.
 
-
-
-
-
-
-
-
-
-
-
-
-- **Línea 12:** `var decisiones = CatalogoDecisiones.DecisionesPorDefecto();` → Obtiene los datos que se utilizarán en las comprobaciones siguientes.
-
-
-- **Línea 14:** `decisiones.Should().HaveCount(5);` → Comprueba el tamaño del catálogo sin inferir servicios o conexiones en ejecución.
-
-
-
-
-
-
-
-
-- **Línea 22:** `decisiones.Count(d => d.Enfoque == "Sincrona").Should().Be(2);` → Compara el recuento obtenido con el valor esperado del catálogo.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-- **Línea 46:** `decisiones.Where(d => d.Enfoque == "Hibrida").Should().OnlyContain(d => d.TienePatronHibrido);` → Comprueba la condición en cada entrada declarada del catálogo.
-
-
-
-
-**Por qué funciona así.** Las pruebas del catálogo verifican cantidades y propiedades declaradas. No prueban que existan los servicios nombrados.
+Comprueba la condición en cada entrada declarada del catálogo.
 
 **Verificación concreta.** `CatalogoDecisionesTests` compila en el proyecto indicado; su contenido coincide con el bloque completo.
 
@@ -6138,8 +4869,6 @@ public class CatalogoDecisionesTests
 
 - Un test sin `[Fact]` compila pero no se descubre: revisa los atributos del bloque.
 - Añadir el archivo al proyecto anterior modifica su suite: crea el test en la ruta de este punto.
-
-
 
 #### Implementación funcional: `AceriaApp.Decisiones.Tests.csproj`
 
@@ -6165,11 +4894,7 @@ Este archivo completa el contrato, registro o prueba indicada por su nombre. Cr�
 </Project>
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 4:** `<ProjectReference Include="../../src/AceriaApp.Api/AceriaApp.Api.csproj" />` → Declara una dependencia de compilación explícita; el ensamblado debe existir en la solución.
-- **Línea 6:** `<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />` → Fija la versión de la dependencia para reproducir la compilación y sus API.
-
+Declara una dependencia de compilación explícita; el ensamblado debe existir en la solución. Fija la versión de la dependencia para reproducir la compilación y sus API.
 
 #### Implementación funcional: `FlujoHibridoTests.cs`
 
@@ -6218,16 +4943,11 @@ public class FlujoHibridoTests
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 18:** `{var p=new Planificador();Assert.Equal(EstadoPlanificacion.Aceptada,await new FlujoPlanificacion(p,new Inventario(new("Acero",100))).EjecutarAsync(Guid.NewGuid(),default));Assert.Equal(1,p.Escrituras);}` → Comprueba una consecuencia observable. Si cambia el comportamiento descrito por el nombre del test, esta aserción debe fallar.
-
+Comprueba una consecuencia observable. Si cambia el comportamiento descrito por el nombre del test, esta aserción debe fallar.
 
 ### PASO 6.3.16 — Compilar la solución completa
 
-**Resultado de aprendizaje.** Compilar la solución completa. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La comprobación final reúne compilación, pruebas de catálogo y ensayos de HTTP y mensajería real. Cada uno acredita una propiedad diferente y evita presentar una decisión declarada como un flujo ejecutado.
 
 1. Aplica los bloques de integración funcional de este paso en el orden mostrado.
 2. Añade a `AceriaApp.sln` todos los nuevos proyectos `.csproj` indicados por esos bloques.
@@ -6236,7 +4956,6 @@ public class FlujoHibridoTests
 
 Los archivos funcionales de este punto se han incorporado en los pasos 5, 8, 9, 10, 13 y 15. Antes de compilar, agrega todos los proyectos nuevos a la solución con los comandos indicados y guarda los archivos completos.
 
-**Por qué funciona así.** Los adaptadores ejecutables hacen observable la comunicación; el catálogo por sí solo analiza entradas.
 
 **Verificación concreta.** La solución de la etapa compila con 29 proyectos.
 
@@ -6247,16 +4966,13 @@ Los archivos funcionales de este punto se han incorporado en los pasos 5, 8, 9, 
 
 ### PASO 6.3.17 — Ejecutar todos los tests del punto 6.3
 
-**Resultado de aprendizaje.** Ejecutar todos los tests del punto 6.3. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La prueba del punto distingue reglas de análisis y comportamiento de sus adaptadores.
 
 1. Ejecuta `dotnet test tests/AceriaApp.Decisiones.Tests/AceriaApp.Decisiones.Tests.csproj -c Release --no-build --no-restore`.
 2. Comprueba que se ejecutan los 12 tests de catálogo y las pruebas funcionales añadidas al proyecto hasta el paso 15.
 3. Revisa que cada prueba figure como aprobada, sin errores ni omisiones.
 4. Conserva el resultado de ejecución para compararlo con la suite completa del paso siguiente.
 
-**Por qué funciona así.** La prueba del punto distingue reglas de análisis y comportamiento de sus adaptadores.
 
 **Verificación concreta.** Los 12 casos de catálogo se descubren y pasan junto con la integración del punto.
 
@@ -6267,16 +4983,13 @@ Los archivos funcionales de este punto se han incorporado en los pasos 5, 8, 9, 
 
 ### PASO 6.3.18 — Ejecutar todos los tests de la solución
 
-**Resultado de aprendizaje.** Ejecutar todos los tests de la solución. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La suite completa detecta regresiones de dominio, persistencia y comunicación. Cada proyecto produce su propio resumen; una sola línea de salida no es el total de la solución.
 
 1. Configura `ACERIA_TEST_SQLSERVER` para SQL Server Express o LocalDB y comprueba la disponibilidad de los servicios de integración.
 2. Ejecuta `dotnet test AceriaApp.sln -c Release --no-build --no-restore --logger trx --results-directory TestResults`.
 3. Suma los resultados de los archivos TRX y verifica 283 pruebas aprobadas, cero fallos y cero omisiones.
 4. Revisa las pruebas heredadas de M03, M04 y M05: deben seguir formando parte de la solución.
 
-**Por qué funciona así.** La suite completa detecta regresiones de dominio, persistencia y comunicación. Cada proyecto produce su propio resumen; una sola línea de salida no es el total de la solución.
 
 **Verificación concreta.** Los TRX suman 283 pruebas aprobadas sin omitir integración con SQL Server.
 
@@ -6284,8 +4997,6 @@ Los archivos funcionales de este punto se han incorporado en los pasos 5, 8, 9, 
 
 - Un error de conexión SQL Server no autoriza sustituirlo por memoria: comprueba instancia, credenciales y permiso para crear bases de prueba.
 - Comparar solo el último resumen de `dotnet test` infracuenta la solución: suma todos los TRX.
-
-
 
 #### Comprobación con procesos reales
 
@@ -6309,9 +5020,7 @@ En 6.3, una orden de 450 unidades de Acero obtiene 409 de disponibilidad y perma
 
 ### PASO 6.3.19 — Actualizar el README del punto 6.3
 
-**Resultado de aprendizaje.** Actualizar el README del punto 6.3. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+El README de la copia debe describir el estado actual y la evidencia disponible, no acumular instrucciones obsoletas.
 
 1. Abre el `README.md` copiado dentro de `6.3-cuando-usar-cada-enfoque`.
 2. Reemplaza su contenido completo por el bloque siguiente.
@@ -6354,7 +5063,6 @@ El catálogo del punto, su proyecto de pruebas, `docs/cuando-usar-cada-enfoque.m
 - Los 32 documentos anteriores, incluidos los ADR-010 a ADR-025, permanecen disponibles en `docs`.
 ```
 
-**Por qué funciona así.** El README de la copia debe describir el estado actual y la evidencia disponible, no acumular instrucciones obsoletas.
 
 **Verificación concreta.** El README identifica 29 proyectos, 283 pruebas y 12 tests nuevos de catálogo.
 
@@ -6365,9 +5073,7 @@ El catálogo del punto, su proyecto de pruebas, `docs/cuando-usar-cada-enfoque.m
 
 ### PASO 6.3.20 — Crear el ADR-026 del punto 6.3
 
-**Resultado de aprendizaje.** Crear el ADR-026 del punto 6.3. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+El ADR registra la decisión, alternativas y consecuencias sin reescribir decisiones anteriores.
 
 1. Crea `docs/ADR-026-cuando-usar-cada-enfoque.md` dentro de la copia de `6.3-cuando-usar-cada-enfoque`.
 2. Introduce el contenido completo del bloque siguiente.
@@ -6405,7 +5111,6 @@ Elegir por interacción considerando respuesta requerida, consistencia, fallos y
 - Mitigación: distinguir pruebas de análisis y pruebas funcionales, mantener límites claros y revisar las decisiones con evidencia operativa.
 ```
 
-**Por qué funciona así.** El ADR registra la decisión, alternativas y consecuencias sin reescribir decisiones anteriores.
 
 **Verificación concreta.** `docs/ADR-026-cuando-usar-cada-enfoque.md` incluye todos los apartados del bloque mostrado.
 
@@ -6416,16 +5121,13 @@ Elegir por interacción considerando respuesta requerida, consistencia, fallos y
 
 ### PASO 6.3.21 — Verificar que no se ha modificado ningún archivo del punto 6.2
 
-**Resultado de aprendizaje.** Verificar que no se ha modificado ningún archivo del punto 6.2. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Los archivos nuevos se añaden en la copia actual; los documentos y tests heredados siguen siendo la base de regresión.
 
 1. Abre PowerShell en la raíz del curso y define las carpetas anterior `M06_COMUNICACION_MICROSERVICIOS/PROYECTO/6.2-comunicacion-asincrona-eventos` y actual `M06_COMUNICACION_MICROSERVICIOS/PROYECTO/6.3-cuando-usar-cada-enfoque`.
 2. Enumera los archivos heredados de `docs` y de `tests` terminados en `.cs` en la etapa anterior.
 3. Compara cada archivo con su copia actual mediante `Get-FileHash`; el mismo camino relativo debe tener el mismo SHA-256.
 4. Comprueba 32 documentos idénticos y restaura únicamente cualquier documento o prueba heredada que se haya alterado por error.
 
-**Por qué funciona así.** Los archivos nuevos se añaden en la copia actual; los documentos y tests heredados siguen siendo la base de regresión.
 
 **Verificación concreta.** Los 32 documentos y todas las pruebas heredadas tienen el mismo SHA-256; los archivos nuevos del punto no se comparan como heredados.
 
@@ -6436,16 +5138,13 @@ Elegir por interacción considerando respuesta requerida, consistencia, fallos y
 
 ### PASO 6.3.22 — Verificar la estructura del punto 6.3
 
-**Resultado de aprendizaje.** Verificar la estructura del punto 6.3. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La estructura debe permitir reconstruir y ejecutar el punto desde sus archivos y referencias, sin proyectos ocultos fuera de la etapa.
 
 1. Ejecuta `tree /F` en Windows desde la carpeta de la etapa.
 2. Localiza las tres clases de `src/AceriaApp.Api/Decisiones` y las dos clases de tests en `tests/AceriaApp.Decisiones.Tests`.
 3. Comprueba los 34 documentos de `docs`, incluida la ficha del punto y el ADR-026.
 4. Ejecuta `dotnet sln AceriaApp.sln list` y contrasta sus 29 proyectos con los `.csproj` presentes.
 
-**Por qué funciona así.** La estructura debe permitir reconstruir y ejecutar el punto desde sus archivos y referencias, sin proyectos ocultos fuera de la etapa.
 
 **Verificación concreta.** Las rutas del catálogo, documentación e integración están presentes y la solución incluye 29 proyectos.
 
@@ -6456,16 +5155,13 @@ Elegir por interacción considerando respuesta requerida, consistencia, fallos y
 
 ### PASO 6.3.23 — Verificar el `.gitignore` del punto 6.3
 
-**Resultado de aprendizaje.** Verificar el `.gitignore` del punto 6.3. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Las exclusiones se aplican desde la raíz a las etapas; no es necesario inventar un `.gitignore` propio dentro de cada copia.
 
 1. Abre el `.gitignore` de la raíz del repositorio del curso.
 2. Comprueba las reglas `**/bin/`, `**/obj/` y `**/TestResults/` que ya excluyen los artefactos de todas las etapas.
 3. Ejecuta `git status --short` y revisa que no aparezcan binarios, cachés ni resultados temporales.
 4. Conserva las exclusiones existentes; si aparecen archivos locales de Visual Studio, excluye `.vs/`, `*.user` y `*.suo` mediante `.git/info/exclude`, sin ignorar código ni configuración entregable.
 
-**Por qué funciona así.** Las exclusiones se aplican desde la raíz a las etapas; no es necesario inventar un `.gitignore` propio dentro de cada copia.
 
 **Verificación concreta.** Los archivos compilados y resultados de tests están excluidos; los archivos del punto siguen visibles para Git.
 
@@ -6476,16 +5172,13 @@ Elegir por interacción considerando respuesta requerida, consistencia, fallos y
 
 ### PASO 6.3.24 — Hacer el commit del punto 6.3 y verificar el estado final del módulo 6
 
-**Resultado de aprendizaje.** Hacer el commit del punto 6.3 y verificar el estado final del módulo 6. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Un commit local identifica el estado comprobado del punto; su número depende de la historia real y no se deduce del temario.
 
 1. Ejecuta `git diff --check` y revisa `git status --short` desde la raíz del curso.
 2. Añade los archivos revisados de `M06_COMUNICACION_MICROSERVICIOS/PROYECTO/6.3-cuando-usar-cada-enfoque` con `git add` y comprueba el resumen de `git diff --cached --stat`.
 3. Cuando las pruebas hayan pasado, crea el commit local con el mensaje `Punto 6.3: cuándo utilizar cada enfoque`.
 4. Comprueba `git log -1 --oneline` y `git status --short`; no incluyas cambios ajenos al punto.
 
-**Por qué funciona así.** Un commit local identifica el estado comprobado del punto; su número depende de la historia real y no se deduce del temario.
 
 **Verificación concreta.** El commit local contiene solo los cambios revisados de 6.3 y los archivos esperados quedan registrados.
 
@@ -6511,10 +5204,6 @@ Abre `src/AceriaApp.Api/Decisiones/ValidadorDecisiones.cs` e inserta el contrato
 public record ResumenDecisiones(int Total, int Sincronas, int Asincronas, int Hibridas);
 ```
 
-
-
-
-
 ### Reto 6.3.3 — Calcular los recuentos
 
 Inserta el método dentro de `ValidadorDecisiones`, antes del campo `private static readonly string[]`; conserva las cuatro posiciones del constructor del resumen.
@@ -6535,18 +5224,7 @@ Inserta el método dentro de `ValidadorDecisiones`, antes del campo `private sta
     }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-
-
-
-- **Línea 4:** `var sincronas = lista.Count(d => d.Enfoque == "Sincrona");` → Cuenta las entradas que cumplen el criterio indicado.
-
-
-
-- **Línea 7:** `return new ResumenDecisiones(lista.Count, sincronas, asincronas, hibridas);` → Devuelve los recuentos del catálogo sin modificar sus entradas.
-
-
+Cuenta las entradas que cumplen el criterio indicado. Devuelve los recuentos del catálogo sin modificar sus entradas.
 
 ### Reto 6.3.6 — Verificar el catálogo por defecto
 
@@ -6570,23 +5248,10 @@ Inserta la prueba dentro de `ValidadorDecisionesTests`, antes del campo `_valida
     }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-
-
-
-- **Línea 4:** `var resumen = ValidadorDecisiones.Resumen(CatalogoDecisiones.DecisionesPorDefecto());` → Calcula el resumen sobre el catálogo por defecto.
-
-
-
-
-
-
-
+Calcula el resumen sobre el catálogo por defecto.
 
 **Comprobación del reto.** Compila la copia optativa y ejecuta primero `dotnet test tests/AceriaApp.Decisiones.Tests/AceriaApp.Decisiones.Tests.csproj -c Release`, después `dotnet test AceriaApp.sln -c Release`. El catálogo pasa de 12 a 13 tests; la solución debe ejecutar 283 + 1 pruebas, todas aprobadas y ninguna omitida. Confirma en el TRX que se ejecutó `Resumen_ConCatalogoPorDefecto_CalculaTotales` y que la etapa obligatoria conserva sus hashes.
 
-**Por qué funciona así.** El resumen materializa la secuencia una sola vez y calcula sobre ella; no altera los datos ni configura la infraestructura.
 
 **Diagnóstico si falla.** Si el método queda fuera de la clase, mueve solo el fragmento al ancla señalada. Si el total no coincide, revisa las entradas del catálogo antes de cambiar la expectativa. No acumules los retos al construir la siguiente etapa.
 
