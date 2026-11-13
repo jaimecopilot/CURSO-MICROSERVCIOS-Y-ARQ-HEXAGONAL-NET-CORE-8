@@ -54,7 +54,7 @@ jobs:
           if ($service.Status -ne 'Running') { Start-Service -Name 'MSSQL$SQLEXPRESS' }
           if ((Get-Service -Name 'MSSQL$SQLEXPRESS').Status -ne 'Running') { throw "SQL Express no disponible" }
           Write-Host 'SQL Server Express activo'
-      - name: Auditar y ejecutar M02
+      - name: Auditar y ejecutar M04
         shell: pwsh
         run: |
           $env:ACERIA_SQL_EVIDENCE_DIR = Join-Path $env:RUNNER_TEMP 'evidencia-sql-m04'
@@ -104,7 +104,7 @@ jobs:
           if ($service.Status -ne 'Running') { Start-Service -Name 'MSSQL$SQLEXPRESS' }
           if ((Get-Service -Name 'MSSQL$SQLEXPRESS').Status -ne 'Running') { throw "SQL Express no disponible" }
           Write-Host 'SQL Server Express activo'
-      - name: Auditar y ejecutar M03
+      - name: Auditar y ejecutar M05
         shell: pwsh
         run: |
           $env:ACERIA_SQL_EVIDENCE_DIR = Join-Path $env:RUNNER_TEMP 'evidencia-sql-m05'
