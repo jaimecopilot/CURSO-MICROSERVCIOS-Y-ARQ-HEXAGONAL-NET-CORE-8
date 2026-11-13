@@ -147,10 +147,71 @@ def apply_marked_operations(previous: dict[str, str], ops: list[dict]):
     return constructed, diagnostics
 
 
+def solution_paths(text: str) -> set[str]:
+    """Rutas lógicas de proyectos .csproj; omite GUIDs generados por dotnet sln."""
+    results = set()
+    for match in re.finditer(
+        r'(?m)^Project\("[^"]+"\)\s*=\s*"[^"]+",\s*"([^"]+\.csproj)"',
+        text,
+    ):
+        results.add(match.group(1).replace("\\", "/").casefold())
+    return results
+
+
+def manual_section(manual: str, module: int, point: int) -> str:
+    """Selecciona la primera sección del punto; evita coincidencias en bloques de código."""
+    pattern = re.compile(r"(?m)^# Punto " + str(module) + r"\.(\d+)\s+")
+    headers = list(pattern.finditer(manual))
+    indices = [i for i, match in enumerate(headers)
+               if int(match.group(1)) == point]
+    if not indices:
+        return ""
+    i = indices[0]
+    end = next(
+        (h.start() for h in headers[i+1:] if int(h.group(1)) != point),
+        len(manual),
+    )
+    return manual[headers[i].start():end]
+
+
+def check_generated_solution(previous: dict[str,str], built: dict[str,str],
+                             actual: dict[str,str], section: str):
+    """La solución se construye mediante dotnet sln add, no copiando GUIDs.
+
+    Un PASS semántico exige que la guía indique agregar proyectos, que los
+    nuevos .csproj procedan de operaciones escritas en el manual y que la
+    membresía resultante coincida con el proyecto canónico.
+    """
+    prev = previous.get("AceriaApp.sln")
+    wanted = actual.get("AceriaApp.sln")
+    if not prev or not wanted:
+        return False, "Falta la solución anterior o la esperada"
+    if not re.search(r"dotnet\s+sln(?:\s+\S+)?\s+add\b", section, re.I):
+        return False, "La práctica no muestra el comando dotnet sln add"
+    baseline = solution_paths(prev)
+    newly_created = {
+        file.casefold()
+        for file in built.keys() - previous.keys() if file.endswith(".csproj")
+    }
+    predicted = baseline | newly_created
+    target = solution_paths(wanted)
+    if not predicted == target:
+        extra = sorted(predicted - target)
+        missing = sorted(target - predicted)
+        return False, f"Membresía diferente; extra={extra}, ausentes={missing}"
+    if any(rel not in {p.casefold() for p in built} for rel in target):
+        return False, "Algún proyecto de la solución no se encuentra en el árbol reconstruido"
+    return True, (
+        f"{len(baseline)} proyectos heredados + {len(newly_created)} "
+        f"incorporados mediante comandos; {len(target)} referencias coincidentes"
+    )
+
+
 def audit_module(module: int) -> tuple[list[str], dict]:
     dirname, stages = CONFIG[module]
     root = ROOT / dirname
     expected_steps, by_point = steps_and_operations(module, root, stages)
+    manual_text = (root / "PRACTICAS" / f"M{module:02}_PRACTICAS.md").read_text(encoding="utf-8-sig")
     report = [
         f"## M{module:02} — {dirname}",
         "",
@@ -211,15 +272,24 @@ def audit_module(module: int) -> tuple[list[str], dict]:
         mismatch = sorted(rel for rel in marked_changes if
                           norm(constructed.get(rel, "")) != norm(actual.get(rel, "")))
         deleted = sorted(rel for rel in previous.keys() - actual.keys())
-        summary.update(transitions=1,changed=len(target_changes),
+        semantic_solution = False
+        semantic_detail = ""
+        if "AceriaApp.sln" in untraced:
+            semantic_solution, semantic_detail = check_generated_solution(
+                previous, constructed, actual,
+                manual_section(manual_text, module, p))
+            if semantic_solution:
+                untraced.remove("AceriaApp.sln")
+        summary.update(transitions=1, changed=len(target_changes),
                        marked_changed=len(marked_changes),
-                       reconstructed=len(complete), missing=len(untraced),
-                       incorrect=len(mismatch), blocked=len(errors))
+                       reconstructed=len(complete), solution_semantic=int(semantic_solution),
+                       missing=len(untraced), incorrect=len(mismatch), blocked=len(errors))
         report += [
             f"### Punto {module}.{p}",
             "",
             f"- Archivos cambiados respecto al punto anterior: {len(target_changes)}",
             f"- Cambios con operación de código marcada: {len(marked_changes)}",
+            f"- Archivo AceriaApp.sln validado por membresía y comandos: {'sí' if semantic_solution else 'no'} ({semantic_detail})",
             f"- **Resultado idéntico tras aplicar instrucciones marcadas:** "
             f"{len(complete)}/{len(target_changes)}",
             f"- Cambios sin operación marcada: **{len(untraced)}**",
@@ -245,7 +315,8 @@ def audit_module(module: int) -> tuple[list[str], dict]:
     report += [
         f"**Balance M{module:02}:** {summary['transitions']} transiciones comparadas, "
         f"{summary['reconstructed']}/{summary['changed']} archivos reconstruidos "
-        f"sin consultar su destino, {summary['missing']} sin operación marcada, "
+        f"por código sin consultar su destino, y {summary['solution_semantic']} "
+        f"soluciones contrastadas por membresía; {summary['missing']} sin operación marcada, "
         f"{summary['incorrect']} discrepantes con operación marcada.",
         "",
     ]
@@ -298,6 +369,8 @@ def main():
         f"- Archivos con cambios: **{aggregate['changed']}**",
         f"- Reconstruidos exactamente desde los pasos marcados: "
         f"**{aggregate['reconstructed']}**",
+        f"- Soluciones .sln verificadas por comandos de alta y membresía "
+        f"(no igualdad byte a byte): **{aggregate['solution_semantic']}**",
         f"- Sin operación de reconstrucción explícita: **{aggregate['missing']}**",
         f"- Marcados, pero no reproducibles exactamente: "
         f"**{aggregate['incorrect']}**",
