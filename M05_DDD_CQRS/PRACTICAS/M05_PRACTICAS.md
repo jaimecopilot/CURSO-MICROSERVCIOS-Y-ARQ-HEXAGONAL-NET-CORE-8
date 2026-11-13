@@ -777,7 +777,7 @@ Aquí aparece una frontera de dominio auténtica: `OrdenProduccion` controla la 
 4. Ejecuta `dotnet restore AceriaApp.sln` y `dotnet build AceriaApp.sln -c Release`; `dotnet sln AceriaApp.sln list` debe mostrar 16 proyectos.
 
 
-**Integración funcional.** Configura las referencias y versiones de este proyecto manteniendo los proyectos y catálogos heredados.
+Configura las referencias y versiones de este proyecto manteniendo los proyectos y catálogos heredados.
 
 **Archivo:** `src/AceriaApp.Produccion.Dominio/AceriaApp.Produccion.Dominio.csproj`. **Operación:** Crear.
 
@@ -789,7 +789,7 @@ Aquí aparece una frontera de dominio auténtica: `OrdenProduccion` controla la 
 Compila el modelo para .NET 8. No incluye referencias de proyecto ni paquetes externos: la frontera del dominio se comprueba también con tests.
 
 
-**Integración funcional.** Modela la raíz de Producción con identidad estable, transiciones explícitas y reglas de capacidad; desde 5.2 controla todas las mutaciones de sus líneas.
+Modela la raíz de Producción con identidad estable, transiciones explícitas y reglas de capacidad; desde 5.2 controla todas las mutaciones de sus líneas.
 
 **Archivo:** `src/AceriaApp.Produccion.Dominio/OrdenProduccion.cs`. **Operación:** Crear.
 
@@ -842,12 +842,12 @@ public sealed class OrdenProduccion : IEquatable<OrdenProduccion>
 }
 ```
 
-Fija la capacidad didáctica por orden, no una cuota global entre órdenes. Valida el cliente normalizado antes de crear un agregado o llegar a la persistencia. Impide finalizar directamente desde Borrador o volver a finalizar una orden.
+La raíz `OrdenProduccion` protege el estado del agregado desde su constructor. `CapacidadMaxima` fija el límite didáctico de 500 unidades por orden; no representa una cuota global del taller. Antes de asignar el identificador, el constructor valida y normaliza cliente y material. A partir de ahí, `Planificar()` solo acepta una orden en Borrador y `Finalizar()` exige el estado Planificada. Estas comprobaciones evitan que un consumidor salte directamente de Borrador a Finalizada o repita una transición ya completada.
 
-Compara entidades por identidad estable; los datos iguales no convierten dos órdenes distintas en una sola.
+La implementación de `Equals` conserva la noción de identidad: dos órdenes con los mismos datos comerciales no son la misma entidad si sus GUID son distintos. Los tests del dominio deben comprobar tanto esa distinción como que una transición rechazada deja intacto el estado.
 
 
-**Integración funcional.** Define el error de negocio y los estados Borrador, Planificada y Finalizada sin dependencias técnicas.
+Define el error de negocio y los estados Borrador, Planificada y Finalizada sin dependencias técnicas.
 
 **Archivo:** `src/AceriaApp.Produccion.Dominio/ReglaProduccionException.cs`. **Operación:** Crear.
 
@@ -861,10 +861,10 @@ public sealed class ReglaProduccionException(string codigo, string mensaje) : Ex
 public enum EstadoOrdenProduccion { Borrador, Planificada, Finalizada }
 ```
 
-Distingue una regla del modelo incumplida de un fallo técnico. La aplicación puede traducir este tipo concreto sin ocultar otras excepciones. Conserva un código estable que permite identificar la regla sin depender del texto del mensaje. Expresa los estados del ciclo de vida; los métodos de la raíz deciden qué transiciones están permitidas.
+`ReglaProduccionException` expresa un incumplimiento conocido de las reglas del modelo y conserva un código estable independiente de la redacción del mensaje. La aplicación puede traducir ese error a un resultado funcional sin ocultar fallos técnicos inesperados. El enum `EstadoOrdenProduccion` identifica Borrador, Planificada y Finalizada, pero no establece por sí mismo las transiciones legales: esa responsabilidad sigue en los métodos de la raíz.
 
 
-**Integración funcional.** Configura las referencias y versiones de este proyecto manteniendo los proyectos y catálogos heredados.
+Configura las referencias y versiones de este proyecto manteniendo los proyectos y catálogos heredados.
 
 **Archivo:** `tests/AceriaApp.Ddd.Tests/AceriaApp.Ddd.Tests.csproj`. **Operación:** Reemplazar el contenido completo.
 
@@ -889,7 +889,7 @@ Fija la versión del paquete usado por esta capa o por sus pruebas para hacer re
 Fija la versión del paquete usado por esta capa o por sus pruebas para hacer reproducible la compilación. Declara una dependencia de proyecto que el compilador necesita; no registra servicios en el contenedor. Declara una dependencia de proyecto que el compilador necesita; no registra servicios en el contenedor.
 
 
-**Integración funcional.** Añade 5 pruebas funcionales del punto 5.1, además del catálogo original; verifica comportamiento real y regresiones heredadas.
+Añade 5 pruebas funcionales del punto 5.1, además del catálogo original; verifica comportamiento real y regresiones heredadas.
 
 **Archivo:** `tests/AceriaApp.Ddd.Tests/DddFuncionalesTests.cs`. **Operación:** Crear.
 
@@ -2043,7 +2043,7 @@ Las modificaciones de dominio deben pasar por operaciones que protejan las invar
 4. Ejecuta `dotnet restore AceriaApp.sln` y `dotnet build AceriaApp.sln -c Release`; `dotnet sln AceriaApp.sln list` debe mostrar 17 proyectos.
 
 
-**Integración funcional.** Implementa la entidad hija con identidad propia; su creación y sus cambios quedan bajo control de la raíz.
+Implementa la entidad hija con identidad propia; su creación y sus cambios quedan bajo control de la raíz.
 
 **Archivo:** `src/AceriaApp.Produccion.Dominio/LineaDeOrden.cs`. **Operación:** Crear.
 
@@ -2074,7 +2074,7 @@ public sealed class LineaDeOrden : IEquatable<LineaDeOrden>
 Impide crear entidades hijas desde la capa de aplicación: la raíz controla su incorporación. La raíz llama a esta operación solo después de validar el total y el estado. Dos líneas con el mismo material y cantidad siguen siendo entidades distintas.
 
 
-**Integración funcional.** Modela la raíz de Producción con identidad estable, transiciones explícitas y reglas de capacidad; desde 5.2 controla todas las mutaciones de sus líneas.
+Modela la raíz de Producción con identidad estable, transiciones explícitas y reglas de capacidad; desde 5.2 controla todas las mutaciones de sus líneas.
 
 **Archivo:** `src/AceriaApp.Produccion.Dominio/OrdenProduccion.cs`. **Operación:** Reemplazar el contenido completo.
 
@@ -2159,7 +2159,7 @@ Valida el cliente normalizado antes de crear un agregado o llegar a la persisten
 Impide finalizar directamente desde Borrador o volver a finalizar una orden. Compara entidades por identidad estable; los datos iguales no convierten dos órdenes distintas en una sola.
 
 
-**Integración funcional.** Implementa value objects inmutables, con normalización, validación e igualdad por valor; las clases selladas evitan default(struct) inválidos.
+Implementa value objects inmutables, con normalización, validación e igualdad por valor; las clases selladas evitan default(struct) inválidos.
 
 **Archivo:** `src/AceriaApp.Produccion.Dominio/ValoresProduccion.cs`. **Operación:** Crear.
 
@@ -2196,7 +2196,7 @@ El tipo sellado obtiene igualdad por valor sin abrir una jerarquía que cambie e
 Usa una clase en lugar de struct para evitar una instancia default con cero sin pasar por validación. Valida la cantidad individual; la raíz valida además la suma del agregado.
 
 
-**Integración funcional.** Configura las referencias y versiones de este proyecto manteniendo los proyectos y catálogos heredados.
+Configura las referencias y versiones de este proyecto manteniendo los proyectos y catálogos heredados.
 
 **Archivo:** `tests/AceriaApp.ModeloDominio.Tests/AceriaApp.ModeloDominio.Tests.csproj`. **Operación:** Reemplazar el contenido completo.
 
@@ -2221,7 +2221,7 @@ Fija la versión del paquete usado por esta capa o por sus pruebas para hacer re
 Fija la versión del paquete usado por esta capa o por sus pruebas para hacer reproducible la compilación. Declara una dependencia de proyecto que el compilador necesita; no registra servicios en el contenedor. Declara una dependencia de proyecto que el compilador necesita; no registra servicios en el contenedor.
 
 
-**Integración funcional.** Añade 7 pruebas funcionales del punto 5.2, además del catálogo original; verifica comportamiento real y regresiones heredadas.
+Añade 7 pruebas funcionales del punto 5.2, además del catálogo original; verifica comportamiento real y regresiones heredadas.
 
 **Archivo:** `tests/AceriaApp.ModeloDominio.Tests/ModeloDominioFuncionalesTests.cs`. **Operación:** Crear.
 
@@ -3391,7 +3391,7 @@ La aplicación coordina los puertos y el agregado: no debe exigir al dominio que
 4. Ejecuta `dotnet restore AceriaApp.sln` y `dotnet build AceriaApp.sln -c Release`; `dotnet sln AceriaApp.sln list` debe mostrar 20 proyectos.
 
 
-**Integración funcional.** Configura las referencias y versiones de este proyecto manteniendo los proyectos y catálogos heredados.
+Configura las referencias y versiones de este proyecto manteniendo los proyectos y catálogos heredados.
 
 **Archivo:** `src/AceriaApp.Api/AceriaApp.Api.csproj`. **Operación:** Reemplazar el contenido completo.
 
@@ -3412,7 +3412,7 @@ Fija la versión del paquete usado por esta capa o por sus pruebas para hacer re
 Declara una dependencia de proyecto que el compilador necesita; no registra servicios en el contenedor.
 
 
-**Integración funcional.** Expone el contrato HTTP de Producción con 201 y Location al crear, y errores 400, 404 o 409 según su significado.
+Expone el contrato HTTP de Producción con 201 y Location al crear, y errores 400, 404 o 409 según su significado.
 
 **Archivo:** `src/AceriaApp.Api/Produccion/ProduccionEndpoints.cs`. **Operación:** Crear.
 
@@ -3458,7 +3458,7 @@ public static class ProduccionEndpoints
 Mantiene una ruta explícita del contexto nuevo, sin colisionar con las APIs de los módulos anteriores. Devuelve 201 y la URI que permite consultar el recurso recién creado. Traduce una transición incompatible con el estado actual a conflicto HTTP.
 
 
-**Integración funcional.** Integra el contexto nuevo en la API conservando los endpoints heredados y limita EnsureCreated al entorno Development.
+Integra el contexto nuevo en la API conservando los endpoints heredados y limita EnsureCreated al entorno Development.
 
 **Archivo:** `src/AceriaApp.Api/Program.cs`. **Operación:** Reemplazar el contenido completo.
 
@@ -3640,7 +3640,7 @@ public partial class Program {} // permite WebApplicationFactory en tests
 Registra el contexto de Producción antes de construir el contenedor. Inicializa la base didáctica propia solo dentro de la condición Development y sin sustituir migraciones productivas. Añade las rutas del nuevo contexto a las rutas ya existentes.
 
 
-**Integración funcional.** Añade la base LocalDB AceriaProduccion sin modificar las conexiones heredadas; la separación es una decisión de esta práctica.
+Añade la base LocalDB AceriaProduccion sin modificar las conexiones heredadas; la separación es una decisión de esta práctica.
 
 **Archivo:** `src/AceriaApp.Api/appsettings.json`. **Operación:** Reemplazar el contenido completo.
 
@@ -3658,7 +3658,7 @@ Registra el contexto de Producción antes de construir el contenedor. Inicializa
 Configura la conexión SQL Server propia de Producción. Las conexiones de los flujos heredados se conservan; ajusta servidor y autenticación a tu entorno sin incluir secretos en Git.
 
 
-**Integración funcional.** Configura las referencias y versiones de este proyecto manteniendo los proyectos y catálogos heredados.
+Configura las referencias y versiones de este proyecto manteniendo los proyectos y catálogos heredados.
 
 **Archivo:** `src/AceriaApp.Produccion.Aplicacion/AceriaApp.Produccion.Aplicacion.csproj`. **Operación:** Crear.
 
@@ -3673,7 +3673,7 @@ Configura la conexión SQL Server propia de Producción. Las conexiones de los f
 Declara una dependencia de proyecto que el compilador necesita; no registra servicios en el contenedor.
 
 
-**Integración funcional.** Proyecta la raíz y sus líneas a un contrato de salida sin exponer entidades del dominio.
+Proyecta la raíz y sus líneas a un contrato de salida sin exponer entidades del dominio.
 
 **Archivo:** `src/AceriaApp.Produccion.Aplicacion/OrdenProduccionDto.cs`. **Operación:** Crear.
 
@@ -3696,7 +3696,7 @@ Copia identidad y valores escalares de la línea; el cliente no recibe la entida
 Construye DTO nuevos para cada línea y materializa una colección de solo lectura, separada de la colección interna del agregado.
 
 
-**Integración funcional.** Coordina recuperación, operación del agregado y commit; convierte solo reglas de negocio esperadas en resultados tipados.
+Coordina recuperación, operación del agregado y commit; convierte solo reglas de negocio esperadas en resultados tipados.
 
 **Archivo:** `src/AceriaApp.Produccion.Aplicacion/OrdenesProduccionCasosUso.cs`. **Operación:** Crear.
 
@@ -3754,7 +3754,7 @@ Delega las invariantes de creación en el dominio. Registra el agregado sin conf
 Invoca el comportamiento del agregado, sin asignar su estado desde fuera. Distingue una orden que no existe de una petición con datos inválidos. Convierte únicamente errores esperados de negocio; los fallos técnicos y la cancelación se propagan.
 
 
-**Integración funcional.** Separa la recuperación del agregado del commit explícito; el contrato no depende de EF Core.
+Separa la recuperación del agregado del commit explícito; el contrato no depende de EF Core.
 
 **Archivo:** `src/AceriaApp.Produccion.Aplicacion/PuertosProduccion.cs`. **Operación:** Crear.
 
@@ -3778,7 +3778,7 @@ public interface IProduccionUnitOfWork
 Confirma los cambios preparados en la unidad de trabajo actual. La implementación debe compartir el contexto del repositorio.
 
 
-**Integración funcional.** Representa éxito o error tipado y prohíbe leer la rama incorrecta del resultado.
+Representa éxito o error tipado y prohíbe leer la rama incorrecta del resultado.
 
 **Archivo:** `src/AceriaApp.Produccion.Aplicacion/ResultadoProduccion.cs`. **Operación:** Crear.
 
@@ -3806,7 +3806,7 @@ public sealed class ResultadoProduccion<T>
 Expresa categorías de aplicación que el adaptador HTTP traducirá a 400, 404 y 409. Impide usar un valor inexistente cuando el resultado representa un fallo. Protege también la rama de error para que el contrato no permita estados ambiguos.
 
 
-**Integración funcional.** Configura las referencias y versiones de este proyecto manteniendo los proyectos y catálogos heredados.
+Configura las referencias y versiones de este proyecto manteniendo los proyectos y catálogos heredados.
 
 **Archivo:** `src/AceriaApp.Produccion.Infraestructura/AceriaApp.Produccion.Infraestructura.csproj`. **Operación:** Crear.
 
@@ -3823,7 +3823,7 @@ Expresa categorías de aplicación que el adaptador HTTP traducirá a 400, 404 y
 Declara una dependencia de proyecto que el compilador necesita; no registra servicios en el contenedor. Fija la versión del paquete usado por esta capa o por sus pruebas para hacer reproducible la compilación.
 
 
-**Integración funcional.** El repositorio recupera la raíz con sus líneas y registra altas; únicamente la unidad de trabajo confirma cambios.
+El repositorio recupera la raíz con sus líneas y registra altas; únicamente la unidad de trabajo confirma cambios.
 
 **Archivo:** `src/AceriaApp.Produccion.Infraestructura/PersistenciaProduccion.cs`. **Operación:** Crear.
 
@@ -3849,7 +3849,7 @@ public sealed class ProduccionUnitOfWork(ProduccionDbContext db) : IProduccionUn
 Recupera el agregado completo para que las reglas dispongan de todas sus líneas. Agrega el grafo al seguimiento de EF sin ejecutar SaveChanges. Centraliza la confirmación explícita; un SaveChanges guarda el agregado en una transacción relacional.
 
 
-**Integración funcional.** Mapea identidad, colección privada y value objects con EF Core en un modelo relacional propio del contexto Producción.
+Mapea identidad, colección privada y value objects con EF Core en un modelo relacional propio del contexto Producción.
 
 **Archivo:** `src/AceriaApp.Produccion.Infraestructura/ProduccionDbContext.cs`. **Operación:** Crear.
 
@@ -3889,7 +3889,7 @@ Conserva la identidad creada por el dominio en lugar de pedir otra a la base. El
 Almacena el valor escalar y reconstruye el value object validado durante la lectura.
 
 
-**Integración funcional.** Compone los adaptadores scoped de Producción sobre SQL Server; desde 5.4 registra el ensamblado propio de MediatR y el puerto de lecturas.
+Compone los adaptadores scoped de Producción sobre SQL Server; desde 5.4 registra el ensamblado propio de MediatR y el puerto de lecturas.
 
 **Archivo:** `src/AceriaApp.Produccion.Infraestructura/RegistroProduccion.cs`. **Operación:** Crear.
 
@@ -3916,7 +3916,7 @@ public static class RegistroProduccion
 Configura SQL Server; las pruebas usan el mismo proveedor con una conexión a una base aislada. Usa una instancia por petición que comparte el DbContext con la unidad de trabajo.
 
 
-**Integración funcional.** Configura las referencias y versiones de este proyecto manteniendo los proyectos y catálogos heredados.
+Configura las referencias y versiones de este proyecto manteniendo los proyectos y catálogos heredados.
 
 **Archivo:** `tests/AceriaApp.CasosDeUso.Tests/AceriaApp.CasosDeUso.Tests.csproj`. **Operación:** Reemplazar el contenido completo.
 
@@ -3944,7 +3944,7 @@ Compila para .NET 8, igual que los proyectos heredados. Fija el cliente de conte
 Compila el helper heredado que crea y elimina únicamente la base aislada de cada prueba, sin añadir otro proyecto a la solución.
 
 
-**Integración funcional.** Añade 7 pruebas funcionales del punto 5.3, además del catálogo original; verifica comportamiento real y regresiones heredadas.
+Añade 7 pruebas funcionales del punto 5.3, además del catálogo original; verifica comportamiento real y regresiones heredadas.
 
 **Archivo:** `tests/AceriaApp.CasosDeUso.Tests/CasosDeUsoFuncionalesTests.cs`. **Operación:** Crear.
 
@@ -4076,7 +4076,7 @@ Comprueba el comportamiento observable: resultado impide observar la rama incorr
 Comprueba el comportamiento observable: http distingue 404 y 409 sin alterar el estado. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
 
 
-**Integración funcional.** Configura ProduccionDbContext sobre una base SQL Server aislada y permite verificar los datos desde contextos con conexiones independientes.
+Configura ProduccionDbContext sobre una base SQL Server aislada y permite verificar los datos desde contextos con conexiones independientes.
 
 **Archivo:** `tests/Compartido/ProduccionApiFactory.cs`. **Operación:** Crear.
 
@@ -5224,7 +5224,7 @@ La comprobación funcional debe seguir un comando que modifica la orden y una qu
 4. Ejecuta `dotnet restore AceriaApp.sln` y `dotnet build AceriaApp.sln -c Release`; `dotnet sln AceriaApp.sln list` debe mostrar 21 proyectos.
 
 
-**Integración funcional.** Expone el contrato HTTP de Producción con 201 y Location al crear, y errores 400, 404 o 409 según su significado.
+Expone el contrato HTTP de Producción con 201 y Location al crear, y errores 400, 404 o 409 según su significado.
 
 **Archivo:** `src/AceriaApp.Api/Produccion/ProduccionEndpoints.cs`. **Operación:** Reemplazar el contenido completo.
 
@@ -5273,7 +5273,7 @@ public static class ProduccionEndpoints
 Mantiene una ruta explícita del contexto nuevo, sin colisionar con las APIs de los módulos anteriores. Devuelve 201 y la URI que permite consultar el recurso recién creado. Traduce una transición incompatible con el estado actual a conflicto HTTP.
 
 
-**Integración funcional.** Configura las referencias y versiones de este proyecto manteniendo los proyectos y catálogos heredados.
+Configura las referencias y versiones de este proyecto manteniendo los proyectos y catálogos heredados.
 
 **Archivo:** `src/AceriaApp.Produccion.Aplicacion/AceriaApp.Produccion.Aplicacion.csproj`. **Operación:** Reemplazar el contenido completo.
 
@@ -5288,7 +5288,7 @@ Mantiene una ruta explícita del contexto nuevo, sin colisionar con las APIs de 
 Declara una dependencia de proyecto que el compilador necesita; no registra servicios en el contenedor.
 
 
-**Integración funcional.** Define un puerto de consulta que devuelve DTOs y no expone operaciones de escritura ni unidad de trabajo.
+Define un puerto de consulta que devuelve DTOs y no expone operaciones de escritura ni unidad de trabajo.
 
 **Archivo:** `src/AceriaApp.Produccion.Aplicacion/IOrdenProduccionLecturas.cs`. **Operación:** Crear.
 
@@ -5306,7 +5306,7 @@ public interface IOrdenProduccionLecturas
 Crea un puerto exclusivo de lectura; sus consumidores no pueden agregar entidades ni confirmar escrituras mediante él. Devuelve una proyección DTO o ausencia para el identificador solicitado. El contrato de lectura no expone la raíz del agregado. Devuelve una colección de respuestas ya proyectadas y propaga cancelación, sin necesitar una unidad de trabajo de escritura.
 
 
-**Integración funcional.** Conecta cada command con los casos de uso y cada query con el puerto de lectura; el dominio conserva las invariantes.
+Conecta cada command con los casos de uso y cada query con el puerto de lectura; el dominio conserva las invariantes.
 
 **Archivo:** `src/AceriaApp.Produccion.Aplicacion/ManejadoresProduccion.cs`. **Operación:** Crear.
 
@@ -5358,7 +5358,7 @@ El manejador de consulta recibe exclusivamente el puerto de lectura, sin reposit
 La consulta de colección devuelve los DTO del puerto sin ejecutar CommitAsync; una colección vacía es una respuesta normal.
 
 
-**Integración funcional.** Declara los commands de escritura y las queries de lectura como contratos MediatR con respuestas explícitas.
+Declara los commands de escritura y las queries de lectura como contratos MediatR con respuestas explícitas.
 
 **Archivo:** `src/AceriaApp.Produccion.Aplicacion/MensajesProduccion.cs`. **Operación:** Crear.
 
@@ -5382,7 +5382,7 @@ Transporta la intención de crear una orden y sus datos; la solicitud no ejecuta
 Solicita información sin campos de modificación. Su manejador consulta un puerto de lectura y traduce la ausencia. Solicita la colección y devuelve directamente `IReadOnlyList<OrdenProduccionDto>`. Esta variante demuestra que CQRS no exige envolver toda respuesta en Result.
 
 
-**Integración funcional.** Proyecta columnas y líneas con AsNoTracking sobre la misma base relacional; no materializa agregados con seguimiento ni confirma cambios.
+Proyecta columnas y líneas con AsNoTracking sobre la misma base relacional; no materializa agregados con seguimiento ni confirma cambios.
 
 **Archivo:** `src/AceriaApp.Produccion.Infraestructura/OrdenProduccionLecturas.cs`. **Operación:** Crear.
 
@@ -5423,7 +5423,7 @@ Filtra el detalle por identidad en SQL antes de construir la respuesta. Proyecta
 Calcula el total del DTO con los valores consultados; la query no cambia el dominio ni ejecuta un commit.
 
 
-**Integración funcional.** Compone los adaptadores scoped de Producción sobre SQL Server; desde 5.4 registra el ensamblado propio de MediatR y el puerto de lecturas.
+Compone los adaptadores scoped de Producción sobre SQL Server; desde 5.4 registra el ensamblado propio de MediatR y el puerto de lecturas.
 
 **Archivo:** `src/AceriaApp.Produccion.Infraestructura/RegistroProduccion.cs`. **Operación:** Reemplazar el contenido completo.
 
@@ -5452,7 +5452,7 @@ public static class RegistroProduccion
 Configura SQL Server; las pruebas usan el mismo proveedor con una conexión a una base aislada. Usa una instancia por petición que comparte el DbContext con la unidad de trabajo. Descubre los handlers del ensamblado propio de Producción sin incorporarlos al escaneo de M4.
 
 
-**Integración funcional.** Configura las referencias y versiones de este proyecto manteniendo los proyectos y catálogos heredados.
+Configura las referencias y versiones de este proyecto manteniendo los proyectos y catálogos heredados.
 
 **Archivo:** `tests/AceriaApp.Cqrs.Tests/AceriaApp.Cqrs.Tests.csproj`. **Operación:** Reemplazar el contenido completo.
 
@@ -5480,7 +5480,7 @@ Compila para .NET 8, igual que los proyectos heredados. Fija el cliente de conte
 Compila el helper heredado que crea y elimina únicamente la base aislada de cada prueba, sin añadir otro proyecto a la solución.
 
 
-**Integración funcional.** Añade 6 pruebas funcionales del punto 5.4, además del catálogo original; verifica comportamiento real y regresiones heredadas.
+Añade 6 pruebas funcionales del punto 5.4, además del catálogo original; verifica comportamiento real y regresiones heredadas.
 
 **Archivo:** `tests/AceriaApp.Cqrs.Tests/CqrsFuncionalesTests.cs`. **Operación:** Crear.
 
@@ -6673,7 +6673,7 @@ El cierre recorre la orden de Producción desde HTTP hasta SQL Server: alta, pla
 4. Ejecuta `dotnet restore AceriaApp.sln` y `dotnet build AceriaApp.sln -c Release`; `dotnet sln AceriaApp.sln list` debe mostrar 22 proyectos.
 
 
-**Integración funcional.** Expone el contrato HTTP de Producción con 201 y Location al crear, y errores 400, 404 o 409 según su significado.
+Expone el contrato HTTP de Producción con 201 y Location al crear, y errores 400, 404 o 409 según su significado.
 
 **Archivo:** `src/AceriaApp.Api/Produccion/ProduccionEndpoints.cs`. **Operación:** Reemplazar el contenido completo.
 
@@ -6727,7 +6727,7 @@ Mantiene una ruta explícita del contexto nuevo, sin colisionar con las APIs de 
 Traduce una transición incompatible con el estado actual a conflicto HTTP.
 
 
-**Integración funcional.** Conecta cada command con los casos de uso y cada query con el puerto de lectura; el dominio conserva las invariantes.
+Conecta cada command con los casos de uso y cada query con el puerto de lectura; el dominio conserva las invariantes.
 
 **Archivo:** `src/AceriaApp.Produccion.Aplicacion/ManejadoresProduccion.cs`. **Operación:** Reemplazar el contenido completo.
 
@@ -6786,7 +6786,7 @@ El manejador de consulta recibe exclusivamente el puerto de lectura, sin reposit
 La consulta de colección devuelve los DTO del puerto sin ejecutar CommitAsync; una colección vacía es una respuesta normal. Incorpora una nueva escritura reutilizando la coordinación del caso de uso. Las reglas de estado y capacidad siguen perteneciendo a la raíz.
 
 
-**Integración funcional.** Declara los commands de escritura y las queries de lectura como contratos MediatR con respuestas explícitas.
+Declara los commands de escritura y las queries de lectura como contratos MediatR con respuestas explícitas.
 
 **Archivo:** `src/AceriaApp.Produccion.Aplicacion/MensajesProduccion.cs`. **Operación:** Reemplazar el contenido completo.
 
@@ -6813,7 +6813,7 @@ Transporta la intención de crear una orden y sus datos; la solicitud no ejecuta
 Solicita información sin campos de modificación. Su manejador consulta un puerto de lectura y traduce la ausencia. Solicita la colección y devuelve directamente `IReadOnlyList<OrdenProduccionDto>`. Esta variante demuestra que CQRS no exige envolver toda respuesta en Result. Transporta el identificador de la raíz y los valores de la nueva línea. El agregado comprobará estado y capacidad antes de incorporarla.
 
 
-**Integración funcional.** Coordina recuperación, operación del agregado y commit; convierte solo reglas de negocio esperadas en resultados tipados.
+Coordina recuperación, operación del agregado y commit; convierte solo reglas de negocio esperadas en resultados tipados.
 
 **Archivo:** `src/AceriaApp.Produccion.Aplicacion/OrdenesProduccionCasosUso.cs`. **Operación:** Reemplazar el contenido completo.
 
@@ -6876,7 +6876,7 @@ Invoca el comportamiento del agregado, sin asignar su estado desde fuera. La nue
 Convierte únicamente errores esperados de negocio; los fallos técnicos y la cancelación se propagan.
 
 
-**Integración funcional.** Configura las referencias y versiones de este proyecto manteniendo los proyectos y catálogos heredados.
+Configura las referencias y versiones de este proyecto manteniendo los proyectos y catálogos heredados.
 
 **Archivo:** `tests/AceriaApp.DominioAceria.Tests/AceriaApp.DominioAceria.Tests.csproj`. **Operación:** Reemplazar el contenido completo.
 
@@ -6904,7 +6904,7 @@ Compila para .NET 8, igual que los proyectos heredados. Fija el cliente de conte
 Compila el helper heredado que crea y elimina únicamente la base aislada de cada prueba, sin añadir otro proyecto a la solución.
 
 
-**Integración funcional.** Añade 8 pruebas funcionales del punto 5.5, además del catálogo original; verifica comportamiento real y regresiones heredadas.
+Añade 8 pruebas funcionales del punto 5.5, además del catálogo original; verifica comportamiento real y regresiones heredadas.
 
 **Archivo:** `tests/AceriaApp.DominioAceria.Tests/DominioAceriaFuncionalesTests.cs`. **Operación:** Crear.
 
