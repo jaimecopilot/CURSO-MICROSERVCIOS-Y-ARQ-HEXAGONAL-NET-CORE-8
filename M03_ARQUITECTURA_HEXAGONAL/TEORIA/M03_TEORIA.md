@@ -849,11 +849,15 @@ El contenido del punto 3.2 se aplica al servicio de órdenes que ya funciona en 
 
 ---
 
-## Desarrollo teórico
+## Convertir responsabilidades en referencias verificables
 
-### Bloque 1 — Separación física frente a separación lógica
 
-La separación entre dominio, aplicación e infraestructura se puede realizar de dos formas: lógica o física. La separación lógica agrupa las capas en carpetas dentro de un mismo proyecto. La separación física agrupa las capas en proyectos independientes. Ambas formas respetan la regla de dependencia, pero tienen consecuencias distintas. La separación lógica es más sencilla de mantener porque no requiere configurar referencias entre proyectos. La separación física es más estricta porque el compilador impide las violaciones de la regla de dependencia. La elección entre ambas depende del tamaño del sistema y de la disciplina del equipo.
+
+El objetivo del punto no es aumentar el número de bibliotecas de la solución. Es demostrar que una regla puede mantenerse en su núcleo mientras HTTP y SQL Server se integran mediante referencias y contratos controlados.
+
+### Separación física frente a separación lógica
+
+Separar responsabilidades dentro de una carpeta ayuda a leer el código, pero no impide que cualquier clase utilice un tipo situado en otra carpeta del mismo proyecto. La separación física mediante proyectos .NET permite expresar límites adicionales: un ensamblado solo puede acceder directamente a tipos de otro cuando existe una referencia que lo permite. Esa diferencia hace visible una parte de la arquitectura para el compilador, no solo para quien lee el diagrama. En AceriaApp queremos que Dominio y Aplicación puedan compilarse sin depender de ASP.NET Core ni de Entity Framework, mientras Infraestructura conoce las abstracciones necesarias para implementar almacenamiento. Esta organización exige diseñar bien los contratos y evitar referencias circulares. El objetivo es localizar cambios y probar reglas, no acumular bibliotecas vacías que aparenten desacoplamiento.
 
 ```text
 Separación lógica:
@@ -869,35 +873,24 @@ AceriaApp.Monolito.Infraestructura/
 AceriaApp.Monolito.Api/
 ```
 
-- **Línea 1:** `Separación lógica:` → título de la primera forma.
-- **Línea 2:** `AceriaApp.Monolito.Api/` → proyecto único.
-- **Línea 3:** `├── Dominio/` → carpeta de dominio.
-- **Línea 4:** `├── Aplicacion/` → carpeta de aplicación.
-- **Línea 5:** `└── Infraestructura/` → carpeta de infraestructura.
-- **Línea 6:** `Separación física:` → título de la segunda forma.
-- **Línea 7:** `AceriaApp.Monolito.Dominio/` → proyecto de dominio.
-- **Línea 8:** `AceriaApp.Monolito.Aplicacion/` → proyecto de aplicación.
-- **Línea 9:** `AceriaApp.Monolito.Infraestructura/` → proyecto de infraestructura.
-- **Línea 10:** `AceriaApp.Monolito.Api/` → proyecto de presentación.
+
+El esquema contrapone carpetas internas de una solución con proyectos que el compilador trata como ensamblados diferentes. El límite físico facilita detectar referencias no permitidas, aunque no garantiza que la responsabilidad de cada proyecto esté bien definida. El análisis de dependencias debe acompañarse de lectura del código.
+
 
 La separación física tiene tres ventajas medibles. La primera es que el compilador impide las violaciones de la regla de dependencia: si el dominio intenta referenciar la infraestructura, el proyecto no compila. La segunda es que las dependencias son visibles en el archivo `.csproj` de cada proyecto. La tercera es que los tests pueden referenciar solo los proyectos que necesitan. La separación lógica no ofrece estas ventajas porque todas las capas comparten el mismo proyecto y las violaciones solo se detectan con revisión manual.
 
----
 
+La separación lógica existe cuando el código se organiza por responsabilidades aunque permanezca en un único ensamblado. La separación física aparece cuando distintos proyectos .NET y sus referencias controlan qué conoce cada módulo. La segunda ofrece un límite verificable por el compilador: un tipo no está disponible si su proyecto no se referencia. Ese límite hace visibles las violaciones antes del despliegue.
 
-#### Ampliación didáctica aplicada a AceriaApp
+En AceriaApp pasamos de carpetas ilustrativas `Capas` y `PuertosAdaptadores` dentro de la API a tres proyectos nuevos en 3.3. Dominio contiene la entidad; Aplicación contiene puerto y casos de uso; Infraestructura implementa EF Core. La API permanece como host y composición. Así el alumno puede abrir los `.csproj` y comprobar qué referencia cada proyecto.
 
-**La decisión arquitectónica.** La separación lógica existe cuando el código se organiza por responsabilidades aunque permanezca en un único ensamblado. La separación física aparece cuando distintos proyectos .NET y sus referencias controlan qué conoce cada módulo. La segunda ofrece un límite verificable por el compilador: un tipo no está disponible si su proyecto no se referencia. Ese límite hace visibles las violaciones antes del despliegue.
+No debemos concluir que dividir una solución en varios ensamblados es siempre mejor. El aumento de proyectos añade un coste de compilación, publicación y comprensión. La separación resulta útil cuando ayuda a prevenir dependencias de alto impacto, permite probar en aislamiento o organiza un sistema donde distintas responsabilidades cambian a ritmos distintos.
 
-**Ejemplo concreto en AceriaApp.** En AceriaApp pasamos de carpetas ilustrativas `Capas` y `PuertosAdaptadores` dentro de la API a tres proyectos nuevos en 3.3. Dominio contiene la entidad; Aplicación contiene puerto y casos de uso; Infraestructura implementa EF Core. La API permanece como host y composición. Así el alumno puede abrir los `.csproj` y comprobar qué referencia cada proyecto.
+La evidencia mínima de una separación física consiste en compilar `AceriaApp.Hexagonal.Dominio.csproj` sin la API, después compilar Aplicación y finalmente toda la solución. Si dominio necesita instalar EF Core o ASP.NET Core, se ha introducido un acoplamiento que el nombre de proyecto no soluciona.
 
-**Riesgo, alternativa y límite.** No debemos concluir que dividir una solución en varios ensamblados es siempre mejor. El aumento de proyectos añade un coste de compilación, publicación y comprensión. La separación resulta útil cuando ayuda a prevenir dependencias de alto impacto, permite probar en aislamiento o organiza un sistema donde distintas responsabilidades cambian a ritmos distintos.
+### Proyecto de dominio
 
-**Comprobación técnica y aprendizaje.** La evidencia mínima de una separación física consiste en compilar `AceriaApp.Hexagonal.Dominio.csproj` sin la API, después compilar Aplicación y finalmente toda la solución. Si dominio necesita instalar EF Core o ASP.NET Core, se ha introducido un acoplamiento que el nombre de proyecto no soluciona.
-
-### Bloque 2 — Proyecto de dominio
-
-El proyecto de dominio contiene las entidades, los value objects, los agregados y las reglas de negocio. No referencia ningún otro proyecto del sistema. No referencia paquetes de infraestructura ni de framework web. El único paquete que puede referenciar es el propio framework base de .NET. El proyecto de dominio es el más estable del sistema y el que cambia con menos frecuencia. Los cambios en el dominio se propagan al resto del sistema.
+El proyecto de dominio representa aquello que el negocio necesita mantener verdadero. Para una acería, una orden de fabricación tiene identidad, datos esenciales y transiciones válidas que no deberían quedar a merced de un endpoint. `AceriaApp.Hexagonal.Dominio` permite aislar esas reglas en una biblioteca que puede ejecutarse sin web, SQL Server ni un contenedor de dependencias. Esta independencia debe ser observable: los tests de entidad crean órdenes y ejercen sus métodos sin levantar servicios externos. Tener el dominio en un proyecto distinto no basta si sus clases reciben `DbContext` o utilizan directamente `HttpContext`. Por ello revisaremos qué paquetes y referencias aparecen en su `.csproj` y qué tipos importan sus clases.
 
 ```text
 AceriaApp.Monolito.Dominio/
@@ -907,30 +900,24 @@ AceriaApp.Monolito.Dominio/
 └── Cliente.cs
 ```
 
-- **Línea 1:** `AceriaApp.Monolito.Dominio/` → proyecto de dominio.
-- **Línea 2:** `Orden.cs` → entidad de orden.
-- **Línea 3:** `LineaOrden.cs` → entidad de línea de orden.
-- **Línea 4:** `Material.cs` → entidad de material.
-- **Línea 5:** `Cliente.cs` → entidad de cliente.
+
+La biblioteca de dominio contiene entidades, reglas y tipos de negocio, sin referencias a HTTP ni a EF Core. Una prueba que crea y finaliza una orden puede ejecutarse sin servidor web y ofrece evidencia de que el modelo no necesita infraestructura para mantener sus invariantes.
+
 
 El proyecto de dominio se caracteriza por tres propiedades. La primera es que no referencia otros proyectos del sistema. La segunda es que no referencia paquetes de infraestructura. La tercera es que sus entidades no tienen dependencias externas. Las tres propiedades garantizan que el dominio sea independiente y reutilizable. La independencia permite que el dominio se pruebe sin base de datos ni framework web.
 
----
 
+El proyecto de dominio debe poder explicarse sin decir «endpoint», «SQL» o «Swagger». En la acería contiene una entidad orden y sus reglas de identidad, datos mínimos y estado de producción. La clase concreta `OrdenHexagonal` mantiene sus propiedades con acceso controlado y ofrece `Finalizar()` como operación de negocio. La decisión de cómo exponer esa orden públicamente no se codifica aquí.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Un dominio independiente admite pruebas baratas y rápidas. Crear una entidad, terminarla y probar que no puede terminarse dos veces es una prueba de reglas, no de conectividad. Cuando una excepción o un resultado de negocio emerge de esa operación, el adaptador externo decide qué respuesta corresponde. De ese modo, una futura interfaz distinta puede reutilizar la misma regla.
 
-**La decisión arquitectónica.** El proyecto de dominio debe poder explicarse sin decir «endpoint», «SQL» o «Swagger». En la acería contiene una entidad orden y sus reglas de identidad, datos mínimos y estado de producción. La clase concreta `OrdenHexagonal` mantiene sus propiedades con acceso controlado y ofrece `Finalizar()` como operación de negocio. La decisión de cómo exponer esa orden públicamente no se codifica aquí.
+Se debe evitar que el proyecto de dominio importe bibliotecas EF Core o tipos ASP.NET. La infraestructura puede mapear la entidad desde `OnModelCreating` y configurarle propiedades; el dominio no debe incorporar atributos de tabla solo para complacer al ORM. Excepciones por invariantes del propio objeto son legítimas si expresan un estado del negocio.
 
-**Ejemplo concreto en AceriaApp.** Un dominio independiente admite pruebas baratas y rápidas. Crear una entidad, terminarla y probar que no puede terminarse dos veces es una prueba de reglas, no de conectividad. Cuando una excepción o un resultado de negocio emerge de esa operación, el adaptador externo decide qué respuesta corresponde. De ese modo, una futura interfaz distinta puede reutilizar la misma regla.
+Inspecciona el archivo `AceriaApp.Hexagonal.Dominio.csproj`: no contiene `ProjectReference` ni paquete EF. Intenta compilar solo ese proyecto y verifica que no depende de la configuración de LocalDB. Esta prueba tiene más significado arquitectónico que contar cuántas clases contiene la carpeta.
 
-**Riesgo, alternativa y límite.** Se debe evitar que el proyecto de dominio importe bibliotecas EF Core o tipos ASP.NET. La infraestructura puede mapear la entidad desde `OnModelCreating` y configurarle propiedades; el dominio no debe incorporar atributos de tabla solo para complacer al ORM. Excepciones por invariantes del propio objeto son legítimas si expresan un estado del negocio.
+### Proyecto de aplicación
 
-**Comprobación técnica y aprendizaje.** Inspecciona el archivo `AceriaApp.Hexagonal.Dominio.csproj`: no contiene `ProjectReference` ni paquete EF. Intenta compilar solo ese proyecto y verifica que no depende de la configuración de LocalDB. Esta prueba tiene más significado arquitectónico que contar cuántas clases contiene la carpeta.
-
-### Bloque 3 — Proyecto de aplicación
-
-El proyecto de aplicación contiene los casos de uso, los puertos y las interfaces de los repositorios. Referencia el proyecto de dominio. No referencia el proyecto de infraestructura. No referencia el proyecto de presentación. Define las interfaces que la infraestructura implementa y los contratos que la presentación consume. El proyecto de aplicación es el orquestador del sistema.
+La aplicación organiza acciones del negocio sobre entidades y puertos. Una operación de creación puede validar una entrada de caso de uso, construir una `OrdenHexagonal`, pedir a un repositorio que la almacene y devolver su identificador. Ese recorrido pertenece a `AceriaApp.Hexagonal.Aplicacion`, mientras la tecnología que realiza el guardado debe quedar fuera. El proyecto referencia el dominio y declara necesidades mediante interfaces, pero no debería referenciar directamente una biblioteca de EF Core para ejecutar su lógica. La prueba significativa consiste en proporcionar un repositorio controlado y observar que el caso de uso coordina correctamente las operaciones. Si una modificación de SQL requiere reescribir la política de creación, esa frontera no estará cumpliendo su función.
 
 ```text
 AceriaApp.Monolito.Aplicacion/
@@ -944,34 +931,24 @@ AceriaApp.Monolito.Aplicacion/
     └── OrdenServicio.cs
 ```
 
-- **Línea 1:** `AceriaApp.Monolito.Aplicacion/` → proyecto de aplicación.
-- **Línea 2:** `Puertos/` → carpeta de puertos.
-- **Línea 3:** `Entrada/` → puertos de entrada.
-- **Línea 4:** `IOrdenServicio.cs` → puerto de entrada del servicio de órdenes.
-- **Línea 5:** `Salida/` → puertos de salida.
-- **Línea 6:** `IOrdenRepositorio.cs` → puerto de salida del repositorio.
-- **Línea 7:** `IPublicadorEventos.cs` → puerto de salida del publicador.
-- **Línea 8:** `Servicios/` → carpeta de servicios.
-- **Línea 9:** `OrdenServicio.cs` → implementación del puerto de entrada.
+
+La aplicación conoce operaciones del dominio y las necesidades expresadas mediante puertos. El esquema separa esa responsabilidad de la construcción de un contexto SQL o de la selección del código HTTP; tales decisiones corresponden a otros componentes.
+
 
 El proyecto de aplicación se caracteriza por tres propiedades. La primera es que referencia solo el proyecto de dominio. La segunda es que define las interfaces que la infraestructura implementa. La tercera es que no conoce la tecnología concreta. Las tres propiedades garantizan que la aplicación sea independiente de la infraestructura y de la presentación. La independencia permite que la aplicación se pruebe con adaptadores en memoria.
 
----
 
+El proyecto de aplicación requiere el vocabulario del dominio, pero no los detalles técnicos de almacenamiento. `IOrdenRepositorio` declara lo que la aplicación necesita del exterior, y `OrdenesCasoUso` coordina las intenciones de listar, obtener, crear y finalizar. Por eso el `.csproj` de aplicación solo referencia Dominio. El compilador hace cumplir esa frontera cuando los tipos concretos de infraestructura no están disponibles.
 
-#### Ampliación didáctica aplicada a AceriaApp
+En creación, el caso de uso limita la capacidad a 500 y construye la entidad. En finalización, obtiene la orden mediante el puerto, invoca la regla del dominio y solicita guardar. Si no encuentra el identificador, devuelve `null` para que un adaptador de entrada traduzca ese hecho. No es responsabilidad del caso de uso construir un `Results.NotFound()` ni obtener el host de ASP.NET Core.
 
-**La decisión arquitectónica.** El proyecto de aplicación requiere el vocabulario del dominio, pero no los detalles técnicos de almacenamiento. `IOrdenRepositorio` declara lo que la aplicación necesita del exterior, y `OrdenesCasoUso` coordina las intenciones de listar, obtener, crear y finalizar. Por eso el `.csproj` de aplicación solo referencia Dominio. El compilador hace cumplir esa frontera cuando los tipos concretos de infraestructura no están disponibles.
+Un error de diseño es usar `new SqlConnection` o `new HexagonalDbContext` dentro de `OrdenesCasoUso`; el servicio pasaría a depender de infraestructura y sería difícil de probar sin base. Otro error es usar un «servicio de aplicación» para agrupar todas las clases sin respetar capacidades: la separación quedaría en una sola fachada que no expresa flujos coherentes.
 
-**Ejemplo concreto en AceriaApp.** En creación, el caso de uso limita la capacidad a 500 y construye la entidad. En finalización, obtiene la orden mediante el puerto, invoca la regla del dominio y solicita guardar. Si no encuentra el identificador, devuelve `null` para que un adaptador de entrada traduzca ese hecho. No es responsabilidad del caso de uso construir un `Results.NotFound()` ni obtener el host de ASP.NET Core.
+Para demostrar la independencia, un test puede implementar un `IOrdenRepositorio` falso con una lista y comprobar qué métodos invoca el caso de uso. El resultado no depende de SQL Server. Además, el proyecto de aplicación compila sin referenciar Infraestructura.
 
-**Riesgo, alternativa y límite.** Un error de diseño es usar `new SqlConnection` o `new HexagonalDbContext` dentro de `OrdenesCasoUso`; el servicio pasaría a depender de infraestructura y sería difícil de probar sin base. Otro error es usar un «servicio de aplicación» para agrupar todas las clases sin respetar capacidades: la separación quedaría en una sola fachada que no expresa flujos coherentes.
+### Proyecto de infraestructura
 
-**Comprobación técnica y aprendizaje.** Para demostrar la independencia, un test puede implementar un `IOrdenRepositorio` falso con una lista y comprobar qué métodos invoca el caso de uso. El resultado no depende de SQL Server. Además, el proyecto de aplicación compila sin referenciar Infraestructura.
-
-### Bloque 4 — Proyecto de infraestructura
-
-El proyecto de infraestructura contiene las implementaciones concretas de los puertos de salida. Referencia el proyecto de aplicación y el proyecto de dominio. No referencia el proyecto de presentación. Implementa los repositorios, los clientes HTTP, los publicadores de eventos y los adaptadores a servicios externos. El proyecto de infraestructura es el que conoce la tecnología concreta.
+La infraestructura introduce las clases que dependen de bibliotecas y servicios externos. En el ejemplo del curso, `AceriaApp.Hexagonal.Infraestructura` utiliza EF Core para convertir operaciones del repositorio en consultas y escrituras SQL Server. Por eso puede referenciar a la aplicación y al dominio: necesita conocer el puerto y las entidades que persiste. Lo que no debería ocurrir es la relación inversa, en la que el dominio importe el `HexagonalDbContext` para completar una transición de estado. La infraestructura puede contener configuración, mapeos y adaptadores; su diseño debe garantizar que la persistencia real cumpla lo que el puerto promete. Una prueba con SQL Server verifica esa parte que un doble de repositorio no puede acreditar.
 
 ```text
 AceriaApp.Monolito.Infraestructura/
@@ -984,33 +961,24 @@ AceriaApp.Monolito.Infraestructura/
     └── ClienteInventarioHttp.cs
 ```
 
-- **Línea 1:** `AceriaApp.Monolito.Infraestructura/` → proyecto de infraestructura.
-- **Línea 2:** `Persistencia/` → carpeta de persistencia.
-- **Línea 3:** `AceriaDbContext.cs` → contexto de EF Core.
-- **Línea 4:** `OrdenRepositorioSqlServer.cs` → adaptador de repositorio.
-- **Línea 5:** `Mensajeria/` → carpeta de mensajería.
-- **Línea 6:** `PublicadorEventosRabbitMq.cs` → adaptador de publicador.
-- **Línea 7:** `Clientes/` → carpeta de clientes HTTP.
-- **Línea 8:** `ClienteInventarioHttp.cs` → adaptador de cliente HTTP.
+
+La infraestructura es la única parte del recorrido que necesita conocer el proveedor EF Core para almacenar una orden. Su referencia al puerto es esperable; una referencia inversa desde el caso de uso al repositorio concreto sería una señal de acoplamiento que hay que corregir.
+
 
 El proyecto de infraestructura se caracteriza por tres propiedades. La primera es que referencia los proyectos de aplicación y dominio. La segunda es que implementa las interfaces definidas en la aplicación. La tercera es que conoce la tecnología concreta. Las tres propiedades permiten que la infraestructura se sustituya sin modificar el núcleo. La sustitución se realiza cambiando la implementación y el registro en el contenedor de dependencias.
 
----
 
+El proyecto de infraestructura contiene implementaciones y se permite que dependa de las interfaces de aplicación y los tipos de dominio. En nuestro ejemplo hay cuatro piezas: `HexagonalDbContext`, `OrdenRepositorioSqlServer`, `ServiciosHexagonales` para registros DI y el `.csproj` con EF Core SQL Server. No hay necesidad de copiar todas esas clases en la aplicación.
 
-#### Ampliación didáctica aplicada a AceriaApp
+El contexto hace el mapeo `OrdenHexagonal` a `OrdenesHexagonales`. El repositorio traduce `AgregarAsync` a `AddAsync` y `SaveChangesAsync`, y `GuardarAsync` a una actualización confirmada. En la lectura se utiliza `AsNoTracking` para listados, mientras que una operación que cambia estado requiere el objeto rastreado o una actualización adecuada. Estas diferencias afectan a persistencia, no al contrato del caso de uso.
 
-**La decisión arquitectónica.** El proyecto de infraestructura contiene implementaciones y se permite que dependa de las interfaces de aplicación y los tipos de dominio. En nuestro ejemplo hay cuatro piezas: `HexagonalDbContext`, `OrdenRepositorioSqlServer`, `ServiciosHexagonales` para registros DI y el `.csproj` con EF Core SQL Server. No hay necesidad de copiar todas esas clases en la aplicación.
+El riesgo es introducir en infraestructura reglas que deberían ser del núcleo, como permitir finalizar dos veces una orden. Si el repositorio decide transiciones de estado, quedaría un comportamiento diferente entre SQL Server e InMemory. Los adaptadores deben mantener el significado del contrato y los tests deben cubrir qué pasa cuando cambian los efectos.
 
-**Ejemplo concreto en AceriaApp.** El contexto hace el mapeo `OrdenHexagonal` a `OrdenesHexagonales`. El repositorio traduce `AgregarAsync` a `AddAsync` y `SaveChangesAsync`, y `GuardarAsync` a una actualización confirmada. En la lectura se utiliza `AsNoTracking` para listados, mientras que una operación que cambia estado requiere el objeto rastreado o una actualización adecuada. Estas diferencias afectan a persistencia, no al contrato del caso de uso.
+Comprueba que el `.csproj` de infraestructura referencia aplicación y dominio y contiene EF Core. Después busca en dominio y aplicación cualquier referencia a `AceriaApp.Hexagonal.Infraestructura`: no debería existir. Ese análisis convierte el diagrama en una regla que el E2E puede ejecutar.
 
-**Riesgo, alternativa y límite.** El riesgo es introducir en infraestructura reglas que deberían ser del núcleo, como permitir finalizar dos veces una orden. Si el repositorio decide transiciones de estado, quedaría un comportamiento diferente entre SQL Server e InMemory. Los adaptadores deben mantener el significado del contrato y los tests deben cubrir qué pasa cuando cambian los efectos.
+### Proyecto de presentación
 
-**Comprobación técnica y aprendizaje.** Comprueba que el `.csproj` de infraestructura referencia aplicación y dominio y contiene EF Core. Después busca en dominio y aplicación cualquier referencia a `AceriaApp.Hexagonal.Infraestructura`: no debería existir. Ese análisis convierte el diagrama en una regla que el E2E puede ejecutar.
-
-### Bloque 5 — Proyecto de presentación
-
-El proyecto de presentación contiene los endpoints, los controladores y los puntos de entrada al sistema. Referencia el proyecto de aplicación. No referencia el proyecto de infraestructura directamente: la infraestructura se registra en el contenedor de dependencias del proyecto de presentación. El proyecto de presentación es el que arranca la aplicación y configura los servicios.
+El proyecto de presentación conoce la tecnología de entrada y debe traducir sus solicitudes a operaciones del núcleo. En ASP.NET Core encontramos rutas, binding de parámetros, serialización, códigos de respuesta y configuración del host. `AceriaApp.Monolito.Api` seguirá alojando los endpoints de M02 mientras incorpora el nuevo grupo hexagonal; esta convivencia permite comparar el recorrido antiguo con otro que inyecta `OrdenesCasoUso` y no conoce la implementación SQL directamente. La presentación puede necesitar acceso a registros de infraestructura para componer el sistema durante el arranque, pero ese conocimiento no debe filtrarse a los métodos de dominio ni a las reglas de negocio. El criterio de calidad es que el transporte pueda cambiar sin cambiar el significado de una operación.
 
 ```text
 AceriaApp.Monolito.Api/
@@ -1020,30 +988,24 @@ AceriaApp.Monolito.Api/
 └── appsettings.json
 ```
 
-- **Línea 1:** `AceriaApp.Monolito.Api/` → proyecto de presentación.
-- **Línea 2:** `Program.cs` → punto de entrada y configuración.
-- **Línea 3:** `Endpoints/` → carpeta de endpoints.
-- **Línea 4:** `OrdenesEndpoints.cs` → endpoints de órdenes.
-- **Línea 5:** `appsettings.json` → configuración.
+
+La presentación adapta peticiones a casos de uso. Los proyectos de API, dominio e infraestructura pueden compilarse en una misma solución y publicarse juntos, pero los handlers deben evitar trasladar la lógica de negocio al punto de entrada.
+
 
 El proyecto de presentación se caracteriza por tres propiedades. La primera es que referencia el proyecto de aplicación. La segunda es que registra la infraestructura en el contenedor de dependencias. La tercera es que expone los endpoints. Las tres propiedades permiten que el sistema se exponga en distintos protocolos sin modificar el núcleo. La presentación es el único proyecto que conoce el protocolo HTTP.
 
----
 
+La presentación decide cómo habla el exterior con el sistema. En M03 se conserva la aplicación ASP.NET Core de M02 y se incorpora una carpeta `Hexagonal` con rutas nuevas. Esa elección permite comparar los endpoints clásicos que inyectan `AceriaDbContext` con los nuevos que inyectan `OrdenesCasoUso`. La diferencia central es quién conoce el mecanismo de persistencia.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Los DTOs de presentación `CrearOrdenHexagonalRequest` y `OrdenHexagonalDto` existen para el contrato público. La entidad de dominio no debe serializarse directamente sin valorar sus invariantes y los datos que queremos exponer. En la respuesta al POST, `CreatedAtRoute` construye una URL pública; su nombre de ruta corresponde al GET por GUID de la misma API.
 
-**La decisión arquitectónica.** La presentación decide cómo habla el exterior con el sistema. En M03 se conserva la aplicación ASP.NET Core de M02 y se incorpora una carpeta `Hexagonal` con rutas nuevas. Esa elección permite comparar los endpoints clásicos que inyectan `AceriaDbContext` con los nuevos que inyectan `OrdenesCasoUso`. La diferencia central es quién conoce el mecanismo de persistencia.
+No confundas el hecho de tener un servidor web con disponer de una arquitectura de entrada bien separada. Una Minimal API puede crecer de manera acoplada si incorpora consultas SQL dentro de cada handler. La función de esta capa es traducir, validar forma y delegar el proceso. Las decisiones de negocio deben permanecer más adentro.
 
-**Ejemplo concreto en AceriaApp.** Los DTOs de presentación `CrearOrdenHexagonalRequest` y `OrdenHexagonalDto` existen para el contrato público. La entidad de dominio no debe serializarse directamente sin valorar sus invariantes y los datos que queremos exponer. En la respuesta al POST, `CreatedAtRoute` construye una URL pública; su nombre de ruta corresponde al GET por GUID de la misma API.
+Una prueba de HTTP puede enviar un JSON válido, recibir 201, extraer `Location` y llamar al GET. También puede enviar un cliente vacío y observar 400. Esos hechos demuestran que el adaptador funciona, no que el dominio conozca HTTP.
 
-**Riesgo, alternativa y límite.** No confundas el hecho de tener un servidor web con disponer de una arquitectura de entrada bien separada. Una Minimal API puede crecer de manera acoplada si incorpora consultas SQL dentro de cada handler. La función de esta capa es traducir, validar forma y delegar el proceso. Las decisiones de negocio deben permanecer más adentro.
+### Configuración de referencias entre proyectos
 
-**Comprobación técnica y aprendizaje.** Una prueba de HTTP puede enviar un JSON válido, recibir 201, extraer `Location` y llamar al GET. También puede enviar un cliente vacío y observar 400. Esos hechos demuestran que el adaptador funciona, no que el dominio conozca HTTP.
-
-### Bloque 6 — Configuración de referencias entre proyectos
-
-La configuración de referencias entre proyectos se realiza con el comando `dotnet add reference` o con el panel de Visual Studio. Cada proyecto referencia solo los proyectos que necesita según la regla de dependencia. La configuración se verifica con un test que comprueba las referencias del archivo `.csproj`. La verificación automática evita que se añadan referencias que violan la regla.
+Las referencias entre proyectos son un instrumento práctico para impedir ciertas violaciones de arquitectura. El dominio no necesita conocer aplicación; aplicación puede conocer dominio; infraestructura conoce los contratos y entidades que implementa; presentación utiliza la composición y los casos de uso. Si añadimos una referencia desde dominio hacia infraestructura, aunque el código siga compilando, habremos debilitado el aislamiento que necesitamos. Es útil revisar el grafo mediante los `.csproj` o herramientas de arquitectura, pero también hay que interpretar el motivo de cada dependencia: una biblioteca común con tipos de negocio ajenos puede esconder un acoplamiento importante. En AceriaApp la revisión de referencias complementará los tests funcionales y hará visible cuándo el compilador puede proteger una frontera.
 
 ```text
 Referencias entre proyectos:
@@ -1054,33 +1016,28 @@ AceriaApp.Monolito.Infraestructura/ → referencia Aplicacion y Dominio.
 AceriaApp.Monolito.Api/             → referencia Aplicacion e Infraestructura.
 ```
 
-- **Línea 1:** `AceriaApp.Monolito.Dominio/` → sin referencias.
-- **Línea 2:** `AceriaApp.Monolito.Aplicacion/` → referencia Dominio.
-- **Línea 3:** `AceriaApp.Monolito.Infraestructura/` → referencia Aplicacion y Dominio.
-- **Línea 4:** `AceriaApp.Monolito.Api/` → referencia Aplicacion e Infraestructura.
+
+El diagrama de referencias muestra el grafo que debería permitir la solución. El dominio permanece independiente; aplicación depende de él; infraestructura implementa sus contratos; y presentación construye los componentes que participarán en una petición. Una referencia circular rompe esa lectura.
+
 
 La configuración de referencias tiene dos consecuencias prácticas. La primera es que el compilador impide las violaciones de la regla. La segunda es que las dependencias son visibles en el archivo `.csproj`. La combinación de ambas permite que la separación física sea verificable de forma automática. El proyecto de presentación referencia la infraestructura porque necesita registrar las implementaciones en el contenedor de dependencias.
 
----
 
+Las referencias de proyecto son reglas arquitectónicas que podemos inspeccionar. Un conjunto sano es: Aplicación → Dominio; Infraestructura → Aplicación y Dominio; API → Aplicación e Infraestructura para componer. No aparece ninguna flecha saliente desde Dominio. Esta topología permite que el núcleo sobreviva a un cambio tecnológico de entrada o salida.
 
-#### Ampliación didáctica aplicada a AceriaApp
+En `.csproj` el `ProjectReference` es una decisión concreta de compilación. Si añadimos accidentalmente Infraestructura como dependencia de Aplicación, quizá el proyecto compile y todos los tests funcionales pasen, pero la arquitectura habrá dejado de cumplir el objetivo. Por eso necesitamos un segundo tipo de prueba: examinar los XML de proyecto y rechazar referencias prohibidas.
 
-**La decisión arquitectónica.** Las referencias de proyecto son reglas arquitectónicas que podemos inspeccionar. Un conjunto sano es: Aplicación → Dominio; Infraestructura → Aplicación y Dominio; API → Aplicación e Infraestructura para componer. No aparece ninguna flecha saliente desde Dominio. Esta topología permite que el núcleo sobreviva a un cambio tecnológico de entrada o salida.
+Una referencia circular no suele ser admitida por MSBuild, pero muchos errores relevantes no crean ciclos. Por ejemplo, Aplicación → Infraestructura → Dominio no es un ciclo y puede compilar, aunque viole la regla. No debemos confundir ausencia de ciclos con independencia del núcleo. Las fronteras deben describirse explícitamente.
 
-**Ejemplo concreto en AceriaApp.** En `.csproj` el `ProjectReference` es una decisión concreta de compilación. Si añadimos accidentalmente Infraestructura como dependencia de Aplicación, quizá el proyecto compile y todos los tests funcionales pasen, pero la arquitectura habrá dejado de cumplir el objetivo. Por eso necesitamos un segundo tipo de prueba: examinar los XML de proyecto y rechazar referencias prohibidas.
-
-**Riesgo, alternativa y límite.** Una referencia circular no suele ser admitida por MSBuild, pero muchos errores relevantes no crean ciclos. Por ejemplo, Aplicación → Infraestructura → Dominio no es un ciclo y puede compilar, aunque viole la regla. No debemos confundir ausencia de ciclos con independencia del núcleo. Las fronteras deben describirse explícitamente.
-
-**Comprobación técnica y aprendizaje.** Dibuja el grafo de los cuatro proyectos y señala el ensamblado que podría reemplazarse para migrar de SQL Server a otro proveedor. Si para hacerlo debes editar Aplicación, revisa la ubicación o el diseño del puerto.
+Dibuja el grafo de los cuatro proyectos y señala el ensamblado que podría reemplazarse para migrar de SQL Server a otro proveedor. Si para hacerlo debes editar Aplicación, revisa la ubicación o el diseño del puerto.
 
 ![Diagrama explicativo del punto 3.3, bloque 6](IMAGENES/3-3-proyectos.svg)
 
-*Interpretación del gráfico:* identifica las referencias de código que admite el diseño y distingue esas relaciones de las llamadas en ejecución. La figura está disponible como SVG vectorial y como PNG para consulta externa.
+identifica las referencias de código que admite el diseño y distingue esas relaciones de las llamadas en ejecución. La figura está disponible como SVG vectorial y como PNG para consulta externa.
 
-### Bloque 7 — El contenedor de dependencias como punto de unión
+### El contenedor de dependencias como punto de unión
 
-El contenedor de dependencias es el punto de unión entre el núcleo y los adaptadores. La aplicación define las interfaces. La infraestructura implementa las interfaces. La presentación registra las implementaciones en el contenedor. El contenedor resuelve las dependencias en tiempo de ejecución. La configuración del contenedor se realiza en el arranque del proyecto de presentación.
+La inyección de dependencias permite ensamblar los objetos que participan en una petición sin exigir que cada clase construya manualmente a sus colaboradores. El caso de uso declara que necesita `IOrdenRepositorio`, la infraestructura ofrece una implementación SQL Server y el host ASP.NET Core decide cómo registrarla. Esta elección se realiza fuera del núcleo, en el punto de composición. El contenedor no transforma un diseño acoplado en hexagonal por el mero hecho de invocar `AddScoped`; la separación proviene de las interfaces y de que las referencias apuntan en la dirección correcta. Una configuración errónea puede provocar fallos en tiempo de ejecución aun cuando todos los proyectos compilan, por lo que necesitaremos pruebas que resuelvan realmente el grafo y ejecuten una petición.
 
 ```csharp
 // Program.cs del proyecto de presentación
@@ -1090,30 +1047,24 @@ builder.Services.AddDbContext<AceriaDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("AceriaDb")));
 ```
 
-- **Línea 1:** `// Program.cs del proyecto de presentación` → comentario de ubicación.
-- **Línea 2:** `builder.Services.AddScoped<IOrdenRepositorio, OrdenRepositorioSqlServer>();` → registra el adaptador de salida.
-- **Línea 3:** `builder.Services.AddScoped<IOrdenServicio, OrdenServicio>();` → registra el puerto de entrada.
-- **Línea 4:** `builder.Services.AddDbContext<AceriaDbContext>(options =>` → registra el contexto de EF Core.
-- **Línea 5:** `options.UseSqlServer(builder.Configuration.GetConnectionString("AceriaDb")));` → configura SQL Server Express.
+
+El registro de DI en `Program.cs` relaciona una interfaz con su implementación concreta. La construcción del grafo es responsabilidad del host; la aplicación no debería usar un contenedor de servicios para decidir cómo obtener el repositorio.
+
 
 El contenedor de dependencias tiene dos consecuencias prácticas. La primera es que el núcleo no conoce la implementación concreta. La segunda es que la implementación puede sustituirse cambiando el registro. La combinación de ambas permite que el núcleo se pruebe con adaptadores en memoria y que la infraestructura evolucione con independencia del núcleo. El contenedor es la pieza que materializa la inversión de dependencias.
 
----
 
+El contenedor de DI realiza en ejecución la composición que los `.csproj` permiten en compilación. En `AddServiciosHexagonales` se registra el contexto SQL Server y la equivalencia `IOrdenRepositorio → OrdenRepositorioSqlServer`. También se registra `OrdenesCasoUso`, de manera que un endpoint puede solicitarlo por parámetro sin crear manualmente el repositorio. Ese enlace se sitúa deliberadamente cerca del arranque.
 
-#### Ampliación didáctica aplicada a AceriaApp
+DI no es una arquitectura por sí mismo: registrar clases acopladas no corrige sus responsabilidades. El valor aparece cuando el caso de uso solicita un contrato, y el host decide la implementación en un borde sustituible. Un test puede reemplazar el registro por otro adaptador sin recompilar los casos de uso.
 
-**La decisión arquitectónica.** El contenedor de DI realiza en ejecución la composición que los `.csproj` permiten en compilación. En `AddServiciosHexagonales` se registra el contexto SQL Server y la equivalencia `IOrdenRepositorio → OrdenRepositorioSqlServer`. También se registra `OrdenesCasoUso`, de manera que un endpoint puede solicitarlo por parámetro sin crear manualmente el repositorio. Ese enlace se sitúa deliberadamente cerca del arranque.
+Si se registra una implementación con un ciclo de vida incompatible con las dependencias internas, pueden surgir errores incluso cuando todas las interfaces están bien definidas. Un `DbContext` normalmente vive en scope de petición; el repositorio que lo utiliza no debería almacenarse en un singleton global. La elección Scoped para servicio y repositorio alinea sus ciclos de vida.
 
-**Ejemplo concreto en AceriaApp.** DI no es una arquitectura por sí mismo: registrar clases acopladas no corrige sus responsabilidades. El valor aparece cuando el caso de uso solicita un contrato, y el host decide la implementación en un borde sustituible. Un test puede reemplazar el registro por otro adaptador sin recompilar los casos de uso.
+Comprueba primero los registros en código y luego una petición HTTP real. Un test de DI que solo resuelve `IOrdenRepositorio` detecta fallos de configuración; uno de POST→GET añade evidencia de que las dependencias resueltas ejecutan correctamente el flujo completo.
 
-**Riesgo, alternativa y límite.** Si se registra una implementación con un ciclo de vida incompatible con las dependencias internas, pueden surgir errores incluso cuando todas las interfaces están bien definidas. Un `DbContext` normalmente vive en scope de petición; el repositorio que lo utiliza no debería almacenarse en un singleton global. La elección Scoped para servicio y repositorio alinea sus ciclos de vida.
+### Separación física y tests
 
-**Comprobación técnica y aprendizaje.** Comprueba primero los registros en código y luego una petición HTTP real. Un test de DI que solo resuelve `IOrdenRepositorio` detecta fallos de configuración; uno de POST→GET añade evidencia de que las dependencias resueltas ejecutan correctamente el flujo completo.
-
-### Bloque 8 — Separación física y tests
-
-La separación física facilita los tests porque cada proyecto de tests referencia solo los proyectos que necesita. Los tests del dominio referencian solo el proyecto de dominio. Los tests de la aplicación referencian el proyecto de aplicación y el de dominio. Los tests de la infraestructura referencian el proyecto de infraestructura. Los tests de la presentación referencian el proyecto de presentación. La separación permite aislar cada capa en sus pruebas.
+Las pruebas deben seguir la frontera que intentan comprobar. Para una entidad de dominio, basta con ejecutar reglas e invariantes sin infraestructura. Para un caso de uso, resulta útil un doble del puerto que registre operaciones o devuelva situaciones controladas. Para el repositorio de EF Core, en cambio, necesitamos un proveedor SQL Server real si afirmamos que su persistencia funciona de esa manera. Finalmente, una prueba HTTP comprueba la traducción de rutas, estados y respuestas de la aplicación. Separar proyectos ayuda a organizar esas baterías y a diagnosticar fallos con precisión. La suma de pruebas no se interpreta solo por cantidad: importa saber qué propiedad de la arquitectura protege cada una y cuáles dependencias participan realmente.
 
 ```text
 Proyectos de tests y sus referencias:
@@ -1124,33 +1075,28 @@ AceriaApp.Infraestructura.Tests/ → referencia Infraestructura.
 AceriaApp.Api.Tests/             → referencia Api.
 ```
 
-- **Línea 1:** `AceriaApp.Dominio.Tests/` → referencia el proyecto de dominio.
-- **Línea 2:** `AceriaApp.Aplicacion.Tests/` → referencia aplicación y dominio.
-- **Línea 3:** `AceriaApp.Infraestructura.Tests/` → referencia infraestructura.
-- **Línea 4:** `AceriaApp.Api.Tests/` → referencia la API.
+
+Los proyectos de tests se orientan a distintos niveles: dominio, aplicación, persistencia e HTTP. La existencia de carpetas distintas ayuda a encontrarlos, pero las aserciones deben demostrar qué parte del comportamiento está realmente aislada o integrada.
+
 
 La separación física tiene dos consecuencias prácticas para los tests. La primera es que cada proyecto de tests solo compila si sus dependencias están correctamente referenciadas. La segunda es que los tests del dominio no necesitan base de datos ni framework web. La combinación de ambas reduce el tiempo de ejecución de los tests y facilita su mantenimiento. La separación es una inversión que se recupera en cada ejecución de la suite.
 
----
 
+La separación física multiplica las fronteras que podemos probar. La entidad se verifica de forma aislada; el caso de uso se prueba con un repositorio falso; el adaptador EF Core se prueba con base controlada; el servidor se verifica con `WebApplicationFactory`. No todos los tests deben iniciar ASP.NET Core, porque eso haría las pruebas más lentas y dificultaría localizar el origen de un fallo.
 
-#### Ampliación didáctica aplicada a AceriaApp
+En este módulo conservamos las pruebas HTTP de M02, añadimos pruebas de catálogos de 3.1–3.4 y pruebas de los endpoints hexagonales. `HexagonalFactory` obtiene dos bases SQL Server aisladas: una para `AceriaDbContext`, que atiende las rutas antiguas, y otra para `HexagonalDbContext`, que atiende las nuevas. Así comprobamos su convivencia sin mezclar sus datos ni sus esquemas.
 
-**La decisión arquitectónica.** La separación física multiplica las fronteras que podemos probar. La entidad se verifica de forma aislada; el caso de uso se prueba con un repositorio falso; el adaptador EF Core se prueba con base controlada; el servidor se verifica con `WebApplicationFactory`. No todos los tests deben iniciar ASP.NET Core, porque eso haría las pruebas más lentas y dificultaría localizar el origen de un fallo.
+La cobertura debe medirse por propiedades verificadas y no solo por número de tests. Tres pruebas que llaman al mismo GET no compensan la falta de comprobación de dirección de referencias. Necesitamos pruebas de flujo, de estado, de errores y de arquitectura. El E2E también debe construir los proyectos desde el manual del alumno en lugar de compilar únicamente un resultado terminado.
 
-**Ejemplo concreto en AceriaApp.** En este módulo conservamos las pruebas HTTP de M02, añadimos pruebas de catálogos de 3.1–3.4 y pruebas de los endpoints hexagonales. `HexagonalFactory` obtiene dos bases SQL Server aisladas: una para `AceriaDbContext`, que atiende las rutas antiguas, y otra para `HexagonalDbContext`, que atiende las nuevas. Así comprobamos su convivencia sin mezclar sus datos ni sus esquemas.
-
-**Riesgo, alternativa y límite.** La cobertura debe medirse por propiedades verificadas y no solo por número de tests. Tres pruebas que llaman al mismo GET no compensan la falta de comprobación de dirección de referencias. Necesitamos pruebas de flujo, de estado, de errores y de arquitectura. El E2E también debe construir los proyectos desde el manual del alumno en lugar de compilar únicamente un resultado terminado.
-
-**Comprobación técnica y aprendizaje.** Cuando un test falle, determina primero a qué frontera pertenece. Un 500 en POST puede venir de DI o de persistencia; un error de compilación en dominio suele indicar un problema de tipos o dependencias; un 409 inesperado puede revelar una transición aplicada dos veces.
+Cuando un test falle, determina primero a qué frontera pertenece. Un 500 en POST puede venir de DI o de persistencia; un error de compilación en dominio suele indicar un problema de tipos o dependencias; un 409 inesperado puede revelar una transición aplicada dos veces.
 
 ![Diagrama explicativo del punto 3.3, bloque 8](IMAGENES/3-3-tests.svg)
 
-*Interpretación del gráfico:* identifica las referencias de código que admite el diseño y distingue esas relaciones de las llamadas en ejecución. La figura está disponible como SVG vectorial y como PNG para consulta externa.
+identifica las referencias de código que admite el diseño y distingue esas relaciones de las llamadas en ejecución. La figura está disponible como SVG vectorial y como PNG para consulta externa.
 
-### Bloque 9 — Separación física y despliegue
+### Separación física y despliegue
 
-La separación física facilita el despliegue porque cada proyecto puede publicarse de forma independiente. El proyecto de dominio se publica como una biblioteca reutilizable. El proyecto de aplicación se publica como una biblioteca. El proyecto de infraestructura se publica como una biblioteca. El proyecto de presentación se publica como una aplicación ejecutable. La separación permite que la presentación se sustituya sin modificar las bibliotecas.
+La separación en ensamblados no exige automáticamente desplegar varios procesos. Podemos publicar un único host ASP.NET Core que cargue las bibliotecas de dominio, aplicación e infraestructura y continuar teniendo un monolito modular desde el punto de vista operativo. Esto es lo que ocurre en el recorrido de M03: la diferencia arquitectónica se observa en el código y los tests, no en que cada biblioteca se convierta en un microservicio independiente. Más adelante, si Producción e Inventario requieren despliegues separados, los mismos principios ayudarán a decidir qué partes pertenecen a cada servicio. Confundir proyecto .NET con unidad de despliegue suele conducir a soluciones artificialmente distribuidas. Antes de añadir procesos conviene demostrar que el límite lógico ya está bien diseñado.
 
 ```text
 Publicación de proyectos:
@@ -1161,33 +1107,28 @@ Infraestructura/ → biblioteca reutilizable.
 Api/             → aplicación ejecutable.
 ```
 
-- **Línea 1:** `Dominio/` → biblioteca reutilizable.
-- **Línea 2:** `Aplicacion/` → biblioteca reutilizable.
-- **Línea 3:** `Infraestructura/` → biblioteca reutilizable.
-- **Línea 4:** `Api/` → aplicación ejecutable.
+
+El esquema conserva un único despliegue aunque el código compile varias bibliotecas. Esto permite evolucionar hacia arquitectura hexagonal sin comprometer desde el comienzo la operación del sistema con varios procesos remotos.
+
 
 La separación física tiene dos consecuencias prácticas para el despliegue. La primera es que las bibliotecas pueden reutilizarse en distintas aplicaciones. La segunda es que la aplicación ejecutable solo contiene el código de arranque. La combinación de ambas reduce el tamaño del artefacto desplegable y facilita el despliegue. La separación es una inversión que se recupera en cada despliegue.
 
----
 
+Separar cuatro proyectos .NET dentro de una solución no obliga a desplegarlos como cuatro microservicios. Si `AceriaApp.Api` publica todo el código como un solo proceso, seguimos teniendo un monolito modular con fronteras explícitas. Las capas facilitan reorganizar responsabilidades, pero no introducen automáticamente colas, balances de carga ni contratos entre procesos.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Para crear servicios independientes harían falta decisiones adicionales sobre comunicación, ownership de datos, transacciones distribuidas, autenticación y observabilidad. Nada de eso se obtiene con `ProjectReference`. Un solo proceso con una base puede resultar más eficiente para una acería pequeña o un primer proyecto de formación; distribuirlo por obligación aumentaría el coste operativo.
 
-**La decisión arquitectónica.** Separar cuatro proyectos .NET dentro de una solución no obliga a desplegarlos como cuatro microservicios. Si `AceriaApp.Api` publica todo el código como un solo proceso, seguimos teniendo un monolito modular con fronteras explícitas. Las capas facilitan reorganizar responsabilidades, pero no introducen automáticamente colas, balances de carga ni contratos entre procesos.
+La hexagonal ayuda a elegir dónde insertar un adaptador de eventos, pero no resuelve cómo se entregan mensajes o cómo se recupera una transacción fallida. Dejar claras estas limitaciones evita vender al alumno una propiedad que el código del curso no demuestra. El objetivo M03 es aislar dependencias y verificar una nueva ruta hexagonal, no construir un despliegue de microservicios de producción.
 
-**Ejemplo concreto en AceriaApp.** Para crear servicios independientes harían falta decisiones adicionales sobre comunicación, ownership de datos, transacciones distribuidas, autenticación y observabilidad. Nada de eso se obtiene con `ProjectReference`. Un solo proceso con una base puede resultar más eficiente para una acería pequeña o un primer proyecto de formación; distribuirlo por obligación aumentaría el coste operativo.
-
-**Riesgo, alternativa y límite.** La hexagonal ayuda a elegir dónde insertar un adaptador de eventos, pero no resuelve cómo se entregan mensajes o cómo se recupera una transacción fallida. Dejar claras estas limitaciones evita vender al alumno una propiedad que el código del curso no demuestra. El objetivo M03 es aislar dependencias y verificar una nueva ruta hexagonal, no construir un despliegue de microservicios de producción.
-
-**Comprobación técnica y aprendizaje.** Pide al alumno una decisión con dos escenarios: evolución en un único equipo y necesidad de que varios equipos desplieguen dominios diferentes. En el primero puede bastar un monolito modular; en el segundo la separación física es una ayuda para una extracción futura, no una evidencia de que ya ocurrió.
+Pide al alumno una decisión con dos escenarios: evolución en un único equipo y necesidad de que varios equipos desplieguen dominios diferentes. En el primero puede bastar un monolito modular; en el segundo la separación física es una ayuda para una extracción futura, no una evidencia de que ya ocurrió.
 
 ![Diagrama explicativo del punto 3.3, bloque 9](IMAGENES/3-3-despliegue.svg)
 
-*Interpretación del gráfico:* identifica las referencias de código que admite el diseño y distingue esas relaciones de las llamadas en ejecución. La figura está disponible como SVG vectorial y como PNG para consulta externa.
+identifica las referencias de código que admite el diseño y distingue esas relaciones de las llamadas en ejecución. La figura está disponible como SVG vectorial y como PNG para consulta externa.
 
-### Bloque 10 — Aplicación al proyecto del curso
+### Aplicación al proyecto del curso
 
-El proyecto del curso aplica la separación física entre dominio, aplicación e infraestructura. El proyecto de dominio contiene las entidades. El proyecto de aplicación contiene los puertos y los servicios. El proyecto de infraestructura contiene los repositorios y los adaptadores. El proyecto de presentación contiene los endpoints y la configuración. Las referencias entre proyectos respetan la regla de dependencia. La separación se valida con un test que comprueba las referencias del archivo `.csproj`.
+La etapa 3.3 da forma física a lo que antes aparecía como una clasificación conceptual. Creamos proyectos para Dominio, Aplicación e Infraestructura y configuramos sus referencias, conservando la API REST existente de M02. `OrdenHexagonal` protegerá reglas, un caso de uso conocerá `IOrdenRepositorio` y el adaptador SQL Server dependerá de esa abstracción. Todavía faltará conectar todas las piezas al host y exponer un recorrido HTTP nuevo, algo que se completará en 3.4. Por eso la evidencia de 3.3 incluye compilación y pruebas del grafo de dependencias, sin afirmar que la arquitectura ya recibe peticiones hexagonales reales. El alumno debe poder distinguir «estructura preparada» de «comportamiento conectado y ejecutado».
 
 ```text
 Aplicación al proyecto del curso:
@@ -1200,18 +1141,15 @@ Regla            → referencias hacia el interior.
 Validación       → test de referencias entre proyectos.
 ```
 
-- **Línea 1:** `Dominio/` → entidades y reglas de negocio.
-- **Línea 2:** `Aplicacion/` → puertos y servicios.
-- **Línea 3:** `Infraestructura/` → repositorios y adaptadores.
-- **Línea 4:** `Api/` → endpoints y configuración.
-- **Línea 5:** `Regla` → referencias hacia el interior.
-- **Línea 6:** `Validación` → test de referencias entre proyectos.
+
+La organización final facilita localizar reglas, contratos, adaptadores y pruebas en la misma solución. Para que sea algo más que un diagrama, las referencias deben corresponder al sentido de dependencia descrito y los casos de uso deben utilizar las interfaces declaradas.
+
 
 La aplicación de la separación física prepara el proyecto para el punto 3.4. El punto 3.4 estudiará la implementación de la arquitectura hexagonal en ASP.NET Core con proyectos separados. El punto 3.3 establece la base que se aplicará en el punto 3.4. La separación física es la estructura que soporta la arquitectura hexagonal.
 
 ---
 
-### Resumen rápido de la teoría
+### Lo que debe demostrar la separación física
 
 - La separación entre capas puede ser lógica o física.
 - La separación física agrupa cada capa en un proyecto independiente.
@@ -1222,18 +1160,14 @@ La aplicación de la separación física prepara el proyecto para el punto 3.4. 
 - La separación física facilita los tests y el despliegue.
 - La separación física se verifica con tests que comprueban las referencias del archivo `.csproj`.
 
----
 
+La etapa 3.3 es el punto donde el ejemplo deja de ser únicamente un catálogo de conceptos y crea ensamblados reales. Se añaden `AceriaApp.Hexagonal.Dominio`, `AceriaApp.Hexagonal.Aplicacion` y `AceriaApp.Hexagonal.Infraestructura`, que se compilan por separado y tienen un grafo de referencias controlado. El código de M02 permanece en su proyecto API para preservar el itinerario anterior.
 
-#### Ampliación didáctica aplicada a AceriaApp
+La entidad `OrdenHexagonal` representa una orden con identidad y estado. El puerto de aplicación permite listar, obtener, agregar y guardar. El caso de uso conoce ese contrato. La infraestructura implementa el repositorio con EF Core y configura una tabla independiente. Esta estructura prepara 3.4, donde el host REST registrará adaptadores y expondrá endpoints que la utilicen.
 
-**La decisión arquitectónica.** La etapa 3.3 es el punto donde el ejemplo deja de ser únicamente un catálogo de conceptos y crea ensamblados reales. Se añaden `AceriaApp.Hexagonal.Dominio`, `AceriaApp.Hexagonal.Aplicacion` y `AceriaApp.Hexagonal.Infraestructura`, que se compilan por separado y tienen un grafo de referencias controlado. El código de M02 permanece en su proyecto API para preservar el itinerario anterior.
+El alumno debe comprender que declarar un proyecto no significa ejecutar su comportamiento. Hasta que se registre `AddServiciosHexagonales` y se llame a `MapHexagonalOrdenes`, los nuevos ensamblados pueden compilar pero no recibir peticiones. Esa distinción es importante para no dar por cerrada una arquitectura cuando solo se han creado carpetas.
 
-**Ejemplo concreto en AceriaApp.** La entidad `OrdenHexagonal` representa una orden con identidad y estado. El puerto de aplicación permite listar, obtener, agregar y guardar. El caso de uso conoce ese contrato. La infraestructura implementa el repositorio con EF Core y configura una tabla independiente. Esta estructura prepara 3.4, donde el host REST registrará adaptadores y expondrá endpoints que la utilicen.
-
-**Riesgo, alternativa y límite.** El alumno debe comprender que declarar un proyecto no significa ejecutar su comportamiento. Hasta que se registre `AddServiciosHexagonales` y se llame a `MapHexagonalOrdenes`, los nuevos ensamblados pueden compilar pero no recibir peticiones. Esa distinción es importante para no dar por cerrada una arquitectura cuando solo se han creado carpetas.
-
-**Comprobación técnica y aprendizaje.** Como hito, ejecuta los tests acumulados y verifica el grafo de dependencias. El siguiente punto no debería reescribir las clases del dominio para incorporar HTTP: solo añadirá el adaptador de entrada y la composición.
+Como hito, ejecuta los tests acumulados y verifica el grafo de dependencias. El siguiente punto no debería reescribir las clases del dominio para incorporar HTTP: solo añadirá el adaptador de entrada y la composición.
 
 
 ## Estudio integrador 3.3 — La solución .NET como control arquitectónico
