@@ -13,17 +13,17 @@ Módulo 1: Introducción a los microservicios
 
 ---
 
-## Desarrollo teórico
+## Del diseño del código a la frontera de despliegue
 
-### Bloque 1 — Definición de arquitectura monolítica
+Antes de comparar estilos, conviene seguir una misma operación de negocio en ambos. Crearemos la referencia de Órdenes de AceriaApp como una aplicación que atiende HTTP, aplica reglas y persiste datos. Sobre ese recorrido observaremos qué ocurre cuando todo se publica junto y qué nuevas obligaciones aparecen si se separan procesos. El propósito no es asociar una arquitectura con el éxito y otra con el fracaso, sino entender su efecto sobre cambios, operación y consistencia.
 
-**Esquema visual del concepto**
+### Definición de arquitectura monolítica
 
 ![Comparación de límites de despliegue entre monolito modular y microservicios](figuras/01-monolito-vs-servicios.png)
 
 *Figura. Comparación de límites de despliegue entre monolito modular y microservicios.*
 
-Una arquitectura monolítica es un estilo de diseño de software en el que todos los componentes funcionales de una aplicación se empaquetan y se despliegan como una única unidad. El término no implica por sí mismo una mala práctica: numerosas aplicaciones empresariales consolidadas se han construido con este enfoque durante décadas. En un monolito, la interfaz de presentación, la lógica de negocio y el acceso a datos residen en el mismo proceso y, con frecuencia, en el mismo artefacto desplegable. La compilación produce un único ensamblado o un conjunto reducido de ensamblados que se ejecutan juntos. Esta concentración simplifica la operación porque existe un único punto de despliegue, un único proceso que arrancar y un único registro donde investigar errores. La comunicación entre componentes se realiza mediante llamadas a métodos en memoria, lo que elimina la latencia de red y reduce la complejidad de la coordinación distribuida. La consecuencia inmediata es que el modelo mental del sistema es sencillo de construir y de explicar.
+El rasgo que define a una aplicación monolítica no es la cantidad de carpetas ni de proyectos de Visual Studio, sino su **unidad de despliegue**. Podemos separar presentación, casos de uso, dominio y persistencia en varias bibliotecas y aun así publicar una única aplicación ASP.NET Core: cuando se modifica una capacidad de negocio, se genera y distribuye de nuevo ese conjunto. Este modelo ha sustentado numerosas aplicaciones empresariales porque facilita la comunicación interna, la puesta en marcha y el diagnóstico de los primeros errores. El riesgo aparece si confundimos esa comodidad operativa con permiso para mezclar responsabilidades. En AceriaApp interesa comenzar por una unidad ejecutable que permita seguir una orden desde la petición HTTP hasta SQL Server, pero cuyos componentes se organicen de manera que sus dependencias puedan inspeccionarse y evolucionar. La modularidad es una propiedad del diseño; la distribución entre procesos es una decisión posterior.
 
 La estructura interna de un monolito suele organizarse por capas: presentación, aplicación, dominio e infraestructura. Cada capa depende de la inferior y expone una interfaz estable al resto del sistema. Esta organización por capas permite separar responsabilidades dentro del proceso, aunque todas ellas compartan el mismo ciclo de vida de compilación y despliegue. El código fuente completo reside en un único repositorio y, normalmente, en una única solución de Visual Studio. Los equipos trabajan sobre el mismo conjunto de archivos, lo que facilita la reutilización de utilidades comunes y evita duplicaciones accidentales de lógica. La transacción de base de datos se convierte en el mecanismo natural para garantizar la consistencia, porque todas las operaciones ocurren sobre el mismo contexto de persistencia. La clase Orden pertenece al mismo proceso que las rutas HTTP, aunque residan en carpetas distintas. Si una acción de producción empieza a invocar directamente utilidades de inventario desde cada endpoint, la estructura por carpetas no bastará para preservar la autonomía lógica.
 
@@ -35,18 +35,12 @@ AceriaApp.Monolito/
 └── AceriaApp.Monolito.Infraestructura/ → EF Core, repositorios, migraciones
 ```
 
-**Lectura guiada del ejemplo**
+El árbol distingue cuatro responsabilidades que conviene reconocer antes de escribir código. `Api` recibe peticiones; `Aplicacion` organiza los casos de uso; `Dominio` concentra las reglas que deberían seguir siendo válidas aunque cambiase el transporte; `Infraestructura` se ocupa de EF Core y los recursos externos. La estructura no representa cuatro microservicios, sino cuatro proyectos que pueden publicarse juntos. Su utilidad es que, al revisar una operación de órdenes, el alumno pueda identificar dónde debería tomarse cada decisión.
 
-- **Línea 1:** AceriaApp.Monolito.Api/ → proyecto que expone los endpoints HTTP y arranca el proceso.
-- **Línea 2:** AceriaApp.Monolito.Aplicacion/ → proyecto que contiene los casos de uso y orquesta el dominio.
-- **Línea 3:** AceriaApp.Monolito.Dominio/ → proyecto que contiene entidades, value objects y reglas invariantes.
-- **Línea 4:** AceriaApp.Monolito.Infraestructura/ → proyecto que implementa la persistencia y los servicios externos.
 
 Esta separación lógica de proyectos dentro de un mismo despliegue prepara el terreno para entender por qué los microservicios aplican el mismo principio de separación, pero con un límite físico distinto. La organización por capas dentro de un monolito no impide que el sistema crezca en complejidad interna. Cuando varias funcionalidades comparten el mismo proceso, cualquier cambio en una de ellas obliga a recompilar y redesplegar el conjunto completo. La transacción única garantiza consistencia fuerte, pero también acopla el ciclo de vida de todas las funcionalidades. Este acoplamiento es aceptable en dominios pequeños y estables, y se vuelve problemático cuando el dominio crece y los equipos se multiplican. Esto no impide diseñar módulos con contratos internos bien definidos; la modularidad no exige distribuir procesos. El primer control de calidad consiste en localizar quién conoce a quién: presentación puede invocar aplicación, y persistencia puede implementar necesidades definidas en el núcleo.
 
-**Aplicación adicional:** En AceriaApp, la condición monolítica se verifica observando el límite de despliegue: el host de ASP.NET Core registra el DbContext, configura los endpoints y publica una aplicación. La separación entre capas debe comprobarse por la dirección de las dependencias y por la facilidad para modificar una regla sin alterar el transporte. Una solución con cuatro bibliotecas que se despliegan juntas sigue siendo monolítica.
-
-#### Profundización: módulos lógicos y límites de despliegue
+En AceriaApp, la condición monolítica se verifica observando el límite de despliegue: el host de ASP.NET Core registra el DbContext, configura los endpoints y publica una aplicación. La separación entre capas debe comprobarse por la dirección de las dependencias y por la facilidad para modificar una regla sin alterar el transporte. Una solución con cuatro bibliotecas que se despliegan juntas sigue siendo monolítica.
 
 La estructura de un monolito no se determina por el número de proyectos de Visual Studio. Una solución puede contener bibliotecas de dominio, aplicación e infraestructura, compilar varios ensamblados y seguir desplegándose como una sola aplicación. Para identificar la arquitectura hay que seguir una petición desde Kestrel hasta su almacenamiento: si los endpoints invocan componentes dentro de un proceso y todas las capacidades se actualizan como una unidad, el límite operativo es monolítico. Separar el código en bibliotecas ayuda a ordenar las dependencias; no crea, por sí mismo, independencia de despliegue. Este matiz explica por qué el primer estado de AceriaApp utiliza una API ejecutable, aunque ya se distingan carpetas de dominio e infraestructura.
 
@@ -65,9 +59,9 @@ La comparación muestra que modularizar no equivale a distribuir. Antes de separ
 
 ---
 
-### Bloque 2 — Características operativas del monolito
+### Características operativas del monolito
 
-El despliegue de un monolito consiste en publicar un único artefacto en un servidor o en un contenedor. La configuración se concentra en un archivo appsettings.json y en variables de entorno del proceso. El escalado se realiza replicando el artefacto completo: si una funcionalidad concreta consume más recursos que las demás, se replica todo el proceso, no solo esa funcionalidad. Esta característica se conoce como escalado horizontal homogéneo. Su principal ventaja es la simplicidad: no hay que decidir qué componente escalar ni cómo coordinar réplicas de distintos servicios. Su principal inconveniente es el desperdicio de recursos, porque se replica código que no lo necesita.
+Imaginemos que tenemos que publicar una corrección en la validación de órdenes. En un monolito típico, el equipo ejecuta el pipeline común, despliega una versión de la aplicación y comprueba que el mismo proceso puede atender el resto de las funcionalidades. No necesita coordinar las versiones de varios servicios remotos; en cambio, debe someter el conjunto a una regresión suficiente para detectar efectos colaterales. El mismo criterio se aprecia al escalar: si se duplican las instancias del host, se duplica su consumo de memoria y de recursos, incluso cuando la carga procede de una parte pequeña del negocio. Una configuración centralizada, como `appsettings.json`, resulta fácil de localizar, pero exige saber qué valores pertenecen a cada entorno y cuáles nunca deben almacenarse en un repositorio. Estas características explican por qué el despliegue monolítico es sencillo sin que sea automáticamente barato a cualquier escala.
 
 ```json
 {
@@ -83,19 +77,8 @@ El despliegue de un monolito consiste en publicar un único artefacto en un serv
 }
 ```
 
-**Lectura guiada del ejemplo**
+La configuración muestra dos asuntos diferentes. `ConnectionStrings` establece qué almacén utilizará EF Core; `Logging:LogLevel` determina qué eventos se enviarán a los registros. Ambos pueden cambiar entre el equipo de desarrollo y un despliegue, sin recompilar el código de negocio. La contraseña, cuando exista, no debería codificarse en este archivo versionado; para ese dato se utilizan secretos de desarrollo o configuración protegida del entorno.
 
-- **Línea 1:** { → abre el objeto raíz de configuración.
-- **Línea 2:** "ConnectionStrings": { → abre la sección donde se declaran las cadenas de conexión.
-- **Línea 3:** "AceriaDb": "Server=.\SQLEXPRESS;..." → cadena de conexión a SQL Server Express con autenticación integrada.
-- **Línea 4:** }, → cierra la sección de cadenas de conexión.
-- **Línea 5:** "Logging": { → abre la sección de configuración de logging.
-- **Línea 6:** "LogLevel": { → abre la sección de niveles de log.
-- **Línea 7:** "Default": "Information" → nivel por defecto para todos los proveedores.
-- **Línea 8:** "Microsoft.AspNetCore": "Warning" → reduce el ruido de los logs del framework.
-- **Línea 9:** } → cierra la sección de niveles.
-- **Línea 10:** } → cierra la sección de logging.
-- **Línea 11:** } → cierra el objeto raíz.
 
 El archivo de configuración único refleja la naturaleza centralizada del monolito: una sola fuente de verdad para todos los componentes. La observabilidad en un monolito se concentra en un único flujo de logs. Cuando ocurre un error, existe un solo archivo o una sola consola donde buscar la traza completa. Esta concentración acelera el diagnóstico inicial, pero también genera ruido: los logs de todas las funcionalidades se mezclan en el mismo flujo. El versionado del artefacto es lineal y cada versión contiene el estado de todas las funcionalidades en ese instante. No es posible desplegar una funcionalidad nueva sin arrastrar los cambios de las demás que se hayan fusionado en la misma rama.
 
@@ -103,9 +86,9 @@ La cadena de conexión del ejemplo utiliza autenticación integrada y un servido
 
 ---
 
-### Bloque 3 — Ventajas del monolito
+### Ventajas del monolito
 
-La primera ventaja del monolito es la simplicidad operativa. Un único artefacto implica un único pipeline de compilación, un único proceso de despliegue y un único punto de monitorización. Los equipos pequeños pueden operar el sistema sin necesidad de infraestructura de orquestación. Esta simplicidad se traduce en menores costes de arranque y en una curva de aprendizaje más suave para desarrolladores que se incorporan al proyecto. La segunda ventaja es la consistencia transaccional. Al compartir un único contexto de base de datos, las operaciones que afectan a varias tablas pueden ejecutarse dentro de una transacción ACID sin necesidad de patrones de compensación ni de coordinación distribuida.
+La principal ventaja práctica de comenzar con un monolito bien organizado es que permite avanzar desde una necesidad del negocio hasta una respuesta observable con pocos componentes operativos. Una petición entra por Kestrel, invoca código del mismo proceso, utiliza un contexto de datos y devuelve un resultado. Este recorrido se puede depurar con un solo entorno de desarrollo y, cuando los cambios de varias entidades pertenecen al mismo ámbito de persistencia, puede cerrarse mediante una transacción local. La transacción es especialmente útil en una aplicación inicial como AceriaApp: si crear una orden y registrar un movimiento requieren confirmarse juntos, una transacción permite aceptar ambas escrituras o deshacerlas. La ventaja no proviene de que el monolito sea «mejor», sino de que evita introducir fronteras de red antes de necesitar sus beneficios. Conviene diferenciar este ejemplo conceptual de las operaciones que la primera etapa del curso implementa realmente.
 
 ```csharp
 using var scope = app.Services.CreateScope();
@@ -117,21 +100,12 @@ await db.SaveChangesAsync();
 await tx.CommitAsync();
 ```
 
-**Lectura guiada del ejemplo**
+El ejemplo abre una transacción sobre `AceriaDbContext`, añade dos cambios y solo los confirma después de que `SaveChangesAsync` termine correctamente. Si la operación falla antes de `CommitAsync`, el ámbito transaccional permite revertir las escrituras pendientes. El fragmento es un esquema pedagógico: para ejecutarlo habría que disponer también de las entidades, propiedades y `DbSet` correspondientes a Inventario. Lo importante aquí es comprender qué garantía aporta una única base transaccional, no dar por implementado ese flujo en la primera práctica.
 
-- **Línea 1:** using var scope = app.Services.CreateScope(); → crea un ámbito de servicios para resolver dependencias con ciclo de vida scoped.
-- **Línea 2:** var db = scope.ServiceProvider.GetRequiredService<AceriaDbContext>(); → obtiene el contexto de EF Core desde el contenedor de dependencias.
-- **Línea 3:** await using var tx = await db.Database.BeginTransactionAsync(); → abre una transacción explícita sobre SQL Server Express.
-- **Línea 4:** db.Ordenes.Add(new Orden { ... }); → añade una orden al DbSet de órdenes.
-- **Línea 5:** db.Inventario.Add(new Movimiento { ... }); → añade un movimiento al DbSet de inventario dentro de la misma transacción.
-- **Línea 6:** await db.SaveChangesAsync(); → persiste los cambios pendientes en la base de datos.
-- **Línea 7:** await tx.CommitAsync(); → confirma la transacción y hace visibles los cambios.
 
 Esta transacción única es imposible de replicar de forma directa en microservicios, donde cada servicio posee su propia base de datos y la consistencia se gestiona con patrones como Saga. La tercera ventaja es la facilidad para refactorizar. Cuando todo el código reside en el mismo repositorio y en el mismo proceso, renombrar una clase o mover una responsabilidad entre capas es una operación mecánica que el IDE resuelve sin coordinación entre equipos. La cuarta ventaja es la depuración: se puede ejecutar el sistema completo en la máquina del desarrollador con un único F5 y establecer puntos de interrupción en cualquier capa sin necesidad de levantar varios procesos.
 
 La transacción del ejemplo agrupa varias operaciones, pero la mera presencia de `BeginTransactionAsync` no garantiza que todas las entidades y tablas pertenezcan al modelo. En el punto inicial solo se incluye la entidad Orden; la operación con Movimiento e Inventario es conceptual y requiere modelar esos tipos antes de compilarse. `SaveChangesAsync` ejecuta las escrituras pendientes; `CommitAsync` decide la confirmación definitiva de la transacción explícita. Si el guardado falla, disponer correctamente la transacción evita que los cambios queden confirmados. También debe distinguirse un test unitario de una comprobación transaccional: un test de propiedades de Orden no confirma el funcionamiento de SQL Server. La ventaja ACID se demuestra ejecutando una operación real, provocando deliberadamente un error entre dos escrituras y verificando que ninguna queda persistida. Esta evidencia fundamenta la comparación posterior con los costes de coordinación distribuida.
-
-#### Profundización: qué demuestra realmente una transacción
 
 Una transacción de EF Core agrupa escrituras realizadas a través de la misma conexión y transacción de base de datos. La secuencia de crear una orden y registrar un movimiento parece simple, pero presenta dos condiciones distintas: el modelo debe contener ambas entidades y la ejecución debe llegar al mismo ámbito transaccional. En el primer estado de AceriaApp existe `Orden`, no la implementación completa de inventario. Por tanto, el ejemplo conjunto de este bloque describe la garantía que se quiere enseñar; no debe copiarse sin añadir antes las entidades y el mapeo faltantes. Diferenciar un fragmento conceptual de uno ejecutable evita que el alumno atribuya al proyecto capacidades que aún no ha construido.
 
@@ -142,9 +116,9 @@ Para preparar una verificación reproducible deben anotarse el estado inicial de
 
 ---
 
-### Bloque 4 — Limitaciones del monolito
+### Limitaciones del monolito
 
-La primera limitación es el acoplamiento del ciclo de vida. Cualquier cambio, por pequeño que sea, obliga a recompilar y redesplegar el artefacto completo. Cuando el pipeline es largo, incluso una corrección pequeña debe recorrer el mismo ciclo completo de publicación. La segunda limitación es el escalado homogéneo. Si un endpoint concreto recibe diez veces más tráfico que el resto, hay que replicar todo el proceso y no solo ese endpoint. El coste de infraestructura crece de forma desproporcionada respecto a la carga real. La tercera limitación es la barrera tecnológica: todos los componentes deben compartir el mismo stack, la misma versión del runtime y las mismas bibliotecas.
+Los inconvenientes de un monolito se manifiestan sobre todo cuando el **ciclo de vida compartido** deja de corresponderse con las necesidades del negocio. Si Órdenes tiene mucha más carga que el resto de capacidades, replicar el host completo consume recursos que esas otras funciones no demandan. Si distintos equipos necesitan publicar cambios diariamente, todos dependen de una misma cadena de integración y de una regresión común. Y si un componente monopoliza memoria o bloquea recursos críticos, la incidencia puede afectar a rutas que no tienen relación funcional con él. Ninguna de estas limitaciones implica que un monolito esté condenado a fracasar: separar módulos, limitar dependencias y medir cuellos de botella puede aplazar durante años una división en servicios. La decisión de distribuir debe responder a dificultades observadas, no a un umbral arbitrario de líneas de código.
 
 ```text
 Monolito con 4 funcionalidades y escalado homogéneo:
@@ -157,22 +131,18 @@ Si solo Órdenes necesita 3 instancias, las otras 3 funcionalidades
 también se replican sin necesitarlo.
 ```
 
-**Lectura guiada del ejemplo**
+El esquema replica tres veces el mismo host. Todas las réplicas llevan Órdenes, Inventario, Clientes y Facturación, aunque el crecimiento de tráfico proceda solo de Órdenes. Esa es la diferencia entre escalar la unidad desplegable y escalar una capacidad concreta. Antes de concluir que la replicación es ineficiente, habría que medir cuánto consumen los componentes y si realmente existe un cuello de botella independiente.
 
-- **Línea 1:** [Instancia 1] Órdenes + Inventario + Clientes + Facturación → primera réplica del proceso completo.
-- **Línea 2:** [Instancia 2] ... → segunda réplica idéntica.
-- **Línea 3:** [Instancia 3] ... → tercera réplica idéntica.
-- **Línea 4:** Si solo Órdenes necesita 3 instancias, ... → describe el desperdicio de recursos del escalado homogéneo.
 
-La cuarta limitación es la organización de equipos. Cuando varias personas trabajan sobre el mismo artefacto, los conflictos de fusión se multiplican y las decisiones técnicas se centralizan. La quinta limitación es la adopción de nuevas tecnologías: migrar una parte del sistema a una versión superior del framework obliga a migrar todo el conjunto, porque el artefacto es indivisible. Estas limitaciones no invalidan el monolito como opción; simplemente definen el contexto en el que deja de ser la elección óptima. Para evaluar limitaciones del monolito conviene registrar el resultado observable y la restricción de negocio que motiva el cambio, antes de introducir infraestructura adicional.
+La cuarta limitación es la organización de equipos. Cuando varias personas trabajan sobre el mismo artefacto, los conflictos de fusión se multiplican y las decisiones técnicas se centralizan. La quinta limitación es la adopción de nuevas tecnologías: migrar una parte del sistema a una versión superior del framework obliga a migrar todo el conjunto, porque el artefacto es indivisible. Estas limitaciones no invalidan el monolito como opción; simplemente definen el contexto en el que deja de ser la elección óptima.
 
 El impacto del escalado homogéneo debe evaluarse sobre consumo real de CPU, memoria y concurrencia. Si Órdenes concentra las peticiones y Facturación casi no recibe tráfico, añadir réplicas del monolito aumenta la capacidad disponible para ambas funciones aunque solo una sea la causa. El coste adicional incluye memoria de arranque, conexiones potenciales a la base de datos y tiempo de inicialización del proceso. No implica necesariamente que todo el monolito sea ineficiente: un host ligero y una infraestructura sencilla pueden resultar más económicos que varios servicios mínimos. El dato útil no es el número de módulos, sino la relación entre carga y coste marginal de una instancia. Para justificar la extracción, conviene medir latencia del endpoint, porcentaje de CPU, uso de memoria y frecuencia de cambios; después se comprueba si la independencia de escalado compensa el coste de red y operación.
 
 ---
 
-### Bloque 5 — Definición de arquitectura de microservicios
+### Definición de arquitectura de microservicios
 
-Una arquitectura de microservicios es un estilo de diseño en el que la aplicación se descompone en un conjunto de servicios pequeños, autónomos y desplegables de forma independiente. Cada servicio encapsula una capacidad de negocio concreta, posee su propio ciclo de vida y, con frecuencia, su propia base de datos. La comunicación entre servicios se realiza a través de la red mediante protocolos ligeros como HTTP o mensajería asíncrona. El término "micro" hace referencia al alcance funcional del servicio, no al número de líneas de código. Un microservicio puede contener cientos de archivos si su dominio lo justifica; lo relevante es que su límite coincida con una capacidad de negocio claramente identificable.
+La arquitectura de microservicios desplaza el límite de independencia desde los módulos de código hacia **procesos que se publican y operan por separado**. Una capacidad como Inventario puede tener su propia API, responsables, ciclo de despliegue y propiedad de datos, mientras Producción mantiene contratos explícitos para consultar existencias o notificar hechos relevantes. El cambio introduce una frontera real: donde antes existía una llamada de método, ahora intervienen protocolos, direcciones, tiempos de espera, errores parciales y evolución de contratos. La independencia tampoco exige que cada servicio tenga un servidor físico exclusivo; sí exige evitar que uno pueda escribir directamente el modelo privado de otro. Los nombres de los servicios del esquema son ilustrativos del diseño futuro de AceriaApp: no todos se materializan en el primer módulo. Es importante distinguir desde el principio entre una propuesta de descomposición y una solución distribuida ejecutable.
 
 ```text
 AceriaApp (microservicios)/
@@ -182,12 +152,8 @@ AceriaApp (microservicios)/
 └── AceriaApp.Gateway/           → API Gateway con YARP (puerto 5000)
 ```
 
-**Lectura guiada del ejemplo**
+Los directorios representan posibles límites de ejecución: cada API podría tener su propia configuración y ciclo de publicación, y YARP actuaría como entrada común. No conviene interpretar los puertos del esquema como una topología ya creada ni pensar que un API Gateway convierte automáticamente una aplicación en microservicios. La separación solo sería efectiva si los servicios se comunicasen mediante contratos y respetasen la propiedad de sus datos.
 
-- **Línea 1:** AceriaApp.Ordenes.Api/ → servicio autónomo que gestiona las órdenes de producción.
-- **Línea 2:** AceriaApp.Inventario.Api/ → servicio autónomo que gestiona las materias primas.
-- **Línea 3:** AceriaApp.Clientes.Api/ → servicio autónomo que gestiona el registro de clientes.
-- **Línea 4:** AceriaApp.Gateway/ → punto de entrada único que enruta las peticiones a cada servicio.
 
 Cada servicio de la lista anterior se compila, se despliega y se escala de forma independiente respecto a los demás. La autonomía de cada servicio implica que su equipo puede elegir el stack tecnológico, la versión del runtime y la cadencia de despliegue. Esta libertad acelera la innovación, pero también introduce heterogeneidad operativa. La organización de equipos alrededor de servicios, con equipos pequeños, autónomos y responsables de extremo a extremo, es uno de los principios fundacionales de este estilo arquitectónico. El límite del servicio debe coincidir con una capacidad de negocio, no con una capa técnica.
 
@@ -195,9 +161,9 @@ En el sistema distribuido propuesto, Órdenes e Inventario tienen responsabilida
 
 ---
 
-### Bloque 6 — Características operativas de los microservicios
+### Características operativas de los microservicios
 
-El despliegue en microservicios se realiza servicio a servicio. Cada uno tiene su propio pipeline de compilación, su propio artefacto y su propia configuración. El escalado es selectivo: se replica únicamente el servicio que lo necesita. Esta selectividad reduce el coste de infraestructura y permite ajustar los recursos a la carga real de cada capacidad de negocio. La base de datos se descentraliza: cada servicio posee su propio esquema o su propia instancia, y ningún servicio accede directamente a la base de datos de otro. Esta regla se conoce como "database per service" y es la que garantiza el desacoplamiento real entre servicios.
+La diferencia operativa aparece en las rutinas cotidianas del equipo. Cada servicio puede compilarse, probarse, configurarse y desplegarse con su propio artefacto, lo que permite ampliar una capacidad sin publicar obligatoriamente todas las demás. Sin embargo, esa autonomía exige contratos estables, gestión de configuración por entorno y mecanismos para observar una operación que atraviesa varios procesos. Cuando Producción consulta Inventario por HTTP, el éxito de ambos procesos por separado no garantiza que la llamada funcione: debe resolverse el destino, establecerse la conexión y respetarse el contrato acordado. Por eso los tests unitarios de cada servicio y los tests de integración entre ellos tienen propósitos diferentes. En los módulos posteriores la solución incorporará rutas HTTP, mensajería y un gateway; aquí basta con comprender que la independencia solo es valiosa cuando puede verificarse en despliegues y comportamientos reales.
 
 ```csharp
 // AceriaApp.Ordenes.Api/Program.cs
@@ -212,23 +178,12 @@ app.MapGet("/api/v1/ordenes", async (OrdenesDbContext db) =>
 app.Run();
 ```
 
-**Lectura guiada del ejemplo**
+El fragmento reduce un servicio a su arranque ASP.NET Core, el registro de un contexto EF y una ruta GET. `UseSqlServer` vincula el contexto a una configuración que el proceso deberá recibir; `MapGet` establece la operación visible para el consumidor. Faltan las clases del dominio y otros elementos necesarios para ejecutarlo como aplicación autónoma: aquí interesa reconocer la forma que adoptaría un proceso de Órdenes independiente.
 
-- **Línea 1:** var builder = WebApplication.CreateBuilder(args); → crea el constructor de la aplicación Minimal API.
-- **Línea 2:** builder.Services.AddDbContext<OrdenesDbContext>(...) → registra el contexto de EF Core específico del servicio de órdenes.
-- **Línea 3:** opt.UseSqlServer(...) → configura SQL Server Express como proveedor, leyendo la cadena OrdenesDb.
-- **Línea 4:** builder.Services.AddEndpointsApiExplorer(); → habilita la exploración de endpoints para OpenAPI.
-- **Línea 5:** builder.Services.AddSwaggerGen(); → registra el generador de Swagger.
-- **Línea 6:** var app = builder.Build(); → construye la aplicación.
-- **Línea 7:** app.MapGet("/api/v1/ordenes", ...) → define un endpoint GET que devuelve las órdenes del servicio.
-- **Línea 8:** await db.Ordenes.ToListAsync()); → consulta la tabla de órdenes del contexto propio.
-- **Línea 9:** app.Run(); → arranca el servidor Kestrel.
 
 Este archivo Program.cs pertenece exclusivamente al servicio de órdenes: el servicio de inventario tendrá su propio Program.cs, su propio DbContext y su propia cadena de conexión. La observabilidad en microservicios requiere correlación de trazas entre servicios, porque una petición puede atravesar varios procesos. El versionado es independiente: cada servicio puede evolucionar a su ritmo siempre que respete los contratos públicos. La consistencia se vuelve eventual y exige patrones como Saga, Outbox o compensación explícita. La comunicación entre servicios debe diseñarse con tolerancia a fallos desde el primer momento.
 
 El ejemplo de `OrdenesDbContext` ilustra el aislamiento de datos, pero no significa que cada servicio necesite siempre un servidor SQL distinto. Puede disponer de una base de datos independiente en una misma instancia administrativa, con permisos que impidan acceder a los esquemas ajenos. Lo esencial es la propiedad exclusiva de su modelo y la ausencia de lecturas y escrituras directas desde otros servicios. Esta independencia obliga a expresar necesidades interdominio mediante una API o eventos. Si Inventario publica información de disponibilidad, Órdenes debe gestionar que la respuesta llegue tarde o cambie después de la consulta. También se debe distinguir el descubrimiento de endpoints de la propiedad de datos: el Gateway simplifica la entrada de clientes, pero no convierte automáticamente en autónomas las bases de datos. Los tests de un servicio deben poder ejecutarse sin modificar tablas propiedad de otro.
-
-#### Profundización: independencia observable, no simplemente procesos separados
 
 Separar Órdenes e Inventario en dos aplicaciones ASP.NET Core cambia las condiciones de error del sistema. En el monolito, una llamada local puede fallar por una excepción y un acceso a datos puede fallar por la base de datos. Cuando Órdenes consulta Inventario mediante HTTP aparecen nuevos estados: el nombre del servicio puede no resolverse, la conexión puede rechazarse, la petición puede expirar, el servidor puede devolver 503 o la respuesta puede tener una estructura incompatible. Todos esos resultados son posibles incluso cuando ambos servicios compilan correctamente. Por eso la independencia de despliegue debe acompañarse de contratos y tratamiento explícito del fallo remoto.
 
@@ -239,9 +194,9 @@ Una frontera distribuida correcta debe responder a tres comprobaciones: quién e
 
 ---
 
-### Bloque 7 — Ventajas de los microservicios
+### Ventajas de los microservicios
 
-La primera ventaja es la independencia de despliegue. Un cambio en el servicio de inventario no obliga a redesplegar el servicio de órdenes. Esta independencia reduce el riesgo de cada despliegue y permite liberar versiones con mayor frecuencia. La segunda ventaja es el escalado selectivo: cada servicio se replica según su propia carga, lo que optimiza el uso de recursos. La tercera ventaja es la autonomía tecnológica: cada equipo puede elegir el stack que mejor se adapte a su dominio, siempre que respete los contratos de comunicación. La cuarta ventaja es el aislamiento de fallos: si un servicio cae, los demás pueden seguir operando, aunque con funcionalidad degradada.
+La libertad para publicar Inventario sin recompilar Órdenes puede acortar el tiempo entre corregir una regla y ponerla a disposición del usuario. También ofrece una ventaja de escalado: si aumentan las consultas de stock, se pueden ampliar las instancias que atienden esa demanda, en vez de replicar indiscriminadamente todo el sistema. Para un equipo con varios responsables funcionales, esa separación puede disminuir conflictos y permitir ciclos de trabajo distintos. Pero ninguna de estas ventajas nace automáticamente al colocar varias APIs en carpetas diferentes. Hace falta comprobar que sus contratos no obligan a cambiar todos los servicios en cada despliegue, que los datos tienen propietarios claros y que la infraestructura puede atender las nuevas dependencias. Una arquitectura de microservicios que requiere publicar cinco procesos juntos para corregir una propiedad apenas ha ganado independencia.
 
 ```text
 Escalado selectivo:
@@ -253,12 +208,8 @@ Escalado selectivo:
 Cada servicio se escala según su carga real.
 ```
 
-**Lectura guiada del ejemplo**
+Las proporciones de tráfico son hipotéticas y facilitan comparar el despliegue de cada servicio. Con el 70 % de las peticiones dirigido a Órdenes, el ejemplo le asigna tres instancias y mantiene una para Inventario y Clientes. En un sistema real habría que medir utilización, latencia y coste por petición, no dimensionar procesos únicamente por porcentaje de tráfico. El beneficio arquitectónico es poder tomar esa decisión por capacidad.
 
-- **Línea 1:** [Órdenes] 3 instancias → el servicio de órdenes se replica tres veces por su alta demanda.
-- **Línea 2:** [Inventario] 1 instancia → el servicio de inventario mantiene una sola instancia.
-- **Línea 3:** [Clientes] 1 instancia → el servicio de clientes mantiene una sola instancia.
-- **Línea 4:** Cada servicio se escala según su carga real. → sintetiza la ventaja del escalado selectivo.
 
 La quinta ventaja es la alineación con equipos autónomos. Cada equipo posee un servicio completo, desde la base de datos hasta el endpoint, y puede tomar decisiones sin coordinación con otros equipos. Esta alineación reduce los cuellos de botella organizativos y acelera la entrega. La sexta ventaja es la posibilidad de adoptar nuevas tecnologías de forma incremental: un servicio puede migrar a una versión superior del runtime sin afectar a los demás. La séptima ventaja es la resiliencia: el aislamiento de fallos permite diseñar degradaciones controladas.
 
@@ -266,9 +217,9 @@ La independencia de despliegue solo es una ventaja efectiva si los contratos per
 
 ---
 
-### Bloque 8 — Desafíos y costes de los microservicios
+### Desafíos y costes de los microservicios
 
-El primer desafío es la complejidad distribuida. Una llamada que en un monolito era una invocación en memoria se convierte en una llamada de red que puede fallar, tardar o perderse. Hay que gestionar timeouts, reintentos, circuit breakers y compensaciones. El segundo desafío es la consistencia eventual: no existe una transacción ACID que abarque varios servicios, por lo que hay que diseñar patrones como Saga para mantener la coherencia del negocio. El tercer desafío es la observabilidad: sin trazabilidad distribuida, diagnosticar un error que atraviesa cinco servicios es inviable.
+La distribución convierte los fallos de comunicación en parte normal del diseño. Una petición remota puede tardar demasiado, llegar a su destino cuando el cliente ya ha desistido o devolver un error después de haber ejecutado parte del trabajo. El servidor necesita presupuestos temporales, los clientes deben interpretar correctamente los estados de respuesta y los reintentos no pueden añadirse indiscriminadamente. En una operación de lectura suele resultar razonable volver a consultar ante un fallo transitorio; repetir una creación sin una garantía de idempotencia puede generar duplicados. Tampoco hay una transacción local que abarque de manera natural bases pertenecientes a servicios distintos; coordinar cambios requiere contratos, mensajes, compensaciones o decisiones explícitas sobre consistencia. Por último, el diagnóstico deja de realizarse sobre un solo proceso: hay que correlacionar eventos, peticiones y tiempos. El coste operativo de estas medidas debe entrar en la decisión arquitectónica.
 
 ```csharp
 var policy = Policy
@@ -278,19 +229,12 @@ var response = await policy.ExecuteAsync(() =>
     httpClient.GetAsync("http://acería-inventario/api/v1/materiales"));
 ```
 
-**Lectura guiada del ejemplo**
+La política de Polly muestra una reacción ante `HttpRequestException`, pero no contempla por sí sola todas las respuestas HTTP de error. Además, la espera `200 * attempt` crece **linealmente**: 200, 400 y 600 milisegundos; no es un retroceso exponencial. Conviene leer el ejemplo como una introducción a los reintentos, no como una configuración apta para producción. Cuando se estudie resiliencia habrá que limitar la duración total y comprobar qué operaciones pueden repetirse sin duplicar efectos.
 
-- **Línea 1:** var policy = Policy → comienza la definición de una política de Polly.
-- **Línea 2:** .Handle<HttpRequestException>() → indica que la política se activa ante errores HTTP.
-- **Línea 3:** .WaitAndRetryAsync(3, attempt => ...) → reintenta hasta tres veces con retroceso exponencial.
-- **Línea 4:** var response = await policy.ExecuteAsync(...) → ejecuta la llamada HTTP bajo la política.
-- **Línea 5:** httpClient.GetAsync("http://acería-inventario/api/v1/materiales") → llamada al servicio de inventario.
 
 La política anterior es necesaria porque en microservicios toda comunicación remota es falible por definición. El cuarto desafío es el coste operativo. Cada servicio requiere su propio pipeline, su propia monitorización y su propia configuración. La infraestructura mínima (contenedores, orquestación, descubrimiento de servicios) añade complejidad que un monolito no necesita. El quinto desafío es la duplicación de código: sin disciplina, cada equipo reimplementa utilidades comunes, lo que fragmenta las convenciones y multiplica los errores. El sexto desafío es la gestión de versiones de los contratos públicos entre servicios.
 
 Las políticas de reintento y de circuit breaker requieren evaluar la semántica de cada operación. Reintentar un GET suele ser menos arriesgado que repetir un POST que crea un recurso, y hasta un GET puede tener efectos observables si modifica contadores o dispara procesos. El ejemplo del reintento lineal `200 * attempt` debe identificarse como espera creciente lineal, no exponencial; un retroceso exponencial necesita una función como `200 * 2^(attempt - 1)`. Los fallos de HTTP no se reducen a `HttpRequestException`: un servidor puede devolver un estado de error sin que `GetAsync` lance esa excepción. Por ello el manejo debe contemplar códigos de respuesta, cancelación y límites de tiempo. Al diseñar las políticas, la duración total esperada de todos los intentos debe mantenerse dentro del presupuesto de latencia del cliente.
-
-#### Profundización: la latencia se acumula y el fallo se propaga
 
 En una cadena de llamadas síncronas el tiempo total de una operación depende del servicio más lento, de las conexiones utilizadas y del trabajo que se ejecuta en cada salto. Si una petición del Gateway recorre Órdenes, Inventario y Clientes de forma secuencial, las esperas se acumulan. Una operación que parece barata vista desde cada servicio puede superar el presupuesto de respuesta del cliente cuando se ejecuta como flujo completo. Esta observación no significa que todas las llamadas deban hacerse en paralelo: algunas dependen de resultados previos y otras modifican el estado. Significa que el diseño necesita una vista del recorrido completo de la petición, no una optimización aislada de cada endpoint.
 
@@ -301,9 +245,9 @@ En AceriaApp, una verificación de resiliencia futura no debería limitarse a ob
 
 ---
 
-### Bloque 9 — Comparativa y criterios de decisión
+### Comparativa y criterios de decisión
 
-La elección entre monolito y microservicios no es binaria ni permanente. Un monolito bien modularizado puede evolucionar hacia microservicios extrayendo servicios a medida que aparecen necesidades concretas. Este enfoque se conoce como "monolito modular primero" y es el recomendado por numerosos arquitectos porque evita el coste prematuro de la distribución. La decisión debe basarse en el tamaño del dominio, el número de equipos, la frecuencia de despliegue requerida y la tolerancia al fallo del negocio.
+La pregunta que debe resolver una elección de arquitectura no es «¿qué estilo es más moderno?», sino **qué problemas resuelve cada frontera y cuánto cuesta mantenerla**. Un equipo pequeño que desarrolla un dominio todavía cambiante puede beneficiarse de un monolito modular: las reglas se clarifican con rapidez y permanecen disponibles transacciones locales. En cambio, cuando una capacidad tiene ritmos de publicación o carga muy diferentes, extraerla puede reducir dependencias de despliegue. Para comparar alternativas es útil registrar frecuencia de cambios, tiempos de regresión, incidencias, coste de infraestructura, volumen de llamadas y requisitos de consistencia. Son indicadores que deben interpretarse conjuntamente. Una cifra aislada —por ejemplo, el número de equipos o de tablas— no determina por sí sola la arquitectura apropiada. La tabla del apartado condensa criterios iniciales, no una ley universal.
 
 ```text
 Criterio                  | Monolito            | Microservicios
@@ -316,21 +260,12 @@ Complejidad operativa     | Baja                | Alta
 Coste de infraestructura  | Bajo                | Medio/alto
 ```
 
-**Lectura guiada del ejemplo**
+La comparación sintetiza condiciones frecuentes, pero las columnas no deben interpretarse como reglas excluyentes. Existen monolitos que atienden grandes dominios y microservicios que necesitan consistencia fuerte dentro de su propia base. La decisión depende de cómo se agrupan las transacciones, de quién controla los cambios y de cuánta complejidad operativa está preparada para asumir la organización.
 
-- **Línea 1:** Criterio | Monolito | Microservicios → cabecera de la tabla comparativa.
-- **Línea 2:** Tamaño del dominio | Pequeño/mediano | Grande → el tamaño del dominio condiciona la elección.
-- **Línea 3:** Número de equipos | 1-2 | 3 o más → los microservicios brillan cuando hay varios equipos.
-- **Línea 4:** Frecuencia de despliegue | Baja/media | Alta → la independencia de despliegue importa cuando se libera a menudo.
-- **Línea 5:** Consistencia requerida | Fuerte (ACID) | Eventual aceptable → la consistencia fuerte favorece al monolito.
-- **Línea 6:** Complejidad operativa | Baja | Alta → los microservicios exigen más inversión operativa.
-- **Línea 7:** Coste de infraestructura | Bajo | Medio/alto → el coste crece con la distribución.
 
-La regla práctica es empezar con un monolito modular y extraer microservicios solo cuando un criterio objetivo lo justifique. Los criterios anteriores no son mutuamente excluyentes. Un sistema puede tener un monolito para el dominio administrativo y microservicios para el dominio transaccional. La arquitectura evoluciona con el negocio y con la organización, y la decisión debe revisarse periódicamente. La inversión en microservicios solo se recupera cuando la independencia de despliegue y el escalado selectivo aportan un valor medible. Para evaluar comparativa y criterios de decisión conviene registrar el resultado observable y la restricción de negocio que motiva el cambio, antes de introducir infraestructura adicional.
+La regla práctica es empezar con un monolito modular y extraer microservicios solo cuando un criterio objetivo lo justifique. Los criterios anteriores no son mutuamente excluyentes. Un sistema puede tener un monolito para el dominio administrativo y microservicios para el dominio transaccional. La arquitectura evoluciona con el negocio y con la organización, y la decisión debe revisarse periódicamente. La inversión en microservicios solo se recupera cuando la independencia de despliegue y el escalado selectivo aportan un valor medible.
 
 Los umbrales comparativos de equipos, costes o tamaños de dominio no deben interpretarse como reglas universales. Dos equipos pueden necesitar desplegar con independencia si gestionan productos sometidos a obligaciones regulatorias distintas; cuatro equipos pueden colaborar eficientemente sobre un monolito modular si el dominio cambia de manera coordinada. La decisión necesita mediciones históricas: cuántos despliegues por semana se bloquean entre sí, qué porcentaje de recursos consume cada capacidad y cuánto tarda en localizarse un fallo. También interesa saber si una transacción atraviesa varias funciones de negocio, porque extraerlas puede sustituir garantías ACID por un proceso distribuido explícito. El cuadro es un instrumento inicial para formular hipótesis. Una buena decisión registra el contexto y las consecuencias y señala indicadores que, si cambian, justificarán revisar el estilo arquitectónico.
-
-#### Profundización: decidir con restricciones observables
 
 Los criterios de comparación son útiles cuando se traducen a señales que el equipo pueda verificar. El número de personas, por sí solo, no obliga a distribuir; tampoco lo hace el tamaño del repositorio. Un equipo pequeño puede operar una arquitectura distribuida por exigencias de aislamiento o escala, y uno grande puede mantener un monolito bien modularizado. La pregunta decisiva es qué problema se pretende resolver y qué coste nuevo introduce la solución. Para AceriaApp, el problema inicial consiste en construir y validar reglas de producción con persistencia relacional y una API comprensible. No existe todavía evidencia de que el despliegue único impida entregar cambios ni de que sea rentable sostener varios servicios independientes.
 
@@ -349,9 +284,9 @@ La decisión de comenzar con el monolito modular debe expresarse en un ADR con c
 
 ---
 
-### Bloque 10 — Evolución y contexto del proyecto del curso
+### Evolución y contexto del proyecto del curso
 
-El proyecto del curso parte de un monolito modular y evoluciona hacia microservicios a lo largo de los ocho módulos. Esta progresión permite entender cada decisión arquitectónica en el momento en que se toma y medir su impacto sobre el código existente. En el módulo 1 se construye la estructura inicial con un monolito de referencia. En el módulo 2 se añade la API REST de órdenes. En el módulo 3 se refactoriza a arquitectura hexagonal. En el módulo 4 se aplican patrones de arquitectura. En el módulo 5 se introduce DDD y CQRS. En el módulo 6 se comunican los servicios. En el módulo 7 se añade observabilidad y resiliencia. En el módulo 8 se publica todo mediante un API Gateway con YARP.
+El itinerario de AceriaApp está pensado para hacer visible el coste de cada decisión antes de introducir la siguiente. En el módulo inicial se puede reconocer un monolito modular, seguir una orden y comprobar su persistencia. Después se diseñan recursos HTTP, se separan casos de uso y adaptadores, se introducen patrones, y el modelo del dominio gana comportamiento. Solo cuando existe esa base se incorporan Producción e Inventario como procesos que necesitan comunicación y observabilidad, hasta situarlos detrás de YARP. El módulo práctico de Docker completa el recorrido desplegando juntos los componentes ejecutables. Esta secuencia permite atribuir a cada cambio sus consecuencias: quién conoce a quién, qué se compila, qué se publica y qué prueba demuestra el funcionamiento. La meta del curso no es obligar a utilizar microservicios, sino aprender a decidir cuándo su coste está justificado.
 
 ```text
 Evolución del proyecto:
@@ -366,16 +301,8 @@ M7: + Observabilidad (Serilog, health checks) y Polly
 M8: + API Gateway con YARP (enrutamiento y balanceo)
 ```
 
-**Lectura guiada del ejemplo**
+La secuencia del curso es acumulativa: la API inicial permite observar HTTP y SQL, la arquitectura hexagonal delimita responsabilidades, DDD y CQRS aclaran el comportamiento, y los módulos posteriores hacen visibles las consecuencias de comunicar procesos distintos. Los nombres del esquema describen esa evolución pedagógica; cada etapa debe contrastarse con su código y sus pruebas, sin atribuir al primer módulo funcionalidades que todavía no existen.
 
-- **Línea 1:** M1: Monolito modular de referencia → punto de partida del curso.
-- **Línea 2:** M2: + API REST de órdenes → primera API REST con Minimal API y OpenAPI.
-- **Línea 3:** M3: + Arquitectura hexagonal → refactorización a puertos y adaptadores.
-- **Línea 4:** M4: + Patrones → aplicación de Repository, Unit of Work, MediatR y Result Pattern.
-- **Línea 5:** M5: + DDD y CQRS → modelado del dominio con entidades, value objects, commands y queries.
-- **Línea 6:** M6: + Comunicación entre servicios → HTTP síncrono y eventos asíncronos.
-- **Línea 7:** M7: + Observabilidad y resiliencia → Serilog, health checks y Polly.
-- **Línea 8:** M8: + API Gateway con YARP → enrutamiento y balanceo de carga.
 
 Cada módulo añade código nuevo sin sustituir el anterior, de modo que la solución final conserva todas las versiones y permite comparar la evolución. El resultado final es una plataforma de microservicios funcional, con persistencia en SQL Server Express, pruebas automatizadas, observabilidad y resiliencia. El alumno puede abrir cualquier carpeta de punto y ejecutarla de forma independiente, y puede comparar dos carpetas consecutivas con diff -r para ver exactamente qué se ha añadido. El proyecto es acumulativo y no opcional: cada punto hace referencia explícita a cómo lo aprendido se integra en el proyecto creciente.
 
@@ -406,13 +333,9 @@ Finalmente, el caso permite explicar por qué se parte del monolito. La ruta, el
 
 ---
 
-## Resumen rápido de la teoría
+## Síntesis para continuar
 
-- Un monolito empaqueta todos los componentes en un único artefacto desplegable; su ventaja principal es la simplicidad operativa y transaccional, y su limitación principal es el acoplamiento del ciclo de vida.
-- Los microservicios descomponen la aplicación en servicios autónomos con base de datos propia y despliegue independiente; su ventaja principal es la independencia y el escalado selectivo, y su coste principal es la complejidad distribuida.
-- La decisión entre ambos estilos depende del tamaño del dominio, el número de equipos, la frecuencia de despliegue y la tolerancia al fallo.
-- La estrategia recomendada es empezar con un monolito modular y extraer microservicios cuando un criterio objetivo lo justifique.
-- El proyecto del curso evoluciona desde un monolito modular hasta una plataforma de microservicios con arquitectura hexagonal, patrones, DDD, CQRS, comunicación entre servicios, observabilidad, resiliencia y API Gateway.
+La primera decisión importante consiste en separar dos preguntas que suelen confundirse: **cómo organizamos el código** y **qué publicamos como proceso independiente**. Un monolito puede tener límites internos de calidad; unos microservicios pueden estar mal delimitados y funcionar como un monolito distribuido. El primer estilo simplifica las comunicaciones y las transacciones locales; el segundo puede aportar autonomía de publicación y escalado selectivo, a cambio de introducir latencia, fallos parciales y coordinación entre datos. En AceriaApp comenzamos por el modelo más sencillo que permite explicar y probar una operación de negocio. Los módulos siguientes modificarán esa frontera cuando la necesidad y la evidencia técnica lo justifiquen.
 
 # Punto 1.2 — Ventajas e inconvenientes
 
