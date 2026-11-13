@@ -75,6 +75,20 @@ jobs:
           $ErrorActionPreference = 'Stop'
           ./EJECUTAR_DOCKER_WINDOWS.ps1 -Accion verificar -PermitirLinuxEnCI
 
+      - name: Simular caída y recuperación de Inventario 2 y RabbitMQ
+        shell: pwsh
+        working-directory: M09_DESPLIEGUE_DOCKER/PROYECTO
+        run: |
+          $ErrorActionPreference = 'Stop'
+          ./VALIDAR_FALLOS_DOCKER_WINDOWS.ps1 -PermitirLinuxEnCI
+
+      - name: Verificar eventos reales después de recuperar el broker
+        shell: pwsh
+        working-directory: M09_DESPLIEGUE_DOCKER/PROYECTO
+        run: |
+          $ErrorActionPreference = 'Stop'
+          ./EJECUTAR_DOCKER_WINDOWS.ps1 -Accion verificar -PermitirLinuxEnCI
+
       - name: Conservar diagnóstico sin imprimir contraseñas
         if: always()
         shell: bash
