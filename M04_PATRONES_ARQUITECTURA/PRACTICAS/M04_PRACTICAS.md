@@ -45,23 +45,24 @@ Los retos añaden una prueba al proyecto de su punto y a la solución completa, 
 
 # Punto 4.1 — Repository
 
+## Encapsular la persistencia sin esconder el contrato del dominio
+
+M04 comienza donde terminó la arquitectura hexagonal de M03: los casos de uso se comunican con el exterior mediante puertos y un adaptador EF Core sobre SQL Server. En este punto estudiaremos Repository para comprender por qué el código de aplicación no debería construir consultas SQL ni depender del DbContext. La interfaz expresa las operaciones que necesita el negocio y la implementación concreta se ocupa de recuperar y guardar entidades sin romper sus reglas.
+
+El alumno conservará el estado 3.4 y añadirá el catálogo didáctico para analizar repositorios, pero el aprendizaje principal se obtendrá al ejecutar un caso de uso con un doble del puerto y con el repositorio SQL real. La misma operación ha de respetar el contrato en ambos entornos. Una prueba de catálogo que clasifica nombres o métodos no acredita esa propiedad: necesitamos observar qué se recupera, qué se guarda y cómo se comporta la API ante un recurso ausente.
+
 **Carpeta de trabajo:** `M04_PATRONES_ARQUITECTURA/PROYECTO/4.1-repository`.
 
 **Objetivo:** completar los veinticuatro pasos, conservar los documentos heredados y comprobar el patrón con código y tests ejecutables. La etapa suma 62 pruebas en 10 proyectos.
 
 ### PASO 4.1.1 — Crear la estructura del módulo 4 y del punto 4.1
 
-**Resultado de aprendizaje.** Crear la estructura del módulo 4 y del punto 4.1. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+La etapa 4.1 debe comenzar con una copia limpia del resultado 3.4, porque el nuevo patrón se incorpora sobre el repositorio SQL y las rutas hexagonales que ya existen. Verificar el inventario de proyectos antes de editar ayuda a atribuir cualquier error al cambio concreto y evita modificar la referencia histórica.
 
 1. Abre la terminal integrada de Visual Studio y localiza `M03_ARQUITECTURA_HEXAGONAL/PROYECTO/3.4-implementacion-aspnet-core`; esa es la etapa completa que vas a continuar.
 2. Crea `M04_PATRONES_ARQUITECTURA/PROYECTO/4.1-repository` y copia en ella el contenido de `3.4-implementacion-aspnet-core`; en Windows puedes usar `xcopy` con `/E /I /H /Y`.
 3. Excluye `bin`, `obj` y `TestResults`; abre únicamente la copia de `4.1-repository` para que el punto anterior permanezca intacto.
 4. Ejecuta `dir` dentro de `4.1-repository` y verifica `AceriaApp.sln`, `README.md`, `src`, `tests`, `docs` y `global.json`.
-
-
-**Por qué funciona así.** La copia preserva una etapa autónoma y reproducible. 3.4-implementacion-aspnet-core aporta 50 tests aprobados y 9 proyectos antes de añadir este punto.
 
 **Verificación concreta.** La copia contiene la solución y los 9 proyectos de la etapa anterior; no contiene todavía archivos nuevos de 4.1.
 
@@ -76,17 +77,12 @@ Los retos añaden una prueba al proyecto de su punto y a la solución completa, 
 
 ### PASO 4.1.2 — Abrir la solución copiada en Visual Studio 2026
 
-**Resultado de aprendizaje.** Abrir la solución copiada en Visual Studio 2026. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+Abrir la solución copiada permite trabajar en el punto 4.1 sobre la base del punto 3.4. La compilación verifica que la copia es correcta.
 
 1. Entra en `4.1-repository` y abre `AceriaApp.sln` con Visual Studio; desde Windows puedes ejecutar `start AceriaApp.sln`.
 2. Ejecuta `dotnet sln AceriaApp.sln list` y comprueba los 9 proyectos heredados; todos deben existir bajo esta etapa.
 3. Ejecuta `dotnet restore AceriaApp.sln` y `dotnet build AceriaApp.sln -c Release`; conserva la salida como comprobación inicial.
 4. Si la API está en ejecución, detenla antes de compilar. Continúa cuando la compilación termine sin errores y las rutas no apunten a otra etapa.
-
-
-**Por qué funciona así.** abrir la solución copiada permite trabajar en el punto 4.1 sobre la base del punto 3.4. La compilación verifica que la copia es correcta.
 
 **Verificación concreta.** `dotnet sln AceriaApp.sln list` muestra 9 proyectos y `dotnet build AceriaApp.sln -c Release` termina con `Build succeeded.`.
 
@@ -99,17 +95,12 @@ Los retos añaden una prueba al proyecto de su punto y a la solución completa, 
 
 ### PASO 4.1.3 — Verificar que la carpeta `docs` contiene los documentos del punto 3.4
 
-**Resultado de aprendizaje.** Verificar que la carpeta `docs` contiene los documentos del punto 3.4. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+La etapa conserva los 8 documentos anteriores y añade únicamente su ficha de patrón y su ADR. Las modificaciones de código se escriben en la copia actual.
 
 1. Expande `docs` dentro de la copia de `4.1-repository`.
 2. Comprueba los 8 documentos heredados: los ADR-010 a ADR-013 y las fichas de los puntos anteriores.
 3. Compara sus nombres y contenido con `docs` de `3.4-implementacion-aspnet-core`. No modifiques ni elimines los documentos anteriores.
 4. Confirma que todavía no existen `docs/patron-repository.md` ni `docs/ADR-014-patron-repository.md`; se crearán en este punto.
-
-
-**Por qué funciona así.** La etapa conserva los 8 documentos anteriores y añade únicamente su ficha de patrón y su ADR. Las modificaciones de código se escriben en la copia actual.
 
 **Verificación concreta.** `docs` contiene 8 archivos heredados idénticos; los dos documentos de este punto todavía no existen.
 
@@ -122,9 +113,7 @@ Los retos añaden una prueba al proyecto de su punto y a la solución completa, 
 
 ### PASO 4.1.4 — Crear el documento del patrón Repository en `docs`
 
-**Resultado de aprendizaje.** Crear el documento del patrón Repository en `docs`. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+El documento del patrón Repository es el artefacto de `docs` específico del punto 4.1. No modifica los 8 documentos heredados del punto 3.4.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `docs`.
 2. Seleccionar `Add` → `New Item` → `Text File` y nombrar el archivo `patron-repository.md`.
@@ -195,7 +184,6 @@ El repositorio gestiona una entidad. La unidad de trabajo coordina varias.
 El catálogo de este punto describe reglas de diseño y contiene ejemplos de contratos. Sus nombres no implican servicios registrados. La implementación utiliza los proyectos `AceriaApp.Hexagonal.Aplicacion`, `AceriaApp.Hexagonal.Dominio` y `AceriaApp.Hexagonal.Infraestructura`, compuestos desde `AceriaApp.Api`. Comprueba los archivos y los tests funcionales que incorpora el paso de compilación de este punto.
 ```
 
-**Por qué funciona así.** el documento del patrón Repository es el artefacto de `docs` específico del punto 4.1. No modifica los 8 documentos heredados del punto 3.4.
 
 **Verificación concreta.** El archivo `docs/patron-repository.md` existe y contiene las 10 secciones mostradas; abre su vista previa y comprueba todos los apartados.
 
@@ -208,17 +196,12 @@ El catálogo de este punto describe reglas de diseño y contiene ejemplos de con
 
 ### PASO 4.1.5 — Crear la carpeta `Repository` en el proyecto API
 
-**Resultado de aprendizaje.** Crear la carpeta `Repository` en el proyecto API. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+La carpeta `Repository` albergará las clases de validación del patrón Repository. Se crea como carpeta nueva sin tocar las carpetas existentes.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre el proyecto `AceriaApp.Api`.
 2. Seleccionar `Add` → `New Folder` y nombrar la carpeta `Repository`.
 3. Verificar que la carpeta `Repository` aparece dentro de `AceriaApp.Api` sin afectar a las carpetas existentes.
 4. Verificar que no se ha modificado ningún archivo existente del punto 3.4.
-
-
-**Por qué funciona así.** la carpeta `Repository` albergará las clases de validación del patrón Repository. Se crea como carpeta nueva sin tocar las carpetas existentes.
 
 **Verificación concreta.** la carpeta `Repository` existe dentro de `AceriaApp.Api` y las carpetas existentes permanecen intactas.
 
@@ -231,9 +214,7 @@ El catálogo de este punto describe reglas de diseño y contiene ejemplos de con
 
 ### PASO 4.1.6 — Crear la clase `Repositorio`
 
-**Resultado de aprendizaje.** Crear la clase `Repositorio`. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+La clase `Repositorio` del catálogo describe capacidades de persistencia para poder analizar su contrato. No es el adaptador EF Core que ejecutan los casos de uso: identifica los dos tipos y su función antes de continuar.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `Repository`.
 2. Seleccionar `Add` → `Class` y nombrar la clase `Repositorio.cs`.
@@ -256,7 +237,6 @@ public class Repositorio
 }
 ```
 
-**Por qué funciona así.** la clase `Repositorio` modela un repositorio con su nombre, entidad, número de métodos y dos indicadores de responsabilidades mal ubicadas. Es la unidad de información del validador.
 
 **Verificación concreta.** la clase `Repositorio` compila sin errores y expone cinco propiedades.
 
@@ -269,9 +249,7 @@ public class Repositorio
 
 ### PASO 4.1.7 — Crear la clase `ValidadorRepositorios`
 
-**Resultado de aprendizaje.** Crear la clase `ValidadorRepositorios`. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+`ValidadorRepositorios` permite detectar descripciones que incumplen las reglas del ejercicio. Para entender Repository en ejecución es necesario además ver el puerto `IOrdenRepositorio` y el adaptador `OrdenRepositorioSqlServer` ya construidos en M03.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `Repository`.
 2. Seleccionar `Add` → `Class` y nombrar la clase `ValidadorRepositorios.cs`.
@@ -331,7 +309,6 @@ public class ValidadorRepositorios
 public record ResultadoRepositorios(bool EsValido, IReadOnlyList<string> Errores);
 ```
 
-**Por qué funciona así.** la clase `ValidadorRepositorios` comprueba que cada repositorio declara nombre, entidad y métodos, y que no contiene reglas de negocio ni gestiona transacciones.
 
 **Verificación concreta.** la clase `ValidadorRepositorios` compila sin errores y expone un método y un `record`.
 
@@ -344,9 +321,7 @@ public record ResultadoRepositorios(bool EsValido, IReadOnlyList<string> Errores
 
 ### PASO 4.1.8 — Añadir los `using` necesarios en `ValidadorRepositorios`
 
-**Resultado de aprendizaje.** Añadir los `using` necesarios en `ValidadorRepositorios`. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+Los tipos `List<string>` e `IReadOnlyList<string>` pertenecen a `System.Collections.Generic`. El método `ToList` pertenece a `System.Linq`. En proyectos con `ImplicitUsings` desactivado, hay que añadir los usings explícitos.
 
 1. En el panel Solution Explorer, hacer doble clic en `ValidadorRepositorios.cs`.
 2. Inserta las directivas indicadas antes del namespace del archivo; la indicación del archivo identifica la línea exacta.
@@ -367,7 +342,6 @@ using System.Collections.Generic;
 using System.Linq;
 ```
 
-**Por qué funciona así.** los tipos `List<string>` e `IReadOnlyList<string>` pertenecen a `System.Collections.Generic`. El método `ToList` pertenece a `System.Linq`. En proyectos con `ImplicitUsings` desactivado, hay que añadir los usings explícitos.
 
 **Verificación concreta.** `ValidadorRepositorios.cs` compila sin errores y no muestra subrayados rojos.
 
@@ -380,9 +354,7 @@ using System.Linq;
 
 ### PASO 4.1.9 — Crear la clase `CatalogoRepositorios`
 
-**Resultado de aprendizaje.** Crear la clase `CatalogoRepositorios`. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+`CatalogoRepositorios` reúne definiciones que la práctica puede comparar sin abrir SQL Server. Es una herramienta para razonar sobre opciones, no el registro de repositorios de la aplicación ni una garantía de persistencia.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `Repository`.
 2. Seleccionar `Add` → `Class` y nombrar la clase `CatalogoRepositorios.cs`.
@@ -409,7 +381,6 @@ public class CatalogoRepositorios
 }
 ```
 
-**Por qué funciona así.** la clase `CatalogoRepositorios` contiene los repositorios por defecto del proyecto. Se usan en los tests y en la validación automática.
 
 **Verificación concreta.** la clase `CatalogoRepositorios` compila sin errores y expone un método estático.
 
@@ -422,9 +393,7 @@ public class CatalogoRepositorios
 
 ### PASO 4.1.10 — Añadir el `using` necesario en `CatalogoRepositorios`
 
-**Resultado de aprendizaje.** Añadir el `using` necesario en `CatalogoRepositorios`. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+El tipo `List<T>` pertenece a `System.Collections.Generic`. En proyectos con `ImplicitUsings` desactivado, hay que añadir el using explícito.
 
 1. En el panel Solution Explorer, hacer doble clic en `CatalogoRepositorios.cs`.
 2. Inserta las directivas indicadas antes del namespace del archivo; la indicación del archivo identifica la línea exacta.
@@ -444,7 +413,6 @@ namespace AceriaApp.Api.Repository;
 using System.Collections.Generic;
 ```
 
-**Por qué funciona así.** el tipo `List<T>` pertenece a `System.Collections.Generic`. En proyectos con `ImplicitUsings` desactivado, hay que añadir el using explícito.
 
 **Verificación concreta.** `CatalogoRepositorios.cs` compila sin errores y no muestra subrayados rojos.
 
@@ -457,9 +425,7 @@ using System.Collections.Generic;
 
 ### PASO 4.1.11 — Crear el proyecto de tests del punto 4.1
 
-**Resultado de aprendizaje.** Crear el proyecto de tests del punto 4.1. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+El punto 4.1 añade un proyecto de tests específico para las clases del patrón Repository. Se crea como proyecto nuevo y conserva las pruebas previas; las actualizaciones explícitas de integración se muestran en su paso correspondiente.
 
 1. En `tests` crea la carpeta `AceriaApp.Repository.Tests` y, dentro, el archivo `AceriaApp.Repository.Tests.csproj` con el XML completo de este paso. En Visual Studio puedes elegir la plantilla xUnit y ajustar el archivo generado.
 2. Elimina el archivo de ejemplo `UnitTest1.cs` si lo creó la plantilla; los archivos de pruebas completos se escriben en sus pasos correspondientes.
@@ -486,7 +452,6 @@ using System.Collections.Generic;
 </Project>
 ```
 
-**Por qué funciona así.** el punto 4.1 añade un proyecto de tests específico para las clases del patrón Repository. Se crea como proyecto nuevo y conserva las pruebas previas; las actualizaciones explícitas de integración se muestran en su paso correspondiente.
 
 **Verificación concreta.** La solución muestra 10 proyectos, incluido `AceriaApp.Repository.Tests`; el nuevo csproj fija .NET 8, SDK de tests 17.12.0, xUnit 2.9.2 y runner 2.8.2.
 
@@ -499,9 +464,7 @@ using System.Collections.Generic;
 
 ### PASO 4.1.12 — Añadir la referencia del proyecto de tests a la API
 
-**Resultado de aprendizaje.** Añadir la referencia del proyecto de tests a la API. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+La referencia permite que el proyecto de tests acceda a las clases de `Repository` del proyecto API.
 
 1. Ejecuta `dotnet add tests/AceriaApp.Repository.Tests/AceriaApp.Repository.Tests.csproj reference src/AceriaApp.Api/AceriaApp.Api.csproj` o deja el archivo exactamente como el bloque XML de este paso.
 2. Comprueba que la referencia va de tests a API; la API nunca debe referenciar el proyecto de tests.
@@ -529,7 +492,6 @@ using System.Collections.Generic;
 </Project>
 ```
 
-**Por qué funciona así.** la referencia permite que el proyecto de tests acceda a las clases de `Repository` del proyecto API.
 
 **Verificación concreta.** el archivo `AceriaApp.Repository.Tests.csproj` contiene un `ProjectReference` al proyecto API.
 
@@ -542,9 +504,7 @@ using System.Collections.Generic;
 
 ### PASO 4.1.13 — Añadir el paquete `FluentAssertions` al proyecto de tests
 
-**Resultado de aprendizaje.** Añadir el paquete `FluentAssertions` al proyecto de tests. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+`FluentAssertions` proporciona la sintaxis de aserción usada en el curso. Se añade al nuevo proyecto de tests sin modificar los proyectos de tests existentes.
 
 1. Ejecuta `dotnet add tests/AceriaApp.Repository.Tests/AceriaApp.Repository.Tests.csproj package FluentAssertions --version 6.12.2` o reemplaza el csproj por el XML completo indicado.
 2. Ejecuta `dotnet list tests/AceriaApp.Repository.Tests/AceriaApp.Repository.Tests.csproj package` y localiza `FluentAssertions 6.12.2`.
@@ -573,7 +533,6 @@ using System.Collections.Generic;
 </Project>
 ```
 
-**Por qué funciona así.** `FluentAssertions` proporciona la sintaxis de aserción usada en el curso. Se añade al nuevo proyecto de tests sin modificar los proyectos de tests existentes.
 
 **Verificación concreta.** El archivo de proyecto y `dotnet list package` muestran `FluentAssertions 6.12.2`; la compilación finaliza correctamente.
 
@@ -586,9 +545,7 @@ using System.Collections.Generic;
 
 ### PASO 4.1.14 — Crear el archivo `ValidadorRepositoriosTests.cs`
 
-**Resultado de aprendizaje.** Crear el archivo `ValidadorRepositoriosTests.cs`. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+Los tests verifican que el validador acepta el catálogo por defecto y rechaza los repositorios que violan las responsabilidades del patrón.
 
 1. En el panel Solution Explorer, expandir `tests` → `AceriaApp.Repository.Tests`.
 2. Crear el archivo `ValidadorRepositoriosTests.cs`.
@@ -671,7 +628,6 @@ public class ValidadorRepositoriosTests
 }
 ```
 
-**Por qué funciona así.** los tests verifican que el validador acepta el catálogo por defecto y rechaza los repositorios que violan las responsabilidades del patrón.
 
 **Verificación concreta.** el archivo `ValidadorRepositoriosTests.cs` compila y contiene cinco métodos de test.
 
@@ -684,9 +640,7 @@ public class ValidadorRepositoriosTests
 
 ### PASO 4.1.15 — Crear el archivo `CatalogoRepositoriosTests.cs`
 
-**Resultado de aprendizaje.** Crear el archivo `CatalogoRepositoriosTests.cs`. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+Los tests verifican que el catálogo por defecto contiene los repositorios esperados y que ninguno contiene reglas de negocio ni gestiona transacciones.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre el proyecto `AceriaApp.Repository.Tests`.
 2. Seleccionar `Add` → `Class` y nombrar la clase `CatalogoRepositoriosTests.cs`.
@@ -731,7 +685,6 @@ public class CatalogoRepositoriosTests
 }
 ```
 
-**Por qué funciona así.** los tests verifican que el catálogo por defecto contiene los repositorios esperados y que ninguno contiene reglas de negocio ni gestiona transacciones.
 
 **Verificación concreta.** el archivo `CatalogoRepositoriosTests.cs` compila y contiene tres métodos de test.
 
@@ -744,9 +697,7 @@ public class CatalogoRepositoriosTests
 
 ### PASO 4.1.16 — Probar el contrato de repositorio y compilar la solución
 
-**Resultado de aprendizaje.** Probar el contrato de repositorio y compilar la solución. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+Las pruebas funcionales deben ejecutar el mismo caso de uso primero con un doble del puerto y después contra una base SQL Server aislada. La primera variante comprueba la aplicación sin infraestructura; la segunda confirma que el adaptador persiste y recupera los datos, incluida una transición del dominio leída desde otro DbContext.
 
 1. Abre cada archivo de integración funcional indicado en este paso. Crea los nuevos y reemplaza únicamente los que se señalen; copia todo el código mostrado.
 2. Recorre las referencias: el dominio define sus entidades, la aplicación usa puertos y la infraestructura implementa persistencia; la API compone el flujo.
@@ -775,15 +726,9 @@ public class CatalogoRepositoriosTests
 </Project>
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+Compila para .NET 8, igual que los proyectos heredados. Fija el cliente de contenedores para SQL Server; el proveedor EF Core SQL Server llega mediante la referencia a la API. Permite ejecutar peticiones HTTP contra el host real de la API.
 
-- **Línea 2:** `<PropertyGroup><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><IsPackable>false</IsPackable><IsTestProject>true</IsTestProject></PropertyGroup>` → Compila para .NET 8, igual que los proyectos heredados.
-
-- **Línea 8:** `<PackageReference Include="Testcontainers.MsSql" Version="3.10.0" />` → Fija el cliente de contenedores para SQL Server; el proveedor EF Core SQL Server llega mediante la referencia a la API.
-
-- **Línea 9:** `<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.21" />` → Permite ejecutar peticiones HTTP contra el host real de la API.
-
-- **Línea 11:** `<Compile Include="../Compartido/SqlServerPruebas.cs" Link="SqlServerPruebas.cs" />` → Compila el helper heredado que crea y elimina únicamente la base aislada de cada prueba, sin añadir otro proyecto a la solución.
+Compila el helper heredado que crea y elimina únicamente la base aislada de cada prueba, sin añadir otro proyecto a la solución.
 
 
 **Integración funcional.** Ejecuta el mismo puerto con un doble sin EF y con el adaptador EF Core sobre SQL Server. Comprueba normalización, capacidad, lectura entre contextos y persistencia de la transición de dominio. Son pruebas de caracterización del contrato real heredado de M3.
@@ -878,24 +823,11 @@ public sealed class RepositoryFuncionalesTests
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+El doble del puerto comprueba lógica de aplicación sin conectarse a una base. Una cantidad fuera de capacidad se rechaza antes de persistir. En `await using var store = BaseSqlServer.Crear();` se crea una base SQL Server exclusiva de esta prueba y la elimina al abandonar el ámbito.
 
-- **Línea 15:** `public async Task Caso_de_uso_funciona_con_un_doble_del_puerto_sin_EF()` → El doble del puerto comprueba lógica de aplicación sin conectarse a una base.
+Configura el mismo proveedor relacional que usa el adaptador en producción. Comprueba explícitamente el proveedor de la prueba de integración. Una conexión y un contexto independientes comprueban persistencia real.
 
-- **Línea 26:** `public async Task Caso_de_uso_no_persiste_lotes_que_superan_la_capacidad()` → Una cantidad fuera de capacidad se rechaza antes de persistir.
-
-- **Línea 37:** `await using var store = BaseSqlServer.Crear();` → Crea una base SQL Server exclusiva de esta prueba y la elimina al abandonar el ámbito.
-
-- **Línea 38:** `var options = new DbContextOptionsBuilder<HexagonalDbContext>().UseSqlServer(store.ConnectionString).Options;` → Configura el mismo proveedor relacional que usa el adaptador en producción.
-
-- **Línea 42:** `Assert.Equal("Microsoft.EntityFrameworkCore.SqlServer", db.Database.ProviderName);` → Comprueba explícitamente el proveedor de la prueba de integración.
-
-- **Línea 46:** `await using var lectura = new HexagonalDbContext(options);` → Una conexión y un contexto independientes comprueban persistencia real.
-
-- **Línea 66:** `await caso.FinalizarAsync(id);` → Ejecuta la transición de dominio antes de recuperarla desde otro contexto.
-
-
-**Por qué funciona así.** compilar la solución completa verifica que todos los proyectos, incluidos los nuevos, se resuelven correctamente.
+Ejecuta la transición de dominio antes de recuperarla desde otro contexto.
 
 **Verificación concreta.** La solución completa compila, incluidos el código de integración y sus pruebas. Las siguientes ejecuciones de tests comprobarán el comportamiento de los patrones.
 
@@ -908,17 +840,12 @@ public sealed class RepositoryFuncionalesTests
 
 ### PASO 4.1.17 — Ejecutar todos los tests del punto 4.1
 
-**Resultado de aprendizaje.** Ejecutar todos los tests del punto 4.1. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+Ejecutar los tests del punto 4.1 verifica que las clases del patrón Repository funcionan correctamente.
 
 1. Ejecuta `dotnet test tests/AceriaApp.Repository.Tests/AceriaApp.Repository.Tests.csproj -c Release` desde la raíz de esta etapa.
 2. Comprueba un total de 12 pruebas: 8 de catálogo y 4 funcionales, con cero fallos y cero omisiones.
 3. Si falla una prueba, abre su mensaje de aserción y el archivo indicado; corrige el comportamiento antes de continuar.
 4. Repite el mismo comando tras la corrección y conserva el resultado de la ejecución válida.
-
-
-**Por qué funciona así.** ejecutar los tests del punto 4.1 verifica que las clases del patrón Repository funcionan correctamente.
 
 **Verificación concreta.** El proyecto `AceriaApp.Repository.Tests` termina con `Failed: 0, Passed: 12, Skipped: 0, Total: 12`.
 
@@ -931,17 +858,12 @@ public sealed class RepositoryFuncionalesTests
 
 ### PASO 4.1.18 — Ejecutar todos los tests de la solución
 
-**Resultado de aprendizaje.** Ejecutar todos los tests de la solución. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+Ejecutar todos los tests de la solución verifica que los tests de los puntos anteriores y del punto 4.1 pasan conjuntamente.
 
 1. Ejecuta `dotnet build AceriaApp.sln -c Release` para producir todas las asambleas de esta etapa.
 2. Ejecuta `dotnet test AceriaApp.sln -c Release --no-build --no-restore` para ejecutar todas las pruebas acumuladas.
 3. Suma los resultados de los 6 proyectos de tests: deben ser 62 pruebas aprobadas, sin fallos ni omisiones.
 4. Comprueba que las pruebas heredadas de M03 y los puntos anteriores de M04 siguen presentes; no borres tests para obtener un resultado verde.
-
-
-**Por qué funciona así.** ejecutar todos los tests de la solución verifica que los tests de los puntos anteriores y del punto 4.1 pasan conjuntamente.
 
 **Verificación concreta.** La suma de las líneas de resultados es `Failed: 0`, `Passed: 62`, `Skipped: 0` y `Total: 62`. Dotnet muestra un resumen por proyecto, no necesariamente una única línea global.
 
@@ -954,9 +876,7 @@ public sealed class RepositoryFuncionalesTests
 
 ### PASO 4.1.19 — Crear el README del punto 4.1
 
-**Resultado de aprendizaje.** Crear el README del punto 4.1. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+El README del punto 4.1 explica el objetivo, el estado, la ejecución y los añadidos. No modifica el README del punto 3.4.
 
 1. En la carpeta del punto `4.1-repository`, hacer clic derecho y seleccionar `Add` → `New Item` → `Text File`.
 2. Nombrar el archivo `README.md`.
@@ -1004,7 +924,6 @@ La práctica conecta además el patrón con los puertos, adaptadores y pruebas d
 Los catálogos describen ejemplos de diseño. El comportamiento de las clases reales se comprueba además con los tests funcionales del punto. Ejecuta `dotnet test AceriaApp.sln -c Release` y exige cero fallos y cero omisiones.
 ```
 
-**Por qué funciona así.** el README del punto 4.1 explica el objetivo, el estado, la ejecución y los añadidos. No modifica el README del punto 3.4.
 
 **Verificación concreta.** El archivo `README.md` existe y contiene las 6 secciones mostradas; abre su vista previa y comprueba todos los apartados.
 
@@ -1017,9 +936,7 @@ Los catálogos describen ejemplos de diseño. El comportamiento de las clases re
 
 ### PASO 4.1.20 — Crear el ADR-014 del punto 4.1
 
-**Resultado de aprendizaje.** Crear el ADR-014 del punto 4.1. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+El ADR-014 documenta la decisión de adoptar el patrón Repository. Es un artefacto nuevo del punto 4.1 que no modifica los ADR existentes.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `docs`.
 2. Seleccionar `Add` → `New Item` → `Text File` y nombrar el archivo `ADR-014-patron-repository.md`.
@@ -1052,7 +969,6 @@ Se adopta el patrón Repository con repositorios específicos por entidad. El co
 - Mitigación: validación automática con el validador.
 ```
 
-**Por qué funciona así.** el ADR-014 documenta la decisión de adoptar el patrón Repository. Es un artefacto nuevo del punto 4.1 que no modifica los ADR existentes.
 
 **Verificación concreta.** El archivo `docs/ADR-014-patron-repository.md` existe y contiene las 5 secciones mostradas; abre su vista previa y comprueba todos los apartados.
 
@@ -1065,17 +981,12 @@ Se adopta el patrón Repository con repositorios específicos por entidad. El co
 
 ### PASO 4.1.21 — Verificar que los documentos heredados y la etapa 3.4 permanecen intactos
 
-**Resultado de aprendizaje.** Verificar que los documentos heredados y la etapa 3.4 permanecen intactos. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+Las decisiones previas se conservan como registros históricos. Los nuevos ADR explican la evolución y las modificaciones de integración se aplican solo a la copia de la etapa actual.
 
 1. Vuelve a la raíz del repositorio; las rutas siguientes se interpretan desde allí.
 2. En CMD ejecuta `for %f in (M03_ARQUITECTURA_HEXAGONAL\PROYECTO\3.4-implementacion-aspnet-core\docs\*.md) do fc /L "%f" "M04_PATRONES_ARQUITECTURA\PROYECTO\4.1-repository\docs\%~nxf"`. En PowerShell puedes comparar `Get-FileHash` para cada par de documentos.
 3. Comprueba 8 comparaciones y exige igualdad en todas; se conserva exactamente el contenido de los documentos heredados.
 4. Si una comparación falla, restaura el documento de la etapa actual desde `3.4-implementacion-aspnet-core`. Verifica también que la carpeta del punto anterior no tiene modificaciones.
-
-
-**Por qué funciona así.** Las decisiones previas se conservan como registros históricos. Los nuevos ADR explican la evolución y las modificaciones de integración se aplican solo a la copia de la etapa actual.
 
 **Verificación concreta.** Los 8 documentos heredados coinciden byte a byte y el punto anterior permanece intacto.
 
@@ -1088,17 +999,12 @@ Se adopta el patrón Repository con repositorios específicos por entidad. El co
 
 ### PASO 4.1.22 — Verificar la estructura del punto 4.1
 
-**Resultado de aprendizaje.** Verificar la estructura del punto 4.1. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+La verificación estructural confirma que el punto 4.1 añade archivos nuevos conservando los documentos heredados.
 
 1. Escribir `tree /F M04_PATRONES_ARQUITECTURA\PROYECTO\4.1-repository` y pulsar Enter.
 2. Verificar que la salida muestra `AceriaApp.sln`, `README.md`, `src\AceriaApp.Api\Repository` con las tres clases nuevas, `tests\AceriaApp.Repository.Tests` con los dos archivos de catálogo y el archivo de tests funcionales y `docs` con el documento del patrón y el ADR-014. Comprueba además todos los archivos de integración de las carpetas Patrones y los cambios de composición indicados en este punto.
 3. Verificar que las carpetas existentes del punto 3.4 permanecen intactas.
 4. Verificar que no existe ninguna carpeta `labs` ni ningún archivo `metaprompt.md` ni `verificacion.md`.
-
-
-**Por qué funciona así.** la verificación estructural confirma que el punto 4.1 añade archivos nuevos conservando los documentos heredados.
 
 **Verificación concreta.** la estructura contiene los archivos nuevos y conserva los del punto 3.4.
 
@@ -1111,17 +1017,12 @@ Se adopta el patrón Repository con repositorios específicos por entidad. El co
 
 ### PASO 4.1.23 — Verificar el `.gitignore` del punto 4.1
 
-**Resultado de aprendizaje.** Verificar el `.gitignore` del punto 4.1. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+El `.gitignore` se hereda del punto 3.4 sin modificaciones. La verificación confirma que no se ha tocado.
 
 1. Verificar que el archivo `.gitignore` existe en la carpeta del punto 4.1 (copiado del punto 3.4).
 2. Abrir el archivo `.gitignore` con Visual Studio 2026.
 3. Verificar que contiene las líneas `**/bin/`, `**/obj/`, `.vs/`, `*.user`, `TestResults/` y `*.trx`.
 4. Verificar que no se ha modificado respecto al punto 3.4. Pulsar `Ctrl+S` si no hay cambios y cerrar el archivo.
-
-
-**Por qué funciona así.** el `.gitignore` se hereda del punto 3.4 sin modificaciones. La verificación confirma que no se ha tocado.
 
 **Verificación concreta.** el `.gitignore` existe y contiene las seis líneas sin modificaciones.
 
@@ -1134,17 +1035,12 @@ Se adopta el patrón Repository con repositorios específicos por entidad. El co
 
 ### PASO 4.1.24 — Hacer el commit del punto 4.1 y verificar el estado final
 
-**Resultado de aprendizaje.** Hacer el commit del punto 4.1 y verificar el estado final. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+El commit permite comparar esta etapa con la anterior. Si has realizado un commit por punto desde 1.1, el recorrido suma 14 commits de puntos; otros commits legítimos pueden aumentar el historial.
 
 1. Desde la raíz del repositorio ejecuta `git status` y revisa que solo aparezcan los archivos de esta etapa y los entregables que has trabajado.
 2. Ejecuta `git add .` después de verificar que `bin/`, `obj/`, `TestResults/` y credenciales están excluidos.
 3. Ejecuta `git commit -m "Punto 4.1: Repository"` con `user.name` y `user.email` configurados.
 4. Ejecuta `git log --oneline` y `git status`; comprueba que se registró el commit de este punto y que no quedan cambios pendientes de esta actividad.
-
-
-**Por qué funciona así.** El commit permite comparar esta etapa con la anterior. Si has realizado un commit por punto desde 1.1, el recorrido suma 14 commits de puntos; otros commits legítimos pueden aumentar el historial.
 
 **Verificación concreta.** El historial incluye el commit de 4.1 y `git status` no muestra cambios pendientes de esta actividad; no se exige un número rígido de commits a un repositorio con más trabajo.
 
@@ -1294,23 +1190,24 @@ El punto 4.1 ha definido el patrón Repository como abstracción entre la capa d
 
 # Punto 4.2 — Unit of Work
 
+## Entender quién confirma una operación y qué significa su transacción
+
+EF Core dispone de una unidad de trabajo implícita: un DbContext sigue cambios y puede confirmarlos mediante SaveChangesAsync. Introducir un patrón Unit of Work sobre esta infraestructura solo resulta útil si aclara quién controla la transacción y evita confirmaciones dispersas. En AceriaApp el caso de uso debe mantener el límite de la operación dentro de una única base de datos, sin prometer atomicidad entre microservicios que todavía no participan.
+
+La práctica separa el catálogo de unidades de trabajo de la implementación que utiliza el contexto real. Reconstruiremos los tipos y sus pruebas y comprobaremos qué ocurre cuando una regla de negocio rechaza un cambio antes de guardar. Los ensayos con SQL Server son los que muestran una confirmación efectiva; un test de coherencia del catálogo únicamente verifica las condiciones que le hemos programado.
+
 **Carpeta de trabajo:** `M04_PATRONES_ARQUITECTURA/PROYECTO/4.2-unit-of-work`.
 
 **Objetivo:** completar los veinticuatro pasos, conservar los documentos heredados y comprobar el patrón con código y tests ejecutables. La etapa suma 77 pruebas en 11 proyectos.
 
 ### PASO 4.2.1 — Crear la carpeta del punto 4.2 a partir del punto 4.1
 
-**Resultado de aprendizaje.** Crear la carpeta del punto 4.2 a partir del punto 4.1. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+La copia preserva una etapa autónoma y reproducible. 4.1-repository aporta 62 tests aprobados y 10 proyectos antes de añadir este punto.
 
 1. Abre la terminal integrada de Visual Studio y localiza `M04_PATRONES_ARQUITECTURA/PROYECTO/4.1-repository`; esa es la etapa completa que vas a continuar.
 2. Crea `M04_PATRONES_ARQUITECTURA/PROYECTO/4.2-unit-of-work` y copia en ella el contenido de `4.1-repository`; en Windows puedes usar `xcopy` con `/E /I /H /Y`.
 3. Excluye `bin`, `obj` y `TestResults`; abre únicamente la copia de `4.2-unit-of-work` para que el punto anterior permanezca intacto.
 4. Ejecuta `dir` dentro de `4.2-unit-of-work` y verifica `AceriaApp.sln`, `README.md`, `src`, `tests`, `docs` y `global.json`.
-
-
-**Por qué funciona así.** La copia preserva una etapa autónoma y reproducible. 4.1-repository aporta 62 tests aprobados y 10 proyectos antes de añadir este punto.
 
 **Verificación concreta.** La copia contiene la solución y los 10 proyectos de la etapa anterior; no contiene todavía archivos nuevos de 4.2.
 
@@ -1324,17 +1221,12 @@ El punto 4.1 ha definido el patrón Repository como abstracción entre la capa d
 
 ### PASO 4.2.2 — Abrir la solución copiada en Visual Studio 2026
 
-**Resultado de aprendizaje.** Abrir la solución copiada en Visual Studio 2026. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+Abrir la solución copiada permite trabajar en el punto 4.2 sobre la base del punto 4.1. La compilación verifica que la copia es correcta.
 
 1. Entra en `4.2-unit-of-work` y abre `AceriaApp.sln` con Visual Studio; desde Windows puedes ejecutar `start AceriaApp.sln`.
 2. Ejecuta `dotnet sln AceriaApp.sln list` y comprueba los 10 proyectos heredados; todos deben existir bajo esta etapa.
 3. Ejecuta `dotnet restore AceriaApp.sln` y `dotnet build AceriaApp.sln -c Release`; conserva la salida como comprobación inicial.
 4. Si la API está en ejecución, detenla antes de compilar. Continúa cuando la compilación termine sin errores y las rutas no apunten a otra etapa.
-
-
-**Por qué funciona así.** abrir la solución copiada permite trabajar en el punto 4.2 sobre la base del punto 4.1. La compilación verifica que la copia es correcta.
 
 **Verificación concreta.** `dotnet sln AceriaApp.sln list` muestra 10 proyectos y `dotnet build AceriaApp.sln -c Release` termina con `Build succeeded.`.
 
@@ -1347,17 +1239,12 @@ El punto 4.1 ha definido el patrón Repository como abstracción entre la capa d
 
 ### PASO 4.2.3 — Verificar que la carpeta `docs` contiene los documentos del punto 4.1
 
-**Resultado de aprendizaje.** Verificar que la carpeta `docs` contiene los documentos del punto 4.1. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+La etapa conserva los 10 documentos anteriores y añade únicamente su ficha de patrón y su ADR. Las modificaciones de código se escriben en la copia actual.
 
 1. Expande `docs` dentro de la copia de `4.2-unit-of-work`.
 2. Comprueba los 10 documentos heredados: los ADR-010 a ADR-014 y las fichas de los puntos anteriores.
 3. Compara sus nombres y contenido con `docs` de `4.1-repository`. No modifiques ni elimines los documentos anteriores.
 4. Confirma que todavía no existen `docs/patron-unit-of-work.md` ni `docs/ADR-015-patron-unit-of-work.md`; se crearán en este punto.
-
-
-**Por qué funciona así.** La etapa conserva los 10 documentos anteriores y añade únicamente su ficha de patrón y su ADR. Las modificaciones de código se escriben en la copia actual.
 
 **Verificación concreta.** `docs` contiene 10 archivos heredados idénticos; los dos documentos de este punto todavía no existen.
 
@@ -1370,9 +1257,7 @@ El punto 4.1 ha definido el patrón Repository como abstracción entre la capa d
 
 ### PASO 4.2.4 — Crear el documento del patrón Unit of Work en `docs`
 
-**Resultado de aprendizaje.** Crear el documento del patrón Unit of Work en `docs`. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+El documento del patrón Unit of Work es el artefacto de `docs` específico del punto 4.2. No modifica los 10 documentos existentes del punto 4.1.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `docs`.
 2. Seleccionar `Add` → `New Item` → `Text File` y nombrar el archivo `patron-unit-of-work.md`.
@@ -1447,7 +1332,6 @@ El catálogo de este punto describe reglas de diseño y contiene ejemplos de con
 El catálogo de diseño de este punto incluye unidades que declaran confirmación y reversión explícitas. Sus dos registros y el resumen de seis repositorios son datos del ejercicio de validación. La implementación ejecutable utiliza `IUnitOfWork.CommitAsync` y `EfUnitOfWork`, con un repositorio para las órdenes; la prueba del lote coordina dos entidades y la transacción pertenece al contexto. Una unidad de trabajo puede coordinar varios repositorios que compartan ese contexto, pero este punto no implementa repositorios ficticios de inventario o clientes.
 ```
 
-**Por qué funciona así.** el documento del patrón Unit of Work es el artefacto de `docs` específico del punto 4.2. No modifica los 10 documentos existentes del punto 4.1.
 
 **Verificación concreta.** El archivo `docs/patron-unit-of-work.md` existe y contiene las 11 secciones mostradas; abre su vista previa y comprueba todos los apartados.
 
@@ -1460,17 +1344,12 @@ El catálogo de diseño de este punto incluye unidades que declaran confirmació
 
 ### PASO 4.2.5 — Crear la carpeta `UnitOfWork` en el proyecto API
 
-**Resultado de aprendizaje.** Crear la carpeta `UnitOfWork` en el proyecto API. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+La carpeta `UnitOfWork` albergará las clases de validación del patrón Unit of Work. Se crea como carpeta nueva sin tocar las carpetas existentes.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre el proyecto `AceriaApp.Api`.
 2. Seleccionar `Add` → `New Folder` y nombrar la carpeta `UnitOfWork`.
 3. Verificar que la carpeta `UnitOfWork` aparece dentro de `AceriaApp.Api` sin afectar a las carpetas existentes.
 4. Verificar que no se ha modificado ningún archivo existente del punto 4.1.
-
-
-**Por qué funciona así.** la carpeta `UnitOfWork` albergará las clases de validación del patrón Unit of Work. Se crea como carpeta nueva sin tocar las carpetas existentes.
 
 **Verificación concreta.** la carpeta `UnitOfWork` existe dentro de `AceriaApp.Api` y las carpetas existentes permanecen intactas.
 
@@ -1483,9 +1362,7 @@ El catálogo de diseño de este punto incluye unidades que declaran confirmació
 
 ### PASO 4.2.6 — Crear la clase `UnidadDeTrabajo`
 
-**Resultado de aprendizaje.** Crear la clase `UnidadDeTrabajo`. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+`UnidadDeTrabajo` modela la responsabilidad de confirmar cambios. En EF Core esta responsabilidad ya se manifiesta en `SaveChangesAsync`; una abstracción adicional debe explicitar el límite transaccional, no introducir una segunda confirmación que deje estados parciales.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `UnitOfWork`.
 2. Seleccionar `Add` → `Class` y nombrar la clase `UnidadDeTrabajo.cs`.
@@ -1509,7 +1386,6 @@ public class UnidadDeTrabajo
 }
 ```
 
-**Por qué funciona así.** la clase `UnidadDeTrabajo` modela una unidad de trabajo con su nombre, número de repositorios coordinados y cuatro indicadores de responsabilidades. Es la unidad de información del validador.
 
 **Verificación concreta.** la clase `UnidadDeTrabajo` compila sin errores y expone seis propiedades.
 
@@ -1522,9 +1398,7 @@ public class UnidadDeTrabajo
 
 ### PASO 4.2.7 — Crear la clase `ValidadorUnidadesDeTrabajo`
 
-**Resultado de aprendizaje.** Crear la clase `ValidadorUnidadesDeTrabajo`. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+El validador del catálogo estudia propiedades de una unidad de trabajo declarada. Sus pruebas no pueden demostrar que una transacción SQL se confirmó o se revirtió: esa evidencia exige comprobar el repositorio y la base real.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `UnitOfWork`.
 2. Seleccionar `Add` → `Class` y nombrar la clase `ValidadorUnidadesDeTrabajo.cs`.
@@ -1591,7 +1465,6 @@ public class ValidadorUnidadesDeTrabajo
 public record ResultadoUnidadesDeTrabajo(bool EsValida, IReadOnlyList<string> Errores);
 ```
 
-**Por qué funciona así.** la clase `ValidadorUnidadesDeTrabajo` comprueba que cada unidad de trabajo declara nombre, coordina al menos un repositorio, expone las operaciones de confirmación y reversión, y no contiene reglas de negocio ni conoce entidades concretas.
 
 **Verificación concreta.** la clase `ValidadorUnidadesDeTrabajo` compila sin errores y expone un método y un `record`.
 
@@ -1604,9 +1477,7 @@ public record ResultadoUnidadesDeTrabajo(bool EsValida, IReadOnlyList<string> Er
 
 ### PASO 4.2.8 — Añadir los `using` necesarios en `ValidadorUnidadesDeTrabajo`
 
-**Resultado de aprendizaje.** Añadir los `using` necesarios en `ValidadorUnidadesDeTrabajo`. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+Los tipos `List<string>` e `IReadOnlyList<string>` pertenecen a `System.Collections.Generic`. El método `ToList` pertenece a `System.Linq`. En proyectos con `ImplicitUsings` desactivado, hay que añadir los usings explícitos.
 
 1. En el panel Solution Explorer, hacer doble clic en `ValidadorUnidadesDeTrabajo.cs`.
 2. Inserta las directivas indicadas antes del namespace del archivo; la indicación del archivo identifica la línea exacta.
@@ -1627,7 +1498,6 @@ using System.Collections.Generic;
 using System.Linq;
 ```
 
-**Por qué funciona así.** los tipos `List<string>` e `IReadOnlyList<string>` pertenecen a `System.Collections.Generic`. El método `ToList` pertenece a `System.Linq`. En proyectos con `ImplicitUsings` desactivado, hay que añadir los usings explícitos.
 
 **Verificación concreta.** `ValidadorUnidadesDeTrabajo.cs` compila sin errores y no muestra subrayados rojos.
 
@@ -1640,9 +1510,7 @@ using System.Linq;
 
 ### PASO 4.2.9 — Crear la clase `CatalogoUnidadesDeTrabajo`
 
-**Resultado de aprendizaje.** Crear la clase `CatalogoUnidadesDeTrabajo`. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+La clase `CatalogoUnidadesDeTrabajo` contiene las unidades de trabajo por defecto del proyecto. Se usan en los tests y en la validación automática.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `UnitOfWork`.
 2. Seleccionar `Add` → `Class` y nombrar la clase `CatalogoUnidadesDeTrabajo.cs`.
@@ -1684,7 +1552,6 @@ public class CatalogoUnidadesDeTrabajo
 }
 ```
 
-**Por qué funciona así.** la clase `CatalogoUnidadesDeTrabajo` contiene las unidades de trabajo por defecto del proyecto. Se usan en los tests y en la validación automática.
 
 **Verificación concreta.** la clase `CatalogoUnidadesDeTrabajo` compila sin errores y expone un método estático.
 
@@ -1697,9 +1564,7 @@ public class CatalogoUnidadesDeTrabajo
 
 ### PASO 4.2.10 — Añadir el `using` necesario en `CatalogoUnidadesDeTrabajo`
 
-**Resultado de aprendizaje.** Añadir el `using` necesario en `CatalogoUnidadesDeTrabajo`. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+El tipo `List<T>` pertenece a `System.Collections.Generic`. En proyectos con `ImplicitUsings` desactivado, hay que añadir el using explícito.
 
 1. En el panel Solution Explorer, hacer doble clic en `CatalogoUnidadesDeTrabajo.cs`.
 2. Inserta las directivas indicadas antes del namespace del archivo; la indicación del archivo identifica la línea exacta.
@@ -1719,7 +1584,6 @@ namespace AceriaApp.Api.UnitOfWork;
 using System.Collections.Generic;
 ```
 
-**Por qué funciona así.** el tipo `List<T>` pertenece a `System.Collections.Generic`. En proyectos con `ImplicitUsings` desactivado, hay que añadir el using explícito.
 
 **Verificación concreta.** `CatalogoUnidadesDeTrabajo.cs` compila sin errores y no muestra subrayados rojos.
 
@@ -1732,9 +1596,7 @@ using System.Collections.Generic;
 
 ### PASO 4.2.11 — Crear el proyecto de tests del punto 4.2
 
-**Resultado de aprendizaje.** Crear el proyecto de tests del punto 4.2. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+El punto 4.2 añade un proyecto de tests específico para las clases del patrón Unit of Work. Se crea como proyecto nuevo y conserva las pruebas previas; las actualizaciones explícitas de integración se muestran en su paso correspondiente.
 
 1. En `tests` crea la carpeta `AceriaApp.UnitOfWork.Tests` y, dentro, el archivo `AceriaApp.UnitOfWork.Tests.csproj` con el XML completo de este paso. En Visual Studio puedes elegir la plantilla xUnit y ajustar el archivo generado.
 2. Elimina el archivo de ejemplo `UnitTest1.cs` si lo creó la plantilla; los archivos de pruebas completos se escriben en sus pasos correspondientes.
@@ -1761,7 +1623,6 @@ using System.Collections.Generic;
 </Project>
 ```
 
-**Por qué funciona así.** el punto 4.2 añade un proyecto de tests específico para las clases del patrón Unit of Work. Se crea como proyecto nuevo y conserva las pruebas previas; las actualizaciones explícitas de integración se muestran en su paso correspondiente.
 
 **Verificación concreta.** La solución muestra 11 proyectos, incluido `AceriaApp.UnitOfWork.Tests`; el nuevo csproj fija .NET 8, SDK de tests 17.12.0, xUnit 2.9.2 y runner 2.8.2.
 
@@ -1774,9 +1635,7 @@ using System.Collections.Generic;
 
 ### PASO 4.2.12 — Añadir la referencia del proyecto de tests a la API
 
-**Resultado de aprendizaje.** Añadir la referencia del proyecto de tests a la API. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+La referencia permite que el proyecto de tests acceda a las clases de `UnitOfWork` del proyecto API.
 
 1. Ejecuta `dotnet add tests/AceriaApp.UnitOfWork.Tests/AceriaApp.UnitOfWork.Tests.csproj reference src/AceriaApp.Api/AceriaApp.Api.csproj` o deja el archivo exactamente como el bloque XML de este paso.
 2. Comprueba que la referencia va de tests a API; la API nunca debe referenciar el proyecto de tests.
@@ -1804,7 +1663,6 @@ using System.Collections.Generic;
 </Project>
 ```
 
-**Por qué funciona así.** la referencia permite que el proyecto de tests acceda a las clases de `UnitOfWork` del proyecto API.
 
 **Verificación concreta.** el archivo `AceriaApp.UnitOfWork.Tests.csproj` contiene un `ProjectReference` al proyecto API.
 
@@ -1817,9 +1675,7 @@ using System.Collections.Generic;
 
 ### PASO 4.2.13 — Añadir el paquete `FluentAssertions` al proyecto de tests
 
-**Resultado de aprendizaje.** Añadir el paquete `FluentAssertions` al proyecto de tests. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+`FluentAssertions` proporciona la sintaxis de aserción usada en el curso. Se añade al nuevo proyecto de tests sin modificar los proyectos de tests existentes.
 
 1. Ejecuta `dotnet add tests/AceriaApp.UnitOfWork.Tests/AceriaApp.UnitOfWork.Tests.csproj package FluentAssertions --version 6.12.2` o reemplaza el csproj por el XML completo indicado.
 2. Ejecuta `dotnet list tests/AceriaApp.UnitOfWork.Tests/AceriaApp.UnitOfWork.Tests.csproj package` y localiza `FluentAssertions 6.12.2`.
@@ -1848,7 +1704,6 @@ using System.Collections.Generic;
 </Project>
 ```
 
-**Por qué funciona así.** `FluentAssertions` proporciona la sintaxis de aserción usada en el curso. Se añade al nuevo proyecto de tests sin modificar los proyectos de tests existentes.
 
 **Verificación concreta.** El archivo de proyecto y `dotnet list package` muestran `FluentAssertions 6.12.2`; la compilación finaliza correctamente.
 
@@ -1861,9 +1716,7 @@ using System.Collections.Generic;
 
 ### PASO 4.2.14 — Crear el archivo `ValidadorUnidadesDeTrabajoTests.cs`
 
-**Resultado de aprendizaje.** Crear el archivo `ValidadorUnidadesDeTrabajoTests.cs`. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+Los tests verifican que el validador acepta el catálogo por defecto y rechaza las unidades de trabajo que violan las responsabilidades del patrón.
 
 1. En el panel Solution Explorer, expandir `tests` → `AceriaApp.UnitOfWork.Tests`.
 2. Crear el archivo `ValidadorUnidadesDeTrabajoTests.cs`.
@@ -1974,7 +1827,6 @@ public class ValidadorUnidadesDeTrabajoTests
 }
 ```
 
-**Por qué funciona así.** los tests verifican que el validador acepta el catálogo por defecto y rechaza las unidades de trabajo que violan las responsabilidades del patrón.
 
 **Verificación concreta.** el archivo `ValidadorUnidadesDeTrabajoTests.cs` compila y contiene siete métodos de test.
 
@@ -1987,9 +1839,7 @@ public class ValidadorUnidadesDeTrabajoTests
 
 ### PASO 4.2.15 — Crear el archivo `CatalogoUnidadesDeTrabajoTests.cs`
 
-**Resultado de aprendizaje.** Crear el archivo `CatalogoUnidadesDeTrabajoTests.cs`. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+Los tests verifican que el catálogo por defecto contiene las unidades esperadas y que ninguna viola las responsabilidades del patrón.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre el proyecto `AceriaApp.UnitOfWork.Tests`.
 2. Seleccionar `Add` → `Class` y nombrar la clase `CatalogoUnidadesDeTrabajoTests.cs`.
@@ -2043,7 +1893,6 @@ public class CatalogoUnidadesDeTrabajoTests
 }
 ```
 
-**Por qué funciona así.** los tests verifican que el catálogo por defecto contiene las unidades esperadas y que ninguna viola las responsabilidades del patrón.
 
 **Verificación concreta.** el archivo `CatalogoUnidadesDeTrabajoTests.cs` compila y contiene cuatro métodos de test.
 
@@ -2056,9 +1905,7 @@ public class CatalogoUnidadesDeTrabajoTests
 
 ### PASO 4.2.16 — Integrar la unidad de trabajo y compilar la solución
 
-**Resultado de aprendizaje.** Integrar la unidad de trabajo y compilar la solución. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+La integración muestra cómo se comparte el DbContext dentro del ámbito de la petición y quién ejecuta la confirmación. Comprueba un resultado correcto y un rechazo de dominio: no debe persistirse un cambio después de un fallo de validación.
 
 1. Abre cada archivo de integración funcional indicado en este paso. Crea los nuevos y reemplaza únicamente los que se señalen; copia todo el código mostrado.
 2. Recorre las referencias: el dominio define sus entidades, la aplicación usa puertos y la infraestructura implementa persistencia; la API compone el flujo.
@@ -2100,11 +1947,7 @@ public static class PatronesOrdenesEndpoints
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
-
-- **Línea 9:** Aísla la ruta de este módulo y conserva los endpoints existentes de M02 y M03.
-
-- **Línea 22:** Devuelve 201 y una cabecera Location calculada con la ruta de lectura nombrada y el identificador creado.
+Aísla la ruta de este módulo y conserva los endpoints existentes de M02 y M03. Devuelve 201 y una cabecera Location calculada con la ruta de lectura nombrada y el identificador creado.
 
 
 **Integración funcional.** Integra únicamente registros y mapeo del endpoint de patrones. Conserva íntegros los endpoints, documentación y arranque de M2/M3; en 4.5 reemplaza registros repetidos por AddPatronesOrdenes().
@@ -2279,19 +2122,9 @@ app.Run();
 public partial class Program {} // permite WebApplicationFactory en tests
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+Permite mapear los endpoints del módulo desde la raíz de composición. Permite registrar las implementaciones de los puertos desde la API. Mantiene el registro SQL Server y los servicios que ya utilizaba M03.
 
-- **Línea 1:** Permite mapear los endpoints del módulo desde la raíz de composición.
-
-- **Línea 3:** Permite registrar las implementaciones de los puertos desde la API.
-
-- **Línea 24:** Mantiene el registro SQL Server y los servicios que ya utilizaba M03.
-
-- **Línea 25:** Durante esta etapa se registra explícitamente el puerto de escritura con su adaptador.
-
-- **Línea 26:** La unidad de trabajo comparte el contexto Scoped de la petición.
-
-- **Línea 162:** Publica las rutas del nuevo flujo después de construir la aplicación y antes de ejecutarla.
+Durante esta etapa se registra explícitamente el puerto de escritura con su adaptador. La unidad de trabajo comparte el contexto Scoped de la petición. Publica las rutas del nuevo flujo después de construir la aplicación y antes de ejecutarla.
 
 
 **Integración funcional.** Separa el contrato de staging del repositorio autocontenido de M3. Agregar prepara una entidad; Obtener devuelve una entidad seguida por el mismo contexto. No confirma cambios.
@@ -2311,13 +2144,7 @@ public interface IOrdenTrabajoRepositorio
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
-
-- **Línea 5:** Define el puerto que necesita el caso de uso; no depende de DbContext ni de SQL Server.
-
-- **Línea 7:** Devuelve una entidad del dominio o null si no existe; el token permite propagar cancelación.
-
-- **Línea 8:** Prepara una entidad en el contexto compartido. Este contrato no confirma cambios, porque esa decisión corresponde a la unidad de trabajo.
+Define el puerto que necesita el caso de uso; no depende de DbContext ni de SQL Server. Devuelve una entidad del dominio o null si no existe; el token permite propagar cancelación. Prepara una entidad en el contexto compartido. Este contrato no confirma cambios, porque esa decisión corresponde a la unidad de trabajo.
 
 
 **Integración funcional.** Define en Aplicación el límite explícito de confirmación. Devuelve el número de entradas guardadas y propaga CancellationToken.
@@ -2334,11 +2161,7 @@ public interface IUnitOfWork
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
-
-- **Línea 3:** La aplicación declara la frontera de persistencia y la infraestructura la implementa.
-
-- **Línea 5:** Expone una única confirmación asincrónica del conjunto de cambios preparados; devuelve el número de entradas guardadas y propaga la cancelación.
+La aplicación declara la frontera de persistencia y la infraestructura la implementa. Expone una única confirmación asincrónica del conjunto de cambios preparados; devuelve el número de entradas guardadas y propaga la cancelación.
 
 
 **Integración funcional.** Coordina la regla de capacidad, el agregado al repositorio y un único commit. Es la variante inicial de 4.2 y permanece como referencia ejecutable al introducir Result en 4.4.
@@ -2365,19 +2188,9 @@ public sealed class OrdenesTransaccionales(IOrdenTrabajoRepositorio repositorio,
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+El caso de uso depende de dos puertos. No instancia repositorios ni conoce el proveedor de persistencia. La regla de capacidad se aplica antes de preparar cualquier escritura. El dominio construye la entidad y protege sus invariantes.
 
-- **Línea 4:** El caso de uso depende de dos puertos. No instancia repositorios ni conoce el proveedor de persistencia.
-
-- **Línea 8:** La regla de capacidad se aplica antes de preparar cualquier escritura.
-
-- **Línea 9:** El dominio construye la entidad y protege sus invariantes.
-
-- **Línea 10:** Prepara el cambio a través del repositorio; aún no hay confirmación.
-
-- **Línea 11:** El caso de uso decide el momento de confirmar y propaga el mismo token de cancelación.
-
-- **Línea 15:** La consulta se delega al puerto sin introducir consultas EF en la aplicación.
+Prepara el cambio a través del repositorio; aún no hay confirmación. El caso de uso decide el momento de confirmar y propaga el mismo token de cancelación. La consulta se delega al puerto sin introducir consultas EF en la aplicación.
 
 
 **Integración funcional.** Confirma todos los cambios seguidos por el contexto mediante un único SaveChangesAsync. EF Core usa su transacción automática en el proveedor relacional; el alcance se limita a esta base de datos, sin prometer atomicidad de servicios externos.
@@ -2397,11 +2210,7 @@ public sealed class EfUnitOfWork(HexagonalDbContext db) : IUnitOfWork
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
-
-- **Línea 6:** La implementación de infraestructura recibe el mismo HexagonalDbContext que utiliza el repositorio del ámbito.
-
-- **Línea 8:** Confirma todos los cambios pendientes con una sola llamada. El proveedor relacional usa una transacción automática cuando es necesaria; si falla el lote, se revierte. El token se transmite a EF Core.
+La implementación de infraestructura recibe el mismo HexagonalDbContext que utiliza el repositorio del ámbito. Confirma todos los cambios pendientes con una sola llamada. El proveedor relacional usa una transacción automática cuando es necesaria; si falla el lote, se revierte. El token se transmite a EF Core.
 
 
 **Integración funcional.** Implementa staging y lectura con seguimiento sobre HexagonalDbContext. No llama SaveChanges: varios cambios pueden confirmarse juntos mediante IUnitOfWork.
@@ -2425,13 +2234,7 @@ public sealed class OrdenTrabajoRepositorio(HexagonalDbContext db) : IOrdenTraba
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
-
-- **Línea 7:** Recibe por constructor el contexto del ámbito actual y cumple el puerto de la aplicación.
-
-- **Línea 10:** Consulta por identificador con seguimiento de EF Core; la entidad recuperada permanece asociada al contexto compartido.
-
-- **Línea 12:** Añade la entidad al seguimiento sin llamar a SaveChanges. Un segundo contexto todavía no debe observarla antes del commit.
+Recibe por constructor el contexto del ámbito actual y cumple el puerto de la aplicación. Consulta por identificador con seguimiento de EF Core; la entidad recuperada permanece asociada al contexto compartido. Añade la entidad al seguimiento sin llamar a SaveChanges. Un segundo contexto todavía no debe observarla antes del commit.
 
 
 **Integración funcional.** Conserva las dependencias de los tests de catálogo y añade Testcontainers.MsSql, el helper compartido y WebApplicationFactory para las pruebas funcionales.
@@ -2455,15 +2258,9 @@ public sealed class OrdenTrabajoRepositorio(HexagonalDbContext db) : IOrdenTraba
 </Project>
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+Compila para .NET 8, igual que los proyectos heredados. Fija el cliente de contenedores para SQL Server; el proveedor EF Core SQL Server llega mediante la referencia a la API. Permite ejecutar peticiones HTTP contra el host real de la API.
 
-- **Línea 2:** `<PropertyGroup><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><IsPackable>false</IsPackable><IsTestProject>true</IsTestProject></PropertyGroup>` → Compila para .NET 8, igual que los proyectos heredados.
-
-- **Línea 8:** `<PackageReference Include="Testcontainers.MsSql" Version="3.10.0" />` → Fija el cliente de contenedores para SQL Server; el proveedor EF Core SQL Server llega mediante la referencia a la API.
-
-- **Línea 9:** `<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.21" />` → Permite ejecutar peticiones HTTP contra el host real de la API.
-
-- **Línea 11:** `<Compile Include="../Compartido/SqlServerPruebas.cs" Link="SqlServerPruebas.cs" />` → Compila el helper heredado que crea y elimina únicamente la base aislada de cada prueba, sin añadir otro proyecto a la solución.
+Compila el helper heredado que crea y elimina únicamente la base aislada de cada prueba, sin añadir otro proyecto a la solución.
 
 
 **Integración funcional.** Prueba staging, confirmación, abandono del ámbito y persistencia entre contextos. La prueba de atomicidad limita los lotes a un comando únicamente al inyectar el fallo y lo provoca antes del segundo INSERT, después de verificar uno ejecutado. WhenNeeded deja cero filas; el control negativo Never deja una. Así se demuestra rollback después de una escritura real, sin EF InMemory.
@@ -2580,28 +2377,11 @@ public sealed class UnitOfWorkFuncionalesTests
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+Un contexto independiente no ve cambios preparados; el commit debe persistir ambas órdenes. Ejecuta la misma secuencia con transacción automática y con el control negativo sin transacción. En `await using var db = Contexto(store, fallo);` se solo esta prueba separa los INSERT para provocar el error después de la primera escritura.
 
-- **Línea 15:** `public async Task Agregar_solo_prepara_y_commit_persiste_todo()` → Un contexto independiente no ve cambios preparados; el commit debe persistir ambas órdenes.
+En `Assert.Equal(1, fallo.InsertsEjecutados);` se exige que una escritura se haya ejecutado antes de lanzar el fallo. Un contexto independiente consulta el estado confirmado; Never deja una fila y WhenNeeded ninguna. Desechar el contexto sin commit no escribe las entidades preparadas.
 
-- **Línea 32:** `foreach (var transacciones in new[] { AutoTransactionBehavior.WhenNeeded, AutoTransactionBehavior.Never })` → Ejecuta la misma secuencia con transacción automática y con el control negativo sin transacción.
-
-- **Línea 36:** `await using var db = Contexto(store, fallo);` → Solo esta prueba separa los INSERT para provocar el error después de la primera escritura.
-
-- **Línea 43:** `Assert.Equal(1, fallo.InsertsEjecutados);` → Exige que una escritura se haya ejecutado antes de lanzar el fallo.
-
-- **Línea 44:** `await using var verificacion = Contexto(store);` → Un contexto independiente consulta el estado confirmado; Never deja una fila y WhenNeeded ninguna.
-
-- **Línea 52:** `public async Task Descartar_el_ambito_sin_commit_descarta_cambios()` → Desechar el contexto sin commit no escribe las entidades preparadas.
-
-- **Línea 85:** `if (command.CommandText.Contains("INSERT INTO", StringComparison.OrdinalIgnoreCase) && InsertsEjecutados == 1)` → Detecta el INSERT aunque SQL Server anteponga instrucciones SET al comando.
-
-- **Línea 101:** `else options.UseSqlServer(store.ConnectionString, sql => sql.MaxBatchSize(1)).AddInterceptors(fallo);` → Desactiva la agrupación solamente cuando se inyecta el fallo; las demás pruebas conservan la configuración habitual.
-
-- **Línea 103:** `Assert.Equal("Microsoft.EntityFrameworkCore.SqlServer", db.Database.ProviderName);` → Comprueba que todos los contextos de la prueba usan SQL Server.
-
-
-**Por qué funciona así.** compilar la solución completa verifica que todos los proyectos, incluidos los nuevos, se resuelven correctamente.
+Detecta el INSERT aunque SQL Server anteponga instrucciones SET al comando. Desactiva la agrupación solamente cuando se inyecta el fallo; las demás pruebas conservan la configuración habitual. Comprueba que todos los contextos de la prueba usan SQL Server.
 
 **Verificación concreta.** La solución completa compila, incluidos el código de integración y sus pruebas. Las siguientes ejecuciones de tests comprobarán el comportamiento de los patrones.
 
@@ -2614,17 +2394,12 @@ public sealed class UnitOfWorkFuncionalesTests
 
 ### PASO 4.2.17 — Ejecutar todos los tests del punto 4.2
 
-**Resultado de aprendizaje.** Ejecutar todos los tests del punto 4.2. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+Ejecutar los tests del punto 4.2 verifica que las clases del patrón Unit of Work funcionan correctamente.
 
 1. Ejecuta `dotnet test tests/AceriaApp.UnitOfWork.Tests/AceriaApp.UnitOfWork.Tests.csproj -c Release` desde la raíz de esta etapa.
 2. Comprueba un total de 15 pruebas: 11 de catálogo y 4 funcionales, con cero fallos y cero omisiones.
 3. Si falla una prueba, abre su mensaje de aserción y el archivo indicado; corrige el comportamiento antes de continuar.
 4. Repite el mismo comando tras la corrección y conserva el resultado de la ejecución válida.
-
-
-**Por qué funciona así.** ejecutar los tests del punto 4.2 verifica que las clases del patrón Unit of Work funcionan correctamente.
 
 **Verificación concreta.** El proyecto `AceriaApp.UnitOfWork.Tests` termina con `Failed: 0, Passed: 15, Skipped: 0, Total: 15`.
 
@@ -2637,17 +2412,12 @@ public sealed class UnitOfWorkFuncionalesTests
 
 ### PASO 4.2.18 — Ejecutar todos los tests de la solución
 
-**Resultado de aprendizaje.** Ejecutar todos los tests de la solución. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+Ejecutar todos los tests de la solución verifica que los tests de los puntos anteriores y del punto 4.2 pasan conjuntamente.
 
 1. Ejecuta `dotnet build AceriaApp.sln -c Release` para producir todas las asambleas de esta etapa.
 2. Ejecuta `dotnet test AceriaApp.sln -c Release --no-build --no-restore` para ejecutar todas las pruebas acumuladas.
 3. Suma los resultados de los 7 proyectos de tests: deben ser 77 pruebas aprobadas, sin fallos ni omisiones.
 4. Comprueba que las pruebas heredadas de M03 y los puntos anteriores de M04 siguen presentes; no borres tests para obtener un resultado verde.
-
-
-**Por qué funciona así.** ejecutar todos los tests de la solución verifica que los tests de los puntos anteriores y del punto 4.2 pasan conjuntamente.
 
 **Verificación concreta.** La suma de las líneas de resultados es `Failed: 0`, `Passed: 77`, `Skipped: 0` y `Total: 77`. Dotnet muestra un resumen por proyecto, no necesariamente una única línea global.
 
@@ -2660,9 +2430,7 @@ public sealed class UnitOfWorkFuncionalesTests
 
 ### PASO 4.2.19 — Crear el README del punto 4.2
 
-**Resultado de aprendizaje.** Crear el README del punto 4.2. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+El README del punto 4.2 explica el objetivo, el estado, la ejecución y los añadidos. No modifica el README del punto 4.1.
 
 1. En la carpeta del punto `4.2-unit-of-work`, hacer clic derecho y seleccionar `Add` → `New Item` → `Text File`.
 2. Nombrar el archivo `README.md`.
@@ -2710,7 +2478,6 @@ La práctica conecta además el patrón con los puertos, adaptadores y pruebas d
 Los catálogos describen ejemplos de diseño. El comportamiento de las clases reales se comprueba además con los tests funcionales del punto. Ejecuta `dotnet test AceriaApp.sln -c Release` y exige cero fallos y cero omisiones.
 ```
 
-**Por qué funciona así.** el README del punto 4.2 explica el objetivo, el estado, la ejecución y los añadidos. No modifica el README del punto 4.1.
 
 **Verificación concreta.** El archivo `README.md` existe y contiene las 6 secciones mostradas; abre su vista previa y comprueba todos los apartados.
 
@@ -2723,9 +2490,7 @@ Los catálogos describen ejemplos de diseño. El comportamiento de las clases re
 
 ### PASO 4.2.20 — Crear el ADR-015 del punto 4.2
 
-**Resultado de aprendizaje.** Crear el ADR-015 del punto 4.2. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+El ADR-015 documenta la decisión de adoptar el patrón Unit of Work. Es un artefacto nuevo del punto 4.2 que no modifica los ADR existentes.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `docs`.
 2. Seleccionar `Add` → `New Item` → `Text File` y nombrar el archivo `ADR-015-patron-unit-of-work.md`.
@@ -2762,7 +2527,6 @@ Se adopta un contrato mínimo `IUnitOfWork` con `CommitAsync`. La implementació
 El catálogo de diseño de este punto incluye unidades que declaran confirmación y reversión explícitas. Sus dos registros y el resumen de seis repositorios son datos del ejercicio de validación. La implementación ejecutable utiliza `IUnitOfWork.CommitAsync` y `EfUnitOfWork`, con un repositorio para las órdenes; la prueba del lote coordina dos entidades y la transacción pertenece al contexto. Una unidad de trabajo puede coordinar varios repositorios que compartan ese contexto, pero este punto no implementa repositorios ficticios de inventario o clientes.
 ```
 
-**Por qué funciona así.** el ADR-015 documenta la decisión de adoptar el patrón Unit of Work. Es un artefacto nuevo del punto 4.2 que no modifica los ADR existentes.
 
 **Verificación concreta.** El archivo `docs/ADR-015-patron-unit-of-work.md` existe y contiene las 6 secciones mostradas; abre su vista previa y comprueba todos los apartados.
 
@@ -2775,17 +2539,12 @@ El catálogo de diseño de este punto incluye unidades que declaran confirmació
 
 ### PASO 4.2.21 — Verificar que los documentos heredados y la etapa 4.1 permanecen intactos
 
-**Resultado de aprendizaje.** Verificar que los documentos heredados y la etapa 4.1 permanecen intactos. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+Las decisiones previas se conservan como registros históricos. Los nuevos ADR explican la evolución y las modificaciones de integración se aplican solo a la copia de la etapa actual.
 
 1. Vuelve a la raíz del repositorio; las rutas siguientes se interpretan desde allí.
 2. En CMD ejecuta `for %f in (M04_PATRONES_ARQUITECTURA\PROYECTO\4.1-repository\docs\*.md) do fc /L "%f" "M04_PATRONES_ARQUITECTURA\PROYECTO\4.2-unit-of-work\docs\%~nxf"`. En PowerShell puedes comparar `Get-FileHash` para cada par de documentos.
 3. Comprueba 10 comparaciones y exige igualdad en todas; se conserva exactamente el contenido de los documentos heredados.
 4. Si una comparación falla, restaura el documento de la etapa actual desde `4.1-repository`. Verifica también que la carpeta del punto anterior no tiene modificaciones.
-
-
-**Por qué funciona así.** Las decisiones previas se conservan como registros históricos. Los nuevos ADR explican la evolución y las modificaciones de integración se aplican solo a la copia de la etapa actual.
 
 **Verificación concreta.** Los 10 documentos heredados coinciden byte a byte y el punto anterior permanece intacto.
 
@@ -2798,17 +2557,12 @@ El catálogo de diseño de este punto incluye unidades que declaran confirmació
 
 ### PASO 4.2.22 — Verificar la estructura del punto 4.2
 
-**Resultado de aprendizaje.** Verificar la estructura del punto 4.2. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+La verificación estructural confirma que el punto 4.2 añade archivos nuevos conservando los documentos heredados.
 
 1. Escribir `tree /F M04_PATRONES_ARQUITECTURA\PROYECTO\4.2-unit-of-work` y pulsar Enter.
 2. Verificar que la salida muestra `AceriaApp.sln`, `README.md`, `src\AceriaApp.Api\UnitOfWork` con las tres clases nuevas, `tests\AceriaApp.UnitOfWork.Tests` con los dos archivos de catálogo y el archivo de tests funcionales y `docs` con el documento del patrón y el ADR-015. Comprueba además todos los archivos de integración de las carpetas Patrones y los cambios de composición indicados en este punto.
 3. Verificar que las carpetas existentes del punto 4.1 permanecen intactas.
 4. Verificar que no existe ninguna carpeta `labs` ni ningún archivo `metaprompt.md` ni `verificacion.md`.
-
-
-**Por qué funciona así.** la verificación estructural confirma que el punto 4.2 añade archivos nuevos conservando los documentos heredados.
 
 **Verificación concreta.** la estructura contiene los archivos nuevos y conserva los del punto 4.1.
 
@@ -2821,17 +2575,12 @@ El catálogo de diseño de este punto incluye unidades que declaran confirmació
 
 ### PASO 4.2.23 — Verificar el `.gitignore` del punto 4.2
 
-**Resultado de aprendizaje.** Verificar el `.gitignore` del punto 4.2. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+El `.gitignore` se hereda del punto 4.1 sin modificaciones. La verificación confirma que no se ha tocado.
 
 1. Verificar que el archivo `.gitignore` existe en la carpeta del punto 4.2 (copiado del punto 4.1).
 2. Abrir el archivo `.gitignore` con Visual Studio 2026.
 3. Verificar que contiene las líneas `**/bin/`, `**/obj/`, `.vs/`, `*.user`, `TestResults/` y `*.trx`.
 4. Verificar que no se ha modificado respecto al punto 4.1. Pulsar `Ctrl+S` si no hay cambios y cerrar el archivo.
-
-
-**Por qué funciona así.** el `.gitignore` se hereda del punto 4.1 sin modificaciones. La verificación confirma que no se ha tocado.
 
 **Verificación concreta.** el `.gitignore` existe y contiene las seis líneas sin modificaciones.
 
@@ -2844,17 +2593,12 @@ El catálogo de diseño de este punto incluye unidades que declaran confirmació
 
 ### PASO 4.2.24 — Hacer el commit del punto 4.2 y verificar el estado final
 
-**Resultado de aprendizaje.** Hacer el commit del punto 4.2 y verificar el estado final. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+El commit permite comparar esta etapa con la anterior. Si has realizado un commit por punto desde 1.1, el recorrido suma 15 commits de puntos; otros commits legítimos pueden aumentar el historial.
 
 1. Desde la raíz del repositorio ejecuta `git status` y revisa que solo aparezcan los archivos de esta etapa y los entregables que has trabajado.
 2. Ejecuta `git add .` después de verificar que `bin/`, `obj/`, `TestResults/` y credenciales están excluidos.
 3. Ejecuta `git commit -m "Punto 4.2: Unit of Work"` con `user.name` y `user.email` configurados.
 4. Ejecuta `git log --oneline` y `git status`; comprueba que se registró el commit de este punto y que no quedan cambios pendientes de esta actividad.
-
-
-**Por qué funciona así.** El commit permite comparar esta etapa con la anterior. Si has realizado un commit por punto desde 1.1, el recorrido suma 15 commits de puntos; otros commits legítimos pueden aumentar el historial.
 
 **Verificación concreta.** El historial incluye el commit de 4.2 y `git status` no muestra cambios pendientes de esta actividad; no se exige un número rígido de commits a un repositorio con más trabajo.
 
@@ -3004,23 +2748,24 @@ El punto 4.2 ha definido el patrón Unit of Work como abstracción para coordina
 
 # Punto 4.3 — Mediator
 
+## Coordinar solicitudes sin acoplar el emisor a todos los manejadores
+
+El patrón Mediator permite enviar una petición a un manejador sin que el iniciador conozca su implementación concreta. Esta mediación tiene sentido en la capa de aplicación, donde se coordinan operaciones, y no debe convertir el dominio en dependiente de ASP.NET Core. En M04 utilizaremos MediatR para reconocer el registro, el descubrimiento del manejador y el trayecto que sigue una petición real, diferenciándolo de un simple catálogo de mensajes.
+
+El alumno continuará desde la etapa 4.2 y conservará su persistencia. Las nuevas clases de análisis ayudarán a describir mensajes y reglas, pero la prueba decisiva será enviar un comando o consulta al mediador registrado y comprobar que el resultado y sus efectos son los previstos. Además, habrá que mantener separados los errores de configuración de DI de los errores esperados del negocio.
+
 **Carpeta de trabajo:** `M04_PATRONES_ARQUITECTURA/PROYECTO/4.3-mediator`.
 
 **Objetivo:** completar los veinticuatro pasos, conservar los documentos heredados y comprobar el patrón con código y tests ejecutables. La etapa suma 90 pruebas en 12 proyectos.
 
 ### PASO 4.3.1 — Crear la carpeta del punto 4.3 a partir del punto 4.2
 
-**Resultado de aprendizaje.** Crear la carpeta del punto 4.3 a partir del punto 4.2. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+La copia preserva una etapa autónoma y reproducible. 4.2-unit-of-work aporta 77 tests aprobados y 11 proyectos antes de añadir este punto.
 
 1. Abre la terminal integrada de Visual Studio y localiza `M04_PATRONES_ARQUITECTURA/PROYECTO/4.2-unit-of-work`; esa es la etapa completa que vas a continuar.
 2. Crea `M04_PATRONES_ARQUITECTURA/PROYECTO/4.3-mediator` y copia en ella el contenido de `4.2-unit-of-work`; en Windows puedes usar `xcopy` con `/E /I /H /Y`.
 3. Excluye `bin`, `obj` y `TestResults`; abre únicamente la copia de `4.3-mediator` para que el punto anterior permanezca intacto.
 4. Ejecuta `dir` dentro de `4.3-mediator` y verifica `AceriaApp.sln`, `README.md`, `src`, `tests`, `docs` y `global.json`.
-
-
-**Por qué funciona así.** La copia preserva una etapa autónoma y reproducible. 4.2-unit-of-work aporta 77 tests aprobados y 11 proyectos antes de añadir este punto.
 
 **Verificación concreta.** La copia contiene la solución y los 11 proyectos de la etapa anterior; no contiene todavía archivos nuevos de 4.3.
 
@@ -3034,17 +2779,12 @@ El punto 4.2 ha definido el patrón Unit of Work como abstracción para coordina
 
 ### PASO 4.3.2 — Abrir la solución copiada en Visual Studio 2026
 
-**Resultado de aprendizaje.** Abrir la solución copiada en Visual Studio 2026. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+Abrir la solución copiada permite trabajar en el punto 4.3 sobre la base del punto 4.2. La compilación verifica que la copia es correcta.
 
 1. Entra en `4.3-mediator` y abre `AceriaApp.sln` con Visual Studio; desde Windows puedes ejecutar `start AceriaApp.sln`.
 2. Ejecuta `dotnet sln AceriaApp.sln list` y comprueba los 11 proyectos heredados; todos deben existir bajo esta etapa.
 3. Ejecuta `dotnet restore AceriaApp.sln` y `dotnet build AceriaApp.sln -c Release`; conserva la salida como comprobación inicial.
 4. Si la API está en ejecución, detenla antes de compilar. Continúa cuando la compilación termine sin errores y las rutas no apunten a otra etapa.
-
-
-**Por qué funciona así.** abrir la solución copiada permite trabajar en el punto 4.3 sobre la base del punto 4.2. La compilación verifica que la copia es correcta.
 
 **Verificación concreta.** `dotnet sln AceriaApp.sln list` muestra 11 proyectos y `dotnet build AceriaApp.sln -c Release` termina con `Build succeeded.`.
 
@@ -3057,17 +2797,12 @@ El punto 4.2 ha definido el patrón Unit of Work como abstracción para coordina
 
 ### PASO 4.3.3 — Verificar que la carpeta `docs` contiene los documentos del punto 4.2
 
-**Resultado de aprendizaje.** Verificar que la carpeta `docs` contiene los documentos del punto 4.2. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+La etapa conserva los 12 documentos anteriores y añade únicamente su ficha de patrón y su ADR. Las modificaciones de código se escriben en la copia actual.
 
 1. Expande `docs` dentro de la copia de `4.3-mediator`.
 2. Comprueba los 12 documentos heredados: los ADR-010 a ADR-015 y las fichas de los puntos anteriores.
 3. Compara sus nombres y contenido con `docs` de `4.2-unit-of-work`. No modifiques ni elimines los documentos anteriores.
 4. Confirma que todavía no existen `docs/patron-mediator.md` ni `docs/ADR-016-patron-mediator.md`; se crearán en este punto.
-
-
-**Por qué funciona así.** La etapa conserva los 12 documentos anteriores y añade únicamente su ficha de patrón y su ADR. Las modificaciones de código se escriben en la copia actual.
 
 **Verificación concreta.** `docs` contiene 12 archivos heredados idénticos; los dos documentos de este punto todavía no existen.
 
@@ -3080,9 +2815,7 @@ El punto 4.2 ha definido el patrón Unit of Work como abstracción para coordina
 
 ### PASO 4.3.4 — Crear el documento del patrón Mediator en `docs`
 
-**Resultado de aprendizaje.** Crear el documento del patrón Mediator en `docs`. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+El documento del patrón Mediator es el artefacto de `docs` específico del punto 4.3. No modifica los 12 documentos existentes del punto 4.2.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `docs`.
 2. Seleccionar `Add` → `New Item` → `Text File` y nombrar el archivo `patron-mediator.md`.
@@ -3147,7 +2880,6 @@ Un pipeline puede integrar FluentValidation como variante de diseño. El flujo e
 El catálogo de este punto describe reglas de diseño y contiene ejemplos de contratos. Sus nombres no implican servicios registrados. La implementación utiliza los proyectos `AceriaApp.Hexagonal.Aplicacion`, `AceriaApp.Hexagonal.Dominio` y `AceriaApp.Hexagonal.Infraestructura`, compuestos desde `AceriaApp.Api`. Comprueba los archivos y los tests funcionales que incorpora el paso de compilación de este punto.
 ```
 
-**Por qué funciona así.** el documento del patrón Mediator es el artefacto de `docs` específico del punto 4.3. No modifica los 12 documentos existentes del punto 4.2.
 
 **Verificación concreta.** El archivo `docs/patron-mediator.md` existe y contiene las 11 secciones mostradas; abre su vista previa y comprueba todos los apartados.
 
@@ -3160,9 +2892,7 @@ El catálogo de este punto describe reglas de diseño y contiene ejemplos de con
 
 ### PASO 4.3.5 — Añadir el paquete `MediatR` al proyecto API
 
-**Resultado de aprendizaje.** Añadir el paquete `MediatR` al proyecto API. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+MediatR solo aporta una capacidad de mediación cuando los mensajes y sus manejadores se registran correctamente. Verifica la versión NuGet y la compatibilidad con la solución antes de conectar el nuevo recorrido.
 
 1. Abre `src/AceriaApp.Hexagonal.Aplicacion/AceriaApp.Hexagonal.Aplicacion.csproj`, donde vivirán los mensajes y manejadores reales.
 2. Ejecuta `dotnet add src/AceriaApp.Hexagonal.Aplicacion/AceriaApp.Hexagonal.Aplicacion.csproj package MediatR --version 12.4.1`.
@@ -3186,16 +2916,7 @@ El catálogo de este punto describe reglas de diseño y contiene ejemplos de con
 </Project>
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
-
-- **Línea 2:** Compila para .NET 8, igual que los proyectos heredados.
-
-- **Línea 3:** Mantiene la referencia a la capa necesaria; los tests pueden alcanzar la API y sus referencias transitivas.
-
-- **Línea 5:** Fija MediatR 12.4.1 en la aplicación, donde se definen mensajes, manejadores y pipeline.
-
-
-**Por qué funciona así.** MediatR proporciona las abstracciones y la infraestructura del patrón Mediator. Es el paquete que el curso usa para implementar el patrón en la capa de aplicación.
+Compila para .NET 8, igual que los proyectos heredados. Mantiene la referencia a la capa necesaria; los tests pueden alcanzar la API y sus referencias transitivas. Fija MediatR 12.4.1 en la aplicación, donde se definen mensajes, manejadores y pipeline.
 
 **Verificación concreta.** La capa de aplicación referencia `MediatR 12.4.1`; la capa de dominio no contiene esa dependencia.
 
@@ -3208,17 +2929,12 @@ El catálogo de este punto describe reglas de diseño y contiene ejemplos de con
 
 ### PASO 4.3.6 — Crear la carpeta `Mediator` en el proyecto API
 
-**Resultado de aprendizaje.** Crear la carpeta `Mediator` en el proyecto API. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+La carpeta `Mediator` albergará las clases de validación del patrón Mediator. Se crea como carpeta nueva sin tocar las carpetas existentes.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre el proyecto `AceriaApp.Api`.
 2. Seleccionar `Add` → `New Folder` y nombrar la carpeta `Mediator`.
 3. Verificar que la carpeta `Mediator` aparece dentro de `AceriaApp.Api` sin afectar a las carpetas existentes.
 4. Verificar que no se ha modificado ningún archivo existente del punto 4.2.
-
-
-**Por qué funciona así.** la carpeta `Mediator` albergará las clases de validación del patrón Mediator. Se crea como carpeta nueva sin tocar las carpetas existentes.
 
 **Verificación concreta.** la carpeta `Mediator` existe dentro de `AceriaApp.Api` y las carpetas existentes permanecen intactas.
 
@@ -3231,9 +2947,7 @@ El catálogo de este punto describe reglas de diseño y contiene ejemplos de con
 
 ### PASO 4.3.7 — Crear la clase `Mensaje`
 
-**Resultado de aprendizaje.** Crear la clase `Mensaje`. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+`Mensaje` describe los datos que permiten clasificar solicitudes dentro del catálogo de este punto. El mensaje enviado por `ISender` o `IMediator` es un contrato distinto que necesita su propio manejador y registro efectivo.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `Mediator`.
 2. Seleccionar `Add` → `Class` y nombrar la clase `Mensaje.cs`.
@@ -3255,7 +2969,6 @@ public class Mensaje
 }
 ```
 
-**Por qué funciona así.** la clase `Mensaje` modela un mensaje MediatR con su nombre, tipo, si tiene manejador y si devuelve resultado. Es la unidad de información del validador.
 
 **Verificación concreta.** la clase `Mensaje` compila sin errores y expone cuatro propiedades.
 
@@ -3268,9 +2981,7 @@ public class Mensaje
 
 ### PASO 4.3.8 — Crear la clase `ValidadorMensajes`
 
-**Resultado de aprendizaje.** Crear la clase `ValidadorMensajes`. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+El catálogo puede rechazar descripciones ambiguas de mensajes o de sus responsabilidades. Esa validación no prueba que MediatR descubra el handler; se necesitará resolverlo y ejecutar una petición real.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `Mediator`.
 2. Seleccionar `Add` → `Class` y nombrar la clase `ValidadorMensajes.cs`.
@@ -3327,7 +3038,6 @@ public class ValidadorMensajes
 public record ResultadoMensajes(bool EsValido, IReadOnlyList<string> Errores);
 ```
 
-**Por qué funciona así.** la clase `ValidadorMensajes` comprueba que cada mensaje declara nombre, tipo permitido y manejador, y que las notificaciones no devuelven resultado.
 
 **Verificación concreta.** la clase `ValidadorMensajes` compila sin errores y expone un método y un `record`.
 
@@ -3340,9 +3050,7 @@ public record ResultadoMensajes(bool EsValido, IReadOnlyList<string> Errores);
 
 ### PASO 4.3.9 — Añadir los `using` necesarios en `ValidadorMensajes`
 
-**Resultado de aprendizaje.** Añadir los `using` necesarios en `ValidadorMensajes`. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+Los tipos `List<string>` e `IReadOnlyList<string>` pertenecen a `System.Collections.Generic`. Los métodos `Contains` y `ToList` pertenecen a `System.Linq`. En proyectos con `ImplicitUsings` desactivado, hay que añadir los usings explícitos.
 
 1. En el panel Solution Explorer, hacer doble clic en `ValidadorMensajes.cs`.
 2. Inserta las directivas indicadas antes del namespace del archivo; la indicación del archivo identifica la línea exacta.
@@ -3363,7 +3071,6 @@ using System.Collections.Generic;
 using System.Linq;
 ```
 
-**Por qué funciona así.** los tipos `List<string>` e `IReadOnlyList<string>` pertenecen a `System.Collections.Generic`. Los métodos `Contains` y `ToList` pertenecen a `System.Linq`. En proyectos con `ImplicitUsings` desactivado, hay que añadir los usings explícitos.
 
 **Verificación concreta.** `ValidadorMensajes.cs` compila sin errores y no muestra subrayados rojos.
 
@@ -3376,9 +3083,7 @@ using System.Linq;
 
 ### PASO 4.3.10 — Crear la clase `CatalogoMensajes`
 
-**Resultado de aprendizaje.** Crear la clase `CatalogoMensajes`. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+La clase `CatalogoMensajes` contiene los mensajes por defecto del proyecto. Se usan en los tests y en la validación automática.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `Mediator`.
 2. Seleccionar `Add` → `Class` y nombrar la clase `CatalogoMensajes.cs`.
@@ -3407,7 +3112,6 @@ public class CatalogoMensajes
 }
 ```
 
-**Por qué funciona así.** la clase `CatalogoMensajes` contiene los mensajes por defecto del proyecto. Se usan en los tests y en la validación automática.
 
 **Verificación concreta.** la clase `CatalogoMensajes` compila sin errores y expone un método estático.
 
@@ -3420,9 +3124,7 @@ public class CatalogoMensajes
 
 ### PASO 4.3.11 — Añadir el `using` necesario en `CatalogoMensajes`
 
-**Resultado de aprendizaje.** Añadir el `using` necesario en `CatalogoMensajes`. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+El tipo `List<T>` pertenece a `System.Collections.Generic`. En proyectos con `ImplicitUsings` desactivado, hay que añadir el using explícito.
 
 1. En el panel Solution Explorer, hacer doble clic en `CatalogoMensajes.cs`.
 2. Inserta las directivas indicadas antes del namespace del archivo; la indicación del archivo identifica la línea exacta.
@@ -3442,7 +3144,6 @@ namespace AceriaApp.Api.Mediator;
 using System.Collections.Generic;
 ```
 
-**Por qué funciona así.** el tipo `List<T>` pertenece a `System.Collections.Generic`. En proyectos con `ImplicitUsings` desactivado, hay que añadir el using explícito.
 
 **Verificación concreta.** `CatalogoMensajes.cs` compila sin errores y no muestra subrayados rojos.
 
@@ -3455,9 +3156,7 @@ using System.Collections.Generic;
 
 ### PASO 4.3.12 — Crear el proyecto de tests del punto 4.3
 
-**Resultado de aprendizaje.** Crear el proyecto de tests del punto 4.3. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+El punto 4.3 añade un proyecto de tests específico para las clases del patrón Mediator. Se crea como proyecto nuevo y conserva las pruebas previas; las actualizaciones explícitas de integración se muestran en su paso correspondiente.
 
 1. En `tests` crea la carpeta `AceriaApp.Mediator.Tests` y, dentro, el archivo `AceriaApp.Mediator.Tests.csproj` con el XML completo de este paso. En Visual Studio puedes elegir la plantilla xUnit y ajustar el archivo generado.
 2. Elimina el archivo de ejemplo `UnitTest1.cs` si lo creó la plantilla; los archivos de pruebas completos se escriben en sus pasos correspondientes.
@@ -3484,7 +3183,6 @@ using System.Collections.Generic;
 </Project>
 ```
 
-**Por qué funciona así.** el punto 4.3 añade un proyecto de tests específico para las clases del patrón Mediator. Se crea como proyecto nuevo y conserva las pruebas previas; las actualizaciones explícitas de integración se muestran en su paso correspondiente.
 
 **Verificación concreta.** La solución muestra 12 proyectos, incluido `AceriaApp.Mediator.Tests`; el nuevo csproj fija .NET 8, SDK de tests 17.12.0, xUnit 2.9.2 y runner 2.8.2.
 
@@ -3497,9 +3195,7 @@ using System.Collections.Generic;
 
 ### PASO 4.3.13 — Añadir la referencia del proyecto de tests a la API
 
-**Resultado de aprendizaje.** Añadir la referencia del proyecto de tests a la API. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+La referencia permite que el proyecto de tests acceda a las clases de `Mediator` del proyecto API.
 
 1. Ejecuta `dotnet add tests/AceriaApp.Mediator.Tests/AceriaApp.Mediator.Tests.csproj reference src/AceriaApp.Api/AceriaApp.Api.csproj` o deja el archivo exactamente como el bloque XML de este paso.
 2. Comprueba que la referencia va de tests a API; la API nunca debe referenciar el proyecto de tests.
@@ -3527,7 +3223,6 @@ using System.Collections.Generic;
 </Project>
 ```
 
-**Por qué funciona así.** la referencia permite que el proyecto de tests acceda a las clases de `Mediator` del proyecto API.
 
 **Verificación concreta.** el archivo `AceriaApp.Mediator.Tests.csproj` contiene un `ProjectReference` al proyecto API.
 
@@ -3540,9 +3235,7 @@ using System.Collections.Generic;
 
 ### PASO 4.3.14 — Añadir el paquete `FluentAssertions` al proyecto de tests
 
-**Resultado de aprendizaje.** Añadir el paquete `FluentAssertions` al proyecto de tests. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+`FluentAssertions` proporciona la sintaxis de aserción usada en el curso. Se añade al nuevo proyecto de tests sin modificar los proyectos de tests existentes.
 
 1. Ejecuta `dotnet add tests/AceriaApp.Mediator.Tests/AceriaApp.Mediator.Tests.csproj package FluentAssertions --version 6.12.2` o reemplaza el csproj por el XML completo indicado.
 2. Ejecuta `dotnet list tests/AceriaApp.Mediator.Tests/AceriaApp.Mediator.Tests.csproj package` y localiza `FluentAssertions 6.12.2`.
@@ -3571,7 +3264,6 @@ using System.Collections.Generic;
 </Project>
 ```
 
-**Por qué funciona así.** `FluentAssertions` proporciona la sintaxis de aserción usada en el curso. Se añade al nuevo proyecto de tests sin modificar los proyectos de tests existentes.
 
 **Verificación concreta.** El archivo de proyecto y `dotnet list package` muestran `FluentAssertions 6.12.2`; la compilación finaliza correctamente.
 
@@ -3584,9 +3276,7 @@ using System.Collections.Generic;
 
 ### PASO 4.3.15 — Crear el archivo `ValidadorMensajesTests.cs`
 
-**Resultado de aprendizaje.** Crear el archivo `ValidadorMensajesTests.cs`. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+Los tests verifican que el validador acepta el catálogo por defecto y rechaza los mensajes que violan las reglas del patrón.
 
 1. En el panel Solution Explorer, expandir `tests` → `AceriaApp.Mediator.Tests`.
 2. Crear el archivo `ValidadorMensajesTests.cs`.
@@ -3669,7 +3359,6 @@ public class ValidadorMensajesTests
 }
 ```
 
-**Por qué funciona así.** los tests verifican que el validador acepta el catálogo por defecto y rechaza los mensajes que violan las reglas del patrón.
 
 **Verificación concreta.** el archivo `ValidadorMensajesTests.cs` compila y contiene cinco métodos de test.
 
@@ -3682,9 +3371,7 @@ public class ValidadorMensajesTests
 
 ### PASO 4.3.16 — Crear el archivo `CatalogoMensajesTests.cs`
 
-**Resultado de aprendizaje.** Crear el archivo `CatalogoMensajesTests.cs`. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+Los tests verifican que el catálogo por defecto contiene los mensajes esperados y la distribución correcta por tipo.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre el proyecto `AceriaApp.Mediator.Tests`.
 2. Seleccionar `Add` → `Class` y nombrar la clase `CatalogoMensajesTests.cs`.
@@ -3745,7 +3432,6 @@ public class CatalogoMensajesTests
 }
 ```
 
-**Por qué funciona así.** los tests verifican que el catálogo por defecto contiene los mensajes esperados y la distribución correcta por tipo.
 
 **Verificación concreta.** el archivo `CatalogoMensajesTests.cs` compila y contiene cinco métodos de test.
 
@@ -3758,9 +3444,7 @@ public class CatalogoMensajesTests
 
 ### PASO 4.3.17 — Conectar MediatR y compilar la solución
 
-**Resultado de aprendizaje.** Conectar MediatR y compilar la solución. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+El resultado de MediatR debe comprobarse desde el host real y también con el caso de uso aislado cuando corresponda. Una llamada `Send` con un manejador mal registrado debe fallar explícitamente; no se atribuirá su éxito a un catálogo correcto.
 
 1. Abre cada archivo de integración funcional indicado en este paso. Crea los nuevos y reemplaza únicamente los que se señalen; copia todo el código mostrado.
 2. Recorre las referencias: el dominio define sus entidades, la aplicación usa puertos y la infraestructura implementa persistencia; la API compone el flujo.
@@ -3803,15 +3487,9 @@ public static class PatronesOrdenesEndpoints
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+Aísla la ruta de este módulo y conserva los endpoints existentes de M02 y M03. La API solo construye la consulta y la envía; el contenedor selecciona su manejador. Traduce la petición HTTP en un comando de aplicación y propaga la cancelación.
 
-- **Línea 10:** Aísla la ruta de este módulo y conserva los endpoints existentes de M02 y M03.
-
-- **Línea 13:** La API solo construye la consulta y la envía; el contenedor selecciona su manejador.
-
-- **Línea 22:** Traduce la petición HTTP en un comando de aplicación y propaga la cancelación.
-
-- **Línea 23:** Devuelve 201 y una cabecera Location calculada con la ruta de lectura nombrada y el identificador creado.
+Devuelve 201 y una cabecera Location calculada con la ruta de lectura nombrada y el identificador creado.
 
 
 **Integración funcional.** Integra únicamente registros y mapeo del endpoint de patrones. Conserva íntegros los endpoints, documentación y arranque de M2/M3; en 4.5 reemplaza registros repetidos por AddPatronesOrdenes().
@@ -3992,23 +3670,11 @@ app.Run();
 public partial class Program {} // permite WebApplicationFactory en tests
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+Permite mapear los endpoints del módulo desde la raíz de composición. Permite registrar las implementaciones de los puertos desde la API. Mantiene el registro SQL Server y los servicios que ya utilizaba M03.
 
-- **Línea 1:** Permite mapear los endpoints del módulo desde la raíz de composición.
+Durante esta etapa se registra explícitamente el puerto de escritura con su adaptador. La unidad de trabajo comparte el contexto Scoped de la petición. Conecta MediatR con los manejadores reales del ensamblado de aplicación.
 
-- **Línea 3:** Permite registrar las implementaciones de los puertos desde la API.
-
-- **Línea 24:** Mantiene el registro SQL Server y los servicios que ya utilizaba M03.
-
-- **Línea 25:** Durante esta etapa se registra explícitamente el puerto de escritura con su adaptador.
-
-- **Línea 26:** La unidad de trabajo comparte el contexto Scoped de la petición.
-
-- **Línea 30:** Conecta MediatR con los manejadores reales del ensamblado de aplicación.
-
-- **Línea 32:** Registra el logging como comportamiento transversal del mediador.
-
-- **Línea 168:** Publica las rutas del nuevo flujo después de construir la aplicación y antes de ejecutarla.
+Registra el logging como comportamiento transversal del mediador. Publica las rutas del nuevo flujo después de construir la aplicación y antes de ejecutarla.
 
 
 **Integración funcional.** Implementa IPipelineBehavior con logging de inicio y fin del tipo de petición. Propaga cancelación y excepciones; nunca registra datos del cliente ni hace casts de TResponse.
@@ -4036,21 +3702,11 @@ public sealed class LoggingBehavior<TRequest, TResponse>(ILogger<LoggingBehavior
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+El comportamiento genérico envuelve solicitudes y respuestas sin acoplarse a un comando concreto. Recibe la solicitud, el siguiente delegado del pipeline y el token de cancelación. Interrumpe el flujo antes del manejador cuando el llamador ya canceló; no se inicia una escritura.
 
-- **Línea 7:** El comportamiento genérico envuelve solicitudes y respuestas sin acoplarse a un comando concreto.
+Registra solo el nombre del tipo. No serializa el contenido del comando ni datos del cliente. Invoca exactamente una vez el siguiente comportamiento o el manejador, preservando el tipo de respuesta de MediatR 12.4.1. Registra la finalización normal después de obtener la respuesta. Una excepción se propaga y no produce este mensaje de finalización.
 
-- **Línea 9:** Recibe la solicitud, el siguiente delegado del pipeline y el token de cancelación.
-
-- **Línea 11:** Interrumpe el flujo antes del manejador cuando el llamador ya canceló; no se inicia una escritura.
-
-- **Línea 12:** Registra solo el nombre del tipo. No serializa el contenido del comando ni datos del cliente.
-
-- **Línea 13:** Invoca exactamente una vez el siguiente comportamiento o el manejador, preservando el tipo de respuesta de MediatR 12.4.1.
-
-- **Línea 14:** Registra la finalización normal después de obtener la respuesta. Una excepción se propaga y no produce este mensaje de finalización.
-
-- **Línea 15:** Entrega la respuesta original sin transformarla.
+Entrega la respuesta original sin transformarla.
 
 
 **Integración funcional.** Define command y query tipados y handlers que invocan el caso de uso real. En 4.4 los mensajes pasan a `Result<OrdenHexagonal>` y se añade FinalizarOrdenCommand, conservando el mismo flujo MediatR.
@@ -4077,17 +3733,9 @@ public sealed class ObtenerOrdenHandler(OrdenesTransaccionales caso) : IRequestH
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+El comando transporta los datos de entrada e implementa IRequest con su tipo de respuesta; MediatR utiliza ese contrato para seleccionar el manejador. La consulta solicita una orden por identificador y declara el resultado que espera el emisor. El manejador recibe el caso de uso por constructor; no recibe DbContext ni construye infraestructura.
 
-- **Línea 5:** El comando transporta los datos de entrada e implementa IRequest con su tipo de respuesta; MediatR utiliza ese contrato para seleccionar el manejador.
-
-- **Línea 6:** La consulta solicita una orden por identificador y declara el resultado que espera el emisor.
-
-- **Línea 8:** El manejador recibe el caso de uso por constructor; no recibe DbContext ni construye infraestructura.
-
-- **Línea 11:** Delega la operación completa y transmite la cancelación. La regla de negocio y la confirmación siguen en el caso de uso.
-
-- **Línea 13:** MediatR asocia esta clase al contrato de consulta; su único trabajo es delegar la lectura.
+Delega la operación completa y transmite la cancelación. La regla de negocio y la confirmación siguen en el caso de uso. MediatR asocia esta clase al contrato de consulta; su único trabajo es delegar la lectura.
 
 
 **Integración funcional.** Conserva las dependencias de los tests de catálogo y añade Testcontainers.MsSql, el helper compartido y WebApplicationFactory para las pruebas funcionales.
@@ -4111,15 +3759,9 @@ public sealed class ObtenerOrdenHandler(OrdenesTransaccionales caso) : IRequestH
 </Project>
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+Compila para .NET 8, igual que los proyectos heredados. Fija el cliente de contenedores para SQL Server; el proveedor EF Core SQL Server llega mediante la referencia a la API. Permite ejecutar peticiones HTTP contra el host real de la API.
 
-- **Línea 2:** `<PropertyGroup><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><IsPackable>false</IsPackable><IsTestProject>true</IsTestProject></PropertyGroup>` → Compila para .NET 8, igual que los proyectos heredados.
-
-- **Línea 8:** `<PackageReference Include="Testcontainers.MsSql" Version="3.10.0" />` → Fija el cliente de contenedores para SQL Server; el proveedor EF Core SQL Server llega mediante la referencia a la API.
-
-- **Línea 9:** `<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.21" />` → Permite ejecutar peticiones HTTP contra el host real de la API.
-
-- **Línea 11:** `<Compile Include="../Compartido/SqlServerPruebas.cs" Link="SqlServerPruebas.cs" />` → Compila el helper heredado que crea y elimina únicamente la base aislada de cada prueba, sin añadir otro proyecto a la solución.
+Compila el helper heredado que crea y elimina únicamente la base aislada de cada prueba, sin añadir otro proyecto a la solución.
 
 
 **Integración funcional.** Verifica persistencia y consulta mediante ISender, ejecución observable del pipeline sin payloads y cancelación sin efectos persistidos. En 4.4 adapta la lectura a Result.Valor y registra OrdenesConResultado.
@@ -4229,26 +3871,11 @@ public sealed class MediatorFuncionalesTests
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+El mediador ejecuta el caso de uso y una lectura independiente verifica la orden persistida. El pipeline registra inicio y fin sin incluir el nombre del cliente. Una cancelación previa impide persistir una orden.
 
-- **Línea 15:** `public async Task Command_y_query_ejecutan_el_caso_de_uso_y_devuelven_datos_persistidos()` → El mediador ejecuta el caso de uso y una lectura independiente verifica la orden persistida.
+En `var store = BaseSqlServer.Crear();` se asigna una base SQL Server aislada al entorno de cada prueba. Los ámbitos de DI reciben contextos SQL Server sobre la misma base de esa prueba. Comprueba el proveedor antes de crear las tablas.
 
-- **Línea 29:** `public async Task Pipeline_registra_inicio_y_fin_sin_datos_de_cliente()` → El pipeline registra inicio y fin sin incluir el nombre del cliente.
-
-- **Línea 41:** `public async Task Cancelacion_del_command_no_persiste_la_orden()` → Una cancelación previa impide persistir una orden.
-
-- **Línea 60:** `var store = BaseSqlServer.Crear();` → Asigna una base SQL Server aislada al entorno de cada prueba.
-
-- **Línea 64:** `services.AddDbContext<HexagonalDbContext>(o => o.UseSqlServer(store.ConnectionString));` → Los ámbitos de DI reciben contextos SQL Server sobre la misma base de esa prueba.
-
-- **Línea 77:** `Assert.Equal("Microsoft.EntityFrameworkCore.SqlServer", db.Database.ProviderName);` → Comprueba el proveedor antes de crear las tablas.
-
-- **Línea 80:** `catch { await fixture.DisposeAsync(); throw; }` → Si falla la inicialización, libera también la base temporal.
-
-- **Línea 83:** `public async ValueTask DisposeAsync() { await services.DisposeAsync(); await store.DisposeAsync(); }` → Libera los servicios antes de eliminar la base que les pertenece.
-
-
-**Por qué funciona así.** compilar la solución completa verifica que todos los proyectos, incluidos los nuevos, se resuelven correctamente.
+En `catch { await fixture.DisposeAsync(); throw; }` se si falla la inicialización, libera también la base temporal. Libera los servicios antes de eliminar la base que les pertenece.
 
 **Verificación concreta.** La solución completa compila, incluidos el código de integración y sus pruebas. Las siguientes ejecuciones de tests comprobarán el comportamiento de los patrones.
 
@@ -4261,17 +3888,12 @@ public sealed class MediatorFuncionalesTests
 
 ### PASO 4.3.18 — Ejecutar todos los tests del punto 4.3
 
-**Resultado de aprendizaje.** Ejecutar todos los tests del punto 4.3. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+Ejecutar los tests del punto 4.3 verifica que las clases del patrón Mediator funcionan correctamente.
 
 1. Ejecuta `dotnet test tests/AceriaApp.Mediator.Tests/AceriaApp.Mediator.Tests.csproj -c Release` desde la raíz de esta etapa.
 2. Comprueba un total de 13 pruebas: 10 de catálogo y 3 funcionales, con cero fallos y cero omisiones.
 3. Si falla una prueba, abre su mensaje de aserción y el archivo indicado; corrige el comportamiento antes de continuar.
 4. Repite el mismo comando tras la corrección y conserva el resultado de la ejecución válida.
-
-
-**Por qué funciona así.** ejecutar los tests del punto 4.3 verifica que las clases del patrón Mediator funcionan correctamente.
 
 **Verificación concreta.** El proyecto `AceriaApp.Mediator.Tests` termina con `Failed: 0, Passed: 13, Skipped: 0, Total: 13`.
 
@@ -4284,17 +3906,12 @@ public sealed class MediatorFuncionalesTests
 
 ### PASO 4.3.19 — Ejecutar todos los tests de la solución
 
-**Resultado de aprendizaje.** Ejecutar todos los tests de la solución. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+Ejecutar todos los tests de la solución verifica que los tests de los puntos anteriores y del punto 4.3 pasan conjuntamente.
 
 1. Ejecuta `dotnet build AceriaApp.sln -c Release` para producir todas las asambleas de esta etapa.
 2. Ejecuta `dotnet test AceriaApp.sln -c Release --no-build --no-restore` para ejecutar todas las pruebas acumuladas.
 3. Suma los resultados de los 8 proyectos de tests: deben ser 90 pruebas aprobadas, sin fallos ni omisiones.
 4. Comprueba que las pruebas heredadas de M03 y los puntos anteriores de M04 siguen presentes; no borres tests para obtener un resultado verde.
-
-
-**Por qué funciona así.** ejecutar todos los tests de la solución verifica que los tests de los puntos anteriores y del punto 4.3 pasan conjuntamente.
 
 **Verificación concreta.** La suma de las líneas de resultados es `Failed: 0`, `Passed: 90`, `Skipped: 0` y `Total: 90`. Dotnet muestra un resumen por proyecto, no necesariamente una única línea global.
 
@@ -4307,9 +3924,7 @@ public sealed class MediatorFuncionalesTests
 
 ### PASO 4.3.20 — Crear el README del punto 4.3
 
-**Resultado de aprendizaje.** Crear el README del punto 4.3. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+El README del punto 4.3 explica el objetivo, el estado, la ejecución y los añadidos. No modifica el README del punto 4.2.
 
 1. En la carpeta del punto `4.3-mediator`, hacer clic derecho y seleccionar `Add` → `New Item` → `Text File`.
 2. Nombrar el archivo `README.md`.
@@ -4357,7 +3972,6 @@ La práctica conecta además el patrón con los puertos, adaptadores y pruebas d
 Los catálogos describen ejemplos de diseño. El comportamiento de las clases reales se comprueba además con los tests funcionales del punto. Ejecuta `dotnet test AceriaApp.sln -c Release` y exige cero fallos y cero omisiones.
 ```
 
-**Por qué funciona así.** el README del punto 4.3 explica el objetivo, el estado, la ejecución y los añadidos. No modifica el README del punto 4.2.
 
 **Verificación concreta.** El archivo `README.md` existe y contiene las 6 secciones mostradas; abre su vista previa y comprueba todos los apartados.
 
@@ -4370,9 +3984,7 @@ Los catálogos describen ejemplos de diseño. El comportamiento de las clases re
 
 ### PASO 4.3.21 — Crear el ADR-016 del punto 4.3
 
-**Resultado de aprendizaje.** Crear el ADR-016 del punto 4.3. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+El ADR-016 documenta la decisión de adoptar el patrón Mediator con MediatR. Es un artefacto nuevo del punto 4.3 que no modifica los ADR existentes.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `docs`.
 2. Seleccionar `Add` → `New Item` → `Text File` y nombrar el archivo `ADR-016-patron-mediator.md`.
@@ -4404,7 +4016,6 @@ Se adopta MediatR 12.4.1 en la capa de aplicación. `CrearOrdenCommand` y `Obten
 - Mitigación: la validación automática y el registro claro de los manejadores.
 ```
 
-**Por qué funciona así.** el ADR-016 documenta la decisión de adoptar el patrón Mediator con MediatR. Es un artefacto nuevo del punto 4.3 que no modifica los ADR existentes.
 
 **Verificación concreta.** El archivo `docs/ADR-016-patron-mediator.md` existe y contiene las 5 secciones mostradas; abre su vista previa y comprueba todos los apartados.
 
@@ -4417,17 +4028,12 @@ Se adopta MediatR 12.4.1 en la capa de aplicación. `CrearOrdenCommand` y `Obten
 
 ### PASO 4.3.22 — Verificar que los documentos heredados y la etapa 4.2 permanecen intactos
 
-**Resultado de aprendizaje.** Verificar que los documentos heredados y la etapa 4.2 permanecen intactos. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+Las decisiones previas se conservan como registros históricos. Los nuevos ADR explican la evolución y las modificaciones de integración se aplican solo a la copia de la etapa actual.
 
 1. Vuelve a la raíz del repositorio; las rutas siguientes se interpretan desde allí.
 2. En CMD ejecuta `for %f in (M04_PATRONES_ARQUITECTURA\PROYECTO\4.2-unit-of-work\docs\*.md) do fc /L "%f" "M04_PATRONES_ARQUITECTURA\PROYECTO\4.3-mediator\docs\%~nxf"`. En PowerShell puedes comparar `Get-FileHash` para cada par de documentos.
 3. Comprueba 12 comparaciones y exige igualdad en todas; se conserva exactamente el contenido de los documentos heredados.
 4. Si una comparación falla, restaura el documento de la etapa actual desde `4.2-unit-of-work`. Verifica también que la carpeta del punto anterior no tiene modificaciones.
-
-
-**Por qué funciona así.** Las decisiones previas se conservan como registros históricos. Los nuevos ADR explican la evolución y las modificaciones de integración se aplican solo a la copia de la etapa actual.
 
 **Verificación concreta.** Los 12 documentos heredados coinciden byte a byte y el punto anterior permanece intacto.
 
@@ -4440,17 +4046,12 @@ Se adopta MediatR 12.4.1 en la capa de aplicación. `CrearOrdenCommand` y `Obten
 
 ### PASO 4.3.23 — Verificar la estructura del punto 4.3
 
-**Resultado de aprendizaje.** Verificar la estructura del punto 4.3. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+La verificación estructural confirma que el punto 4.3 añade archivos nuevos conservando los documentos heredados.
 
 1. Escribir `tree /F M04_PATRONES_ARQUITECTURA\PROYECTO\4.3-mediator` y pulsar Enter.
 2. Verificar que la salida muestra `AceriaApp.sln`, `README.md`, `src\AceriaApp.Api\Mediator` con las tres clases nuevas, `tests\AceriaApp.Mediator.Tests` con los dos archivos de catálogo y el archivo de tests funcionales y `docs` con el documento del patrón y el ADR-016. Comprueba además todos los archivos de integración de las carpetas Patrones y los cambios de composición indicados en este punto.
 3. Verificar que las carpetas existentes del punto 4.2 permanecen intactas.
 4. Verificar que no existe ninguna carpeta `labs` ni ningún archivo `metaprompt.md` ni `verificacion.md`.
-
-
-**Por qué funciona así.** la verificación estructural confirma que el punto 4.3 añade archivos nuevos conservando los documentos heredados.
 
 **Verificación concreta.** la estructura contiene los archivos nuevos y conserva los del punto 4.2.
 
@@ -4463,17 +4064,12 @@ Se adopta MediatR 12.4.1 en la capa de aplicación. `CrearOrdenCommand` y `Obten
 
 ### PASO 4.3.24 — Hacer el commit del punto 4.3 y verificar el estado final
 
-**Resultado de aprendizaje.** Hacer el commit del punto 4.3 y verificar el estado final. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+El commit permite comparar esta etapa con la anterior. Si has realizado un commit por punto desde 1.1, el recorrido suma 16 commits de puntos; otros commits legítimos pueden aumentar el historial.
 
 1. Desde la raíz del repositorio ejecuta `git status` y revisa que solo aparezcan los archivos de esta etapa y los entregables que has trabajado.
 2. Ejecuta `git add .` después de verificar que `bin/`, `obj/`, `TestResults/` y credenciales están excluidos.
 3. Ejecuta `git commit -m "Punto 4.3: Mediator"` con `user.name` y `user.email` configurados.
 4. Ejecuta `git log --oneline` y `git status`; comprueba que se registró el commit de este punto y que no quedan cambios pendientes de esta actividad.
-
-
-**Por qué funciona así.** El commit permite comparar esta etapa con la anterior. Si has realizado un commit por punto desde 1.1, el recorrido suma 16 commits de puntos; otros commits legítimos pueden aumentar el historial.
 
 **Verificación concreta.** El historial incluye el commit de 4.3 y `git status` no muestra cambios pendientes de esta actividad; no se exige un número rígido de commits a un repositorio con más trabajo.
 
@@ -4627,23 +4223,24 @@ El punto 4.3 ha definido el patrón Mediator como mecanismo para desacoplar los 
 
 # Punto 4.4 — Result Pattern
 
+## Expresar fallos conocidos sin convertirlos en excepciones indiscriminadas
+
+Una aplicación necesita explicar cuándo no encuentra un recurso, cuándo una petición es inválida y cuándo existe un conflicto de negocio. El patrón Result puede representar esas condiciones de manera explícita, evitando utilizar excepciones para cada rama normal del flujo. En este punto distinguiremos el resultado del caso de uso de la traducción que hace el adaptador HTTP hacia códigos y documentos de error.
+
+En AceriaApp aplicaremos la separación al recorrido real de las órdenes. El catálogo de resultados es un ejercicio para razonar sobre sus estados; la integración verdadera se observa cuando un endpoint devuelve la respuesta prevista y no oculta una avería de SQL como si fuera una validación. Revisaremos casos satisfactorios y negativos, manteniendo el contrato heredado para no introducir regresiones al añadir el patrón.
+
 **Carpeta de trabajo:** `M04_PATRONES_ARQUITECTURA/PROYECTO/4.4-result-pattern`.
 
 **Objetivo:** completar los veinticuatro pasos, conservar los documentos heredados y comprobar el patrón con código y tests ejecutables. La etapa suma 105 pruebas en 13 proyectos.
 
 ### PASO 4.4.1 — Crear la carpeta del punto 4.4 a partir del punto 4.3
 
-**Resultado de aprendizaje.** Crear la carpeta del punto 4.4 a partir del punto 4.3. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+La copia preserva una etapa autónoma y reproducible. 4.3-mediator aporta 90 tests aprobados y 12 proyectos antes de añadir este punto.
 
 1. Abre la terminal integrada de Visual Studio y localiza `M04_PATRONES_ARQUITECTURA/PROYECTO/4.3-mediator`; esa es la etapa completa que vas a continuar.
 2. Crea `M04_PATRONES_ARQUITECTURA/PROYECTO/4.4-result-pattern` y copia en ella el contenido de `4.3-mediator`; en Windows puedes usar `xcopy` con `/E /I /H /Y`.
 3. Excluye `bin`, `obj` y `TestResults`; abre únicamente la copia de `4.4-result-pattern` para que el punto anterior permanezca intacto.
 4. Ejecuta `dir` dentro de `4.4-result-pattern` y verifica `AceriaApp.sln`, `README.md`, `src`, `tests`, `docs` y `global.json`.
-
-
-**Por qué funciona así.** La copia preserva una etapa autónoma y reproducible. 4.3-mediator aporta 90 tests aprobados y 12 proyectos antes de añadir este punto.
 
 **Verificación concreta.** La copia contiene la solución y los 12 proyectos de la etapa anterior; no contiene todavía archivos nuevos de 4.4.
 
@@ -4657,17 +4254,12 @@ El punto 4.3 ha definido el patrón Mediator como mecanismo para desacoplar los 
 
 ### PASO 4.4.2 — Abrir la solución copiada en Visual Studio 2026
 
-**Resultado de aprendizaje.** Abrir la solución copiada en Visual Studio 2026. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+Abrir la solución copiada permite trabajar en el punto 4.4 sobre la base del punto 4.3. La compilación verifica que la copia es correcta.
 
 1. Entra en `4.4-result-pattern` y abre `AceriaApp.sln` con Visual Studio; desde Windows puedes ejecutar `start AceriaApp.sln`.
 2. Ejecuta `dotnet sln AceriaApp.sln list` y comprueba los 12 proyectos heredados; todos deben existir bajo esta etapa.
 3. Ejecuta `dotnet restore AceriaApp.sln` y `dotnet build AceriaApp.sln -c Release`; conserva la salida como comprobación inicial.
 4. Si la API está en ejecución, detenla antes de compilar. Continúa cuando la compilación termine sin errores y las rutas no apunten a otra etapa.
-
-
-**Por qué funciona así.** abrir la solución copiada permite trabajar en el punto 4.4 sobre la base del punto 4.3. La compilación verifica que la copia es correcta.
 
 **Verificación concreta.** `dotnet sln AceriaApp.sln list` muestra 12 proyectos y `dotnet build AceriaApp.sln -c Release` termina con `Build succeeded.`.
 
@@ -4680,17 +4272,12 @@ El punto 4.3 ha definido el patrón Mediator como mecanismo para desacoplar los 
 
 ### PASO 4.4.3 — Verificar que la carpeta `docs` contiene los documentos del punto 4.3
 
-**Resultado de aprendizaje.** Verificar que la carpeta `docs` contiene los documentos del punto 4.3. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+La etapa conserva los 14 documentos anteriores y añade únicamente su ficha de patrón y su ADR. Las modificaciones de código se escriben en la copia actual.
 
 1. Expande `docs` dentro de la copia de `4.4-result-pattern`.
 2. Comprueba los 14 documentos heredados: los ADR-010 a ADR-016 y las fichas de los puntos anteriores.
 3. Compara sus nombres y contenido con `docs` de `4.3-mediator`. No modifiques ni elimines los documentos anteriores.
 4. Confirma que todavía no existen `docs/patron-result.md` ni `docs/ADR-017-patron-result.md`; se crearán en este punto.
-
-
-**Por qué funciona así.** La etapa conserva los 14 documentos anteriores y añade únicamente su ficha de patrón y su ADR. Las modificaciones de código se escriben en la copia actual.
 
 **Verificación concreta.** `docs` contiene 14 archivos heredados idénticos; los dos documentos de este punto todavía no existen.
 
@@ -4703,9 +4290,7 @@ El punto 4.3 ha definido el patrón Mediator como mecanismo para desacoplar los 
 
 ### PASO 4.4.4 — Crear el documento del patrón Result en `docs`
 
-**Resultado de aprendizaje.** Crear el documento del patrón Result en `docs`. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+El documento del patrón Result es el artefacto de `docs` específico del punto 4.4. No modifica los 14 documentos existentes del punto 4.3.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `docs`.
 2. Seleccionar `Add` → `New Item` → `Text File` y nombrar el archivo `patron-result.md`.
@@ -4780,7 +4365,6 @@ La validación de esta ruta se realiza en `OrdenesConResultado`, que devuelve un
 El catálogo de este punto describe reglas de diseño y contiene ejemplos de contratos. Sus nombres no implican servicios registrados. La implementación utiliza los proyectos `AceriaApp.Hexagonal.Aplicacion`, `AceriaApp.Hexagonal.Dominio` y `AceriaApp.Hexagonal.Infraestructura`, compuestos desde `AceriaApp.Api`. Comprueba los archivos y los tests funcionales que incorpora el paso de compilación de este punto.
 ```
 
-**Por qué funciona así.** el documento del patrón Result es el artefacto de `docs` específico del punto 4.4. No modifica los 14 documentos existentes del punto 4.3.
 
 **Verificación concreta.** El archivo `docs/patron-result.md` existe y contiene las 11 secciones mostradas; abre su vista previa y comprueba todos los apartados.
 
@@ -4793,17 +4377,12 @@ El catálogo de este punto describe reglas de diseño y contiene ejemplos de con
 
 ### PASO 4.4.5 — Crear la carpeta `ResultPattern` en el proyecto API
 
-**Resultado de aprendizaje.** Crear la carpeta `ResultPattern` en el proyecto API. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+La carpeta `ResultPattern` albergará las clases de validación del patrón Result. Se crea como carpeta nueva sin tocar las carpetas existentes.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre el proyecto `AceriaApp.Api`.
 2. Seleccionar `Add` → `New Folder` y nombrar la carpeta `ResultPattern`.
 3. Verificar que la carpeta `ResultPattern` aparece dentro de `AceriaApp.Api` sin afectar a las carpetas existentes.
 4. Verificar que no se ha modificado ningún archivo existente del punto 4.3.
-
-
-**Por qué funciona así.** la carpeta `ResultPattern` albergará las clases de validación del patrón Result. Se crea como carpeta nueva sin tocar las carpetas existentes.
 
 **Verificación concreta.** la carpeta `ResultPattern` existe dentro de `AceriaApp.Api` y las carpetas existentes permanecen intactas.
 
@@ -4816,9 +4395,7 @@ El catálogo de este punto describe reglas de diseño y contiene ejemplos de con
 
 ### PASO 4.4.6 — Crear la clase `Result`
 
-**Resultado de aprendizaje.** Crear la clase `Result`. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+`Result` expresa un resultado explícito que el consumidor puede inspeccionar sin recurrir a excepciones de control de flujo. Observa cómo se distingue éxito de error y qué información queda disponible para la traducción HTTP.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `ResultPattern`.
 2. Seleccionar `Add` → `Class` y nombrar la clase `Result.cs`.
@@ -4850,7 +4427,6 @@ public class Result<T>
 }
 ```
 
-**Por qué funciona así.** Este tipo básico de `AceriaApp.Api.ResultPattern` permite estudiar las ramas de éxito y fallo con las pruebas iniciales. Tiene límites deliberados: `Failure` no rechaza un texto vacío ni un null suministrado en ejecución, y `Value` devuelve el valor por defecto cuando la operación falla. El constructor privado limita las vías de creación, pero por sí solo no garantiza todas las invariantes. No uses este tipo en los endpoints ni en los casos de uso. En el paso 4.4.17 se construye y prueba el contrato ejecutable `AceriaApp.Hexagonal.Aplicacion.Patrones.Result<T>`, que valida sus fábricas y protege el acceso a cada rama.
 
 **Verificación concreta.** la clase `Result<T>` compila sin errores y expone tres propiedades y dos métodos estáticos.
 
@@ -4863,9 +4439,7 @@ public class Result<T>
 
 ### PASO 4.4.7 — Crear la clase `ResultadoOperacion`
 
-**Resultado de aprendizaje.** Crear la clase `ResultadoOperacion`. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+`ResultadoOperacion` ofrece una representación docente de estados y errores. La API no debería devolver un 200 ante un fallo funcional solo porque el objeto se creó correctamente; su adaptador decide el código según el contrato.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `ResultPattern`.
 2. Seleccionar `Add` → `Class` y nombrar la clase `ResultadoOperacion.cs`.
@@ -4887,7 +4461,6 @@ public class ResultadoOperacion
 }
 ```
 
-**Por qué funciona así.** la clase `ResultadoOperacion` modela un caso de uso con su nombre, si usa el patrón Result y si usa excepciones para errores esperados. Es la unidad de información del validador.
 
 **Verificación concreta.** la clase `ResultadoOperacion` compila sin errores y expone cuatro propiedades.
 
@@ -4900,9 +4473,7 @@ public class ResultadoOperacion
 
 ### PASO 4.4.8 — Crear la clase `ValidadorResultados`
 
-**Resultado de aprendizaje.** Crear la clase `ValidadorResultados`. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+El validador permite contrastar combinaciones de estado y significado definidas en el catálogo. Debe diferenciarse de un middleware que captura excepciones inesperadas: los dos mecanismos resuelven problemas distintos.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `ResultPattern`.
 2. Seleccionar `Add` → `Class` y nombrar la clase `ValidadorResultados.cs`.
@@ -4952,7 +4523,6 @@ public class ValidadorResultados
 public record ResultadoResultados(bool EsValido, IReadOnlyList<string> Errores);
 ```
 
-**Por qué funciona así.** la clase `ValidadorResultados` comprueba que cada operación declara nombre, usa el patrón Result cuando tiene errores esperados y no usa excepciones para errores esperados.
 
 **Verificación concreta.** la clase `ValidadorResultados` compila sin errores y expone un método y un `record`.
 
@@ -4965,9 +4535,7 @@ public record ResultadoResultados(bool EsValido, IReadOnlyList<string> Errores);
 
 ### PASO 4.4.9 — Añadir los `using` necesarios en `ValidadorResultados`
 
-**Resultado de aprendizaje.** Añadir los `using` necesarios en `ValidadorResultados`. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+Los tipos `List<string>` e `IReadOnlyList<string>` pertenecen a `System.Collections.Generic`. El método `ToList` pertenece a `System.Linq`. En proyectos con `ImplicitUsings` desactivado, hay que añadir los usings explícitos.
 
 1. En el panel Solution Explorer, hacer doble clic en `ValidadorResultados.cs`.
 2. Inserta las directivas indicadas antes del namespace del archivo; la indicación del archivo identifica la línea exacta.
@@ -4988,7 +4556,6 @@ using System.Collections.Generic;
 using System.Linq;
 ```
 
-**Por qué funciona así.** los tipos `List<string>` e `IReadOnlyList<string>` pertenecen a `System.Collections.Generic`. El método `ToList` pertenece a `System.Linq`. En proyectos con `ImplicitUsings` desactivado, hay que añadir los usings explícitos.
 
 **Verificación concreta.** `ValidadorResultados.cs` compila sin errores y no muestra subrayados rojos.
 
@@ -5001,9 +4568,7 @@ using System.Linq;
 
 ### PASO 4.4.10 — Crear la clase `CatalogoResultados`
 
-**Resultado de aprendizaje.** Crear la clase `CatalogoResultados`. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+La clase `CatalogoResultados` contiene las operaciones por defecto del proyecto. Se usan en los tests y en la validación automática.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `ResultPattern`.
 2. Seleccionar `Add` → `Class` y nombrar la clase `CatalogoResultados.cs`.
@@ -5031,7 +4596,6 @@ public class CatalogoResultados
 }
 ```
 
-**Por qué funciona así.** la clase `CatalogoResultados` contiene las operaciones por defecto del proyecto. Se usan en los tests y en la validación automática.
 
 **Verificación concreta.** la clase `CatalogoResultados` compila sin errores y expone un método estático.
 
@@ -5044,9 +4608,7 @@ public class CatalogoResultados
 
 ### PASO 4.4.11 — Añadir el `using` necesario en `CatalogoResultados`
 
-**Resultado de aprendizaje.** Añadir el `using` necesario en `CatalogoResultados`. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+El tipo `List<T>` pertenece a `System.Collections.Generic`. En proyectos con `ImplicitUsings` desactivado, hay que añadir el using explícito.
 
 1. En el panel Solution Explorer, hacer doble clic en `CatalogoResultados.cs`.
 2. Inserta las directivas indicadas antes del namespace del archivo; la indicación del archivo identifica la línea exacta.
@@ -5066,7 +4628,6 @@ namespace AceriaApp.Api.ResultPattern;
 using System.Collections.Generic;
 ```
 
-**Por qué funciona así.** el tipo `List<T>` pertenece a `System.Collections.Generic`. En proyectos con `ImplicitUsings` desactivado, hay que añadir el using explícito.
 
 **Verificación concreta.** `CatalogoResultados.cs` compila sin errores y no muestra subrayados rojos.
 
@@ -5079,9 +4640,7 @@ using System.Collections.Generic;
 
 ### PASO 4.4.12 — Crear el proyecto de tests del punto 4.4
 
-**Resultado de aprendizaje.** Crear el proyecto de tests del punto 4.4. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+El punto 4.4 añade un proyecto de tests específico para las clases del patrón Result. Se crea como proyecto nuevo y conserva las pruebas previas; las actualizaciones explícitas de integración se muestran en su paso correspondiente.
 
 1. En `tests` crea la carpeta `AceriaApp.ResultPattern.Tests` y, dentro, el archivo `AceriaApp.ResultPattern.Tests.csproj` con el XML completo de este paso. En Visual Studio puedes elegir la plantilla xUnit y ajustar el archivo generado.
 2. Elimina el archivo de ejemplo `UnitTest1.cs` si lo creó la plantilla; los archivos de pruebas completos se escriben en sus pasos correspondientes.
@@ -5108,7 +4667,6 @@ using System.Collections.Generic;
 </Project>
 ```
 
-**Por qué funciona así.** el punto 4.4 añade un proyecto de tests específico para las clases del patrón Result. Se crea como proyecto nuevo y conserva las pruebas previas; las actualizaciones explícitas de integración se muestran en su paso correspondiente.
 
 **Verificación concreta.** La solución muestra 13 proyectos, incluido `AceriaApp.ResultPattern.Tests`; el nuevo csproj fija .NET 8, SDK de tests 17.12.0, xUnit 2.9.2 y runner 2.8.2.
 
@@ -5121,9 +4679,7 @@ using System.Collections.Generic;
 
 ### PASO 4.4.13 — Añadir la referencia del proyecto de tests a la API
 
-**Resultado de aprendizaje.** Añadir la referencia del proyecto de tests a la API. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+La referencia permite que el proyecto de tests acceda a las clases de `ResultPattern` del proyecto API.
 
 1. Ejecuta `dotnet add tests/AceriaApp.ResultPattern.Tests/AceriaApp.ResultPattern.Tests.csproj reference src/AceriaApp.Api/AceriaApp.Api.csproj` o deja el archivo exactamente como el bloque XML de este paso.
 2. Comprueba que la referencia va de tests a API; la API nunca debe referenciar el proyecto de tests.
@@ -5151,7 +4707,6 @@ using System.Collections.Generic;
 </Project>
 ```
 
-**Por qué funciona así.** la referencia permite que el proyecto de tests acceda a las clases de `ResultPattern` del proyecto API.
 
 **Verificación concreta.** el archivo `AceriaApp.ResultPattern.Tests.csproj` contiene un `ProjectReference` al proyecto API.
 
@@ -5164,9 +4719,7 @@ using System.Collections.Generic;
 
 ### PASO 4.4.14 — Añadir el paquete `FluentAssertions` al proyecto de tests
 
-**Resultado de aprendizaje.** Añadir el paquete `FluentAssertions` al proyecto de tests. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+`FluentAssertions` proporciona la sintaxis de aserción usada en el curso. Se añade al nuevo proyecto de tests sin modificar los proyectos de tests existentes.
 
 1. Ejecuta `dotnet add tests/AceriaApp.ResultPattern.Tests/AceriaApp.ResultPattern.Tests.csproj package FluentAssertions --version 6.12.2` o reemplaza el csproj por el XML completo indicado.
 2. Ejecuta `dotnet list tests/AceriaApp.ResultPattern.Tests/AceriaApp.ResultPattern.Tests.csproj package` y localiza `FluentAssertions 6.12.2`.
@@ -5195,7 +4748,6 @@ using System.Collections.Generic;
 </Project>
 ```
 
-**Por qué funciona así.** `FluentAssertions` proporciona la sintaxis de aserción usada en el curso. Se añade al nuevo proyecto de tests sin modificar los proyectos de tests existentes.
 
 **Verificación concreta.** El archivo de proyecto y `dotnet list package` muestran `FluentAssertions 6.12.2`; la compilación finaliza correctamente.
 
@@ -5208,9 +4760,7 @@ using System.Collections.Generic;
 
 ### PASO 4.4.15 — Crear el archivo `ResultTests.cs`
 
-**Resultado de aprendizaje.** Crear el archivo `ResultTests.cs`. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+Los tests verifican que la clase `Result<T>` produce los valores correctos en los estados de éxito y de fallo.
 
 1. En el panel Solution Explorer, expandir `tests` → `AceriaApp.ResultPattern.Tests`.
 2. Crear el archivo `ResultTests.cs`.
@@ -5260,7 +4810,6 @@ public class ResultTests
 }
 ```
 
-**Por qué funciona así.** los tests verifican que la clase `Result<T>` produce los valores correctos en los estados de éxito y de fallo.
 
 **Verificación concreta.** el archivo `ResultTests.cs` compila y contiene tres métodos de test.
 
@@ -5273,9 +4822,7 @@ public class ResultTests
 
 ### PASO 4.4.16 — Crear el archivo `ValidadorResultadosTests.cs`
 
-**Resultado de aprendizaje.** Crear el archivo `ValidadorResultadosTests.cs`. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+Los tests verifican que el validador acepta el catálogo por defecto y rechaza las operaciones que violan las reglas del patrón.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre el proyecto `AceriaApp.ResultPattern.Tests`.
 2. Seleccionar `Add` → `Class` y nombrar la clase `ValidadorResultadosTests.cs`.
@@ -5358,7 +4905,6 @@ public class ValidadorResultadosTests
 }
 ```
 
-**Por qué funciona así.** los tests verifican que el validador acepta el catálogo por defecto y rechaza las operaciones que violan las reglas del patrón.
 
 **Verificación concreta.** el archivo `ValidadorResultadosTests.cs` compila y contiene cinco métodos de test.
 
@@ -5371,9 +4917,7 @@ public class ValidadorResultadosTests
 
 ### PASO 4.4.17 — Integrar Result y sus respuestas HTTP y compilar la solución
 
-**Resultado de aprendizaje.** Integrar Result y sus respuestas HTTP y compilar la solución. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+El recorrido HTTP convierte un resultado de aplicación en códigos estables, como ausencia o conflicto, y confirma que una operación exitosa sí modifica el estado previsto. Probar únicamente que existe un tipo `Result` dejaría sin verificar la integración.
 
 1. Abre cada archivo de integración funcional indicado en este paso. Crea los nuevos y reemplaza únicamente los que se señalen; copia todo el código mostrado.
 2. Recorre las referencias: el dominio define sus entidades, la aplicación usa puertos y la infraestructura implementa persistencia; la API compone el flujo.
@@ -5430,29 +4974,13 @@ public static class PatronesOrdenesEndpoints
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+Aísla la ruta de este módulo y conserva los endpoints existentes de M02 y M03. La API solo construye la consulta y la envía; el contenedor selecciona su manejador. Traduce la petición HTTP en un comando de aplicación y propaga la cancelación.
 
-- **Línea 10:** Aísla la ruta de este módulo y conserva los endpoints existentes de M02 y M03.
+Selecciona la rama de error antes de leer el valor de éxito. Devuelve 201 y una cabecera Location calculada con la ruta de lectura nombrada y el identificador creado. Solicita la transición mediante el mediador y mantiene la lógica de negocio fuera del endpoint.
 
-- **Línea 13:** La API solo construye la consulta y la envía; el contenedor selecciona su manejador.
+Centraliza la traducción del error de aplicación al cuerpo Problem Details de HTTP. Los datos inválidos producen 400; la categoría se mantiene separada del texto del mensaje. La ausencia del recurso produce 404.
 
-- **Línea 18:** Traduce la petición HTTP en un comando de aplicación y propaga la cancelación.
-
-- **Línea 19:** Selecciona la rama de error antes de leer el valor de éxito.
-
-- **Línea 21:** Devuelve 201 y una cabecera Location calculada con la ruta de lectura nombrada y el identificador creado.
-
-- **Línea 25:** Solicita la transición mediante el mediador y mantiene la lógica de negocio fuera del endpoint.
-
-- **Línea 31:** Centraliza la traducción del error de aplicación al cuerpo Problem Details de HTTP.
-
-- **Línea 35:** Los datos inválidos producen 400; la categoría se mantiene separada del texto del mensaje.
-
-- **Línea 36:** La ausencia del recurso produce 404.
-
-- **Línea 37:** Una transición incompatible con el estado del recurso produce 409.
-
-- **Línea 40:** Añade el código estable del error como extensión de Problem Details para que el cliente no dependa del texto.
+Una transición incompatible con el estado del recurso produce 409. Añade el código estable del error como extensión de Problem Details para que el cliente no dependa del texto.
 
 
 **Integración funcional.** Integra únicamente registros y mapeo del endpoint de patrones. Conserva íntegros los endpoints, documentación y arranque de M2/M3; en 4.5 reemplaza registros repetidos por AddPatronesOrdenes().
@@ -5634,25 +5162,11 @@ app.Run();
 public partial class Program {} // permite WebApplicationFactory en tests
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+Permite mapear los endpoints del módulo desde la raíz de composición. Permite registrar las implementaciones de los puertos desde la API. Mantiene el registro SQL Server y los servicios que ya utilizaba M03.
 
-- **Línea 1:** Permite mapear los endpoints del módulo desde la raíz de composición.
+Durante esta etapa se registra explícitamente el puerto de escritura con su adaptador. La unidad de trabajo comparte el contexto Scoped de la petición. Permite a los manejadores recibir el caso de uso que devuelve Result.
 
-- **Línea 3:** Permite registrar las implementaciones de los puertos desde la API.
-
-- **Línea 24:** Mantiene el registro SQL Server y los servicios que ya utilizaba M03.
-
-- **Línea 25:** Durante esta etapa se registra explícitamente el puerto de escritura con su adaptador.
-
-- **Línea 26:** La unidad de trabajo comparte el contexto Scoped de la petición.
-
-- **Línea 28:** Permite a los manejadores recibir el caso de uso que devuelve Result.
-
-- **Línea 31:** Conecta MediatR con los manejadores reales del ensamblado de aplicación.
-
-- **Línea 33:** Registra el logging como comportamiento transversal del mediador.
-
-- **Línea 169:** Publica las rutas del nuevo flujo después de construir la aplicación y antes de ejecutarla.
+Conecta MediatR con los manejadores reales del ensamblado de aplicación. Registra el logging como comportamiento transversal del mediador. Publica las rutas del nuevo flujo después de construir la aplicación y antes de ejecutarla.
 
 
 **Integración funcional.** Define command y query tipados y handlers que invocan el caso de uso real. En 4.4 los mensajes pasan a `Result<OrdenHexagonal>` y se añade FinalizarOrdenCommand, conservando el mismo flujo MediatR.
@@ -5684,21 +5198,11 @@ public sealed class FinalizarOrdenHandler(OrdenesConResultado caso) : IRequestHa
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+El comando transporta los datos de entrada e implementa IRequest con su tipo de respuesta; MediatR utiliza ese contrato para seleccionar el manejador. La consulta solicita una orden por identificador y declara el resultado que espera el emisor. El comando de transición se mantiene separado de la consulta y conserva el identificador del recurso.
 
-- **Línea 5:** El comando transporta los datos de entrada e implementa IRequest con su tipo de respuesta; MediatR utiliza ese contrato para seleccionar el manejador.
+El manejador recibe el caso de uso por constructor; no recibe DbContext ni construye infraestructura. Delega la operación completa y transmite la cancelación. La regla de negocio y la confirmación siguen en el caso de uso. MediatR asocia esta clase al contrato de consulta; su único trabajo es delegar la lectura.
 
-- **Línea 6:** La consulta solicita una orden por identificador y declara el resultado que espera el emisor.
-
-- **Línea 7:** El comando de transición se mantiene separado de la consulta y conserva el identificador del recurso.
-
-- **Línea 9:** El manejador recibe el caso de uso por constructor; no recibe DbContext ni construye infraestructura.
-
-- **Línea 12:** Delega la operación completa y transmite la cancelación. La regla de negocio y la confirmación siguen en el caso de uso.
-
-- **Línea 14:** MediatR asocia esta clase al contrato de consulta; su único trabajo es delegar la lectura.
-
-- **Línea 18:** El manejador de finalización devuelve el mismo resultado explícito que produce el caso de uso.
+El manejador de finalización devuelve el mismo resultado explícito que produce el caso de uso.
 
 
 **Integración funcional.** Integra errores esperados de validación, ausencia y conflicto sin excepciones de negocio. Solo hace commit en creación válida o transición válida. Las excepciones operacionales y la cancelación siguen propagándose.
@@ -5746,25 +5250,11 @@ public sealed class OrdenesConResultado(IOrdenTrabajoRepositorio repositorio, IU
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+El caso de uso conserva la dependencia de los puertos de repositorio y unidad de trabajo; no conoce HTTP. Comprueba los datos antes de crear una entidad o preparar escrituras. Representa un rechazo esperado con un código estable y una categoría de validación.
 
-- **Línea 4:** El caso de uso conserva la dependencia de los puertos de repositorio y unidad de trabajo; no conoce HTTP.
+Prepara la nueva entidad solo después de superar la validación. Confirma el cambio una vez. Los fallos de infraestructura se propagan como excepciones y no se disfrazan de errores esperados. Expresa la ausencia como un fallo de resultado, permitiendo al adaptador elegir la respuesta HTTP.
 
-- **Línea 8:** Comprueba los datos antes de crear una entidad o preparar escrituras.
-
-- **Línea 10:** Representa un rechazo esperado con un código estable y una categoría de validación.
-
-- **Línea 13:** Prepara la nueva entidad solo después de superar la validación.
-
-- **Línea 14:** Confirma el cambio una vez. Los fallos de infraestructura se propagan como excepciones y no se disfrazan de errores esperados.
-
-- **Línea 22:** Expresa la ausencia como un fallo de resultado, permitiendo al adaptador elegir la respuesta HTTP.
-
-- **Línea 29:** Devuelve el fallo de lectura sin acceder al valor inexistente.
-
-- **Línea 32:** Una segunda finalización produce conflicto y no vuelve a modificar ni confirmar la orden.
-
-- **Línea 33:** El dominio realiza la transición válida. El contexto conserva el seguimiento de la entidad recuperada.
+Devuelve el fallo de lectura sin acceder al valor inexistente. Una segunda finalización produce conflicto y no vuelve a modificar ni confirmar la orden. El dominio realiza la transición válida. El contexto conserva el seguimiento de la entidad recuperada.
 
 
 **Integración funcional.** Implementa un `Result<T>` inmutable con constructor privado y factories que rechazan null. El éxito contiene valor y el fallo un error tipado; acceder a la rama incorrecta lanza. Error valida código, descripción y tipo. No colisiona con el ejemplo del catálogo en API.
@@ -5808,29 +5298,13 @@ public sealed class Result<T> where T : notnull
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+Limita las categorías esperadas a validación, ausencia y conflicto, que se traducirán en el adaptador HTTP. Agrupa código estable, descripción y categoría en un contrato inmutable. Rechaza contratos de error sin código. Es una defensa ante un uso incorrecto del tipo, no un error de negocio del usuario.
 
-- **Línea 3:** Limita las categorías esperadas a validación, ausencia y conflicto, que se traducirán en el adaptador HTTP.
+Rechaza categorías inválidas incluso si se convierten desde un entero. El genérico exige un valor no nulo en la rama de éxito. Permite leer el valor únicamente en un éxito; una lectura de la rama equivocada es un error de programación.
 
-- **Línea 5:** Agrupa código estable, descripción y categoría en un contrato inmutable.
+Permite leer el error únicamente en un fallo, evitando estados ambiguos. El constructor privado establece solo la rama de éxito; no acepta simultáneamente valor y error. El constructor privado establece solo la rama de fallo.
 
-- **Línea 12:** Rechaza contratos de error sin código. Es una defensa ante un uso incorrecto del tipo, no un error de negocio del usuario.
-
-- **Línea 14:** Rechaza categorías inválidas incluso si se convierten desde un entero.
-
-- **Línea 20:** El genérico exige un valor no nulo en la rama de éxito.
-
-- **Línea 25:** Permite leer el valor únicamente en un éxito; una lectura de la rama equivocada es un error de programación.
-
-- **Línea 26:** Permite leer el error únicamente en un fallo, evitando estados ambiguos.
-
-- **Línea 27:** El constructor privado establece solo la rama de éxito; no acepta simultáneamente valor y error.
-
-- **Línea 28:** El constructor privado establece solo la rama de fallo.
-
-- **Línea 29:** La fábrica pública controla la creación del éxito y rechaza un valor nulo.
-
-- **Línea 31:** La fábrica pública controla la creación del fallo y rechaza un error nulo.
+La fábrica pública controla la creación del éxito y rechaza un valor nulo. La fábrica pública controla la creación del fallo y rechaza un error nulo.
 
 
 **Integración funcional.** Verifica persistencia y consulta mediante ISender, ejecución observable del pipeline sin payloads y cancelación sin efectos persistidos. En 4.4 adapta la lectura a Result.Valor y registra OrdenesConResultado.
@@ -5941,23 +5415,11 @@ public sealed class MediatorFuncionalesTests
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+El mediador ejecuta el caso de uso y una lectura independiente verifica la orden persistida. El pipeline registra inicio y fin sin incluir el nombre del cliente. Una cancelación previa impide persistir una orden.
 
-- **Línea 15:** `public async Task Command_y_query_ejecutan_el_caso_de_uso_y_devuelven_datos_persistidos()` → El mediador ejecuta el caso de uso y una lectura independiente verifica la orden persistida.
+En `var store = BaseSqlServer.Crear();` se asigna una base SQL Server aislada al entorno de cada prueba. Los ámbitos de DI reciben contextos SQL Server sobre la misma base de esa prueba. Comprueba el proveedor antes de crear las tablas.
 
-- **Línea 29:** `public async Task Pipeline_registra_inicio_y_fin_sin_datos_de_cliente()` → El pipeline registra inicio y fin sin incluir el nombre del cliente.
-
-- **Línea 41:** `public async Task Cancelacion_del_command_no_persiste_la_orden()` → Una cancelación previa impide persistir una orden.
-
-- **Línea 60:** `var store = BaseSqlServer.Crear();` → Asigna una base SQL Server aislada al entorno de cada prueba.
-
-- **Línea 64:** `services.AddDbContext<HexagonalDbContext>(o => o.UseSqlServer(store.ConnectionString));` → Los ámbitos de DI reciben contextos SQL Server sobre la misma base de esa prueba.
-
-- **Línea 78:** `Assert.Equal("Microsoft.EntityFrameworkCore.SqlServer", db.Database.ProviderName);` → Comprueba el proveedor antes de crear las tablas.
-
-- **Línea 81:** `catch { await fixture.DisposeAsync(); throw; }` → Si falla la inicialización, libera también la base temporal.
-
-- **Línea 84:** `public async ValueTask DisposeAsync() { await services.DisposeAsync(); await store.DisposeAsync(); }` → Libera los servicios antes de eliminar la base que les pertenece.
+En `catch { await fixture.DisposeAsync(); throw; }` se si falla la inicialización, libera también la base temporal. Libera los servicios antes de eliminar la base que les pertenece.
 
 
 **Integración funcional.** Conserva las dependencias de los tests de catálogo y añade Testcontainers.MsSql, el helper compartido y WebApplicationFactory para las pruebas funcionales.
@@ -5981,15 +5443,9 @@ public sealed class MediatorFuncionalesTests
 </Project>
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+Compila para .NET 8, igual que los proyectos heredados. Fija el cliente de contenedores para SQL Server; el proveedor EF Core SQL Server llega mediante la referencia a la API. Permite ejecutar peticiones HTTP contra el host real de la API.
 
-- **Línea 2:** `<PropertyGroup><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><IsPackable>false</IsPackable><IsTestProject>true</IsTestProject></PropertyGroup>` → Compila para .NET 8, igual que los proyectos heredados.
-
-- **Línea 8:** `<PackageReference Include="Testcontainers.MsSql" Version="3.10.0" />` → Fija el cliente de contenedores para SQL Server; el proveedor EF Core SQL Server llega mediante la referencia a la API.
-
-- **Línea 9:** `<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.21" />` → Permite ejecutar peticiones HTTP contra el host real de la API.
-
-- **Línea 11:** `<Compile Include="../Compartido/SqlServerPruebas.cs" Link="SqlServerPruebas.cs" />` → Compila el helper heredado que crea y elimina únicamente la base aislada de cada prueba, sin añadir otro proyecto a la solución.
+Compila el helper heredado que crea y elimina únicamente la base aislada de cada prueba, sin añadir otro proyecto a la solución.
 
 
 **Integración funcional.** Prueba invariantes de Result y flujo HTTP real con WebApplicationFactory y SQL Server: 201 con Location, 400 sin persistencia, 404 de lectura y finalización, y 409 al repetir la transición.
@@ -6122,26 +5578,11 @@ public sealed class ResultFuncionalesTests
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+Comprueba las invariantes de los resultados y sus errores. La creación HTTP devuelve un recurso persistido con Location. Los datos inválidos producen 400 y ninguna escritura.
 
-- **Línea 19:** `public void Factories_impiden_resultados_o_errores_incompletos()` → Comprueba las invariantes de los resultados y sus errores.
+La segunda finalización devuelve conflicto y conserva el estado de la primera. En `private readonly BaseSqlServer store = BaseSqlServer.Crear();` se cada host de prueba es dueño de una base SQL Server distinta. La inicialización falla si no está activo el proveedor SQL Server.
 
-- **Línea 40:** `public async Task Crear_devuelve_201_location_y_lectura_del_recurso_persistido()` → La creación HTTP devuelve un recurso persistido con Location.
-
-- **Línea 53:** `public async Task Datos_invalidos_devuelven_400_sin_crear_ordenes()` → Los datos inválidos producen 400 y ninguna escritura.
-
-- **Línea 85:** `public async Task Finalizar_dos_veces_devuelve_409_y_conserva_la_primera_transicion()` → La segunda finalización devuelve conflicto y conserva el estado de la primera.
-
-- **Línea 100:** `private readonly BaseSqlServer store = BaseSqlServer.Crear();` → Cada host de prueba es dueño de una base SQL Server distinta.
-
-- **Línea 106:** `Assert.Equal("Microsoft.EntityFrameworkCore.SqlServer", db.Database.ProviderName);` → La inicialización falla si no está activo el proveedor SQL Server.
-
-- **Línea 116:** `services.AddDbContext<HexagonalDbContext>(o => o.UseSqlServer(store.ConnectionString));` → Sustituye la conexión del contexto por la base aislada de esta prueba.
-
-- **Línea 120:** `{ base.Dispose(disposing); if (disposing) store.Dispose(); }` → Cierra el host antes de eliminar su base de prueba.
-
-
-**Por qué funciona así.** compilar la solución completa verifica que todos los proyectos, incluidos los nuevos, se resuelven correctamente.
+Sustituye la conexión del contexto por la base aislada de esta prueba. En `{ base.Dispose(disposing); if (disposing) store.Dispose(); }` se cierra el host antes de eliminar su base de prueba.
 
 **Verificación concreta.** La solución completa compila, incluidos el código de integración y sus pruebas. Las siguientes ejecuciones de tests comprobarán el comportamiento de los patrones.
 
@@ -6154,17 +5595,12 @@ public sealed class ResultFuncionalesTests
 
 ### PASO 4.4.18 — Ejecutar todos los tests del punto 4.4
 
-**Resultado de aprendizaje.** Ejecutar todos los tests del punto 4.4. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+Ejecutar los tests del punto 4.4 verifica que las clases del patrón Result funcionan correctamente.
 
 1. Ejecuta `dotnet test tests/AceriaApp.ResultPattern.Tests/AceriaApp.ResultPattern.Tests.csproj -c Release` desde la raíz de esta etapa.
 2. Comprueba un total de 15 pruebas: 8 de catálogo y 7 funcionales, con cero fallos y cero omisiones.
 3. Si falla una prueba, abre su mensaje de aserción y el archivo indicado; corrige el comportamiento antes de continuar.
 4. Repite el mismo comando tras la corrección y conserva el resultado de la ejecución válida.
-
-
-**Por qué funciona así.** ejecutar los tests del punto 4.4 verifica que las clases del patrón Result funcionan correctamente.
 
 **Verificación concreta.** El proyecto `AceriaApp.ResultPattern.Tests` termina con `Failed: 0, Passed: 15, Skipped: 0, Total: 15`.
 
@@ -6177,17 +5613,12 @@ public sealed class ResultFuncionalesTests
 
 ### PASO 4.4.19 — Ejecutar todos los tests de la solución
 
-**Resultado de aprendizaje.** Ejecutar todos los tests de la solución. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+Ejecutar todos los tests de la solución verifica que los tests de los puntos anteriores y del punto 4.4 pasan conjuntamente.
 
 1. Ejecuta `dotnet build AceriaApp.sln -c Release` para producir todas las asambleas de esta etapa.
 2. Ejecuta `dotnet test AceriaApp.sln -c Release --no-build --no-restore` para ejecutar todas las pruebas acumuladas.
 3. Suma los resultados de los 9 proyectos de tests: deben ser 105 pruebas aprobadas, sin fallos ni omisiones.
 4. Comprueba que las pruebas heredadas de M03 y los puntos anteriores de M04 siguen presentes; no borres tests para obtener un resultado verde.
-
-
-**Por qué funciona así.** ejecutar todos los tests de la solución verifica que los tests de los puntos anteriores y del punto 4.4 pasan conjuntamente.
 
 **Verificación concreta.** La suma de las líneas de resultados es `Failed: 0`, `Passed: 105`, `Skipped: 0` y `Total: 105`. Dotnet muestra un resumen por proyecto, no necesariamente una única línea global.
 
@@ -6200,9 +5631,7 @@ public sealed class ResultFuncionalesTests
 
 ### PASO 4.4.20 — Crear el README del punto 4.4
 
-**Resultado de aprendizaje.** Crear el README del punto 4.4. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+El README del punto 4.4 explica el objetivo, el estado, la ejecución y los añadidos. No modifica el README del punto 4.3.
 
 1. En la carpeta del punto `4.4-result-pattern`, hacer clic derecho y seleccionar `Add` → `New Item` → `Text File`.
 2. Nombrar el archivo `README.md`.
@@ -6250,7 +5679,6 @@ La práctica conecta además el patrón con los puertos, adaptadores y pruebas d
 Los catálogos describen ejemplos de diseño. El comportamiento de las clases reales se comprueba además con los tests funcionales del punto. Ejecuta `dotnet test AceriaApp.sln -c Release` y exige cero fallos y cero omisiones.
 ```
 
-**Por qué funciona así.** el README del punto 4.4 explica el objetivo, el estado, la ejecución y los añadidos. No modifica el README del punto 4.3.
 
 **Verificación concreta.** El archivo `README.md` existe y contiene las 6 secciones mostradas; abre su vista previa y comprueba todos los apartados.
 
@@ -6263,9 +5691,7 @@ Los catálogos describen ejemplos de diseño. El comportamiento de las clases re
 
 ### PASO 4.4.21 — Crear el ADR-017 del punto 4.4
 
-**Resultado de aprendizaje.** Crear el ADR-017 del punto 4.4. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+El ADR-017 documenta la decisión de adoptar el patrón Result. Es un artefacto nuevo del punto 4.4 que no modifica los ADR existentes.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `docs`.
 2. Seleccionar `Add` → `New Item` → `Text File` y nombrar el archivo `ADR-017-patron-result.md`.
@@ -6298,7 +5724,6 @@ Se adopta `AceriaApp.Hexagonal.Aplicacion.Patrones.Result<T>` para los errores e
 - Mitigación: la validación automática y el uso consistente del patrón.
 ```
 
-**Por qué funciona así.** el ADR-017 documenta la decisión de adoptar el patrón Result. Es un artefacto nuevo del punto 4.4 que no modifica los ADR existentes.
 
 **Verificación concreta.** El archivo `docs/ADR-017-patron-result.md` existe y contiene las 5 secciones mostradas; abre su vista previa y comprueba todos los apartados.
 
@@ -6311,17 +5736,12 @@ Se adopta `AceriaApp.Hexagonal.Aplicacion.Patrones.Result<T>` para los errores e
 
 ### PASO 4.4.22 — Verificar que los documentos heredados y la etapa 4.3 permanecen intactos
 
-**Resultado de aprendizaje.** Verificar que los documentos heredados y la etapa 4.3 permanecen intactos. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+Las decisiones previas se conservan como registros históricos. Los nuevos ADR explican la evolución y las modificaciones de integración se aplican solo a la copia de la etapa actual.
 
 1. Vuelve a la raíz del repositorio; las rutas siguientes se interpretan desde allí.
 2. En CMD ejecuta `for %f in (M04_PATRONES_ARQUITECTURA\PROYECTO\4.3-mediator\docs\*.md) do fc /L "%f" "M04_PATRONES_ARQUITECTURA\PROYECTO\4.4-result-pattern\docs\%~nxf"`. En PowerShell puedes comparar `Get-FileHash` para cada par de documentos.
 3. Comprueba 14 comparaciones y exige igualdad en todas; se conserva exactamente el contenido de los documentos heredados.
 4. Si una comparación falla, restaura el documento de la etapa actual desde `4.3-mediator`. Verifica también que la carpeta del punto anterior no tiene modificaciones.
-
-
-**Por qué funciona así.** Las decisiones previas se conservan como registros históricos. Los nuevos ADR explican la evolución y las modificaciones de integración se aplican solo a la copia de la etapa actual.
 
 **Verificación concreta.** Los 14 documentos heredados coinciden byte a byte y el punto anterior permanece intacto.
 
@@ -6334,17 +5754,12 @@ Se adopta `AceriaApp.Hexagonal.Aplicacion.Patrones.Result<T>` para los errores e
 
 ### PASO 4.4.23 — Verificar la estructura del punto 4.4
 
-**Resultado de aprendizaje.** Verificar la estructura del punto 4.4. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+La verificación estructural confirma que el punto 4.4 añade archivos nuevos conservando los documentos heredados.
 
 1. Escribir `tree /F M04_PATRONES_ARQUITECTURA\PROYECTO\4.4-result-pattern` y pulsar Enter.
 2. Verificar que la salida muestra `AceriaApp.sln`, `README.md`, `src\AceriaApp.Api\ResultPattern` con las cuatro clases nuevas, `tests\AceriaApp.ResultPattern.Tests` con los dos archivos de catálogo y el archivo de tests funcionales y `docs` con el documento del patrón y el ADR-017. Comprueba además todos los archivos de integración de las carpetas Patrones y los cambios de composición indicados en este punto.
 3. Verificar que las carpetas existentes del punto 4.3 permanecen intactas.
 4. Verificar que no existe ninguna carpeta `labs` ni ningún archivo `metaprompt.md` ni `verificacion.md`.
-
-
-**Por qué funciona así.** la verificación estructural confirma que el punto 4.4 añade archivos nuevos conservando los documentos heredados.
 
 **Verificación concreta.** la estructura contiene los archivos nuevos y conserva los del punto 4.3.
 
@@ -6357,17 +5772,12 @@ Se adopta `AceriaApp.Hexagonal.Aplicacion.Patrones.Result<T>` para los errores e
 
 ### PASO 4.4.24 — Hacer el commit del punto 4.4 y verificar el estado final
 
-**Resultado de aprendizaje.** Hacer el commit del punto 4.4 y verificar el estado final. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+El commit permite comparar esta etapa con la anterior. Si has realizado un commit por punto desde 1.1, el recorrido suma 17 commits de puntos; otros commits legítimos pueden aumentar el historial.
 
 1. Desde la raíz del repositorio ejecuta `git status` y revisa que solo aparezcan los archivos de esta etapa y los entregables que has trabajado.
 2. Ejecuta `git add .` después de verificar que `bin/`, `obj/`, `TestResults/` y credenciales están excluidos.
 3. Ejecuta `git commit -m "Punto 4.4: Result Pattern"` con `user.name` y `user.email` configurados.
 4. Ejecuta `git log --oneline` y `git status`; comprueba que se registró el commit de este punto y que no quedan cambios pendientes de esta actividad.
-
-
-**Por qué funciona así.** El commit permite comparar esta etapa con la anterior. Si has realizado un commit por punto desde 1.1, el recorrido suma 17 commits de puntos; otros commits legítimos pueden aumentar el historial.
 
 **Verificación concreta.** El historial incluye el commit de 4.4 y `git status` no muestra cambios pendientes de esta actividad; no se exige un número rígido de commits a un repositorio con más trabajo.
 
@@ -6515,23 +5925,24 @@ El punto 4.4 ha definido el patrón Result como mecanismo para representar error
 
 # Punto 4.5 — Inyección de dependencias
 
+## Componer los adaptadores con el ciclo de vida correcto
+
+La inversión de dependencias solo funciona en ejecución si ASP.NET Core puede resolver cada puerto y entregar al caso de uso el adaptador adecuado. El contenedor administra además ciclos de vida: un DbContext suele ser Scoped por petición y no debería capturarse en un singleton que prolongue su existencia. El último punto de M04 explica estas decisiones en el punto de composición y comprueba que las instancias se utilizan en el ámbito previsto.
+
+La práctica parte de la solución acumulada del punto 4.4. Conservaremos los ejercicios de catálogo para estudiar registros válidos e inválidos, pero los contrastaremos con servicios realmente registrados. La compilación y las pruebas de integración nos permitirán cerrar M04 con un flujo funcional desde HTTP hasta SQL Server, además de un ADR que justifica por qué la API depende de abstracciones mientras infraestructura contiene las implementaciones.
+
 **Carpeta de trabajo:** `M04_PATRONES_ARQUITECTURA/PROYECTO/4.5-inyeccion-dependencias`.
 
 **Objetivo:** completar los veinticuatro pasos, conservar los documentos heredados y comprobar el patrón con código y tests ejecutables. La etapa suma 118 pruebas en 14 proyectos.
 
 ### PASO 4.5.1 — Crear la carpeta del punto 4.5 a partir del punto 4.4
 
-**Resultado de aprendizaje.** Crear la carpeta del punto 4.5 a partir del punto 4.4. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+La copia preserva una etapa autónoma y reproducible. 4.4-result-pattern aporta 105 tests aprobados y 13 proyectos antes de añadir este punto.
 
 1. Abre la terminal integrada de Visual Studio y localiza `M04_PATRONES_ARQUITECTURA/PROYECTO/4.4-result-pattern`; esa es la etapa completa que vas a continuar.
 2. Crea `M04_PATRONES_ARQUITECTURA/PROYECTO/4.5-inyeccion-dependencias` y copia en ella el contenido de `4.4-result-pattern`; en Windows puedes usar `xcopy` con `/E /I /H /Y`.
 3. Excluye `bin`, `obj` y `TestResults`; abre únicamente la copia de `4.5-inyeccion-dependencias` para que el punto anterior permanezca intacto.
 4. Ejecuta `dir` dentro de `4.5-inyeccion-dependencias` y verifica `AceriaApp.sln`, `README.md`, `src`, `tests`, `docs` y `global.json`.
-
-
-**Por qué funciona así.** La copia preserva una etapa autónoma y reproducible. 4.4-result-pattern aporta 105 tests aprobados y 13 proyectos antes de añadir este punto.
 
 **Verificación concreta.** La copia contiene la solución y los 13 proyectos de la etapa anterior; no contiene todavía archivos nuevos de 4.5.
 
@@ -6545,17 +5956,12 @@ El punto 4.4 ha definido el patrón Result como mecanismo para representar error
 
 ### PASO 4.5.2 — Abrir la solución copiada en Visual Studio 2026
 
-**Resultado de aprendizaje.** Abrir la solución copiada en Visual Studio 2026. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+Abrir la solución copiada permite trabajar en el punto 4.5 sobre la base del punto 4.4. La compilación verifica que la copia es correcta.
 
 1. Entra en `4.5-inyeccion-dependencias` y abre `AceriaApp.sln` con Visual Studio; desde Windows puedes ejecutar `start AceriaApp.sln`.
 2. Ejecuta `dotnet sln AceriaApp.sln list` y comprueba los 13 proyectos heredados; todos deben existir bajo esta etapa.
 3. Ejecuta `dotnet restore AceriaApp.sln` y `dotnet build AceriaApp.sln -c Release`; conserva la salida como comprobación inicial.
 4. Si la API está en ejecución, detenla antes de compilar. Continúa cuando la compilación termine sin errores y las rutas no apunten a otra etapa.
-
-
-**Por qué funciona así.** abrir la solución copiada permite trabajar en el punto 4.5 sobre la base del punto 4.4. La compilación verifica que la copia es correcta.
 
 **Verificación concreta.** `dotnet sln AceriaApp.sln list` muestra 13 proyectos y `dotnet build AceriaApp.sln -c Release` termina con `Build succeeded.`.
 
@@ -6568,17 +5974,12 @@ El punto 4.4 ha definido el patrón Result como mecanismo para representar error
 
 ### PASO 4.5.3 — Verificar que la carpeta `docs` contiene los documentos del punto 4.4
 
-**Resultado de aprendizaje.** Verificar que la carpeta `docs` contiene los documentos del punto 4.4. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+La etapa conserva los 16 documentos anteriores y añade únicamente su ficha de patrón y su ADR. Las modificaciones de código se escriben en la copia actual.
 
 1. Expande `docs` dentro de la copia de `4.5-inyeccion-dependencias`.
 2. Comprueba los 16 documentos heredados: los ADR-010 a ADR-017 y las fichas de los puntos anteriores.
 3. Compara sus nombres y contenido con `docs` de `4.4-result-pattern`. No modifiques ni elimines los documentos anteriores.
 4. Confirma que todavía no existen `docs/inyeccion-dependencias.md` ni `docs/ADR-018-inyeccion-dependencias.md`; se crearán en este punto.
-
-
-**Por qué funciona así.** La etapa conserva los 16 documentos anteriores y añade únicamente su ficha de patrón y su ADR. Las modificaciones de código se escriben en la copia actual.
 
 **Verificación concreta.** `docs` contiene 16 archivos heredados idénticos; los dos documentos de este punto todavía no existen.
 
@@ -6591,9 +5992,7 @@ El punto 4.4 ha definido el patrón Result como mecanismo para representar error
 
 ### PASO 4.5.4 — Crear el documento de inyección de dependencias en `docs`
 
-**Resultado de aprendizaje.** Crear el documento de inyección de dependencias en `docs`. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+El documento de inyección de dependencias es el artefacto de `docs` específico del punto 4.5. Incluye el cierre del módulo 4 con el resumen del estado del proyecto. No modifica los 16 documentos heredados del punto 4.4.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `docs`.
 2. Seleccionar `Add` → `New Item` → `Text File` y nombrar el archivo `inyeccion-dependencias.md`.
@@ -6678,7 +6077,6 @@ El proyecto AceriaApp dispone de:
 El catálogo de este punto describe reglas de diseño y contiene ejemplos de contratos. Sus nombres no implican servicios registrados. La implementación utiliza los proyectos `AceriaApp.Hexagonal.Aplicacion`, `AceriaApp.Hexagonal.Dominio` y `AceriaApp.Hexagonal.Infraestructura`, compuestos desde `AceriaApp.Api`. Comprueba los archivos y los tests funcionales que incorpora el paso de compilación de este punto.
 ```
 
-**Por qué funciona así.** el documento de inyección de dependencias es el artefacto de `docs` específico del punto 4.5. Incluye el cierre del módulo 4 con el resumen del estado del proyecto. No modifica los 16 documentos heredados del punto 4.4.
 
 **Verificación concreta.** El archivo `docs/inyeccion-dependencias.md` existe y contiene las 12 secciones mostradas; abre su vista previa y comprueba todos los apartados.
 
@@ -6691,17 +6089,12 @@ El catálogo de este punto describe reglas de diseño y contiene ejemplos de con
 
 ### PASO 4.5.5 — Crear la carpeta `InyeccionDependencias` en el proyecto API
 
-**Resultado de aprendizaje.** Crear la carpeta `InyeccionDependencias` en el proyecto API. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+La carpeta `InyeccionDependencias` albergará las clases de validación del contenedor. Se crea como carpeta nueva sin tocar las carpetas existentes.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre el proyecto `AceriaApp.Api`.
 2. Seleccionar `Add` → `New Folder` y nombrar la carpeta `InyeccionDependencias`.
 3. Verificar que la carpeta `InyeccionDependencias` aparece dentro de `AceriaApp.Api` sin afectar a las carpetas existentes.
 4. Verificar que no se ha modificado ningún archivo existente del punto 4.4.
-
-
-**Por qué funciona así.** la carpeta `InyeccionDependencias` albergará las clases de validación del contenedor. Se crea como carpeta nueva sin tocar las carpetas existentes.
 
 **Verificación concreta.** la carpeta `InyeccionDependencias` existe dentro de `AceriaApp.Api` y las carpetas existentes permanecen intactas.
 
@@ -6714,9 +6107,7 @@ El catálogo de este punto describe reglas de diseño y contiene ejemplos de con
 
 ### PASO 4.5.6 — Crear la clase `RegistroInyeccion`
 
-**Resultado de aprendizaje.** Crear la clase `RegistroInyeccion`. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+`RegistroInyeccion` describe un registro de DI para el catálogo. Sin una llamada real a `AddScoped`, `AddTransient` o `AddSingleton` en la composición, la descripción no hace que ASP.NET Core pueda resolver el servicio.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `InyeccionDependencias`.
 2. Seleccionar `Add` → `Class` y nombrar la clase `RegistroInyeccion.cs`.
@@ -6740,7 +6131,6 @@ public class RegistroInyeccion
 }
 ```
 
-**Por qué funciona así.** la clase `RegistroInyeccion` modela un registro del contenedor con la interfaz, la implementación, el ciclo y tres indicadores de buenas prácticas. Es la unidad de información del validador.
 
 **Verificación concreta.** la clase `RegistroInyeccion` compila sin errores y expone seis propiedades.
 
@@ -6753,9 +6143,7 @@ public class RegistroInyeccion
 
 ### PASO 4.5.7 — Crear la clase `ValidadorInyeccionDependencias`
 
-**Resultado de aprendizaje.** Crear la clase `ValidadorInyeccionDependencias`. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+El validador del catálogo distingue vidas útiles y asociaciones potencialmente incompatibles. Esas reglas ayudan a razonar, pero conviene comprobar también la resolución de las implementaciones con el contenedor real.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `InyeccionDependencias`.
 2. Seleccionar `Add` → `Class` y nombrar la clase `ValidadorInyeccionDependencias.cs`.
@@ -6822,7 +6210,6 @@ public class ValidadorInyeccionDependencias
 public record ResultadoInyeccion(bool EsValido, IReadOnlyList<string> Errores);
 ```
 
-**Por qué funciona así.** la clase `ValidadorInyeccionDependencias` comprueba que cada registro declara interfaz, implementación y ciclo permitido, se resuelve por constructor y no resuelve manualmente ni captura el contenedor.
 
 **Verificación concreta.** la clase `ValidadorInyeccionDependencias` compila sin errores y expone un método y un `record`.
 
@@ -6835,9 +6222,7 @@ public record ResultadoInyeccion(bool EsValido, IReadOnlyList<string> Errores);
 
 ### PASO 4.5.8 — Añadir los `using` necesarios en `ValidadorInyeccionDependencias`
 
-**Resultado de aprendizaje.** Añadir los `using` necesarios en `ValidadorInyeccionDependencias`. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+Los tipos `List<string>` e `IReadOnlyList<string>` pertenecen a `System.Collections.Generic`. Los métodos `Contains` y `ToList` pertenecen a `System.Linq`. En proyectos con `ImplicitUsings` desactivado, hay que añadir los usings explícitos.
 
 1. En el panel Solution Explorer, hacer doble clic en `ValidadorInyeccionDependencias.cs`.
 2. Inserta las directivas indicadas antes del namespace del archivo; la indicación del archivo identifica la línea exacta.
@@ -6858,7 +6243,6 @@ using System.Collections.Generic;
 using System.Linq;
 ```
 
-**Por qué funciona así.** los tipos `List<string>` e `IReadOnlyList<string>` pertenecen a `System.Collections.Generic`. Los métodos `Contains` y `ToList` pertenecen a `System.Linq`. En proyectos con `ImplicitUsings` desactivado, hay que añadir los usings explícitos.
 
 **Verificación concreta.** `ValidadorInyeccionDependencias.cs` compila sin errores y no muestra subrayados rojos.
 
@@ -6871,9 +6255,7 @@ using System.Linq;
 
 ### PASO 4.5.9 — Crear la clase `CatalogoInyeccion`
 
-**Resultado de aprendizaje.** Crear la clase `CatalogoInyeccion`. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+La clase `CatalogoInyeccion` contiene los registros por defecto del proyecto. Se usan en los tests y en la validación automática.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `InyeccionDependencias`.
 2. Seleccionar `Add` → `Class` y nombrar la clase `CatalogoInyeccion.cs`.
@@ -6902,7 +6284,6 @@ public class CatalogoInyeccion
 }
 ```
 
-**Por qué funciona así.** la clase `CatalogoInyeccion` contiene los registros por defecto del proyecto. Se usan en los tests y en la validación automática.
 
 **Verificación concreta.** la clase `CatalogoInyeccion` compila sin errores y expone un método estático.
 
@@ -6915,9 +6296,7 @@ public class CatalogoInyeccion
 
 ### PASO 4.5.10 — Añadir el `using` necesario en `CatalogoInyeccion`
 
-**Resultado de aprendizaje.** Añadir el `using` necesario en `CatalogoInyeccion`. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+El tipo `List<T>` pertenece a `System.Collections.Generic`. En proyectos con `ImplicitUsings` desactivado, hay que añadir el using explícito.
 
 1. En el panel Solution Explorer, hacer doble clic en `CatalogoInyeccion.cs`.
 2. Inserta las directivas indicadas antes del namespace del archivo; la indicación del archivo identifica la línea exacta.
@@ -6937,7 +6316,6 @@ namespace AceriaApp.Api.InyeccionDependencias;
 using System.Collections.Generic;
 ```
 
-**Por qué funciona así.** el tipo `List<T>` pertenece a `System.Collections.Generic`. En proyectos con `ImplicitUsings` desactivado, hay que añadir el using explícito.
 
 **Verificación concreta.** `CatalogoInyeccion.cs` compila sin errores y no muestra subrayados rojos.
 
@@ -6950,9 +6328,7 @@ using System.Collections.Generic;
 
 ### PASO 4.5.11 — Crear el proyecto de tests del punto 4.5
 
-**Resultado de aprendizaje.** Crear el proyecto de tests del punto 4.5. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+El punto 4.5 añade un proyecto de tests específico para las clases de inyección de dependencias. Se crea como proyecto nuevo y conserva las pruebas previas; las actualizaciones explícitas de integración se muestran en su paso correspondiente.
 
 1. En `tests` crea la carpeta `AceriaApp.InyeccionDependencias.Tests` y, dentro, el archivo `AceriaApp.InyeccionDependencias.Tests.csproj` con el XML completo de este paso. En Visual Studio puedes elegir la plantilla xUnit y ajustar el archivo generado.
 2. Elimina el archivo de ejemplo `UnitTest1.cs` si lo creó la plantilla; los archivos de pruebas completos se escriben en sus pasos correspondientes.
@@ -6979,7 +6355,6 @@ using System.Collections.Generic;
 </Project>
 ```
 
-**Por qué funciona así.** el punto 4.5 añade un proyecto de tests específico para las clases de inyección de dependencias. Se crea como proyecto nuevo y conserva las pruebas previas; las actualizaciones explícitas de integración se muestran en su paso correspondiente.
 
 **Verificación concreta.** La solución muestra 14 proyectos, incluido `AceriaApp.InyeccionDependencias.Tests`; el nuevo csproj fija .NET 8, SDK de tests 17.12.0, xUnit 2.9.2 y runner 2.8.2.
 
@@ -6992,9 +6367,7 @@ using System.Collections.Generic;
 
 ### PASO 4.5.12 — Añadir la referencia del proyecto de tests a la API
 
-**Resultado de aprendizaje.** Añadir la referencia del proyecto de tests a la API. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+La referencia permite que el proyecto de tests acceda a las clases de `InyeccionDependencias` del proyecto API.
 
 1. Ejecuta `dotnet add tests/AceriaApp.InyeccionDependencias.Tests/AceriaApp.InyeccionDependencias.Tests.csproj reference src/AceriaApp.Api/AceriaApp.Api.csproj` o deja el archivo exactamente como el bloque XML de este paso.
 2. Comprueba que la referencia va de tests a API; la API nunca debe referenciar el proyecto de tests.
@@ -7022,7 +6395,6 @@ using System.Collections.Generic;
 </Project>
 ```
 
-**Por qué funciona así.** la referencia permite que el proyecto de tests acceda a las clases de `InyeccionDependencias` del proyecto API.
 
 **Verificación concreta.** el archivo `AceriaApp.InyeccionDependencias.Tests.csproj` contiene un `ProjectReference` al proyecto API.
 
@@ -7035,9 +6407,7 @@ using System.Collections.Generic;
 
 ### PASO 4.5.13 — Añadir el paquete `FluentAssertions` al proyecto de tests
 
-**Resultado de aprendizaje.** Añadir el paquete `FluentAssertions` al proyecto de tests. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+`FluentAssertions` proporciona la sintaxis de aserción usada en el curso. Se añade al nuevo proyecto de tests sin modificar los proyectos de tests existentes.
 
 1. Ejecuta `dotnet add tests/AceriaApp.InyeccionDependencias.Tests/AceriaApp.InyeccionDependencias.Tests.csproj package FluentAssertions --version 6.12.2` o reemplaza el csproj por el XML completo indicado.
 2. Ejecuta `dotnet list tests/AceriaApp.InyeccionDependencias.Tests/AceriaApp.InyeccionDependencias.Tests.csproj package` y localiza `FluentAssertions 6.12.2`.
@@ -7066,7 +6436,6 @@ using System.Collections.Generic;
 </Project>
 ```
 
-**Por qué funciona así.** `FluentAssertions` proporciona la sintaxis de aserción usada en el curso. Se añade al nuevo proyecto de tests sin modificar los proyectos de tests existentes.
 
 **Verificación concreta.** El archivo de proyecto y `dotnet list package` muestran `FluentAssertions 6.12.2`; la compilación finaliza correctamente.
 
@@ -7079,9 +6448,7 @@ using System.Collections.Generic;
 
 ### PASO 4.5.14 — Crear el archivo `ValidadorInyeccionDependenciasTests.cs`
 
-**Resultado de aprendizaje.** Crear el archivo `ValidadorInyeccionDependenciasTests.cs`. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+Las pruebas de validador deben cubrir registros correctos y errores de ámbito. Una condición válida del catálogo no basta para certificar que el DbContext no ha sido capturado por un singleton en ejecución.
 
 1. En el panel Solution Explorer, expandir `tests` → `AceriaApp.InyeccionDependencias.Tests`.
 2. Crear el archivo `ValidadorInyeccionDependenciasTests.cs`.
@@ -7178,7 +6545,6 @@ public class ValidadorInyeccionDependenciasTests
 }
 ```
 
-**Por qué funciona así.** los tests verifican que el validador acepta el catálogo por defecto y rechaza los registros que violan las reglas y las prohibiciones del contenedor.
 
 **Verificación concreta.** el archivo `ValidadorInyeccionDependenciasTests.cs` compila y contiene seis métodos de test.
 
@@ -7191,9 +6557,7 @@ public class ValidadorInyeccionDependenciasTests
 
 ### PASO 4.5.15 — Crear el archivo `CatalogoInyeccionTests.cs`
 
-**Resultado de aprendizaje.** Crear el archivo `CatalogoInyeccionTests.cs`. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+Los tests verifican que el catálogo por defecto contiene los registros esperados y que ninguno viola las prohibiciones del contenedor.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre el proyecto `AceriaApp.InyeccionDependencias.Tests`.
 2. Seleccionar `Add` → `Class` y nombrar la clase `CatalogoInyeccionTests.cs`.
@@ -7246,7 +6610,6 @@ public class CatalogoInyeccionTests
 }
 ```
 
-**Por qué funciona así.** los tests verifican que el catálogo por defecto contiene los registros esperados y que ninguno viola las prohibiciones del contenedor.
 
 **Verificación concreta.** el archivo `CatalogoInyeccionTests.cs` compila y contiene cuatro métodos de test.
 
@@ -7259,9 +6622,7 @@ public class CatalogoInyeccionTests
 
 ### PASO 4.5.16 — Componer los servicios y comprobar sus ámbitos antes de compilar
 
-**Resultado de aprendizaje.** Componer los servicios y comprobar sus ámbitos antes de compilar. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+Componer los servicios exige asignar correctamente puertos, implementaciones y ámbitos. Comprueba la resolución de servicios en una petición real, la persistencia en SQL Server y que la instancia Scoped no se utilice fuera de su ciclo de vida.
 
 1. Abre cada archivo de integración funcional indicado en este paso. Crea los nuevos y reemplaza únicamente los que se señalen; copia todo el código mostrado.
 2. Recorre las referencias: el dominio define sus entidades, la aplicación usa puertos y la infraestructura implementa persistencia; la API compone el flujo.
@@ -7438,17 +6799,9 @@ app.Run();
 public partial class Program {} // permite WebApplicationFactory en tests
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+Permite mapear los endpoints del módulo desde la raíz de composición. Permite registrar las implementaciones de los puertos desde la API. Mantiene el registro SQL Server y los servicios que ya utilizaba M03.
 
-- **Línea 1:** Permite mapear los endpoints del módulo desde la raíz de composición.
-
-- **Línea 2:** Permite registrar las implementaciones de los puertos desde la API.
-
-- **Línea 23:** Mantiene el registro SQL Server y los servicios que ya utilizaba M03.
-
-- **Línea 24:** Sustituye los registros repetidos del flujo por un método de extensión; se conserva el registro previo del contexto.
-
-- **Línea 159:** Publica las rutas del nuevo flujo después de construir la aplicación y antes de ejecutarla.
+Sustituye los registros repetidos del flujo por un método de extensión; se conserva el registro previo del contexto. Publica las rutas del nuevo flujo después de construir la aplicación y antes de ejecutarla.
 
 
 **Integración funcional.** Centraliza registros del flujo real. Requiere HexagonalDbContext registrado por AddServiciosHexagonales; repositorio, UoW, casos de uso y servicios MediatR se resuelven dentro del mismo ámbito. El pipeline abierto no captura dependencias scoped en un singleton.
@@ -7482,25 +6835,11 @@ public static class ServiciosPatrones
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+Agrupa los registros del flujo. Antes debe registrarse HexagonalDbContext mediante AddServiciosHexagonales. Proporciona ILogger al pipeline de MediatR. Reutiliza el repositorio dentro del ámbito de petición y permite sustituir el puerto en tests.
 
-- **Línea 8:** Agrupa los registros del flujo. Antes debe registrarse HexagonalDbContext mediante AddServiciosHexagonales.
+Registra la unidad de trabajo con el mismo ciclo Scoped del contexto; las resoluciones del ámbito comparten la persistencia. Registra el caso de uso que separa preparación y confirmación. Registra el caso de uso que devuelve éxito o errores esperados.
 
-- **Línea 10:** Proporciona ILogger al pipeline de MediatR.
-
-- **Línea 11:** Reutiliza el repositorio dentro del ámbito de petición y permite sustituir el puerto en tests.
-
-- **Línea 12:** Registra la unidad de trabajo con el mismo ciclo Scoped del contexto; las resoluciones del ámbito comparten la persistencia.
-
-- **Línea 13:** Registra el caso de uso que separa preparación y confirmación.
-
-- **Línea 14:** Registra el caso de uso que devuelve éxito o errores esperados.
-
-- **Línea 17:** Descubre los manejadores en el ensamblado de la capa de aplicación.
-
-- **Línea 18:** Evita capturar un servicio del ámbito desde un manejador de vida más larga.
-
-- **Línea 19:** Añade el comportamiento genérico de logging alrededor de todos los manejadores compatibles.
+Descubre los manejadores en el ensamblado de la capa de aplicación. Evita capturar un servicio del ámbito desde un manejador de vida más larga. Añade el comportamiento genérico de logging alrededor de todos los manejadores compatibles.
 
 
 **Integración funcional.** Conserva las dependencias de los tests de catálogo y añade Testcontainers.MsSql, el helper compartido y WebApplicationFactory para las pruebas funcionales.
@@ -7524,15 +6863,9 @@ public static class ServiciosPatrones
 </Project>
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+Compila para .NET 8, igual que los proyectos heredados. Fija el cliente de contenedores para SQL Server; el proveedor EF Core SQL Server llega mediante la referencia a la API. Permite ejecutar peticiones HTTP contra el host real de la API.
 
-- **Línea 2:** `<PropertyGroup><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><IsPackable>false</IsPackable><IsTestProject>true</IsTestProject></PropertyGroup>` → Compila para .NET 8, igual que los proyectos heredados.
-
-- **Línea 8:** `<PackageReference Include="Testcontainers.MsSql" Version="3.10.0" />` → Fija el cliente de contenedores para SQL Server; el proveedor EF Core SQL Server llega mediante la referencia a la API.
-
-- **Línea 9:** `<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.21" />` → Permite ejecutar peticiones HTTP contra el host real de la API.
-
-- **Línea 11:** `<Compile Include="../Compartido/SqlServerPruebas.cs" Link="SqlServerPruebas.cs" />` → Compila el helper heredado que crea y elimina únicamente la base aislada de cada prueba, sin añadir otro proyecto a la solución.
+Compila el helper heredado que crea y elimina únicamente la base aislada de cada prueba, sin añadir otro proyecto a la solución.
 
 
 **Integración funcional.** Comprueba aislamiento entre ámbitos, ejecución del flujo con la extensión real y rechazo de resolución scoped desde raíz. Añade un singleton cautivo solo en la prueba y verifica que ValidateScopes junto a ValidateOnBuild lo detectan.
@@ -7613,24 +6946,11 @@ public sealed class InyeccionFuncionalesTests
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+Dos ámbitos comparten la base de la prueba, pero tienen contextos y cambios pendientes independientes. Exige el proveedor SQL Server antes de crear y consultar tablas. Confirmar el segundo ámbito no escribe los cambios preparados en el primero.
 
-- **Línea 15:** `public async Task Ambitos_distintos_no_confirman_cambios_pendientes_del_otro()` → Dos ámbitos comparten la base de la prueba, pero tienen contextos y cambios pendientes independientes.
+Comprueba el flujo completo del mediador dentro de un ámbito válido. La validación de DI no abre conexiones: la cadena solo permite construir las opciones del contexto. Introduce deliberadamente una dependencia Scoped cautiva para verificar el diagnóstico del contenedor.
 
-- **Línea 21:** `Assert.Equal("Microsoft.EntityFrameworkCore.SqlServer", db.Database.ProviderName);` → Exige el proveedor SQL Server antes de crear y consultar tablas.
-
-- **Línea 27:** `Assert.Equal(0, await segundo.ServiceProvider.GetRequiredService<IUnitOfWork>().CommitAsync());` → Confirmar el segundo ámbito no escribe los cambios preparados en el primero.
-
-- **Línea 33:** `public async Task Extension_resuelve_flujo_completo_en_un_ambito_valido()` → Comprueba el flujo completo del mediador dentro de un ámbito válido.
-
-- **Línea 52:** `var services = CrearServicios("Server=localhost;Database=ValidacionDi;Integrated Security=True;TrustServerCertificate=True");` → La validación de DI no abre conexiones: la cadena solo permite construir las opciones del contexto.
-
-- **Línea 53:** `services.AddSingleton<ConsumidorCautivo>(); // Registro incorrecto solo en esta prueba.` → Introduce deliberadamente una dependencia Scoped cautiva para verificar el diagnóstico del contenedor.
-
-- **Línea 62:** `services.AddDbContext<HexagonalDbContext>(o => o.UseSqlServer(connectionString));` → Los contextos mantienen ciclo Scoped y el proveedor SQL Server.
-
-
-**Por qué funciona así.** compilar la solución completa verifica que todos los proyectos, incluidos los nuevos, se resuelven correctamente.
+Los contextos mantienen ciclo Scoped y el proveedor SQL Server.
 
 **Verificación concreta.** La solución completa compila, incluidos el código de integración y sus pruebas. Las siguientes ejecuciones de tests comprobarán el comportamiento de los patrones.
 
@@ -7643,17 +6963,12 @@ public sealed class InyeccionFuncionalesTests
 
 ### PASO 4.5.17 — Ejecutar todos los tests del punto 4.5
 
-**Resultado de aprendizaje.** Ejecutar todos los tests del punto 4.5. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+Ejecutar los tests del punto 4.5 verifica que las clases de inyección de dependencias funcionan correctamente.
 
 1. Ejecuta `dotnet test tests/AceriaApp.InyeccionDependencias.Tests/AceriaApp.InyeccionDependencias.Tests.csproj -c Release` desde la raíz de esta etapa.
 2. Comprueba un total de 13 pruebas: 10 de catálogo y 3 funcionales, con cero fallos y cero omisiones.
 3. Si falla una prueba, abre su mensaje de aserción y el archivo indicado; corrige el comportamiento antes de continuar.
 4. Repite el mismo comando tras la corrección y conserva el resultado de la ejecución válida.
-
-
-**Por qué funciona así.** ejecutar los tests del punto 4.5 verifica que las clases de inyección de dependencias funcionan correctamente.
 
 **Verificación concreta.** El proyecto `AceriaApp.InyeccionDependencias.Tests` termina con `Failed: 0, Passed: 13, Skipped: 0, Total: 13`.
 
@@ -7666,17 +6981,12 @@ public sealed class InyeccionFuncionalesTests
 
 ### PASO 4.5.18 — Ejecutar todos los tests de la solución
 
-**Resultado de aprendizaje.** Ejecutar todos los tests de la solución. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+Ejecutar todos los tests de la solución verifica que los tests de los puntos anteriores y del punto 4.5 pasan conjuntamente.
 
 1. Ejecuta `dotnet build AceriaApp.sln -c Release` para producir todas las asambleas de esta etapa.
 2. Ejecuta `dotnet test AceriaApp.sln -c Release --no-build --no-restore` para ejecutar todas las pruebas acumuladas.
 3. Suma los resultados de los 10 proyectos de tests: deben ser 118 pruebas aprobadas, sin fallos ni omisiones.
 4. Comprueba que las pruebas heredadas de M03 y los puntos anteriores de M04 siguen presentes; no borres tests para obtener un resultado verde.
-
-
-**Por qué funciona así.** ejecutar todos los tests de la solución verifica que los tests de los puntos anteriores y del punto 4.5 pasan conjuntamente.
 
 **Verificación concreta.** La suma de las líneas de resultados es `Failed: 0`, `Passed: 118`, `Skipped: 0` y `Total: 118`. Dotnet muestra un resumen por proyecto, no necesariamente una única línea global.
 
@@ -7689,9 +6999,7 @@ public sealed class InyeccionFuncionalesTests
 
 ### PASO 4.5.19 — Crear el README del punto 4.5
 
-**Resultado de aprendizaje.** Crear el README del punto 4.5. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+El README del punto 4.5 explica el objetivo, el estado, la ejecución y los añadidos. No modifica el README del punto 4.4.
 
 1. En la carpeta del punto `4.5-inyeccion-dependencias`, hacer clic derecho y seleccionar `Add` → `New Item` → `Text File`.
 2. Nombrar el archivo `README.md`.
@@ -7740,7 +7048,6 @@ La práctica conecta además el patrón con los puertos, adaptadores y pruebas d
 Los catálogos describen ejemplos de diseño. El comportamiento de las clases reales se comprueba además con los tests funcionales del punto. Ejecuta `dotnet test AceriaApp.sln -c Release` y exige cero fallos y cero omisiones.
 ```
 
-**Por qué funciona así.** el README del punto 4.5 explica el objetivo, el estado, la ejecución y los añadidos. No modifica el README del punto 4.4.
 
 **Verificación concreta.** El archivo `README.md` existe y contiene las 6 secciones mostradas; abre su vista previa y comprueba todos los apartados.
 
@@ -7753,9 +7060,7 @@ Los catálogos describen ejemplos de diseño. El comportamiento de las clases re
 
 ### PASO 4.5.20 — Crear el ADR-018 del punto 4.5
 
-**Resultado de aprendizaje.** Crear el ADR-018 del punto 4.5. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+El ADR-018 documenta la decisión de adoptar la inyección de dependencias y de cerrar el módulo 4. Es un artefacto nuevo del punto 4.5 que no modifica los ADR existentes.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `docs`.
 2. Seleccionar `Add` → `New Item` → `Text File` y nombrar el archivo `ADR-018-inyeccion-dependencias.md`.
@@ -7788,7 +7093,6 @@ Se adopta el contenedor de ASP.NET Core. `AddServiciosHexagonales(configuration)
 - Mitigación: validación automática y uso consistente del patrón.
 ```
 
-**Por qué funciona así.** el ADR-018 documenta la decisión de adoptar la inyección de dependencias y de cerrar el módulo 4. Es un artefacto nuevo del punto 4.5 que no modifica los ADR existentes.
 
 **Verificación concreta.** El archivo `docs/ADR-018-inyeccion-dependencias.md` existe y contiene las 5 secciones mostradas; abre su vista previa y comprueba todos los apartados.
 
@@ -7801,17 +7105,12 @@ Se adopta el contenedor de ASP.NET Core. `AddServiciosHexagonales(configuration)
 
 ### PASO 4.5.21 — Verificar que los documentos heredados y la etapa 4.4 permanecen intactos
 
-**Resultado de aprendizaje.** Verificar que los documentos heredados y la etapa 4.4 permanecen intactos. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+Las decisiones previas se conservan como registros históricos. Los nuevos ADR explican la evolución y las modificaciones de integración se aplican solo a la copia de la etapa actual.
 
 1. Vuelve a la raíz del repositorio; las rutas siguientes se interpretan desde allí.
 2. En CMD ejecuta `for %f in (M04_PATRONES_ARQUITECTURA\PROYECTO\4.4-result-pattern\docs\*.md) do fc /L "%f" "M04_PATRONES_ARQUITECTURA\PROYECTO\4.5-inyeccion-dependencias\docs\%~nxf"`. En PowerShell puedes comparar `Get-FileHash` para cada par de documentos.
 3. Comprueba 16 comparaciones y exige igualdad en todas; se conserva exactamente el contenido de los documentos heredados.
 4. Si una comparación falla, restaura el documento de la etapa actual desde `4.4-result-pattern`. Verifica también que la carpeta del punto anterior no tiene modificaciones.
-
-
-**Por qué funciona así.** Las decisiones previas se conservan como registros históricos. Los nuevos ADR explican la evolución y las modificaciones de integración se aplican solo a la copia de la etapa actual.
 
 **Verificación concreta.** Los 16 documentos heredados coinciden byte a byte y el punto anterior permanece intacto.
 
@@ -7824,17 +7123,12 @@ Se adopta el contenedor de ASP.NET Core. `AddServiciosHexagonales(configuration)
 
 ### PASO 4.5.22 — Verificar la estructura del punto 4.5
 
-**Resultado de aprendizaje.** Verificar la estructura del punto 4.5. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+La verificación estructural confirma que el punto 4.5 añade archivos nuevos conservando los documentos heredados.
 
 1. Escribir `tree /F M04_PATRONES_ARQUITECTURA\PROYECTO\4.5-inyeccion-dependencias` y pulsar Enter.
 2. Verificar que la salida muestra `AceriaApp.sln`, `README.md`, `src\AceriaApp.Api\InyeccionDependencias` con las tres clases nuevas, `tests\AceriaApp.InyeccionDependencias.Tests` con los dos archivos de catálogo y el archivo de tests funcionales y `docs` con el documento de inyección y el ADR-018. Comprueba además todos los archivos de integración de las carpetas Patrones y los cambios de composición indicados en este punto.
 3. Verificar que las carpetas existentes del punto 4.4 permanecen intactas.
 4. Verificar que no existe ninguna carpeta `labs` ni ningún archivo `metaprompt.md` ni `verificacion.md`.
-
-
-**Por qué funciona así.** la verificación estructural confirma que el punto 4.5 añade archivos nuevos conservando los documentos heredados.
 
 **Verificación concreta.** la estructura contiene los archivos nuevos y conserva los del punto 4.4.
 
@@ -7847,17 +7141,12 @@ Se adopta el contenedor de ASP.NET Core. `AddServiciosHexagonales(configuration)
 
 ### PASO 4.5.23 — Verificar el `.gitignore` del punto 4.5
 
-**Resultado de aprendizaje.** Verificar el `.gitignore` del punto 4.5. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+El `.gitignore` se hereda del punto 4.4 sin modificaciones. La verificación confirma que no se ha tocado.
 
 1. Verificar que el archivo `.gitignore` existe en la carpeta del punto 4.5 (copiado del punto 4.4).
 2. Abrir el archivo `.gitignore` con Visual Studio 2026.
 3. Verificar que contiene las líneas `**/bin/`, `**/obj/`, `.vs/`, `*.user`, `TestResults/` y `*.trx`.
 4. Verificar que no se ha modificado respecto al punto 4.4. Pulsar `Ctrl+S` si no hay cambios y cerrar el archivo.
-
-
-**Por qué funciona así.** el `.gitignore` se hereda del punto 4.4 sin modificaciones. La verificación confirma que no se ha tocado.
 
 **Verificación concreta.** el `.gitignore` existe y contiene las seis líneas sin modificaciones.
 
@@ -7870,17 +7159,12 @@ Se adopta el contenedor de ASP.NET Core. `AddServiciosHexagonales(configuration)
 
 ### PASO 4.5.24 — Hacer el commit del punto 4.5 y verificar el estado final del módulo 4
 
-**Resultado de aprendizaje.** Hacer el commit del punto 4.5 y verificar el estado final del módulo 4. Identifica el archivo, su responsabilidad y la evidencia que debe producir el paso.
-
-**Procedimiento guiado.**
+El commit permite comparar esta etapa con la anterior. Si has realizado un commit por punto desde 1.1, el recorrido suma 18 commits de puntos; otros commits legítimos pueden aumentar el historial.
 
 1. Desde la raíz del repositorio ejecuta `git status` y revisa que solo aparezcan los archivos de esta etapa y los entregables que has trabajado.
 2. Ejecuta `git add .` después de verificar que `bin/`, `obj/`, `TestResults/` y credenciales están excluidos.
 3. Ejecuta `git commit -m "Punto 4.5: Inyección de dependencias"` con `user.name` y `user.email` configurados.
 4. Ejecuta `git log --oneline` y `git status`; comprueba que se registró el commit de este punto y que no quedan cambios pendientes de esta actividad.
-
-
-**Por qué funciona así.** El commit permite comparar esta etapa con la anterior. Si has realizado un commit por punto desde 1.1, el recorrido suma 18 commits de puntos; otros commits legítimos pueden aumentar el historial.
 
 **Verificación concreta.** El historial incluye el commit de 4.5 y `git status` no muestra cambios pendientes de esta actividad; no se exige un número rígido de commits a un repositorio con más trabajo.
 
