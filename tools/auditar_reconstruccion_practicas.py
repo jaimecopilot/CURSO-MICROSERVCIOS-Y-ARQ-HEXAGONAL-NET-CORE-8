@@ -330,7 +330,8 @@ def audit_module(module: int) -> tuple[list[str], dict]:
     return report, dict(summary)
 
 
-def materializar_etapa(module: int, point: int, destination: Path) -> dict:
+def materializar_etapa(module: int, point: int, destination: Path,
+                       origen_reconstruido: Path | None = None) -> dict:
     """Construye el punto N.P desde el punto N.(P-1), sin leer código del destino.
 
     Reutiliza *solo* el snapshot anterior como estado inicial. Aplica las
@@ -344,7 +345,8 @@ def materializar_etapa(module: int, point: int, destination: Path) -> dict:
     dirname, stages = CONFIG[module]
     root = ROOT / dirname
     _, by_point = steps_and_operations(module, root, stages)
-    previous_root = root / "PROYECTO" / stages[point - 2]
+    previous_root = (origen_reconstruido if origen_reconstruido is not None
+                     else root / "PROYECTO" / stages[point - 2])
     target_root = root / "PROYECTO" / stages[point - 1]
     previous = files(previous_root)
     wanted = files(target_root)
