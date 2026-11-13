@@ -54,11 +54,6 @@ Infraestructura → OrdenRepositorioSqlServer (adaptador)
 El diagrama sitúa la interfaz del repositorio entre la aplicación y el adaptador SQL Server. Las flechas muestran qué componente define el contrato y quién lo implementa, no el orden temporal de una petición. La aplicación se mantiene libre de los tipos de EF Core porque su dependencia es el puerto.
 
 
-El patrón Repository se caracteriza por tres propiedades. La primera es que la interfaz se expresa en términos del dominio: los métodos reciben y devuelven entidades del dominio, no filas de base de datos. La segunda es que oculta la tecnología de persistencia: el cliente no conoce si los datos se guardan en SQL Server, en un archivo o en memoria. La tercera es que agrupa operaciones de persistencia de una entidad o, habitualmente en DDD, de una raíz de agregado: el contrato expresa las necesidades del caso de uso. Las tres propiedades permiten que el dominio sea independiente de la tecnología de persistencia.
-
-La aplicación del patrón Repository tiene dos consecuencias prácticas. La primera es que el dominio y la aplicación se prueban con repositorios en memoria sin necesidad de base de datos. La segunda es que la abstracción reduce el impacto de sustituir la persistencia, aunque diferencias en consultas, consistencia y transacciones pueden exigir revisar el contrato. La combinación de ambas reduce el acoplamiento entre capas y facilita la evolución del sistema. El repositorio es la pieza que materializa el puerto de salida de persistencia.
-
-
 El contrato debe explicar qué necesita la aplicación antes de describir cómo guarda SQL Server. La palabra Repository nombra el patrón; IOrdenRepositorio nombra un puerto concreto.
 
 M3 ya contiene IOrdenRepositorio y OrdenRepositorioSqlServer. M4 añade un puerto de trabajo que permite estudiar por separado la preparación de cambios y su confirmación.
@@ -92,8 +87,6 @@ La interfaz enumera operaciones de lectura y escritura que el caso de uso podrí
 
 Las tres responsabilidades se expresan con cinco métodos típicos. El método `GetByIdAsync` recupera una entidad concreta. El método `ListarAsync` recupera la colección. El método `AddAsync` inserta una entidad nueva. El método `UpdateAsync` actualiza una entidad existente. El método `DeleteAsync` elimina una entidad. Son cinco operaciones habituales, no una plantilla obligatoria. Un repositorio puede omitir actualización o eliminación si el dominio no permite esas acciones y añadir las búsquedas que necesita.
 
-La definición de las responsabilidades tiene dos consecuencias prácticas. La primera es que el repositorio es una abstracción del almacenamiento, no del dominio: no contiene reglas de negocio. La segunda es que las consultas deben servir al contrato: un JOIN puede ser necesario para reconstruir un agregado; las consultas de informes pueden separarse en puertos de lectura. La combinación de ambas permite que el repositorio sea simple y mantenible. El contrato evita exponer detalles como SQL, DbSet o IQueryable cuando se busca independencia del proveedor.
-
 
 Los métodos se eligen por necesidades de negocio. No añadas Delete solo porque aparece en una plantilla CRUD si la orden debe conservarse por trazabilidad.
 
@@ -119,9 +112,6 @@ Lo que un repositorio no debe hacer:
 
 
 La lista marca fronteras negativas importantes: ni validación de invariantes, ni composición de respuestas HTTP, ni decisiones de transacción entre varios repositorios pertenecen automáticamente a la clase que consulta SQL. Esas tareas necesitan propietarios explícitos en dominio o aplicación.
-
-
-La delimitación de responsabilidades tiene dos consecuencias prácticas. La primera es que el repositorio se mantiene simple y cohesionado. La segunda es que las reglas de negocio y las validaciones no se duplican entre el repositorio y el dominio. La combinación de ambas permite que el repositorio sea sustituible sin afectar a la lógica de negocio. La disciplina en la delimitación es lo que distingue un repositorio correcto de un repositorio que acumula responsabilidades.
 
 
 La frontera se define por responsabilidad, no por el número de JOINs. Recuperar un agregado puede exigir varias tablas sin incorporar reglas de negocio al repositorio.
@@ -154,9 +144,6 @@ public interface IRepositorio<T> where T : class
 
 
 El contraste entre `IOrdenRepositorio` e `IRepositorio<T>` muestra cómo cambia la expresividad del contrato. Una interfaz genérica puede reutilizarse, pero la específica permite explicar necesidades del agregado sin filtrar operaciones que no tienen sentido para ese recurso.
-
-
-El repositorio específico tiene dos consecuencias prácticas. La primera es que la interfaz es legible: cada método describe una operación concreta. La segunda es que la implementación es testeable: cada repositorio se prueba de forma aislada. El repositorio genérico tiene dos consecuencias prácticas. La primera es que reduce la duplicación: una sola interfaz sirve para varias entidades. La segunda es que la interfaz es menos expresiva: los métodos son comunes a todas las entidades. La elección depende del contexto del proyecto.
 
 
 Un repositorio específico usa vocabulario del agregado; uno genérico comparte operaciones estructurales. Ambos pueden ser útiles y ambos pueden volverse demasiado amplios.
@@ -200,9 +187,6 @@ public class OrdenRepositorioSqlServer : IOrdenRepositorio
 `OrdenRepositorioSqlServer` implementa el puerto utilizando `AceriaDbContext`. El caso de uso no debería construir esa clase: el host resuelve la dependencia y la prueba de integración verifica que la implementación cumple la operación de guardado.
 
 
-La relación entre repositorio y puerto de salida tiene dos consecuencias prácticas. La primera es que el repositorio se define en el núcleo y se implementa en el exterior. La segunda es que el repositorio puede sustituirse por una implementación en memoria sin modificar el núcleo. La combinación de ambas permite que el núcleo se pruebe sin base de datos y que la tecnología de persistencia evolucione con independencia del núcleo.
-
-
 El puerto pertenece al núcleo; el adaptador implementa el acceso. La inversión de dependencias se comprueba leyendo referencias de proyectos, no el recorrido de una petición.
 
 OrdenRepositorioSqlServer de M3 confirma cada alta. El adaptador de trabajo de M4 prepara el alta y deja que IUnitOfWork confirme el mismo HexagonalDbContext.
@@ -225,9 +209,6 @@ public interface IOrdenRepositorio
 
 
 La interfaz distingue una lectura de la entidad de una proyección resumida. El DTO de consulta debe contener solo lo que el consumidor necesita y evitar que las reglas de presentación se conviertan en consultas sobre entidades fuera de su contexto.
-
-
-La distinción entre entidad y proyección tiene dos consecuencias prácticas. La primera es que las operaciones con reglas de agregado usan el modelo que protege esas reglas. La segunda es que las operaciones de lectura pueden usar proyecciones para reducir el tamaño de la respuesta. La combinación de ambas mejora el rendimiento y mantiene la coherencia del modelo. La decisión se documenta en el ADR del punto y se revisa al final del módulo 5.
 
 
 Una proyección de lectura expresa los datos que necesita la pantalla o consumidor. No obliga a materializar una entidad con todas sus relaciones.
@@ -263,9 +244,6 @@ repositorioMock.Verify(
 El mock devuelve una orden conocida y permite comprobar que el caso de uso solicitó el identificador previsto exactamente una vez. Esa comprobación protege la coordinación, pero no certifica materialización, consultas ni escritura de datos reales en SQL Server.
 
 
-Las pruebas con dobles tienen dos consecuencias prácticas. La primera es que los casos de uso se prueban de forma aislada. La segunda es que las pruebas se ejecutan sin base de datos y sin infraestructura. La combinación de ambas reduce el tiempo de ejecución de la suite y facilita el mantenimiento. El ejemplo muestra Moq; también se pueden escribir fakes pequeños sin una biblioteca adicional.
-
-
 Un mock comprueba interacciones; un stub fija respuestas; un fake ofrece una implementación reducida. Elegir el doble depende de la pregunta que responde la prueba.
 
 El ejemplo usa el identificador de la misma OrdenHexagonal que devuelve el doble. Así detecta una consulta con una identidad incorrecta en lugar de aceptar cualquier GUID.
@@ -288,9 +266,6 @@ Unidad de trabajo → coordina las operaciones de A y B en una transacción.
 
 
 Dos repositorios pueden compartir una unidad de trabajo cuando sus cambios deben confirmarse atómicamente en la misma frontera SQL. El diagrama no significa que una transacción distribuida entre servicios se obtenga automáticamente por registrar una clase con ese nombre.
-
-
-La relación entre repositorio y unidad de trabajo tiene dos consecuencias prácticas. La primera es que el repositorio se mantiene simple. La segunda es que la transacción se gestiona en la capa de aplicación. La combinación de ambas permite que la aplicación controle la atomicidad de las operaciones sin acoplar los repositorios. La unidad de trabajo se estudia en detalle en el punto 4.2.
 
 
 Separar preparación y confirmación permite agrupar cambios. El requisito crucial es compartir un ámbito transaccional real, no añadir una clase llamada UnitOfWork.
@@ -321,9 +296,6 @@ Sistema sin lógica de dominio    → puede no compensar.
 
 
 La tabla plantea situaciones en las que Repository facilita pruebas y desacoplamiento, así como otras donde su coste puede superar el beneficio. La pregunta adecuada es qué decisión del negocio deja de depender del almacenamiento gracias a esta abstracción.
-
-
-La decisión de usar el patrón tiene dos consecuencias prácticas. La primera es que el sistema gana independencia de la tecnología de persistencia. La segunda es que el sistema añade una capa de indirección. La combinación de ambas se valora según el contexto del proyecto. El curso aplica el patrón porque el dominio es complejo y se quiere mantener independiente de la base de datos.
 
 
 Repository compensa cuando el contrato protege una frontera útil. En un CRUD pequeño, usar DbContext directamente en una aplicación acoplada a EF Core puede ser una decisión consciente.
@@ -415,11 +387,6 @@ Infraestructura → EfUnitOfWork (adaptador)
 La interfaz `IUnitOfWork` pertenece a la aplicación, y su implementación EF Core reside en infraestructura. Ese dibujo muestra dónde se define la necesidad de confirmar cambios y dónde se decide cómo hacerlo. No supone que cualquier base remota participe en la misma transacción.
 
 
-La unidad de trabajo se caracteriza por tres propiedades. La primera es que mantiene el seguimiento de los cambios: sabe qué entidades han sido añadidas, modificadas o eliminadas durante una operación. La segunda es que coordina la persistencia: aplica todos los cambios en una única transacción. La tercera es que expone una operación de confirmación: el cliente decide cuándo se aplican los cambios. Las tres propiedades permiten que la aplicación controle la atomicidad de las operaciones sin acoplar los repositorios entre sí.
-
-La aplicación del patrón Unit of Work tiene dos consecuencias prácticas. La primera es que las operaciones complejas que afectan a varias entidades se ejecutan de forma atómica. La segunda es que los repositorios no gestionan transacciones: solo añaden, modifican o eliminan entidades. La combinación de ambas permite que la aplicación controle la atomicidad sin acoplar los repositorios. La unidad de trabajo es la pieza que coordina los repositorios en una operación compleja.
-
-
 Una unidad de trabajo reúne cambios relacionados durante un caso de uso. Atomicidad significa que la operación confirmada se aplica completa dentro del recurso transaccional cubierto.
 
 OrdenesTransaccionales registra órdenes mediante el puerto de trabajo y confirma por IUnitOfWork. Ambos adaptadores comparten HexagonalDbContext dentro del ámbito de DI.
@@ -442,8 +409,6 @@ public interface IUnitOfWork
 
 `CommitAsync` expresa el momento de confirmación del conjunto de modificaciones preparadas. La semántica debe acordarse con los métodos de Repository: si cada uno confirma por su cuenta, el puerto de unidad de trabajo aporta poco control adicional.
 
-
-La relación entre ambos patrones tiene dos consecuencias prácticas. La primera es que el repositorio se mantiene simple: no gestiona transacciones. La segunda es que el puerto se mantiene pequeño: no necesita enumerar las entidades, aunque el contexto de infraestructura las conozca. La combinación de ambas permite que la aplicación componga operaciones complejas a partir de operaciones simples. La composición se realiza en la capa de aplicación con la unidad de trabajo como coordinadora.
 
 La ausencia de la unidad de trabajo produce tres síntomas reconocibles. El primero es la duplicación de la gestión de transacciones en cada repositorio. El segundo es la dificultad de coordinar varias operaciones en una única transacción. El tercero es el riesgo de confirmar cambios parciales. Los tres síntomas motivan revisar el límite transaccional; un DbContext compartido ya puede cubrirlo sin otra clase. La corrección se aplica en la capa de aplicación, donde se compone la operación compleja.
 
@@ -480,8 +445,6 @@ El contrato de confirmación y cancelación obliga a precisar cuándo puede real
 
 La confirmación se expresa con `CommitAsync`. Algunas interfaces añaden `RollbackAsync`, pero ese nombre exige definir si revierte una transacción abierta o descarta cambios que todavía no se han enviado. No son equivalentes. Una interfaz mínima puede exponer solo confirmación y dejar que la eliminación del ámbito descarte el trabajo no confirmado.
 
-La definición de las responsabilidades tiene dos consecuencias prácticas. La primera es que la unidad de trabajo es una abstracción de la transacción, no del dominio. La segunda es que el puerto puede ocultar las entidades concretas mientras la implementación gestiona sus cambios pendientes. La combinación de ambas permite que la unidad de trabajo sea simple y sustituible. La unidad de trabajo se limita a las operaciones básicas de confirmación y reversión.
-
 
 Confirmar, deshacer una transacción abierta y abandonar cambios en memoria son operaciones diferentes. El contrato debe decir cuál ofrece, especialmente si usa la palabra Rollback.
 
@@ -509,9 +472,6 @@ Lo que una unidad de trabajo no debe hacer:
 La lista delimita responsabilidades: la unidad de trabajo no debería validar el negocio ni decidir respuestas HTTP, sino coordinar la persistencia. Al mantener estas tareas en dominio, aplicación y adaptadores se evita que una sola clase concentre todas las decisiones.
 
 
-La delimitación de responsabilidades tiene dos consecuencias prácticas. La primera es que la unidad de trabajo se mantiene simple y cohesionada. La segunda es que las reglas de negocio y las validaciones no se duplican entre la unidad de trabajo y el dominio. La combinación de ambas permite que la unidad de trabajo sea sustituible sin afectar a la lógica de negocio. La disciplina en la delimitación es lo que distingue una unidad de trabajo correcta de una que acumula responsabilidades.
-
-
 La unidad debe coordinar persistencia; no decidir precios, cantidades máximas ni respuestas HTTP. La política de cuándo confirmar corresponde al caso de uso.
 
 OrdenHexagonal protege cantidad positiva; OrdenesTransaccionales coordina el alta; el adaptador EfUnitOfWork delega la escritura en EF Core. Son responsabilidades distintas aunque compartan una petición.
@@ -534,9 +494,6 @@ public sealed class EfUnitOfWork(HexagonalDbContext db) : IUnitOfWork
 
 
 El ejemplo `EfUnitOfWork` delega `CommitAsync` a `SaveChangesAsync`. La diferencia didáctica es que el caso de uso conoce una operación de confirmación y no el método concreto de EF Core. La base real sigue siendo quien determina las garantías transaccionales.
-
-
-El seguimiento de cambios tiene dos consecuencias prácticas. La primera es que la unidad de trabajo conoce el estado de cada entidad. La segunda es que la confirmación aplica todos los cambios en una única transacción. La combinación de ambas permite que la aplicación controle la atomicidad de las operaciones. El seguimiento de cambios se delega en el `DbContext` de EF Core cuando se usa Entity Framework Core.
 
 
 El seguimiento compara valores y estados para producir las operaciones necesarias. No es una lista artesanal de SQL que la aplicación deba mantener.
@@ -573,9 +530,6 @@ catch
 La transacción explícita rodea las escrituras y se confirma solo cuando todas han terminado satisfactoriamente. Ante una excepción se solicita rollback y se propaga el error. Para demostrarlo hay que leer filas desde una nueva conexión, no quedarse en la estructura del `try/catch`.
 
 
-La implementación de EF Core tiene dos consecuencias prácticas. La primera es que el `DbContext` ya implementa el patrón Unit of Work de forma nativa. La segunda es que los `DbSet` ya cubren muchas operaciones de un repositorio. La combinación de ambas permite que el proyecto use EF Core directamente sin necesidad de envoltorios adicionales. Sin embargo, la separación entre los patrones facilita las pruebas y la sustitución de la tecnología.
-
-
 Una llamada a SaveChanges usa atomicidad del proveedor relacional por defecto. Una transacción explícita es útil si necesitas cubrir varias llamadas u otras operaciones compatibles.
 
 El ejemplo muestra begin, guardado y commit explícitos. Con una sola llamada de guardado, suele bastar la transacción implícita del proveedor de EF Core.
@@ -609,9 +563,6 @@ public sealed class EfUnitOfWork(HexagonalDbContext db) : IUnitOfWork
 La clase personalizada incluye confirmación y limpieza del seguimiento. `ChangeTracker.Clear` puede liberar entidades pendientes o seguidas, pero no revierte una escritura que SQL Server haya confirmado. El alumno debe reconocer el límite exacto de cada operación.
 
 
-La unidad de trabajo personalizada tiene dos consecuencias prácticas. La primera es que la aplicación solo conoce la interfaz `IUnitOfWork`. La segunda es que la implementación puede sustituirse sin modificar la aplicación. La combinación de ambas permite que el núcleo se pruebe con una unidad de trabajo en memoria y que la tecnología de persistencia evolucione con independencia del núcleo.
-
-
 Una interfaz personalizada debe ser más pequeña y más clara que el detalle que encapsula. Ocultar DbContext no obliga a reimplementar todos sus métodos.
 
 CommitAsync devuelve el número de entradas de estado guardadas por EF Core. No representa necesariamente el número exacto de filas SQL afectadas ni es un identificador de negocio.
@@ -633,9 +584,6 @@ Transacción distribuida → varias bases de datos o servicios.
 
 
 La comparación entre transacción local y distribuida explica por qué una unidad de trabajo no puede garantizar atomicidad entre Producción e Inventario sin otro mecanismo de coordinación. Las fronteras de propiedad de datos importan tanto como el nombre del patrón.
-
-
-El alcance de la unidad de trabajo tiene dos consecuencias prácticas. La primera es que la implementación puede garantizar atomicidad dentro de la transacción local que realmente comparte. La segunda es que la atomicidad entre bases de datos requiere patrones adicionales. La combinación de ambas define el ámbito de aplicación de la unidad de trabajo. La unidad de trabajo se aplica a las transacciones locales y se complementa con patrones distribuidos cuando es necesario.
 
 
 La atomicidad local termina donde acaba la transacción compartida. Enviar un correo o publicar en un broker introduce efectos que no revierten con un rollback de SQL.
@@ -666,9 +614,6 @@ Sin requisito de atomicidad    → evaluar abstracción.
 
 
 La tabla muestra cuándo una abstracción explícita de commit ayuda a coordinar varios repositorios y cuándo `DbContext` puede ofrecer suficiente estructura. La decisión debe basarse en un requisito de atomicidad comprobable y no en agregar interfaces por rutina.
-
-
-La decisión de usar el patrón tiene dos consecuencias prácticas. La primera es que la aplicación gana independencia de la tecnología de transacciones. La segunda es que la aplicación añade una capa de indirección. La combinación de ambas se valora según el contexto del proyecto. El curso aplica el patrón porque el dominio tiene operaciones que afectan a varias entidades.
 
 
 El patrón puede existir aunque solo haya una entidad modificada. La decisión relevante es si necesitas otra abstracción sobre la unidad que ya proporciona EF Core.
@@ -817,11 +762,6 @@ Componente C ──┘
 El diagrama presenta al mediador como punto de entrega de solicitudes entre componentes internos. Esa mediación reduce dependencias directas, pero sigue funcionando dentro del proceso y necesita contratos de mensajes bien definidos.
 
 
-El patrón Mediator se caracteriza por tres propiedades. La primera es que reduce el acoplamiento: los componentes no se conocen entre sí. La segunda es que centraliza la comunicación: el mediador conoce todos los componentes. La tercera es que facilita la evolución: añadir un componente nuevo solo requiere registrarlo en el mediador. Las tres propiedades permiten que el sistema evolucione sin modificar los componentes existentes.
-
-La aplicación del patrón Mediator tiene dos consecuencias prácticas. La primera es que los componentes se vuelven más simples: solo envían mensajes y no conocen a los receptores. La segunda es que el mediador se convierte en el punto central de la comunicación. La combinación de ambas permite que el sistema tenga un acoplamiento bajo entre los componentes. El mediador se usa en sistemas con muchos componentes que necesitan comunicarse de forma flexible.
-
-
 El mediador sustituye dependencias directas entre emisores y receptores por contratos de mensajes. El acoplamiento al contrato sigue existiendo y debe diseñarse.
 
 Un endpoint conoce CrearOrdenCommand e ISender. El contenedor resuelve CrearOrdenHandler, que conoce los puertos necesarios para coordinar la orden.
@@ -854,9 +794,6 @@ public sealed class CrearOrdenHandler(
 El comando de creación llega a un handler que coordina el dominio, el repositorio y la unidad de trabajo. El mediador solo selecciona la clase de destino; las reglas de órdenes y la confirmación SQL pertenecen a otros componentes.
 
 
-La aplicación del patrón en la capa de aplicación tiene dos consecuencias prácticas. La primera es que los adaptadores de entrada no conocen los manejadores: solo conocen el mediador. La segunda es que un mismo manejador puede invocarse desde distintos adaptadores. La combinación de ambas permite que el sistema se exponga en varios protocolos sin duplicar la lógica de los casos de uso.
-
-
 El manejador puede implementar el caso de uso o delegar en uno existente. Ambas alternativas son válidas si evitan duplicar decisiones de negocio.
 
 El ejemplo muestra coordinación directa de entidad, repositorio de trabajo y unidad. La práctica puede delegar en OrdenesTransaccionales para reutilizar la operación del punto anterior.
@@ -883,9 +820,6 @@ public record ActualizarMaterialCommand(Guid Id, int Cantidad) : IRequest;
 Los records representan intenciones de crear, cancelar o actualizar. Cada uno contiene datos de entrada y necesita un manejador que aplique las invariantes correspondientes, en lugar de comportarse como una entidad directamente editable.
 
 
-Los comandos se caracterizan por tres propiedades. La primera es que expresan una intención de cambio: el nombre describe la acción. La segunda es que no son idempotentes por defecto: ejecutarlos varias veces puede producir efectos distintos. La tercera es que cada envío se resuelve con un manejador; esto no impide repetir el envío. Las tres propiedades permiten que los comandos sean la unidad de trabajo de las operaciones de escritura.
-
-
 Un comando expresa intención: crear o finalizar son acciones. Una respuesta con identificador no lo convierte en consulta, porque el criterio es su efecto sobre el estado.
 
 CrearOrdenCommand contiene cliente, material y cantidad. Generar un nuevo GUID en cada ejecución hará dos órdenes si el cliente reintenta sin una estrategia de idempotencia.
@@ -906,9 +840,6 @@ public record BuscarMaterialQuery(string Nombre) : IRequest<List<MaterialDto>>;
 
 
 Las queries describen información que desea obtener el consumidor y pueden devolver DTOs de lectura. No deben introducir efectos ocultos ni confirmaciones SQL solo porque utilicen el mismo mecanismo de envío que un comando.
-
-
-Las consultas se caracterizan por tres propiedades. La primera es que expresan una solicitud de información: el nombre describe qué se busca. La segunda es que repetirlas no debe añadir efectos de negocio, aunque el valor leído pueda variar. La tercera es que no modifican el estado del sistema. Las tres propiedades permiten que las consultas sean la unidad de trabajo de las operaciones de lectura.
 
 
 Una consulta describe qué información necesita el consumidor. Separarla de comandos ayuda a revisar efectos, validación y optimización sin imponer bases de datos separadas.
@@ -951,9 +882,6 @@ public sealed class RegistrarAuditoriaOrdenCreadaHandler(IAuditoriaOrdenes audit
 Los handlers de la notificación reciben el hecho de creación y pueden actuar sobre correo o auditoría. Esa publicación local no ofrece por sí sola almacenamiento duradero del evento ni coordinación transaccional de los efectos externos.
 
 
-Las notificaciones se caracterizan por tres propiedades. La primera es que informan de un evento ocurrido: el nombre describe el hecho. La segunda es que tienen varios manejadores: cada manejador reacciona de forma independiente. La tercera es que no devuelven resultado. Las tres propiedades permiten que las notificaciones sean el mecanismo de comunicación entre componentes desacoplados.
-
-
 Una notificación comunica un hecho y admite cero o más receptores. Los efectos de los receptores no deben depender de un orden implícito de registro.
 
 La creación puede originar auditoría y confirmación por correo mediante puertos separados. Los manejadores completos del ejemplo delegan esos efectos sin conocer SMTP ni almacenamiento concreto.
@@ -979,9 +907,6 @@ builder.Services.AddMediatR(cfg =>
 
 
 El registro por ensamblado permite descubrir handlers y componer sus dependencias. Debemos comprobar la resolución de un mensaje concreto, no limitar la evaluación a que el código de arranque contenga AddMediatR.
-
-
-MediatR se caracteriza por tres propiedades. La primera es que ofrece abstracciones para comandos, consultas y notificaciones. La segunda es que registra los manejadores en el contenedor de dependencias. La tercera es que ofrece `ISender` para solicitudes, `IPublisher` para notificaciones e `IMediator` como interfaz que reúne ambas capacidades. Las tres propiedades permiten que los adaptadores de entrada invoquen los casos de uso con una sola línea de código.
 
 
 El módulo fija MediatR 12.4.1 para que código, paquetes y API sean reproducibles. Esa versión es una elección del curso, no una afirmación sobre la versión más reciente.
@@ -1016,9 +941,6 @@ public static class OrdenesEndpoints
 El endpoint envía el comando mediante ISender y construye una respuesta Created con el identificador devuelto. Así el adaptador conserva decisiones HTTP y el handler conserva la operación de aplicación.
 
 
-El envío de comandos y consultas tiene dos consecuencias prácticas. La primera es que el adaptador de entrada se mantiene simple: solo conoce el mediador. La segunda es que el manejador se mantiene independiente: no conoce al adaptador. La combinación de ambas permite que el sistema se exponga en varios protocolos sin modificar los manejadores.
-
-
 El endpoint transforma protocolo y envía un mensaje. ISender limita su dependencia a Send cuando no necesita publicar notificaciones.
 
 La firma incluye CancellationToken y lo transmite a Send. El manejador recibe el mismo propósito de cancelación y lo transmite a EF Core mediante los puertos.
@@ -1037,9 +959,6 @@ await mediator.Publish(new OrdenCreadaNotification(id, command.Cliente));
 
 
 Publish entrega la notificación a los handlers internos registrados. La decisión de publicar antes o después de guardar es importante y no queda resuelta por el nombre de la llamada al mediador.
-
-
-La publicación de notificaciones tiene dos consecuencias prácticas. La primera es que los componentes se comunican sin conocerse entre sí. La segunda es que añadir un manejador nuevo no requiere modificar los manejadores existentes. La combinación de ambas permite que el sistema evolucione sin modificar el código existente. Las notificaciones de MediatR viven dentro del proceso y no son una cola persistente. La comunicación entre servicios del módulo 6 requiere un transporte y garantías adicionales.
 
 
 Publish espera el trabajo de la estrategia de publicación configurada. Asíncrono describe cómo se espera; no implica una cola duradera ni un proceso separado.
@@ -1077,9 +996,6 @@ public sealed class ValidationBehavior<TRequest, TResponse>(
 
 
 El comportamiento genérico valida la solicitud antes de invocar next; si encuentra errores, la operación de escritura debe quedar detenida. La prueba debe comprobar precisamente que no se ejecutó el handler rechazado.
-
-
-La integración con FluentValidation tiene dos consecuencias prácticas. La primera es que la validación se realiza de forma automática. La segunda es que el manejador no contiene código de validación. La combinación de ambas permite que los manejadores se centren en la lógica del caso de uso.
 
 
 Un pipeline aplica comportamiento transversal alrededor de la solicitud. Logging, validación y medición son ejemplos; el orden de registro decide cómo se anidan.
@@ -1190,11 +1106,6 @@ Result<T> → Fallo con error.
 El esquema diferencia un resultado satisfactorio con valor de una respuesta fallida con información de error. Ambas posibilidades forman parte de la firma, lo que evita que el consumidor interprete un GUID vacío o un null ambiguo como si fuera un resultado válido.
 
 
-El patrón Result se caracteriza por tres propiedades. La primera es que hace explícito el fallo: la firma del método indica que la operación puede fallar. La segunda es que evita el uso de excepciones para errores esperados: los errores esperados se representan como valores. La tercera es que permite componer operaciones: el resultado de una operación se encadena con el de la siguiente. Las tres propiedades permiten que el flujo de errores sea explícito y controlado.
-
-La aplicación del patrón Result tiene dos consecuencias prácticas. La primera es que el código refleja con precisión qué operaciones pueden fallar y por qué. La segunda es que se evita lanzar excepciones en rutas de fallo frecuentes; cualquier mejora de rendimiento debe medirse en el escenario real. La combinación favorece un flujo explícito y predecible. El patrón se usa en operaciones de negocio donde el fallo es parte del flujo normal.
-
-
 Result vuelve visibles dos salidas de negocio: éxito y fallo esperado. La firma informa del contenedor, pero los códigos concretos de error también deben documentarse.
 
 Una orden con cantidad fuera de capacidad puede devolver un fallo conocido. Un timeout del proveedor no debe presentarse automáticamente como cliente no válido.
@@ -1215,8 +1126,6 @@ Errores excepcionales      → excepción.
 
 Los rechazos previstos de negocio se representan como resultados, mientras las excepciones siguen teniendo sentido para fallos inesperados. La frontera requiere juicio: una base caída no debe comunicarse como si el cliente hubiese escrito mal la cantidad.
 
-
-La distinción entre errores esperados y excepcionales tiene dos consecuencias prácticas. La primera es que el código refleja con precisión la naturaleza del error. La segunda es que los errores esperados no se mezclan con los excepcionales en el flujo de control. La combinación de ambas permite que el sistema sea más predecible y que las excepciones se reserven para condiciones realmente anómalas.
 
 La aplicación incorrecta del patrón produce dos síntomas reconocibles. El primero es el uso de excepciones para errores esperados, lo que produce un flujo de control costoso y difícil de seguir. El segundo es el uso del patrón Result para errores excepcionales, lo que oculta condiciones anómalas que deberían propagarse. Los dos síntomas se corrigen clasificando correctamente cada error antes de decidir cómo representarlo.
 
@@ -1260,9 +1169,6 @@ public sealed class Result<T>
 La clase protege la lectura de Value cuando el resultado no tiene éxito y utiliza fábricas para construir estados coherentes. El ejemplo es deliberadamente pequeño; en un contrato público real conviene tipar los errores cuando el consumidor necesita tomar decisiones distintas.
 
 
-La estructura del resultado se caracteriza por tres propiedades. La primera es que el constructor es privado: los resultados se crean con los métodos estáticos. La segunda es que sus propiedades son de solo lectura: el contenedor es inmutable, aunque T podría ser un objeto mutable. La tercera es que el estado controla el acceso: un fallo tiene error no vacío y no permite leer Value. El valor default almacenado para un fallo no representa un éxito. Las tres propiedades garantizan que el resultado sea consistente y seguro.
-
-
 Un resultado debe impedir estados contradictorios. Un constructor privado y factorías válidas son más claros que permitir modificar IsSuccess, Value y Error independientemente.
 
 El tipo simple mostrado prohíbe leer Value en fallo y exige un error no vacío. El tipo funcional del proyecto usa EsExito, Valor, Exito/Fallo, Error y TipoError para la traducción HTTP.
@@ -1290,9 +1196,6 @@ Result<T> con errores   → lista de errores.
 
 
 Las variantes permiten devolver un valor, un error tipado o varios errores de entrada. La elección debe responder a las necesidades del caso de uso: crear más tipos no aporta claridad si todos se convierten finalmente en el mismo texto genérico.
-
-
-La elección de la variante tiene dos consecuencias prácticas. La primera es que la variante simple es más legible pero menos expresiva. La segunda es que la variante con tipo de error específico es más expresiva pero más compleja. La combinación de ambas se valora según el contexto del proyecto. El curso usa la variante simple con un mensaje de error como base y menciona las variantes avanzadas como opciones.
 
 
 El mensaje explica un error a una persona; un código o categoría estable permite que otro componente decida sin analizar texto traducido.
@@ -1334,9 +1237,6 @@ public sealed class CrearOrdenConResultadoHandler(
 El handler devuelve un resultado explícito y solo confirma la orden cuando las condiciones necesarias se cumplen. Un test de fallo debería demostrar que no se escribió en SQL, además de comprobar el mensaje o código de rechazo.
 
 
-La aplicación del patrón en los casos de uso tiene dos consecuencias prácticas. La primera es que el flujo de errores es explícito: cada caso de uso documenta los errores que puede producir. La segunda es que el adaptador de entrada puede traducir el fallo en una respuesta HTTP específica. La combinación de ambas permite que el sistema sea más predecible y que los errores se gestionen de forma uniforme.
-
-
 El caso de uso debe devolver éxito después de confirmar los cambios requeridos. Preparar una entidad en memoria todavía no demuestra que la operación haya terminado.
 
 El ejemplo incluye un comando con respuesta `IRequest<Result<Guid>>`, manejador compatible, comprobaciones de entrada, alta pendiente y commit. OrdenesConResultado aplica el mismo criterio en el proyecto.
@@ -1363,9 +1263,6 @@ app.MapPost("/api/v1/ordenes-con-resultado", async (
 
 
 El endpoint traduce el estado del resultado a una respuesta HTTP. Una implementación completa debe distinguir error de validación, ausencia y conflicto; devolver siempre 400 pierde información importante del contrato.
-
-
-La traducción del resultado tiene dos consecuencias prácticas. La primera es que el adaptador de entrada se mantiene simple: solo traduce el resultado a una respuesta. La segunda es que la lógica de negocio no conoce el protocolo HTTP: solo conoce el resultado. La combinación de ambas permite que el mismo caso de uso se exponga en distintos protocolos con traducciones específicas.
 
 
 La traducción a HTTP pertenece a API. El núcleo no devuelve Results.BadRequest, ProblemDetails ni números de estado como sustituto de conceptos de negocio.
@@ -1401,9 +1298,6 @@ public static class ResultExtensions
 
 
 Map transforma un éxito; Bind añade otra operación que puede fallar; Match obliga a tratar ambos caminos. El ejemplo de cantidad permite seguir cómo un fallo interrumpe la composición sin perder la información de rechazo.
-
-
-La composición de resultados tiene dos consecuencias prácticas. La primera es que el flujo de errores es lineal: cada paso encadena con el siguiente. La segunda es que el código evita el anidamiento de condicionales. La combinación de ambas permite que el código sea más legible y que el flujo de errores sea explícito.
 
 
 Map transforma un valor; Bind encadena otra operación con posibilidad de fallo; Match obliga a tratar ambos estados. No son métodos mágicos incorporados a cualquier Result.
@@ -1462,9 +1356,6 @@ public sealed class CrearOrdenResultValidationBehavior(
 El cuadro muestra casos donde un resultado explícito aporta valor y otros donde una excepción representa mejor un fallo técnico. No se trata de eliminar excepciones del lenguaje, sino de distinguir condiciones previstas del negocio.
 
 
-La integración con la validación tiene dos consecuencias prácticas. La primera es que la validación se realiza antes del manejador. La segunda es que el resultado del caso de uso incluye los errores de validación cuando la validación falla. La combinación de ambas permite que el flujo de errores sea uniforme en todos los casos de uso.
-
-
 El comportamiento tiene que construir exactamente el tipo que promete la solicitud. `Result<object>` y `Result<Guid>` son tipos distintos y un cast a object no los vuelve compatibles.
 
 El ejemplo usa un pipeline cerrado para CrearOrdenConResultadoCommand y `Result<Guid>`. Conserva mensajes de validación y omite el manejador cuando hay fallos.
@@ -1489,9 +1380,6 @@ Operación sin fallo esperado → no.
 
 
 La implementación de AceriaApp combina resultados explícitos con casos de uso y su traducción HTTP. Los nombres españoles del tipo real no deben mezclarse indiscriminadamente con los ejemplos conceptuales escritos con IsSuccess y Failure.
-
-
-La decisión de usar el patrón tiene dos consecuencias prácticas. La primera es que el código gana claridad sobre los errores esperados. La segunda es que el código añade una estructura adicional. La combinación de ambas se valora según el contexto del proyecto. El curso aplica el patrón porque el dominio tiene varios errores esperados en sus operaciones.
 
 
 Result tiene sentido cuando el fallo es parte habitual del contrato y el consumidor debe decidir qué hacer. La legibilidad y la coherencia son los criterios principales.
@@ -1581,8 +1469,6 @@ Módulo de alto nivel → abstracción ← Módulo de bajo nivel.
 La abstracción ocupa la frontera entre política de aplicación e implementación técnica. Ambos lados dependen de ella según sus necesidades, pero esa dirección solo está protegida cuando los proyectos y tipos realmente evitan referencias desde el núcleo a SQL Server.
 
 
-La aplicación del principio tiene dos consecuencias prácticas. La primera es que los módulos de alto nivel son independientes de los detalles de implementación. La segunda es que los módulos de bajo nivel son sustituibles sin modificar los de alto nivel. La combinación de ambas permite que el sistema evolucione sin acoplamiento entre capas. El principio puede materializarse con inyección manual o con un contenedor que respete la dirección de los contratos.
-
 La violación del principio produce tres síntomas reconocibles. El primero es la dependencia directa entre capas: un módulo de alto nivel instancia un módulo de bajo nivel. El segundo es la imposibilidad de sustituir la implementación: el módulo de alto nivel conoce la clase concreta. El tercero es la dificultad de las pruebas: no se puede sustituir la implementación por un doble. Los tres síntomas se corrigen invirtiendo la dependencia y definiendo abstracciones.
 
 
@@ -1618,9 +1504,6 @@ public class OrdenServicio
 El constructor de OrdenServicio declara la interfaz que necesita y la almacena como colaborador. La creación de la instancia corresponde al host o al test, no a la clase que ejecuta las reglas de la orden.
 
 
-La inyección de dependencias se caracteriza por tres propiedades. La primera es que el objeto no crea sus dependencias: las recibe. La segunda es que permite recibir contratos estables, sean interfaces o clases apropiadas. La tercera es que la construcción puede hacerse manualmente o mediante un contenedor; el objeto no necesita conocer cuál se ha usado. Las tres propiedades permiten que el objeto sea testeable y sustituible.
-
-
 La inyección por constructor hace visibles las dependencias obligatorias y permite crear objetos completos desde el principio. La construcción manual también es inyección.
 
 Una prueba puede crear OrdenesTransaccionales con un fake de repositorio y otro de unidad. El caso de uso recibe colaboradores sin preguntar cómo fueron construidos.
@@ -1641,9 +1524,6 @@ builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
 
 
 Los registros de IOrdenRepositorio, IOrdenServicio y TimeProvider ilustran distintas duraciones. La validez del grafo depende de que todos los colaboradores sean compatibles con el ciclo elegido y puedan resolverse.
-
-
-El contenedor se caracteriza por tres propiedades. La primera es que registra las dependencias en el arranque. La segunda es que resuelve las dependencias en tiempo de ejecución. La tercera es que gestiona el ciclo de vida de las instancias. Las tres propiedades permiten que el sistema se componga de forma declarativa y que las dependencias se resuelvan sin intervención manual.
 
 
 IServiceCollection describe registros; IServiceProvider resuelve instancias a partir de ellos. La configuración debe completarse antes de construir el proveedor que usará la aplicación.
@@ -1668,9 +1548,6 @@ Singleton → una instancia por proveedor de servicios.
 
 
 Transient, Scoped y Singleton determinan el alcance de reutilización de un objeto. Un repositorio que usa DbContext scoped no debería ser retenido por un singleton, aunque el compilador acepte el registro.
-
-
-La elección del ciclo tiene dos consecuencias prácticas. La primera es que el ciclo incorrecto produce errores de concurrencia o de memoria. La segunda es que el ciclo correcto mantiene el rendimiento y la coherencia. La combinación de ambas permite que el contenedor gestione los recursos de forma eficiente.
 
 
 La duración se elige por estado, propiedad de recursos y concurrencia. Scoped significa ámbito, no usuario, sesión del navegador ni proceso completo.
@@ -1703,9 +1580,6 @@ public static class RepositoriosExtensions
 
 
 AddRepositorios agrupa contratos y adaptadores para hacer más legible la composición. Conviene que el método no esconda dependencias circulares y que se pruebe qué implementación recibe cada puerto.
-
-
-El registro por convención tiene dos consecuencias prácticas. La primera es que el archivo `Program.cs` se mantiene corto. La segunda es que los registros de un mismo grupo se mantienen juntos. La combinación de ambas reduce el coste de mantenimiento y facilita la localización de los registros.
 
 
 Los métodos de extensión organizan la raíz de composición por capacidades o capas. Su valor está en encapsular registros coherentes y dependencias necesarias.
@@ -1741,9 +1615,6 @@ foreach (var tipo in tipos)
 El código de reflexión descubre servicios por convención de nombre, pero la coincidencia de sufijos no demuestra que la clase tenga la responsabilidad esperada. La lista obtenida y su resolución deben verificarse para evitar registros ambiguos.
 
 
-El registro por ensamblado tiene dos consecuencias prácticas. La primera es que el código de registro se reduce. La segunda es que la convención debe ser estricta para evitar registros accidentales. La combinación de ambas permite que el sistema tenga muchos servicios sin un archivo de registro extenso.
-
-
 El escaneo por reflexión automatiza una convención. Debe elegir ensamblados concretos y filtrar clases abstractas, genéricas abiertas y tipos ajenos a la capacidad.
 
 MediatR busca manejadores en el ensamblado de aplicación mediante un tipo marcador. El ejemplo de servicios busca interfaces cuyo nombre coincide con una convención explícita.
@@ -1770,9 +1641,6 @@ Reglas de registro:
 El catálogo de reglas recomienda contratos explícitos, inyección por constructor y ámbitos coherentes. El criterio es que un caso de uso pueda comprenderse a partir de sus dependencias declaradas, sin buscar servicios globalmente.
 
 
-La aplicación de las reglas tiene dos consecuencias prácticas. La primera es que se reduce el riesgo de registros ausentes o incompatibles; sigue siendo necesario comprobar el grafo real. La segunda es que los servicios se mantienen testeables. La combinación de ambas permite que el sistema se componga de forma predecible y que las pruebas se ejecuten sin infraestructura.
-
-
 El contenedor admite varios registros del mismo contrato. La política debe distinguir resolver uno, resolver `IEnumerable<T>` o seleccionar servicios con clave cuando corresponda.
 
 Varios `IValidator<CrearOrdenCommand>` son intencionales: el comportamiento puede recorrerlos. Dos adaptadores de persistencia registrados sin política de selección pueden esconder una configuración equivocada.
@@ -1796,9 +1664,6 @@ Prohibiciones del contenedor:
 
 
 Las advertencias sobre el contenedor se refieren a dependencias ocultas y a ciclos de vida incompatibles. El ejemplo de scoped capturado por singleton es un problema concreto que debe probarse, no una mera regla de estilo.
-
-
-La aplicación de las prohibiciones tiene dos consecuencias prácticas. La primera es que se evitan varias causas de fallo en ejecución, sin sustituir pruebas de composición. La segunda es que las dependencias son predecibles y testeables. La combinación de ambas permite que el sistema se comporte de forma coherente en producción.
 
 
 La dependencia cautiva aparece cuando un consumidor retiene un colaborador más allá de su ámbito previsto. El caso crítico es singleton que captura DbContext scoped.
@@ -1831,9 +1696,6 @@ repositorioMock.Verify(
 
 
 El mock suministra un repositorio controlado al caso de uso y permite verificar la operación solicitada. La misma prueba no demuestra que el repositorio SQL real haya escrito filas, tarea de las pruebas de integración.
-
-
-La inyección de dependencias en los tests tiene dos consecuencias prácticas. La primera es que los tests se ejecutan sin base de datos ni infraestructura. La segunda es que las dependencias se sustituyen por dobles específicos. La combinación de ambas permite que los tests sean rápidos y fiables.
 
 
 Las pruebas unitarias construyen la clase con colaboradores controlados; las pruebas de composición verifican que el contenedor de producción sabe construirla.
