@@ -24,7 +24,7 @@ En tu copia del repositorio, abre `M01_INTRODUCCION_MICROSERVICIOS/PROYECTO/1.1-
 
 Desde esa misma carpeta, abre **Ver > Terminal** en Visual Studio o una consola de Windows y ejecuta `dotnet --list-sdks`; debe aparecer un SDK `8.0.x`. Si no existe, instala el SDK .NET 8 antes de continuar. Ejecuta `dir` y registra la ruta de trabajo efectiva. Todos los comandos relativos posteriores se ejecutan desde la carpeta que contiene `AceriaApp.sln`, salvo que indiquemos expresamente otra ubicación.
 
-cada punto constituye una solución autónoma. Se evita copiar la solución anterior sobre archivos nuevos ya preparados y se garantiza que los bloques de código comentados correspondan exactamente a este punto.
+Cada punto constituye una solución autónoma. Se evita copiar la solución anterior sobre archivos nuevos ya preparados y se garantiza que los bloques de código comentados correspondan exactamente a este punto.
 
 **Errores comunes:** abrir la solución del punto anterior; copiar archivos que sobrescriban los bloques preparados; confundir la carpeta del repositorio con la carpeta del proyecto.
 
@@ -52,11 +52,11 @@ En el **Explorador de soluciones** localiza `src/AceriaApp.Monolito.Api` y `test
 
 Abre también la carpeta `docs` y localiza el ADR preparado del primer punto; los documentos de diseño no se compilan ni sustituyen al código de la API. Dibuja un árbol con la raíz de la etapa, solución, proyectos, documentación y configuración. Contrasta ese árbol con las rutas reales del repositorio; la ruta `C:\cursos\...` es solo un ejemplo si tú has elegido esa instalación.
 
-cada módulo tiene su propia carpeta en la raíz del repositorio y cada punto tiene su propia carpeta dentro del módulo. Esta separación permite que cada punto sea autocontenido y ejecutable sin depender de otros.
+Cada módulo tiene su propia carpeta en la raíz del repositorio y cada punto tiene su propia carpeta dentro del módulo. Esta separación permite que cada punto sea autocontenido y ejecutable sin depender de otros.
 
 **Errores comunes:**
 
-- Escribir la ruta con barras inclinadas (/) en lugar de barras invertidas () en Windows: PowerShell acepta ambas, pero cmd solo acepta .
+- Confundir el directorio del repositorio con la carpeta de una etapa. Usa comillas cuando una ruta de Windows incluya espacios y trabaja desde el directorio que contiene `AceriaApp.sln`.
 - Crear la carpeta con un nombre distinto al slug indicado: el slug debe ser exactamente 1.1-monolito-vs-microservicios.
 - Olvidar cambiar a la carpeta del punto con cd: los siguientes comandos se ejecutan en la carpeta del módulo.
 
@@ -70,7 +70,7 @@ Localiza `AceriaApp.sln` en la raíz de la etapa y ábrelo en Visual Studio. Est
 
 Distingue la **solución** (`.sln`), que organiza proyectos, de un **proyecto** (`.csproj`), que declara la compilación y sus dependencias. Guarda el estado inicial sin cambiar el `.sln`. Si la solución no enumera los proyectos que aparecen físicamente, revisa que hayas abierto el fichero de la etapa correcta antes de continuar.
 
-la solución es el contenedor que agrupa todos los proyectos del punto. El nombre AceriaApp se mantiene constante en todos los puntos para que el alumno reconozca la solución al abrir cualquier carpeta.
+La solución es el contenedor que agrupa todos los proyectos del punto. El nombre AceriaApp se mantiene constante en todos los puntos para que el alumno reconozca la solución al abrir cualquier carpeta.
 
 **Errores comunes:**
 
@@ -88,7 +88,7 @@ Desde el Explorador de soluciones expande `src/AceriaApp.Monolito.Api` y abre el
 
 Busca los `PackageReference` a EF Core SQL Server, EF Core Design y Swashbuckle; relaciona cada paquete con persistencia, herramientas de migración y documentación de API. Abre `Program.cs` y `appsettings.json` sin activar código aún. Ejecuta `dotnet build src/AceriaApp.Monolito.Api/AceriaApp.Monolito.Api.csproj` y verifica que el esqueleto del proyecto es válido.
 
-el proyecto monolítico de referencia sirve como punto de partida del curso y como término de comparación con los microservicios que se construirán en módulos posteriores. El nombre AceriaApp.Monolito.Api deja claro que se trata del monolito.
+El proyecto monolítico de referencia sirve como punto de partida del curso y como término de comparación con los microservicios que se construirán en módulos posteriores. El nombre AceriaApp.Monolito.Api deja claro que se trata del monolito.
 
 **Errores comunes:**
 
@@ -106,7 +106,7 @@ En la carpeta raíz de 1.1 abre `AceriaApp.sln` y confirma que `AceriaApp.Monoli
 
 Inspecciona las propiedades del proyecto desde Visual Studio y comprueba que la ruta coincide con el proyecto físico entregado. No ejecutes `dotnet sln add` si ya está incluido. Si recibes un error de proyecto no cargado, restaura con `dotnet restore AceriaApp.sln` y vuelve a abrirlo; documenta el mensaje antes de intentar recrear archivos.
 
-añadir el proyecto a la solución permite compilarlo y ejecutarlo desde Visual Studio 2026 y desde la línea de comandos con dotnet build AceriaApp.sln.
+Comprobar que el proyecto figura en la solución permite verificar que participa en Visual Studio y `dotnet build AceriaApp.sln`, sin añadir una referencia duplicada.
 
 **Errores comunes:**
 
@@ -124,7 +124,7 @@ Localiza la carpeta `tests/AceriaApp.Monolito.Tests` y abre `AceriaApp.Monolito.
 
 En la misma carpeta encuentra `OrdenTests.cs`, que contiene código didáctico comentado que se activará en el paso 17. No busques `UnitTest1.cs`: no forma parte de este proyecto de referencia. Abre **Prueba > Explorador de pruebas** y confirma que el proyecto es visible. Si no aparecen casos aún, es normal: el test estará disponible después de activar su bloque.
 
-el proyecto de tests albergará las pruebas unitarias y de integración del monolito. Se crea desde el primer punto para que la práctica de TDD forme parte del flujo de trabajo desde el inicio.
+El proyecto de tests preparado permite incorporar una prueba unitaria del modelo en este punto. No constituye todavía una suite completa de integración HTTP y SQL Server.
 
 **Errores comunes:**
 
@@ -142,7 +142,7 @@ En Visual Studio, expande las **Dependencias** del proyecto de tests y observa l
 
 Ejecuta `dotnet sln AceriaApp.sln list` y comprueba que ambos proyectos se incluyen en la misma solución. La referencia del test **hacia** la API ya está creada. No agregues otra referencia idéntica. Si el editor señala un problema, comprueba primero la ruta relativa y realiza `dotnet restore AceriaApp.sln`.
 
-la referencia permite que el proyecto de tests acceda a las clases públicas del proyecto monolítico. Sin esta referencia, los tests no pueden instanciar los tipos que deben verificar.
+La referencia permite que el proyecto de tests acceda a las clases públicas del proyecto monolítico. Sin esta referencia, los tests no pueden instanciar los tipos que deben verificar.
 
 **Errores comunes:**
 
@@ -166,7 +166,7 @@ EF Core es el ORM del curso y SQL Server Express es la base de datos. Design es 
 
 - Instalar una versión preliminar de EF Core (8.0.0-rc.1): el curso usa la versión estable 8.0.0.
 - Olvidar el paquete Design: dotnet ef migrations add falla con el error Unable to create an object of type 'AceriaDbContext'.
-- Instalar Swashbuckle.AspNetCore sin versión: el comando instala la última estable, que es válida para .NET 8.
+- Instalar una versión no fijada de Swashbuckle sin comprobar su compatibilidad. El archivo `.csproj` ya declara la versión utilizada en este punto.
 
 **Verificación:** la salida de dotnet list package debe mostrar Microsoft.EntityFrameworkCore.SqlServer 8.0.0, Microsoft.EntityFrameworkCore.Design 8.0.0 y Swashbuckle.AspNetCore con su versión.
 
@@ -191,7 +191,7 @@ Lee el servidor y el nombre de base de datos configurados. En el ejercicio de M0
   "AllowedHosts": "*"
 }
 
-la cadena de conexión define el servidor, la base de datos y el modo de autenticación. Trusted_Connection=True usa la identidad de Windows, y TrustServerCertificate=True evita errores de certificado en entornos locales.
+La cadena de conexión define el servidor, la base de datos y el modo de autenticación. Trusted_Connection=True usa la identidad de Windows, y TrustServerCertificate=True evita errores de certificado en entornos locales.
 
 **Errores comunes:**
 
@@ -227,7 +227,7 @@ public class Orden
 
 La entidad `Orden` reúne los datos de la operación: `Id` identifica el registro, `Cliente` y `Material` describen la solicitud y `Cantidad` expresa las unidades. Las cadenas se inicializan para evitar referencias nulas. `FechaCreacion` recibirá una marca UTC cuando POST cree la orden. Este modelo inicial todavía no implementa invariantes de negocio: esa diferencia se abordará al introducir un dominio más rico.
 
-la entidad Orden representa la orden de producción. Es la unidad de negocio sobre la que operará el monolito de referencia.
+La entidad Orden representa la orden de producción. Es la unidad de negocio sobre la que operará el monolito de referencia.
 
 **Errores comunes:**
 
@@ -274,7 +274,7 @@ public class AceriaDbContext : DbContext
 
 El `AceriaDbContext` recibe las opciones desde la configuración del host y expone `Ordenes` como conjunto consultable por EF Core. Su `OnModelCreating` establece la clave y exige `Cliente` y `Material`, limitados a 100 caracteres. La configuración describe el esquema, pero la tabla física no existe hasta aplicar la migración; tampoco sustituye la validación de las entradas HTTP.
 
-el DbContext es el punto de acceso a la base de datos. Define las tablas y sus restricciones, y expone los DbSet que usan los repositorios y los endpoints.
+El `DbContext` representa el modelo persistente y las restricciones utilizadas por EF Core. La creación física de las tablas se realiza al aplicar la migración, no al declarar el contexto.
 
 **Errores comunes:**
 
@@ -355,7 +355,7 @@ En `src/AceriaApp.Monolito.Api/Infraestructura/Migraciones`, abre `202610140001_
 
 Abre la clase `Inicial`, revisa `Up` y `Down` y comprueba que `Up` crea `Ordenes` con Id, Cliente, Material, Cantidad y FechaCreacion. Compila y ejecuta, desde la carpeta donde está `AceriaApp.sln`, `dotnet ef migrations list --project src/AceriaApp.Monolito.Api --startup-project src/AceriaApp.Monolito.Api`. Si no está instalado `dotnet-ef`, instala la herramienta versión 8.
 
-la migración se entrega versionada para que todos los alumnos apliquen el mismo esquema; generar otra con idéntico nombre duplicaría la operación.
+La migración se entrega versionada para que todos los alumnos apliquen el mismo esquema; generar otra con idéntico nombre duplicaría la operación.
 
 **Errores comunes:** ejecutar `migrations add Inicial` otra vez; cambiar la migración heredada; buscar una marca temporal arbitraria.
 
@@ -443,7 +443,7 @@ public class OrdenTests
 
 `OrdenTests` crea una orden con datos conocidos y comprueba sus propiedades mediante xUnit y FluentAssertions. Es una prueba unitaria del modelo, no un ensayo del endpoint HTTP ni de la persistencia en SQL Server. Esta distinción evita concluir que GET devuelve `404` o que POST guarda los datos únicamente porque una clase puede construirse correctamente.
 
-la prueba unitaria verifica que la entidad Orden se instancia correctamente con datos válidos. FluentAssertions proporciona una sintaxis de aserción más legible que Assert.
+La prueba unitaria verifica que la entidad Orden se instancia correctamente con datos válidos. FluentAssertions proporciona una sintaxis de aserción más legible que Assert.
 
 **Errores comunes:**
 
@@ -630,7 +630,7 @@ Utiliza una **copia personal de trabajo**, no el repositorio del profesor ni la 
 
 Ejecuta `git add` sobre los archivos que has trabajado y revisa `git diff --cached --stat` para evitar incluir compilados o secretos de conexión. Crea el commit con `git commit -m "Punto 1.1: estructura inicial del proyecto AceriaApp"`. Comprueba con `git log -1 --oneline` que existe ese commit y con `git status` que no quedan cambios imprevistos. Si el repositorio de trabajo contiene más módulos, confirma que no has incluido archivos de puntos futuros.
 
-el commit inicial registra el estado del punto 1.1 en el historial de Git. Cada punto del curso tendrá su propio commit para facilitar la comparación.
+El commit inicial registra el estado del punto 1.1 en el historial de Git. Cada punto del curso tendrá su propio commit para facilitar la comparación.
 
 **Errores comunes:**
 
@@ -764,7 +764,7 @@ Abre `PROYECTO/1.2-ventajas-inconvenientes` de tu copia del repositorio. No modi
 
 Abre la terminal en la carpeta que contiene `AceriaApp.sln` y ejecuta `dotnet --list-sdks`; verifica .NET 8 y que el entorno de trabajo es el de 1.2. Anota la ruta real de esta etapa y confirma que en su carpeta `tests` hay proyectos heredados y uno nuevo para métricas. No crees proyectos con nombres duplicados.
 
-cada punto constituye una solución autónoma. Se evita copiar la solución anterior sobre archivos nuevos ya preparados y se garantiza que los bloques de código comentados correspondan exactamente a este punto.
+Cada punto constituye una solución autónoma. Se evita copiar la solución anterior sobre archivos nuevos ya preparados y se garantiza que los bloques de código comentados correspondan exactamente a este punto.
 
 **Errores comunes:** abrir la solución del punto anterior; copiar archivos que sobrescriban los bloques preparados; confundir la carpeta del repositorio con la carpeta del proyecto.
 
@@ -792,7 +792,7 @@ En el Explorador de archivos abre `1.2-ventajas-inconvenientes/docs` y comprueba
 
 Abre los documentos en un visor Markdown de Visual Studio y distingue los contenidos heredados de los documentos exclusivos de 1.2. Comprueba que los archivos están en la carpeta `docs` de **esta etapa**; no edites el original de 1.1 para documentar las ventajas e inconvenientes de 1.2.
 
-el punto 1.2 parte del contenido del punto 1.1, que ya incluye la carpeta docs con el ADR-001. No se modifica ningún archivo existente.
+El punto 1.2 parte del contenido del punto 1.1, que ya incluye la carpeta docs con el ADR-001. No se modifica ningún archivo existente.
 
 **Errores comunes:**
 
@@ -902,7 +902,7 @@ Consideración transversal: coste operativo total.
 El proyecto empieza como monolito modular. La evolución hacia microservicios se justificará cuando alguno de los seis criterios cambie.
 ```
 
-el documento de análisis comparativo es el artefacto de docs específico del punto 1.2. No modifica el ADR-001 existente ni ningún otro archivo del punto 1.1.
+El documento de análisis comparativo es el artefacto de docs específico del punto 1.2. No modifica el ADR-001 existente ni ningún otro archivo del punto 1.1.
 
 **Errores comunes:**
 
@@ -920,7 +920,7 @@ Desde Visual Studio expande `src/AceriaApp.Monolito.Api/Metricas` dentro de la s
 
 Comprueba que los archivos heredados de `Dominio` e `Infraestructura` no contienen marcadores nuevos de la etapa 1.2 y no necesitan ser modificados. Guarda la solución y prepara los archivos en ese orden: primero métricas globales, después métricas por servicio y finalmente el analizador.
 
-la carpeta ya existe en el proyecto preparado; la progresión didáctica se logra activando el contenido, no creando archivos duplicados.
+La carpeta ya existe en el proyecto preparado; la progresión didáctica se logra activando el contenido, no creando archivos duplicados.
 
 **Errores comunes:** crear un archivo con el mismo nombre; descomentar código de otros pasos; modificar archivos heredados.
 
@@ -970,7 +970,7 @@ public class MetricasAcoplamiento
 
 `MetricasAcoplamiento` construye dos cocientes a partir de cantidades introducidas explícitamente: referencias entre proyectos y tablas compartidas, cada una comparada con el número de proyectos. Los métodos devuelven cero si no hay proyectos, evitando una división inválida. Son indicadores docentes que hacen visible un razonamiento; no descubren dependencias del repositorio ni permiten evaluar automáticamente una arquitectura real.
 
-la clase MetricasAcoplamiento calcula dos indicadores objetivos: el índice de acoplamiento entre proyectos y el índice de compartición de datos. Estos indicadores permiten medir el grado de acoplamiento del monolito y compararlo con el de los microservicios en módulos posteriores.
+La clase `MetricasAcoplamiento` calcula dos indicadores didácticos de dependencias y compartición de datos. Estos cocientes comparan los valores declarados, pero no representan una medida universal de la calidad arquitectónica.
 
 **Errores comunes:**
 
@@ -1018,7 +1018,7 @@ public class MetricasServicio
 
 `MetricasServicio` describe una capacidad mediante el número declarado de endpoints, tablas y dependencias. `IndiceDeComplejidad` combina esos valores y `EsCandidatoAExtraccion` aplica un umbral del ejercicio. La clasificación es consecuencia de la fórmula programada; extraer realmente una capacidad requiere estudiar también su cohesión, datos y operaciones compartidas.
 
-la clase MetricasServicio permite analizar cada funcionalidad del monolito y decidir si es candidata a extraerse como microservicio. El método EsCandidatoAExtraccion aplica dos criterios objetivos: pocas dependencias externas y pocas tablas propias.
+La clase `MetricasServicio` compara capacidades mediante datos introducidos en el ejercicio. `EsCandidatoAExtraccion` aplica umbrales docentes que por sí solos no justifican crear un microservicio.
 
 **Errores comunes:**
 
@@ -1077,7 +1077,7 @@ public class AnalizadorMonolito
 
 `AnalizadorMonolito` recibe una colección de métricas, agrega sus valores y obtiene candidatos mediante el criterio de `MetricasServicio`. No inspecciona todos los ensamblados ni ejecuta una migración a microservicios. El ejercicio sirve para distinguir el cálculo correcto de la decisión que un arquitecto debe justificar.
 
-la clase AnalizadorMonolito agrega las métricas de todos los servicios del monolito y calcula el acoplamiento global. También filtra los servicios que son candidatos a extracción como microservicios.
+La clase `AnalizadorMonolito` agrega los datos declarados y filtra candidatos según el criterio programado. Extraer realmente una capacidad requiere evaluar su cohesión, contratos, persistencia y costes operativos.
 
 **Errores comunes:**
 
@@ -1116,7 +1116,7 @@ En el Explorador de soluciones localiza `tests/AceriaApp.Metricas.Tests/AceriaAp
 
 Abre su `.csproj` para revisar `net8.0`, xUnit, Microsoft.NET.Test.Sdk, FluentAssertions y la referencia de proyecto a la API. Ejecuta `dotnet restore AceriaApp.sln`. No uses `dotnet new xunit` encima de la carpeta preparada ni agregues un `UnitTest1.cs` adicional.
 
-el punto 1.2 añade un proyecto de tests específico para las métricas. Se crea como proyecto nuevo sin modificar el proyecto de tests existente AceriaApp.Monolito.Tests del punto 1.1.
+El punto 1.2 añade un proyecto de tests específico para las métricas. Se crea como proyecto nuevo sin modificar el proyecto de tests existente AceriaApp.Monolito.Tests del punto 1.1.
 
 **Errores comunes:**
 
@@ -1134,7 +1134,7 @@ Abre `tests/AceriaApp.Metricas.Tests/AceriaApp.Metricas.Tests.csproj` en Visual 
 
 Comprueba que la referencia apunta **del test a la API**, no al revés, y que la ruta relativa resuelve realmente el archivo existente. Desde la raíz del punto ejecuta `dotnet restore AceriaApp.sln` y, si todo restaura, no agregues otra referencia duplicada.
 
-la referencia permite que el proyecto de tests acceda a las clases de Metricas del proyecto monolítico. Sin esta referencia, los tests no pueden instanciar MetricasAcoplamiento, MetricasServicio ni AnalizadorMonolito.
+La referencia permite que el proyecto de tests acceda a las clases de Metricas del proyecto monolítico. Sin esta referencia, los tests no pueden instanciar MetricasAcoplamiento, MetricasServicio ni AnalizadorMonolito.
 
 **Errores comunes:**
 
@@ -1517,7 +1517,7 @@ Desde la raíz del punto 1.2, localiza el `ADR-001` heredado y el fichero del mi
 
 Abre ambos `README.md` para distinguir su estado: el de 1.2 **debe ser distinto** del de 1.1 porque documenta los archivos nuevos y sus pruebas. No copies de nuevo los archivos para forzar igualdad. Registra como evidencia qué documento es heredado sin cambios y cuál es propio de la etapa.
 
-la comparación con fc verifica que el ADR-001 no se ha modificado y que el README del punto 1.2 es distinto al del punto 1.1.
+La comparación con fc verifica que el ADR-001 no se ha modificado y que el README del punto 1.2 es distinto al del punto 1.1.
 
 **Errores comunes:**
 
@@ -1535,7 +1535,7 @@ Desde la raíz común `M01_INTRODUCCION_MICROSERVICIOS/PROYECTO` ejecuta `tree /
 
 Confirma que `AceriaApp.sln` de esta etapa incluye los proyectos declarados y que los archivos nuevos están donde indican sus namespaces. Anota cualquier fichero o carpeta inesperados, distinguiendo fuentes versionadas de los temporales `bin` y `obj` creados al compilar.
 
-la verificación estructural confirma que el punto 1.2 añade archivos nuevos sin modificar los existentes.
+La verificación estructural confirma que el punto 1.2 añade archivos nuevos sin modificar los existentes.
 
 **Errores comunes:**
 
@@ -1578,7 +1578,7 @@ Antes de crear un commit, ejecuta `git status` desde tu copia personal del repos
 
 Ejecuta el commit del punto 1.2 con el mensaje que aparece en la práctica, siempre dentro de tu rama de trabajo y sin modificar la rama oficial del curso. Comprueba `git log -1 --oneline` y `git status` para confirmar que el commit existe y no quedan cambios inesperados; conserva la salida de los nueve tests como evidencia de cierre.
 
-el commit del punto 1.2 registra el estado acumulado del proyecto. Los dos commits consecutivos permiten comparar el punto 1.1 y el punto 1.2 con git diff.
+El commit del punto 1.2 registra el estado acumulado del proyecto. Los dos commits consecutivos permiten comparar el punto 1.1 y el punto 1.2 con git diff.
 
 **Errores comunes:**
 
@@ -1730,7 +1730,7 @@ Localiza `M01_INTRODUCCION_MICROSERVICIOS/PROYECTO/1.3-principios-diseno` en tu 
 
 Abre la terminal en esa misma carpeta y ejecuta `dotnet --list-sdks` para comprobar la disponibilidad del SDK .NET 8. Registra la ruta de trabajo y diferencia el proyecto distribuido de uno vacío que no debes crear otra vez.
 
-cada punto constituye una solución autónoma. Se evita copiar la solución anterior sobre archivos nuevos ya preparados y se garantiza que los bloques de código comentados correspondan exactamente a este punto.
+Cada punto constituye una solución autónoma. Se evita copiar la solución anterior sobre archivos nuevos ya preparados y se garantiza que los bloques de código comentados correspondan exactamente a este punto.
 
 **Errores comunes:** abrir la solución del punto anterior; copiar archivos que sobrescriban los bloques preparados; confundir la carpeta del repositorio con la carpeta del proyecto.
 
@@ -1758,7 +1758,7 @@ Abre `docs` en la carpeta `1.3-principios-diseno` y comprueba que conserva los d
 
 Contrasta uno de los ADR heredados con el fichero homónimo de la etapa anterior, sin reescribirlo. Anota qué archivos son heredados y cuáles nuevos; no exijas una carpeta `docs` vacía antes de comenzar, porque los documentos ya están entregados.
 
-el punto 1.3 parte del contenido del punto 1.2, que ya incluye la carpeta docs con tres documentos. No se modifica ningún documento existente.
+El punto 1.3 parte del contenido del punto 1.2, que ya incluye la carpeta docs con tres documentos. No se modifica ningún documento existente.
 
 **Errores comunes:**
 
@@ -1829,7 +1829,7 @@ Un servicio debe poder evolucionar sin obligar a los demás a cambiar al mismo r
 | Evolución independiente | Versionado de contratos |
 ```
 
-el documento de principios de diseño es el artefacto de docs específico del punto 1.3. No modifica los tres documentos existentes del punto 1.2.
+El documento de principios de diseño es el artefacto de docs específico del punto 1.3. No modifica los tres documentos existentes del punto 1.2.
 
 **Errores comunes:**
 
@@ -1847,7 +1847,7 @@ En el Explorador de soluciones abre `src/AceriaApp.Monolito.Api/Diseno` y locali
 
 Confirma que las clases heredadas de Dominio e Infraestructura siguen activas y no se deben modificar. Planifica la secuencia de activación: primero `LimiteServicio`, después `ValidadorLimiteServicio` y finalmente `CatalogoLimites`.
 
-la carpeta ya existe en el proyecto preparado; la progresión didáctica se logra activando el contenido, no creando archivos duplicados.
+La carpeta ya existe en el proyecto preparado; la progresión didáctica se logra activando el contenido, no creando archivos duplicados.
 
 **Errores comunes:** crear un archivo con el mismo nombre; descomentar código de otros pasos; modificar archivos heredados.
 
@@ -1881,7 +1881,7 @@ public class LimiteServicio
 
 `LimiteServicio` contiene los atributos de una frontera propuesta: su capacidad de negocio, el contexto delimitado y otros indicadores docentes de cohesión o autonomía. No se trata de un servicio ejecutable y su creación no modifica el despliegue. El objetivo es disponer de entradas explícitas para discutir reglas de diseño.
 
-la clase LimiteServicio modela los atributos que definen un límite de servicio según los principios de diseño. Cada propiedad corresponde a un principio: capacidad de negocio al de responsabilidad única, contexto delimitado al de límite del contexto, número de conceptos al de cohesión, dependencias salientes al de acoplamiento, exposición de entidades al de ocultación y compartición de base de datos al de autonomía.
+La clase LimiteServicio modela los atributos que definen un límite de servicio según los principios de diseño. Cada propiedad corresponde a un principio: capacidad de negocio al de responsabilidad única, contexto delimitado al de límite del contexto, número de conceptos al de cohesión, dependencias salientes al de acoplamiento, exposición de entidades al de ocultación y compartición de base de datos al de autonomía.
 
 **Errores comunes:**
 
@@ -1950,7 +1950,7 @@ public record ResultadoValidacion(bool EsValido, IReadOnlyList<string> Errores);
 
 `ValidadorLimiteServicio` examina las propiedades del límite y reúne los motivos que impiden aceptarlo conforme a las reglas del ejercicio. Sigue cada comprobación hasta el resultado devuelto, especialmente los casos de datos obligatorios o de cohesión insuficiente. Una respuesta válida significa que cumple ese contrato de validación, no que la frontera haya sido aprobada por expertos del dominio.
 
-la clase ValidadorLimiteServicio aplica los principios de diseño de forma automática. Recibe un LimiteServicio y devuelve un ResultadoValidacion con la lista de errores detectados. Cada comprobación corresponde a un principio concreto.
+La clase ValidadorLimiteServicio aplica los principios de diseño de forma automática. Recibe un LimiteServicio y devuelve un ResultadoValidacion con la lista de errores detectados. Cada comprobación corresponde a un principio concreto.
 
 **Errores comunes:**
 
@@ -1971,7 +1971,7 @@ En `src/AceriaApp.Monolito.Api/Diseno/ValidadorLimiteServicio.cs`, examina las d
 
 Relaciona cada import con las colecciones y los métodos empleados en `Validar`. Guarda y compila; si hay errores de tipos, comprueba primero el bloque de activación antes de cambiar las dependencias.
 
-el tipo List<string> pertenece a System.Collections.Generic. En proyectos con ImplicitUsings desactivado, hay que añadir el using explícito.
+El tipo List<string> pertenece a System.Collections.Generic. En proyectos con ImplicitUsings desactivado, hay que añadir el using explícito.
 
 **Errores comunes:**
 
@@ -2018,7 +2018,7 @@ public class CatalogoLimites
 
 `CatalogoLimites` utiliza el validador para separar propuestas válidas e inválidas. La clase no conoce la red, el almacenamiento ni la topología real de AceriaApp. Su función permite comprobar que un mismo criterio se aplica de forma consistente a varias entradas.
 
-la clase CatalogoLimites agrupa los límites de servicio del proyecto y permite filtrarlos por validez. Es el punto de entrada para auditar los límites del monolito antes de extraer microservicios.
+La clase CatalogoLimites agrupa los límites de servicio del proyecto y permite filtrarlos por validez. Es el punto de entrada para auditar los límites del monolito antes de extraer microservicios.
 
 **Errores comunes:**
 
@@ -2039,7 +2039,7 @@ Abre el archivo de **código fuente** `src/AceriaApp.Monolito.Api/Diseno/Catalog
 
 No dupliques imports; localiza las operaciones de filtrado del catálogo que utilizan LINQ o colecciones. Guarda y compila el proyecto API. El resultado de este paso es una importación correcta en `CatalogoLimites.cs`, no un cambio NuGet.
 
-el método Where pertenece a System.Linq. En proyectos con ImplicitUsings desactivado, hay que añadir el using explícito.
+El método Where pertenece a System.Linq. En proyectos con ImplicitUsings desactivado, hay que añadir el using explícito.
 
 **Errores comunes:**
 
@@ -2057,7 +2057,7 @@ En `tests/AceriaApp.Diseno.Tests`, localiza `AceriaApp.Diseno.Tests.csproj`: es 
 
 Abre el `.csproj` y comprueba `net8.0`, xUnit, FluentAssertions y la referencia de proyecto a la API monolítica. Ejecuta `dotnet restore AceriaApp.sln`; las clases de tests comentadas se activarán en los pasos 14 y 15.
 
-el punto 1.3 añade un proyecto de tests específico para las clases de diseño. Se crea como proyecto nuevo sin modificar los proyectos de tests existentes.
+El punto 1.3 añade un proyecto de tests específico para las clases de diseño. Se crea como proyecto nuevo sin modificar los proyectos de tests existentes.
 
 **Errores comunes:**
 
@@ -2075,7 +2075,7 @@ Abre `tests/AceriaApp.Diseno.Tests/AceriaApp.Diseno.Tests.csproj` y localiza el 
 
 Ejecuta `dotnet sln AceriaApp.sln list` y confirma que los proyectos de la etapa están incluidos en la misma solución. No agregues la referencia dos veces; restaura con `dotnet restore AceriaApp.sln` si Visual Studio no resuelve el proyecto.
 
-la referencia permite que el proyecto de tests acceda a las clases de Diseno del proyecto monolítico. Sin esta referencia, los tests no pueden instanciar LimiteServicio, ValidadorLimiteServicio ni CatalogoLimites.
+La referencia permite que el proyecto de tests acceda a las clases de Diseno del proyecto monolítico. Sin esta referencia, los tests no pueden instanciar LimiteServicio, ValidadorLimiteServicio ni CatalogoLimites.
 
 **Errores comunes:**
 
@@ -2249,7 +2249,7 @@ public class CatalogoLimitesTests
 
 `CatalogoLimitesTests` comprueba que el catálogo conserva en cada colección los límites que corresponden según el validador. No configura soluciones ni crea servicios: filtra propuestas. La distinción resulta importante al interpretar lo que demuestra la prueba.
 
-el test verifica que el catálogo filtra correctamente los límites válidos y los inválidos según el validador.
+El test verifica que el catálogo filtra correctamente los límites válidos y los inválidos según el validador.
 
 **Errores comunes:**
 
@@ -2412,7 +2412,7 @@ En tu copia del repositorio localiza las carpetas `docs` de `1.2-ventajas-inconv
 
 Los documentos heredados deben ser idénticos; el `README.md` de 1.3 puede ser diferente porque explica la etapa actual. Registra el resultado y no modifiques los originales de `1.2-ventajas-inconvenientes` para forzar igualdad.
 
-la comparación con fc verifica que los documentos del punto 1.2 no se han modificado.
+La comparación con fc verifica que los documentos del punto 1.2 no se han modificado.
 
 **Errores comunes:**
 
@@ -2430,7 +2430,7 @@ Desde `M01_INTRODUCCION_MICROSERVICIOS/PROYECTO` ejecuta `tree /F 1.3-principios
 
 En `tests/AceriaApp.Diseno.Tests` localiza las pruebas del validador y catálogo; en `docs` localiza `principios-diseno.md`, `ADR-003-principios-diseno.md` y los documentos heredados. Distingue los archivos fuente de las carpetas temporales `bin` y `obj`, que no deben incorporarse como entregables.
 
-la verificación estructural confirma que el punto 1.3 añade archivos nuevos sin modificar los existentes.
+La verificación estructural confirma que el punto 1.3 añade archivos nuevos sin modificar los existentes.
 
 **Errores comunes:**
 
@@ -2466,7 +2466,7 @@ Desde tu copia personal (no la rama del profesor) ejecuta `git status` para iden
 
 Realiza el commit del punto 1.3 con un mensaje descriptivo de límites de servicio, autonomía y cohesión; no sobrescribas los commits de etapas previas. Comprueba `git log -1 --oneline`, `git status` y conserva el resultado de los 13 tests acumulados como evidencia final.
 
-el commit del punto 1.3 registra el estado acumulado del proyecto. Los tres commits consecutivos permiten comparar los puntos 1.1, 1.2 y 1.3 con git diff.
+El commit del punto 1.3 registra el estado acumulado del proyecto. Los tres commits consecutivos permiten comparar los puntos 1.1, 1.2 y 1.3 con git diff.
 
 **Errores comunes:**
 
@@ -2632,7 +2632,7 @@ Localiza `M01_INTRODUCCION_MICROSERVICIOS/PROYECTO/1.4-organizacion-solucion` en
 
 Abre la terminal en esa misma carpeta y ejecuta `dotnet --list-sdks` para comprobar la disponibilidad del SDK .NET 8. Registra la ruta de trabajo y diferencia el proyecto distribuido de uno vacío que no debes crear otra vez.
 
-cada punto constituye una solución autónoma. Se evita copiar la solución anterior sobre archivos nuevos ya preparados y se garantiza que los bloques de código comentados correspondan exactamente a este punto.
+Cada punto constituye una solución autónoma. Se evita copiar la solución anterior sobre archivos nuevos ya preparados y se garantiza que los bloques de código comentados correspondan exactamente a este punto.
 
 **Errores comunes:** abrir la solución del punto anterior; copiar archivos que sobrescriban los bloques preparados; confundir la carpeta del repositorio con la carpeta del proyecto.
 
@@ -2660,7 +2660,7 @@ Abre `docs` en la carpeta `1.4-organizacion-solucion` y comprueba que conserva l
 
 Contrasta uno de los ADR heredados con el fichero homónimo de la etapa anterior, sin reescribirlo. Anota qué archivos son heredados y cuáles nuevos; no exijas una carpeta `docs` vacía antes de comenzar, porque los documentos ya están entregados.
 
-el punto 1.4 parte del contenido del punto 1.3, que ya incluye la carpeta docs con cinco documentos. No se modifica ningún documento existente.
+El punto 1.4 parte del contenido del punto 1.3, que ya incluye la carpeta docs con cinco documentos. No se modifica ningún documento existente.
 
 **Errores comunes:**
 
@@ -2728,7 +2728,7 @@ Cada servicio tiene su propio conjunto de proyectos y su propio conjunto de test
 | Commits | `Punto N.M: descripción` |
 ```
 
-el documento de organización de la solución es el artefacto de docs específico del punto 1.4. No modifica los cinco documentos existentes del punto 1.3.
+El documento de organización de la solución es el artefacto de docs específico del punto 1.4. No modifica los cinco documentos existentes del punto 1.3.
 
 **Errores comunes:**
 
@@ -2746,7 +2746,7 @@ En el Explorador de soluciones abre `src/AceriaApp.Monolito.Api/Organizacion` y 
 
 Confirma que las clases heredadas de Dominio e Infraestructura siguen activas y no se deben modificar. Planifica la secuencia de activación: primero `ConvencionNombres`, después `ValidadorConvencionNombres` y finalmente `CatalogoProyectos`.
 
-la carpeta ya existe en el proyecto preparado; la progresión didáctica se logra activando el contenido, no creando archivos duplicados.
+La carpeta ya existe en el proyecto preparado; la progresión didáctica se logra activando el contenido, no creando archivos duplicados.
 
 **Errores comunes:** crear un archivo con el mismo nombre; descomentar código de otros pasos; modificar archivos heredados.
 
@@ -2781,7 +2781,7 @@ public class ConvencionNombres
 
 `ConvencionNombres` reúne las partes necesarias para formar un nombre de proyecto según la convención del curso. La composición debe producir un identificador comprensible y estable. Ese resultado mejora la lectura de una solución, pero no restringe de manera automática las referencias entre proyectos.
 
-la clase ConvencionNombres modela la convención de nombres de proyectos y expone un método que devuelve el nombre completo. Es la base para validar que todos los proyectos del curso siguen la convención.
+La clase ConvencionNombres modela la convención de nombres de proyectos y expone un método que devuelve el nombre completo. Es la base para validar que todos los proyectos del curso siguen la convención.
 
 **Errores comunes:**
 
@@ -2844,7 +2844,7 @@ public record ResultadoConvencion(bool EsValido, IReadOnlyList<string> Errores);
 
 `ValidadorConvencionNombres` descompone una denominación y comprueba las condiciones de prefijo, estructura y tipo permitido. Los errores indican qué convención se incumplió, no que el proyecto compilado contenga un defecto funcional. Podemos cambiar un nombre sin haber modificado una sola dependencia arquitectónica.
 
-la clase ValidadorConvencionNombres comprueba que un nombre de proyecto cumple el patrón Prefijo.Componente.Tipo y que el tipo pertenece a la lista de tipos permitidos. Es el mecanismo de auditoría de la convención de nombres.
+La clase ValidadorConvencionNombres comprueba que un nombre de proyecto cumple el patrón Prefijo.Componente.Tipo y que el tipo pertenece a la lista de tipos permitidos. Es el mecanismo de auditoría de la convención de nombres.
 
 **Errores comunes:**
 
@@ -2912,7 +2912,7 @@ public class CatalogoProyectos
 
 `CatalogoProyectos` filtra una colección de propuestas de nombres a partir de los resultados del validador. No crea archivos `.csproj` ni inventaría procesos iniciados. El alumno debe relacionar cada clasificación con la regla que la produjo.
 
-la clase CatalogoProyectos agrupa los nombres de los proyectos del curso y permite filtrarlos por validez según la convención.
+La clase CatalogoProyectos agrupa los nombres de los proyectos del curso y permite filtrarlos por validez según la convención.
 
 **Errores comunes:**
 
@@ -2930,7 +2930,7 @@ Abre el archivo de **código fuente** `src/AceriaApp.Monolito.Api/Organizacion/C
 
 No dupliques imports; localiza las operaciones de filtrado del catálogo que utilizan LINQ o colecciones. Guarda y compila el proyecto API. El resultado de este paso es una importación correcta en `CatalogoProyectos.cs`, no un cambio NuGet.
 
-el método Where pertenece a System.Linq. En proyectos con ImplicitUsings desactivado, hay que añadir el using explícito.
+El método Where pertenece a System.Linq. En proyectos con ImplicitUsings desactivado, hay que añadir el using explícito.
 
 **Errores comunes:**
 
@@ -2948,7 +2948,7 @@ En `tests/AceriaApp.Organizacion.Tests`, localiza `AceriaApp.Organizacion.Tests.
 
 Abre el `.csproj` y comprueba `net8.0`, xUnit, FluentAssertions y la referencia de proyecto a la API monolítica. Ejecuta `dotnet restore AceriaApp.sln`; las clases de tests comentadas se activarán en los pasos 14 y 15.
 
-el punto 1.4 añade un proyecto de tests específico para las clases de organización. Se crea como proyecto nuevo sin modificar los proyectos de tests existentes.
+El punto 1.4 añade un proyecto de tests específico para las clases de organización. Se crea como proyecto nuevo sin modificar los proyectos de tests existentes.
 
 **Errores comunes:**
 
@@ -2966,7 +2966,7 @@ Abre `tests/AceriaApp.Organizacion.Tests/AceriaApp.Organizacion.Tests.csproj` y 
 
 Ejecuta `dotnet sln AceriaApp.sln list` y confirma que los proyectos de la etapa están incluidos en la misma solución. No agregues la referencia dos veces; restaura con `dotnet restore AceriaApp.sln` si Visual Studio no resuelve el proyecto.
 
-la referencia permite que el proyecto de tests acceda a las clases de Organizacion del proyecto monolítico.
+La referencia permite que el proyecto de tests acceda a las clases de Organizacion del proyecto monolítico.
 
 **Errores comunes:**
 
@@ -3118,7 +3118,7 @@ public class CatalogoProyectosTests
 
 `CatalogoProyectosTests` demuestra que el filtro conserva únicamente las denominaciones admitidas por el validador. Se trabaja con datos explícitos y sin desplegar servicios. El resultado debe interpretarse como la clasificación de un catálogo, no como la corrección de la estructura física de la solución.
 
-el test verifica que el catálogo filtra correctamente los nombres válidos y los inválidos según el validador de convenciones.
+El test verifica que el catálogo filtra correctamente los nombres válidos y los inválidos según el validador de convenciones.
 
 **Errores comunes:**
 
@@ -3283,7 +3283,7 @@ En tu copia del repositorio localiza las carpetas `docs` de `1.3-principios-dise
 
 Los documentos heredados deben ser idénticos; el `README.md` de 1.4 puede ser diferente porque explica la etapa actual. Registra el resultado y no modifiques los originales de `1.3-principios-diseno` para forzar igualdad.
 
-la comparación con fc verifica que los documentos del punto 1.3 no se han modificado.
+La comparación con fc verifica que los documentos del punto 1.3 no se han modificado.
 
 **Errores comunes:**
 
@@ -3301,7 +3301,7 @@ Desde `M01_INTRODUCCION_MICROSERVICIOS/PROYECTO` ejecuta `tree /F 1.4-organizaci
 
 En `tests/AceriaApp.Organizacion.Tests` localiza las pruebas del validador y catálogo; en `docs` localiza `organizacion-solucion.md`, `ADR-004-organizacion-solucion.md` y los documentos heredados. Distingue los archivos fuente de las carpetas temporales `bin` y `obj`, que no deben incorporarse como entregables.
 
-la verificación estructural confirma que el punto 1.4 añade archivos nuevos sin modificar los existentes.
+La verificación estructural confirma que el punto 1.4 añade archivos nuevos sin modificar los existentes.
 
 **Errores comunes:**
 
@@ -3337,7 +3337,7 @@ Desde tu copia personal (no la rama del profesor) ejecuta `git status` para iden
 
 Realiza el commit del punto 1.4 con un mensaje descriptivo de organización de soluciones y nomenclatura; no sobrescribas los commits de etapas previas. Comprueba `git log -1 --oneline`, `git status` y conserva el resultado de los 18 tests acumulados como evidencia final.
 
-el commit del punto 1.4 registra el estado acumulado del proyecto. Los cuatro commits consecutivos permiten comparar los puntos 1.1, 1.2, 1.3 y 1.4 con git diff.
+El commit del punto 1.4 registra el estado acumulado del proyecto. Los cuatro commits consecutivos permiten comparar los puntos 1.1, 1.2, 1.3 y 1.4 con git diff.
 
 **Errores comunes:**
 
@@ -3507,7 +3507,7 @@ Localiza `M01_INTRODUCCION_MICROSERVICIOS/PROYECTO/1.5-buenas-practicas` en tu c
 
 Abre la terminal en esa misma carpeta y ejecuta `dotnet --list-sdks` para comprobar la disponibilidad del SDK .NET 8. Registra la ruta de trabajo y diferencia el proyecto distribuido de uno vacío que no debes crear otra vez.
 
-cada punto constituye una solución autónoma. Se evita copiar la solución anterior sobre archivos nuevos ya preparados y se garantiza que los bloques de código comentados correspondan exactamente a este punto.
+Cada punto constituye una solución autónoma. Se evita copiar la solución anterior sobre archivos nuevos ya preparados y se garantiza que los bloques de código comentados correspondan exactamente a este punto.
 
 **Errores comunes:** abrir la solución del punto anterior; copiar archivos que sobrescriban los bloques preparados; confundir la carpeta del repositorio con la carpeta del proyecto.
 
@@ -3535,7 +3535,7 @@ Abre `docs` en la carpeta `1.5-buenas-practicas` y comprueba que conserva los do
 
 Contrasta uno de los ADR heredados con el fichero homónimo de la etapa anterior, sin reescribirlo. Anota qué archivos son heredados y cuáles nuevos; no exijas una carpeta `docs` vacía antes de comenzar, porque los documentos ya están entregados.
 
-el punto 1.5 parte del contenido del punto 1.4, que ya incluye la carpeta docs con siete documentos. No se modifica ningún documento existente.
+El punto 1.5 parte del contenido del punto 1.4, que ya incluye la carpeta docs con siete documentos. No se modifica ningún documento existente.
 
 **Errores comunes:**
 
@@ -3612,7 +3612,7 @@ El proyecto AceriaApp dispone, al terminar el módulo 1, de los siguientes compo
 - Tests unitarios acumulados en cuatro proyectos de tests.
 ```
 
-el documento de buenas prácticas es el artefacto de docs específico del punto 1.5. Incluye el cierre del módulo 1 con el resumen del estado del proyecto. No modifica los siete documentos existentes del punto 1.4.
+El documento de buenas prácticas es el artefacto de docs específico del punto 1.5. Incluye el cierre del módulo 1 con el resumen del estado del proyecto. No modifica los siete documentos existentes del punto 1.4.
 
 **Errores comunes:**
 
@@ -3630,7 +3630,7 @@ En el Explorador de soluciones abre `src/AceriaApp.Monolito.Api/BuenasPracticas`
 
 Confirma que las clases heredadas de Dominio e Infraestructura siguen activas y no se deben modificar. Planifica la secuencia de activación: primero `Practica`, después `ValidadorBuenasPracticas` y finalmente `CatalogoPracticas`.
 
-la carpeta ya existe en el proyecto preparado; la progresión didáctica se logra activando el contenido, no creando archivos duplicados.
+La carpeta ya existe en el proyecto preparado; la progresión didáctica se logra activando el contenido, no creando archivos duplicados.
 
 **Errores comunes:** crear un archivo con el mismo nombre; descomentar código de otros pasos; modificar archivos heredados.
 
@@ -3661,7 +3661,7 @@ public class Practica
 
 `Practica` representa los datos que necesitamos para registrar una práctica y su estado. Su valor consiste en mantener homogénea la información; no observa automáticamente el código del repositorio. Una afirmación de cumplimiento necesitaría evidencias adicionales fuera de este modelo.
 
-la clase Practica modela una buena práctica con su código, categoría, descripción y estado de aplicación. Es la unidad de información que maneja el validador.
+La clase Practica modela una buena práctica con su código, categoría, descripción y estado de aplicación. Es la unidad de información que maneja el validador.
 
 **Errores comunes:**
 
@@ -3726,7 +3726,7 @@ public record ResultadoPracticas(bool EsValido, IReadOnlyList<string> Errores);
 
 `ValidadorBuenasPracticas` revisa las categorías y condiciones acordadas, añadiendo errores para los casos rechazados. Es preferible estudiar cada condición junto a su test que convertir el resultado en una puntuación general de calidad. El método responde a un contrato concreto, no certifica el proyecto completo.
 
-la clase ValidadorBuenasPracticas comprueba que todas las prácticas declaradas pertenecen a categorías permitidas y están aplicadas. Es el mecanismo de auditoría de buenas prácticas.
+La clase ValidadorBuenasPracticas comprueba que todas las prácticas declaradas pertenecen a categorías permitidas y están aplicadas. Es el mecanismo de auditoría de buenas prácticas.
 
 **Errores comunes:**
 
@@ -3794,7 +3794,7 @@ public class CatalogoPracticas
 
 `CatalogoPracticas` agrupa entradas que cumplen los criterios previstos y permite distinguir aplicadas de pendientes. La clasificación no cambia archivos de código, despliegues ni configuraciones. Su utilidad está en la consulta coherente de los registros creados.
 
-la clase CatalogoPracticas agrupa las prácticas del proyecto y permite filtrarlas por estado de aplicación.
+La clase CatalogoPracticas agrupa las prácticas del proyecto y permite filtrarlas por estado de aplicación.
 
 **Errores comunes:**
 
@@ -3815,7 +3815,7 @@ Abre el archivo de **código fuente** `src/AceriaApp.Monolito.Api/BuenasPractica
 
 No dupliques imports; localiza las operaciones de filtrado del catálogo que utilizan LINQ o colecciones. Guarda y compila el proyecto API. El resultado de este paso es una importación correcta en `CatalogoPracticas.cs`, no un cambio NuGet.
 
-el método Where pertenece a System.Linq. En proyectos con ImplicitUsings desactivado, hay que añadir el using explícito.
+El método Where pertenece a System.Linq. En proyectos con ImplicitUsings desactivado, hay que añadir el using explícito.
 
 **Errores comunes:**
 
@@ -3833,7 +3833,7 @@ En `tests/AceriaApp.BuenasPracticas.Tests`, localiza `AceriaApp.BuenasPracticas.
 
 Abre el `.csproj` y comprueba `net8.0`, xUnit, FluentAssertions y la referencia de proyecto a la API monolítica. Ejecuta `dotnet restore AceriaApp.sln`; las clases de tests comentadas se activarán en los pasos 14 y 15.
 
-el punto 1.5 añade un proyecto de tests específico para las clases de buenas prácticas. Se crea como proyecto nuevo sin modificar los proyectos de tests existentes.
+El punto 1.5 añade un proyecto de tests específico para las clases de buenas prácticas. Se crea como proyecto nuevo sin modificar los proyectos de tests existentes.
 
 **Errores comunes:**
 
@@ -3851,7 +3851,7 @@ Abre `tests/AceriaApp.BuenasPracticas.Tests/AceriaApp.BuenasPracticas.Tests.cspr
 
 Ejecuta `dotnet sln AceriaApp.sln list` y confirma que los proyectos de la etapa están incluidos en la misma solución. No agregues la referencia dos veces; restaura con `dotnet restore AceriaApp.sln` si Visual Studio no resuelve el proyecto.
 
-la referencia permite que el proyecto de tests acceda a las clases de BuenasPracticas del proyecto monolítico.
+La referencia permite que el proyecto de tests acceda a las clases de BuenasPracticas del proyecto monolítico.
 
 **Errores comunes:**
 
@@ -4013,7 +4013,7 @@ public class CatalogoPracticasTests
 
 `CatalogoPracticasTests` asegura que la clasificación de la colección devuelve los elementos correctos. No prueba que se hayan aplicado prácticas en un sistema real: para eso sería necesario contrastar código, tests y comportamiento. Esta limitación forma parte de la interpretación del resultado.
 
-el test verifica que el catálogo filtra correctamente las prácticas aplicadas y las pendientes.
+El test verifica que el catálogo filtra correctamente las prácticas aplicadas y las pendientes.
 
 **Errores comunes:**
 
@@ -4181,7 +4181,7 @@ En tu copia del repositorio localiza las carpetas `docs` de `1.4-organizacion-so
 
 Los documentos heredados deben ser idénticos; el `README.md` de 1.5 puede ser diferente porque explica la etapa actual. Registra el resultado y no modifiques los originales de `1.4-organizacion-solucion` para forzar igualdad.
 
-la comparación con fc verifica que los documentos del punto 1.4 no se han modificado.
+La comparación con fc verifica que los documentos del punto 1.4 no se han modificado.
 
 **Errores comunes:**
 
@@ -4199,7 +4199,7 @@ Desde `M01_INTRODUCCION_MICROSERVICIOS/PROYECTO` ejecuta `tree /F 1.5-buenas-pra
 
 En `tests/AceriaApp.BuenasPracticas.Tests` localiza las pruebas del validador y catálogo; en `docs` localiza `buenas-practicas.md`, `ADR-005-buenas-practicas.md` y los documentos heredados. Distingue los archivos fuente de las carpetas temporales `bin` y `obj`, que no deben incorporarse como entregables.
 
-la verificación estructural confirma que el punto 1.5 añade archivos nuevos sin modificar los existentes.
+La verificación estructural confirma que el punto 1.5 añade archivos nuevos sin modificar los existentes.
 
 **Errores comunes:**
 
@@ -4235,7 +4235,7 @@ Desde tu copia personal (no la rama del profesor) ejecuta `git status` para iden
 
 Realiza el commit del punto 1.5 con un mensaje descriptivo de buenas prácticas declaradas de la solución; no sobrescribas los commits de etapas previas. Comprueba `git log -1 --oneline`, `git status` y conserva el resultado de los 23 tests acumulados como evidencia final.
 
-el commit del punto 1.5 cierra el módulo 1. Los cinco commits consecutivos permiten comparar el estado del proyecto entre puntos consecutivos y entre módulos completos.
+El commit del punto 1.5 cierra el módulo 1. Los cinco commits consecutivos permiten comparar el estado del proyecto entre puntos consecutivos y entre módulos completos.
 
 **Errores comunes:**
 
