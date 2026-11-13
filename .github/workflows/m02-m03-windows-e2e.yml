@@ -1,0 +1,118 @@
+name: M02 M03 - Practicas Windows SQL HTTP
+
+on:
+  push:
+    branches: [version-corregida]
+    paths:
+      - 'M02_APIS_REST_ASPNET_CORE/PRACTICAS/M02_PRACTICAS.md'
+      - 'M03_ARQUITECTURA_HEXAGONAL/PRACTICAS/M03_PRACTICAS.md'
+      - 'M02_APIS_REST_ASPNET_CORE/PROYECTO/**'
+      - 'M03_ARQUITECTURA_HEXAGONAL/PROYECTO/**'
+      - 'tools/validar_practicas_m02_m03.py'
+      - '.github/workflows/m02-m03-windows-e2e.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  m02-windows:
+    name: Prácticas M02 - xUnit, SQL y HTTP
+    runs-on: windows-2022
+    timeout-minutes: 55
+    env:
+      ACERIA_TEST_SQLSERVER: 'Server=.\SQLEXPRESS;Database=master;Trusted_Connection=True;TrustServerCertificate=True;Encrypt=False'
+      ACERIA_SQL_ORIGIN: 'WindowsSQLExpress'
+    steps:
+      - name: Permitir rutas largas
+        shell: pwsh
+        run: git config --global core.longpaths true
+      - uses: actions/checkout@v4
+        with:
+          ref: version-corregida
+          sparse-checkout: |
+            M02_APIS_REST_ASPNET_CORE
+            M03_ARQUITECTURA_HEXAGONAL
+            tools
+          sparse-checkout-cone-mode: true
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Preparar SQL Server Express real
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $service = Get-Service -Name 'MSSQL$SQLEXPRESS' -ErrorAction SilentlyContinue
+          if ($null -eq $service) {
+            choco install sql-server-express --version=2022.16.0.20260305 -y --no-progress
+            if ($LASTEXITCODE -notin @(0,3010,1641)) { throw "Falló la instalación de SQL Express" }
+            $service = Get-Service -Name 'MSSQL$SQLEXPRESS' -ErrorAction Stop
+          }
+          if ($service.Status -ne 'Running') { Start-Service -Name 'MSSQL$SQLEXPRESS' }
+          if ((Get-Service -Name 'MSSQL$SQLEXPRESS').Status -ne 'Running') { throw "SQL Express no disponible" }
+          Write-Host 'SQL Server Express activo'
+      - name: Auditar y ejecutar M02
+        shell: pwsh
+        run: |
+          $env:ACERIA_SQL_EVIDENCE_DIR = Join-Path $env:RUNNER_TEMP 'evidencia-sql-m02'
+          python tools/validar_practicas_m02_m03.py --module 2 --report M02_WINDOWS_VALIDACION.md
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: m02-validacion-windows
+          path: |
+            M02_WINDOWS_VALIDACION.md
+          retention-days: 30
+  m03-windows:
+    name: Prácticas M03 - xUnit, SQL y HTTP
+    runs-on: windows-2022
+    timeout-minutes: 55
+    env:
+      ACERIA_TEST_SQLSERVER: 'Server=.\SQLEXPRESS;Database=master;Trusted_Connection=True;TrustServerCertificate=True;Encrypt=False'
+      ACERIA_SQL_ORIGIN: 'WindowsSQLExpress'
+    steps:
+      - name: Permitir rutas largas
+        shell: pwsh
+        run: git config --global core.longpaths true
+      - uses: actions/checkout@v4
+        with:
+          ref: version-corregida
+          sparse-checkout: |
+            M02_APIS_REST_ASPNET_CORE
+            M03_ARQUITECTURA_HEXAGONAL
+            tools
+          sparse-checkout-cone-mode: true
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Preparar SQL Server Express real
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $service = Get-Service -Name 'MSSQL$SQLEXPRESS' -ErrorAction SilentlyContinue
+          if ($null -eq $service) {
+            choco install sql-server-express --version=2022.16.0.20260305 -y --no-progress
+            if ($LASTEXITCODE -notin @(0,3010,1641)) { throw "Falló la instalación de SQL Express" }
+            $service = Get-Service -Name 'MSSQL$SQLEXPRESS' -ErrorAction Stop
+          }
+          if ($service.Status -ne 'Running') { Start-Service -Name 'MSSQL$SQLEXPRESS' }
+          if ((Get-Service -Name 'MSSQL$SQLEXPRESS').Status -ne 'Running') { throw "SQL Express no disponible" }
+          Write-Host 'SQL Server Express activo'
+      - name: Auditar y ejecutar M03
+        shell: pwsh
+        run: |
+          $env:ACERIA_SQL_EVIDENCE_DIR = Join-Path $env:RUNNER_TEMP 'evidencia-sql-m03'
+          python tools/validar_practicas_m02_m03.py --module 3 --report M03_WINDOWS_VALIDACION.md
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: m03-validacion-windows
+          path: |
+            M03_WINDOWS_VALIDACION.md
+          retention-days: 30
