@@ -15,6 +15,10 @@ AUTHOR = "JAIME GALLO"
 HEADER_HEIGHT = 46.0
 MIN_FREE_TOP = 48.0
 ROOT = Path(__file__).resolve().parents[1]
+PRACTICE_PDFS = (
+    "M01_INTRODUCCION_MICROSERVICIOS/PRACTICAS/M01_PRACTICAS.pdf",
+)
+
 PDFS = (
     "M01_INTRODUCCION_MICROSERVICIOS/TEORIA/M01_TEORIA.pdf",
     "M02_APIS_REST_ASPNET_CORE/TEORIA/M02_TEORIA.pdf",
@@ -27,8 +31,9 @@ PDFS = (
 )
 
 
-def header_lines(module: int) -> tuple[str, str, str]:
-    return (COURSE, f"TEORÍA MÓDULO {module}", AUTHOR)
+def header_lines(module: int, practice: bool = False) -> tuple[str, str, str]:
+    kind = "PRÁCTICAS" if practice else "TEORÍA"
+    return (COURSE, f"{kind} MÓDULO {module}", AUTHOR)
 
 
 def top_text(page: fitz.Page) -> str:
@@ -37,9 +42,9 @@ def top_text(page: fitz.Page) -> str:
     )
 
 
-def header_present(page: fitz.Page, module: int) -> bool:
+def header_present(page: fitz.Page, module: int, practice: bool = False) -> bool:
     text = top_text(page).upper()
-    return all(line in text for line in header_lines(module))
+    return all(line in text for line in header_lines(module, practice))
 
 
 def free_top(page: fitz.Page) -> float:
@@ -53,11 +58,11 @@ def free_top(page: fitz.Page) -> float:
     return min(bounds, default=float(page.rect.height))
 
 
-def draw_header(page: fitz.Page, module: int) -> None:
+def draw_header(page: fitz.Page, module: int, practice: bool = False) -> None:
     width = page.rect.width
     for value, font, size, baseline in (
         (COURSE, "hebo", 8.5, 13.0),
-        (f"TEORÍA MÓDULO {module}", "hebo", 8.3, 25.2),
+        (f"{'PRÁCTICAS' if practice else 'TEORÍA'} MÓDULO {module}", "hebo", 8.3, 25.2),
         (AUTHOR, "hebo", 7.9, 37.2),
     ):
         text_width = fitz.get_text_length(value, fontname=font, fontsize=size)
@@ -93,7 +98,7 @@ def copy_uri_links(target: fitz.Page, original: fitz.Page,
 
 
 def reframe(source: fitz.Document, module: int,
-            colliding: set[int]) -> fitz.Document:
+            colliding: set[int], practice: bool = False) -> fitz.Document:
     """Si hay texto en la zona superior, conserva la página A4 y abre espacio.
 
     Mantiene texto seleccionable, vectores e imágenes; no recorta el pie.
@@ -112,17 +117,18 @@ def reframe(source: fitz.Document, module: int,
             scale, dx, dy = 1.0, 0.0, 0.0
             target.show_pdf_page(original.rect, source, original.number)
         copy_uri_links(target, original, scale, dx, dy)
-        draw_header(target, module)
+        draw_header(target, module, practice)
     if source.metadata:
         output.set_metadata(source.metadata)
     return output
 
 
-def validate(document: fitz.Document, module: int, name: str) -> None:
+def validate(document: fitz.Document, module: int, name: str,
+             practice: bool = False) -> None:
     assert len(document) > 0, f"Documento vacío: {name}"
     for page_number, page in enumerate(document, 1):
         text = top_text(page)
-        for line in header_lines(module):
+        for line in header_lines(module, practice):
             assert text.count(line) == 1, (
                 f"Cabecera ausente o repetida en {name}, página {page_number}: {line}"
             )
@@ -131,16 +137,17 @@ def validate(document: fitz.Document, module: int, name: str) -> None:
         )
 
 
-def process(path: Path, module: int, only_check: bool) -> tuple[int, int, int]:
+def process(path: Path, module: int, only_check: bool,
+            practice: bool = False) -> tuple[int, int, int]:
     if not path.is_file():
         raise FileNotFoundError(f"Falta el PDF: {path}")
     source = fitz.open(path)
     if source.needs_pass:
         raise ValueError(f"PDF protegido: {path}")
-    marked = sum(header_present(p, module) for p in source)
+    marked = sum(header_present(p, module, practice) for p in source)
     pages = len(source)
     if only_check or marked == pages:
-        validate(source, module, path.name)
+        validate(source, module, path.name, practice)
         source.close()
         return pages, marked, 0
     if marked:
@@ -148,12 +155,12 @@ def process(path: Path, module: int, only_check: bool) -> tuple[int, int, int]:
 
     colliding = {p.number for p in source if free_top(p) < MIN_FREE_TOP}
     if colliding:
-        output = reframe(source, module, colliding)
+        output = reframe(source, module, colliding, practice)
     else:
         output = source
         for page in output:
-            draw_header(page, module)
-    validate(output, module, path.name)
+            draw_header(page, module, practice)
+    validate(output, module, path.name, practice)
 
     temp = path.with_name(path.stem + ".cabecera-tmp.pdf")
     output.save(temp, garbage=4, deflate=True)
@@ -162,19 +169,21 @@ def process(path: Path, module: int, only_check: bool) -> tuple[int, int, int]:
     source.close()
     temp.replace(path)
     with fitz.open(path) as verified:
-        validate(verified, module, path.name)
+        validate(verified, module, path.name, practice)
     return pages, marked, len(colliding)
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--check", action="store_true")
+    parser.add_argument("--practicas", action="store_true")
     parser.add_argument("--root", type=Path, default=ROOT)
     args = parser.parse_args()
     all_pages = 0
-    for module, relative in enumerate(PDFS, 1):
+    selected = PRACTICE_PDFS if args.practicas else PDFS
+    for module, relative in enumerate(selected, 1):
         pages, previous, adjusted = process(
-            args.root / relative, module, args.check
+            args.root / relative, module, args.check, args.practicas
         )
         all_pages += pages
         print(
@@ -182,7 +191,7 @@ def main() -> None:
             f"ya marcadas {previous}; páginas adaptadas {adjusted}"
         )
     print(
-        f"VALIDADO: {all_pages} páginas de 8 PDF; "
+        f"VALIDADO: {all_pages} páginas de {len(selected)} PDF; "
         "cabecera del curso, módulo y autor presente en todas"
     )
 
