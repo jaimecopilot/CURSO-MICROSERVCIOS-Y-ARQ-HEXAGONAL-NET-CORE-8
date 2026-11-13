@@ -54,9 +54,9 @@ Servicio A ← respuesta HTTP ← Servicio B.
 
 El esquema representa los dos sentidos del intercambio: la petición sale del servicio A hacia el B y la respuesta regresa al solicitante antes de que pueda proseguir la operación dependiente.
 
-En este recorrido, el emisor espera la respuesta; también el receptor debe estar disponible en el momento de la petición, y finalmente la comunicación tiene un tiempo de espera máximo. En conjunto, estas condiciones hacen que la interacción sea simple pero introducen acoplamiento temporal.
+En este recorrido, el emisor espera la respuesta; también el receptor debe estar disponible en el momento de la petición, y finalmente la comunicación tiene un tiempo de espera máximo. La interacción resulta sencilla de comprender, pero también introduce una dependencia temporal que deberá controlarse.
 
-En la práctica, el flujo de datos es directo y fácil de seguir y el fallo del servicio destino afecta al servicio origen. Así, la comunicación sea simple pero también frágil ante fallos.
+En la práctica, el flujo de datos es directo y fácil de seguir y el fallo del servicio destino afecta al servicio origen. De ese modo, la comunicación resulta simple pero también frágil ante fallos.
 
 Distingue dos niveles de asincronía. En el nivel del programa, un método devuelve Task y libera el hilo mientras espera E/S. En el nivel del negocio, Producción sigue necesitando el resultado de Inventario para decidir su siguiente paso. Usar async no rompe esa dependencia temporal.
 
@@ -166,7 +166,7 @@ builder.Services.AddHttpClient<IClienteInventario, ClienteInventarioHttp>(client
 
 `client.DefaultRequestHeaders.Accept.ParseAdd("application/json");` solicita una representación JSON mediante Accept; `});` cierra el registro de dependencias.
 
-La configuración se centraliza en un único punto. También la factoría administra los manejadores subyacentes y sus conexiones. Así, la comunicación síncrona sea robusta y mantenible.
+La configuración se centraliza en un único punto. También la factoría administra los manejadores subyacentes y sus conexiones. De ese modo, la comunicación síncrona resulta robusta y mantenible.
 
 Centralizar configuración permite cambiar el destino por entorno sin recompilar el dominio. La configuración debe validar que la URL existe, es absoluta y usa un esquema admitido. Un operador debería descubrir un error de configuración al arrancar, no tras la primera petición de un usuario.
 
@@ -191,7 +191,7 @@ Servicio A espera → Servicio B no responde → Servicio A falla.
 
 El esquema contrasta una respuesta recibida con la imposibilidad de completar la operación cuando el destino no contesta; no implica que las demás funciones del servicio de origen dejen de atender peticiones.
 
-En la práctica, la disponibilidad del servicio destino afecta al servicio origen y la latencia del servicio destino afecta a la latencia del servicio origen. Así, la comunicación síncrona sea directa pero también frágil.
+En la práctica, la disponibilidad del servicio destino afecta al servicio origen y la latencia del servicio destino afecta a la latencia del servicio origen. De ese modo, la comunicación síncrona resulta directa pero también frágil.
 
 Una cadena síncrona suma dependencias de tiempo y disponibilidad. Si A necesita B y B necesita C, el usuario de A observa retrasos y fallos de toda la cadena. El diseño debe justificar cada dependencia antes de añadir políticas que solo intentan amortiguarla.
 
@@ -218,7 +218,7 @@ Disponibilidad.
 
 `Fallo en cascada.` primer riesgo; `Latencia acumulada.` segundo riesgo; `Saturación.` tercer riesgo; `Disponibilidad.` cuarto riesgo.
 
-Los riesgos tienen dos consecuencias prácticas. La comunicación síncrona requiere políticas de resiliencia; por su parte, la comunicación síncrona requiere monitorización. Así, los riesgos se mitiguen con timeouts, reintentos y circuit breakers.
+La comunicación síncrona requiere políticas de resiliencia; por su parte, la comunicación síncrona requiere monitorización. De ese modo, los riesgos se mitigan con timeouts, reintentos y circuit breakers.
 
 Un fallo en cascada aparece cuando cada servicio conserva demasiadas solicitudes mientras espera a otro. Aunque await no bloquee un hilo durante E/S, las tareas pendientes consumen memoria, conexiones, tiempo y capacidad de concurrencia. La programación asíncrona no sustituye el control de carga.
 
@@ -244,7 +244,7 @@ response.EnsureSuccessStatusCode();
 
 `using var limite = CancellationTokenSource.CreateLinkedTokenSource(ct);` combina cancelación del llamador con un presupuesto local de espera; `limite.CancelAfter(TimeSpan.FromSeconds(2));` solicita cancelación al agotarse dos segundos; no deshace trabajo remoto ya confirmado; `using var response = await httpClient.GetAsync("api/v1/materiales/CHAPA-3MM", limite.Token);` propaga el presupuesto a la llamada y dispone la respuesta; `response.EnsureSuccessStatusCode();` no transforma una respuesta de error en éxito; los reintentos se deciden por separado.
 
-La comunicación síncrona se vuelve más robusta; a la vez, la comunicación síncrona se vuelve más compleja. Así, los riesgos se controlen a costa de añadir código.
+La comunicación síncrona se vuelve más robusta; a la vez, la comunicación síncrona se vuelve más compleja. De ese modo, los riesgos se controlan a costa de añadir código.
 
 Ordena las decisiones: presupuesto total, timeout por intento, errores transitorios, número máximo de reintentos, espera con jitter y límites de concurrencia. Un reintento es una nueva ejecución y exige saber si repetir la operación puede alterar el negocio.
 
@@ -269,7 +269,7 @@ Si Servicio B falla → Servicio A debe compensar.
 
 El diagrama presenta una operación distribuida hipotética en la que el segundo servicio descuenta existencias y el primero podría necesitar compensar un cambio local. No describe una reserva implementada por AceriaApp.
 
-El ejemplo de crear una orden y descontar stock es conceptual; no corresponde a una capacidad implementada del módulo. La operación distribuida no es atómica. También la compensación se implementa explícitamente. Así, el sistema mantenga la coherencia a costa de añadir complejidad.
+El ejemplo de crear una orden y descontar stock es conceptual; no corresponde a una capacidad implementada del módulo. La operación distribuida no es atómica. También la compensación se implementa explícitamente. Esto permite que el sistema mantenga la coherencia a costa de añadir complejidad.
 
 La regla importante es qué datos deben cambiar juntos. Dos servicios tienen normalmente transacciones locales diferentes. Una respuesta HTTP de éxito de Inventario no hace atómico un commit posterior de Producción; un fallo entre ambos deja un estado intermedio que necesita tratamiento.
 
@@ -303,7 +303,7 @@ Consistencia: diseñar invariantes, no inferirlas del protocolo.
 
 `Trabajo diferible: considerar mensajería.` el procesamiento diferido puede reducir dependencia temporal; `Consistencia: diseñar invariantes, no inferirlas del protocolo.` la consistencia depende de las fronteras de datos y coordinación.
 
-En la práctica, la comunicación síncrona se aplica donde aporta valor y la comunicación asíncrona se aplica donde la síncrona no es adecuada. Así, el sistema elija el estilo adecuado a cada operación.
+En la práctica, la comunicación síncrona se aplica donde aporta valor y la comunicación asíncrona se aplica donde la síncrona no es adecuada. Así, el sistema puede elegir el estilo adecuado a cada operación.
 
 Formula la pregunta del actor antes de elegir transporte: «¿qué hay ahora?», «¿se aceptó mi solicitud?» y «¿terminó el trabajo?» son preguntas diferentes. Una respuesta HTTP puede contestar cualquiera si el contrato define su alcance, mientras un evento comunica un hecho a destinatarios desacoplados.
 
@@ -390,7 +390,7 @@ El mensaje pasa del productor al broker y de allí al consumidor. El proceso emi
 
 El publicador no espera el efecto de negocio del consumidor, el publicador y el consumidor no necesitan estar disponibles al mismo tiempo y el broker almacena y enruta mensajes según la topología y las políticas configuradas; la aplicación sigue siendo responsable de publicar, confirmar, reintentar y procesar correctamente. En conjunto, estas condiciones hacen que la interacción sea desacoplada temporalmente.
 
-El publicador no depende de la disponibilidad del consumidor; a la vez, el consumidor no necesita invocar una instancia concreta del publicador, aunque depende del significado, esquema y reglas de evolución de su contrato. Así, el sistema sea más resiliente y más evolutivo.
+El publicador no depende de la disponibilidad del consumidor; a la vez, el consumidor no necesita invocar una instancia concreta del publicador, aunque depende del significado, esquema y reglas de evolución de su contrato. En consecuencia, el sistema resulta más resiliente y más evolutivo.
 
 El desacoplamiento temporal desplaza la espera, no elimina dependencias. Producción no espera el efecto remoto, pero necesita confirmar su propio estado y conservar el evento pendiente. El publicador necesita después conectarse al broker, y el consumidor necesita su base de datos.
 
@@ -413,7 +413,7 @@ Eventos de integración → entre contextos.
 
 La primera relación se mantiene dentro del contexto que origina el hecho; la segunda publica una representación apropiada para que otro contexto lo conozca.
 
-El modelo del dominio no conoce el broker. También los eventos de integración se diseñan como contratos públicos. Así, el dominio sea independiente de la infraestructura de mensajería.
+El modelo del dominio no conoce el broker. También los eventos de integración se diseñan como contratos públicos. Esto contribuye a que el dominio sea independiente de la infraestructura de mensajería.
 
 Un evento de dominio expresa un hecho útil dentro del modelo; un evento de integración publica una parte estable de ese hecho para otros contextos. No es obligatorio serializar directamente el objeto interno. La traducción permite ocultar detalles que cambiarán con el diseño del agregado.
 
@@ -589,7 +589,7 @@ Curso: outbox + confirms + ack manual + inbox transaccional.
 
 `Curso: outbox + confirms + ack manual + inbox transaccional.` combina mecanismos de transporte con atomicidad y deduplicación locales.
 
-Las garantías de entrega tienen dos consecuencias prácticas. La entrega como mínimo una vez requiere idempotencia en el consumidor; a la vez, un efecto local único requiere deduplicación persistente y una transacción que incluya el efecto. Un registro inbox separado de la actualización de negocio deja una ventana de pérdida o duplicación. Así, el sistema elija la garantía adecuada a cada operación.
+La entrega como mínimo una vez requiere idempotencia en el consumidor; a la vez, un efecto local único requiere deduplicación persistente y una transacción que incluya el efecto. Un registro inbox separado de la actualización de negocio deja una ventana de pérdida o duplicación. Así, el sistema puede elegir la garantía adecuada a cada operación.
 
 Las confirmaciones del publicador cubren el tramo hacia el broker; los acknowledgements del consumidor cubren el tramo de entrega hacia la aplicación. Ninguna de ellas convierte automáticamente dos bases de datos y un broker en una transacción única.
 
@@ -620,7 +620,7 @@ Resiliencia.
 
 `Desacoplamiento temporal.` primer beneficio; `Desacoplamiento de conocimiento.` segundo beneficio; `Escalabilidad.` tercer beneficio; `Resiliencia.` cuarto beneficio.
 
-Los beneficios tienen dos consecuencias prácticas. El sistema se adapta mejor a las cargas desiguales. También el sistema tolera mejor los fallos. Así, el sistema sea más robusto.
+El sistema se adapta mejor a las cargas desiguales. También el sistema tolera mejor los fallos. En consecuencia, el sistema resulta más robusto.
 
 Una cola permite desacoplar ritmo de llegada y ritmo de trabajo durante un intervalo. Esa elasticidad es útil cuando Inventario puede ponerse al día después de un pico. El beneficio se mide por retraso tolerable y recuperación, no solo por haber introducido un broker.
 
@@ -647,7 +647,7 @@ Observabilidad.
 
 `Complejidad.` primer coste; `Consistencia eventual.` segundo coste; `Idempotencia.` tercer coste; `Observabilidad.` cuarto coste.
 
-Los costes tienen dos consecuencias prácticas. En la práctica, la comunicación asíncrona no se aplica en todos los contextos y su aplicación se concentra donde aporta valor. Así, el esfuerzo se invierta donde produce beneficio.
+En la práctica, la comunicación asíncrona no se aplica en todos los contextos y su aplicación se concentra donde aporta valor. Conviene concentrar el esfuerzo allí donde aporte un beneficio real.
 
 La consistencia eventual significa que una vista derivada puede retrasarse respecto de la fuente y debe converger cuando el sistema se recupera. No equivale a aceptar cualquier divergencia indefinida. El contrato debe definir un plazo razonable y cómo detectar una planificación que no progresa.
 
@@ -735,7 +735,7 @@ La representación compara el intercambio HTTP, la propagación por eventos y la
 
 Se toma por interacción y no por sistema, se basa en criterios explícitos y se documenta para que sea trazable. En conjunto, estas condiciones hacen que la elección sea razonada y que se revise cuando cambien las circunstancias.
 
-El sistema se adapta a las necesidades de cada interacción; a la vez, la arquitectura es más flexible. Así, el sistema sea coherente y mantenible.
+El sistema se adapta a las necesidades de cada interacción; a la vez, la arquitectura es más flexible. En consecuencia, el sistema resulta coherente y mantenible.
 
 La unidad de decisión es una interacción con una necesidad concreta. Elegir «todos los servicios usan eventos» oculta diferencias entre consultar un dato, aceptar una intención y notificar un hecho. Una misma orden puede recorrer las tres formas a lo largo de su vida.
 
@@ -761,7 +761,7 @@ Resultado más tarde: estado consultable y plazo observable.
 
 `Respuesta que necesita el actor:` distingue el significado de la respuesta; `Resultado remoto ahora: evaluar petición-respuesta.` el siguiente paso depende del resultado; `Aceptación duradera ahora: HTTP 202 y trabajo posterior.` aceptar no equivale a completar; `Resultado más tarde: estado consultable y plazo observable.` el retraso requiere una experiencia de usuario y una política de recuperación.
 
-Una interacción puede devolver aceptación inmediata y completar el trabajo después. También un proceso de fondo también puede necesitar una respuesta HTTP para dar su siguiente paso. Así, el estilo se ajuste a la naturaleza de la operación.
+Una interacción puede devolver aceptación inmediata y completar el trabajo después. Un proceso de fondo también puede necesitar una respuesta HTTP para dar su siguiente paso. De ese modo, el estilo se ajusta a la naturaleza de la operación.
 
 La palabra «inmediata» requiere un plazo y un significado. Un actor puede necesitar un número de seguimiento en dos segundos y aceptar el resultado final después. Ese diseño permite una confirmación síncrona de aceptación y procesamiento asíncrono sin engañar al usuario.
 
@@ -819,7 +819,7 @@ HTTP o eventos: no sustituyen la frontera de consistencia.
 
 `HTTP o eventos: no sustituyen la frontera de consistencia.` ambos estilos requieren un diseño explícito de los datos.
 
-En la práctica, una Saga coordina transacciones locales con compensaciones y estados intermedios; no proporciona aislamiento ni atomicidad ACID global. Two-Phase Commit es una coordinación transaccional diferente, con participantes compatibles y costes de disponibilidad y la consistencia eventual exige convergencia y recuperación; algunas operaciones necesitan compensación y otras solo una proyección idempotente. Así, el estilo se ajuste a los requisitos de consistencia.
+Una Saga coordina transacciones locales con compensaciones y estados intermedios, sin proporcionar aislamiento ni atomicidad ACID global. Two-Phase Commit constituye otra forma de coordinación, con participantes compatibles y costes de disponibilidad. Por su parte, la consistencia eventual exige convergencia y recuperación; algunas operaciones necesitan compensación y otras solo una proyección idempotente. De ese modo, el estilo se ajusta a los requisitos de consistencia.
 
 Una invariante necesita un propietario capaz de hacerla cumplir en su frontera transaccional. Si no se permite que el stock disponible baje de cero, consultar desde Producción y guardar en otra base no protege esa regla. Inventario necesitaría una operación autoritativa de reserva o consumo.
 
@@ -853,7 +853,7 @@ Reutilizar conexiones en HTTP y en mensajería.
 
 `Medir percentiles de latencia, backlog y edad del pendiente.` hace visible la saturación y el retraso; `Reutilizar conexiones en HTTP y en mensajería.` evita deducir el protocolo solo de la frecuencia.
 
-Las tasas y tamaños condicionan capacidad, almacenamiento y límites del broker; por su parte, hay que evaluar la concurrencia y reutilización de conexiones en ambos estilos. Así, el estilo se ajuste a la carga del sistema.
+Las tasas y tamaños condicionan capacidad, almacenamiento y límites del broker; por su parte, hay que evaluar la concurrencia y reutilización de conexiones en ambos estilos. De ese modo, el estilo se ajusta a la carga del sistema.
 
 La capacidad se razona con tasas y tiempo. Si entran cien eventos por segundo y salen ochenta, se acumulan veinte cada segundo mientras persista esa diferencia. Una cola ofrece un lugar para esperar, pero aumenta almacenamiento y latencia del resultado final.
 
@@ -882,7 +882,7 @@ Mensajes antiguos pueden permanecer pendientes.
 
 `Mensajes antiguos pueden permanecer pendientes.` el consumidor debe tolerar contratos emitidos antes de su despliegue.
 
-La autonomía requiere contratos estables; a la vez, incluso un equipo coordinado necesita compatibilidad durante un despliegue gradual y con mensajes antiguos pendientes. Así, el estilo se ajuste a la organización del equipo.
+La autonomía requiere contratos estables; a la vez, incluso un equipo coordinado necesita compatibilidad durante un despliegue gradual y con mensajes antiguos pendientes. De ese modo, el estilo se ajusta a la organización del equipo.
 
 La autonomía real depende de poder desplegar cambios compatibles, identificar propietarios y mantener contratos antiguos durante la transición. El transporte no elimina conversaciones entre equipos sobre significado, datos obligatorios o eliminación de campos.
 
@@ -912,7 +912,7 @@ Asignar responsables y comprobar restauración.
 
 `Recuperar mensajes inválidos o pendientes.` un error permanente necesita tratamiento definido; `Asignar responsables y comprobar restauración.` la operación incluye personas y procedimientos.
 
-La madurez operativa requiere inversión en herramientas. También la falta de madurez requiere simplicidad. Así, el estilo se ajuste a la capacidad del equipo.
+La madurez operativa requiere inversión en herramientas. También la falta de madurez requiere simplicidad. De ese modo, el estilo se ajusta a la capacidad del equipo.
 
 Operar mensajería significa saber qué hacer cuando el trabajo deja de avanzar. Tener un broker encendido no demuestra que las rutas existan, el publicador reciba confirmación o el consumidor pueda confirmar SQL. Cada tramo necesita señales observables.
 
@@ -976,7 +976,7 @@ Métricas y criterio para revisar la decisión.
 
 `Política de fallo, duplicados y recuperación.` explica cómo se mantiene la corrección ante fallos; `Métricas y criterio para revisar la decisión.` hace que la decisión sea revisable con evidencia.
 
-La decisión se basa en criterios explícitos; por su parte, la decisión se documenta y se revisa. Así, la elección sea razonada y trazable.
+La decisión se basa en criterios explícitos; por su parte, la decisión se documenta y se revisa. De ese modo, la elección resulta razonada y trazable.
 
 | Criterio | Petición-respuesta HTTP | Eventos y procesamiento diferido |
 |---|---|---|
