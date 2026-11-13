@@ -93,7 +93,7 @@ app.MapGet("/api/v1/ordenes", async (AceriaDbContext db) =>
 El ejemplo vincula una ruta GET con una consulta de EF Core sin seguimiento de cambios. Al devolver la colección el framework la serializa según la configuración de salida. La cabecera `Accept` solo influye si el servidor dispone de los formatos solicitados; no demuestra que el endpoint ofrezca negociación con varios serializadores.
 
 
-La representación tiene dos consecuencias prácticas. La primera es que la misma URI puede devolver formatos distintos según la cabecera Accept. La segunda es que el servidor puede devolver 406 Not Acceptable si no puede generar ningún formato solicitado. La negociación de contenido es una de las sub-restricciones de la interfaz uniforme. Su aplicación correcta evita que el cliente tenga que usar URIs distintas para formatos distintos.
+Una representación puede ofrecer distintos formatos desde una misma URI si el servidor dispone de los serializadores correspondientes. El cliente expresa sus preferencias con `Accept` y, cuando ninguno de los formatos solicitados está disponible, la API puede devolver `406 Not Acceptable`. En AceriaApp el laboratorio utiliza JSON, de modo que no debemos confundir el mecanismo de negociación con la implementación efectiva de múltiples representaciones. La URI identifica el recurso; el formato describe cómo se intercambia su información.
 
 
 ---
@@ -115,7 +115,7 @@ Métodos HTTP:
 La elección de método determina qué efecto puede esperar un cliente, con independencia del nombre del método C# que se ejecute internamente. La idempotencia de PUT y DELETE se refiere a su efecto sobre el recurso; un PATCH que asigna una cantidad concreta podría ser idempotente, mientras que uno que incrementa la cantidad no lo sería.
 
 
-La semántica de los métodos tiene dos consecuencias prácticas. La primera es que los métodos seguros pueden ser cacheados por intermediarios sin riesgo. La segunda es que los métodos idempotentes pueden ser reintentados sin riesgo de duplicación. La combinación de ambas propiedades determina qué métodos pueden reintentarse automáticamente. GET, PUT y DELETE pueden reintentarse. POST y PATCH no pueden reintentarse sin una clave de idempotencia. La semántica correcta de los métodos es la base de la comunicación fiable.
+La seguridad y la idempotencia ayudan a razonar sobre cachés y reintentos, pero no significan que cualquier operación pueda repetirse sin condiciones. GET está definido como método seguro; PUT y DELETE son idempotentes respecto al efecto esperado, aunque distintas peticiones puedan recibir estados HTTP diferentes. Un POST de creación necesita protección adicional frente a duplicados, y PATCH debe analizarse según si establece un valor o aplica un cambio acumulativo. La caché, por otra parte, depende de la semántica HTTP y de cabeceras y políticas concretas, no solo del verbo.
 
 
 ---
@@ -163,7 +163,7 @@ Códigos de estado habituales:
 Los estados de éxito, error de cliente y error interno permiten distinguir una creación, una búsqueda sin resultado y un fallo inesperado. La regla de AceriaApp es seleccionar el código según la situación comprobada, no devolver un estado fijo para todos los caminos. Cuando existe un error describible, puede acompañarse de un cuerpo estructurado sin filtrar detalles del servidor.
 
 
-La elección del código de estado tiene dos consecuencias prácticas. La primera es que el cliente puede reaccionar de forma distinta a cada código sin analizar el cuerpo. La segunda es que los intermediarios pueden cachear o no cachear según el código. Los códigos 2xx son cacheables según las cabeceras. Los códigos 4xx y 5xx no son cacheables por defecto. La elección correcta del código es la base de la comunicación predecible entre cliente y servidor.
+El cliente utiliza el estado HTTP para distinguir resultados y decidir qué hacer después de una solicitud. Un 201 señala creación, un 404 informa de ausencia y un 409 puede expresar una transición incompatible con el estado actual. Las cachés intermedias interpretan también códigos y directivas de respuesta, pero sería incorrecto afirmar que todos los 2xx son cacheables o que los 4xx jamás pueden almacenarse. La política efectiva depende del código, las cabeceras y el método. Por eso la respuesta debe describir el hecho ocurrido y no una categoría elegida arbitrariamente.
 
 
 ---
@@ -224,7 +224,7 @@ app.Run();
 El arranque de Minimal API configura el host y mapea dos rutas. En el GET individual, EF Core busca una orden por identificador y el manejador elige `Ok` o `NotFound`. El comportamiento real de la ruta se comprueba enviando peticiones con un identificador existente y otro ausente, no contando llamadas a `MapGet`.
 
 
-La configuración de la interfaz uniforme tiene dos consecuencias prácticas. La primera es que los endpoints siguen un patrón común que facilita la lectura. La segunda es que la documentación OpenAPI se genera automáticamente a partir de los endpoints. La combinación de ambas reduce el coste de mantenimiento y mejora la experiencia del consumidor. La interfaz uniforme es una de las propiedades más valiosas de REST.
+Una interfaz coherente permite que un consumidor comprenda el comportamiento de las rutas sin memorizar reglas diferentes para cada endpoint. En Minimal API, la definición de un manejador y sus metadatos puede utilizarse para generar documentación OpenAPI, siempre que estén registrados los servicios adecuados. Esta generación automática no garantiza que el documento describa correctamente cada resultado: si se declara un 201, las pruebas deben demostrar que la creación produce realmente ese código. La uniformidad de REST se construye con contratos y semántica, no con la apariencia similar de las funciones C#.
 
 
 ---
@@ -248,7 +248,7 @@ Alternativa sin anidar:
 Una relación puede representarse en la URI, en un enlace de la representación o mediante una consulta filtrada. La elección afecta a la estabilidad del contrato cuando evoluciona el modelo interno. Por eso conviene comparar cómo consultaría un cliente las líneas de una orden sin obligarlo a conocer todas las tablas intermedias.
 
 
-El anidamiento tiene dos consecuencias prácticas. La primera es que las relaciones se expresan de forma natural. La segunda es que las URIs pueden volverse largas si se anidan demasiados niveles. La regla práctica es anidar solo cuando la relación es de composición: la línea no existe sin la orden. Cuando la relación es de asociación, se usa un recurso independiente con parámetros de consulta. La distinción entre composición y asociación es la clave para decidir cuándo anidar.
+Anidar una ruta puede expresar con claridad que una línea pertenece a una orden de producción. La ventaja se pierde cuando la URI comienza a reflejar todas las relaciones del modelo interno y obliga al cliente a navegar por rutas excesivamente profundas. La composición fuerte puede justificar un subrecurso; una asociación independiente puede expresarse mejor mediante un recurso propio y filtros. La decisión debe responder a las operaciones que necesita el consumidor, no a copiar automáticamente la estructura de las claves foráneas de SQL Server.
 
 
 ---
@@ -302,7 +302,7 @@ Respuesta con metadatos:
 En la consulta paginada los parámetros deben terminar influyendo en `Skip`, `Take`, ordenación y filtros de la base. Si se devuelve un envoltorio con total de elementos y número de páginas, esos metadatos también deben corresponder a los datos realmente consultados. Dejar el ejemplo como simple cadena de URI no demuestra que exista paginación implementada.
 
 
-La paginación tiene dos consecuencias prácticas. La primera es que las respuestas se mantienen pequeñas y predecibles. La segunda es que el cliente puede construir la interfaz de navegación con los metadatos. La ausencia de paginación en colecciones grandes produce respuestas lentas, consumo elevado de memoria y dificultad para el cliente. La paginación es una buena práctica obligatoria en cualquier API REST que exponga colecciones.
+La paginación evita enviar colecciones enormes en una sola respuesta y permite al cliente navegar por resultados con un coste previsible. Cuando la API devuelve metadatos de total, página y tamaño, esos valores deben proceder de la misma consulta lógica que produjo los elementos, no de números fijos del ejemplo. Las colecciones con límites pequeños pueden no requerir un mecanismo complejo, pero una API que espera crecer debería definir desde temprano un tamaño máximo y un orden estable. La necesidad se demuestra mediante uso y carga, no con la etiqueta REST.
 
 
 ---
@@ -897,7 +897,7 @@ public class CrearOrdenRequestValidator : AbstractValidator<CrearOrdenRequest>
 El validador asocia condiciones a propiedades concretas del contrato y puede producir mensajes específicos. Una regla de longitud y otra de positividad son verificables con tests unitarios; las reglas que requieren conocer el estado persistido necesitan además un caso de uso o el dominio.
 
 
-La validación semántica tiene dos consecuencias prácticas. La primera es que cada campo tiene reglas explícitas y documentadas. La segunda es que los mensajes de error son específicos y útiles para el cliente. La combinación de ambas mejora la experiencia del consumidor y reduce el tiempo de integración. La validación semántica no comprueba reglas de negocio: comprueba que los valores son coherentes en el contexto del recurso. Las reglas de negocio se aplican en el siguiente nivel.
+La validación semántica permite declarar condiciones concretas sobre valores ya deserializados: una cantidad positiva, un nombre de cliente con longitud admisible o un identificador con formato correcto. Esas reglas ofrecen mejores mensajes al consumidor que un rechazo genérico. Sin embargo, no hay una frontera absoluta entre «semántica» y «negocio»: algunas condiciones aparentemente simples son invariantes del dominio y deben protegerse también fuera de HTTP. En AceriaApp separaremos el tratamiento de datos de entrada de las decisiones que dependen del ciclo de vida de una orden.
 
 
 ---
@@ -937,7 +937,7 @@ public class OrdenServicio
 El servicio de aplicación representa el lugar donde debe resolverse la operación con sus invariantes. Rechazar una cantidad o estado prohibido no debería depender exclusivamente de que una petición haya atravesado un filtro de ASP.NET Core.
 
 
-La validación de negocio tiene dos consecuencias prácticas. La primera es que se separa de la validación sintáctica y semántica. La segunda es que requiere acceso a datos externos al propio validador. La separación permite que la validación de negocio se implemente en la capa de aplicación o en el dominio, donde tiene acceso a los repositorios y a los servicios necesarios. La validación de negocio no se realiza en el validador de la petición porque el validador no tiene acceso a la base de datos. La separación por niveles es la clave para mantener la validación como un contrato claro y mantenible.
+Las reglas del negocio deben mantenerse aunque cambie el canal de entrada. Un caso de uso puede necesitar consultar el estado persistido o coordinar repositorios, pero eso no significa que cualquier validación deba acceder directamente a la base de datos ni que un validador nunca pueda realizar una comprobación asíncrona. Lo relevante es decidir quién posee la regla y evitar duplicarla de manera inconsistente en filtros HTTP. La aplicación y el dominio protegen las invariantes; el adaptador traduce sus rechazos a respuestas comprensibles para el consumidor.
 
 
 ---
@@ -1066,7 +1066,7 @@ RuleFor(x => x.Cantidad)
 Las reglas sobre cantidad producen mensajes útiles solo si se asocian a la condición concreta. Un consumidor debe poder comprender el límite y corregir la petición; un mensaje genérico impide distinguir una cantidad negativa de otra que exceda el máximo permitido.
 
 
-La adopción de mensajes específicos tiene dos consecuencias prácticas. La primera es que el cliente sabe exactamente qué ha fallado. La segunda es que el soporte puede reproducir el error con el mensaje. La localización se aplica de forma opcional según los requisitos del proyecto. El curso usa mensajes en español sin localización porque el alcance no lo requiere. La adopción de mensajes específicos es independiente de la localización y se aplica en todos los casos.
+Un mensaje de error específico reduce la incertidumbre del cliente: permite saber qué propiedad corregir o qué transición no está permitida. También facilita reproducir incidencias, siempre que el mensaje no publique datos sensibles ni sustituya a los registros técnicos internos. La localización es una decisión aparte. En esta edición los mensajes de la API se explican en español para el laboratorio, sin afirmar que el sistema implementa un mecanismo general de traducción. El contrato debe mantener tipos o códigos estables incluso cuando cambia el idioma del texto.
 
 
 ---
@@ -1085,7 +1085,7 @@ Códigos de respuesta según el nivel de validación:
 Los ejemplos de 400, 409 y 500 muestran distintos orígenes del fallo. Conviene mantener una correspondencia estable entre validación de entrada, conflicto de reglas de negocio y error del servidor, en lugar de traducir toda excepción al mismo estado.
 
 
-La distinción entre 400 y 422 tiene dos consecuencias prácticas. La primera es que el cliente puede reaccionar de forma distinta a cada código. La segunda es que las herramientas de monitorización pueden separar los errores de datos de los errores de negocio. La separación permite generar alertas específicas para cada tipo de error. El curso usa 400 para errores sintácticos y semánticos y 422 para errores de negocio.
+Elegir entre 400 y 422 requiere una convención explícita para el contrato. El 400 sirve para rechazar peticiones que el servidor considera inválidas y el 422 puede reservarse para contenidos cuyo formato se comprende pero no pueden procesarse según ciertas condiciones semánticas. No existe una obligación universal de mapear todos los errores de negocio a 422: un conflicto de estado puede expresarse mejor con 409. AceriaApp debe documentar qué responde en cada caso y demostrarlo mediante peticiones; las métricas operativas podrán agrupar los resultados sin inventar una equivalencia rígida.
 
 
 ---
@@ -1146,7 +1146,7 @@ Problem Details ofrece una representación estructurada para explicar por qué u
 El objeto Problem Details conserva una estructura que los clientes pueden interpretar. Su valor reside en la coherencia entre `type`, `title`, `status` y los detalles, no en el número de campos que se envían. Evitar la divulgación de excepciones internas sigue siendo esencial.
 
 
-La estructura del campo errors tiene dos consecuencias prácticas. La primera es que el cliente puede mostrar los errores junto a los campos correspondientes. La segunda es que el cliente puede procesar los errores de forma uniforme sin analizar el mensaje. La adopción del formato problem details con el campo errors es la práctica más común en las APIs REST modernas. El curso usa este formato en todos los endpoints que devuelven errores de validación.
+Un cuerpo con errores asociados a campos permite que la interfaz de un cliente muestre cada problema junto a la propiedad correspondiente. En ASP.NET Core puede adoptarse una extensión `errors` dentro de una representación de problemas de validación, pero ese campo no debe presentarse como obligatorio en todos los Problem Details. La estructura debe ser estable y documentada, y los mensajes deben corresponder a condiciones que el servidor comprueba realmente. Con ello se evitan consumidores que necesiten analizar texto libre para reconocer qué ha fallado.
 
 
 ---
@@ -1428,7 +1428,7 @@ app.MapGet("/api/v1/ordenes", async (AceriaDbContext db) =>
 Los `record` utilizados como DTO proporcionan una base clara para los esquemas de datos; los campos públicos y tipos deben corresponderse con los valores JSON reales. Conviene separar la estructura de `CrearOrdenRequest` de la de `OrdenDto` para no prometer al cliente permisos de escritura que no posee.
 
 
-La derivación de esquemas a partir de los tipos tiene dos consecuencias prácticas. La primera es que el contrato público está documentado de forma exacta. La segunda es que la evolución del contrato se refleja automáticamente en la documentación. La separación entre entidad y DTO del punto 2.1 se mantiene: los esquemas se derivan de los DTOs, no de las entidades. La separación garantiza que la documentación no expone la implementación interna del servicio.
+Los esquemas de OpenAPI generados a partir de DTOs facilitan mantener próximos código y documentación. Aun así, la generación no garantiza exactitud semántica: reglas de negocio, respuestas de error y determinados ejemplos necesitan anotaciones y comprobaciones adicionales. Mantener separadas las entidades de persistencia y las representaciones públicas reduce la posibilidad de filtrar detalles internos, siempre que los endpoints usen efectivamente esos DTOs. Una prueba de contrato puede comparar el documento publicado con los estados y cuerpos HTTP reales.
 
 ---
 
@@ -1493,7 +1493,7 @@ app.UseSwaggerUI(options =>
 La configuración de la versión del documento y sus metadatos debe estar alineada con las rutas públicas. OpenAPI no gestiona por sí solo la convivencia de versiones ni las migraciones de clientes; esas decisiones requieren contratos y pruebas adicionales.
 
 
-El versionado de la documentación tiene dos consecuencias prácticas. La primera es que el consumidor puede consultar la versión que usa. La segunda es que la documentación de versiones antiguas sigue disponible mientras el contrato antiguo siga activo. La combinación de ambas permite la evolución sin romper a los consumidores. El curso usa el versionado en la URL y en la documentación de forma coherente.
+Mantener documentos asociados a distintas versiones permite que cada consumidor consulte el contrato que utiliza. Esa convivencia solo es útil si el servidor continúa ofreciendo las operaciones prometidas y se conoce la política de retirada de versiones anteriores. El identificador de versión del documento y el de las rutas deben ser coherentes, pero no basta con cambiar ambos nombres para asegurar compatibilidad. En AceriaApp la especificación describe la versión pública que se está ejecutando y se contrasta mediante pruebas de API.
 
 ---
 
@@ -1517,7 +1517,7 @@ app.MapPost("/api/v1/ordenes", async (CrearOrdenRequest request, AceriaDbContext
 La descripción del POST debe contemplar respuestas correctas y condiciones de error. Si el cuerpo produce un `ProblemDetails`, la documentación necesita expresar ese formato y los estados HTTP pertinentes, sin limitarse a mostrar el caso satisfactorio.
 
 
-La documentación de errores tiene dos consecuencias prácticas. La primera es que el consumidor ve los códigos de error esperados. La segunda es que las herramientas pueden generar clientes que manejen cada código de forma específica. La adopción de la documentación de errores es una buena práctica que se aplica de forma uniforme en todos los endpoints. El curso documenta los códigos 400, 404, 409, 422 y 500 según corresponda.
+Documentar errores ayuda a que un consumidor comprenda condiciones de entrada inválida, ausencia de recursos y conflictos de estado sin tener que experimentar a ciegas. La especificación puede declarar códigos 400, 404, 409 o 422 cuando sus endpoints realmente los producen, junto con el esquema Problem Details que corresponda. No es útil declarar una lista fija de códigos idéntica para todas las rutas: cada operación tiene fallos posibles diferentes. La comprobación se completa con tests que envían peticiones para provocar esos resultados.
 
 ---
 
@@ -1554,7 +1554,7 @@ ReDoc                → documentación de solo lectura.
 Swagger UI, los generadores de clientes y las herramientas de prueba consumen la misma especificación con finalidades distintas. Su correcto funcionamiento depende de la precisión del documento; una representación errónea puede propagarse a varios consumidores simultáneamente.
 
 
-La integración con herramientas tiene dos consecuencias prácticas. La primera es que la documentación se reutiliza en distintos contextos. La segunda es que el consumidor elige la herramienta que mejor se adapta a su flujo de trabajo. La combinación de ambas reduce el coste de integración y mejora la experiencia del consumidor. El curso usa Swagger UI como herramienta principal y menciona las demás como opciones.
+Una especificación OpenAPI bien conservada puede consultarse en Swagger UI, utilizarse para generar clientes o importarse en herramientas de pruebas. Cada herramienta aprovecha una parte distinta del contrato y puede propagar sus errores si la descripción no coincide con la implementación. En AceriaApp utilizamos Swagger UI para explorar la API y efectuar peticiones manuales, sin confundir esa comodidad con la certificación del comportamiento. La evidencia de funcionamiento procede de endpoints y pruebas HTTP ejecutadas sobre el servicio real.
 
 ---
 
