@@ -443,39 +443,40 @@ Si no aparece la proyección, compara `WorkersActivos` y `Prefijo` en productor 
 
 ### Paso 9.13 — Simular la caída de Inventario 2 y la recuperación de YARP
 
-Detendremos **solo** `inventario-2`. El gateway debe continuar atendiendo las consultas de materiales mediante `inventario-1`, que sigue teniendo acceso a la misma base. La detección de la caída puede requerir unos instantes; por eso no conviene convertir un retardo transitorio en un fallo definitivo tras una única petición.
+Detendremos **solo** `inventario-2`. La petición debe seguir pudiendo resolverse por `inventario-1`, que conserva el acceso a la misma base SQL. Hay una diferencia entre el comportamiento **durante la detección de la caída** y el comportamiento **una vez que el proxy converge**. Algunas peticiones pueden fallar transitoriamente mientras YARP retira el destino inactivo; la prueba no debe dar por terminado ese proceso tras observar un único éxito.
+
+En lugar de esperar un número fijo de segundos, realizaremos consultas con un límite de intentos y exigiremos **diez respuestas correctas consecutivas**, todas atendidas por Inventario 1:
 
 ```powershell
 docker compose --env-file .\.env -f .\docker\compose.fullstack.yml stop inventario-2
-$destinoSano = $false
-foreach ($intento in 1..45) {
+$consecutivas = 0
+foreach ($intento in 1..120) {
+  $respuesta = $null
   try {
     $respuesta = Invoke-WebRequest "$gateway/api/v1/materiales/Acero" -TimeoutSec 5 -SkipHttpErrorCheck
-    if ($respuesta.StatusCode -eq 200 -and
-        [string]$respuesta.Headers['X-Instancia'] -eq 'inventario-1') {
-      $destinoSano = $true
-      break
-    }
   } catch {
-    # Puede haber una conexión transitoria mientras YARP detecta la caída.
+    # Durante la detección puede existir un fallo de conexión transitorio.
   }
+  if ($null -ne $respuesta -and $respuesta.StatusCode -eq 200 -and
+      [string]$respuesta.Headers['X-Instancia'] -eq 'inventario-1') {
+    $consecutivas++
+  } else {
+    $consecutivas = 0
+  }
+  if ($consecutivas -ge 10) { break }
   Start-Sleep -Seconds 2
 }
-if (-not $destinoSano) { throw 'YARP no recuperó el servicio mediante Inventario 1.' }
-foreach ($intento in 1..10) {
-  $respuesta = Invoke-WebRequest "$gateway/api/v1/materiales/Acero" -TimeoutSec 10 -SkipHttpErrorCheck
-  if ($respuesta.StatusCode -ne 200 -or
-      [string]$respuesta.Headers['X-Instancia'] -ne 'inventario-1') {
-    throw 'Una petición no fue atendida por el destino superviviente.'
-  }
+if ($consecutivas -lt 10) {
+  throw "YARP no se estabilizó con diez consultas consecutivas a Inventario 1."
 }
 docker compose --env-file .\.env -f .\docker\compose.fullstack.yml start inventario-2
 ```
 
-La primera parte espera a que YARP deje de seleccionar el destino inactivo. Las diez consultas posteriores comprueban que la lectura permanece disponible mientras falta Inventario 2. Tras reiniciarlo, consulta `http://localhost:5107/health/ready` hasta que vuelva a estar preparado y repite el Paso 9.8 para verificar que **ambas instancias** participan de nuevo.
+El bucle reinicia el contador si aparece una respuesta diferente de HTTP 200 o una instancia distinta de la superviviente. De esta manera no se confunde una respuesta aislada con la recuperación estable del proxy. La prueba sigue fallando si el sistema no llega a ofrecer diez lecturas correctas consecutivas dentro del límite. Conserva además el registro de los fallos transitorios: son información útil sobre el intervalo necesario para detectar un destino inactivo.
 
-No reinicies el gateway para forzar el resultado: hacerlo ocultaría un defecto de detección y recuperación de destinos. Registra el comportamiento antes, durante y después de la interrupción.
+Una vez recuperado `inventario-2`, consulta `http://localhost:5107/health/ready` hasta recibir una respuesta saludable y repite el Paso 9.8 para confirmar que las dos instancias vuelven a participar.
 
+No reinicies el gateway para forzar el resultado, porque ocultaría un problema de descubrimiento y recuperación de destinos. Si necesitas repetir la secuencia de forma automatizada, el proyecto M09 incluye `VALIDAR_FALLOS_DOCKER_WINDOWS.ps1`, que comprueba también la interrupción de RabbitMQ sin borrar volúmenes.
 
 ### Paso 9.14 — Detener RabbitMQ sin borrar mensajes ni bases
 
