@@ -17,8 +17,18 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 12
     steps:
+      - name: Habilitar rutas largas de Git
+        shell: pwsh
+        run: git config --global core.longpaths true
+
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: version-corregida
+          sparse-checkout: |
+            M09_DESPLIEGUE_DOCKER
+            M08_API_GATEWAY/PROYECTO/8.4-balanceo-carga
+          sparse-checkout-cone-mode: true
 
       - name: Parsear todos los bloques PowerShell del manual M09
         shell: pwsh
