@@ -31,6 +31,7 @@ def normalized(data):
 
 def main():
     report=["# M06–M08 — Paridad de fragmentos frente a proyectos canónicos",""]
+    divergencias = 0
     for number, (dirname,stages,expected) in CONFIG.items():
         md=(ROOT/dirname/"PRACTICAS"/f"M{number:02}_PRACTICAS.md").read_text("utf-8")
         matches=[]
@@ -53,6 +54,7 @@ def main():
             ratio=difflib.SequenceMatcher(None,snippet,target,autojunk=False).ratio() if len(snippet)<30000 and len(target)<30000 else 0
             scores.append((info["paso"],info["ruta"],same,contains,ratio,info["modo"]))
         counts=Counter("exacto" if e else "contenido" if inc else "divergente" for _,_,e,inc,_,_ in scores)
+        divergencias += counts["divergente"]
         report.extend([
             f"## M{number:02}",
             "",
@@ -77,6 +79,8 @@ def main():
     output=ROOT/"AUDITORIA_PARIDAD_M06_M08.md"
     output.write_text("\n".join(report)+"\n",encoding="utf-8")
     print("INFORME "+str(output))
+    if divergencias:
+        raise SystemExit(f"Paridad fallida: {divergencias} destinos del código docente no coinciden con los proyectos")
 
 
 if __name__=="__main__":
