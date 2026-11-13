@@ -1561,11 +1561,15 @@ Ejecuta una creación correcta y peticiones que provoquen cada error esperado. V
 
 ---
 
-## Desarrollo teórico
+## Componer la aplicación sin trasladar infraestructura al núcleo
 
-### Bloque 1 — Principio de inversión de dependencias
 
-El principio de inversión de dependencias establece que los módulos de alto nivel no deben depender de los módulos de bajo nivel. Ambos deben depender de abstracciones. Las abstracciones no deben depender de los detalles. Los detalles deben depender de las abstracciones. El principio es uno de los cinco principios SOLID y es la base sobre la que se construye la inyección de dependencias. Su aplicación permite que las capas interiores definan contratos y que las capas exteriores los implementen. La separación entre contrato e implementación es la que permite sustituir la implementación sin modificar el contrato.
+
+Seguiremos la construcción real de un handler y su repositorio mediante las interfaces que requiere. La composición de ASP.NET Core será el lugar donde se eligen tecnologías y ciclos de vida, sin que esa elección cambie las reglas de órdenes.
+
+### Principio de inversión de dependencias
+
+La inversión de dependencias persigue que las reglas estables de una aplicación no se construyan alrededor de detalles tecnológicos que cambian con facilidad. En AceriaApp, un caso de uso que necesita recuperar órdenes debería depender de `IOrdenRepositorio`, no de `OrdenRepositorioSqlServer` ni de la forma en que EF Core ejecuta una consulta. La infraestructura implementa esa necesidad y el host decide qué implementación conectar en cada entorno. Esta relación se suele representar mediante una flecha desde los módulos de alto y bajo nivel hacia la misma abstracción, pero el dibujo solo tiene valor si los proyectos .NET respetan realmente esa dirección. El principio permite probar decisiones de negocio con dobles y sustituir adaptadores sin reescribir las invariantes del dominio. No debe confundirse con la obligación de crear interfaces para cualquier clase utilitaria.
 
 ```text
 Principio de inversión de dependencias:
@@ -1573,33 +1577,30 @@ Principio de inversión de dependencias:
 Módulo de alto nivel → abstracción ← Módulo de bajo nivel.
 ```
 
-- **Línea 1:** `Módulo de alto nivel → abstracción ← Módulo de bajo nivel.` → ambos módulos dependen de la abstracción.
+
+La abstracción ocupa la frontera entre política de aplicación e implementación técnica. Ambos lados dependen de ella según sus necesidades, pero esa dirección solo está protegida cuando los proyectos y tipos realmente evitan referencias desde el núcleo a SQL Server.
+
 
 La aplicación del principio tiene dos consecuencias prácticas. La primera es que los módulos de alto nivel son independientes de los detalles de implementación. La segunda es que los módulos de bajo nivel son sustituibles sin modificar los de alto nivel. La combinación de ambas permite que el sistema evolucione sin acoplamiento entre capas. El principio puede materializarse con inyección manual o con un contenedor que respete la dirección de los contratos.
 
 La violación del principio produce tres síntomas reconocibles. El primero es la dependencia directa entre capas: un módulo de alto nivel instancia un módulo de bajo nivel. El segundo es la imposibilidad de sustituir la implementación: el módulo de alto nivel conoce la clase concreta. El tercero es la dificultad de las pruebas: no se puede sustituir la implementación por un doble. Los tres síntomas se corrigen invirtiendo la dependencia y definiendo abstracciones.
 
----
 
+Inversión de dependencias decide hacia qué contratos apuntan las referencias; inyección decide cómo recibe un objeto sus colaboradores. Un contenedor automatiza la composición.
 
+Aplicación declara IOrdenTrabajoRepositorio e IUnitOfWork. Infraestructura los implementa; AceriaApp.Api participa en el arranque que conecta todas las piezas.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Añadir una interfaz junto a una clase no garantiza inversión si aplicación sigue dependiendo del ensamblado de infraestructura para conocerla.
 
-**La decisión arquitectónica.** Inversión de dependencias decide hacia qué contratos apuntan las referencias; inyección decide cómo recibe un objeto sus colaboradores. Un contenedor automatiza la composición.
-
-**Ejemplo concreto en AceriaApp.** Aplicación declara IOrdenTrabajoRepositorio e IUnitOfWork. Infraestructura los implementa; AceriaApp.Api participa en el arranque que conecta todas las piezas.
-
-**Riesgo, alternativa y límite.** Añadir una interfaz junto a una clase no garantiza inversión si aplicación sigue dependiendo del ensamblado de infraestructura para conocerla.
-
-**Comprobación técnica y aprendizaje.** Comprueba ProjectReference y namespaces además de constructores. El dominio no necesita conocer el contenedor para que sus objetos se construyan correctamente.
+Comprueba ProjectReference y namespaces además de constructores. El dominio no necesita conocer el contenedor para que sus objetos se construyan correctamente.
 
 ![Diagrama explicativo del punto 4.5, bloque 1](IMAGENES/4-5-composicion.svg)
 
-*Interpretación del gráfico:* La raíz de composición conoce los adaptadores y enlaza puertos internos con implementaciones exteriores. La figura se distribuye en SVG vectorial y PNG.
+La raíz de composición conoce los adaptadores y enlaza puertos internos con implementaciones exteriores. La figura se distribuye en SVG vectorial y PNG.
 
-### Bloque 2 — Inyección de dependencias
+### Inyección de dependencias
 
-La inyección de dependencias es una técnica que ayuda a aplicar la inversión de dependencias. No son sinónimos: se puede inyectar una clase concreta y seguir acoplado a un detalle. El mecanismo consiste en que un objeto no crea sus dependencias: las recibe desde el exterior. La recepción se realiza a través del constructor, de una propiedad o de un método. La inyección por constructor es la más común y la que el curso usa. El contenedor de dependencias se encarga de resolver las dependencias y de inyectarlas en el momento de crear el objeto.
+La inyección de dependencias es el mecanismo mediante el que un objeto recibe los colaboradores que necesita en lugar de construirlos directamente. Un constructor que solicita `IOrdenRepositorio` hace explícita esa necesidad y permite que otra parte de la aplicación decida con qué instancia satisfacerla. Esto reduce acoplamiento y hace más sencillas las pruebas, pero solo funciona bien cuando el contrato tiene significado y no oculta llamadas a un servicio universal. En AceriaApp, `OrdenServicio` se concentra en su caso de uso; no necesita saber la dirección de SQL Server ni cómo registrar EF Core. El registro de la implementación pertenece al borde, donde se conocen las condiciones de ejecución y la configuración del entorno.
 
 ```csharp
 public class OrdenServicio
@@ -1613,34 +1614,24 @@ public class OrdenServicio
 }
 ```
 
-- **Línea 1:** `public class OrdenServicio` → clase que necesita una dependencia.
-- **Línea 2:** `{` → abre el cuerpo.
-- **Línea 3:** `private readonly IOrdenRepositorio _repositorio;` → campo de la dependencia.
-- **Línea 4:** `public OrdenServicio(IOrdenRepositorio repositorio)` → constructor con la dependencia.
-- **Línea 5:** `{` → abre el cuerpo del constructor.
-- **Línea 6:** `_repositorio = repositorio;` → asigna la dependencia.
-- **Línea 7:** `}` → cierra el constructor.
-- **Línea 8:** `}` → cierra la clase.
+
+El constructor de OrdenServicio declara la interfaz que necesita y la almacena como colaborador. La creación de la instancia corresponde al host o al test, no a la clase que ejecuta las reglas de la orden.
+
 
 La inyección de dependencias se caracteriza por tres propiedades. La primera es que el objeto no crea sus dependencias: las recibe. La segunda es que permite recibir contratos estables, sean interfaces o clases apropiadas. La tercera es que la construcción puede hacerse manualmente o mediante un contenedor; el objeto no necesita conocer cuál se ha usado. Las tres propiedades permiten que el objeto sea testeable y sustituible.
 
----
 
+La inyección por constructor hace visibles las dependencias obligatorias y permite crear objetos completos desde el principio. La construcción manual también es inyección.
 
+Una prueba puede crear OrdenesTransaccionales con un fake de repositorio y otro de unidad. El caso de uso recibe colaboradores sin preguntar cómo fueron construidos.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Inyectar IServiceProvider en cada clase oculta dependencias y permite resolver servicios inesperados. Reserva factorías y ámbitos explícitos para responsabilidades que realmente los necesitan.
 
-**La decisión arquitectónica.** La inyección por constructor hace visibles las dependencias obligatorias y permite crear objetos completos desde el principio. La construcción manual también es inyección.
+Lee el constructor como una declaración de necesidades. Si requiere demasiados servicios, examina la cohesión del caso de uso antes de esconderlos detrás del contenedor.
 
-**Ejemplo concreto en AceriaApp.** Una prueba puede crear OrdenesTransaccionales con un fake de repositorio y otro de unidad. El caso de uso recibe colaboradores sin preguntar cómo fueron construidos.
+### El contenedor de dependencias de ASP.NET Core
 
-**Riesgo, alternativa y límite.** Inyectar IServiceProvider en cada clase oculta dependencias y permite resolver servicios inesperados. Reserva factorías y ámbitos explícitos para responsabilidades que realmente los necesitan.
-
-**Comprobación técnica y aprendizaje.** Lee el constructor como una declaración de necesidades. Si requiere demasiados servicios, examina la cohesión del caso de uso antes de esconderlos detrás del contenedor.
-
-### Bloque 3 — El contenedor de dependencias de ASP.NET Core
-
-El contenedor de dependencias de ASP.NET Core registra servicios y construye sus grafos. Usarlo en la raíz de composición para inyectar dependencias no equivale al patrón Service Locator; este aparece cuando el código de negocio pide arbitrariamente sus dependencias al contenedor. El contenedor se configura en el arranque de la aplicación. Cada dependencia se registra con un tipo de servicio y un tipo de implementación. El contenedor resuelve las dependencias en tiempo de ejecución. El contenedor se encarga del ciclo de vida de las instancias.
+El contenedor integrado en ASP.NET Core organiza cómo se construyen objetos y qué implementación corresponde a cada interfaz. Mediante `AddScoped`, `AddTransient` o `AddSingleton` podemos controlar el ciclo de vida de colaboradores como repositorios, servicios de aplicación o proveedores de tiempo. No es necesario utilizar un contenedor para aplicar inversión de dependencias, pero facilita el ensamblado de una API con múltiples casos de uso. Conviene distinguir los registros del comportamiento que debe ejecutarse: que una interfaz tenga implementación asociada no demuestra que la ruta HTTP correcta la utilice. En AceriaApp las pruebas de composición deben comprobar que se construye el caso de uso, mientras los tests funcionales ejercen la operación completa.
 
 ```csharp
 builder.Services.AddScoped<IOrdenRepositorio, OrdenRepositorioSqlServer>();
@@ -1648,29 +1639,24 @@ builder.Services.AddScoped<IOrdenServicio, OrdenServicio>();
 builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
 ```
 
-- **Línea 1:** `builder.Services.AddScoped<IOrdenRepositorio, OrdenRepositorioSqlServer>();` → registra el repositorio con ciclo scoped.
-- **Línea 2:** `builder.Services.AddScoped<IOrdenServicio, OrdenServicio>();` → registra el servicio con ciclo scoped.
-- **Línea 3:** `builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);` → registra un proveedor de tiempo seguro para compartir; un adaptador de broker requiere evaluar su concurrencia.
+
+Los registros de IOrdenRepositorio, IOrdenServicio y TimeProvider ilustran distintas duraciones. La validez del grafo depende de que todos los colaboradores sean compatibles con el ciclo elegido y puedan resolverse.
+
 
 El contenedor se caracteriza por tres propiedades. La primera es que registra las dependencias en el arranque. La segunda es que resuelve las dependencias en tiempo de ejecución. La tercera es que gestiona el ciclo de vida de las instancias. Las tres propiedades permiten que el sistema se componga de forma declarativa y que las dependencias se resuelvan sin intervención manual.
 
----
 
+IServiceCollection describe registros; IServiceProvider resuelve instancias a partir de ellos. La configuración debe completarse antes de construir el proveedor que usará la aplicación.
 
+AddPatronesOrdenes agrupa los puertos, casos de uso y adaptadores del módulo. AddDbContext aporta HexagonalDbContext con el ciclo scoped habitual.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Evita llamar a BuildServiceProvider dentro de los registros para obtener servicios. Crear otro proveedor puede duplicar singletons y producir grafos con ciclos de vida inesperados.
 
-**La decisión arquitectónica.** IServiceCollection describe registros; IServiceProvider resuelve instancias a partir de ellos. La configuración debe completarse antes de construir el proveedor que usará la aplicación.
+Resuelve el caso de uso desde un ámbito real y comprueba todas sus dependencias. Una lista de ServiceDescriptor correcta visualmente no demuestra que el grafo se construya.
 
-**Ejemplo concreto en AceriaApp.** AddPatronesOrdenes agrupa los puertos, casos de uso y adaptadores del módulo. AddDbContext aporta HexagonalDbContext con el ciclo scoped habitual.
+### Ciclos de vida del contenedor
 
-**Riesgo, alternativa y límite.** Evita llamar a BuildServiceProvider dentro de los registros para obtener servicios. Crear otro proveedor puede duplicar singletons y producir grafos con ciclos de vida inesperados.
-
-**Comprobación técnica y aprendizaje.** Resuelve el caso de uso desde un ámbito real y comprueba todas sus dependencias. Una lista de ServiceDescriptor correcta visualmente no demuestra que el grafo se construya.
-
-### Bloque 4 — Ciclos de vida del contenedor
-
-El contenedor de ASP.NET Core ofrece tres ciclos de vida: `Transient`, `Scoped` y `Singleton`. El ciclo `Transient` crea una instancia nueva en cada resolución. El ciclo `Scoped` crea una instancia por ámbito de resolución; ASP.NET Core crea normalmente un ámbito para cada petición HTTP y una tarea en segundo plano puede crear ámbitos explícitos. El ciclo `Singleton` reutiliza una instancia por proveedor de servicios; varios procesos o proveedores no comparten automáticamente esa instancia. La elección del ciclo depende del estado que mantiene la implementación y de la duración esperada. Un servicio sin estado puede usar `Singleton` si también sus dependencias, su concurrencia y su liberación de recursos son compatibles. Los servicios que comparten recursos por petición usan `Scoped`. Los servicios que deben ser independientes en cada resolución usan `Transient`.
+Los ciclos de vida de los servicios determinan cuánto tiempo se reutiliza una instancia y qué recursos puede compartir. `Transient` crea objetos por resolución; `Scoped` conserva una instancia durante un ámbito, normalmente una petición HTTP; y `Singleton` reutiliza la misma instancia dentro del proveedor de servicios. La elección no depende solo de la comodidad del registro. Un repositorio que utiliza un `DbContext` scoped no debe conservarse como singleton, pues podría retener un contexto ya liberado o utilizarlo de forma concurrente. En AceriaApp una prueba de composición debe detectar dependencias cautivas y ayudar a justificar por qué los adaptadores de persistencia comparten el ámbito del caso de uso. Las clases sin estado también pueden requerir una duración concreta si dependen de otros servicios.
 
 ```text
 Ciclos de vida del contenedor:
@@ -1680,33 +1666,28 @@ Scoped    → una instancia por ámbito (normalmente petición HTTP).
 Singleton → una instancia por proveedor de servicios.
 ```
 
-- **Línea 1:** `Transient` → nueva instancia en cada resolución.
-- **Línea 2:** `Scoped` → una instancia por ámbito explícito o de petición.
-- **Línea 3:** `Singleton` → una instancia por proveedor raíz.
+
+Transient, Scoped y Singleton determinan el alcance de reutilización de un objeto. Un repositorio que usa DbContext scoped no debería ser retenido por un singleton, aunque el compilador acepte el registro.
+
 
 La elección del ciclo tiene dos consecuencias prácticas. La primera es que el ciclo incorrecto produce errores de concurrencia o de memoria. La segunda es que el ciclo correcto mantiene el rendimiento y la coherencia. La combinación de ambas permite que el contenedor gestione los recursos de forma eficiente.
 
----
 
+La duración se elige por estado, propiedad de recursos y concurrencia. Scoped significa ámbito, no usuario, sesión del navegador ni proceso completo.
 
+Repositorio y unidad de trabajo comparten HexagonalDbContext dentro de una petición. Otra petición recibe otro contexto, evitando mezclar seguimiento de entidades de usuarios distintos.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Un singleton debe soportar acceso concurrente y no capturar scoped. Un servicio de correo o broker no se vuelve seguro como singleton por tener pocas propiedades.
 
-**La decisión arquitectónica.** La duración se elige por estado, propiedad de recursos y concurrencia. Scoped significa ámbito, no usuario, sesión del navegador ni proceso completo.
-
-**Ejemplo concreto en AceriaApp.** Repositorio y unidad de trabajo comparten HexagonalDbContext dentro de una petición. Otra petición recibe otro contexto, evitando mezclar seguimiento de entidades de usuarios distintos.
-
-**Riesgo, alternativa y límite.** Un singleton debe soportar acceso concurrente y no capturar scoped. Un servicio de correo o broker no se vuelve seguro como singleton por tener pocas propiedades.
-
-**Comprobación técnica y aprendizaje.** Resuelve dos veces dentro de un ámbito y una vez desde otro. Usa identidad de objetos para comprobar igualdad dentro del scope y diferencia entre scopes cuando corresponde.
+Resuelve dos veces dentro de un ámbito y una vez desde otro. Usa identidad de objetos para comprobar igualdad dentro del scope y diferencia entre scopes cuando corresponde.
 
 ![Diagrama explicativo del punto 4.5, bloque 4](IMAGENES/4-5-ambitos.svg)
 
-*Interpretación del gráfico:* Cada ámbito tiene su propio contexto; repositorio y unidad del mismo ámbito comparten ese contexto. La figura se distribuye en SVG vectorial y PNG.
+Cada ámbito tiene su propio contexto; repositorio y unidad del mismo ámbito comparten ese contexto. La figura se distribuye en SVG vectorial y PNG.
 
-### Bloque 5 — Registro de servicios por convención
+### Registro de servicios por convención
 
-Una convención de organización agrupa los registros de una capa en un método de extensión. El ejemplo usa registros explícitos; no hace descubrimiento automático de clases. La agrupación reduce el tamaño del archivo `Program.cs` y facilita el mantenimiento. Cada grupo de servicios se registra en un archivo separado. Los métodos de extensión se aplican a `IServiceCollection`. La composición se realiza con llamadas encadenadas. La organización de los métodos de extensión sigue la organización de las capas.
+Agrupar registros mediante métodos de extensión permite que `Program.cs` describa capacidades de la aplicación sin convertirse en una lista interminable de tipos. Un método `AddRepositorios` puede registrar interfaces de órdenes y adaptadores de SQL Server, manteniendo localizadas las decisiones de infraestructura. Esto mejora la navegación cuando la convención es coherente y se acompaña de pruebas, pero no debe ocultar dependencias incorrectas bajo un nombre atractivo. En AceriaApp interesa saber qué clase responde a `IOrdenRepositorio` y qué ámbito utiliza el contexto SQL. El beneficio no está en reducir líneas de código por sí solo, sino en poder entender el grafo que ASP.NET Core construirá cuando una petición necesite persistencia.
 
 ```csharp
 public static class RepositoriosExtensions
@@ -1720,35 +1701,24 @@ public static class RepositoriosExtensions
 }
 ```
 
-- **Línea 1:** `public static class RepositoriosExtensions` → clase de extensión.
-- **Línea 2:** `{` → abre el cuerpo.
-- **Línea 3:** `public static IServiceCollection AddRepositorios(this IServiceCollection services)` → método de extensión.
-- **Línea 4:** `{` → abre el cuerpo del método.
-- **Línea 5:** `services.AddScoped<IOrdenRepositorio, OrdenRepositorioSqlServer>();` → registra el repositorio de órdenes.
-- **Línea 6:** `services.AddScoped<IInventarioRepositorio, InventarioRepositorioSqlServer>();` → registra el repositorio de inventario.
-- **Línea 7:** `return services;` → devuelve la colección para encadenar.
-- **Línea 8:** `}` → cierra el método.
-- **Línea 9:** `}` → cierra la clase.
+
+AddRepositorios agrupa contratos y adaptadores para hacer más legible la composición. Conviene que el método no esconda dependencias circulares y que se pruebe qué implementación recibe cada puerto.
+
 
 El registro por convención tiene dos consecuencias prácticas. La primera es que el archivo `Program.cs` se mantiene corto. La segunda es que los registros de un mismo grupo se mantienen juntos. La combinación de ambas reduce el coste de mantenimiento y facilita la localización de los registros.
 
----
 
+Los métodos de extensión organizan la raíz de composición por capacidades o capas. Su valor está en encapsular registros coherentes y dependencias necesarias.
 
+AddPatronesOrdenes permite que Program mantenga una llamada legible. La implementación registra puertos y adaptadores de M4 junto a sus casos de uso.
 
-#### Ampliación didáctica aplicada a AceriaApp
+El método de extensión debe ubicarse donde sea legal conocer las implementaciones. Ponerlo en dominio obligaría a introducir referencias exteriores y rompería el propósito de la separación.
 
-**La decisión arquitectónica.** Los métodos de extensión organizan la raíz de composición por capacidades o capas. Su valor está en encapsular registros coherentes y dependencias necesarias.
+Llama al método desde una prueba de composición y resuelve la capacidad completa. Esa prueba protege mejor que verificar únicamente cuántas líneas contiene Program.
 
-**Ejemplo concreto en AceriaApp.** AddPatronesOrdenes permite que Program mantenga una llamada legible. La implementación registra puertos y adaptadores de M4 junto a sus casos de uso.
+### Registro de servicios por ensamblado
 
-**Riesgo, alternativa y límite.** El método de extensión debe ubicarse donde sea legal conocer las implementaciones. Ponerlo en dominio obligaría a introducir referencias exteriores y rompería el propósito de la separación.
-
-**Comprobación técnica y aprendizaje.** Llama al método desde una prueba de composición y resuelve la capacidad completa. Esa prueba protege mejor que verificar únicamente cuántas líneas contiene Program.
-
-### Bloque 6 — Registro de servicios por ensamblado
-
-El registro de servicios por ensamblado agrupa los registros según la convención del nombre del tipo. La técnica se usa para registrar automáticamente todos los servicios que implementan una interfaz específica. La técnica se apoya en la reflexión para explorar el ensamblado. La reflexión tiene un coste de arranque que se acepta por la reducción del código de registro. La técnica se aplica cuando hay muchos servicios con la misma convención.
+El registro automático por reflexión puede descubrir clases y relacionarlas con interfaces según convenciones de nombre. Esta estrategia reduce instrucciones repetidas cuando el conjunto es grande y sus reglas son estables, pero hace más difícil ver de forma inmediata qué implementaciones se seleccionan. Una clase puede coincidir por su sufijo y no ser el colaborador adecuado; otra puede estar en un ensamblado que no se exploró. Por eso las convenciones deben documentarse, evitar registros ambiguos y verificarse en pruebas que resuelvan los contratos esperados. En AceriaApp compararemos la claridad del registro explícito con la flexibilidad del descubrimiento automático; no se presenta una estrategia universalmente mejor, sino una decisión de mantenimiento que debe justificarse.
 
 ```csharp
 var assembly = typeof(OrdenServicio).Assembly;
@@ -1767,39 +1737,24 @@ foreach (var tipo in tipos)
 }
 ```
 
-- **Línea 1:** `var assembly = typeof(OrdenServicio).Assembly;` → elige el ensamblado de una clase de aplicación y no necesariamente el de Program.
-- **Línea 2:** `var tipos = assembly.GetTypes()` → obtiene los tipos del ensamblado.
-- **Línea 3:** `.Where(t => t.IsClass && !t.IsAbstract && !t.ContainsGenericParameters` → descarta tipos que no sean clases concretas cerradas.
-- **Línea 4:** `&& t.Name.EndsWith("Servicio", StringComparison.Ordinal))` → aplica la convención de nombre con comparación explícita.
-- **Línea 5:** `.ToList();` → materializa los tipos seleccionados.
-- **Línea 6:** `foreach (var tipo in tipos)` → recorre las implementaciones.
-- **Línea 7:** `{` → abre la iteración.
-- **Línea 8:** `var interfaz = tipo.GetInterfaces().FirstOrDefault(i => i.Name == "I" + tipo.Name);` → busca el contrato cuyo nombre coincide con la convención.
-- **Línea 9:** `if (interfaz != null)` → comprueba que se encontró ese contrato.
-- **Línea 10:** `{` → abre la condición.
-- **Línea 11:** `services.AddScoped(interfaz, tipo);` → registra la pareja contrato e implementación como scoped.
-- **Línea 12:** `}` → cierra la condición.
-- **Línea 13:** `}` → cierra la iteración.
+
+El código de reflexión descubre servicios por convención de nombre, pero la coincidencia de sufijos no demuestra que la clase tenga la responsabilidad esperada. La lista obtenida y su resolución deben verificarse para evitar registros ambiguos.
+
 
 El registro por ensamblado tiene dos consecuencias prácticas. La primera es que el código de registro se reduce. La segunda es que la convención debe ser estricta para evitar registros accidentales. La combinación de ambas permite que el sistema tenga muchos servicios sin un archivo de registro extenso.
 
----
 
+El escaneo por reflexión automatiza una convención. Debe elegir ensamblados concretos y filtrar clases abstractas, genéricas abiertas y tipos ajenos a la capacidad.
 
+MediatR busca manejadores en el ensamblado de aplicación mediante un tipo marcador. El ejemplo de servicios busca interfaces cuyo nombre coincide con una convención explícita.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Renombrar una clase puede quitarla del registro sin impedir compilar. El trimming y AOT también pueden exigir conservación explícita de metadatos o registros estáticos.
 
-**La decisión arquitectónica.** El escaneo por reflexión automatiza una convención. Debe elegir ensamblados concretos y filtrar clases abstractas, genéricas abiertas y tipos ajenos a la capacidad.
+Prueba el conjunto que se espera descubrir. Ante pocos servicios, los registros explícitos son fáciles de revisar y suelen ser suficientes para el módulo.
 
-**Ejemplo concreto en AceriaApp.** MediatR busca manejadores en el ensamblado de aplicación mediante un tipo marcador. El ejemplo de servicios busca interfaces cuyo nombre coincide con una convención explícita.
+### Reglas de registro
 
-**Riesgo, alternativa y límite.** Renombrar una clase puede quitarla del registro sin impedir compilar. El trimming y AOT también pueden exigir conservación explícita de metadatos o registros estáticos.
-
-**Comprobación técnica y aprendizaje.** Prueba el conjunto que se espera descubrir. Ante pocos servicios, los registros explícitos son fáciles de revisar y suelen ser suficientes para el módulo.
-
-### Bloque 7 — Reglas de registro
-
-El registro de servicios sigue cinco reglas prácticas. La primera es que cada contrato debe tener una resolución intencional. El contenedor admite varias implementaciones: `IEnumerable<T>` devuelve todas; resolver T directamente elige el último registro no indexado. La segunda es que la implementación se registra con el ciclo adecuado a su estado. La tercera es que las dependencias se resuelven por constructor. La cuarta es que la resolución manual se limita a composición, factorías justificadas y creación explícita de ámbitos. La quinta es que los servicios no capturan el contenedor. La aplicación de las cinco reglas produce un contenedor coherente y mantenible.
+Las reglas de registro deben proteger la dirección de dependencias que ya diseñamos. Los casos de uso reciben interfaces mediante constructores; el host registra implementaciones concretas; y cada servicio utiliza una duración adecuada a sus recursos. Resolver colaboradores manualmente desde el dominio o conservar una referencia global a `IServiceProvider` suele ocultar dependencias y dificulta probarlas. En AceriaApp el constructor de un handler debería indicar qué puerto necesita sin obligarlo a buscar clases durante su ejecución. Esta visibilidad facilita detectar configuraciones incompletas antes de publicar la API y permite sustituir adaptadores en pruebas. La simplicidad no se mide solo por la cantidad de registros, sino por la facilidad para explicar quién conoce a quién.
 
 ```text
 Reglas de registro:
@@ -1811,31 +1766,24 @@ Reglas de registro:
 5. Sin capturar el contenedor.
 ```
 
-- **Línea 1:** `1. Resolución intencional de cada contrato.` → primera regla.
-- **Línea 2:** `2. Ciclo adecuado al estado.` → segunda regla.
-- **Línea 3:** `3. Inyección por constructor.` → tercera regla.
-- **Línea 4:** `4. Resolución manual solo en los bordes justificados.` → cuarta regla.
-- **Línea 5:** `5. Sin capturar el contenedor.` → quinta regla.
+
+El catálogo de reglas recomienda contratos explícitos, inyección por constructor y ámbitos coherentes. El criterio es que un caso de uso pueda comprenderse a partir de sus dependencias declaradas, sin buscar servicios globalmente.
+
 
 La aplicación de las reglas tiene dos consecuencias prácticas. La primera es que se reduce el riesgo de registros ausentes o incompatibles; sigue siendo necesario comprobar el grafo real. La segunda es que los servicios se mantienen testeables. La combinación de ambas permite que el sistema se componga de forma predecible y que las pruebas se ejecuten sin infraestructura.
 
----
 
+El contenedor admite varios registros del mismo contrato. La política debe distinguir resolver uno, resolver `IEnumerable<T>` o seleccionar servicios con clave cuando corresponda.
 
+Varios `IValidator<CrearOrdenCommand>` son intencionales: el comportamiento puede recorrerlos. Dos adaptadores de persistencia registrados sin política de selección pueden esconder una configuración equivocada.
 
-#### Ampliación didáctica aplicada a AceriaApp
+El último registro simple prevalece al resolver un único servicio. El orden de registro no debería ser una decisión de negocio escondida que cambie por un método de extensión.
 
-**La decisión arquitectónica.** El contenedor admite varios registros del mismo contrato. La política debe distinguir resolver uno, resolver `IEnumerable<T>` o seleccionar servicios con clave cuando corresponda.
+Comprueba la resolución individual y la colección cuando haya varios registros. Activa ValidateScopes y ValidateOnBuild en pruebas, y resuelve los grafos representativos.
 
-**Ejemplo concreto en AceriaApp.** Varios `IValidator<CrearOrdenCommand>` son intencionales: el comportamiento puede recorrerlos. Dos adaptadores de persistencia registrados sin política de selección pueden esconder una configuración equivocada.
+### Prohibiciones del contenedor
 
-**Riesgo, alternativa y límite.** El último registro simple prevalece al resolver un único servicio. El orden de registro no debería ser una decisión de negocio escondida que cambie por un método de extensión.
-
-**Comprobación técnica y aprendizaje.** Comprueba la resolución individual y la colección cuando haya varios registros. Activa ValidateScopes y ValidateOnBuild en pruebas, y resuelve los grafos representativos.
-
-### Bloque 8 — Prohibiciones del contenedor
-
-El contenedor tiene cuatro prohibiciones principales. La primera es que un servicio no debe resolver sus dependencias manualmente con el contenedor. La segunda es que un servicio no debe capturar el contenedor en un campo. La tercera es que un servicio no debe registrar servicios en el contenedor en tiempo de ejecución. La cuarta es que un singleton no debe capturar un servicio scoped, directa ni indirectamente. Un scoped sí puede recibir un transient; un transient capturado por un singleton permanece retenido y exige revisar su estado y seguridad concurrente. Las dependencias cíclicas son otro problema del grafo, no la consecuencia automática de cualquier diferencia de duración.
+El contenedor puede introducir problemas si se utiliza como localizador universal de servicios. Un singleton que captura un objeto scoped conserva una dependencia con duración incompatible; un objeto que pide `IServiceProvider` para resolver cualquier cosa oculta lo que realmente necesita; y registrar nuevos servicios en tiempo de ejecución puede producir comportamientos difíciles de reproducir. Estas situaciones no son prohibiciones metafísicas, pero sí señales que exigen un motivo excepcional y pruebas específicas. En AceriaApp preferiremos inyección por constructor, registros durante el arranque y ámbitos controlados. La estructura resultante se puede inspeccionar y probar, mientras que un contenedor pasado a todas las clases debilitaría la frontera entre aplicación e infraestructura.
 
 ```text
 Prohibiciones del contenedor:
@@ -1846,34 +1794,28 @@ Prohibiciones del contenedor:
 4. No capturar scoped desde singleton.
 ```
 
-- **Línea 1:** `1. No resolver manualmente.` → primera prohibición.
-- **Línea 2:** `2. No capturar el contenedor.` → segunda prohibición.
-- **Línea 3:** `3. No registrar en tiempo de ejecución.` → tercera prohibición.
-- **Línea 4:** `4. No capturar scoped desde singleton.` → cuarta prohibición.
+
+Las advertencias sobre el contenedor se refieren a dependencias ocultas y a ciclos de vida incompatibles. El ejemplo de scoped capturado por singleton es un problema concreto que debe probarse, no una mera regla de estilo.
+
 
 La aplicación de las prohibiciones tiene dos consecuencias prácticas. La primera es que se evitan varias causas de fallo en ejecución, sin sustituir pruebas de composición. La segunda es que las dependencias son predecibles y testeables. La combinación de ambas permite que el sistema se comporte de forma coherente en producción.
 
----
 
+La dependencia cautiva aparece cuando un consumidor retiene un colaborador más allá de su ámbito previsto. El caso crítico es singleton que captura DbContext scoped.
 
+Un proceso en segundo plano puede inyectar IServiceScopeFactory, crear un ámbito por operación y resolver dentro de él los servicios de trabajo. Ese uso es composición explícita.
 
-#### Ampliación didáctica aplicada a AceriaApp
+No prohíbas todos los transient dentro de scoped: esa relación es válida. En un singleton un transient retenido requiere revisar seguridad concurrente y liberación de recursos.
 
-**La decisión arquitectónica.** La dependencia cautiva aparece cuando un consumidor retiene un colaborador más allá de su ámbito previsto. El caso crítico es singleton que captura DbContext scoped.
-
-**Ejemplo concreto en AceriaApp.** Un proceso en segundo plano puede inyectar IServiceScopeFactory, crear un ámbito por operación y resolver dentro de él los servicios de trabajo. Ese uso es composición explícita.
-
-**Riesgo, alternativa y límite.** No prohíbas todos los transient dentro de scoped: esa relación es válida. En un singleton un transient retenido requiere revisar seguridad concurrente y liberación de recursos.
-
-**Comprobación técnica y aprendizaje.** Haz una prueba negativa que registre un consumidor singleton con una dependencia scoped y comprueba el fallo de validación. No desactives ValidateScopes para hacer desaparecer el síntoma.
+Haz una prueba negativa que registre un consumidor singleton con una dependencia scoped y comprueba el fallo de validación. No desactives ValidateScopes para hacer desaparecer el síntoma.
 
 ![Diagrama explicativo del punto 4.5, bloque 8](IMAGENES/4-5-cautiva.svg)
 
-*Interpretación del gráfico:* La duración del consumidor no debe extender accidentalmente la del servicio scoped que conserva. La figura se distribuye en SVG vectorial y PNG.
+La duración del consumidor no debe extender accidentalmente la del servicio scoped que conserva. La figura se distribuye en SVG vectorial y PNG.
 
-### Bloque 9 — Inyección de dependencias y tests
+### Inyección de dependencias y tests
 
-La inyección de dependencias facilita los tests porque las dependencias se sustituyen por dobles. El test crea una instancia del servicio con las dependencias sustituidas. Para probar una clase suele bastar construir sus dependencias manualmente. Las pruebas de composición sí levantan el contenedor real y verifican los registros y ámbitos. La separación entre configuración de producción y configuración de pruebas permite que los tests se ejecuten sin infraestructura.
+La principal ventaja de inyectar un repositorio es poder probar un caso de uso con datos y respuestas controladas sin preparar SQL Server para cada aserción. Un mock puede registrar que la aplicación pidió agregar una orden y devolver un comportamiento determinado, permitiendo comprobar el camino de éxito o error. Eso no acredita que el adaptador real ejecute correctamente sus comandos SQL ni que la transacción se confirme; para esa evidencia se necesita otra prueba de integración. En AceriaApp distinguiremos estas garantías y utilizaremos la inyección para sustituir colaboradores sin alterar el caso de uso. El objetivo no es maximizar el número de mocks, sino hacer que las pruebas identifiquen con claridad la responsabilidad cuyo comportamiento están observando.
 
 ```csharp
 var repositorioMock = new Mock<IOrdenRepositorio>();
@@ -1887,35 +1829,24 @@ repositorioMock.Verify(
     r => r.AgregarAsync(It.IsAny<OrdenHexagonal>(), It.IsAny<CancellationToken>()), Times.Once);
 ```
 
-- **Línea 1:** `var repositorioMock = new Mock<IOrdenRepositorio>();` → crea un mock del puerto de M3.
-- **Línea 2:** `repositorioMock` → inicia la configuración.
-- **Línea 3:** `.Setup(r => r.AgregarAsync(It.IsAny<OrdenHexagonal>(), It.IsAny<CancellationToken>()))` → acepta la entidad que generará el caso de uso y su cancelación.
-- **Línea 4:** `.Returns(Task.CompletedTask);` → simula la terminación de la escritura.
-- **Línea 5:** `var servicio = new OrdenesCasoUso(repositorioMock.Object);` → construye directamente el caso de uso heredado.
-- **Línea 6:** `var resultado = await servicio.CrearAsync("ACX-001", "CHAPA", 10);` → ejecuta una creación válida sin servidor ni SQL Server.
-- **Línea 7:** `Assert.Equal("ACX-001", resultado.Cliente);` → comprueba el dato devuelto, no solo que hubo una llamada.
-- **Línea 8:** `repositorioMock.Verify(` → inicia la comprobación de interacción.
-- **Línea 9:** `r => r.AgregarAsync(It.IsAny<OrdenHexagonal>(), It.IsAny<CancellationToken>()), Times.Once);` → exige un alta de la entidad; las pruebas de M4 añaden la confirmación correspondiente.
+
+El mock suministra un repositorio controlado al caso de uso y permite verificar la operación solicitada. La misma prueba no demuestra que el repositorio SQL real haya escrito filas, tarea de las pruebas de integración.
+
 
 La inyección de dependencias en los tests tiene dos consecuencias prácticas. La primera es que los tests se ejecutan sin base de datos ni infraestructura. La segunda es que las dependencias se sustituyen por dobles específicos. La combinación de ambas permite que los tests sean rápidos y fiables.
 
----
 
+Las pruebas unitarias construyen la clase con colaboradores controlados; las pruebas de composición verifican que el contenedor de producción sabe construirla.
 
+El ejemplo usa OrdenesCasoUso heredado para mostrar constructor manual. Los nuevos casos de M4 necesitan además el doble de IUnitOfWork y las expectativas de confirmación.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Un fake de memoria compartido entre tests puede introducir contaminación. Crea estado nuevo por prueba y reserva recursos compartidos para fixtures con aislamiento definido.
 
-**La decisión arquitectónica.** Las pruebas unitarias construyen la clase con colaboradores controlados; las pruebas de composición verifican que el contenedor de producción sabe construirla.
+Combina pruebas de resultado, ausencia de efectos en fallo y registro real. No necesitas arrancar HTTP para verificar una regla que puede comprobarse directamente en aplicación.
 
-**Ejemplo concreto en AceriaApp.** El ejemplo usa OrdenesCasoUso heredado para mostrar constructor manual. Los nuevos casos de M4 necesitan además el doble de IUnitOfWork y las expectativas de confirmación.
+### Aplicación al proyecto del curso
 
-**Riesgo, alternativa y límite.** Un fake de memoria compartido entre tests puede introducir contaminación. Crea estado nuevo por prueba y reserva recursos compartidos para fixtures con aislamiento definido.
-
-**Comprobación técnica y aprendizaje.** Combina pruebas de resultado, ausencia de efectos en fallo y registro real. No necesitas arrancar HTTP para verificar una regla que puede comprobarse directamente en aplicación.
-
-### Bloque 10 — Aplicación al proyecto del curso
-
-El proyecto del curso aplica la inyección de dependencias en el módulo 4. Los puertos se registran con sus adaptadores en el contenedor. Los servicios se registran con el ciclo adecuado. La configuración se organiza con métodos de extensión. Las prohibiciones se respetan. La validación del contenedor se realiza con un test que verifica los registros. El módulo 4 se cierra con el resumen del estado del proyecto.
+El cierre de M04 integra Repository, Unit of Work, MediatR, Result Pattern e inyección de dependencias en un único recorrido. Un endpoint recibe la solicitud, MediatR la entrega al handler, el caso de uso protege las reglas con ayuda del dominio, los puertos permiten persistir y Unit of Work confirma el efecto. El resultado esperado se expresa mediante un contrato que HTTP traduce a la respuesta adecuada. Ningún patrón sustituye a los demás, y añadirlos todos sin una necesidad clara solo multiplicaría clases. En AceriaApp el valor se demuestra cuando el recorrido conserva las reglas y puede probarse por niveles, desde una decisión aislada hasta la persistencia real. Esa integración prepara un modelo de dominio más rico para el siguiente módulo de DDD y CQRS.
 
 ```text
 Aplicación al proyecto del curso:
@@ -1928,30 +1859,22 @@ Validación              → test de coherencia.
 Cierre del módulo       → resumen del estado.
 ```
 
-- **Línea 1:** `Registro de puertos` → interfaces con adaptadores.
-- **Línea 2:** `Ciclo de vida` → Scoped para la mayoría.
-- **Línea 3:** `Configuración` → métodos de extensión.
-- **Línea 4:** `Prohibiciones` → respetadas.
-- **Línea 5:** `Validación` → test de coherencia.
-- **Línea 6:** `Cierre del módulo` → resumen del estado.
+
+El mapa de cierre reúne las decisiones de composición utilizadas desde los puntos anteriores. El objetivo es seguir un recorrido ejecutable de órdenes y distinguir en qué frontera se encuentra cada patrón.
+
 
 La aplicación de la inyección de dependencias cierra el módulo 4 y prepara el terreno para el módulo 5. El módulo 5 estudiará la introducción a DDD y CQRS. La inyección de dependencias es la base sobre la que se componen los servicios del dominio. El punto 4.5 cierra el módulo 4 con el resumen del estado del proyecto.
 
----
 
+El cierre del módulo enlaza contratos, efectos y composición. No consiste solo en agregar cinco nombres de patrones a un catálogo.
 
+Repository expresa persistencia; Unit of Work confirma; MediatR despacha solicitudes; Result representa fallos esperados; DI conecta sus implementaciones respetando ámbitos.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Los patrones resuelven problemas concretos y añaden costes. Ninguno convierte automáticamente un monolito modular en microservicios ni hace fiable una operación distribuida.
 
-**La decisión arquitectónica.** El cierre del módulo enlaza contratos, efectos y composición. No consiste solo en agregar cinco nombres de patrones a un catálogo.
+Desde el snapshot final, ejecuta la suite completa, recorre los endpoints de patrones y revisa dependencias. Esa base deja preparados los conceptos de agregados, DDD y CQRS del módulo siguiente.
 
-**Ejemplo concreto en AceriaApp.** Repository expresa persistencia; Unit of Work confirma; MediatR despacha solicitudes; Result representa fallos esperados; DI conecta sus implementaciones respetando ámbitos.
-
-**Riesgo, alternativa y límite.** Los patrones resuelven problemas concretos y añaden costes. Ninguno convierte automáticamente un monolito modular en microservicios ni hace fiable una operación distribuida.
-
-**Comprobación técnica y aprendizaje.** Desde el snapshot final, ejecuta la suite completa, recorre los endpoints de patrones y revisa dependencias. Esa base deja preparados los conceptos de agregados, DDD y CQRS del módulo siguiente.
-
-### Resumen rápido de la teoría
+### Cómo se relacionan los patrones de M04
 
 - El principio de inversión de dependencias establece que los módulos de alto nivel y de bajo nivel deben depender de abstracciones.
 - La inyección de dependencias es el mecanismo que permite aplicar el principio.
