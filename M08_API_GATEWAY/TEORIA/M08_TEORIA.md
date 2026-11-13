@@ -79,7 +79,7 @@ Agregación          → combinar respuestas.
 Políticas transversales → autenticación, autorización, rate limiting.
 ```
 
-Las responsabilidades se caracterizan por tres propiedades. Cada responsabilidad es independiente; combinan configuración declarativa y componentes específicos cuando la función lo necesita; y el alcance depende de las políticas y rutas configuradas. Estas condiciones permiten que el gateway sea configurable y mantenible.
+Las responsabilidades del gateway requieren decisiones de configuración y componentes verificables. Cada responsabilidad es independiente; combinan configuración declarativa y componentes específicos cuando la función lo necesita; y el alcance depende de las políticas y rutas configuradas. Estas condiciones permiten que el gateway sea configurable y mantenible.
 
 Enrutamiento es la responsabilidad mínima. Traducción de protocolos y agregación son posibilidades arquitectónicas que requieren código y decisiones adicionales; no aparecen automáticamente al registrar un proxy inverso.
 
@@ -161,7 +161,7 @@ Gateway por dominio → un gateway por dominio.
 BFF                 → un gateway por interfaz.
 ```
 
-Los patrones se caracterizan por tres propiedades. Cada patrón tiene un propósito específico; la elección depende del contexto; y los patrones se pueden combinar. Estas condiciones permiten que el gateway se adapte a las necesidades del sistema.
+La elección de una variante del patrón depende de las necesidades concretas del sistema. Cada patrón tiene un propósito específico; la elección depende del contexto; y los patrones se pueden combinar. Estas condiciones permiten que el gateway se adapte a las necesidades del sistema.
 
 Un BFF adapta una API a las necesidades de una interfaz concreta. Un gateway común prioriza contratos y políticas compartidas. La separación por dominio puede reflejar propiedad de equipos o distintos ciclos de publicación.
 
@@ -187,7 +187,7 @@ Registro            → registrar peticiones.
 Monitorización      → medir rendimiento.
 ```
 
-Las funciones se caracterizan por tres propiedades. Su alcance se define por las políticas y el pipeline; se configuran de forma declarativa; y se pueden desactivar por ruta. Estas condiciones permiten que el gateway sea configurable.
+Las funciones transversales solo existen operativamente cuando su política se incorpora al pipeline. Su alcance se define por las políticas y el pipeline; se configuran de forma declarativa; y se pueden desactivar por ruta. Estas condiciones permiten que el gateway sea configurable.
 
 Una preocupación transversal requiere registro, configuración y orden de ejecución. Tener una propiedad booleana llamada AplicaAutenticacion no ejecuta un autenticador; una cuota declarada necesita un limitador y una política aplicable a la ruta.
 
@@ -276,7 +276,7 @@ Complejidad operativa.
 
 `Punto único de fallo.` primer inconveniente; `Latencia adicional.` segundo inconveniente; `Complejidad operativa.` tercer inconveniente.
 
-Las ventajas e inconvenientes se caracterizan por tres propiedades. Las ventajas se materializan en sistemas con varios servicios; los inconvenientes se mitigan con redundancia y monitorización; y la decisión se documenta en un ADR. Estas condiciones permiten que la adopción del gateway sea razonada.
+El valor del gateway debe medirse frente a su coste de operación y a sus responsabilidades reales. Las ventajas se materializan en sistemas con varios servicios; los inconvenientes se mitigan con redundancia y monitorización; y la decisión se documenta en un ADR. Estas condiciones permiten que la adopción del gateway sea razonada.
 
 La adopción añade una dependencia en el camino público. Su beneficio debe evaluarse junto con latencia, coste operativo, disponibilidad y propiedad de la configuración. La redundancia es una estrategia de despliegue, no una propiedad automática de la biblioteca.
 
@@ -565,7 +565,7 @@ Las transformaciones permiten modificar determinados aspectos de una solicitud a
 
 `},` cierra el objeto abierto en el contexto anterior; `{` abre un objeto en el contexto mostrado; `"RequestHeader": "X-Canal",` selecciona o establece una cabecera de la petición saliente; el valor mostrado es literal; `"Set": "Gateway"` establece el valor literal mostrado; no genera un identificador dinámico.
 
-Las transformaciones se caracterizan por tres propiedades. Modifican la petición; se configuran por ruta; y se combinan en una lista. Estas condiciones permiten que el gateway adapte las peticiones al destino.
+Cada transformación debe responder a una necesidad concreta de adaptación del contrato. Modifican la petición; se configuran por ruta; y se combinan en una lista. Estas condiciones permiten que el gateway adapte las peticiones al destino.
 
 Las transformaciones de petición se configuran por ruta y modifican el mensaje saliente. La dirección del destino aporta esquema, autoridad y base de ruta; no se usa una transformación genérica para aceptar un host arbitrario del cliente.
 
@@ -622,7 +622,7 @@ Buenas prácticas de configuración de YARP:
 
 `5. Validar con un test.` quinta práctica.
 
-Las buenas prácticas se caracterizan por tres propiedades. Producen una configuración clara; protegen la coherencia; y permiten el análisis automático. Estas condiciones permiten que la configuración sea un activo del sistema.
+Una configuración comprensible muestra con claridad sus rutas y destinos; protegen la coherencia; y permiten el análisis automático. Estas condiciones permiten que la configuración sea un activo del sistema.
 
 Los identificadores descriptivos y un ADR permiten revisar cambios sin deducir intención a partir de direcciones. La comprobación debe abarcar estructura, superficie pública y comportamiento del destino, no limitarse a que el JSON se pueda analizar.
 
@@ -787,7 +787,7 @@ La selección combina criterios antes de aplicar las transformaciones de la ruta
 
 `}` cierra el objeto abierto en el contexto anterior.
 
-Las transformaciones de ruta se caracterizan por tres propiedades. Modifican la ruta de la petición; se aplican después de la coincidencia; y se combinan en una lista. Estas condiciones permiten que el enrutamiento sea flexible.
+Modificar el path requiere distinguir la coincidencia inicial de la URL finalmente enviada. Modifican la ruta de la petición; se aplican después de la coincidencia; y se combinan en una lista. Estas condiciones permiten que el enrutamiento sea flexible.
 
 La coincidencia usa la URL de entrada. La transformación se aplica después para construir la petición saliente. Esta separación permite un alias público sin obligar al backend a conocer ese alias.
 
@@ -816,7 +816,7 @@ Las cabeceras HTTP pueden aportar correlación, información de proxy y metadato
 
 `]` cierra la colección de elementos del contexto mostrado; `}` cierra el objeto abierto en el contexto anterior.
 
-Las transformaciones de cabecera se caracterizan por tres propiedades. Modifican las cabeceras; se aplican por ruta; y se combinan en una lista. Estas condiciones permiten que el enrutamiento añada contexto.
+Modificar cabeceras exige decidir qué valores se aceptan, sustituyen o propagan. Modifican las cabeceras; se aplican por ruta; y se combinan en una lista. Estas condiciones permiten que el enrutamiento añada contexto.
 
 Set reemplaza un valor y Append agrega otro. Para quitar una cabecera de petición existe RequestHeaderRemove; no se configura una operación Remove genérica dentro de RequestHeader. La respuesta tiene sus transformaciones específicas.
 
@@ -845,7 +845,7 @@ Los parámetros de consulta pueden conservarse, añadirse o derivarse de valores
 
 `]` cierra la colección de elementos del contexto mostrado; `}` cierra el objeto abierto en el contexto anterior.
 
-Las transformaciones de consulta se caracterizan por tres propiedades. Añaden parámetros de consulta; usan valores literales o de ruta; una cabecera requiere código personalizado; y se combinan en una lista. Estas condiciones permiten que el enrutamiento enriquezca la petición.
+Modificar la query exige preservar la información original del cliente y comprender cómo se agregan los nuevos parámetros. Añaden parámetros de consulta; usan valores literales o de ruta; una cabecera requiere código personalizado; y se combinan en una lista. Estas condiciones permiten que el enrutamiento enriquezca la petición.
 
 QueryValueParameter establece o añade un valor literal; QueryRouteParameter obtiene el valor de un parámetro capturado por la ruta. Copiar una cabecera a query requiere una transformación de código y una revisión de qué datos pueden exponerse.
 
@@ -936,7 +936,7 @@ Buenas prácticas de enrutamiento:
 
 `5. Validar con un test.` quinta práctica.
 
-Las buenas prácticas se caracterizan por tres propiedades. Producen un enrutamiento claro; protegen la coherencia; y permiten el análisis automático. Estas condiciones permiten que el enrutamiento sea un activo del sistema.
+Una política de enrutamiento clara permite explicar por qué una petición llega a determinado destino; protegen la coherencia; y permiten el análisis automático. Estas condiciones permiten que el enrutamiento sea un activo del sistema.
 
 Las buenas prácticas se traducen en casos de prueba concretos. Especificidad, restricciones y prioridades deben evitar ambigüedades; las transformaciones deben conservar la semántica del recurso y justificar cada cambio.
 
@@ -1048,7 +1048,7 @@ PowerOfTwoChoices   → mejor entre dos aleatorias.
 Peso                → distribución según peso.
 ```
 
-Los algoritmos se caracterizan por tres propiedades. Cada algoritmo tiene un propósito específico; la elección depende del contexto; y el algoritmo se configura por cluster. Estas condiciones permiten que el balanceo se adapte a cada situación.
+Cada algoritmo distribuye el trabajo con una hipótesis diferente sobre las instancias disponibles. Cada algoritmo tiene un propósito específico; la elección depende del contexto; y el algoritmo se configura por cluster. Estas condiciones permiten que el balanceo se adapte a cada situación.
 
 RoundRobin recorre candidatos; Random selecciona al azar; LeastRequests compara solicitudes activas; PowerOfTwoChoices limita la comparación a dos candidatos aleatorios. Ninguna de estas políticas mide automáticamente la capacidad real de CPU.
 
@@ -1115,7 +1115,7 @@ Los pesos expresan preferencias de distribución cuando se usa una política de 
 
 `}` cierra el objeto abierto en el contexto anterior; `}` cierra el objeto abierto en el contexto anterior.
 
-Los pesos se caracterizan por tres propiedades. Permiten distribuir de forma ponderada; se usan con instancias de distinta capacidad; y se configuran por destino. Estas condiciones permiten que el balanceo se adapte a la capacidad.
+La utilidad de un peso depende de que la política efectiva lo interprete. Permiten distribuir de forma ponderada; se usan con instancias de distinta capacidad; y se configuran por destino. Estas condiciones permiten que el balanceo se adapte a la capacidad.
 
 Un peso expresa una proporción deseada, por ejemplo 2:1 bajo condiciones estables. Su cumplimiento depende del algoritmo, del conjunto sano y del número de solicitudes. No es una promesa de latencia ni de uso de CPU.
 
@@ -1225,7 +1225,7 @@ Vertical   → aumenta recursos.
 Automático → ajusta instancias según métricas.
 ```
 
-Las estrategias se caracterizan por tres propiedades. Cada estrategia tiene un propósito; la elección depende de la carga; y el balanceo distribuye entre las instancias. Estas condiciones permiten que el sistema sea escalable.
+La elección de una estrategia de escalado debe partir de la carga y de los límites de las dependencias. Cada estrategia tiene un propósito; la elección depende de la carga; y el balanceo distribuye entre las instancias. Estas condiciones permiten que el sistema sea escalable.
 
 Escalar horizontalmente añade procesos; verticalmente aumenta recursos por proceso; automatizar requiere métricas, umbrales y una plataforma que ejecute cambios. El balanceador solo distribuye solicitudes entre los destinos que conoce.
 
@@ -1259,7 +1259,7 @@ Buenas prácticas de balanceo de carga:
 
 `5. Validar con un test.` quinta práctica.
 
-Las buenas prácticas se caracterizan por tres propiedades. Producen un balanceo resiliente; permiten el diagnóstico; y permiten el análisis automático. Estas condiciones permiten que el balanceo sea un activo del sistema.
+El balanceo resiliente requiere observar la salud real de los destinos; permiten el diagnóstico; y permiten el análisis automático. Estas condiciones permiten que el balanceo sea un activo del sistema.
 
 Dos instancias son una condición útil para estudiar reparto, pero no garantizan alta disponibilidad. La salud de dependencias, la capacidad de la superviviente y la coherencia del estado condicionan el resultado del fallo.
 

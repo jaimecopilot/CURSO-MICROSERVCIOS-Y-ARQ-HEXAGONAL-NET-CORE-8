@@ -942,7 +942,7 @@ Consultar la proyección, que puede aparecer después.
 
 `Publicar y consumir en segundo plano.` los trabajadores conservan y deduplican la entrega; `Consultar la proyección, que puede aparecer después.` la consulta HTTP posterior puede no ver todavía el evento.
 
-Los patrones híbridos tienen dos consecuencias prácticas. En la práctica, combinan las ventajas de ambos estilos y añaden complejidad a la implementación. Así, el sistema se adapte a interacciones complejas.
+Los patrones híbridos permiten combinar una consulta inmediata con trabajo duradero posterior, pero obligan a describir los estados intermedios y recuperar los fallos de ambas vías. En AceriaApp la consulta HTTP no equivale a una reserva, y la aceptación de la planificación no acredita que Inventario haya procesado ya su evento.
 
 Un flujo híbrido debe conservar el significado de cada etapa. La consulta de stock produce una observación. El commit local produce una orden planificada y un evento pendiente. La publicación produce aceptación por el broker. El consumo produce una proyección de Inventario.
 

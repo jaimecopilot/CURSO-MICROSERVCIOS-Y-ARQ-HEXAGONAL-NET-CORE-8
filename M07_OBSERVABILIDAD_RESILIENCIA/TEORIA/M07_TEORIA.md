@@ -80,7 +80,7 @@ Error       → error que impide una operación.
 Critical    → error que afecta a todo el sistema.
 ```
 
-Los niveles se caracterizan por tres propiedades. Cada nivel tiene un uso específico; el nivel mínimo se configura por entorno; y los niveles permiten filtrar los eventos. Estas condiciones permiten que el logging sea útil sin generar ruido excesivo.
+Los niveles permiten controlar qué información se emite durante la ejecución y cuál queda disponible para el diagnóstico. Cada nivel tiene un uso específico; el nivel mínimo se configura por entorno; y los niveles permiten filtrar los eventos. Estas condiciones permiten que el logging sea útil sin generar ruido excesivo.
 
 Microsoft.Extensions.Logging define seis niveles de eventos, desde Trace hasta Critical, además del valor None que desactiva la emisión. Serilog los representa como Verbose, Debug, Information, Warning, Error y Fatal. El adaptador traduce los nombres: no hay que crear una segunda escala propia.
 
@@ -277,7 +277,7 @@ Buenas prácticas de logging:
 
 `5. Correlación con identificador.` quinta práctica.
 
-Las buenas prácticas se caracterizan por tres propiedades. Producen logs útiles; protegen la información sensible; y permiten el análisis automático. Estas condiciones permiten que el logging sea un activo del sistema.
+Para ser útil, una política de logging debe producir eventos pertinentes; protegen la información sensible; y permiten el análisis automático. Estas condiciones permiten que el logging sea un activo del sistema.
 
 La selección de campos debe ser positiva: una lista de propiedades necesarias resulta más auditable que serializar todo y quitar algunas. Para las peticiones se usan Servicio, CorrelationId, TraceId, método, plantilla de ruta, estado y duración. Para mensajería se conservan EventoId y OrdenId donde proceda.
 
@@ -424,7 +424,7 @@ Readiness → el servicio está listo. Si falla, se retira del balanceador.
 Startup   → margen de arranque; al agotar el umbral puede reiniciarse.
 ```
 
-Los tres tipos se caracterizan por tres propiedades. Cada tipo tiene un propósito específico; cada tipo se consulta en un momento distinto; y cada tipo provoca una decisión distinta, aunque los ejecute el mismo orquestador. Estas condiciones permiten que el sistema detecte problemas de forma precisa.
+Liveness, readiness y startup tienen cometidos diferentes que conviene separar durante la operación. Cada tipo tiene un propósito específico; cada tipo se consulta en un momento distinto; y cada tipo provoca una decisión distinta, aunque los ejecute el mismo orquestador. Estas condiciones permiten que el sistema detecte problemas de forma precisa.
 
 Liveness pregunta si conviene reiniciar este proceso; readiness pregunta si conviene enviarle tráfico ahora; startup permite un arranque prolongado antes de activar las otras evaluaciones. Los umbrales pertenecen a la plataforma. Una sonda de startup que supera su límite de fallos también puede provocar reinicio.
 
@@ -487,7 +487,7 @@ app.MapHealthChecks("/health/ready", new HealthCheckOptions
 
 `{` abre sus opciones; `Predicate = check => check.Tags.Contains("live")` selecciona únicamente los checks con tag live; `});` termina la configuración de liveness; `app.MapHealthChecks("/health/ready", new HealthCheckOptions` mapea la ruta de readiness.
 
-La integración con ASP.NET Core se caracteriza por tres propiedades. El soporte es nativo; las comprobaciones se registran en el contenedor; y los endpoints se exponen con `MapHealthChecks`. Estas condiciones permiten que los health checks se integren con la aplicación.
+La integración aprovecha los servicios de ASP.NET Core y mantiene una configuración explícita. El soporte es nativo; las comprobaciones se registran en el contenedor; y los endpoints se exponen con `MapHealthChecks`. Estas condiciones permiten que los health checks se integren con la aplicación.
 
 AddHealthChecks registra comprobaciones; MapHealthChecks selecciona cuáles ejecuta una ruta. Los tags son etiquetas y Predicate las filtra. Sin ese filtro, dos endpoints ejecutan todas las comprobaciones registradas. La separación semántica debe quedar escrita en opciones, no únicamente en el nombre de la URL.
 
@@ -655,7 +655,7 @@ Buenas prácticas de health checks:
 
 `5. Tiempos e intervalos configurados.` quinta práctica.
 
-Las buenas prácticas se caracterizan por tres propiedades. Producen health checks útiles; protegen la información sensible; y permiten el diagnóstico. Estas condiciones permiten que los health checks sean un activo del sistema.
+Un health check debe aportar una señal operativa útil; protegen la información sensible; y permiten el diagnóstico. Estas condiciones permiten que los health checks sean un activo del sistema.
 
 Diseña sondas baratas, sin efectos de negocio y con tiempo máximo. El token de cancelación debe llegar a las operaciones SQL y AMQP, y los recursos abiertos deben liberarse. Una configuración de timeout que no se propaga al trabajo real solo limita la espera del observador.
 
@@ -983,7 +983,7 @@ Buenas prácticas de gestión de excepciones:
 
 `5. Devolver respuestas uniformes.` quinta práctica.
 
-Las buenas prácticas se caracterizan por tres propiedades. Producen un flujo de errores explícito; facilitan el diagnóstico; y mantienen la coherencia de la API. Estas condiciones permiten que la gestión de excepciones sea un activo del sistema.
+Una política de errores coherente hace explícito el resultado de cada operación; facilitan el diagnóstico; y mantienen la coherencia de la API. Estas condiciones permiten que la gestión de excepciones sea un activo del sistema.
 
 Captura cuando puedes recuperar, traducir con contexto o liberar recursos; deja que el resto llegue al límite apropiado. La centralización reduce duplicación, pero no sustituye las transacciones, la disposición de recursos ni el tratamiento específico de cancelación.
 
@@ -1324,7 +1324,7 @@ Buenas prácticas de resiliencia:
 
 `5. Ajustar parámetros al contexto.` quinta práctica.
 
-Las buenas prácticas se caracterizan por tres propiedades. Producen un sistema robusto; la resiliencia es observable; y los parámetros se ajustan al contexto. Estas condiciones permiten que la resiliencia sea un activo del sistema.
+En resiliencia, la robustez debe acompañarse de límites que puedan medirse; la resiliencia es observable; y los parámetros se ajustan al contexto. Estas condiciones permiten que la resiliencia sea un activo del sistema.
 
 Prueba las decisiones de la política y sus límites. La observación útil incluye intentos, demoras, aperturas y resultado final con contexto seguro. No registres cuerpos ni mensajes libres de excepciones durante callbacks de resiliencia: las mismas reglas de privacidad siguen vigentes.
 
