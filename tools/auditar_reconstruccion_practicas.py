@@ -186,11 +186,16 @@ def check_generated_solution(previous: dict[str,str], built: dict[str,str],
     """
     prev = previous.get("AceriaApp.sln")
     wanted = actual.get("AceriaApp.sln")
-    if not prev or not wanted:
-        return False, "Falta la solución anterior o la esperada"
+    if not wanted:
+        return False, "No existe la solución esperada"
     if not re.search(r"dotnet\s+sln(?:\s+\S+)?\s+add\b", section, re.I):
         return False, "La práctica no muestra el comando dotnet sln add"
-    baseline = solution_paths(prev)
+    if prev:
+        baseline = solution_paths(prev)
+    else:
+        if not re.search(r"dotnet\s+new\s+sln\b", section, re.I):
+            return False, "No hay solución inicial y el manual no indica dotnet new sln"
+        baseline = {rel.casefold() for rel in previous if rel.endswith(".csproj")}
     newly_created = {
         file.casefold()
         for file in built.keys() - previous.keys() if file.endswith(".csproj")
