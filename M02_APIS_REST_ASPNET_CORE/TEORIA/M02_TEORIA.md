@@ -1209,12 +1209,13 @@ Objetivos de aprendizaje:
 - Comprender las anotaciones de metadatos en Minimal API.
 - Añadir al proyecto AceriaApp la documentación OpenAPI con metadatos, ejemplos y versionado, y un test unitario que verifique la documentación. Cerrar el módulo 2 con el resumen del estado del proyecto.
 
----
 
 
-### Bloque 1 — El estándar OpenAPI
+El contrato que ahora documentamos es el mismo que acabamos de construir. Leeremos la especificación como lo haría un consumidor externo y comprobaremos que cada ruta, esquema y respuesta describe una capacidad que la API puede demostrar.
 
-OpenAPI es una especificación para describir APIs REST de forma legible por máquinas y por personas. La especificación define la estructura de un documento que describe los endpoints, los parámetros, los cuerpos de petición, las respuestas y los esquemas de datos. El documento se escribe en JSON o en YAML. La especificación se originó en el proyecto Swagger y fue donada a la OpenAPI Initiative en 2015. La versión actual es la 3.1, aunque la 3.0 sigue siendo la más adoptada. OpenAPI no es un framework ni una biblioteca: es un formato de descripción. Las herramientas que lo consumen pueden generar documentación, clientes, servidores de prueba y tests automáticos.
+### El estándar OpenAPI
+
+Cuando una API empieza a ser utilizada por otros equipos, la explicación de su contrato no puede depender de mirar el código fuente o de preguntar al autor de cada endpoint. OpenAPI ofrece una descripción estructurada de las rutas, operaciones, parámetros, respuestas y esquemas de datos que un consumidor necesita conocer. No es un servidor ni una biblioteca de validación; es una especificación que distintas herramientas pueden producir, mostrar y analizar. Su utilidad depende de que refleje lo que realmente atiende la aplicación. En AceriaApp utilizaremos la especificación para documentar las operaciones sobre órdenes, pero también para comprobar que la descripción no promete estados HTTP o campos que el servidor no devuelve. Este criterio conecta el documento con las decisiones REST de los puntos anteriores.
 
 ```text
 Estructura de un documento OpenAPI:
@@ -1232,25 +1233,17 @@ paths:
           description: Lista de órdenes
 ```
 
-- **Línea 1:** openapi: 3.0.3 → versión de la especificación.
-- **Línea 2:** info: → sección de metadatos de la API.
-- **Línea 3:** title: AceriaApp.Ordenes.Api → título de la API.
-- **Línea 4:** version: v1 → versión del contrato.
-- **Línea 5:** paths: → sección de endpoints.
-- **Línea 6:** /api/v1/ordenes: → ruta del endpoint.
-- **Línea 7:** get: → método HTTP.
-- **Línea 8:** summary: Lista las órdenes → resumen del endpoint.
-- **Línea 9:** responses: → sección de respuestas.
-- **Línea 10:** '200': → código de respuesta.
-- **Línea 11:** description: Lista de órdenes → descripción de la respuesta.
+
+El documento comienza indicando la versión de la especificación, los metadatos de la API y sus rutas. La relación entre `paths` y los esquemas reutilizables permite describir un contrato sin repetirlo en cada operación. Los nombres del ejemplo solo serán útiles si coinciden con las rutas que el servidor ofrece realmente.
+
 
 Un documento OpenAPI describe la API de forma completa y estructurada. La estructura permite que las herramientas generen documentación interactiva, clientes en distintos lenguajes y pruebas automáticas. La generación automática evita la documentación obsoleta porque el documento se deriva del código. La derivación del código no es automática por defecto: requiere que el código incluya los metadatos necesarios. Los metadatos se añaden con anotaciones, con atributos o con configuración explícita. El curso usa las anotaciones de Minimal API y la configuración de SwaggerGen.
 
 ---
 
-### Bloque 2 — Swagger y Swagger UI
+### Swagger y Swagger UI
 
-Swagger es el nombre original del proyecto que dio lugar a OpenAPI. En la práctica, el término Swagger se usa para referirse a tres cosas: el formato de descripción, las herramientas de generación y la interfaz de usuario. La interfaz de usuario se llama Swagger UI y permite explorar la API de forma interactiva. Swagger UI lee el documento OpenAPI generado por el servidor y construye una página web que muestra los endpoints, los parámetros y las respuestas. La página incluye un botón para probar cada endpoint directamente desde el navegador. La combinación de OpenAPI y Swagger UI proporciona documentación viva y ejecutable.
+Swagger es un conjunto histórico de herramientas relacionado con OpenAPI; Swagger UI es una interfaz web que permite explorar una especificación y realizar peticiones de prueba. Conviene no utilizar «Swagger» como sinónimo de todo el estándar. En ASP.NET Core se pueden registrar servicios de exploración de endpoints y generar un documento que represente la API publicada. La interfaz interactiva facilita probar una ruta y observar sus respuestas, pero no sustituye los tests automatizados ni acredita que la persistencia funcione. Tampoco conviene exponer sin criterio todas esas herramientas en producción: la configuración del entorno debe determinar qué documentación es pública y qué información podría facilitar ataques. En el laboratorio veremos el documento generado y lo contrastaremos con peticiones HTTP.
 
 ![Figura del punto 2.4: Del endpoint de ASP.NET Core al documento OpenAPI](IMAGENES/m02-2-4-generacion-openapi.svg)
 
@@ -1269,32 +1262,24 @@ if (app.Environment.IsDevelopment())
 }
 ```
 
-- **Línea 1:** builder.Services.AddEndpointsApiExplorer(); → habilita la exploración de endpoints.
-- **Línea 2:** builder.Services.AddSwaggerGen(); → registra el generador de Swagger.
-- **Línea 3:** var app = builder.Build(); → construye la aplicación.
-- **Línea 4:** if (app.Environment.IsDevelopment()) → solo en desarrollo.
-- **Línea 5:** { → abre el bloque.
-- **Línea 6:** app.UseSwagger(); → habilita el endpoint del documento OpenAPI.
-- **Línea 7:** app.UseSwaggerUI(); → habilita la interfaz gráfica.
-- **Línea 8:** } → cierra el bloque.
+
+El registro de exploración de endpoints y SwaggerGen habilita la generación del documento, mientras que Swagger UI proporciona la interfaz para consultarlo. Es necesario distinguir la generación del contrato de su exposición web y determinar en qué entornos deben estar disponibles.
+
 
 La configuración de Swagger en ASP.NET Core se realiza en dos fases. La primera fase registra los servicios con AddEndpointsApiExplorer y AddSwaggerGen. La segunda fase habilita los middleware con UseSwagger y UseSwaggerUI. La primera fase se ejecuta antes de builder.Build(). La segunda fase se ejecuta después. La separación entre las dos fases es una consecuencia del modelo de arranque de ASP.NET Core. El curso configura Swagger solo en el entorno de desarrollo para no exponer la documentación en producción.
 
 ---
 
-
-
-#### Del concepto a ASP.NET Core 8: Generación real
+#### Generación real en AceriaApp
 
 OpenAPI no es una cadena YAML fabricada para satisfacer un test superficial. Swashbuckle descubre los endpoints realmente declarados en ASP.NET Core y genera el documento JSON. AddEndpointsApiExplorer registra la exploración de rutas y SwaggerDoc aporta metadatos de la versión v1.
 
-**Aplicación en el proyecto real.** Este comportamiento está materializado en `Documentacion/DocumentacionExtensions.cs` del estado `2.4-documentacion-openapi`. Busca la instrucción `AddSwaggerGen` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
+En `DocumentacionExtensions.cs`, `AddSwaggerGen` organiza la generación de OpenAPI. La configuración tiene sentido cuando identifica la versión real y no confunde datos internos con contratos de salida.
 
-**Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
 
-### Bloque 3 — Estructura de un documento OpenAPI
+### Estructura de un documento OpenAPI
 
-Un documento OpenAPI se organiza en secciones. La sección info contiene los metadatos de la API: título, versión, descripción y contacto. La sección servers contiene las URL base de la API. La sección paths contiene los endpoints con sus métodos y parámetros. La sección components contiene los esquemas de datos reutilizables. La sección security contiene los esquemas de autenticación. La sección tags contiene las etiquetas que agrupan los endpoints. Cada sección tiene una estructura definida por la especificación. La estructura es la misma independientemente del lenguaje o del framework que genere el documento.
+Un documento OpenAPI contiene varias piezas que se relacionan entre sí. `info` identifica la API y su versión; `paths` describe las operaciones; `components.schemas` permite reutilizar definiciones de datos; las respuestas indican estados y contenidos esperados. Esta estructura evita duplicaciones y puede ser consumida por herramientas de generación de clientes. Sin embargo, un documento sintácticamente válido puede resultar incorrecto si refleja modelos internos que la API no expone o si ignora condiciones de error relevantes. Para AceriaApp, el esquema de creación debe mostrar el contrato de entrada y el de consulta debe representar el DTO de salida. Una documentación útil permite construir una llamada correcta sin tener que conocer las clases de persistencia.
 
 ![Figura del punto 2.4: Secciones que componen el contrato OpenAPI](IMAGENES/m02-2-4-estructura-openapi.svg)
 
@@ -1329,40 +1314,17 @@ components:
           type: string
 ```
 
-- **Línea 1:** openapi: 3.0.3 → versión de la especificación.
-- **Línea 2:** info: → metadatos de la API.
-- **Línea 3:** title: AceriaApp.Monolito.Api → título.
-- **Línea 4:** version: v1 → versión del contrato.
-- **Línea 5:** description: API del monolito de referencia. → descripción.
-- **Línea 6:** servers: → URL base de la API.
-- **Línea 7:** - url: https://localhost:7000 → URL del servidor.
-- **Línea 8:** paths: → endpoints.
-- **Línea 9:** /api/v1/ordenes: → ruta del endpoint.
-- **Línea 10:** get: → método HTTP.
-- **Línea 11:** tags: → etiquetas del endpoint.
-- **Línea 12:** - Ordenes → etiqueta del endpoint.
-- **Línea 13:** summary: Lista las órdenes → resumen.
-- **Línea 14:** responses: → respuestas.
-- **Línea 15:** '200': → código de respuesta.
-- **Línea 16:** description: Lista de órdenes → descripción de la respuesta.
-- **Línea 17:** components: → esquemas reutilizables.
-- **Línea 18:** schemas: → esquemas de datos.
-- **Línea 19:** OrdenDto: → nombre del esquema.
-- **Línea 20:** type: object → tipo del esquema.
-- **Línea 21:** properties: → propiedades del esquema.
-- **Línea 22:** id: → primera propiedad.
-- **Línea 23:** type: string → tipo de la propiedad.
-- **Línea 24:** format: uuid → formato de la propiedad.
-- **Línea 25:** cliente: → segunda propiedad.
-- **Línea 26:** type: string → tipo de la propiedad.
+
+Las secciones `paths`, `responses` y `components.schemas` tienen funciones complementarias: identifican operaciones, estados y formatos de datos. Un error común es declarar la ruta de una orden sin describir la representación que devuelve o los estados de ausencia y validación.
+
 
 La estructura del documento OpenAPI se organiza de forma jerárquica. La sección paths contiene un objeto por ruta. Cada ruta contiene un objeto por método. Cada método contiene los parámetros, el cuerpo de petición y las respuestas. La sección components contiene los esquemas reutilizables que se referencian desde los endpoints con $ref. La reutilización de esquemas evita la duplicación de definiciones. La estructura jerárquica del documento refleja la estructura de la API y facilita la navegación.
 
 ---
 
-### Bloque 4 — Anotaciones de metadatos en Minimal API
+### Anotaciones de metadatos en Minimal API
 
-Minimal API permite añadir metadatos a los endpoints con métodos de extensión. Los métodos más usados son WithName, WithSummary, WithDescription, WithTags, Produces y ProducesProblem. El método WithName asigna un nombre único al endpoint. El método WithSummary añade un resumen corto. El método WithDescription añade una descripción larga. El método WithTags agrupa el endpoint bajo una etiqueta. El método Produces declara el tipo de respuesta. El método ProducesProblem declara el tipo de respuesta de error.
+Minimal APIs asocia metadatos a los endpoints para describir sus nombres, parámetros, esquemas y respuestas. Métodos como `WithName`, `WithTags` o `Produces` proporcionan pistas al generador, pero la obligación importante es mantenerlas coherentes con el comportamiento. Si una ruta declara `201 Created` y en ejecución responde `200`, el documento no queda validado por el mero hecho de generarse. La documentación debería incluir también los resultados de ausencia y validación que ya se han estudiado, y evitar que una excepción técnica se presente como un resultado de negocio. Por tanto, el alumno debe recorrer el mismo endpoint de dos formas: leyendo su operación en el documento OpenAPI y enviando peticiones que comprueben los estados declarados.
 
 ```csharp
 app.MapGet("/api/v1/ordenes", async (AceriaDbContext db) =>
@@ -1375,26 +1337,19 @@ app.MapGet("/api/v1/ordenes", async (AceriaDbContext db) =>
     .ProducesProblem(StatusCodes.Status500InternalServerError);
 ```
 
-- **Línea 1:** app.MapGet("/api/v1/ordenes", async (AceriaDbContext db) => → declara el endpoint.
-- **Línea 2:** await db.Ordenes.AsNoTracking().ToListAsync()) → devuelve la lista.
-- **Línea 3:** .WithName("ListarOrdenes") → asigna un nombre único.
-- **Línea 4:** .WithSummary("Lista todas las órdenes") → añade un resumen.
-- **Línea 5:** .WithDescription("Devuelve la lista completa de órdenes de producción.") → añade una descripción.
-- **Línea 6:** .WithTags("Ordenes") → agrupa el endpoint bajo la etiqueta.
-- **Línea 7:** .Produces<List<Orden>>(StatusCodes.Status200OK) → declara el tipo de respuesta.
-- **Línea 8:** .ProducesProblem(StatusCodes.Status500InternalServerError); → declara el tipo de error.
+
+Los metadatos asociados a una Minimal API enriquecen su documentación, pero no cambian automáticamente el comportamiento del manejador. Declarar `Produces(201)` solo es fiable si una petición real de creación devuelve efectivamente ese estado y la representación prevista.
+
 
 Las anotaciones tienen dos consecuencias prácticas. La primera es que el documento OpenAPI se genera con metadatos completos. La segunda es que Swagger UI muestra la información en la interfaz. La combinación de ambas mejora la experiencia del consumidor. Las anotaciones se aplican de forma consistente en todos los endpoints. La consistencia es lo que permite que la documentación sea uniforme y predecible.
 
 ---
 
-
-
-#### Del concepto a ASP.NET Core 8: Conexión en Program.cs
+#### Conexión en Program.cs en AceriaApp
 
 La aplicación debe ejecutar AddDocumentacion antes de builder.Build y UseDocumentacion después. El primer método registra servicios y el segundo habilita el middleware. Definir una clase de extensión que nunca se invoca en Program.cs no documenta nada.
 
-**Aplicación en el proyecto real.** Este comportamiento está materializado en `Program.cs` del estado `2.4-documentacion-openapi`. Busca la instrucción `AddDocumentacion` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
+La llamada `AddDocumentacion` en `Program.cs` centraliza el registro de las herramientas de documentación, mientras que el código del endpoint sigue siendo responsable de atender las peticiones.
 
 **Código de referencia probado:** `src/AceriaApp.Api/Documentacion/DocumentacionExtensions.cs`
 
@@ -1449,11 +1404,10 @@ public sealed class EjemploCrearOrden : ISchemaFilter
 // FIN PASO 2.4.5
 ```
 
-**Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
 
-### Bloque 5 — Esquemas de datos y DTOs
+### Esquemas de datos y DTOs
 
-Los esquemas de datos se derivan de los tipos usados en los endpoints. Un record de respuesta produce un esquema con sus propiedades. Un record de petición produce un esquema con sus propiedades. Los esquemas se incluyen en la sección components del documento OpenAPI. Los endpoints referencian los esquemas con $ref. La referencia evita la duplicación de definiciones. La derivación de esquemas a partir de los tipos requiere que los tipos sean públicos y que sus propiedades sean accesibles. Los tipos anidados se incluyen como esquemas separados.
+Los esquemas de OpenAPI representan formas de datos: tipos, propiedades, restricciones y referencias reutilizables. Son especialmente importantes cuando una misma API admite contratos de entrada y salida diferentes. `CrearOrdenRequest` puede contener cliente, material y cantidad; `OrdenDto` añade identificador y datos asignados por el servidor. Documentar ambos correctamente impide que un consumidor suponga que puede enviar el estado interno de la entidad o que todos los campos de salida son editables. Aunque las herramientas pueden inferir parte del esquema desde tipos C#, algunas reglas semánticas necesitan descripciones adicionales y pruebas. En AceriaApp comprobaremos qué información obtiene un cliente a partir del documento y qué reglas deben explicarse con palabras.
 
 ```csharp
 public record OrdenDto(
@@ -1470,25 +1424,17 @@ app.MapGet("/api/v1/ordenes", async (AceriaDbContext db) =>
     .Produces<List<OrdenDto>>(StatusCodes.Status200OK);
 ```
 
-- **Línea 1:** public record OrdenDto( → declara el esquema de respuesta.
-- **Línea 2:** Guid Id, → identificador de la orden.
-- **Línea 3:** string Cliente, → nombre del cliente.
-- **Línea 4:** string Material, → material solicitado.
-- **Línea 5:** int Cantidad, → cantidad solicitada.
-- **Línea 6:** DateTime FechaCreacion); → fecha de creación.
-- **Línea 7:** app.MapGet("/api/v1/ordenes", async (AceriaDbContext db) => → declara el endpoint.
-- **Línea 8:** await db.Ordenes → consulta las órdenes.
-- **Línea 9:** .Select(o => new OrdenDto(...)) → proyecta la entidad al DTO.
-- **Línea 10:** .ToListAsync()) → materializa la lista.
-- **Línea 11:** .Produces<List<OrdenDto>>(StatusCodes.Status200OK); → declara el tipo de respuesta.
+
+Los `record` utilizados como DTO proporcionan una base clara para los esquemas de datos; los campos públicos y tipos deben corresponderse con los valores JSON reales. Conviene separar la estructura de `CrearOrdenRequest` de la de `OrdenDto` para no prometer al cliente permisos de escritura que no posee.
+
 
 La derivación de esquemas a partir de los tipos tiene dos consecuencias prácticas. La primera es que el contrato público está documentado de forma exacta. La segunda es que la evolución del contrato se refleja automáticamente en la documentación. La separación entre entidad y DTO del punto 2.1 se mantiene: los esquemas se derivan de los DTOs, no de las entidades. La separación garantiza que la documentación no expone la implementación interna del servicio.
 
 ---
 
-### Bloque 6 — Ejemplos en la documentación
+### Ejemplos en la documentación
 
-Los ejemplos en la documentación muestran al consumidor cómo usar la API. Los ejemplos se añaden con anotaciones o con configuración explícita. Un ejemplo puede ser de petición o de respuesta. Un ejemplo de petición muestra el JSON que el cliente debe enviar. Un ejemplo de respuesta muestra el JSON que el servidor devuelve. Los ejemplos facilitan la integración y reducen el tiempo de prueba. La adopción de ejemplos es una buena práctica de documentación.
+Los ejemplos de peticiones y respuestas convierten una especificación formal en una ayuda práctica para el consumidor. Un JSON de ejemplo debe tener campos coherentes con el esquema y representar un caso plausible del negocio. Si mostramos una creación de orden, el alumno debería poder identificar qué datos aporta el cliente y cuáles asigna el servidor, qué resultado HTTP espera y dónde puede consultar el recurso creado. También hay que evitar ejemplos que incluyan identificadores, claves o datos personales reales. Un ejemplo no demuestra que la operación funcione: debe contrastarse con la API ejecutada y mantenerse actualizado cuando cambian contratos. La documentación sirve para reducir ambigüedades, no para fabricar la apariencia de una funcionalidad inexistente.
 
 ```yaml
 components:
@@ -1507,38 +1453,24 @@ components:
           example: 10
 ```
 
-- **Línea 1:** components: → sección de esquemas reutilizables.
-- **Línea 2:** schemas: → esquemas de datos.
-- **Línea 3:** CrearOrdenRequest: → esquema de petición.
-- **Línea 4:** type: object → tipo del esquema.
-- **Línea 5:** properties: → propiedades del esquema.
-- **Línea 6:** cliente: → primera propiedad.
-- **Línea 7:** type: string → tipo de la propiedad.
-- **Línea 8:** example: ACX-001 → ejemplo del valor.
-- **Línea 9:** material: → segunda propiedad.
-- **Línea 10:** type: string → tipo de la propiedad.
-- **Línea 11:** example: CHAPA-3MM → ejemplo del valor.
-- **Línea 12:** cantidad: → tercera propiedad.
-- **Línea 13:** type: integer → tipo de la propiedad.
-- **Línea 14:** example: 10 → ejemplo del valor.
+
+Los ejemplos dentro de `components` ayudan a que otra persona construya una petición plausible, pero deben ser coherentes con el esquema publicado. Si cambia una propiedad obligatoria o una regla de validación, hay que revisar tanto el ejemplo como la prueba del endpoint.
+
 
 Los ejemplos tienen dos consecuencias prácticas. La primera es que el consumidor ve cómo se usa la API sin necesidad de leer toda la documentación. La segunda es que las herramientas pueden generar clientes con ejemplos precargados. La adopción de ejemplos es especialmente útil en APIs con contratos complejos. El curso usa ejemplos en los esquemas de petición y de respuesta.
 
 ---
 
-
-
-#### Del concepto a ASP.NET Core 8: Metadatos y códigos
+#### Metadatos y códigos en AceriaApp
 
 WithName, WithSummary, WithTags, Produces, ProducesProblem y ProducesValidationProblem describen operaciones reales. Declarar que un endpoint puede devolver 400 no hace que valide: la validación efectiva ya se incorporó en 2.3. La documentación debe corresponder a lo que el runtime responde.
 
-**Aplicación en el proyecto real.** Este comportamiento está materializado en `Program.cs` del estado `2.4-documentacion-openapi`. Busca la instrucción `Produces` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
+Los metadatos `Produces` declaran respuestas esperadas para los consumidores. Las pruebas HTTP deben demostrar que la implementación devuelve realmente esos estados y cuerpos.
 
-**Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
 
-### Bloque 7 — Versionado de la documentación
+### Versionado de la documentación
 
-La documentación se versiona junto con el contrato. Cada versión del contrato tiene su propio documento OpenAPI. Swagger UI permite seleccionar la versión que se quiere consultar. La selección se realiza con el método SwaggerDoc que registra cada versión. La versión de la documentación coincide con la versión del contrato en la URL. La coincidencia permite que el consumidor consulte la documentación de la versión que usa. El versionado de la documentación es una consecuencia del versionado del contrato.
+Versionar una API y versionar su documentación son decisiones relacionadas, pero distintas. Un cliente que consulta `/api/v1/ordenes` necesita una especificación que describa exactamente ese contrato. Si algún día conviven versiones 1 y 2, sus documentos deben permitir reconocer diferencias y plazos de migración. Añadir un número al archivo OpenAPI sin mantener endpoints compatibles no resuelve ese problema. También conviene saber qué partes cambian durante una actualización del generador y cuáles responden a decisiones funcionales. En AceriaApp mantendremos una identificación clara de la versión publicada y utilizaremos pruebas que permitan detectar diferencias entre el documento y el comportamiento observable. La compatibilidad se demuestra desde los consumidores, no desde el nombre del documento.
 
 ```csharp
 builder.Services.AddSwaggerGen(options =>
@@ -1557,27 +1489,17 @@ app.UseSwaggerUI(options =>
 });
 ```
 
-- **Línea 1:** builder.Services.AddSwaggerGen(options => → registra el generador.
-- **Línea 2:** { → abre el bloque.
-- **Línea 3:** options.SwaggerDoc("v1", new OpenApiInfo → registra la versión v1.
-- **Línea 4:** { → abre el bloque de metadatos.
-- **Línea 5:** Title = "AceriaApp.Monolito.Api", → título de la API.
-- **Línea 6:** Version = "v1", → versión del contrato.
-- **Línea 7:** Description = "API del monolito de referencia." → descripción.
-- **Línea 8:** }); → cierra el bloque.
-- **Línea 9:** }); → cierra la configuración.
-- **Línea 10:** app.UseSwaggerUI(options => → configura Swagger UI.
-- **Línea 11:** { → abre el bloque.
-- **Línea 12:** options.SwaggerEndpoint("/swagger/v1/swagger.json", "AceriaApp.Monolito.Api v1"); → registra el endpoint del documento.
-- **Línea 13:** }); → cierra el bloque.
+
+La configuración de la versión del documento y sus metadatos debe estar alineada con las rutas públicas. OpenAPI no gestiona por sí solo la convivencia de versiones ni las migraciones de clientes; esas decisiones requieren contratos y pruebas adicionales.
+
 
 El versionado de la documentación tiene dos consecuencias prácticas. La primera es que el consumidor puede consultar la versión que usa. La segunda es que la documentación de versiones antiguas sigue disponible mientras el contrato antiguo siga activo. La combinación de ambas permite la evolución sin romper a los consumidores. El curso usa el versionado en la URL y en la documentación de forma coherente.
 
 ---
 
-### Bloque 8 — Documentación de errores y problem details
+### Documentación de errores y problem details
 
-La documentación incluye los códigos de error y el formato problem details. El método ProducesProblem declara el tipo de error. El método ProducesValidationProblem declara el tipo de error de validación. La documentación muestra los códigos de error esperados para cada endpoint. La inclusión de los errores en la documentación permite al consumidor anticipar las respuestas. La anticipación reduce el tiempo de integración y mejora la experiencia del consumidor.
+Los errores son parte del contrato y no deben desaparecer de la documentación por resultar menos vistosos que los ejemplos de éxito. Un endpoint que valida una petición necesita describir los estados que puede devolver y, cuando resulte apropiado, el formato Problem Details que recibirá el cliente. Un 400 por entrada inválida es distinto de un 404 por orden ausente y de un 409 por una transición incompatible con el estado. Las descripciones deberían permitir a un consumidor decidir si puede corregir la petición, volver a consultar o informar de un problema. No hace falta publicar trazas ni detalles de infraestructura para lograrlo. En AceriaApp verificaremos que los estados de error que declaramos coinciden con los que las rutas devuelven realmente.
 
 ```csharp
 app.MapPost("/api/v1/ordenes", async (CrearOrdenRequest request, AceriaDbContext db) =>
@@ -1591,27 +1513,19 @@ app.MapPost("/api/v1/ordenes", async (CrearOrdenRequest request, AceriaDbContext
 .ProducesProblem(StatusCodes.Status500InternalServerError);
 ```
 
-- **Línea 1:** app.MapPost("/api/v1/ordenes", async (CrearOrdenRequest request, AceriaDbContext db) => → declara el endpoint POST.
-- **Línea 2:** { → abre el cuerpo del lambda.
-- **Línea 3:** // lógica del endpoint → comentario del cuerpo.
-- **Línea 4:** }) → cierra el lambda.
-- **Línea 5:** .WithName("CrearOrden") → asigna un nombre único.
-- **Línea 6:** .WithSummary("Crea una orden") → añade un resumen.
-- **Línea 7:** .Produces<OrdenDto>(StatusCodes.Status201Created) → declara la respuesta exitosa.
-- **Línea 8:** .ProducesValidationProblem(StatusCodes.Status400BadRequest) → declara el error de validación.
-- **Línea 9:** .ProducesProblem(StatusCodes.Status500InternalServerError); → declara el error interno.
+
+La descripción del POST debe contemplar respuestas correctas y condiciones de error. Si el cuerpo produce un `ProblemDetails`, la documentación necesita expresar ese formato y los estados HTTP pertinentes, sin limitarse a mostrar el caso satisfactorio.
+
 
 La documentación de errores tiene dos consecuencias prácticas. La primera es que el consumidor ve los códigos de error esperados. La segunda es que las herramientas pueden generar clientes que manejen cada código de forma específica. La adopción de la documentación de errores es una buena práctica que se aplica de forma uniforme en todos los endpoints. El curso documenta los códigos 400, 404, 409, 422 y 500 según corresponda.
 
 ---
 
-
-
-#### Del concepto a ASP.NET Core 8: Ejemplos y contratos
+#### Ejemplos y contratos en AceriaApp
 
 SchemaFilter permite mostrar en components.schemas un ejemplo de CrearOrdenRequest con cliente, material y cantidad. El ejemplo no crea una fila en SQL Server; explica el cuerpo que puede enviar el consumidor. El DTO de salida, en cambio, describe la representación de una orden ya existente.
 
-**Aplicación en el proyecto real.** Este comportamiento está materializado en `Documentacion/DocumentacionExtensions.cs` del estado `2.4-documentacion-openapi`. Busca la instrucción `EjemploCrearOrden` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
+El ejemplo `EjemploCrearOrden` ayuda a mostrar un cuerpo de solicitud coherente con el esquema de entrada. No basta con crear una clase de ejemplos: su contenido debe ser utilizable en la API real.
 
 **Código de referencia probado:** `src/AceriaApp.Api/Program.cs`
 
@@ -1622,11 +1536,10 @@ SchemaFilter permite mostrar en components.schemas un ejemplo de CrearOrdenReque
 ;
 ```
 
-**Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
 
-### Bloque 9 — Herramientas que consumen OpenAPI
+### Herramientas que consumen OpenAPI
 
-El documento OpenAPI lo consumen varias herramientas. Swagger UI lo consume para generar la documentación interactiva. OpenAPI Generator lo consume para generar clientes en distintos lenguajes. Postman lo consume para importar la colección de endpoints. ReDoc lo consume para generar documentación de solo lectura. Las herramientas se integran con el documento sin modificar la API. La integración es posible porque el documento es un formato estándar. La estandarización es la que permite que la documentación se reutilice en múltiples herramientas.
+Una especificación OpenAPI bien mantenida puede servir a varios tipos de consumidores: interfaces interactivas, herramientas de prueba, generadores de clientes y comprobadores de contratos. Cada herramienta tiene límites. Swagger UI facilita exploración manual; un generador de cliente ahorra escritura repetitiva, pero puede convertir un error de esquema en código incorrecto; Postman u otros clientes permiten ejecutar peticiones, pero no sustituyen el diseño ni la prueba del contrato. Conviene comprobar cómo cada herramienta interpreta los tipos, errores y versiones que declaramos. Para el alumno, el objetivo no es instalar el mayor número de herramientas, sino ser capaz de leer el documento, formular una petición y comprobar que su resultado corresponde con la API de AceriaApp.
 
 ```text
 Herramientas que consumen OpenAPI:
@@ -1637,18 +1550,17 @@ Postman              → colección de endpoints.
 ReDoc                → documentación de solo lectura.
 ```
 
-- **Línea 1:** Swagger UI → documentación interactiva.
-- **Línea 2:** OpenAPI Generator → clientes en varios lenguajes.
-- **Línea 3:** Postman → colección de endpoints.
-- **Línea 4:** ReDoc → documentación de solo lectura.
+
+Swagger UI, los generadores de clientes y las herramientas de prueba consumen la misma especificación con finalidades distintas. Su correcto funcionamiento depende de la precisión del documento; una representación errónea puede propagarse a varios consumidores simultáneamente.
+
 
 La integración con herramientas tiene dos consecuencias prácticas. La primera es que la documentación se reutiliza en distintos contextos. La segunda es que el consumidor elige la herramienta que mejor se adapta a su flujo de trabajo. La combinación de ambas reduce el coste de integración y mejora la experiencia del consumidor. El curso usa Swagger UI como herramienta principal y menciona las demás como opciones.
 
 ---
 
-### Bloque 10 — Aplicación al proyecto del curso
+### Aplicación al proyecto del curso
 
-El proyecto del curso aplica la documentación OpenAPI en todos los endpoints. Los metadatos se añaden con las anotaciones de Minimal API. Los esquemas se derivan de los DTOs. Los ejemplos se añaden en los esquemas de petición. La versión del contrato coincide con la versión de la URL. Los códigos de error se documentan con ProducesProblem y ProducesValidationProblem. La documentación se publica con Swagger UI en el entorno de desarrollo. La documentación se cierra con un test que verifica la generación del documento.
+El cierre de M02 debe relacionar el contrato público con el código que lo implementa. En AceriaApp las operaciones de órdenes ya tienen rutas, métodos, validación y respuestas HTTP; ahora se documentan de forma que un consumidor pueda descubrirlas y utilizarlas. La evidencia exigible no es que `swagger.json` exista, sino que sus paths, esquemas y estados reflejen el servidor real y que las pruebas permitan detectar desviaciones. La implementación seguirá siendo una Minimal API con EF Core y SQL Server Express; OpenAPI no crea nuevas reglas de negocio. Esta separación prepara el trabajo posterior con arquitectura hexagonal, donde los contratos HTTP deberán mantenerse al tiempo que se reorganiza el código interno en puertos, casos de uso y adaptadores.
 
 ```text
 Aplicación al proyecto del curso:
@@ -1662,13 +1574,9 @@ Publicación      → Swagger UI en desarrollo.
 Verificación     → test de generación del documento.
 ```
 
-- **Línea 1:** Metadatos → anotaciones de Minimal API.
-- **Línea 2:** Esquemas → derivados de los DTOs.
-- **Línea 3:** Ejemplos → añadidos en los esquemas de petición.
-- **Línea 4:** Versionado → v1 en URL y en documentación.
-- **Línea 5:** Errores → documentados con ProducesProblem y ProducesValidationProblem.
-- **Línea 6:** Publicación → Swagger UI en desarrollo.
-- **Línea 7:** Verificación → test de generación del documento.
+
+Los elementos de documentación de AceriaApp se incorporan al mismo servicio que ya atiende las operaciones REST. La comprobación final debe enlazar `Program.cs`, la especificación OpenAPI y las respuestas HTTP reales, incluida la lectura de una orden que no existe.
+
 
 La aplicación de la documentación cierra el módulo 2 y prepara el terreno para el módulo 3. El módulo 3 estudiará la arquitectura hexagonal, que reorganizará el código en capas con puertos y adaptadores. La documentación OpenAPI seguirá generándose a partir de los endpoints, independientemente de la organización interna. El punto 2.4 cierra el módulo 2 con el resumen del estado del proyecto.
 
@@ -1687,11 +1595,10 @@ La aplicación de la documentación cierra el módulo 2 y prepara el terreno par
 
 ---
 
-#### Del concepto a ASP.NET Core 8: Comprobar OpenAPI por HTTP
+#### Comprobar OpenAPI por HTTP en AceriaApp
 
 Swagger UI facilita explorar las operaciones y ejecutarlas desde el navegador. WebApplicationFactory descarga /swagger/v1/swagger.json y contrasta versión, paths y schemas. Otra prueba establece Production y exige que el endpoint de documentación no se publique. Así se comprueba el documento generado y no una cadena aislada del servidor.
 
-**Aplicación en el proyecto real.** Este comportamiento está materializado en `Program.cs` del estado `2.4-documentacion-openapi`. Busca la instrucción `UseDocumentacion` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
+`UseDocumentacion` determina cuándo se expone la interfaz y el documento; la comprobación por HTTP debe confirmar que la especificación está disponible en el entorno previsto y que sus rutas reflejan la aplicación.
 
-**Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
 
