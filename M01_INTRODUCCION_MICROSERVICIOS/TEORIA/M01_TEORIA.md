@@ -352,11 +352,13 @@ Módulo 1: Introducción a los microservicios
 
 ---
 
-## Desarrollo teórico
+## Comparar consecuencias, no etiquetas
 
-### Bloque 1 — Marco de análisis de ventajas e inconvenientes
+La arquitectura se evalúa mejor cuando se toma una misma necesidad y se analiza qué exige cada alternativa. Seguiremos el ciclo de vida de una orden de AceriaApp y compararemos quién publica los cambios, cómo se mantienen sus datos y qué costes aparecen al aumentar el tráfico o la cantidad de equipos. Esta perspectiva permite distinguir ventajas reales de promesas que solo se cumplirían después de invertir en infraestructura y operación.
 
-El análisis de ventajas e inconvenientes de un estilo arquitectónico exige un marco de comparación explícito. Sin ese marco, las decisiones se toman por preferencia técnica o por moda, y no por criterios medibles. Un marco útil organiza los criterios en cuatro dimensiones: despliegue, escalado, organización de equipos y consistencia de datos. Cada dimensión se evalúa con indicadores concretos que permiten comparar monolito y microservicios sin ambigüedad. La dimensión de despliegue mide el tiempo entre la fusión de un cambio y su puesta en producción. La dimensión de escalado mide el coste de infraestructura por unidad de carga. La dimensión de organización mide el número de equipos que pueden trabajar sin coordinación. La dimensión de consistencia mide el nivel de garantía transaccional que el negocio necesita. En un análisis real, cada dimensión debe tener una unidad de medida y un periodo de observación. La autonomía de equipos puede estimarse contando cambios que requieren aprobación o sincronización externa.
+### Marco de análisis de ventajas e inconvenientes
+
+Para comparar arquitecturas necesitamos observar la misma operación desde varios ángulos. Pensemos en una orden de producción: alguien la crea, el sistema comprueba sus datos, guarda el resultado y, eventualmente, consulta el inventario. El diseño será adecuado si esa secuencia cumple sus requisitos de tiempo de respuesta, integridad y evolución, con un esfuerzo asumible para el equipo. Por eso conviene distinguir al menos cuatro dimensiones: cuánto cuesta publicar cambios, qué recursos requiere responder a una carga concreta, cuánta coordinación necesita el equipo y qué consistencia deben mantener los datos. Ninguna dimensión es suficiente por sí sola. Una opción puede simplificar una transacción y complicar el crecimiento; otra puede facilitar despliegues independientes y aumentar el tiempo de diagnóstico. En AceriaApp compararemos ambos enfoques sobre decisiones observables, no sobre etiquetas arquitectónicas.
 
 ```text
 Dimensiones del marco de análisis:
@@ -367,20 +369,14 @@ Dimensiones del marco de análisis:
 4. Consistencia  → garantía transaccional requerida.
 ```
 
-**Lectura guiada del ejemplo**
+El esquema enumera las cuatro dimensiones que guiarán la comparación. El tiempo entre fusión y despliegue no debe interpretarse sin saber cuántas pruebas exige el cambio; el coste por carga necesita mediciones; la independencia de equipos depende de contratos estables; y la consistencia requiere identificar exactamente qué operaciones han de confirmarse juntas. Se analizarán en conjunto porque una decisión favorable en una dimensión puede tener costes relevantes en otra.
 
-- **Línea 1:** 1. Despliegue → primera dimensión del marco, mide el tiempo de puesta en producción.
-- **Línea 2:** 2. Escalado → segunda dimensión, mide el coste de infraestructura por carga.
-- **Línea 3:** 3. Organización → tercera dimensión, mide la autonomía de los equipos.
-- **Línea 4:** 4. Consistencia → cuarta dimensión, mide la garantía transaccional.
 
 Este marco se aplica a cada decisión arquitectónica del curso y permite justificar por qué el proyecto empieza como monolito modular y evoluciona hacia microservicios. La primera dimensión, el despliegue, es la que más peso tiene en equipos pequeños porque determina la frecuencia con la que se puede entregar valor al negocio. La segunda dimensión, el escalado, es la que más peso tiene en sistemas con cargas muy desiguales entre funcionalidades. El tiempo de entrega puede calcularse desde la fusión hasta la disponibilidad en producción, separando espera en cola y ejecución del pipeline. La consistencia debe describirse mediante invariantes de negocio: una orden no puede reservar más unidades de material que las disponibles, por ejemplo.
 
 La tercera dimensión, la organización, es la que más peso tiene en empresas con varios equipos trabajando en paralelo sobre el mismo producto. La cuarta dimensión, la consistencia, es la que más peso tiene en dominios financieros o regulados donde la integridad transaccional no es negociable. Ninguna dimensión es universalmente más importante que las demás: el peso relativo depende del contexto del negocio. Lo que sí es universal es la necesidad de medir cada dimensión con indicadores concretos antes de decidir. El marco se completa con una quinta consideración transversal: el coste operativo total, que agrega el esfuerzo de monitorización, configuración y soporte. El escalado puede expresarse como euros por mil peticiones completadas bajo una latencia objetivo, para evitar comparar máquinas con cargas diferentes. Sin definir estas unidades, los resultados de la comparación no son reproducibles.
 
-**Aplicación adicional:** El coste operativo es una dimensión transversal que incluye guardias, alertas, despliegues, administración de secretos y diagnóstico de incidencias, y no se deduce únicamente de la factura del proveedor de infraestructura.
-
-#### Profundización: construir una comparación verificable
+El coste operativo es una dimensión transversal que incluye guardias, alertas, despliegues, administración de secretos y diagnóstico de incidencias, y no se deduce únicamente de la factura del proveedor de infraestructura.
 
 Una comparación arquitectónica requiere establecer primero una unidad de observación. Para despliegue puede utilizarse el intervalo entre la aprobación de un cambio y su disponibilidad en el entorno de destino. Para escalado, el coste puede normalizarse por petición atendida o por carga sostenida. En organización interesa la proporción de cambios que requieren coordinación entre equipos, no únicamente la cantidad de desarrolladores. En consistencia deben enumerarse las operaciones de negocio que exigen una confirmación atómica. Si estas definiciones cambian entre alternativas, la comparación deja de ser válida: un monolito medido bajo carga real no debe contrastarse con microservicios medidos sin tráfico ni supervisión.
 
@@ -391,9 +387,9 @@ Conviene distinguir también indicadores directos y aproximaciones. La cantidad 
 
 ---
 
-### Bloque 2 — Ventajas del monolito en la dimensión de despliegue
+### Ventajas del monolito en la dimensión de despliegue
 
-En la dimensión de despliegue, el monolito presenta una ventaja clara: un único artefacto implica un único pipeline. El pipeline se configura una vez y se reutiliza para todas las funcionalidades. No hay que coordinar versiones entre servicios ni gestionar contratos públicos entre equipos. La puesta en producción es una operación atómica: o se despliega la versión completa o no se despliega. Esta atomicidad simplifica las reversiones porque basta con volver a la versión anterior del único artefacto. El coste de esta ventaja es que cualquier cambio, por pequeño que sea, arrastra el ciclo de vida completo del artefacto.
+Publicar una sola aplicación ofrece una ventaja muy concreta a quien mantiene un sistema pequeño: existe una cadena de compilación, pruebas y publicación que entrega el conjunto como una unidad. El responsable del despliegue sabe qué versión está instalada y puede revertirla sin construir una matriz de compatibilidad entre servicios. En una acería con un equipo reducido, esa simplicidad permite dedicar más esfuerzo a entender las reglas de las órdenes que a sostener infraestructura. La contrapartida es que un cambio localizado recorre también pruebas y pasos de distribución compartidos por funcionalidades que no se han modificado. Esa relación entre rapidez inicial y coste de los cambios frecuentes es más importante que contar cuántos comandos contiene el pipeline. La medición debe incluir el tiempo de revisión y recuperación de incidentes, no solo la ejecución automática.
 
 ```yaml
 # Pipeline único del monolito
@@ -418,24 +414,8 @@ deploy:
     - dotnet publish src/AceriaApp.Monolito.Api -c Release
 ```
 
-**Lectura guiada del ejemplo**
+El YAML ilustra un pipeline único que compila, prueba y publica el monolito. `dotnet build` y `dotnet test` se ejecutan sobre la solución común, mientras que `dotnet publish` prepara el artefacto del host. Es un ejemplo didáctico de secuencia, no una configuración completa de un servidor CI: faltan elementos como artefactos, credenciales, ejecución por entorno y comprobaciones de despliegue.
 
-- **Línea 1:** stages: → declara las etapas del pipeline en orden.
-- **Línea 2:** - build → primera etapa, compilación.
-- **Línea 3:** - test → segunda etapa, pruebas.
-- **Línea 4:** - deploy → tercera etapa, despliegue.
-- **Línea 5:** build: → comienza la definición de la etapa de compilación.
-- **Línea 6:** stage: build → asocia el bloque a la etapa build.
-- **Línea 7:** script: → declara los comandos a ejecutar.
-- **Línea 8:** - dotnet build AceriaApp.sln → compila la solución completa.
-- **Línea 9:** test: → comienza la definición de la etapa de pruebas.
-- **Línea 10:** stage: test → asocia el bloque a la etapa test.
-- **Línea 11:** script: → declara los comandos a ejecutar.
-- **Línea 12:** - dotnet test AceriaApp.sln → ejecuta todos los tests.
-- **Línea 13:** deploy: → comienza la definición de la etapa de despliegue.
-- **Línea 14:** stage: deploy → asocia el bloque a la etapa deploy.
-- **Línea 15:** script: → declara los comandos a ejecutar.
-- **Línea 16:** - dotnet publish src/AceriaApp.Monolito.Api -c Release → publica el artefacto único en modo Release.
 
 La ventaja del pipeline único se materializa en equipos pequeños, donde una sola persona puede mantener el pipeline sin dedicación exclusiva. La desventaja aparece cuando el pipeline tarda más de lo aceptable: cada corrección de una línea paga el coste completo del pipeline. La dimensión de despliegue, por tanto, no es una ventaja absoluta del monolito sino una ventaja condicionada al tamaño del equipo y a la frecuencia de cambio.
 
@@ -443,9 +423,9 @@ Un pipeline único puede ejecutar comprobaciones parciales para acelerar la resp
 
 ---
 
-### Bloque 3 — Ventajas del monolito en la dimensión de consistencia
+### Ventajas del monolito en la dimensión de consistencia
 
-En la dimensión de consistencia, el monolito ofrece la garantía transaccional más fuerte posible: ACID sobre una única base de datos. Cualquier operación que afecte a varias tablas se ejecuta dentro de una transacción y se confirma o se revierte de forma atómica. No hay que diseñar patrones de compensación, no hay que gestionar estados intermedios y no hay que reconciliar datos entre servicios. La integridad referencial se mantiene con claves foráneas y restricciones declarativas. La consulta de datos relacionados se resuelve con un JOIN en la misma base de datos, sin llamadas de red ni composición de respuestas.
+Una orden puede implicar varias escrituras relacionadas. Imaginemos que su creación necesita guardar el encabezado y registrar un movimiento de material. Cuando ambas operaciones pertenecen al mismo ámbito de base de datos, una transacción local ofrece una garantía muy comprensible: si el conjunto falla antes de confirmarse, se revierte. Ese mecanismo permite razonar sobre invariantes del negocio sin introducir comunicación remota. Sin embargo, una transacción ACID no convierte automáticamente el modelo en correcto; únicamente protege determinadas propiedades técnicas de un conjunto de operaciones. Tampoco obliga a que toda la aplicación tenga una única base física: la ventaja depende de que las escrituras que han de ser atómicas compartan una frontera transaccional concreta. Separarlas entre servicios no hace imposible la consistencia, pero exige una estrategia distinta para coordinar sus estados.
 
 ```csharp
 await using var tx = await db.Database.BeginTransactionAsync();
@@ -465,25 +445,12 @@ catch
 }
 ```
 
-**Lectura guiada del ejemplo**
+La transacción envuelve las escrituras de Orden y Movimiento. Al confirmar después de `SaveChangesAsync`, ambas quedan dentro del mismo compromiso; en el bloque `catch` se intenta revertir y se propaga el error para que el llamador pueda tratarlo. Para ejecutar exactamente este ejemplo hacen falta los tipos y `DbSet` indicados. El mecanismo interesa como garantía de atomicidad cuando ambas escrituras pertenecen al mismo proveedor y conexión.
 
-- **Línea 1:** await using var tx = await db.Database.BeginTransactionAsync(); → abre una transacción explícita.
-- **Línea 2:** try → inicia el bloque protegido.
-- **Línea 3:** var orden = new Orden { ... }; → instancia una nueva orden.
-- **Línea 4:** db.Ordenes.Add(orden); → añade la orden al contexto.
-- **Línea 5:** var movimiento = new Movimiento { ... }; → instancia un movimiento asociado a la orden.
-- **Línea 6:** db.Movimientos.Add(movimiento); → añade el movimiento al contexto.
-- **Línea 7:** await db.SaveChangesAsync(); → persiste ambos cambios en la misma transacción.
-- **Línea 8:** await tx.CommitAsync(); → confirma la transacción.
-- **Línea 9:** catch → captura cualquier error.
-- **Línea 10:** await tx.RollbackAsync(); → revierte la transacción completa.
-- **Línea 11:** throw; → propaga la excepción.
 
-Esta garantía transaccional es el activo más valioso del monolito en dominios regulados. Su coste es el acoplamiento: todas las funcionalidades comparten el mismo esquema y el mismo contexto de persistencia. Un cambio en el esquema afecta a todas las funcionalidades y obliga a coordinarlas en el mismo despliegue. Para evaluar ventajas del monolito en la dimensión de consistencia conviene registrar el resultado observable y la restricción de negocio que motiva el cambio, antes de introducir infraestructura adicional. La decisión sobre ventajas del monolito en la dimensión de consistencia debe diferenciar lo que el ejemplo ilustra de lo que la aplicación implementa realmente en esta etapa.
+Esta garantía transaccional es el activo más valioso del monolito en dominios regulados. Su coste es el acoplamiento: todas las funcionalidades comparten el mismo esquema y el mismo contexto de persistencia. Un cambio en el esquema afecta a todas las funcionalidades y obliga a coordinarlas en el mismo despliegue.  
 
 Una transacción ACID de SQL Server permite actualizar filas de órdenes y movimientos como una unidad siempre que ambos modelos formen parte de la misma transacción y de la misma infraestructura transaccional. No significa que cualquier cambio en memoria se revierta automáticamente: las propiedades de objetos ya modificados no se restauran por arte de magia, y los mensajes externos enviados antes del commit tampoco se deshacen. La implementación debe distinguir entre el estado de la base de datos y los efectos secundarios que ocurren fuera de ella. En AceriaApp, el ejemplo con Movimiento es ilustrativo hasta que la entidad y el DbSet correspondientes existan. La garantía se verifica con una prueba que provoque un fallo en una de las escrituras y compruebe la ausencia de cambios parciales. Este enfoque explica después la necesidad de Outbox al integrar eventos con transacciones locales.
-
-#### Profundización: consistencia fuerte y fronteras de propiedad
 
 La consistencia relacional del monolito simplifica la coordinación cuando una misma operación necesita modificar órdenes y movimientos de inventario. Una transacción local puede asegurar que ambos cambios se confirmen o reviertan. Sin embargo, esa ventaja exige definir con precisión qué recursos participan. No todas las operaciones de negocio necesitan una transacción única. La consulta del catálogo de materiales puede tolerar datos ligeramente desactualizados, mientras que la confirmación de una reserva que afecte a existencias disponibles puede necesitar garantías más estrictas. Aplicar la misma exigencia a todos los flujos produce sobrecoste innecesario y dificulta la futura división del sistema.
 
@@ -494,9 +461,9 @@ En el módulo 1 no se implementa ese mecanismo distribuido. Sí se prepara la ca
 
 ---
 
-### Bloque 4 — Ventajas del monolito en las dimensiones de escalado y organización
+### Ventajas del monolito en las dimensiones de escalado y organización
 
-En la dimensión de escalado, el monolito ofrece simplicidad: se replica el artefacto completo y ya está. No hay que decidir qué componente escalar ni cómo enrutar el tráfico entre réplicas de distintos servicios. El balanceo se resuelve con un balanceador genérico. La configuración del escalado es idéntica para todas las réplicas. El coste es el desperdicio: se replican funcionalidades que no lo necesitan. En la dimensión de organización, el monolito también ofrece simplicidad: un único repositorio, un único pipeline y un único equipo responsable. Las decisiones técnicas se toman en una sola conversación. El coste es la coordinación: cuando el equipo crece, las decisiones se convierten en cuellos de botella y los conflictos de fusión se multiplican. La decisión sobre ventajas del monolito en las dimensiones de escalado y organización debe diferenciar lo que el ejemplo ilustra de lo que la aplicación implementa realmente en esta etapa.
+Escalar un monolito significa normalmente replicar el proceso completo detrás de un balanceador. Es una solución fácil de entender: cada instancia dispone de las mismas rutas y el reparto se realiza en la entrada. Esta homogeneidad reduce la complejidad del despliegue cuando todas las capacidades utilizan recursos parecidos y el tráfico puede distribuirse uniformemente. También facilita que un equipo pequeño depure peticiones sin seguirlas por una red de servicios. Si crece solo una funcionalidad, en cambio, cada nueva réplica arrastra el resto de bibliotecas y sus consumos. El análisis real debe contemplar memoria, CPU, conexiones y coste por operación: un escalado aparentemente redundante puede seguir resultando rentable si evita una infraestructura distribuida más costosa. La simplicidad operativa también tiene valor económico.
 
 ```text
 Escalado del monolito:
@@ -510,23 +477,18 @@ Escalado del monolito:
 Todas las instancias ejecutan el mismo artefacto.
 ```
 
-**Lectura guiada del ejemplo**
+El balanceador envía peticiones a tres copias del mismo host. La sencillez está en que todas ofrecen los mismos endpoints y tienen el mismo ciclo de publicación. Si una parte de la aplicación es especialmente costosa, cada réplica incluye también los componentes que quizá no reciban tráfico. La necesidad de escalar selectivamente debe demostrarse con medidas, no deducirse únicamente de este dibujo.
 
-- **Línea 1:** [Balanceador] → punto de entrada único del tráfico.
-- **Línea 2:** +---> [Instancia 1] → primera réplica del artefacto completo.
-- **Línea 3:** +---> [Instancia 2] → segunda réplica idéntica.
-- **Línea 4:** +---> [Instancia 3] → tercera réplica idéntica.
-- **Línea 5:** Todas las instancias ejecutan el mismo artefacto. → sintetiza la homogeneidad del escalado.
 
-Las ventajas de simplicidad en escalado y organización son reales y medibles. Su límite aparece cuando el tamaño del equipo supera la capacidad de una única conversación técnica o cuando la carga entre funcionalidades es muy desigual. En ese momento, la simplicidad se convierte en rigidez y el monolito empieza a frenar la evolución del producto. Para evaluar ventajas del monolito en las dimensiones de escalado y organización conviene registrar el resultado observable y la restricción de negocio que motiva el cambio, antes de introducir infraestructura adicional. La decisión sobre ventajas del monolito en las dimensiones de escalado y organización debe diferenciar lo que el ejemplo ilustra de lo que la aplicación implementa realmente en esta etapa.
+Las ventajas de simplicidad en escalado y organización son reales y medibles. Su límite aparece cuando el tamaño del equipo supera la capacidad de una única conversación técnica o cuando la carga entre funcionalidades es muy desigual. En ese momento, la simplicidad se convierte en rigidez y el monolito empieza a frenar la evolución del producto.  
 
 El escalado horizontal del monolito no impide ajustar recursos verticalmente ni colocar cachés delante de endpoints con alta frecuencia de lectura. Antes de fragmentar la aplicación conviene probar mejoras que no añadan distribución: optimización de consultas, índices en SQL Server, paginación y reducción de bloqueo de recursos. La coordinación organizativa también depende del diseño del código y de las reglas de revisión. Un monolito modular con responsabilidades claras puede reducir conflictos de fusión aunque varios desarrolladores trabajen en el mismo repositorio. La decisión de escalar o dividir debe responder a los cuellos de botella medidos. Si tres réplicas reducen la latencia sin elevar demasiado el coste, la separación puede no aportar valor inmediato. Las métricas relevantes incluyen uso sostenido de CPU, presión de memoria, tiempos de respuesta por ruta y cambios simultáneos en las mismas zonas del código.
 
 ---
 
-### Bloque 5 — Inconvenientes del monolito
+### Inconvenientes del monolito
 
-El primer inconveniente del monolito es el acoplamiento del ciclo de vida. Cualquier cambio obliga a recompilar y redesplegar todo el artefacto. El tiempo de despliegue se convierte en un coste fijo por cambio. El segundo inconveniente es el escalado homogéneo: se replica el artefacto completo aunque solo una funcionalidad lo necesite. El tercer inconveniente es la barrera tecnológica: todos los componentes comparten el mismo stack y la misma versión del runtime. El cuarto inconveniente es la coordinación de equipos: cuando varias personas trabajan sobre el mismo código, los conflictos de fusión crecen y las decisiones se centralizan.
+El principal riesgo de una aplicación monolítica no es que todos sus módulos residan en una carpeta, sino que sus **cambios dejen de estar localizados**. Si una regla de Inventario obliga a modificar código de Órdenes, Facturación y varias pruebas de extremo a extremo, la organización interna ha perdido autonomía. A eso se añade que los equipos comparten pipeline, planificación de publicación y, a veces, decisiones de persistencia. El efecto puede ser notable en una aplicación grande sometida a cambios frecuentes; en un proyecto pequeño apenas se percibe. Antes de dividir procesos conviene atacar las causas internas: extraer reglas de controladores, introducir interfaces entre módulos, reducir referencias y aislar pruebas. Repartir un código acoplado entre contenedores no elimina ese acoplamiento, sino que puede convertirlo en llamadas de red todavía más difíciles de modificar.
 
 ```text
 Coste por cambio en el monolito:
@@ -536,19 +498,12 @@ Cambio de 1 línea → recompilar todo → ejecutar todos los tests → desplega
 Tiempo total = tiempo del pipeline completo.
 ```
 
-**Lectura guiada del ejemplo**
+La secuencia representa el coste de publicar un cambio pequeño dentro de un artefacto compartido. No significa que todas las pruebas deban ejecutarse siempre en cada máquina ni que una compilación larga sea inevitable; muestra que el riesgo de integración y las obligaciones de publicación son comunes. La pregunta operativa es cuánto tarda realmente el flujo y qué fallos bloquean la entrega.
 
-- **Línea 1:** Cambio de 1 línea → cualquier modificación, por pequeña que sea.
-- **Línea 2:** recompilar todo → se compila el artefacto completo.
-- **Línea 3:** ejecutar todos los tests → se ejecuta la suite completa.
-- **Línea 4:** desplegar todo → se publica el artefacto completo.
-- **Línea 5:** Tiempo total = tiempo del pipeline completo. → el coste por cambio es constante e independiente del tamaño del cambio.
 
-El quinto inconveniente es la adopción de nuevas tecnologías: migrar una parte del sistema obliga a migrar todo el conjunto. El sexto inconveniente es la escalabilidad organizativa: a partir de cierto número de equipos, el monolito se convierte en un cuello de botella de coordinación. Estos inconvenientes no invalidan el monolito en contextos pequeños; simplemente marcan el umbral a partir del cual su coste supera su beneficio. Para evaluar inconvenientes del monolito conviene registrar el resultado observable y la restricción de negocio que motiva el cambio, antes de introducir infraestructura adicional.
+El quinto inconveniente es la adopción de nuevas tecnologías: migrar una parte del sistema obliga a migrar todo el conjunto. El sexto inconveniente es la escalabilidad organizativa: a partir de cierto número de equipos, el monolito se convierte en un cuello de botella de coordinación. Estos inconvenientes no invalidan el monolito en contextos pequeños; simplemente marcan el umbral a partir del cual su coste supera su beneficio. 
 
 Los inconvenientes deben expresarse como riesgos condicionados, no como defectos inevitables. Compartir un ciclo de publicación se vuelve problemático cuando unos cambios urgentes quedan retenidos por pruebas de funcionalidades ajenas o por permisos organizativos. La barrera tecnológica puede mitigarse con modularización y actualización gradual de dependencias; no todas las bibliotecas del monolito necesitan renovarse a la vez. Los conflictos de fusión suelen reflejar responsabilidades mal repartidas, archivos demasiado centrales o ramas prolongadas. En AceriaApp, un indicador útil es cuánto código de Orden cambia cuando se modifica una regla exclusiva de Inventario. Si el cambio obliga a tocar Program.cs, consultas de varios módulos y scripts de despliegue simultáneamente, existe acoplamiento que conviene registrar. La lista de inconvenientes prepara preguntas para las métricas, no una orden automática de extraer servicios.
-
-#### Profundización: coste de cambio y coste de coordinación
 
 El coste de cambiar una línea no equivale siempre al tiempo completo del pipeline: existen cachés de compilación, pruebas selectivas, despliegues sin interrupción y distintos modos de publicación. El inconveniente propio de un monolito es la dependencia del ciclo de vida común: incluso si se optimiza la compilación, la versión publicada incluye un conjunto de funcionalidades. En un sistema de gran tamaño, la revisión de un cambio puede verse ralentizada por incertidumbre sobre sus efectos secundarios. La medida útil combina el tiempo de entrega, la tasa de despliegues fallidos y el tiempo de recuperación. Un pipeline rápido que rompe otras capacidades con frecuencia no representa una mejora real.
 
@@ -559,9 +514,9 @@ En AceriaApp, la comparación de carpetas consecutivas ofrece un primer instrume
 
 ---
 
-### Bloque 6 — Ventajas de los microservicios en la dimensión de despliegue
+### Ventajas de los microservicios en la dimensión de despliegue
 
-En la dimensión de despliegue, los microservicios ofrecen independencia: cada servicio tiene su propio pipeline y su propio ciclo de vida. Un cambio en el servicio de inventario no obliga a redesplegar el servicio de órdenes. La frecuencia de despliegue de cada servicio puede ajustarse a su propia cadencia. El riesgo de cada despliegue se limita al servicio afectado. La reversión también se limita al servicio afectado. El coste de esta ventaja es la multiplicación de pipelines: cada servicio requiere su propia configuración, sus propias credenciales y su propia monitorización.
+La independencia de publicación de un servicio aparece cuando su equipo puede cambiarlo, ejecutarle sus pruebas y distribuirlo sin reconstruir el resto del sistema. Esa posibilidad resulta atractiva para Inventario si su frecuencia de cambio o sus cargas difieren mucho de las de Producción. Un pipeline específico puede acortar la comprobación de una modificación, siempre que los contratos que utilizan los otros servicios sigan siendo compatibles. La ventaja se pierde cuando el despliegue exige coordinar de todos modos una nueva versión de cada consumidor. Por ello no basta con crear distintos YAML o soluciones de Visual Studio: hay que registrar dependencias, conservar pruebas de contrato y observar qué publicaciones necesitan actuar de manera sincronizada. Los ejemplos de pipelines de este apartado representan dos estrategias, no un mecanismo listo para desplegar con independencia de la infraestructura elegida.
 
 ```yaml
 # Pipeline del servicio de órdenes
@@ -586,24 +541,8 @@ deploy:
     - dotnet publish src/AceriaApp.Ordenes.Api -c Release
 ```
 
-**Lectura guiada del ejemplo**
+En el pipeline independiente, las órdenes de compilación, prueba y publicación se dirigen al servicio de Órdenes, no a toda la solución. Este aislamiento puede acelerar entregas si el servicio conserva contratos compatibles con sus consumidores. En una organización real aún habrá pruebas de integración y verificación de despliegue; que el YAML nombre un único proyecto no demuestra por sí solo independencia funcional.
 
-- **Línea 1:** stages: → declara las etapas del pipeline del servicio de órdenes.
-- **Línea 2:** - build → primera etapa, compilación del servicio.
-- **Línea 3:** - test → segunda etapa, pruebas del servicio.
-- **Línea 4:** - deploy → tercera etapa, despliegue del servicio.
-- **Línea 5:** build: → comienza la definición de la etapa de compilación.
-- **Línea 6:** stage: build → asocia el bloque a la etapa build.
-- **Línea 7:** script: → declara los comandos a ejecutar.
-- **Línea 8:** - dotnet build src/AceriaApp.Ordenes.Api → compila solo el servicio de órdenes.
-- **Línea 9:** test: → comienza la definición de la etapa de pruebas.
-- **Línea 10:** stage: test → asocia el bloque a la etapa test.
-- **Línea 11:** script: → declara los comandos a ejecutar.
-- **Línea 12:** - dotnet test tests/AceriaApp.Ordenes.Tests → ejecuta solo los tests del servicio.
-- **Línea 13:** deploy: → comienza la definición de la etapa de despliegue.
-- **Línea 14:** stage: deploy → asocia el bloque a la etapa deploy.
-- **Línea 15:** script: → declara los comandos a ejecutar.
-- **Línea 16:** - dotnet publish src/AceriaApp.Ordenes.Api -c Release → publica solo el servicio de órdenes.
 
 La ventaja de la independencia de despliegue se materializa en equipos que necesitan liberar con frecuencia y sin coordinar con otros equipos. Su coste es la duplicación de configuración y la necesidad de gestionar versiones de contratos públicos entre servicios.
 
@@ -611,9 +550,9 @@ Un servicio con pipeline propio necesita controles que garanticen la compatibili
 
 ---
 
-### Bloque 7 — Ventajas de los microservicios en las dimensiones de escalado y organización
+### Ventajas de los microservicios en las dimensiones de escalado y organización
 
-En la dimensión de escalado, los microservicios ofrecen selectividad: cada servicio se replica según su propia carga. El coste de infraestructura se ajusta a la demanda real de cada capacidad de negocio. En la dimensión de organización, ofrecen autonomía: cada equipo posee un servicio completo y puede tomar decisiones sin coordinación con otros equipos. Las decisiones técnicas se distribuyen y los conflictos de fusión desaparecen porque cada equipo trabaja en su propio repositorio. El coste es la heterogeneidad: distintos equipos pueden elegir distintos stacks, lo que complica la operación y el soporte.
+El escalado selectivo es útil cuando las capacidades soportan demandas distintas. Una campaña puede multiplicar las consultas de material disponible mientras la creación de órdenes se mantiene estable; si cada función es un proceso autónomo, podemos asignar más recursos a Inventario sin replicar obligatoriamente Producción. También pueden asignarse responsables que comprendan sus invariantes y publiquen cambios con ritmos propios. Ahora bien, esas ventajas se compran con sistemas de monitorización, autenticación, configuración y recuperación para varios procesos. La eficiencia no se deduce únicamente de tener menos réplicas: hay que comparar el coste de esas réplicas con el coste fijo de coordinar servicios. En el laboratorio de AceriaApp se estudiará el reparto real de solicitudes, pero no se afirmará que cada caso de negocio necesite un microservicio.
 
 ```text
 Escalado selectivo:
@@ -625,18 +564,12 @@ Escalado selectivo:
 Cada servicio se replica según su propia carga.
 ```
 
-**Lectura guiada del ejemplo**
+El ejemplo asigna más réplicas a Órdenes porque se supone una demanda mayor. El número real debe deducirse de métricas de carga, latencia y utilización, no de una proporción fija. En paralelo, Inventario y Clientes conservan recursos propios. El esquema permite visualizar la decisión de escalar por capacidad, pero no estima el gasto que añade mantener esas capacidades comunicadas.
 
-- **Línea 1:** [Órdenes] 3 instancias → el servicio de órdenes se replica tres veces.
-- **Línea 2:** [Inventario] 1 instancia → el servicio de inventario mantiene una sola instancia.
-- **Línea 3:** [Clientes] 1 instancia → el servicio de clientes mantiene una sola instancia.
-- **Línea 4:** Cada servicio se replica según su propia carga. → sintetiza la selectividad del escalado.
 
-La selectividad y la autonomía son ventajas medibles cuando el número de equipos y la desigualdad de carga lo justifican. Su coste aparece en la operación: cada servicio requiere su propia monitorización, su propia configuración y su propio soporte. El coste operativo agregado puede superar el ahorro de infraestructura si no se invierte en plataformas comunes de observabilidad y despliegue. Para evaluar ventajas de los microservicios en las dimensiones de escalado y organización conviene registrar el resultado observable y la restricción de negocio que motiva el cambio, antes de introducir infraestructura adicional.
+La selectividad y la autonomía son ventajas medibles cuando el número de equipos y la desigualdad de carga lo justifican. Su coste aparece en la operación: cada servicio requiere su propia monitorización, su propia configuración y su propio soporte. El coste operativo agregado puede superar el ahorro de infraestructura si no se invierte en plataformas comunes de observabilidad y despliegue. 
 
 La selectividad del escalado reduce recursos infrautilizados solo si el coste fijo de cada servicio no supera el ahorro obtenido. Incluso una instancia de una API de bajo tráfico necesita memoria base, configuración, monitorización y mantenimiento. La autonomía organizativa no exige necesariamente un repositorio por equipo: un monorepo puede contener servicios con políticas de revisión y pipelines separados. La evaluación debe evitar comparar un monolito sin observabilidad con microservicios dotados de una plataforma madura, porque la diferencia observada sería atribuible a la inversión operativa. Para AceriaApp conviene calcular el coste de una réplica completa frente al coste de tres réplicas del servicio de Órdenes más una de Inventario. También debe comprobarse la carga adicional sobre SQL Server y el balanceador, ya que un cambio en el número de instancias no incrementa automáticamente la capacidad de la base de datos.
-
-#### Profundización: ahorro de infraestructura frente a coste operativo
 
 La posibilidad de replicar Órdenes sin replicar Inventario es una capacidad técnica de los microservicios, pero su rentabilidad depende del perfil de recursos de cada uno. Imaginemos una carga en la que Órdenes necesita tres réplicas y los otros dos servicios solo una. En un monolito, tres réplicas del conjunto podrían ser suficientes; en una arquitectura distribuida se mantendrían cinco procesos separados. La segunda opción solo supone un ahorro claro si las réplicas adicionales del monolito consumen recursos significativamente mayores que los procesos del sistema distribuido. También hay que incluir balanceadores, observabilidad, configuración, copias de seguridad y capacidad de recuperación.
 
@@ -655,9 +588,9 @@ La autonomía organizativa es igualmente condicional. Varios equipos pueden publ
 
 ---
 
-### Bloque 8 — Inconvenientes de los microservicios
+### Inconvenientes de los microservicios
 
-El primer inconveniente es la complejidad distribuida. Toda comunicación entre servicios es una llamada de red que puede fallar, tardar o perderse. Hay que gestionar timeouts, reintentos, circuit breakers y compensaciones. El segundo inconveniente es la consistencia eventual: no existe una transacción ACID que abarque varios servicios. Hay que diseñar patrones como Saga, Outbox o compensación explícita. El tercer inconveniente es la observabilidad: sin trazabilidad distribuida, diagnosticar un error que atraviesa varios servicios es inviable. La decisión sobre inconvenientes de los microservicios debe diferenciar lo que el ejemplo ilustra de lo que la aplicación implementa realmente en esta etapa.
+Una arquitectura distribuida introduce posibilidades de fallo que no existen en una llamada local. Inventario puede estar funcionando y, sin embargo, ser inaccesible desde Producción por DNS, red, certificados o saturación de conexiones. Una respuesta tardía puede llegar cuando el cliente ya ha agotado su tiempo de espera. Si una operación abarca varias bases, cada servicio confirma o revierte su propia transacción y la coordinación del negocio no se resuelve automáticamente. Para evaluar el coste hace falta contemplar políticas de timeout, reintento, idempotencia, observabilidad, versiones de contrato y resolución de incidentes. La ventaja de disponer de procesos independientes sigue siendo real, pero sus consumidores deben aceptar explícitamente esa incertidumbre. Un test unitario de la clase que construye una URL no demuestra la disponibilidad de un servicio remoto.
 
 ```csharp
 try
@@ -674,16 +607,8 @@ catch (HttpRequestException ex)
 }
 ```
 
-**Lectura guiada del ejemplo**
+La llamada HTTP se ejecuta dentro de un `try` y `EnsureSuccessStatusCode` convierte una respuesta no satisfactoria en excepción. El `catch` registra la incidencia y vuelve a propagarla, de modo que no convierte automáticamente el fallo de Inventario en una consulta válida. El ejemplo no incorpora todavía cancelación, timeout ni una respuesta degradada: se utilizará para identificar precisamente las piezas que habría que añadir.
 
-- **Línea 1:** try → inicia el bloque protegido.
-- **Línea 2:** var response = await httpClient.GetAsync(...); → llama al servicio de inventario.
-- **Línea 3:** response.EnsureSuccessStatusCode(); → lanza excepción si el código HTTP no es 2xx.
-- **Línea 4:** var materiales = await response.Content.ReadFromJsonAsync<List<Material>>(); → deserializa la respuesta.
-- **Línea 5:** return materiales; → devuelve la lista de materiales.
-- **Línea 6:** catch (HttpRequestException ex) → captura errores de red o códigos no exitosos.
-- **Línea 7:** logger.LogError(ex, "..."); → registra el error con contexto.
-- **Línea 8:** throw; → propaga la excepción.
 
 El cuarto inconveniente es el coste operativo: cada servicio requiere su propio pipeline, su propia monitorización y su propia configuración. La infraestructura mínima añade complejidad que un monolito no necesita. El quinto inconveniente es la duplicación de código: sin disciplina, cada equipo reimplementa utilidades comunes. El sexto inconveniente es la gestión de versiones de contratos públicos entre servicios. El séptimo inconveniente es la latencia: una operación que en un monolito era una llamada en memoria se convierte en una cadena de llamadas de red.
 
@@ -691,9 +616,9 @@ La consistencia eventual no aparece obligatoriamente en todos los datos del sist
 
 ---
 
-### Bloque 9 — Costes ocultos de cada estilo
+### Costes ocultos de cada estilo
 
-Los costes ocultos del monolito son tres. El primero es el coste de coordinación: a medida que el equipo crece, el tiempo dedicado a reuniones y a resolver conflictos de fusión crece de forma no lineal. El segundo es el coste de oportunidad tecnológica: no poder adoptar una nueva versión del framework en una parte del sistema sin migrar todo el conjunto. El tercero es el coste de escalado: replicar el artefacto completo cuando solo una funcionalidad lo necesita. Los costes ocultos de los microservicios son otros tres. El primero es el coste de la complejidad accidental: timeouts, reintentos, idempotencia y compensaciones que no aportan valor de negocio. El segundo es el coste de la observabilidad: sin trazabilidad distribuida, el tiempo medio de diagnóstico se multiplica. El tercero es el coste de la duplicación: utilidades comunes reimplementadas en cada servicio.
+Los costes más relevantes suelen aparecer en actividades que no se ven en una demostración de cinco minutos. Un monolito con muchos equipos puede necesitar una regresión larga, negociaciones continuas sobre interfaces y despliegues bloqueados por funcionalidades no relacionadas. En una solución distribuida, cada servicio introduce tareas recurrentes: certificados, cuotas, alertas, copias de seguridad, análisis de trazas y cambios de contrato. La infraestructura representa solo una parte del gasto. Cuando algo falla, el tiempo necesario para comprender qué ocurrió puede superar con mucho el ahorro de instancias conseguido mediante escalado selectivo. Para AceriaApp es preferible registrar estos costes en una ficha de decisión y revisarlos después de incorporar comunicación real. De lo contrario, se correría el riesgo de elegir la alternativa más vistosa en un diagrama y no la que resuelve mejor las restricciones del equipo.
 
 ```text
 Costes ocultos:
@@ -709,33 +634,22 @@ Microservicios:
 - Duplicación de utilidades.
 ```
 
-**Lectura guiada del ejemplo**
+La lista contrapone tipos de esfuerzo que suelen quedar fuera de las estimaciones iniciales. En el monolito predominan coordinación y cambios compartidos; entre microservicios pesan más la infraestructura de comunicación, el seguimiento de incidencias y la duplicación de herramientas. El balance depende del tamaño y del modo de trabajo del equipo, no de atribuir un precio fijo a cada estilo.
 
-- **Línea 1:** Costes ocultos: → título del bloque.
-- **Línea 2:** Monolito: → comienza la lista de costes ocultos del monolito.
-- **Línea 3:** - Coordinación de equipos. → primer coste oculto.
-- **Línea 4:** - Oportunidad tecnológica. → segundo coste oculto.
-- **Línea 5:** - Escalado homogéneo. → tercer coste oculto.
-- **Línea 6:** Microservicios: → comienza la lista de costes ocultos de los microservicios.
-- **Línea 7:** - Complejidad accidental. → primer coste oculto.
-- **Línea 8:** - Observabilidad distribuida. → segundo coste oculto.
-- **Línea 9:** - Duplicación de utilidades. → tercer coste oculto.
 
-La identificación explícita de estos costes ocultos permite comparar los dos estilos con criterios realistas. Sin este ejercicio, la decisión se basa en percepciones y no en datos. El coste oculto más subestimado en equipos pequeños es el de la complejidad accidental de los microservicios. El coste oculto más subestimado en equipos grandes es el de la coordinación del monolito. Para evaluar costes ocultos de cada estilo conviene registrar el resultado observable y la restricción de negocio que motiva el cambio, antes de introducir infraestructura adicional. La decisión sobre costes ocultos de cada estilo debe diferenciar lo que el ejemplo ilustra de lo que la aplicación implementa realmente en esta etapa.
+La identificación explícita de estos costes ocultos permite comparar los dos estilos con criterios realistas. Sin este ejercicio, la decisión se basa en percepciones y no en datos. El coste oculto más subestimado en equipos pequeños es el de la complejidad accidental de los microservicios. El coste oculto más subestimado en equipos grandes es el de la coordinación del monolito.  
 
 Para valorar costes ocultos es necesario estimar el esfuerzo humano, no solo el número de máquinas. Un monolito grande puede requerir muchas reuniones de integración y pruebas de regresión costosas; varios microservicios exigen crear alertas, rotar certificados, versionar eventos y mantener contratos. En ambos casos, una parte del coste se hace visible solo durante incidentes: tiempo medio hasta detectar el problema, tiempo hasta restaurar el servicio y trabajo de conciliación posterior. En AceriaApp se puede construir una ficha por funcionalidad que registre dependencias, tablas utilizadas, equipos responsables y frecuencia de cambio. Esa ficha ayuda a distinguir acoplamiento de código, acoplamiento de datos y acoplamiento organizativo. Una métrica agregada, como referencias divididas por proyectos, sirve para observar tendencias, pero no sustituye el análisis del tipo y gravedad de cada dependencia.
 
 ---
 
-### Bloque 10 — Criterios de decisión y aplicación al proyecto del curso
-
-**Esquema visual del concepto**
+### Criterios de decisión y aplicación al proyecto del curso
 
 ![Criterios que orientan la decisión entre monolito modular y microservicios](figuras/02-decision-arquitectura.png)
 
 *Figura. Criterios que orientan la decisión entre monolito modular y microservicios.*
 
-La decisión entre monolito y microservicios debe tomarse con los seis criterios siguientes: tamaño del dominio, número de equipos, frecuencia de despliegue, tolerancia al fallo, requisitos de consistencia y madurez operativa. Cada criterio se evalúa con un indicador concreto y se pondera según el contexto. En el proyecto del curso, los seis criterios apuntan a empezar con un monolito modular: el dominio es mediano, el equipo es de dos personas, la frecuencia de despliegue es semanal, la tolerancia al fallo es baja, la consistencia requerida es fuerte y la madurez operativa es inicial. El monolito modular permite validar el dominio y las reglas de negocio antes de asumir el coste de la distribución.
+La elección inicial del curso responde a un contexto concreto: el dominio se conoce progresivamente, el equipo es pequeño y las primeras operaciones necesitan poder comprobarse con HTTP, EF Core y SQL Server sin depender de una red de servicios. El monolito modular ofrece una referencia clara desde la que medir consecuencias antes de extraer capacidades. En otra organización, una necesidad fuerte de despliegues independientes o de aislamiento de cargas podría justificar microservicios desde antes. Por eso las decisiones arquitectónicas deben dejar constancia de sus supuestos y de los acontecimientos que obligarían a revisarlas. La aplicación didáctica utilizará índices sencillos de acoplamiento para explorar tendencias, pero no confundirá una puntuación de clase con una recomendación automática de diseño. Lo decisivo será combinar métricas con propiedad de datos, reglas de negocio y capacidad operativa.
 
 ```text
 Criterios aplicados al proyecto del curso:
@@ -748,14 +662,8 @@ Consistencia fuerte requerida → monolito modular.
 Madurez operativa inicial     → monolito modular.
 ```
 
-**Lectura guiada del ejemplo**
+El cuadro aplica seis restricciones hipotéticas y muestra por qué, en ese contexto, resulta razonable un monolito modular. La exigencia de consistencia o un equipo de dos personas son pistas, no prohibiciones de utilizar microservicios. Para reutilizar el razonamiento en otro proyecto deben revisarse los supuestos de despliegue, datos y madurez operativa. El objetivo de la decisión es hacer explícitas esas condiciones.
 
-- **Línea 1:** Dominio mediano → el tamaño del dominio no justifica la distribución.
-- **Línea 2:** Equipo de 2 personas → el equipo no tiene masa crítica para operar microservicios.
-- **Línea 3:** Despliegue semanal → la frecuencia no exige independencia de despliegue.
-- **Línea 4:** Tolerancia al fallo baja → el negocio no tolera degradaciones.
-- **Línea 5:** Consistencia fuerte requerida → las transacciones ACID son necesarias.
-- **Línea 6:** Madurez operativa inicial → no hay plataforma de observabilidad ni de despliegue.
 
 La conclusión es que el monolito modular es la elección correcta para el punto de partida del curso. La evolución hacia microservicios se justificará en módulos posteriores cuando alguno de los seis criterios cambie. El proyecto no adopta microservicios por moda, sino que los adopta cuando un criterio objetivo lo justifique. Este enfoque evita el coste prematuro de la distribución y permite medir el impacto de cada decisión arquitectónica.
 
@@ -788,19 +696,7 @@ La decisión final para AceriaApp consiste en conservar el monolito modular como
 
 ---
 
-## Resumen rápido de la teoría
 
-- El análisis de ventajas e inconvenientes exige un marco explícito con cuatro dimensiones: despliegue, escalado, organización y consistencia.
-- El monolito ofrece ventajas claras en despliegue, consistencia, escalado y organización cuando el dominio es mediano y el equipo es pequeño.
-- Los microservicios ofrecen ventajas claras en despliegue independiente, escalado selectivo y autonomía de equipos cuando el dominio es grande y hay varios equipos.
-- Los costes ocultos del monolito son coordinación, oportunidad tecnológica y escalado homogéneo.
-- Los costes ocultos de los microservicios son complejidad accidental, observabilidad distribuida y duplicación de utilidades.
-- Los seis criterios de decisión aplicados al proyecto del curso apuntan a empezar con un monolito modular.
-
-
----
-
-#### Profundización: un ADR con condiciones de revisión
 
 La decisión final no debe expresarse como un ranking universal entre monolito y microservicios. El tamaño del dominio, la capacidad del equipo y la exigencia de consistencia son restricciones observadas en un momento concreto. Un ADR es útil cuando conserva ese contexto y define qué debería cambiar para reexaminarlo. La motivación de AceriaApp consiste en disponer de un sistema inicial que permita demostrar operaciones HTTP, persistencia relacional y reglas de dominio sin necesitar desde el primer ejercicio mecanismos de comunicación distribuida. Se trata de una elección pedagógica y operativa concreta, no de afirmar que todos los proyectos de tamaño similar deban comenzar igual.
 
@@ -815,6 +711,12 @@ La decisión final no debe expresarse como un ranking universal entre monolito y
 Un buen ADR contiene alternativas descartadas y sus costes. En este caso, empezar con microservicios obligaría a resolver descubrimiento, fallos remotos y consistencia sin que exista todavía una necesidad que compense esa inversión. Mantener un monolito sin modularizar también tiene un coste: las dependencias internas podrían dificultar la extracción posterior. La alternativa elegida es el punto intermedio, monolito modular con contratos y responsabilidades explícitas.
 
 La práctica registra la decisión en documentación versionada y añade clases que calculan índices sencillos. Es esencial no confundir esos índices con evidencia suficiente para ejecutar una extracción automática: `EsCandidatoAExtraccion` aplica umbrales establecidos para aprender a razonar, pero no analiza latencia, requisitos de seguridad, transacciones ni carga real. El documento debe advertir esta limitación. Así se enseña al alumno a justificar una decisión con información incompleta, mantener trazabilidad y revisar sus hipótesis conforme el proyecto incorpora nuevos hechos.
+
+
+
+## Síntesis y condiciones para revisar la decisión
+
+En AceriaApp elegimos inicialmente un monolito modular porque permite enseñar el recorrido completo de una petición y validar los cambios con pocas dependencias operativas. Esa elección tiene límites: si las capacidades adquieren cargas, propietarios o ciclos de despliegue diferentes, habrá que reconsiderar el ámbito del proceso. La comparación no se reduce a «más fácil» frente a «más escalable»; comprende tiempo de publicación, consistencia, observabilidad, coordinación del equipo y coste de incidentes. Conviene registrar la decisión y sus supuestos para poder revisarla cuando existan evidencias nuevas, en lugar de sustituirla por otra moda arquitectónica.
 
 # Punto 1.3 — Principios de diseño
 
