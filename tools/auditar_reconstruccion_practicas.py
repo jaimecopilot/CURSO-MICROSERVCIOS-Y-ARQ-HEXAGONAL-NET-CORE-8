@@ -16,6 +16,8 @@ import json
 from pathlib import Path
 import re
 import sys
+import shutil
+import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
 FENCE = chr(96) * 3
@@ -321,6 +323,122 @@ def audit_module(module: int) -> tuple[list[str], dict]:
         "",
     ]
     return report, dict(summary)
+
+
+def materializar_etapa(module: int, point: int, destination: Path) -> dict:
+    """Construye el punto N.P desde el punto N.(P-1), sin leer código del destino.
+
+    Reutiliza *solo* el snapshot anterior como estado inicial. Aplica las
+    operaciones de archivo del manual en su orden y genera la solución .sln
+    mediante dotnet sln add. A continuación compara el conjunto de archivos
+    contra el punto canónico y se niega a continuar si falta una diferencia.
+    Primer punto de cada módulo: aún requiere una reconstrucción inicial aparte.
+    """
+    if module not in CONFIG or point < 2 or point > len(CONFIG[module][1]):
+        raise ValueError("Materialización solo para puntos 2..N de M02-M08")
+    dirname, stages = CONFIG[module]
+    root = ROOT / dirname
+    _, by_point = steps_and_operations(module, root, stages)
+    previous_root = root / "PROYECTO" / stages[point - 2]
+    target_root = root / "PROYECTO" / stages[point - 1]
+    previous = files(previous_root)
+    wanted = files(target_root)
+    constructed, errors = apply_marked_operations(previous, by_point[point])
+    if errors:
+        raise RuntimeError(
+            f"Operaciones del manual no aplicables en M{module:02}/{point}: "
+            + "; ".join(errors)
+        )
+    differences = set(previous) | set(wanted)
+    changed = {rel for rel in differences
+               if norm(previous.get(rel, "")) != norm(wanted.get(rel, ""))}
+    missing = {rel for rel in changed if
+               rel not in {op["ruta"] for op in by_point[point]}
+               and rel != "AceriaApp.sln"}
+    if missing:
+        raise RuntimeError(
+            "No se puede reconstruir: el manual no tiene operaciones para "
+            + ", ".join(sorted(missing))
+        )
+    for rel in changed - {"AceriaApp.sln"}:
+        if norm(constructed.get(rel, "")) != norm(wanted.get(rel, "")):
+            raise RuntimeError(
+                f"M{module:02} punto {module}.{point}: el archivo {rel} "
+                "no coincide tras aplicar las instrucciones"
+            )
+    doc = (root / "PRACTICAS" / f"M{module:02}_PRACTICAS.md").read_text(
+        encoding="utf-8-sig"
+    )
+    needs_solution = "AceriaApp.sln" in changed
+    if needs_solution:
+        ok, explanation = check_generated_solution(
+            previous, constructed, wanted, manual_section(doc, module, point)
+        )
+        if not ok:
+            raise RuntimeError("No se puede regenerar AceriaApp.sln: " + explanation)
+    if destination.exists():
+        raise FileExistsError(f"El destino debe estar vacío: {destination}")
+    shutil.copytree(
+        previous_root, destination,
+        ignore=shutil.ignore_patterns(
+            "bin", "obj", "TestResults", "_test_results", "_trx", ".qa"
+        ),
+    )
+    # Sólo las operaciones ya aplicadas al estado anterior se escriben;
+    # nunca se usan los bytes del proyecto canónico para crear nuevos archivos.
+    for rel in changed - {"AceriaApp.sln"}:
+        path = destination / rel
+        if rel in constructed:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(constructed[rel], encoding="utf-8")
+        elif path.exists():
+            path.unlink()
+
+    new_projects = sorted(
+        rel for rel in constructed.keys() - previous.keys()
+        if rel.casefold().endswith(".csproj")
+    )
+    if needs_solution and new_projects:
+        command = ["dotnet", "sln", "AceriaApp.sln", "add", *new_projects]
+        response = subprocess.run(
+            command, cwd=destination, text=True, encoding="utf-8",
+            errors="replace", stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            timeout=120,
+        )
+        print(response.stdout[-4000:], flush=True)
+        if response.returncode:
+            raise RuntimeError("Error al añadir proyectos a solución: "
+                               + response.stdout[-3000:])
+    built = files(destination)
+    if set(built) != set(wanted):
+        raise RuntimeError(
+            "Archivos distintos en el árbol reconstruido: "
+            f"faltan {sorted(set(wanted)-set(built))}; "
+            f"sobran {sorted(set(built)-set(wanted))}"
+        )
+    for rel, expected in wanted.items():
+        actual = built[rel]
+        if rel == "AceriaApp.sln":
+            if solution_paths(actual) != solution_paths(expected):
+                raise RuntimeError("La membresía de AceriaApp.sln no coincide")
+        elif norm(actual) != norm(expected):
+            raise RuntimeError(
+                f"Paridad post-materialización incorrecta: M{module:02}/"
+                f"{module}.{point}/{rel}"
+            )
+    stats = {
+        "module": module,
+        "point": f"{module}.{point}",
+        "files": len(built),
+        "changed": len(changed),
+        "reconstructed_text": len(changed) - int(needs_solution),
+        "solution_membership": "PASS" if needs_solution else "sin cambios",
+        "new_projects": new_projects,
+        "destination": str(destination),
+    }
+    print("RECONSTRUCCION VALIDADA " + json.dumps(stats, ensure_ascii=False),
+          flush=True)
+    return stats
 
 
 def main():
