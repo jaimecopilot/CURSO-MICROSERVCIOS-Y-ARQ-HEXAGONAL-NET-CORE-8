@@ -6,6 +6,7 @@ El código C# no se duplica. Las imágenes se compilan **directamente** desde `.
 - `docker/compose.fullstack.yml`: SQL Server, RabbitMQ, Producción, Inventario x2 y YARP.
 - `.env.example`: copia a `.env` y cambia la contraseña; no publiques credenciales.
 - `EJECUTAR_DOCKER_WINDOWS.ps1`: preparar, levantar, verificar, detener, bajar y limpiar.
+- `VALIDAR_FALLOS_DOCKER_WINDOWS.ps1`: tras levantar, detener y recuperar Inventario 2 y RabbitMQ, sin borrar sus volúmenes.
 
 En PowerShell 7, dentro de `PROYECTO`:
 
@@ -14,6 +15,11 @@ Copy-Item .\.env.example .\.env
 notepad .\.env
 .\EJECUTAR_DOCKER_WINDOWS.ps1 -Accion preparar
 .\EJECUTAR_DOCKER_WINDOWS.ps1 -Accion levantar
+.\EJECUTAR_DOCKER_WINDOWS.ps1 -Accion verificar
+.\VALIDAR_FALLOS_DOCKER_WINDOWS.ps1
+.\EJECUTAR_DOCKER_WINDOWS.ps1 -Accion verificar
 ```
 
 Consulta [los 16 pasos de M09](../PRACTICAS/M09_PRACTICAS.md). El motor debe ser Docker Desktop con contenedores Linux sobre Windows y WSL2. No se debe ejecutar `limpiar` si se pretende demostrar persistencia.
+
+La prueba de fallos exige que los seis contenedores ya estén operativos y guarda `.qa/docker-fallos-e2e.json`. GitHub Actions también la ejecuta sobre Linux con `-PermitirLinuxEnCI`, pero solo una ejecución real en Docker Desktop para Windows certifica el entorno práctico del alumno.
