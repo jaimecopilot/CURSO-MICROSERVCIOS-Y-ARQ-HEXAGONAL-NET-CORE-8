@@ -427,9 +427,9 @@ A continuación supongamos un cambio de persistencia. Los casos de uso necesitan
 
 Esta clasificación guiará 3.2 y 3.3: primero definiremos puertos como contratos, después los haremos observables en los proyectos .NET y finalmente conectaremos el adaptador HTTP. El criterio de cierre del estudio no es repetir nombres de capas, sino justificar a qué archivo iría cada cambio y qué tests detectarían una asignación incorrecta.
 
-#### Aplicación al repositorio vigente y corrección de alcance
+### De la arquitectura conceptual a la solución existente
 
-El contenido del punto 3.1 se aplica al servicio de órdenes que ya funciona en M02. Se parte de la Minimal API construida en el módulo anterior. Los modelos que representan relaciones arquitectónicas son útiles para razonar y probar reglas; por sí solos no convierten el código en una arquitectura hexagonal. Por eso, las prácticas de este módulo también construyen interfaces de aplicación, implementaciones de infraestructura y conexión HTTP real. El proyecto compilado y los tests demuestran la diferencia entre declarar un puerto y utilizarlo en ejecución.
+El punto 3.1 permite reconocer qué responsabilidades deberían pertenecer a dominio, aplicación, infraestructura y presentación. La API de órdenes heredada de M02 continúa funcionando durante este análisis: sus rutas, validaciones y contratos no cambian por dibujar un nuevo esquema. Los primeros modelos de capas ayudan a razonar sobre dependencias, pero todavía no convierten esos endpoints en hexagonales. La evidencia de una separación real llegará cuando el código incorpore bibliotecas, puertos y adaptadores que puedan ejecutarse y probarse con la dirección de dependencia prevista.
 
 
 ---
@@ -828,9 +828,9 @@ Como actividad de razonamiento, prepara una tabla de cuatro columnas: **operaci�
 
 Con esta tabla resulta más claro por qué un adaptador de entrada y uno de salida son distintos: el primero traduce una conversación con el consumidor; el segundo realiza un efecto solicitado por el núcleo. Ambos se pueden modificar sin desplazar la lógica de negocio a sus respectivos protocolos.
 
-#### Aplicación al repositorio vigente y corrección de alcance
+### El contrato diseñado todavía necesita un adaptador
 
-El contenido del punto 3.2 se aplica al servicio de órdenes que ya funciona en M02. Se parte de la Minimal API construida en el módulo anterior. Los modelos que representan relaciones arquitectónicas son útiles para razonar y probar reglas; por sí solos no convierten el código en una arquitectura hexagonal. Por eso, las prácticas de este módulo también construyen interfaces de aplicación, implementaciones de infraestructura y conexión HTTP real. El proyecto compilado y los tests demuestran la diferencia entre declarar un puerto y utilizarlo en ejecución.
+En el punto 3.2 ya podemos explicar qué operaciones requiere la aplicación de órdenes y qué dependencias deberían satisfacerse mediante puertos. Sin embargo, un catálogo de interfaces no demuestra que exista una ruta HTTP utilizando esas abstracciones. En 3.3 se crearán proyectos y referencias verificables; en 3.4, el grupo de endpoints hexagonales y el repositorio SQL Server completarán el recorrido. Conservar las rutas de M02 permite comparar ambas variantes sin atribuir a la aplicación antigua una transformación que aún no se ha ejecutado.
 
 
 ---
@@ -1192,9 +1192,9 @@ No es suficiente comprobar que el grafo no contiene ciclos: una referencia de Ap
 
 Además, compara el resultado final de la carpeta 3.3 con la base M02. Los endpoints antiguos no desaparecen y la solución sigue siendo un proceso web. El hecho de que existan cuatro ensamblados no significa que se hayan creado cuatro microservicios. La separación física ayuda a encapsular responsabilidades y puede facilitar una extracción futura, pero no sustituye decisiones sobre datos distribuidos, despliegue, red ni operaciones.
 
-#### Aplicación al repositorio vigente y corrección de alcance
+### Qué queda preparado y qué falta conectar
 
-El contenido del punto 3.3 se aplica al servicio de órdenes que ya funciona en M02. Se parte de la Minimal API construida en el módulo anterior. Los modelos que representan relaciones arquitectónicas son útiles para razonar y probar reglas; por sí solos no convierten el código en una arquitectura hexagonal. Por eso, las prácticas de este módulo también construyen interfaces de aplicación, implementaciones de infraestructura y conexión HTTP real. El proyecto compilado y los tests demuestran la diferencia entre declarar un puerto y utilizarlo en ejecución.
+La etapa 3.3 incorpora bibliotecas de dominio, aplicación e infraestructura y permite comprobar que sus referencias respetan el núcleo. La entidad `OrdenHexagonal` y el puerto de repositorio ya tienen responsabilidades distintas, mientras el adaptador de EF Core contiene decisiones de persistencia. No obstante, el host todavía necesita registrar esas implementaciones y exponer un adaptador HTTP. El siguiente punto conectará las piezas y comprobará que una solicitud real puede crear y recuperar órdenes sin que el caso de uso conozca directamente la base de datos.
 
 
 ---
@@ -1646,10 +1646,10 @@ Una respuesta **201** obtenida con un repositorio falso no demuestra que una res
 
 Para revisar el soporte técnico de estas decisiones, consulta [las estrategias de prueba de EF Core](https://learn.microsoft.com/ef/core/testing/choosing-a-testing-strategy) y [el módulo SQL Server de Testcontainers](https://dotnet.testcontainers.org/modules/mssql/). El estudio 2.1 introduce imagen, contenedor, puertos y la alternativa `ACERIA_TEST_SQLSERVER`; aquí esos conceptos se sitúan en la frontera de infraestructura.
 
-### Cierre para el profesor y el alumno
+### Cómo comprobar que la arquitectura funciona
 
-Un módulo puede darse por reproducible cuando se cumplen cuatro condiciones independientes: **los cuatro puntos teóricos siguen presentes**, **cada paso del laboratorio identifica sus operaciones y archivos**, **el E2E construye y verifica la solución desde los fragmentos del manual** y **los PDF con los diagramas SVG reproducen el mismo contenido que los Markdown**. Las operaciones exclusivamente manuales del IDE se documentan y se verifican por inspección; no se afirma que GitHub Actions haya hecho clic físicamente en Visual Studio. Esa honestidad en la evidencia es parte del método de formación.
+La organización hexagonal solo merece ese nombre cuando sus límites se reflejan en el código ejecutado. El alumno debería poder crear una orden a través de HTTP, demostrar que sus reglas se protegen en el dominio, identificar el caso de uso que coordina la operación y comprobar que un adaptador conserva los datos en SQL Server. También debe distinguir qué pruebas se ejecutan sin infraestructura, cuáles necesitan una base real y qué aporta recorrer la API completa. Esta evidencia complementa los diagramas: un nombre de proyecto o una interfaz no acredita por sí solo que exista una frontera efectiva.
 
-#### Aplicación al repositorio vigente y corrección de alcance
+### La prueba decisiva es seguir una orden real
 
-El contenido del punto 3.4 se aplica al servicio de órdenes que ya funciona en M02. Se parte de la Minimal API construida en el módulo anterior. Los modelos que representan relaciones arquitectónicas son útiles para razonar y probar reglas; por sí solos no convierten el código en una arquitectura hexagonal. Por eso, las prácticas de este módulo también construyen interfaces de aplicación, implementaciones de infraestructura y conexión HTTP real. El proyecto compilado y los tests demuestran la diferencia entre declarar un puerto y utilizarlo en ejecución.
+Al completar 3.4, la solución debe conservar las operaciones anteriores de M02 y ofrecer un recorrido adicional en el que HTTP llama a `OrdenesCasoUso`, el caso de uso utiliza un puerto y `OrdenRepositorioSqlServer` ejecuta EF Core. Un test del dominio demuestra reglas aisladas; uno de aplicación, coordinación de colaboradores; una prueba HTTP con SQL Server real acredita composición y persistencia. Esta combinación permite explicar qué parte de AceriaApp se ha reorganizado de forma hexagonal sin confundir bibliotecas separadas con microservicios desplegados independientemente.
