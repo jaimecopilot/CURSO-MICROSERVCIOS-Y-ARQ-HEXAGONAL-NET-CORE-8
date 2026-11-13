@@ -48,7 +48,7 @@ Capas habituales en una aplicación:
 La representación habitual de cuatro capas es una forma de clasificar responsabilidades: presentación interpreta el exterior, aplicación organiza acciones, dominio mantiene las reglas e infraestructura conecta con tecnologías. No debe confundirse el orden gráfico con una obligación de referencias desde cada capa hacia otra inmediatamente inferior. La frontera real se determina por los contratos y el sentido de sus dependencias.
 
 
-La organización por capas produce cuatro beneficios medibles. El primero es la separación de responsabilidades: cada capa tiene una responsabilidad clara y delimitada. El segundo es la reutilización: una capa puede reutilizarse en distintos contextos. El tercero es la testabilidad: cada capa se puede probar de forma aislada. El cuarto es la mantenibilidad: los cambios se localizan en la capa correspondiente. Los cuatro beneficios justifican la adopción de la organización por capas en cualquier proyecto de tamaño medio o grande.
+Separar responsabilidades hace que sea más sencillo localizar una regla y comprender qué efectos tendría cambiarla. Esa organización favorece pruebas específicas del dominio, reutilización cuando está justificada y mantenimiento de piezas con ciclos de cambio distintos. Ninguna de estas ventajas aparece automáticamente por dibujar cuatro rectángulos o crear varias carpetas: se obtiene cuando los componentes realmente preservan sus límites y sus referencias no arrastran detalles externos. En AceriaApp comprobaremos la separación observando qué clases necesitan HTTP, cuáles necesitan SQL y cuáles pueden ejecutarse sin ninguno de ellos.
 
 La organización por capas no es una garantía automática de calidad. Una organización por capas mal aplicada produce capas que se conocen entre sí de forma desordenada, con dependencias cíclicas y con lógica duplicada. La calidad de la organización depende de la disciplina con la que se aplique la regla de dependencia. La regla de dependencia establece que las capas se conocen en una única dirección: las capas exteriores conocen a las interiores, pero las interiores no conocen a las exteriores. La aplicación estricta de la regla es lo que produce los beneficios de la organización por capas.
 
@@ -96,7 +96,7 @@ public class Orden
 En la entidad de ejemplo destacan el identificador y los cambios controlados por métodos, en vez de un objeto que cualquier consumidor pueda modificar libremente. La validación del constructor permite crear una orden válida desde distintos canales sin copiar esa condición en cada endpoint. El test del dominio debe comprobar tanto el caso satisfactorio como el intento de construir un estado imposible.
 
 
-La capa de dominio se caracteriza por tres propiedades. La primera es que no tiene dependencias externas: no referencia ningún paquete de infraestructura. La segunda es que expone sus invariantes: las reglas de negocio se validan en el constructor o en métodos específicos. La tercera es que es testeable de forma aislada: los tests no necesitan base de datos ni framework web. Las tres propiedades son la base para que el dominio sea estable y reutilizable en distintos contextos.
+Una entidad de dominio debe expresar invariantes de negocio sin depender de una API ni de un proveedor de base de datos. En AceriaApp, el constructor de `OrdenHexagonal` y sus operaciones controladas sirven para impedir estados inválidos desde cualquier canal. Eso permite comprobar la regla con tests rápidos que no necesitan levantar Kestrel ni crear tablas. Esta independencia no exige ausencia absoluta de bibliotecas: exige no introducir dependencias que impongan decisiones de transporte o persistencia sobre el modelo.
 
 
 El dominio expresa hechos y reglas de la acería, no el protocolo por el que alguien solicita una orden. `OrdenHexagonal` contiene Id, cliente, material, cantidad y estado porque son conceptos de negocio. Cuando su método `Finalizar()` impide repetir la transición, la entidad garantiza una condición independientemente de si la llamada procede de HTTP, de una tarea programada o de una cola. Esto es más fiable que esconder el mismo `if` en cada controlador.
@@ -140,7 +140,7 @@ public class OrdenServicio
 El servicio de aplicación recibe un repositorio mediante una abstracción y organiza una operación sobre `Orden`. Esta dependencia hace que el caso de uso pueda probarse con un doble y después ejecutarse con SQL Server sin cambiar su lógica. La tarea de la aplicación es coordinar; el repositorio se encarga de cómo se guardan los cambios.
 
 
-La capa de aplicación se caracteriza por tres propiedades. La primera es que conoce la capa de dominio y depende de ella. La segunda es que no conoce la capa de infraestructura: depende de interfaces que la infraestructura implementa. La tercera es que es testeable con dobles de prueba: los tests pueden sustituir el repositorio por un mock. Las tres propiedades permiten que la lógica de orquestación se pruebe sin base de datos y sin framework web.
+El caso de uso conoce las operaciones del dominio y necesita colaboradores definidos mediante contratos. Puede coordinar la creación de una orden y su guardado sin utilizar directamente `HexagonalDbContext`. Gracias a esa separación se prueba su coordinación con un repositorio controlado y se reserva la integración SQL para otra batería de tests. La interfaz no debe convertirse en una copia de toda la API de EF Core; tiene que expresar las necesidades reales de la aplicación.
 
 
 La aplicación coordina una intención del usuario y decide qué operaciones del dominio deben ejecutarse en qué secuencia. `OrdenesCasoUso.CrearAsync` no debería interpretar cabeceras HTTP ni formular consultas SQL; recibe cliente, material y cantidad como valores de negocio. Comprueba la capacidad admitida, construye una `OrdenHexagonal` y solicita guardar a través de `IOrdenRepositorio`. La coordinación es una responsabilidad distinta de la validación intrínseca de la entidad.
@@ -179,7 +179,7 @@ public class OrdenRepositorio : IOrdenRepositorio
 El repositorio concreto conoce `AceriaDbContext` porque su tarea es traducir operaciones del puerto a EF Core. Lo relevante es que el caso de uso no declara una dependencia a ese contexto y no necesita usar `SaveChangesAsync` para expresar una regla de negocio. Esa separación se verifica leyendo las referencias de proyecto y ejecutando una prueba de integración.
 
 
-La capa de infraestructura se caracteriza por tres propiedades. La primera es que implementa las interfaces definidas en las capas interiores. La segunda es que conoce el framework y la base de datos. La tercera es que puede sustituirse sin afectar a las capas interiores: la interfaz es la que garantiza el desacoplamiento. Las tres propiedades permiten que el sistema cambie de base de datos o de proveedor de servicios externos sin modificar el dominio ni la aplicación.
+La infraestructura implementa las operaciones que la aplicación solicita a través de los puertos. Conoce EF Core y SQL Server porque su responsabilidad es adaptar esas tecnologías, pero ese conocimiento no debería propagarse al dominio. Sustituir el adaptador puede ser posible sin reescribir el caso de uso siempre que ambos proveedores cumplan el mismo contrato; no debe suponerse que un cambio importante de semántica o transacciones sea completamente gratuito.
 
 
 La infraestructura es la parte del sistema que sabe cómo se ejecutan efectos concretos. En AceriaApp, `HexagonalDbContext` conoce EF Core, asigna la entidad `OrdenHexagonal` a `OrdenesHexagonales` y configura tipos y restricciones de columnas. `OrdenRepositorioSqlServer` usa las operaciones `AsNoTracking`, `FirstOrDefaultAsync`, `AddAsync` y `SaveChangesAsync`. Nada de eso debería ser una obligación de la capa de aplicación.
@@ -208,7 +208,7 @@ app.MapPost("/api/v1/ordenes", async (
 El endpoint recibe una petición HTTP y la convierte en una llamada al caso de uso. El método conserva responsabilidades de transporte y respuesta, sin reimplementar la política de construcción de la orden. Si el manejador vuelve a decidir todas las reglas de fabricación, el cambio de carpeta no habrá conseguido una frontera real.
 
 
-La capa de presentación se caracteriza por tres propiedades. La primera es que traduce entre HTTP y los casos de uso. La segunda es que no contiene reglas de negocio: delega en la capa de aplicación. La tercera es que puede cambiar de protocolo sin afectar a las capas interiores. Las tres propiedades permiten que el mismo sistema se exponga como API REST, como gRPC o como cola de mensajes sin modificar el dominio ni la aplicación.
+La presentación convierte HTTP en operaciones de aplicación y transforma sus resultados en respuestas apropiadas. Mantener los handlers sin reglas de negocio permite exponer un mismo caso de uso desde otro protocolo sin copiar esas reglas. La adaptación de gRPC o de mensajería requeriría componentes nuevos, pero el núcleo puede permanecer estable si sus puertos fueron definidos sin tipos HTTP.
 
 
 La presentación no es necesariamente una interfaz visual: una Minimal API también es una capa de entrada. Sus rutas traducen HTTP en llamadas al sistema y resultados del sistema en respuestas HTTP. En M03 el grupo `/api/v1/hexagonal/ordenes` recibe `CrearOrdenHexagonalRequest`, invoca `OrdenesCasoUso.CrearAsync` y produce `CreatedAtRoute`, sin conocer la conexión a SQL Server ni una entidad `DbContext`.
@@ -237,7 +237,7 @@ Dominio no depende de nadie.
 El diagrama muestra cómo las referencias deben apuntar hacia abstracciones del núcleo aunque los datos se muevan durante la ejecución entre presentación, aplicación y almacenamiento. Una referencia circular entre proyectos impide razonar con claridad sobre la autonomía de cada componente.
 
 
-La regla de dependencia tiene dos consecuencias prácticas. La primera es que el dominio es independiente del framework y de la base de datos. La segunda es que las dependencias cíclicas entre capas son imposibles: si el dominio no conoce a la aplicación, la aplicación no puede depender del dominio y del dominio de la aplicación a la vez. La regla se aplica con revisiones de código y con tests automáticos que verifican las dependencias entre ensamblados.
+La regla de dependencia busca mantener las referencias de compilación dirigidas hacia el núcleo. Al cumplirla, el dominio no necesita conocer ASP.NET Core ni EF Core y disminuye el riesgo de ciclos entre proyectos. Es posible escribir código que viole esta regla, así que las dependencias cíclicas no son «imposibles» por definición: deben prevenirse con referencias adecuadas, revisión y pruebas automatizadas. El beneficio es hacer visible una restricción arquitectónica que el compilador puede ayudar a verificar.
 
 
 La regla de dependencia habla de referencias de código: las políticas internas no deben importar detalles externos. Un proyecto independiente de dominio que compilase solo cuando se instala `Microsoft.AspNetCore.Http` violaría esa independencia, aunque no iniciara un servidor. La herramienta decisiva en .NET es la dirección de `ProjectReference` y también los `using` que se permiten en cada biblioteca.
@@ -277,7 +277,7 @@ public class OrdenRepositorio : IOrdenRepositorio
 La interfaz de repositorio pertenece al núcleo mientras su implementación pertenece a infraestructura. La inyección de dependencias decide qué implementación utilizar, pero no cambia quién es propietario del contrato. Esa relación hace posible sustituir el almacenamiento en una prueba sin incorporar EF Core al modelo.
 
 
-La inversión de dependencias tiene dos consecuencias prácticas. La primera es que la capa de aplicación no conoce la implementación concreta: solo conoce la interfaz. La segunda es que la implementación puede sustituirse sin modificar la aplicación: por ejemplo, un repositorio en memoria para los tests. La inversión es la técnica que permite que la regla de dependencia se cumpla incluso cuando la aplicación necesita servicios de infraestructura.
+Cuando la aplicación depende de una interfaz definida cerca del núcleo, la infraestructura puede proporcionar una implementación sin obligar a cambiar el caso de uso. Así se utiliza un doble durante las pruebas o un repositorio SQL Server en ejecución. La sustitución exige respetar el mismo contrato y sus garantías; no basta con que dos clases implementen la interfaz para demostrar equivalencia funcional.
 
 
 El principio de inversión de dependencias no significa que se invoque infraestructura desde el dominio mediante magia. Significa que ambos lados relevantes dependen de una abstracción situada donde conviene a la política del sistema. `IOrdenRepositorio` describe operaciones que la aplicación necesita, como listar, obtener, agregar y guardar, y no menciona el nombre de EF Core, SQL Server ni la forma de establecer una conexión.
@@ -319,7 +319,7 @@ Arquitectura hexagonal:
 El hexágono representa un núcleo al que pueden llegar distintos adaptadores de entrada y del que pueden salir dependencias hacia diversos proveedores. El propósito no es multiplicar entradas artificiales, sino conservar la misma regla de órdenes cuando cambia el mecanismo que la invoca o la persiste.
 
 
-La arquitectura hexagonal se caracteriza por tres propiedades. La primera es que el núcleo es independiente de los adaptadores. La segunda es que un mismo puerto puede tener varios adaptadores. La tercera es que los adaptadores se pueden sustituir sin modificar el núcleo. Las tres propiedades hacen que la arquitectura hexagonal sea especialmente adecuada para sistemas que deben exponerse en múltiples protocolos o que deben soportar múltiples mecanismos de persistencia.
+El núcleo hexagonal puede recibir operaciones desde distintos adaptadores de entrada y utilizar implementaciones diferentes para sus puertos de salida. Esa flexibilidad resulta valiosa cuando cambia un protocolo o un proveedor, pero no obliga a crear todas las variantes imaginables desde el principio. La arquitectura se justifica porque permite aislar y probar las reglas del negocio con menos dependencias, y porque las implementaciones tecnológicas permanecen localizadas.
 
 
 Los diagramas de capas organizan responsabilidades en niveles; la arquitectura hexagonal pone el énfasis en los límites de interacción y en la sustituibilidad de adaptadores. Son modelos complementarios: en nuestro diseño, Dominio y Aplicación constituyen el núcleo, mientras HTTP y SQL Server viven fuera como adaptadores. No existe obligación de dibujar físicamente un hexágono en cada clase.
@@ -691,7 +691,7 @@ builder.Services.AddScoped<IOrdenServicio, OrdenServicio>();
 El registro de `IOrdenRepositorio` con una implementación concreta demuestra dónde se elige el adaptador en el host. La inversión de dependencias no consiste en que la interfaz «cree» el repositorio; consiste en que el núcleo no necesita referenciar a su implementación.
 
 
-La inversión de dependencias tiene dos consecuencias prácticas. La primera es que el núcleo no conoce la implementación concreta. La segunda es que la implementación puede sustituirse sin modificar el núcleo. La combinación de ambas permite que el núcleo se pruebe con adaptadores en memoria y que la infraestructura evolucione con independencia del núcleo. La inversión es la técnica que hace posible la arquitectura hexagonal en la práctica.
+Definir interfaces en el núcleo permite utilizar adaptadores reales y dobles de prueba sin modificar el caso de uso. La ventaja depende de que el contrato describa una operación estable, como guardar una orden, y no copie detalles de un framework. La inversión de dependencias favorece pruebas aisladas y cambios de proveedor, aunque las pruebas de integración siguen siendo necesarias para comprobar EF Core y SQL Server.
 
 
 La inversión de dependencias se ve claramente cuando dibujamos dos diagramas: uno de llamadas y otro de referencias. Durante una petición el caso de uso invoca un método implementado por infraestructura, por lo que parece que «aplicación llama a SQL». Pero en el `.csproj` de aplicación no hay referencia a infraestructura. Esto es posible porque la interfaz del puerto está declarada en aplicación, y el código de infraestructura depende de ese contrato.
@@ -722,7 +722,7 @@ Puertos secundarios (driven):
 La distinción entre primarios y secundarios refleja qué operación ofrece el núcleo y qué servicio externo necesita. No fija la tecnología de entrada ni obliga a utilizar un controlador por caso de uso. Una misma operación puede ser llamada por HTTP o por otra entrada legítima.
 
 
-La clasificación en primarios y secundarios tiene dos consecuencias prácticas. La primera es que ayuda a identificar qué puertos son invocados por el exterior y qué puertos son invocados por el núcleo. La segunda es que facilita la organización del código: los puertos primarios se agrupan con los casos de uso y los secundarios con los servicios externos. La clasificación es útil para comunicar la arquitectura entre los miembros del equipo.
+Distinguir puertos primarios y secundarios puede ayudar a explicar quién inicia una operación y qué servicios necesita el núcleo. Las entradas HTTP o de consola invocan capacidades de aplicación, mientras los repositorios y clientes externos resuelven necesidades de salida. Esa clasificación mejora la conversación arquitectónica, pero la ubicación de las interfaces debe responder al diseño de responsabilidades, no a una regla universal de carpetas.
 
 
 La nomenclatura primario/secundario describe quién inicia la interacción respecto al núcleo, no la importancia comercial del componente. Un puerto primario permite entrar para ejecutar una capacidad; un secundario representa un recurso externo que el núcleo solicita. Un endpoint HTTP es un adaptador de entrada, mientras un repositorio de SQL Server es un adaptador de salida.
@@ -752,7 +752,7 @@ Clase interna del dominio → no se define puerto.
 La tabla de posibles puertos ayuda a reconocer fronteras tecnológicas que podrían variar. No todas ellas merecen una interfaz en el proyecto actual: su introducción debe justificarse por necesidades reales de prueba, sustitución o claridad del diseño.
 
 
-La decisión de definir un puerto tiene dos consecuencias prácticas. La primera es que añade una interfaz y una indirección. La segunda es que facilita la sustitución y las pruebas. La combinación de ambas permite que el núcleo sea testeable y que la infraestructura evolucione con independencia del núcleo. La decisión se revisa al final de cada módulo para asegurar que los puertos siguen siendo necesarios.
+Crear un puerto introduce una interfaz y una nueva frontera que habrá que mantener. Tiene sentido cuando esa frontera protege reglas frente a cambios de tecnología, permite probar una capacidad sin infraestructura o admite varias entradas legítimas. Si no existe una necesidad así, añadir interfaces genéricas por costumbre puede dificultar la lectura. En AceriaApp justificamos el repositorio porque el caso de uso debe persistir órdenes sin depender del proveedor EF Core.
 
 
 Antes de introducir un puerto hay que saber qué problema resuelve. En el taller, el repositorio de órdenes es un puerto justificado porque persiste datos fuera de la memoria del caso de uso y queremos probar la coordinación sin levantar SQL Server. Una interfaz adicional para un cálculo trivial y puro no aporta el mismo valor. La calidad se aprecia por los cambios que deja de propagar.
@@ -904,7 +904,7 @@ AceriaApp.Monolito.Dominio/
 La biblioteca de dominio contiene entidades, reglas y tipos de negocio, sin referencias a HTTP ni a EF Core. Una prueba que crea y finaliza una orden puede ejecutarse sin servidor web y ofrece evidencia de que el modelo no necesita infraestructura para mantener sus invariantes.
 
 
-El proyecto de dominio se caracteriza por tres propiedades. La primera es que no referencia otros proyectos del sistema. La segunda es que no referencia paquetes de infraestructura. La tercera es que sus entidades no tienen dependencias externas. Las tres propiedades garantizan que el dominio sea independiente y reutilizable. La independencia permite que el dominio se pruebe sin base de datos ni framework web.
+El proyecto de dominio se mantiene pequeño desde el punto de vista de dependencias: contiene entidades y reglas, y no importa referencias de ASP.NET Core o de EF Core. Eso hace posible ejecutar sus tests sin arrancar la aplicación completa. La ausencia de referencias externas es una condición que podemos inspeccionar en `.csproj`; el significado y la corrección de las reglas necesitan además pruebas de comportamiento.
 
 
 El proyecto de dominio debe poder explicarse sin decir «endpoint», «SQL» o «Swagger». En la acería contiene una entidad orden y sus reglas de identidad, datos mínimos y estado de producción. La clase concreta `OrdenHexagonal` mantiene sus propiedades con acceso controlado y ofrece `Finalizar()` como operación de negocio. La decisión de cómo exponer esa orden públicamente no se codifica aquí.
@@ -935,7 +935,7 @@ AceriaApp.Monolito.Aplicacion/
 La aplicación conoce operaciones del dominio y las necesidades expresadas mediante puertos. El esquema separa esa responsabilidad de la construcción de un contexto SQL o de la selección del código HTTP; tales decisiones corresponden a otros componentes.
 
 
-El proyecto de aplicación se caracteriza por tres propiedades. La primera es que referencia solo el proyecto de dominio. La segunda es que define las interfaces que la infraestructura implementa. La tercera es que no conoce la tecnología concreta. Las tres propiedades garantizan que la aplicación sea independiente de la infraestructura y de la presentación. La independencia permite que la aplicación se pruebe con adaptadores en memoria.
+La biblioteca de aplicación puede referenciar el dominio y definir interfaces para operaciones que realizará infraestructura. Sus casos de uso no deberían depender de implementaciones de repositorio ni de la presentación HTTP, lo que permite suministrar colaboradores controlados durante un test. La separación es útil cuando una operación puede comprobarse sin inicializar bases ni abrir puertos de red.
 
 
 El proyecto de aplicación requiere el vocabulario del dominio, pero no los detalles técnicos de almacenamiento. `IOrdenRepositorio` declara lo que la aplicación necesita del exterior, y `OrdenesCasoUso` coordina las intenciones de listar, obtener, crear y finalizar. Por eso el `.csproj` de aplicación solo referencia Dominio. El compilador hace cumplir esa frontera cuando los tipos concretos de infraestructura no están disponibles.
@@ -965,7 +965,7 @@ AceriaApp.Monolito.Infraestructura/
 La infraestructura es la única parte del recorrido que necesita conocer el proveedor EF Core para almacenar una orden. Su referencia al puerto es esperable; una referencia inversa desde el caso de uso al repositorio concreto sería una señal de acoplamiento que hay que corregir.
 
 
-El proyecto de infraestructura se caracteriza por tres propiedades. La primera es que referencia los proyectos de aplicación y dominio. La segunda es que implementa las interfaces definidas en la aplicación. La tercera es que conoce la tecnología concreta. Las tres propiedades permiten que la infraestructura se sustituya sin modificar el núcleo. La sustitución se realiza cambiando la implementación y el registro en el contenedor de dependencias.
+Infraestructura conoce las entidades y contratos que debe implementar, además de las tecnologías necesarias para hacerlo. Esa dirección permite que `OrdenRepositorioSqlServer` utilice EF Core sin trasladar sus detalles a la aplicación. Si se sustituye el proveedor será necesario adaptar su implementación y volver a pasar las pruebas de integración; el núcleo no tendría que cambiar mientras el contrato mantenga su semántica.
 
 
 El proyecto de infraestructura contiene implementaciones y se permite que dependa de las interfaces de aplicación y los tipos de dominio. En nuestro ejemplo hay cuatro piezas: `HexagonalDbContext`, `OrdenRepositorioSqlServer`, `ServiciosHexagonales` para registros DI y el `.csproj` con EF Core SQL Server. No hay necesidad de copiar todas esas clases en la aplicación.
@@ -992,7 +992,7 @@ AceriaApp.Monolito.Api/
 La presentación adapta peticiones a casos de uso. Los proyectos de API, dominio e infraestructura pueden compilarse en una misma solución y publicarse juntos, pero los handlers deben evitar trasladar la lógica de negocio al punto de entrada.
 
 
-El proyecto de presentación se caracteriza por tres propiedades. La primera es que referencia el proyecto de aplicación. La segunda es que registra la infraestructura en el contenedor de dependencias. La tercera es que expone los endpoints. Las tres propiedades permiten que el sistema se exponga en distintos protocolos sin modificar el núcleo. La presentación es el único proyecto que conoce el protocolo HTTP.
+La presentación conoce las rutas HTTP y registra en el host las dependencias que necesitan los endpoints. Puede referenciar componentes externos para construir la aplicación, pero no debería introducir esos tipos en las clases de dominio. Un cambio de protocolo exigiría otro adaptador de entrada, no una reescritura de las reglas de órdenes; esta es la independencia que la distribución de proyectos pretende hacer visible.
 
 
 La presentación decide cómo habla el exterior con el sistema. En M03 se conserva la aplicación ASP.NET Core de M02 y se incorpora una carpeta `Hexagonal` con rutas nuevas. Esa elección permite comparar los endpoints clásicos que inyectan `AceriaDbContext` con los nuevos que inyectan `OrdenesCasoUso`. La diferencia central es quién conoce el mecanismo de persistencia.
@@ -1020,7 +1020,7 @@ AceriaApp.Monolito.Api/             → referencia Aplicacion e Infraestructura.
 El diagrama de referencias muestra el grafo que debería permitir la solución. El dominio permanece independiente; aplicación depende de él; infraestructura implementa sus contratos; y presentación construye los componentes que participarán en una petición. Una referencia circular rompe esa lectura.
 
 
-La configuración de referencias tiene dos consecuencias prácticas. La primera es que el compilador impide las violaciones de la regla. La segunda es que las dependencias son visibles en el archivo `.csproj`. La combinación de ambas permite que la separación física sea verificable de forma automática. El proyecto de presentación referencia la infraestructura porque necesita registrar las implementaciones en el contenedor de dependencias.
+Los `ProjectReference` permiten que una solución .NET exprese qué dependencias están autorizadas. Si dominio no referencia infraestructura, el compilador detectará intentos directos de utilizar sus tipos. Sin embargo, referencias permitidas pueden esconder dependencias semánticas innecesarias; por ello la comprobación del grafo complementa, y no sustituye, la revisión de responsabilidades. Presentación puede conocer infraestructura en el punto de composición sin obligar al núcleo a conocerla.
 
 
 Las referencias de proyecto son reglas arquitectónicas que podemos inspeccionar. Un conjunto sano es: Aplicación → Dominio; Infraestructura → Aplicación y Dominio; API → Aplicación e Infraestructura para componer. No aparece ninguna flecha saliente desde Dominio. Esta topología permite que el núcleo sobreviva a un cambio tecnológico de entrada o salida.
@@ -1051,7 +1051,7 @@ builder.Services.AddDbContext<AceriaDbContext>(options =>
 El registro de DI en `Program.cs` relaciona una interfaz con su implementación concreta. La construcción del grafo es responsabilidad del host; la aplicación no debería usar un contenedor de servicios para decidir cómo obtener el repositorio.
 
 
-El contenedor de dependencias tiene dos consecuencias prácticas. La primera es que el núcleo no conoce la implementación concreta. La segunda es que la implementación puede sustituirse cambiando el registro. La combinación de ambas permite que el núcleo se pruebe con adaptadores en memoria y que la infraestructura evolucione con independencia del núcleo. El contenedor es la pieza que materializa la inversión de dependencias.
+El contenedor de dependencias permite seleccionar qué adaptador cumple un puerto, por ejemplo qué implementación de `IOrdenRepositorio` recibe el caso de uso. Esa decisión se configura en el host y no se incorpora al núcleo. Durante las pruebas puede registrarse una implementación controlada; en ejecución se utiliza SQL Server. El mecanismo funciona si los contratos ya estaban bien diseñados y los ciclos de vida de los objetos son compatibles.
 
 
 El contenedor de DI realiza en ejecución la composición que los `.csproj` permiten en compilación. En `AddServiciosHexagonales` se registra el contexto SQL Server y la equivalencia `IOrdenRepositorio → OrdenRepositorioSqlServer`. También se registra `OrdenesCasoUso`, de manera que un endpoint puede solicitarlo por parámetro sin crear manualmente el repositorio. Ese enlace se sitúa deliberadamente cerca del arranque.
@@ -1079,7 +1079,7 @@ AceriaApp.Api.Tests/             → referencia Api.
 Los proyectos de tests se orientan a distintos niveles: dominio, aplicación, persistencia e HTTP. La existencia de carpetas distintas ayuda a encontrarlos, pero las aserciones deben demostrar qué parte del comportamiento está realmente aislada o integrada.
 
 
-La separación física tiene dos consecuencias prácticas para los tests. La primera es que cada proyecto de tests solo compila si sus dependencias están correctamente referenciadas. La segunda es que los tests del dominio no necesitan base de datos ni framework web. La combinación de ambas reduce el tiempo de ejecución de los tests y facilita su mantenimiento. La separación es una inversión que se recupera en cada ejecución de la suite.
+Separar físicamente los proyectos facilita que cada batería de tests tenga dependencias concretas y permite ejecutar el dominio sin preparar una base SQL. No obstante, que un proyecto de tests compile solo demuestra que puede resolver sus referencias; son las aserciones las que acreditan reglas correctas. Los tests de aplicación con dobles y las pruebas de persistencia real aportan evidencias diferentes, que conviene mantener explícitas en el laboratorio.
 
 
 La separación física multiplica las fronteras que podemos probar. La entidad se verifica de forma aislada; el caso de uso se prueba con un repositorio falso; el adaptador EF Core se prueba con base controlada; el servidor se verifica con `WebApplicationFactory`. No todos los tests deben iniciar ASP.NET Core, porque eso haría las pruebas más lentas y dificultaría localizar el origen de un fallo.
@@ -1111,7 +1111,7 @@ Api/             → aplicación ejecutable.
 El esquema conserva un único despliegue aunque el código compile varias bibliotecas. Esto permite evolucionar hacia arquitectura hexagonal sin comprometer desde el comienzo la operación del sistema con varios procesos remotos.
 
 
-La separación física tiene dos consecuencias prácticas para el despliegue. La primera es que las bibliotecas pueden reutilizarse en distintas aplicaciones. La segunda es que la aplicación ejecutable solo contiene el código de arranque. La combinación de ambas reduce el tamaño del artefacto desplegable y facilita el despliegue. La separación es una inversión que se recupera en cada despliegue.
+Las bibliotecas de dominio, aplicación e infraestructura pueden compilarse por separado y alojarse en distintos hosts si el diseño lo permite. Pero esa posibilidad no implica que el artefacto final sea automáticamente más pequeño ni que cada biblioteca deba desplegarse como proceso independiente. En M03 seguimos publicando una API ASP.NET Core que utiliza esas bibliotecas: el beneficio de la separación aparece primero en el código y las pruebas.
 
 
 Separar cuatro proyectos .NET dentro de una solución no obliga a desplegarlos como cuatro microservicios. Si `AceriaApp.Api` publica todo el código como un solo proceso, seguimos teniendo un monolito modular con fronteras explícitas. Las capas facilitan reorganizar responsabilidades, pero no introducen automáticamente colas, balances de carga ni contratos entre procesos.
@@ -1237,7 +1237,7 @@ app.MapPost("/api/v1/ordenes", async (
 La ruta ASP.NET Core convierte datos HTTP en una llamada de aplicación. La diferencia importante es que el manejador deja de conocer el contexto SQL y no decide dentro de la función de transporte las reglas del agregado.
 
 
-El adaptador de entrada se caracteriza por tres propiedades. La primera es que traduce entre HTTP y los puertos de entrada. La segunda es que no contiene reglas de negocio. La tercera es que puede sustituirse por otro adaptador sin modificar el núcleo. Las tres propiedades permiten que el mismo caso de uso se exponga en HTTP, gRPC o mensajería.
+El adaptador HTTP recibe los datos de una solicitud, los traduce a una operación y convierte el resultado en una respuesta del protocolo. Si incorpora reglas de fabricación o SQL directamente, la frontera pierde parte de su sentido. La misma operación de aplicación podría ser invocada desde gRPC o un consumidor de mensajes mediante otros adaptadores, siempre que el contrato del núcleo no dependa de HTTP.
 
 
 ASP.NET Core es el marco externo que recibe peticiones y entrega respuestas. En arquitectura hexagonal actúa como adaptador de entrada: traduce rutas, parámetros y cuerpos JSON en llamadas a casos de uso. En el grupo hexagonal `MapGet`, `MapPost` y el POST de finalización son deliberadamente pequeños y no reciben `HexagonalDbContext` como parámetro.
@@ -1263,7 +1263,7 @@ builder.Services.AddDbContext<AceriaDbContext>(options =>
 `AddScoped` relaciona un puerto con su implementación y permite al contenedor resolver el caso de uso. La inversión de dependencias proviene del contrato definido por la aplicación, no del método de registro.
 
 
-El contenedor de dependencias tiene dos consecuencias prácticas. La primera es que el núcleo no conoce la implementación concreta. La segunda es que la implementación puede sustituirse cambiando el registro. La combinación de ambas permite que el núcleo se pruebe con adaptadores en memoria y que la infraestructura evolucione con independencia del núcleo.
+El contenedor selecciona implementaciones concretas durante el arranque y permite sustituirlas en pruebas mediante otros registros. Sin embargo, un cambio de registro no demuestra que el nuevo adaptador cumpla el mismo contrato; eso requiere pruebas propias. El caso de uso permanece independiente cuando sus colaboradores se expresan a través de puertos y no de tipos tecnológicos.
 
 
 El contenedor de dependencias no crea la lógica de negocio; solo construye un grafo de objetos según registros explícitos. En `ServiciosHexagonales.AddServiciosHexagonales`, el `IOrdenRepositorio` se asocia con `OrdenRepositorioSqlServer`, y `OrdenesCasoUso` recibe la interfaz. Cuando ASP.NET Core construye una petición, resuelve el caso de uso y sus dependencias con el scope correspondiente.
@@ -1294,7 +1294,7 @@ Singleton → una instancia por aplicación.
 La comparación entre Transient, Scoped y Singleton debe interpretarse teniendo en cuenta los colaboradores de cada objeto. Un repositorio que utiliza DbContext scoped necesita un ciclo compatible para no compartir una instancia inadecuadamente.
 
 
-La elección del ciclo tiene dos consecuencias prácticas. La primera es que el ciclo incorrecto produce errores de concurrencia o de memoria. La segunda es que el ciclo correcto mantiene el rendimiento y la coherencia. La combinación de ambas permite que el contenedor gestione los recursos de forma eficiente. El curso usa `Scoped` para la mayoría de los servicios y `Singleton` para los adaptadores sin estado.
+La duración de los servicios debe corresponder al uso de sus recursos. Una configuración equivocada puede compartir un `DbContext` entre peticiones concurrentes o retener recursos más tiempo del adecuado. `Scoped` suele ser apropiado para repositorios que utilizan EF Core; `Singleton` requiere especial atención a estado compartido y colaboradores. No hay una regla que convierta automáticamente cualquier clase «sin estado» en singleton correcto.
 
 
 Los ciclos de vida de DI determinan durante cuánto tiempo se reutiliza un objeto. `Transient` crea instancias en cada resolución; `Scoped` mantiene la misma instancia dentro de un scope HTTP; `Singleton` reutiliza una instancia durante la vida del host. La elección afecta a estado compartido, rendimiento y seguridad frente a concurrencia, especialmente al utilizar objetos no diseñados como thread-safe.
@@ -1323,7 +1323,7 @@ builder.Services.AddHttpClient<IClienteInventario, ClienteInventarioHttp>(client
 Registrar el repositorio y el contexto permite que el núcleo obtenga persistencia sin conocer EF Core. Si falta el registro de cualquiera de ellos, los tests del grafo deben detectar que el host no puede resolver la operación.
 
 
-El registro de adaptadores tiene dos consecuencias prácticas. La primera es que cada adaptador tiene su ciclo adecuado. La segunda es que los adaptadores pueden sustituirse cambiando el registro. La combinación de ambas permite que la infraestructura evolucione con independencia del núcleo.
+Registrar un adaptador permite que ASP.NET Core construya el caso de uso con la implementación esperada. El registro también debe respetar la duración de sus dependencias. Sustituir un repositorio por otro proveedor será una decisión localizada en composición e infraestructura, pero su comportamiento seguirá necesitando pruebas con el motor real utilizado.
 
 
 Registrar el adaptador de salida significa elegir una implementación concreta para el puerto que conoce la aplicación. `AddScoped<IOrdenRepositorio, OrdenRepositorioSqlServer>()` en `ServiciosHexagonales` proporciona esa correspondencia. El caso de uso no contiene esa línea: su constructor permanece independiente de la tecnología, y el host decide qué adaptador se utilizará.
@@ -1361,7 +1361,7 @@ public static class OrdenesEndpoints
 La clase de endpoints mapea rutas y construye respuestas HTTP, delegando la creación y recuperación de órdenes al caso de uso. Un test funcional debe demostrar que la petición llega a la lógica correcta.
 
 
-La agrupación de endpoints tiene dos consecuencias prácticas. La primera es que la lectura del código mejora. La segunda es que la configuración del arranque se simplifica con una llamada por recurso. La combinación de ambas reduce el coste de mantenimiento y facilita la incorporación de nuevos miembros al equipo.
+Agrupar endpoints por recurso puede mejorar la lectura de la API y dejar `Program.cs` centrado en la composición del sistema. Esa organización tiene sentido si las rutas mantienen contratos coherentes y delegan reglas en aplicación. Mover un handler grande a un archivo diferente sin separar sus responsabilidades apenas aportaría una mejora arquitectónica.
 
 
 Un endpoint expresivo muestra con claridad verbo, recurso, entradas y resultado. En la API hexagonal la colección se publica en `/api/v1/hexagonal/ordenes`, un miembro se consulta por `/api/v1/hexagonal/ordenes/{id:guid}` y la transición se expone como POST a `/{id:guid}/finalizar`. Esta última representa un cambio de estado específico, no una operación CRUD genérica.
@@ -1412,7 +1412,7 @@ public class OrdenRepositorioSqlServer : IOrdenRepositorio
 El adaptador EF Core implementa operaciones del puerto y conoce el contexto relacional. Para validar su comportamiento, se deben comprobar escrituras y lecturas desde contextos independientes contra SQL Server real.
 
 
-El repositorio se caracteriza por tres propiedades. La primera es que implementa un puerto de salida. La segunda es que conoce EF Core y la base de datos. La tercera es que puede sustituirse por otro adaptador. Las tres propiedades permiten que el núcleo se pruebe con adaptadores en memoria y que la base de datos evolucione con independencia del núcleo.
+Un repositorio hexagonal implementa un puerto de salida y utiliza EF Core para consultar o guardar las entidades. La aplicación no debería conocer ese proveedor, de modo que puede probarse con una implementación controlada. Sin embargo, confirmar datos reales en SQL Server introduce garantías y fallos que un doble no reproduce; las pruebas de integración del repositorio siguen siendo imprescindibles.
 
 
 Un repositorio no es toda la infraestructura: es una implementación concreta de un contrato de persistencia definido por la aplicación. `OrdenRepositorioSqlServer` usa EF Core para listar y obtener órdenes, agregarlas y guardar su estado. El caso de uso no elige consultas, tabla ni motor SQL, y eso le permite mantener una interfaz de operación de negocio en lugar de programación de datos.
@@ -1448,7 +1448,7 @@ app.Run();
 Las llamadas de configuración del arranque componen el host, registran los adaptadores y publican los endpoints. La arquitectura no se demuestra por el número de métodos de extensión, sino por las dependencias efectivas.
 
 
-La configuración del arranque tiene dos consecuencias prácticas. La primera es que el archivo `Program.cs` se mantiene corto y legible. La segunda es que cada grupo de servicios se registra en un método de extensión que puede probarse de forma aislada. La combinación de ambas reduce el coste de mantenimiento y facilita la incorporación de nuevos servicios.
+El arranque de ASP.NET Core puede organizarse en registros y métodos de extensión que expresen qué capacidades se incorporan. Eso facilita localizar configuraciones y comprobarlas por separado, siempre que el código no esconda decisiones de dominio dentro de utilidades de infraestructura. El host es el lugar de composición; las reglas de negocio deben continuar independientes de él.
 
 
 El arranque de una aplicación bien organizada concentra las decisiones que necesitan conocer detalles concretos. En `Program.cs` los registros de servicios ocurren antes de `builder.Build()`, la configuración de middleware y endpoints después y finalmente `app.Run()` inicia el servidor. Este orden no es estilístico: el contenedor se construye al realizar `Build` y no admite añadir servicios del modo habitual después.
@@ -1518,7 +1518,7 @@ AceriaApp.Monolito.Api/
 El árbol de proyectos ayuda a encontrar dominio, aplicación, infraestructura y API. Sin revisar las referencias de compilación, un nombre de carpeta no garantiza que la dirección de las dependencias sea la adecuada.
 
 
-La organización de archivos tiene dos consecuencias prácticas. La primera es que cada grupo de funcionalidad tiene su archivo. La segunda es que el archivo `Program.cs` se mantiene corto. La combinación de ambas reduce el coste de mantenimiento y facilita la incorporación de nuevos miembros al equipo.
+La distribución de archivos ayuda a encontrar endpoints, casos de uso, entidades y repositorios sin recorrer una clase central enorme. Su valor reside en que los nombres y carpetas coincidan con responsabilidades reales. Un `Program.cs` breve es deseable cuando permite comprender el arranque, no cuando se ha ocultado su complejidad en capas de extensiones innecesarias.
 
 
 Organizar carpetas mejora la orientación del alumno, pero la arquitectura depende del contenido y de las referencias. En la API existe una carpeta `Hexagonal` con el adaptador HTTP y se mantienen las carpetas anteriores de contratos, validación y documentación. Fuera de la API viven las bibliotecas de Dominio, Aplicación e Infraestructura, que expresan fronteras reales por proyecto.
