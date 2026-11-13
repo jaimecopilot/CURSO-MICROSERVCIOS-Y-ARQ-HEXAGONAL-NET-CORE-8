@@ -33,6 +33,7 @@ Los archivos de Docker y PowerShell del proyecto se mantienen como referentes; e
 | Código fuente reutilizado | Ruta M08/8.4 presente | `M08_API_GATEWAY/PROYECTO/8.4-balanceo-carga` |
 | Script de despliegue | Sin errores de sintaxis PowerShell | Parseo estático en runner Windows |
 | Despliegue real en CI Linux | **PASS: seis contenedores, SQL, RabbitMQ, YARP, orden, evento y persistencia** | GitHub Actions Linux, no certifica Docker Desktop Windows |
+| Fallo/recuperación en CI Linux | **PASS: Inventario 2, YARP, RabbitMQ y nueva proyección** | Ensayo de resiliencia adicional en Docker Linux |
 
 - [PDF M09 generado y validado](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43509870226).
 - [Validación Windows de sintaxis y correspondencia con infraestructura](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43510540166).
@@ -43,7 +44,7 @@ La ejecución [M09 Docker Compose integral E2E — Linux CI](https://github.com/
 
 Se ha comprobado el arranque y la salud de SQL Server Express, RabbitMQ, Inventario 1, Inventario 2, Producción y YARP; GET de stock a través del gateway; distribución por `X-Instancia`; creación de orden SQL; segunda línea; planificación HTTP 202 y rechazo HTTP 409; proyección asíncrona de la orden recibida; y recuperación de la misma orden y evento tras reiniciar las APIs. La acción `levantar` y una repetición separada de `verificar` devolvieron ambas **PASS integral**. El workflow adjunta JSON de evidencias, estado y logs de los servicios sin publicar `.env`.
 
-**Límites:** esta ejecución automatizada no realiza todavía los ensayos manuales específicos de detener `inventario-2` ni de interrumpir el broker durante una operación pendiente (Pasos 9.13 y 9.14). Y la ejecución fue en Linux CI, no en un Windows físico con Docker Desktop/WSL 2. Ambas circunstancias se mantienen diferenciadas en el estado del curso.
+**Ampliación de resiliencia superada:** una ejecución posterior incorpora el script `VALIDAR_FALLOS_DOCKER_WINDOWS.ps1` y valida diez lecturas consecutivas por Inventario 1 tras detener Inventario 2, recuperación del balanceo al reactivarlo, degradación de readiness al detener RabbitMQ y retorno a salud después de recuperarlo. Después se repite el flujo integral de órdenes y eventos. [Ejecución Docker Linux completa con fallos y recuperación — PASS](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43521475426). Sus evidencias adicionales están en `.qa/docker-fallos-e2e.json` y `.qa/docker-windows-e2e.json`. No se afirma un ensayo de redelivery de mensajes creados *durante* la caída del broker ni una certificación física de Windows.
 
 ## Alcance que **no** certifican estas evidencias
 
@@ -59,4 +60,4 @@ Hay que conservar el archivo `.qa/docker-windows-e2e.json` con `resultado=PASS`,
 
 ## Criterio de cierre
 
-La redacción M09, el documento PDF con cabecera en cada página y la validación estructural/sintáctica están preparados para revisión editorial por el autor. La certificación final de ejecución en Docker Desktop para Windows solo se cerrará al disponer de la evidencia E2E descrita.
+La redacción M09, el documento PDF con cabecera en cada página, la validación estructural/sintáctica y el E2E integral con pruebas de fallos sobre Linux están completados para revisión editorial por el autor. La certificación final de ejecución en Docker Desktop para Windows solo se cerrará al disponer de la evidencia E2E descrita.
