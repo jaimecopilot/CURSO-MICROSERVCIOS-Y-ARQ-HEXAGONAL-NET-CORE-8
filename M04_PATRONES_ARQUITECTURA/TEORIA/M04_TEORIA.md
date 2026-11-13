@@ -30,11 +30,15 @@ El punto de partida es `M03_ARQUITECTURA_HEXAGONAL/PROYECTO/3.4-implementacion-a
 
 ---
 
-## Desarrollo teórico
+## Encapsular persistencia sin esconder el dominio
 
-### Bloque 1 — Definición del patrón Repository
 
-El patrón Repository es una abstracción que media entre la capa de dominio o aplicación y la capa de persistencia. Su propósito es ocultar los detalles de acceso a datos detrás de una interfaz que se expresa en términos del dominio. El repositorio actúa como una colección en memoria de objetos del dominio. Los clientes del repositorio no conocen si los datos provienen de una base de datos relacional, de un archivo o de un servicio remoto. La interfaz del repositorio se define en la capa de aplicación o en la capa de dominio, y su implementación se sitúa en la capa de infraestructura.
+
+Partiremos del caso de uso que necesita guardar y recuperar una orden. Su contrato deberá expresar esa intención sin filtrar EF Core, y su implementación deberá demostrarla en SQL Server. Sobre esa operación examinaremos el límite de Repository.
+
+### Definición del patrón Repository
+
+El patrón Repository pretende que un caso de uso trabaje con órdenes del negocio sin conocer las consultas ni las clases del proveedor de datos. La aplicación necesita expresar operaciones como recuperar una orden o incorporar una nueva; la infraestructura decidirá cómo realizarlas con EF Core y SQL Server. En una arquitectura hexagonal esa necesidad se plasma en un puerto de salida, por ejemplo `IOrdenRepositorio`, cuya implementación puede cambiar sin que las reglas de producción importen dependencias de persistencia. El patrón no consiste en crear una clase denominada Repository por convención, sino en diseñar un contrato que mantenga juntas las operaciones relacionadas y que no exponga detalles del almacenamiento. Para AceriaApp resulta especialmente útil porque permite comparar una prueba del caso de uso con un doble del puerto y una prueba real del adaptador SQL.
 
 ```text
 Patrón Repository:
@@ -46,36 +50,30 @@ Aplicación → IOrdenRepositorio (puerto)
 Infraestructura → OrdenRepositorioSqlServer (adaptador)
 ```
 
-- **Línea 1:** `Aplicación → IOrdenRepositorio (puerto)` → la aplicación define el puerto.
-- **Línea 2:** `↑` → la flecha indica que la infraestructura implementa el puerto.
-- **Línea 3:** `| implementa` → la infraestructura implementa el puerto.
-- **Línea 4:** `Infraestructura → OrdenRepositorioSqlServer (adaptador)` → la infraestructura contiene el adaptador.
+
+El diagrama sitúa la interfaz del repositorio entre la aplicación y el adaptador SQL Server. Las flechas muestran qué componente define el contrato y quién lo implementa, no el orden temporal de una petición. La aplicación se mantiene libre de los tipos de EF Core porque su dependencia es el puerto.
+
 
 El patrón Repository se caracteriza por tres propiedades. La primera es que la interfaz se expresa en términos del dominio: los métodos reciben y devuelven entidades del dominio, no filas de base de datos. La segunda es que oculta la tecnología de persistencia: el cliente no conoce si los datos se guardan en SQL Server, en un archivo o en memoria. La tercera es que agrupa operaciones de persistencia de una entidad o, habitualmente en DDD, de una raíz de agregado: el contrato expresa las necesidades del caso de uso. Las tres propiedades permiten que el dominio sea independiente de la tecnología de persistencia.
 
 La aplicación del patrón Repository tiene dos consecuencias prácticas. La primera es que el dominio y la aplicación se prueban con repositorios en memoria sin necesidad de base de datos. La segunda es que la abstracción reduce el impacto de sustituir la persistencia, aunque diferencias en consultas, consistencia y transacciones pueden exigir revisar el contrato. La combinación de ambas reduce el acoplamiento entre capas y facilita la evolución del sistema. El repositorio es la pieza que materializa el puerto de salida de persistencia.
 
----
 
+El contrato debe explicar qué necesita la aplicación antes de describir cómo guarda SQL Server. La palabra Repository nombra el patrón; IOrdenRepositorio nombra un puerto concreto.
 
+M3 ya contiene IOrdenRepositorio y OrdenRepositorioSqlServer. M4 añade un puerto de trabajo que permite estudiar por separado la preparación de cambios y su confirmación.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Un repositorio no convierte automáticamente dos motores distintos en intercambiables. La paginación, las transacciones y la concurrencia siguen requiriendo decisiones explícitas.
 
-**La decisión arquitectónica.** El contrato debe explicar qué necesita la aplicación antes de describir cómo guarda SQL Server. La palabra Repository nombra el patrón; IOrdenRepositorio nombra un puerto concreto.
-
-**Ejemplo concreto en AceriaApp.** M3 ya contiene IOrdenRepositorio y OrdenRepositorioSqlServer. M4 añade un puerto de trabajo que permite estudiar por separado la preparación de cambios y su confirmación.
-
-**Riesgo, alternativa y límite.** Un repositorio no convierte automáticamente dos motores distintos en intercambiables. La paginación, las transacciones y la concurrencia siguen requiriendo decisiones explícitas.
-
-**Comprobación técnica y aprendizaje.** Localiza la interfaz en aplicación y el adaptador en infraestructura. El proyecto de dominio debe compilar sin referenciar EF Core ni ASP.NET Core.
+Localiza la interfaz en aplicación y el adaptador en infraestructura. El proyecto de dominio debe compilar sin referenciar EF Core ni ASP.NET Core.
 
 ![Diagrama explicativo del punto 4.1, bloque 1](IMAGENES/4-1-puerto.svg)
 
-*Interpretación del gráfico:* El puerto se define dentro y el adaptador apunta hacia su contrato. Las flechas muestran dependencias de código. La figura se distribuye en SVG vectorial y PNG.
+El puerto se define dentro y el adaptador apunta hacia su contrato. Las flechas muestran dependencias de código. La figura se distribuye en SVG vectorial y PNG.
 
-### Bloque 2 — Responsabilidades de un repositorio
+### Responsabilidades de un repositorio
 
-Un repositorio tiene tres responsabilidades principales. La primera es recuperar entidades del almacenamiento: el repositorio ofrece métodos para obtener una entidad por identificador, obtener una colección de entidades o buscar entidades por criterios. La segunda es añadir entidades al almacenamiento: el repositorio ofrece métodos para insertar entidades nuevas. La tercera es actualizar o eliminar entidades existentes: el repositorio ofrece métodos para modificar o eliminar entidades. Cada responsabilidad se expresa con métodos específicos en la interfaz del repositorio.
+Un repositorio tiene que mantener un contrato coherente sobre cómo se obtienen y guardan las entidades que controla. Recuperar por identidad, agregar o actualizar una orden pueden ser operaciones necesarias de la aplicación, mientras la traducción a consultas SQL corresponde al adaptador. La interfaz no debería devolver tipos propios de EF Core si los consumidores no necesitan conocerlos, ni permitir que el resto de la solución modifique directamente la base. Este diseño obliga a pensar qué significa guardar una orden, cómo se tratan las ausencias y quién confirma una transacción. No todos los métodos de un CRUD genérico forman parte automáticamente del negocio: se deben publicar las capacidades que de verdad necesita el caso de uso. Así el contrato permanece estable aunque cambien tablas y relaciones.
 
 ```csharp
 public interface IOrdenRepositorio
@@ -88,36 +86,26 @@ public interface IOrdenRepositorio
 }
 ```
 
-- **Línea 1:** `public interface IOrdenRepositorio` → interfaz del repositorio.
-- **Línea 2:** `{` → abre el cuerpo.
-- **Línea 3:** `Task<Orden?> GetByIdAsync(Guid id);` → recupera una entidad por identificador.
-- **Línea 4:** `Task<List<Orden>> ListarAsync();` → recupera la colección completa.
-- **Línea 5:** `Task AddAsync(Orden orden);` → añade una entidad.
-- **Línea 6:** `Task UpdateAsync(Orden orden);` → actualiza una entidad.
-- **Línea 7:** `Task DeleteAsync(Guid id);` → elimina una entidad por identificador.
-- **Línea 8:** `}` → cierra el cuerpo.
+
+La interfaz enumera operaciones de lectura y escritura que el caso de uso podría necesitar. La conveniencia de cada método debe contrastarse con las reglas de Órdenes: añadir un `DeleteAsync` no significa que el negocio permita borrar cualquier orden en cualquier estado.
+
 
 Las tres responsabilidades se expresan con cinco métodos típicos. El método `GetByIdAsync` recupera una entidad concreta. El método `ListarAsync` recupera la colección. El método `AddAsync` inserta una entidad nueva. El método `UpdateAsync` actualiza una entidad existente. El método `DeleteAsync` elimina una entidad. Son cinco operaciones habituales, no una plantilla obligatoria. Un repositorio puede omitir actualización o eliminación si el dominio no permite esas acciones y añadir las búsquedas que necesita.
 
 La definición de las responsabilidades tiene dos consecuencias prácticas. La primera es que el repositorio es una abstracción del almacenamiento, no del dominio: no contiene reglas de negocio. La segunda es que las consultas deben servir al contrato: un JOIN puede ser necesario para reconstruir un agregado; las consultas de informes pueden separarse en puertos de lectura. La combinación de ambas permite que el repositorio sea simple y mantenible. El contrato evita exponer detalles como SQL, DbSet o IQueryable cuando se busca independencia del proveedor.
 
----
 
+Los métodos se eligen por necesidades de negocio. No añadas Delete solo porque aparece en una plantilla CRUD si la orden debe conservarse por trazabilidad.
 
+El puerto heredado ofrece ListarAsync, ObtenerAsync, AgregarAsync y GuardarAsync. El puerto de trabajo de M4 usa ObtenerAsync y AgregarAsync para los casos desarrollados.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Actualizar un objeto seguido por EF Core no siempre requiere un método Update. Un contrato debe aclarar quién sigue la entidad y cuándo se confirma.
 
-**La decisión arquitectónica.** Los métodos se eligen por necesidades de negocio. No añadas Delete solo porque aparece en una plantilla CRUD si la orden debe conservarse por trazabilidad.
+Comprueba ausencia con null, altas con una entidad válida y listas vacías con una colección vacía. Son contratos distintos que no deben confundirse con errores de SQL.
 
-**Ejemplo concreto en AceriaApp.** El puerto heredado ofrece ListarAsync, ObtenerAsync, AgregarAsync y GuardarAsync. El puerto de trabajo de M4 usa ObtenerAsync y AgregarAsync para los casos desarrollados.
+### Lo que un repositorio no debe hacer
 
-**Riesgo, alternativa y límite.** Actualizar un objeto seguido por EF Core no siempre requiere un método Update. Un contrato debe aclarar quién sigue la entidad y cuándo se confirma.
-
-**Comprobación técnica y aprendizaje.** Comprueba ausencia con null, altas con una entidad válida y listas vacías con una colección vacía. Son contratos distintos que no deben confundirse con errores de SQL.
-
-### Bloque 3 — Lo que un repositorio no debe hacer
-
-Un repositorio no debe contener reglas de negocio. Las reglas de negocio residen en las entidades del dominio. Un repositorio no debe validar invariantes: la validación de invariantes se realiza en el constructor de la entidad o en métodos específicos. Un repositorio de agregados no debería decidir la forma de una respuesta HTTP. Un puerto de lectura sí puede devolver una proyección definida por aplicación. Tampoco existe una prohibición de usar JOINs: infraestructura necesita las consultas que permitan cumplir el contrato; los informes con necesidades distintas pueden tener un servicio de consulta propio.
+La frontera de Repository se desdibuja cuando la clase empieza a tomar decisiones que pertenecen al dominio. Determinar si puede cancelarse una orden finalizada, validar una capacidad de fabricación o elegir el estado siguiente no son responsabilidades de acceso a datos. Tampoco debería el repositorio construir respuestas HTTP ni decidir qué código devolver a un cliente. Su trabajo consiste en cumplir operaciones de almacenamiento con las garantías previstas por el puerto; el caso de uso organiza la secuencia y las entidades protegen las invariantes. En AceriaApp evitaremos convertir el repositorio en un «servicio universal» que conoce todas las capacidades de la acería. Si una consulta de informes necesita una proyección específica, podemos diseñarla como contrato de lectura sin contaminar el repositorio de agregados.
 
 ```text
 Lo que un repositorio no debe hacer:
@@ -129,31 +117,24 @@ Lo que un repositorio no debe hacer:
 - Gestionar transacciones de múltiples repositorios.
 ```
 
-- **Línea 1:** `- Contener reglas de negocio.` → las reglas residen en el dominio.
-- **Línea 2:** `- Validar invariantes.` → la validación reside en la entidad.
-- **Línea 3:** `- Diseñar respuestas HTTP desde persistencia.` → el contrato de transporte se decide en el adaptador de entrada.
-- **Línea 4:** `- Exponer consultas ajenas al propósito del contrato.` → un JOIN interno es válido; los informes pueden tener un puerto propio.
-- **Línea 5:** `- Gestionar transacciones de múltiples repositorios.` → la transacción la gestiona la unidad de trabajo.
+
+La lista marca fronteras negativas importantes: ni validación de invariantes, ni composición de respuestas HTTP, ni decisiones de transacción entre varios repositorios pertenecen automáticamente a la clase que consulta SQL. Esas tareas necesitan propietarios explícitos en dominio o aplicación.
+
 
 La delimitación de responsabilidades tiene dos consecuencias prácticas. La primera es que el repositorio se mantiene simple y cohesionado. La segunda es que las reglas de negocio y las validaciones no se duplican entre el repositorio y el dominio. La combinación de ambas permite que el repositorio sea sustituible sin afectar a la lógica de negocio. La disciplina en la delimitación es lo que distingue un repositorio correcto de un repositorio que acumula responsabilidades.
 
----
 
+La frontera se define por responsabilidad, no por el número de JOINs. Recuperar un agregado puede exigir varias tablas sin incorporar reglas de negocio al repositorio.
 
+La regla Cantidad mayor que cero pertenece a OrdenHexagonal. El repositorio puede traducir sus propiedades a columnas, pero no decidir otra capacidad máxima diferente a aplicación.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Un índice único y una validación de negocio pueden proteger aspectos relacionados. La comprobación previa no elimina carreras; las restricciones de almacenamiento también deben tratarse adecuadamente.
 
-**La decisión arquitectónica.** La frontera se define por responsabilidad, no por el número de JOINs. Recuperar un agregado puede exigir varias tablas sin incorporar reglas de negocio al repositorio.
+Revisa si el adaptador decide HTTP 400, 404 o 409. Si lo hace, devuelve al adaptador de entrada esa traducción y conserva información suficiente sobre el resultado.
 
-**Ejemplo concreto en AceriaApp.** La regla Cantidad mayor que cero pertenece a OrdenHexagonal. El repositorio puede traducir sus propiedades a columnas, pero no decidir otra capacidad máxima diferente a aplicación.
+### Repositorio específico frente a repositorio genérico
 
-**Riesgo, alternativa y límite.** Un índice único y una validación de negocio pueden proteger aspectos relacionados. La comprobación previa no elimina carreras; las restricciones de almacenamiento también deben tratarse adecuadamente.
-
-**Comprobación técnica y aprendizaje.** Revisa si el adaptador decide HTTP 400, 404 o 409. Si lo hace, devuelve al adaptador de entrada esa traducción y conserva información suficiente sobre el resultado.
-
-### Bloque 4 — Repositorio específico frente a repositorio genérico
-
-Un repositorio específico se define para una entidad concreta y expone solo los métodos que esa entidad necesita. Un repositorio genérico se define para varias entidades y expone métodos comunes a todas ellas. El repositorio específico puede expresar mejor las operaciones del negocio; ambos enfoques admiten pruebas. El repositorio genérico reduce la duplicación de código. La elección depende de los contratos necesarios, del coste de mantener abstracciones y de la semántica de los agregados, no solo del número de entidades.
+Un repositorio genérico suele ofrecer métodos comunes para distintos tipos de entidad, mientras uno específico utiliza operaciones y nombres del dominio de Órdenes. La alternativa genérica parece ahorrar código, pero puede hacer difícil expresar consultas, reglas de identidad o transacciones particulares sin añadir parámetros técnicos. Una interfaz `IOrdenRepositorio` puede explicar mejor qué necesita un caso de uso que `IRepositorio<T>`, especialmente cuando el agregado tiene un ciclo de vida complejo. Eso no vuelve incorrecta toda abstracción genérica: cuando las operaciones son realmente uniformes y el contrato no pierde significado, compartir infraestructura puede resultar razonable. La elección debe basarse en claridad y estabilidad de la frontera, no en disminuir artificialmente el número de interfaces.
 
 ```csharp
 // Repositorio específico
@@ -171,38 +152,24 @@ public interface IRepositorio<T> where T : class
 }
 ```
 
-- **Línea 1:** `// Repositorio específico` → comentario de ubicación.
-- **Línea 2:** `public interface IOrdenRepositorio` → interfaz específica.
-- **Línea 3:** `{` → abre el cuerpo.
-- **Línea 4:** `Task<Orden?> GetByIdAsync(Guid id);` → método específico.
-- **Línea 5:** `Task AddAsync(Orden orden);` → método específico.
-- **Línea 6:** `}` → cierra el cuerpo.
-- **Línea 7:** `// Repositorio genérico` → comentario de ubicación.
-- **Línea 8:** `public interface IRepositorio<T> where T : class` → interfaz genérica.
-- **Línea 9:** `{` → abre el cuerpo.
-- **Línea 10:** `Task<T?> GetByIdAsync(Guid id);` → método genérico.
-- **Línea 11:** `Task AddAsync(T entidad);` → método genérico.
-- **Línea 12:** `}` → cierra el cuerpo.
+
+El contraste entre `IOrdenRepositorio` e `IRepositorio<T>` muestra cómo cambia la expresividad del contrato. Una interfaz genérica puede reutilizarse, pero la específica permite explicar necesidades del agregado sin filtrar operaciones que no tienen sentido para ese recurso.
+
 
 El repositorio específico tiene dos consecuencias prácticas. La primera es que la interfaz es legible: cada método describe una operación concreta. La segunda es que la implementación es testeable: cada repositorio se prueba de forma aislada. El repositorio genérico tiene dos consecuencias prácticas. La primera es que reduce la duplicación: una sola interfaz sirve para varias entidades. La segunda es que la interfaz es menos expresiva: los métodos son comunes a todas las entidades. La elección depende del contexto del proyecto.
 
----
 
+Un repositorio específico usa vocabulario del agregado; uno genérico comparte operaciones estructurales. Ambos pueden ser útiles y ambos pueden volverse demasiado amplios.
 
+IOrdenTrabajoRepositorio permite expresar necesidades de órdenes sin obligar a todas las entidades futuras a tener el mismo identificador, paginación o política de borrado.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Una interfaz `IRepositorio<T>` con decenas de métodos y parámetros para incluir tablas puede terminar filtrando el ORM. Ahorrar clases no justifica perder el contrato.
 
-**La decisión arquitectónica.** Un repositorio específico usa vocabulario del agregado; uno genérico comparte operaciones estructurales. Ambos pueden ser útiles y ambos pueden volverse demasiado amplios.
+Describe una operación válida para órdenes y otra prohibida. Verifica si la interfaz elegida permite distinguirlas o si ofrece accidentalmente operaciones que el dominio no admite.
 
-**Ejemplo concreto en AceriaApp.** IOrdenTrabajoRepositorio permite expresar necesidades de órdenes sin obligar a todas las entidades futuras a tener el mismo identificador, paginación o política de borrado.
+### Repositorio y puertos de salida
 
-**Riesgo, alternativa y límite.** Una interfaz `IRepositorio<T>` con decenas de métodos y parámetros para incluir tablas puede terminar filtrando el ORM. Ahorrar clases no justifica perder el contrato.
-
-**Comprobación técnica y aprendizaje.** Describe una operación válida para órdenes y otra prohibida. Verifica si la interfaz elegida permite distinguirlas o si ofrece accidentalmente operaciones que el dominio no admite.
-
-### Bloque 5 — Repositorio y puertos de salida
-
-La interfaz del repositorio es el puerto de salida de persistencia; su implementación concreta es el adaptador. El puerto se define en la capa de aplicación. La implementación se sitúa en la capa de infraestructura. La interfaz del puerto se expresa en términos del dominio: recibe y devuelve entidades. La implementación conoce la tecnología de persistencia: usa EF Core, Dapper o el proveedor que corresponda. La separación entre puerto e implementación permite que el núcleo se pruebe con repositorios en memoria.
+En arquitectura hexagonal el repositorio es un adaptador de salida que implementa una interfaz definida hacia el núcleo. La aplicación invoca `IOrdenRepositorio` porque necesita guardar una orden; la clase SQL Server referencia ese contrato y utiliza `AceriaDbContext`. Es importante distinguir dos direcciones: durante la ejecución la llamada llega al adaptador, pero en las referencias de compilación es la infraestructura la que depende de la abstracción. Esta inversión permite sustituir la implementación durante los tests de aplicación y también mantener un repositorio de producción con EF Core. El registro de dependencias, y no el caso de uso, selecciona qué adaptador se utiliza. Su correcto funcionamiento necesita probar tanto la composición como las consultas reales.
 
 ```csharp
 // Puerto de salida en la capa de aplicación
@@ -229,45 +196,24 @@ public class OrdenRepositorioSqlServer : IOrdenRepositorio
 }
 ```
 
-- **Línea 1:** `// Puerto de salida en la capa de aplicación` → comentario de ubicación.
-- **Línea 2:** `public interface IOrdenRepositorio` → puerto de salida.
-- **Línea 3:** `{` → abre el cuerpo.
-- **Línea 4:** `Task AddAsync(Orden orden);` → método del puerto.
-- **Línea 5:** `}` → cierra el cuerpo.
-- **Línea 6:** `// Adaptador de salida en la capa de infraestructura` → comentario de ubicación.
-- **Línea 7:** `public class OrdenRepositorioSqlServer : IOrdenRepositorio` → adaptador.
-- **Línea 8:** `{` → abre el cuerpo.
-- **Línea 9:** `private readonly AceriaDbContext _db;` → dependencia del contexto.
-- **Línea 10:** `public OrdenRepositorioSqlServer(AceriaDbContext db)` → constructor.
-- **Línea 11:** `{` → abre el cuerpo del constructor.
-- **Línea 12:** `_db = db;` → asigna el contexto.
-- **Línea 13:** `}` → cierra el constructor.
-- **Línea 14:** `public async Task AddAsync(Orden orden)` → implementación del método.
-- **Línea 15:** `{` → abre el cuerpo del método.
-- **Línea 16:** `_db.Ordenes.Add(orden);` → añade la orden al contexto.
-- **Línea 17:** `await _db.SaveChangesAsync();` → persiste los cambios.
-- **Línea 18:** `}` → cierra el método.
-- **Línea 19:** `}` → cierra la clase.
+
+`OrdenRepositorioSqlServer` implementa el puerto utilizando `AceriaDbContext`. El caso de uso no debería construir esa clase: el host resuelve la dependencia y la prueba de integración verifica que la implementación cumple la operación de guardado.
+
 
 La relación entre repositorio y puerto de salida tiene dos consecuencias prácticas. La primera es que el repositorio se define en el núcleo y se implementa en el exterior. La segunda es que el repositorio puede sustituirse por una implementación en memoria sin modificar el núcleo. La combinación de ambas permite que el núcleo se pruebe sin base de datos y que la tecnología de persistencia evolucione con independencia del núcleo.
 
----
 
+El puerto pertenece al núcleo; el adaptador implementa el acceso. La inversión de dependencias se comprueba leyendo referencias de proyectos, no el recorrido de una petición.
 
+OrdenRepositorioSqlServer de M3 confirma cada alta. El adaptador de trabajo de M4 prepara el alta y deja que IUnitOfWork confirme el mismo HexagonalDbContext.
 
-#### Ampliación didáctica aplicada a AceriaApp
+El ejemplo breve que guarda dentro del repositorio es una variante útil para una operación autónoma. No debe mezclarse con la confirmación conjunta de varios repositorios.
 
-**La decisión arquitectónica.** El puerto pertenece al núcleo; el adaptador implementa el acceso. La inversión de dependencias se comprueba leyendo referencias de proyectos, no el recorrido de una petición.
+Al componer M4, comprueba que todos los participantes reciben la misma instancia scoped del contexto. Dos contextos independientes no forman una transacción por compartir una interfaz.
 
-**Ejemplo concreto en AceriaApp.** OrdenRepositorioSqlServer de M3 confirma cada alta. El adaptador de trabajo de M4 prepara el alta y deja que IUnitOfWork confirme el mismo HexagonalDbContext.
+### Repositorio y consultas de lectura
 
-**Riesgo, alternativa y límite.** El ejemplo breve que guarda dentro del repositorio es una variante útil para una operación autónoma. No debe mezclarse con la confirmación conjunta de varios repositorios.
-
-**Comprobación técnica y aprendizaje.** Al componer M4, comprueba que todos los participantes reciben la misma instancia scoped del contexto. Dos contextos independientes no forman una transacción por compartir una interfaz.
-
-### Bloque 6 — Repositorio y consultas de lectura
-
-El repositorio devuelve entidades del dominio para las operaciones de escritura y para las operaciones de lectura que necesitan la entidad completa. Cuando la operación de lectura solo necesita una proyección, el repositorio puede ofrecer métodos que devuelvan DTOs. La decisión entre devolver entidades o DTOs depende del caso de uso. Las escrituras que ejecutan reglas de un agregado suelen cargar el agregado necesario; las actualizaciones directas exigen garantizar de otro modo sus invariantes. Las operaciones de lectura pueden necesitar solo una proyección. La separación entre lectura y escritura se profundiza en el módulo 5 con CQRS.
+La lectura de información no siempre necesita materializar un agregado completo con todas sus relaciones. Una consulta destinada a presentar el resumen de una orden puede requerir un DTO proyectado con pocos campos, mientras una operación de negocio necesita una entidad capaz de proteger invariantes. Esa diferencia plantea una decisión de diseño: utilizar un contrato de lectura específico o adaptar un repositorio de agregados para cubrir consultas sencillas. Lo importante es no exponer `IQueryable` de EF Core al consumidor si eso permite que la aplicación construya consultas ligadas a la tecnología. En AceriaApp se puede mantener `GetByIdAsync` para recuperar la entidad y definir una proyección `GetResumenAsync` cuando exista una necesidad real. El módulo de CQRS profundizará en esta separación.
 
 ```csharp
 public interface IOrdenRepositorio
@@ -277,35 +223,28 @@ public interface IOrdenRepositorio
 }
 ```
 
-- **Línea 1:** `public interface IOrdenRepositorio` → interfaz del repositorio.
-- **Línea 2:** `{` → abre el cuerpo.
-- **Línea 3:** `Task<Orden?> GetByIdAsync(Guid id);` → devuelve la entidad completa.
-- **Línea 4:** `Task<OrdenResumenDto?> GetResumenAsync(Guid id);` → devuelve una proyección.
-- **Línea 5:** `}` → cierra el cuerpo.
+
+La interfaz distingue una lectura de la entidad de una proyección resumida. El DTO de consulta debe contener solo lo que el consumidor necesita y evitar que las reglas de presentación se conviertan en consultas sobre entidades fuera de su contexto.
+
 
 La distinción entre entidad y proyección tiene dos consecuencias prácticas. La primera es que las operaciones con reglas de agregado usan el modelo que protege esas reglas. La segunda es que las operaciones de lectura pueden usar proyecciones para reducir el tamaño de la respuesta. La combinación de ambas mejora el rendimiento y mantiene la coherencia del modelo. La decisión se documenta en el ADR del punto y se revisa al final del módulo 5.
 
----
 
+Una proyección de lectura expresa los datos que necesita la pantalla o consumidor. No obliga a materializar una entidad con todas sus relaciones.
 
+Una lista de órdenes puede seleccionar identificador, cliente y estado. La operación Finalizar necesita recuperar la entidad sobre la que ejecuta la regla de transición.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Si el contrato está en dominio no debe depender de un DTO definido en API. Ubica proyecciones en aplicación o en un puerto de lectura separado.
 
-**La decisión arquitectónica.** Una proyección de lectura expresa los datos que necesita la pantalla o consumidor. No obliga a materializar una entidad con todas sus relaciones.
-
-**Ejemplo concreto en AceriaApp.** Una lista de órdenes puede seleccionar identificador, cliente y estado. La operación Finalizar necesita recuperar la entidad sobre la que ejecuta la regla de transición.
-
-**Riesgo, alternativa y límite.** Si el contrato está en dominio no debe depender de un DTO definido en API. Ubica proyecciones en aplicación o en un puerto de lectura separado.
-
-**Comprobación técnica y aprendizaje.** Comprueba que la paginación se ejecuta antes de materializar grandes colecciones y que las lecturas sin edición usan AsNoTracking cuando no necesitan seguimiento.
+Comprueba que la paginación se ejecuta antes de materializar grandes colecciones y que las lecturas sin edición usan AsNoTracking cuando no necesitan seguimiento.
 
 ![Diagrama explicativo del punto 4.1, bloque 6](IMAGENES/4-1-lecturas.svg)
 
-*Interpretación del gráfico:* Distingue el modelo necesario para ejecutar reglas de una proyección de lectura; cada contrato tiene un propósito. La figura se distribuye en SVG vectorial y PNG.
+Distingue el modelo necesario para ejecutar reglas de una proyección de lectura; cada contrato tiene un propósito. La figura se distribuye en SVG vectorial y PNG.
 
-### Bloque 7 — Repositorio y pruebas con dobles
+### Repositorio y pruebas con dobles
 
-La capa de aplicación se prueba con dobles del repositorio; eso no prueba el SQL ni el mapeo del adaptador real. El doble sustituye la implementación real y permite verificar el comportamiento del caso de uso sin base de datos. Los dobles más usados son el mock y el stub. El mock verifica que se ha llamado a un método concreto. El stub devuelve un valor predefinido. La combinación de ambos permite probar los casos de uso de forma aislada.
+Los dobles de prueba permiten comprobar cómo utiliza la aplicación un repositorio sin iniciar una base de datos. Si `OrdenesCasoUso` recibe `IOrdenRepositorio`, un mock puede devolver una orden conocida y registrar que se solicitó exactamente el identificador esperado. Esa prueba aporta evidencia sobre la coordinación del caso de uso y sobre la frontera de dependencias; no demuestra por sí sola que la implementación EF Core consulte correctamente SQL Server. Para esa garantía necesitaremos otro test que use el motor real y verifique lo persistido con un contexto independiente. El valor del patrón aparece precisamente en poder probar de forma distinta la decisión de negocio y el mecanismo tecnológico, sin duplicar la misma lógica.
 
 ```csharp
 var esperada = new OrdenHexagonal("ACX-001", "CHAPA", 10);
@@ -320,36 +259,24 @@ repositorioMock.Verify(
     r => r.ObtenerAsync(esperada.Id, It.IsAny<CancellationToken>()), Times.Once);
 ```
 
-- **Línea 1:** `var esperada = new OrdenHexagonal("ACX-001", "CHAPA", 10);` → crea una entidad válida con la misma identidad que buscará el test.
-- **Línea 2:** `var repositorioMock = new Mock<IOrdenRepositorio>();` → crea un doble Moq del puerto real.
-- **Línea 3:** `repositorioMock` → inicia la configuración del stub.
-- **Línea 4:** `.Setup(r => r.ObtenerAsync(esperada.Id, It.IsAny<CancellationToken>()))` → acepta la identidad esperada y cualquier token.
-- **Línea 5:** `.ReturnsAsync(esperada);` → configura el valor que devolverá el doble.
-- **Línea 6:** `var servicio = new OrdenesCasoUso(repositorioMock.Object);` → construye el caso de uso sin contenedor ni base de datos.
-- **Línea 7:** `var orden = await servicio.ObtenerAsync(esperada.Id);` → ejecuta la consulta por la identidad configurada.
-- **Línea 8:** `Assert.Same(esperada, orden);` → comprueba el resultado, además de la interacción.
-- **Línea 9:** `repositorioMock.Verify(` → inicia la verificación de la llamada.
-- **Línea 10:** `r => r.ObtenerAsync(esperada.Id, It.IsAny<CancellationToken>()), Times.Once);` → exige una única consulta del identificador esperado.
+
+El mock devuelve una orden conocida y permite comprobar que el caso de uso solicitó el identificador previsto exactamente una vez. Esa comprobación protege la coordinación, pero no certifica materialización, consultas ni escritura de datos reales en SQL Server.
+
 
 Las pruebas con dobles tienen dos consecuencias prácticas. La primera es que los casos de uso se prueban de forma aislada. La segunda es que las pruebas se ejecutan sin base de datos y sin infraestructura. La combinación de ambas reduce el tiempo de ejecución de la suite y facilita el mantenimiento. El ejemplo muestra Moq; también se pueden escribir fakes pequeños sin una biblioteca adicional.
 
----
 
+Un mock comprueba interacciones; un stub fija respuestas; un fake ofrece una implementación reducida. Elegir el doble depende de la pregunta que responde la prueba.
 
+El ejemplo usa el identificador de la misma OrdenHexagonal que devuelve el doble. Así detecta una consulta con una identidad incorrecta en lugar de aceptar cualquier GUID.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Una prueba del caso de uso no demuestra que SQL traduzca un filtro, respete claves foráneas o haga rollback. Para eso se necesita una prueba del adaptador.
 
-**La decisión arquitectónica.** Un mock comprueba interacciones; un stub fija respuestas; un fake ofrece una implementación reducida. Elegir el doble depende de la pregunta que responde la prueba.
+Comprueba tanto el resultado como las interacciones relevantes. Evita verificar cada detalle interno: exigir un orden accidental de llamadas vuelve frágil la prueba sin mejorar el contrato.
 
-**Ejemplo concreto en AceriaApp.** El ejemplo usa el identificador de la misma OrdenHexagonal que devuelve el doble. Así detecta una consulta con una identidad incorrecta en lugar de aceptar cualquier GUID.
+### Repositorio y unidad de trabajo
 
-**Riesgo, alternativa y límite.** Una prueba del caso de uso no demuestra que SQL traduzca un filtro, respete claves foráneas o haga rollback. Para eso se necesita una prueba del adaptador.
-
-**Comprobación técnica y aprendizaje.** Comprueba tanto el resultado como las interacciones relevantes. Evita verificar cada detalle interno: exigir un orden accidental de llamadas vuelve frágil la prueba sin mejorar el contrato.
-
-### Bloque 8 — Repositorio y unidad de trabajo
-
-El repositorio y la unidad de trabajo se complementan. El repositorio gestiona las operaciones sobre una entidad. La unidad de trabajo coordina las operaciones de varios repositorios en una única transacción. La separación entre ambos permite que cada pieza tenga una responsabilidad clara. En esta separación, el repositorio no confirma la operación de negocio por su cuenta. El puerto de unidad de trabajo no necesita exponer entidades, aunque su implementación puede conocerlas a través del contexto. La combinación de ambos permite que la aplicación gestione transacciones complejas sin acoplar los repositorios entre sí.
+Un repositorio prepara o registra operaciones sobre determinadas entidades, mientras una unidad de trabajo decide cuándo se confirman conjuntamente. Esta distinción importa cuando una operación del negocio modifica más de un agregado o cuando varias operaciones de repositorio deben constituir un único resultado atómico. Si cada método guarda inmediatamente con `SaveChangesAsync`, quizá resulte imposible coordinar todos los cambios dentro de la misma transacción. Por eso examinaremos la diferencia entre añadir una entidad al contexto y confirmar las escrituras. EF Core ya aporta seguimiento de cambios y mecanismos transaccionales, de modo que una abstracción adicional solo tiene sentido si clarifica el límite de confirmación del caso de uso. En el punto siguiente estudiaremos Unit of Work sobre esa base.
 
 ```text
 Relación entre Repository y Unit of Work:
@@ -359,33 +286,28 @@ Repositorio B → operaciones sobre entidad B.
 Unidad de trabajo → coordina las operaciones de A y B en una transacción.
 ```
 
-- **Línea 1:** `Repositorio A → operaciones sobre entidad A.` → primer repositorio.
-- **Línea 2:** `Repositorio B → operaciones sobre entidad B.` → segundo repositorio.
-- **Línea 3:** `Unidad de trabajo → coordina las operaciones de A y B en una transacción.` → coordinación.
+
+Dos repositorios pueden compartir una unidad de trabajo cuando sus cambios deben confirmarse atómicamente en la misma frontera SQL. El diagrama no significa que una transacción distribuida entre servicios se obtenga automáticamente por registrar una clase con ese nombre.
+
 
 La relación entre repositorio y unidad de trabajo tiene dos consecuencias prácticas. La primera es que el repositorio se mantiene simple. La segunda es que la transacción se gestiona en la capa de aplicación. La combinación de ambas permite que la aplicación controle la atomicidad de las operaciones sin acoplar los repositorios. La unidad de trabajo se estudia en detalle en el punto 4.2.
 
----
 
+Separar preparación y confirmación permite agrupar cambios. El requisito crucial es compartir un ámbito transaccional real, no añadir una clase llamada UnitOfWork.
 
+IOrdenTrabajoRepositorio.AgregarAsync prepara la entidad; IUnitOfWork.CommitAsync confirma. OrdenesTransaccionales coordina esas dos acciones sin depender directamente de EF Core.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Si AgregarAsync ejecutara SaveChanges antes de otro paso que falla, aparecería persistencia parcial. Cambiar nombres de clases no corrige esa frontera equivocada.
 
-**La decisión arquitectónica.** Separar preparación y confirmación permite agrupar cambios. El requisito crucial es compartir un ámbito transaccional real, no añadir una clase llamada UnitOfWork.
-
-**Ejemplo concreto en AceriaApp.** IOrdenTrabajoRepositorio.AgregarAsync prepara la entidad; IUnitOfWork.CommitAsync confirma. OrdenesTransaccionales coordina esas dos acciones sin depender directamente de EF Core.
-
-**Riesgo, alternativa y límite.** Si AgregarAsync ejecutara SaveChanges antes de otro paso que falla, aparecería persistencia parcial. Cambiar nombres de clases no corrige esa frontera equivocada.
-
-**Comprobación técnica y aprendizaje.** Comprueba que antes del commit una consulta desde otro contexto no ve la nueva orden, y que después del commit sí aparece. Ese test observa persistencia real.
+Comprueba que antes del commit una consulta desde otro contexto no ve la nueva orden, y que después del commit sí aparece. Ese test observa persistencia real.
 
 ![Diagrama explicativo del punto 4.1, bloque 8](IMAGENES/4-1-confirmacion.svg)
 
-*Interpretación del gráfico:* Compara confirmación inmediata con preparación de cambios. El flujo transaccional de M4 usa el segundo recorrido. La figura se distribuye en SVG vectorial y PNG.
+Compara confirmación inmediata con preparación de cambios. El flujo transaccional de M4 usa el segundo recorrido. La figura se distribuye en SVG vectorial y PNG.
 
-### Bloque 9 — Cuándo usar el patrón Repository
+### Cuándo usar el patrón Repository
 
-El patrón Repository se usa cuando el sistema accede a una base de datos y el dominio debe permanecer independiente de la tecnología de persistencia. El patrón se usa cuando varias capas necesitan acceder a los mismos datos. El patrón se usa cuando se quiere probar la capa de aplicación con repositorios en memoria. En un CRUD simple o con acceso trivial puede no compensar añadir un envoltorio sobre EF Core. También puede justificarse por una frontera de pruebas, seguridad o consistencia; la decisión depende del beneficio real.
+Repository aporta valor cuando la aplicación necesita independizar reglas de negocio del proveedor de datos, organizar consultas de agregados o probar casos de uso con colaboradores controlados. En un CRUD muy pequeño que utiliza directamente EF Core desde un único punto, introducir interfaces y adaptadores puede añadir complejidad sin un beneficio claro. Lo mismo sucede si el repositorio se limita a copiar, método por método, todas las operaciones de `DbContext`. Para decidir conviene observar si una regla cambia por motivos de negocio, si existen varios consumidores y qué tipos no deberían conocer SQL Server. AceriaApp dispone de un dominio que crecerá a lo largo del curso, por lo que el patrón nos ayuda a hacer explícita la frontera sin comprometer futuras decisiones de persistencia.
 
 ```text
 Cuándo usar Repository:
@@ -397,31 +319,24 @@ Sistema con CRUD simple          → evaluar coste.
 Sistema sin lógica de dominio    → puede no compensar.
 ```
 
-- **Línea 1:** `Sistema con dominio complejo → suele aportar valor.` → el repositorio aporta valor.
-- **Línea 2:** `Sistema con varios repositorios → revisar coordinación.` → el repositorio aporta cohesión.
-- **Línea 3:** `Sistema con pruebas unitarias → facilita dobles.` → el repositorio facilita los dobles.
-- **Línea 4:** `Sistema con CRUD simple → evaluar coste.` → el envoltorio puede aportar poco sobre el ORM.
-- **Línea 5:** `Sistema sin lógica de dominio → puede no compensar.` → el beneficio debe justificar la abstracción.
+
+La tabla plantea situaciones en las que Repository facilita pruebas y desacoplamiento, así como otras donde su coste puede superar el beneficio. La pregunta adecuada es qué decisión del negocio deja de depender del almacenamiento gracias a esta abstracción.
+
 
 La decisión de usar el patrón tiene dos consecuencias prácticas. La primera es que el sistema gana independencia de la tecnología de persistencia. La segunda es que el sistema añade una capa de indirección. La combinación de ambas se valora según el contexto del proyecto. El curso aplica el patrón porque el dominio es complejo y se quiere mantener independiente de la base de datos.
 
----
 
+Repository compensa cuando el contrato protege una frontera útil. En un CRUD pequeño, usar DbContext directamente en una aplicación acoplada a EF Core puede ser una decisión consciente.
 
+AceriaApp lo usa para estudiar puertos y pruebas aisladas. Ese objetivo pedagógico explica la abstracción sin afirmar que todo proyecto necesite la misma cantidad de capas.
 
-#### Ampliación didáctica aplicada a AceriaApp
+La posibilidad teórica de cambiar de base de datos no basta para justificar cualquier envoltorio. Valora las necesidades actuales y el coste de conservar dos APIs equivalentes.
 
-**La decisión arquitectónica.** Repository compensa cuando el contrato protege una frontera útil. En un CRUD pequeño, usar DbContext directamente en una aplicación acoplada a EF Core puede ser una decisión consciente.
+Escribe qué dependencia desaparece del caso de uso y qué pruebas habilita el puerto. Si no puedes explicar ninguno de esos beneficios, revisa la abstracción.
 
-**Ejemplo concreto en AceriaApp.** AceriaApp lo usa para estudiar puertos y pruebas aisladas. Ese objetivo pedagógico explica la abstracción sin afirmar que todo proyecto necesite la misma cantidad de capas.
+### Aplicación al proyecto del curso
 
-**Riesgo, alternativa y límite.** La posibilidad teórica de cambiar de base de datos no basta para justificar cualquier envoltorio. Valora las necesidades actuales y el coste de conservar dos APIs equivalentes.
-
-**Comprobación técnica y aprendizaje.** Escribe qué dependencia desaparece del caso de uso y qué pruebas habilita el puerto. Si no puedes explicar ninguno de esos beneficios, revisa la abstracción.
-
-### Bloque 10 — Aplicación al proyecto del curso
-
-El proyecto del curso conserva el repositorio de órdenes de M3 y añade `IOrdenTrabajoRepositorio`, con `ObtenerAsync` y `AgregarAsync`, para el trabajo que confirmará la unidad de trabajo. Los puertos están en aplicación y sus adaptadores de EF Core están en infraestructura. El catálogo también permite estudiar un posible repositorio de inventario, sin presentarlo como persistencia conectada en este módulo. El contrato incorpora las operaciones necesarias; las cinco operaciones CRUD del ejemplo son un catálogo didáctico, no cinco métodos obligatorios. Las consultas complejas se delegan en servicios específicos. La validación combina el test de coherencia de los repositorios con pruebas del adaptador y de los casos de uso conectados.
+La implementación de Repository en AceriaApp debe interpretarse como una evolución del diseño hexagonal del módulo anterior. Las interfaces de órdenes definen lo que necesitan los casos de uso, mientras sus adaptadores materializan las operaciones con el proveedor SQL elegido. Se incorporan pruebas de coherencia y escenarios con dobles para comprobar los contratos; la persistencia real debe verificarse aparte mediante SQL Server. También se introduce la posibilidad de diferir la confirmación de cambios para coordinar varias operaciones. Este punto no trata de multiplicar clases, sino de demostrar por qué el código de aplicación puede crear y consultar órdenes sin conocer cómo están almacenadas. Esa separación prepara el siguiente estudio de transacciones y unidad de trabajo.
 
 ```text
 Aplicación al proyecto del curso:
@@ -433,29 +348,22 @@ Consultas complejas  → servicios específicos.
 Validación           → test de coherencia de repositorios.
 ```
 
-- **Línea 1:** `Puertos activos` → interfaces de los dos recorridos de órdenes.
-- **Línea 2:** `Adaptadores activos` → implementaciones EF Core en infraestructura.
-- **Línea 3:** `Operaciones posibles` → el contrato selecciona los métodos que necesita.
-- **Línea 4:** `Consultas complejas` → delegadas en servicios específicos.
-- **Línea 5:** `Validación` → test de coherencia.
+
+El catálogo del curso reúne interfaces, adaptadores y operaciones para orientar la implementación. Su presencia en una lista no demuestra que cada método esté conectado a un endpoint real; la evidencia llega cuando los tests ejercen contratos y acceso a SQL Server.
+
 
 La aplicación del patrón Repository prepara el proyecto para los puntos 4.2, 4.3, 4.4 y 4.5. El punto 4.2 estudiará la unidad de trabajo. El punto 4.3 estudiará el patrón Mediator. El punto 4.4 estudiará el Result Pattern. El punto 4.5 estudiará la inyección de dependencias. El punto 4.1 establece la base que se aplicará en los cuatro puntos siguientes.
 
----
 
+El punto mantiene dos evidencias complementarias: el catálogo describe decisiones arquitectónicas y el código ejecuta operaciones que deben respetarlas.
 
+El baseline es M3, punto 3.4, con AceriaApp.Api y las tres capas hexagonales. Los tipos de inventario del catálogo son ejemplos de extensión, no un adaptador conectado automáticamente.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Un test que valida nombres o metadatos no prueba almacenamiento. Tampoco una respuesta 201 demuestra que la orden pueda consultarse desde una sesión nueva.
 
-**La decisión arquitectónica.** El punto mantiene dos evidencias complementarias: el catálogo describe decisiones arquitectónicas y el código ejecuta operaciones que deben respetarlas.
+Relaciona cada puerto activo con su registro DI, adaptador y prueba. Usa los nombres y rutas de la práctica para ejecutar la versión concreta del punto.
 
-**Ejemplo concreto en AceriaApp.** El baseline es M3, punto 3.4, con AceriaApp.Api y las tres capas hexagonales. Los tipos de inventario del catálogo son ejemplos de extensión, no un adaptador conectado automáticamente.
-
-**Riesgo, alternativa y límite.** Un test que valida nombres o metadatos no prueba almacenamiento. Tampoco una respuesta 201 demuestra que la orden pueda consultarse desde una sesión nueva.
-
-**Comprobación técnica y aprendizaje.** Relaciona cada puerto activo con su registro DI, adaptador y prueba. Usa los nombres y rutas de la práctica para ejecutar la versión concreta del punto.
-
-### Resumen rápido de la teoría
+### Comprender la frontera del repositorio
 
 - El patrón Repository es una abstracción que media entre la capa de dominio o aplicación y la capa de persistencia.
 - Un repositorio tiene tres responsabilidades: recuperar, añadir y modificar entidades.
