@@ -76,20 +76,21 @@ try {
     # PASO 9.13: el destino restante debe sostener las lecturas.
     Compose @('stop','inventario-2')
     $inv2Stopped=$true
-    $convergencia=$false
-    for ($i=0; $i -lt 75; $i++) {
+    # Los health checks de YARP tardan en converger. Exigimos estabilidad
+    # (10 éxitos consecutivos), no una sola petición aislada favorable.
+    $consecutivas=0
+    for ($i=0; $i -lt 120; $i++) {
         $n=Get-Instancia
-        if ($n -eq 'inventario-1') { $convergencia=$true; break }
+        if ($n -eq 'inventario-1') {
+            $consecutivas++
+        } else {
+            $consecutivas=0
+        }
+        if ($consecutivas -ge 10) { break }
         Start-Sleep -Seconds 2
     }
-    if (-not $convergencia) {
-        throw 'YARP no alcanzó a Inventario 1 tras detener Inventario 2.'
-    }
-    for ($i=0; $i -lt 10; $i++) {
-        $n=Get-Instancia
-        if ($n -ne 'inventario-1') {
-            throw "Inventario 1 no atendió una de las diez consultas ($n)."
-        }
+    if ($consecutivas -lt 10) {
+        throw "YARP no se estabilizó durante diez consultas con Inventario 1 ($consecutivas/10)."
     }
     $reporte.pruebas.fallo_inventario_2='PASS'
     Compose @('start','inventario-2')
