@@ -47,20 +47,25 @@ Los valores siguientes son criterios que deben verificarse ejecutando la suite. 
 
 # Punto 8.1 — Introducción al patrón API Gateway
 
+## Definir qué publica el gateway y qué responsabilidades conserva cada servicio
+
+Un API Gateway ofrece un punto de entrada común, pero no sustituye los casos de uso ni las reglas de negocio de Producción e Inventario. Antes de instalar YARP vamos a identificar las rutas que necesitan los clientes, los servicios que responderán y las políticas que se aplicarán en el borde. Es importante distinguir esta decisión de un simple balanceador: el gateway puede transformar y enrutar solicitudes, además de aportar observabilidad y otras funciones transversales.
+
+La base es el estado final de M07, con logging, health checks, resiliencia y comunicación mediante RabbitMQ. El catálogo que construiremos en 8.1 registra decisiones y restricciones; sus banderas de autenticación o limitación de tráfico no activan middleware. El proceso de proxy real aparecerá en los siguientes puntos, cuando podamos enviar peticiones HTTP a través de él y comprobar la respuesta del backend.
+
 **Carpeta de trabajo:** `M08_API_GATEWAY/PROYECTO/8.1-introduccion-api-gateway`.
 
 **Objetivo.** Completar los 24 pasos, conservar la etapa anterior y comprobar el catálogo y el comportamiento que incorpora este punto.
 
 ### PASO 8.1.1 — Crear la estructura del módulo 8 y del punto 8.1
 
-**Procedimiento guiado.**
+El primer punto de M08 parte de la solución completa de M07 7.4, conservando sus API y la mensajería. Trabajar sobre una copia permite identificar los cambios del gateway sin sobrescribir el material que el alumno ya ha probado.
 
 1. En el Explorador de archivos localiza `M07_OBSERVABILIDAD_RESILIENCIA/PROYECTO/7.4-retry-circuit-breaker-polly` y comprueba que contiene `AceriaApp.sln`, `src`, `tests`, `docs` y `global.json`.
 2. Crea la carpeta `M08_API_GATEWAY/PROYECTO/8.1-introduccion-api-gateway` y copia allí el contenido de la etapa anterior, incluidas sus carpetas ocultas de configuración.
 3. Excluye `bin`, `obj`, `TestResults` y `.vs`; abre únicamente la copia `8.1-introduccion-api-gateway` para realizar este punto.
 4. Ejecuta `Get-ChildItem -Force` en PowerShell dentro de la copia y comprueba que las carpetas y la solución siguen presentes.
 
-**Por qué funciona así.** La copia conserva 34 proyectos y 403 pruebas antes de incorporar los cambios del punto.
 
 **Verificación concreta.** Ejecuta `Get-ChildItem -Force` en PowerShell dentro de la copia y comprueba que las carpetas y la solución siguen presentes.
 
@@ -74,14 +79,13 @@ Los valores siguientes son criterios que deben verificarse ejecutando la suite. 
 
 ### PASO 8.1.2 — Abrir la solución copiada en Visual Studio con soporte .NET 8
 
-**Procedimiento guiado.**
+La compilación comprueba que la etapa anterior está completa y que el SDK .NET 8 resuelve sus dependencias.
 
 1. Abre en Visual Studio el archivo `AceriaApp.sln` de `8.1-introduccion-api-gateway`.
 2. Abre Terminal en esa carpeta y ejecuta `dotnet sln AceriaApp.sln list`; deben aparecer 34 proyectos.
 3. Ejecuta `dotnet restore AceriaApp.sln` y después `dotnet build AceriaApp.sln -c Release`.
 4. Comprueba que la salida termina con compilación correcta y cero errores antes de continuar.
 
-**Por qué funciona así.** La compilación comprueba que la etapa anterior está completa y que el SDK .NET 8 resuelve sus dependencias.
 
 **Verificación concreta.** Comprueba que la salida termina con compilación correcta y cero errores antes de continuar.
 
@@ -93,14 +97,13 @@ Los valores siguientes son criterios que deben verificarse ejecutando la suite. 
 
 ### PASO 8.1.3 — Verificar que la carpeta `docs` contiene los documentos del punto 7.4
 
-**Procedimiento guiado.**
+Esta etapa añade dos documentos sin sobrescribir las 42 fichas y decisiones anteriores.
 
 1. Expande `docs` en Solution Explorer y ejecuta `(Get-ChildItem docs -Filter *.md).Count`.
 2. Comprueba que hay 42 documentos heredados y que incluyen los ADR-010 a ADR-030.
 3. Compara los nombres y contenidos con `docs` de `M07_OBSERVABILIDAD_RESILIENCIA/PROYECTO/7.4-retry-circuit-breaker-polly`.
 4. Confirma que todavía no existen `docs/introduccion-api-gateway.md` ni `docs/ADR-031-introduccion-api-gateway.md`.
 
-**Por qué funciona así.** Esta etapa añade dos documentos sin sobrescribir las 42 fichas y decisiones anteriores.
 
 **Verificación concreta.** Confirma que todavía no existen `docs/introduccion-api-gateway.md` ni `docs/ADR-031-introduccion-api-gateway.md`.
 
@@ -112,7 +115,7 @@ Los valores siguientes son criterios que deben verificarse ejecutando la suite. 
 
 ### PASO 8.1.4 — Crear el documento de introducción al API Gateway en `docs`
 
-**Procedimiento guiado.**
+La ficha de diseño debe describir las rutas públicas y los servicios que realmente existirán. Producción e Inventario son backends ejecutables; Clientes es todavía una alternativa conceptual y no debe presentarse como un tercer proceso activo.
 
 1. Crea `docs/introduccion-api-gateway.md` dentro de la carpeta actual.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -203,15 +206,9 @@ Los flags AplicaAutenticacion y AplicaRateLimit son declaraciones del catálogo.
 El directorio anterior se conserva intacto. Las copias del punto actual incluyen los cambios completos indicados en el manual.
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
+Define este encabezado en el documento que el alumno conservará junto al proyecto. Conserva esta explicación o instrucción operativa dentro del documento de la etapa. Registra una condición o una decisión que podrá contrastarse al revisar la etapa.
 
-- **Línea 1:** `# Introducción al patrón API Gateway — Punto 8.1` Define este encabezado en el documento que el alumno conservará junto al proyecto.
-- **Línea 2:** (línea vacía) Separa visualmente dos responsabilidades; no añade una instrucción ejecutable.
-- **Línea 5:** `Componente que actúa como punto de entrada único a un conjunto de servicios.` Conserva esta explicación o instrucción operativa dentro del documento de la etapa.
-- **Línea 9:** `- Enrutamiento: dirigir la petición al servicio.` Registra una condición o una decisión que podrá contrastarse al revisar la etapa.
-- **Línea 24:** `| Aspecto | Balanceador | Gateway |` Añade una fila a la tabla documental; sus columnas deben conservarse al copiarla.
-
-**Por qué funciona así.** el documento de introducción al API Gateway es el artefacto de `docs` específico del punto 8.1. No modifica los 42 documentos existentes del punto 7.4.
+Añade una fila a la tabla documental; sus columnas deben conservarse al copiarla.
 
 **Verificación concreta.** El documento existe, su vista previa mantiene los encabezados y los documentos heredados conservan sus hashes.
 
@@ -223,14 +220,13 @@ El directorio anterior se conserva intacto. Las copias del punto actual incluyen
 
 ### PASO 8.1.5 — Crear la carpeta `ApiGateway` en el proyecto de Producción
 
-**Procedimiento guiado.**
+La carpeta separa el modelo y su validador de las implementaciones HTTP y del dominio. El catálogo describe decisiones; no modifica por sí mismo el proxy.
 
 1. En Solution Explorer expande `src/AceriaApp.Api`.
 2. Crea dentro de ese proyecto una carpeta llamada `ApiGateway`.
 3. Comprueba que su ruta es `src/AceriaApp.Api/ApiGateway` y que no está dentro de otra carpeta de catálogo.
 4. Conserva las carpetas anteriores; esta carpeta agrupa únicamente el ejercicio de análisis del punto.
 
-**Por qué funciona así.** La carpeta separa el modelo y su validador de las implementaciones HTTP y del dominio. El catálogo describe decisiones; no modifica por sí mismo el proxy.
 
 **Verificación concreta.** Conserva las carpetas anteriores; esta carpeta agrupa únicamente el ejercicio de análisis del punto.
 
@@ -242,7 +238,7 @@ El directorio anterior se conserva intacto. Las copias del punto actual incluyen
 
 ### PASO 8.1.6 — Crear la clase `RutaGateway`
 
-**Procedimiento guiado.**
+RutaGateway representa una propuesta de ruta junto con políticas declaradas. Sus propiedades no habilitan autenticación ni rate limiting; solo el middleware efectivamente registrado puede aplicar esas protecciones.
 
 1. Crea `src/AceriaApp.Api/ApiGateway/RutaGateway.cs` dentro de la carpeta actual.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -266,15 +262,7 @@ public class RutaGateway
 }
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
-
-- **Línea 1:** `namespace AceriaApp.Api.ApiGateway;` Sitúa los tipos en un espacio de nombres propio, separado del resto de etapas y responsabilidades.
-- **Línea 3:** `public class RutaGateway` Declara el tipo responsable de este comportamiento; sus miembros quedan dentro del bloque siguiente.
-- **Línea 4:** `{` Abre el bloque cuyo contenido se ejecuta o inicializa dentro del contexto inmediatamente anterior.
-- **Línea 5:** `public string RutaExterna { get; init; } = string.Empty;` Expone la propiedad indicada; init limita su asignación a la construcción del objeto y evita cambios posteriores accidentales.
-- **Línea 11:** `}` Cierra el bloque o la expresión anterior; conserva el delimitador para mantener su alcance.
-
-**Por qué funciona así.** la clase `RutaGateway` modela una ruta del gateway con su ruta externa, servicio destino, ruta interna y tres indicadores de políticas. Es la unidad de información del validador.
+Sitúa los tipos en un espacio de nombres propio, separado del resto de etapas y responsabilidades. Declara el tipo responsable de este comportamiento; sus miembros quedan dentro del bloque siguiente. Expone la propiedad indicada; init limita su asignación a la construcción del objeto y evita cambios posteriores accidentales.
 
 **Verificación concreta.** Los archivos indicados contienen todos los bloques y la compilación del proyecto termina sin errores.
 
@@ -286,7 +274,7 @@ public class RutaGateway
 
 ### PASO 8.1.7 — Crear la clase `ValidadorApiGateway`
 
-**Procedimiento guiado.**
+ValidadorApiGateway analiza datos del catálogo, no intercepta solicitudes HTTP. Al probarlo hay que distinguir la coherencia de una ruta descrita de la capacidad de YARP para reenviar una petición real.
 
 1. Crea `src/AceriaApp.Api/ApiGateway/ValidadorApiGateway.cs` dentro de la carpeta actual.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -351,18 +339,11 @@ public class ValidadorApiGateway
 public record ResultadoApiGateway(bool EsValida, IReadOnlyList<string> Errores);
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
+Declara la operación, sus parámetros y su resultado; el bloque siguiente contiene su implementación. Obtiene o prepara este valor local para las comprobaciones y operaciones que siguen. Materializa la secuencia para consultar y recorrer los mismos elementos sin repetir su enumeración.
 
-- **Línea 5:** `public ResultadoApiGateway Validar(IEnumerable<RutaGateway> rutas)` Declara la operación, sus parámetros y su resultado; el bloque siguiente contiene su implementación.
-- **Línea 7:** `var errores = new List<string>();` Obtiene o prepara este valor local para las comprobaciones y operaciones que siguen.
-- **Línea 8:** `var lista = rutas.ToList();` Materializa la secuencia para consultar y recorrer los mismos elementos sin repetir su enumeración.
-- **Línea 10:** `if (lista.Count == 0)` Evalúa esta condición antes de continuar; el bloque asociado trata específicamente ese caso.
-- **Línea 12:** `errores.Add("No hay rutas declaradas.");` Acumula un incumplimiento del contrato didáctico; el resultado final indicará que la declaración no es válida.
-- **Línea 15:** `foreach (var ruta in lista)` Recorre los elementos de la colección para aplicarles la misma comprobación.
-- **Línea 48:** `return new ResultadoApiGateway(errores.Count == 0, errores);` Devuelve el resultado calculado al llamador y termina este recorrido del método.
-- **Línea 52:** `public record ResultadoApiGateway(bool EsValida, IReadOnlyList<string> Errores);` Define un contrato de datos con los campos que el consumidor utilizará para interpretar el resultado.
+Evalúa esta condición antes de continuar; el bloque asociado trata específicamente ese caso. Acumula un incumplimiento del contrato didáctico; el resultado final indicará que la declaración no es válida. Recorre los elementos de la colección para aplicarles la misma comprobación.
 
-**Por qué funciona así.** la clase `ValidadorApiGateway` comprueba que cada ruta declara ruta externa, servicio destino y ruta interna, y que aplica autenticación, limitación de tasa y correlación.
+Devuelve el resultado calculado al llamador y termina este recorrido del método. Define un contrato de datos con los campos que el consumidor utilizará para interpretar el resultado.
 
 **Verificación concreta.** Los archivos indicados contienen todos los bloques y la compilación del proyecto termina sin errores.
 
@@ -374,7 +355,7 @@ public record ResultadoApiGateway(bool EsValida, IReadOnlyList<string> Errores);
 
 ### PASO 8.1.8 — Añadir los `using` necesarios en `ValidadorApiGateway`
 
-**Procedimiento guiado.**
+Los tipos `List<string>` e `IReadOnlyList<string>` pertenecen a `System.Collections.Generic`. El método `ToList` pertenece a `System.Linq`. En proyectos con `ImplicitUsings` desactivado, hay que añadir los usings explícitos.
 
 1. Abre `src/AceriaApp.Api/ApiGateway/ValidadorApiGateway.cs` dentro de la carpeta actual.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -441,11 +422,7 @@ public class ValidadorApiGateway
 public record ResultadoApiGateway(bool EsValida, IReadOnlyList<string> Errores);
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
-
-- **Línea 1:** `using System.Collections.Generic;` Importa el espacio de nombres requerido por los tipos y métodos utilizados en este archivo.
-
-**Por qué funciona así.** los tipos `List<string>` e `IReadOnlyList<string>` pertenecen a `System.Collections.Generic`. El método `ToList` pertenece a `System.Linq`. En proyectos con `ImplicitUsings` desactivado, hay que añadir los usings explícitos.
+Importa el espacio de nombres requerido por los tipos y métodos utilizados en este archivo.
 
 **Verificación concreta.** Los archivos indicados contienen todos los bloques y la compilación del proyecto termina sin errores.
 
@@ -457,7 +434,7 @@ public record ResultadoApiGateway(bool EsValida, IReadOnlyList<string> Errores);
 
 ### PASO 8.1.9 — Crear la clase `CatalogoRutas`
 
-**Procedimiento guiado.**
+CatalogoRutas reúne decisiones de diseño que ayudarán a preparar el gateway. La lista de nombres y flags no inicia el proxy ni acredita conectividad con Producción o Inventario.
 
 1. Crea `src/AceriaApp.Api/ApiGateway/CatalogoRutas.cs` dentro de la carpeta actual.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -508,12 +485,7 @@ public class CatalogoRutas
 }
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
-
-- **Línea 9:** `new()` Completa esta expresión o invocación dentro de CatalogoRutas.cs; se conserva íntegra para reproducir el comportamiento.
-- **Línea 11:** `RutaExterna = "/api/v1/ordenes/{**catch-all}",` Asigna el valor indicado a esta variable, propiedad u opción dentro de la operación actual.
-
-**Por qué funciona así.** la clase `CatalogoRutas` contiene las rutas por defecto del proyecto. Se usan en los tests y en la validación automática.
+Completa esta expresión o invocación dentro de CatalogoRutas.cs; se conserva íntegra para reproducir el comportamiento. Asigna el valor indicado a esta variable, propiedad u opción dentro de la operación actual.
 
 **Verificación concreta.** Los archivos indicados contienen todos los bloques y la compilación del proyecto termina sin errores.
 
@@ -525,7 +497,7 @@ public class CatalogoRutas
 
 ### PASO 8.1.10 — Añadir el `using` necesario en `CatalogoRutas`
 
-**Procedimiento guiado.**
+El tipo `List<T>` pertenece a `System.Collections.Generic`. En proyectos con `ImplicitUsings` desactivado, hay que añadir el using explícito.
 
 1. Abre `src/AceriaApp.Api/ApiGateway/CatalogoRutas.cs` dentro de la carpeta actual.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -577,11 +549,6 @@ public class CatalogoRutas
 }
 ```
 
-
-
-
-**Por qué funciona así.** el tipo `List<T>` pertenece a `System.Collections.Generic`. En proyectos con `ImplicitUsings` desactivado, hay que añadir el using explícito.
-
 **Verificación concreta.** Los archivos indicados contienen todos los bloques y la compilación del proyecto termina sin errores.
 
 **Diagnóstico si falla.**
@@ -592,7 +559,7 @@ public class CatalogoRutas
 
 ### PASO 8.1.11 — Crear el proyecto de tests del punto 8.1
 
-**Procedimiento guiado.**
+El punto 8.1 añade un proyecto de tests específico para las clases de API Gateway. Se crea como proyecto nuevo sin modificar los proyectos de tests existentes.
 
 1. Crea manualmente `tests/AceriaApp.ApiGateway.Tests` y su archivo `.csproj`; al usar este bloque no se genera `UnitTest1.cs`.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -619,13 +586,7 @@ public class CatalogoRutas
 </Project>
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
-
-- **Línea 1:** `<Project Sdk="Microsoft.NET.Sdk">` Organiza propiedades o referencias del proyecto MSBuild; conserva la apertura y el cierre de los elementos.
-- **Línea 3:** `<TargetFramework>net8.0</TargetFramework>` Configura .NET 8 y las opciones de compilación de este proyecto.
-- **Línea 10:** `<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />` Fija la dependencia y su versión para restaurar el mismo paquete en cada equipo.
-
-**Por qué funciona así.** el punto 8.1 añade un proyecto de tests específico para las clases de API Gateway. Se crea como proyecto nuevo sin modificar los proyectos de tests existentes.
+Organiza propiedades o referencias del proyecto MSBuild; conserva la apertura y el cierre de los elementos. Configura .NET 8 y las opciones de compilación de este proyecto. Fija la dependencia y su versión para restaurar el mismo paquete en cada equipo.
 
 **Verificación concreta.** Los archivos indicados contienen todos los bloques y la compilación del proyecto termina sin errores.
 
@@ -637,7 +598,7 @@ public class CatalogoRutas
 
 ### PASO 8.1.12 — Añadir la referencia del proyecto de tests a la API de Producción
 
-**Procedimiento guiado.**
+La referencia permite que el proyecto de tests acceda a las clases de `ApiGateway` del proyecto de Producción.
 
 1. Abre `tests/AceriaApp.ApiGateway.Tests/AceriaApp.ApiGateway.Tests.csproj` y añade la referencia a `AceriaApp.Api` usando el archivo completo siguiente.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -665,11 +626,7 @@ public class CatalogoRutas
 </Project>
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
-
-- **Línea 10:** `<ProjectReference Include="../../src/AceriaApp.Api/AceriaApp.Api.csproj" />` Referencia el proyecto indicado mediante una ruta relativa a este archivo .csproj.
-
-**Por qué funciona así.** la referencia permite que el proyecto de tests acceda a las clases de `ApiGateway` del proyecto de Producción.
+Referencia el proyecto indicado mediante una ruta relativa a este archivo .csproj.
 
 **Verificación concreta.** Los archivos indicados contienen todos los bloques y la compilación del proyecto termina sin errores.
 
@@ -681,7 +638,7 @@ public class CatalogoRutas
 
 ### PASO 8.1.13 — Añadir el paquete `FluentAssertions` al proyecto de tests
 
-**Procedimiento guiado.**
+`FluentAssertions` proporciona la sintaxis de aserción usada en el curso. Se añade al nuevo proyecto de tests sin modificar los proyectos de tests existentes.
 
 1. Abre `tests/AceriaApp.ApiGateway.Tests/AceriaApp.ApiGateway.Tests.csproj` y fija FluentAssertions 6.12.2 con el archivo completo siguiente.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -710,11 +667,6 @@ public class CatalogoRutas
 </Project>
 ```
 
-
-
-
-**Por qué funciona así.** `FluentAssertions` proporciona la sintaxis de aserción usada en el curso. Se añade al nuevo proyecto de tests sin modificar los proyectos de tests existentes.
-
 **Verificación concreta.** Los archivos indicados contienen todos los bloques y la compilación del proyecto termina sin errores.
 
 **Diagnóstico si falla.**
@@ -725,7 +677,7 @@ public class CatalogoRutas
 
 ### PASO 8.1.14 — Crear el archivo `ValidadorApiGatewayTests.cs`
 
-**Procedimiento guiado.**
+Los tests verifican que el validador acepta el catálogo por defecto y rechaza las rutas que violan las reglas del gateway.
 
 1. Crea `tests/AceriaApp.ApiGateway.Tests/ValidadorApiGatewayTests.cs` dentro de la carpeta actual.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -836,12 +788,7 @@ public class ValidadorApiGatewayTests
 }
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
-
-- **Línea 11:** `[Fact]` Declara una prueba individual que xUnit debe descubrir y ejecutar.
-- **Línea 16:** `resultado.EsValida.Should().BeTrue();` Comprueba esta condición observable; una diferencia hace fallar la prueba en vez de ocultar el problema.
-
-**Por qué funciona así.** los tests verifican que el validador acepta el catálogo por defecto y rechaza las rutas que violan las reglas del gateway.
+Declara una prueba individual que xUnit debe descubrir y ejecutar. Comprueba esta condición observable; una diferencia hace fallar la prueba en vez de ocultar el problema.
 
 **Verificación concreta.** Los archivos indicados contienen todos los bloques y la compilación del proyecto termina sin errores.
 
@@ -853,7 +800,7 @@ public class ValidadorApiGatewayTests
 
 ### PASO 8.1.15 — Crear el archivo `CatalogoRutasTests.cs`
 
-**Procedimiento guiado.**
+Los tests verifican que el catálogo por defecto contiene las rutas esperadas y que todas aplican las políticas requeridas.
 
 1. Crea `tests/AceriaApp.ApiGateway.Tests/CatalogoRutasTests.cs` dentro de la carpeta actual.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -916,11 +863,6 @@ public class CatalogoRutasTests
 }
 ```
 
-
-
-
-**Por qué funciona así.** los tests verifican que el catálogo por defecto contiene las rutas esperadas y que todas aplican las políticas requeridas.
-
 **Verificación concreta.** Los archivos indicados contienen todos los bloques y la compilación del proyecto termina sin errores.
 
 **Diagnóstico si falla.**
@@ -931,14 +873,13 @@ public class CatalogoRutasTests
 
 ### PASO 8.1.16 — Compilar la solución completa
 
-**Procedimiento guiado.**
+La compilación confirma la continuidad de M07 y la presencia del nuevo material de análisis. Todavía no acredita una petición reenviada a través de YARP, que se incorporará en 8.2.
 
 1. Escribe todos los archivos de ampliación funcional mostrados a continuación antes de compilar; cuando se indica reemplazar, sustituye el contenido de la copia actual.
 2. Desde la carpeta actual ejecuta `dotnet sln AceriaApp.sln add (Get-ChildItem src,tests -Recurse -Filter *.csproj | ForEach-Object FullName)` en PowerShell 7.
 3. Ejecuta `dotnet restore AceriaApp.sln` y `dotnet build AceriaApp.sln -c Release -m:1`.
 4. Ejecuta `dotnet sln AceriaApp.sln list` y verifica los 35 proyectos; el compilador debe terminar con cero errores.
 
-**Por qué funciona así.** El punto 8.1 conserva el ejercicio de análisis y prepara la incorporación del proxy en 8.2.
 
 **Verificación concreta.** Ejecuta `dotnet sln AceriaApp.sln list` y verifica los 35 proyectos; el compilador debe terminar con cero errores.
 
@@ -950,14 +891,13 @@ public class CatalogoRutasTests
 
 ### PASO 8.1.17 — Ejecutar todos los tests del punto 8.1
 
-**Procedimiento guiado.**
+Una prueba de catálogo acredita su declaración. Las pruebas funcionales utilizan el proxy y servidores HTTP reales, pero la persistencia y el broker se comprueban con la suite y el recorrido completo.
 
 1. Ejecuta `dotnet test tests/AceriaApp.ApiGateway.Tests/AceriaApp.ApiGateway.Tests.csproj -c Release --no-build` en la terminal.
 2. Comprueba que se ejecutan 12 pruebas: 12 de catálogo y 0 funcionales.
 3. Si hay un fallo, identifica su nombre y revisa la regla o la respuesta esperada antes de modificar código.
 4. Confirma cero errores y cero pruebas omitidas; el reto todavía no forma parte de esta etapa.
 
-**Por qué funciona así.** Una prueba de catálogo acredita su declaración. Las pruebas funcionales utilizan el proxy y servidores HTTP reales, pero la persistencia y el broker se comprueban con la suite y el recorrido completo.
 
 **Verificación concreta.** Confirma cero errores y cero pruebas omitidas; el reto todavía no forma parte de esta etapa.
 
@@ -969,14 +909,13 @@ public class CatalogoRutasTests
 
 ### PASO 8.1.18 — Ejecutar todos los tests de la solución
 
-**Procedimiento guiado.**
+La suite completa comprueba que el nuevo punto no rompe la persistencia, la mensajería, el dominio, la observabilidad ni la resiliencia desarrollados antes.
 
 1. Configura `ACERIA_TEST_SQLSERVER` para tu SQL Server Express/LocalDB y `ACERIA_TEST_RABBITMQ` para el broker; sigue los requisitos del inicio del manual.
 2. Ejecuta `dotnet test AceriaApp.sln -c Release --no-build -m:1`.
 3. Comprueba que pasan las 415 pruebas acumuladas, incluidas las heredadas de M07, sin omisiones.
 4. Si falla la conexión, corrige el servicio, los permisos o la URI. Una prueba no ejecutada no se contabiliza como aprobada.
 
-**Por qué funciona así.** La suite completa comprueba que el nuevo punto no rompe la persistencia, la mensajería, el dominio, la observabilidad ni la resiliencia desarrollados antes.
 
 **Verificación concreta.** Si falla la conexión, corrige el servicio, los permisos o la URI. Una prueba no ejecutada no se contabiliza como aprobada.
 
@@ -988,7 +927,7 @@ public class CatalogoRutasTests
 
 ### PASO 8.1.19 — Crear el README del punto 8.1
 
-**Procedimiento guiado.**
+El README del punto 8.1 explica el objetivo, el estado, la ejecución y los añadidos. No modifica el README del punto 7.4.
 
 1. Abre `README.md` dentro de la carpeta actual.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -1027,13 +966,7 @@ Desde esta carpeta: `dotnet restore AceriaApp.sln`, `dotnet build AceriaApp.sln 
 - Las 42 fichas y decisiones anteriores permanecen idénticas.
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
-
-- **Línea 13:** `` Desde esta carpeta: `dotnet restore AceriaApp.sln`, `dotnet build AceriaApp.sln -c Release` y `dotnet test AceriaApp.sln -c Release`. Configura SQL Server/LocalDB y RabbitMQ según el manual antes de ejecutar la suite completa. `` Conserva esta explicación o instrucción operativa dentro del documento de la etapa.
-- **Línea 24:** `` - `docs/introduccion-api-gateway.md`. `` Registra una condición o una decisión que podrá contrastarse al revisar la etapa.
-- **Línea 25:** `` - `docs/ADR-031-introduccion-api-gateway.md`. `` Registra una condición o una decisión que podrá contrastarse al revisar la etapa.
-
-**Por qué funciona así.** el README del punto 8.1 explica el objetivo, el estado, la ejecución y los añadidos. No modifica el README del punto 7.4.
+`` Desde esta carpeta: `dotnet restore AceriaApp.sln`, `dotnet build AceriaApp.sln -c Release` y `dotnet test AceriaApp.sln -c Release`. Configura SQL Server/LocalDB y RabbitMQ según el manual antes de ejecutar la suite completa. `` Conserva esta explicación o instrucción operativa dentro del documento de la etapa. `` - `docs/introduccion-api-gateway.md`. `` Registra una condición o una decisión que podrá contrastarse al revisar la etapa. `` - `docs/ADR-031-introduccion-api-gateway.md`. `` Registra una condición o una decisión que podrá contrastarse al revisar la etapa.
 
 **Verificación concreta.** El documento existe, su vista previa mantiene los encabezados y los documentos heredados conservan sus hashes.
 
@@ -1045,7 +978,7 @@ Desde esta carpeta: `dotnet restore AceriaApp.sln`, `dotnet build AceriaApp.sln 
 
 ### PASO 8.1.20 — Crear el ADR-031 del punto 8.1
 
-**Procedimiento guiado.**
+El ADR-031 documenta la decisión de adoptar el patrón API Gateway. Es un artefacto nuevo del punto 8.1 que no modifica los ADR existentes.
 
 1. Crea `docs/ADR-031-introduccion-api-gateway.md` dentro de la carpeta actual.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -1084,11 +1017,6 @@ Los flags AplicaAutenticacion y AplicaRateLimit son declaraciones del catálogo.
 El directorio anterior se conserva intacto. Las copias del punto actual incluyen los cambios completos indicados en el manual.
 ```
 
-
-
-
-**Por qué funciona así.** el ADR-031 documenta la decisión de adoptar el patrón API Gateway. Es un artefacto nuevo del punto 8.1 que no modifica los ADR existentes.
-
 **Verificación concreta.** El documento existe, su vista previa mantiene los encabezados y los documentos heredados conservan sus hashes.
 
 **Diagnóstico si falla.**
@@ -1099,14 +1027,13 @@ El directorio anterior se conserva intacto. Las copias del punto actual incluyen
 
 ### PASO 8.1.21 — Verificar que no se ha modificado ningún archivo del punto 7.4
 
-**Procedimiento guiado.**
+La progresión modifica copias independientes. Los nuevos archivos o configuraciones de una etapa no deben alterar un punto ya entregado.
 
 1. Abre las carpetas `docs` de la etapa actual y de `M07_OBSERVABILIDAD_RESILIENCIA/PROYECTO/7.4-retry-circuit-breaker-polly`.
 2. Compara con Get-FileHash los archivos que existían en la etapa anterior; cada hash SHA256 debe coincidir.
 3. Comprueba también que los archivos de tests heredados conservan su contenido; solo se incorporan los tests del punto.
 4. Verifica que `M07_OBSERVABILIDAD_RESILIENCIA/PROYECTO/7.4-retry-circuit-breaker-polly` no presenta modificaciones. Los cambios completos del punto pertenecen exclusivamente a `8.1-introduccion-api-gateway`.
 
-**Por qué funciona así.** La progresión modifica copias independientes. Los nuevos archivos o configuraciones de una etapa no deben alterar un punto ya entregado.
 
 **Verificación concreta.** Verifica que `M07_OBSERVABILIDAD_RESILIENCIA/PROYECTO/7.4-retry-circuit-breaker-polly` no presenta modificaciones. Los cambios completos del punto pertenecen exclusivamente a `8.1-introduccion-api-gateway`.
 
@@ -1118,14 +1045,13 @@ El directorio anterior se conserva intacto. Las copias del punto actual incluyen
 
 ### PASO 8.1.22 — Verificar la estructura del punto 8.1
 
-**Procedimiento guiado.**
+El inventario convierte la comprobación de estructura en una condición observable y detecta omisiones que una compilación aislada podría pasar por alto.
 
 1. Ejecuta `Get-ChildItem -Recurse -File` y revisa las carpetas src, tests y docs.
 2. Verifica 35 proyectos, 23 proyectos de pruebas y 44 documentos.
 3. Comprueba la presencia de las tres clases de `ApiGateway`, sus tests, el documento temático y ADR-031.
 4. Comprueba que no has introducido carpetas temporales, labs ni metaprompts dentro del entregable.
 
-**Por qué funciona así.** El inventario convierte la comprobación de estructura en una condición observable y detecta omisiones que una compilación aislada podría pasar por alto.
 
 **Verificación concreta.** Comprueba que no has introducido carpetas temporales, labs ni metaprompts dentro del entregable.
 
@@ -1137,14 +1063,13 @@ El directorio anterior se conserva intacto. Las copias del punto actual incluyen
 
 ### PASO 8.1.23 — Verificar el `.gitignore` del punto 8.1
 
-**Procedimiento guiado.**
+Las exclusiones conservan un repositorio reproducible sin binarios temporales ni datos específicos de Visual Studio.
 
 1. Abre `.gitignore` de la etapa actual.
 2. Comprueba que contiene bin/, obj/, *.user, *.suo, .vs/ y TestResults/.
 3. Compara su contenido con el archivo heredado y conserva sus exclusiones.
 4. Ejecuta `git status --short` desde la raíz del curso y verifica que los artefactos de compilación no aparecen como entregables.
 
-**Por qué funciona así.** Las exclusiones conservan un repositorio reproducible sin binarios temporales ni datos específicos de Visual Studio.
 
 **Verificación concreta.** Ejecuta `git status --short` desde la raíz del curso y verifica que los artefactos de compilación no aparecen como entregables.
 
@@ -1156,14 +1081,13 @@ El directorio anterior se conserva intacto. Las copias del punto actual incluyen
 
 ### PASO 8.1.24 — Hacer el commit del punto 8.1 y verificar el estado final
 
-**Procedimiento guiado.**
+Un commit conserva el estado comprobado. El número de commits no tiene que coincidir con el de puntos: las correcciones y revisiones también forman parte del historial.
 
 1. Desde la raíz del repositorio ejecuta `git status --short` y revisa todos los cambios de la etapa.
 2. Añade exclusivamente los archivos docentes y del proyecto con `git add M08_API_GATEWAY/PROYECTO/8.1-introduccion-api-gateway`.
 3. Ejecuta `git commit -m "Punto 8.1: Introducción al patrón API Gateway"` después de comprobar las pruebas.
 4. Ejecuta `git log --oneline -5` y `git status --short`; confirma el hito y revisa cualquier archivo pendiente.
 
-**Por qué funciona así.** Un commit conserva el estado comprobado. El número de commits no tiene que coincidir con el de puntos: las correcciones y revisiones también forman parte del historial.
 
 **Verificación concreta.** Ejecuta `git log --oneline -5` y `git status --short`; confirma el hito y revisa cualquier archivo pendiente.
 
@@ -1243,9 +1167,6 @@ public record ResultadoApiGateway(bool EsValida, IReadOnlyList<string> Errores);
 public record ResumenApiGateway(int Total, int ServiciosDistintos, int ConAutenticacion);
 ```
 
-
-
-
 ### Ampliación 2: implementar el cálculo del resumen
 
 **Archivo:** `src/AceriaApp.Api/ApiGateway/ValidadorApiGateway.cs`. **Operación:** Reemplazar el contenido completo.
@@ -1317,9 +1238,6 @@ public record ResultadoApiGateway(bool EsValida, IReadOnlyList<string> Errores);
 
 public record ResumenApiGateway(int Total, int ServiciosDistintos, int ConAutenticacion);
 ```
-
-
-
 
 ### Ampliación 3: verificar el resultado con el catálogo
 
@@ -1437,9 +1355,6 @@ public class ValidadorApiGatewayTests
 }
 ```
 
-
-
-
 **Ejecución y resultado esperado.** En la copia optativa ejecuta `dotnet test AceriaApp.sln -c Release -m:1`. Deben pasar 416 pruebas; el proyecto `AceriaApp.ApiGateway.Tests` debe ejecutar 13. Verifica que se ejecutó `Resumen_ConCatalogoPorDefecto_CalculaTotales` y que los cuatro puntos obligatorios no cambiaron. Registra el reto en un commit independiente cuando lo hayas comprobado.
 
 ### Resultado esperado del punto
@@ -1462,20 +1377,25 @@ El punto 8.1 ha definido el patrón API Gateway como punto de entrada único a l
 
 # Punto 8.2 — Configuración básica de YARP
 
+## Levantar YARP y comprobar que una ruta llega al backend correcto
+
+YARP actúa como proxy inverso y utiliza rutas y clusters para decidir a qué destino enviar una petición. Una configuración válida debe indicar qué URL pública acepta el gateway y qué dirección real tiene el backend, sin crear un servicio ficticio para completar el diagrama. En esta etapa conectaremos los procesos Windows de Producción e Inventario al gateway y comprobaremos el reenvío con solicitudes reales.
+
+El catálogo de clusters ayuda a detectar inconsistencias de diseño, pero no demuestra que un destino responda. La evidencia funcional requiere iniciar el proxy, consultar una ruta publicada, comprobar el código recibido y relacionarlo con el servicio al que se envió. Mantendremos la mensajería y SQL Server del proyecto heredado sin trasladar el dominio al gateway.
+
 **Carpeta de trabajo:** `M08_API_GATEWAY/PROYECTO/8.2-configuracion-basica-yarp`.
 
 **Objetivo.** Completar los 24 pasos, conservar la etapa anterior y comprobar el catálogo y el comportamiento que incorpora este punto.
 
 ### PASO 8.2.1 — Crear la carpeta del punto 8.2 a partir del punto 8.1
 
-**Procedimiento guiado.**
+La copia conserva 35 proyectos y 415 pruebas antes de incorporar los cambios del punto.
 
 1. En el Explorador de archivos localiza `M08_API_GATEWAY/PROYECTO/8.1-introduccion-api-gateway` y comprueba que contiene `AceriaApp.sln`, `src`, `tests`, `docs` y `global.json`.
 2. Crea la carpeta `M08_API_GATEWAY/PROYECTO/8.2-configuracion-basica-yarp` y copia allí el contenido de la etapa anterior, incluidas sus carpetas ocultas de configuración.
 3. Excluye `bin`, `obj`, `TestResults` y `.vs`; abre únicamente la copia `8.2-configuracion-basica-yarp` para realizar este punto.
 4. Ejecuta `Get-ChildItem -Force` en PowerShell dentro de la copia y comprueba que las carpetas y la solución siguen presentes.
 
-**Por qué funciona así.** La copia conserva 35 proyectos y 415 pruebas antes de incorporar los cambios del punto.
 
 **Verificación concreta.** Ejecuta `Get-ChildItem -Force` en PowerShell dentro de la copia y comprueba que las carpetas y la solución siguen presentes.
 
@@ -1488,14 +1408,13 @@ El punto 8.1 ha definido el patrón API Gateway como punto de entrada único a l
 
 ### PASO 8.2.2 — Abrir la solución copiada en Visual Studio con soporte .NET 8
 
-**Procedimiento guiado.**
+La compilación comprueba que la etapa anterior está completa y que el SDK .NET 8 resuelve sus dependencias.
 
 1. Abre en Visual Studio el archivo `AceriaApp.sln` de `8.2-configuracion-basica-yarp`.
 2. Abre Terminal en esa carpeta y ejecuta `dotnet sln AceriaApp.sln list`; deben aparecer 35 proyectos.
 3. Ejecuta `dotnet restore AceriaApp.sln` y después `dotnet build AceriaApp.sln -c Release`.
 4. Comprueba que la salida termina con compilación correcta y cero errores antes de continuar.
 
-**Por qué funciona así.** La compilación comprueba que la etapa anterior está completa y que el SDK .NET 8 resuelve sus dependencias.
 
 **Verificación concreta.** Comprueba que la salida termina con compilación correcta y cero errores antes de continuar.
 
@@ -1507,14 +1426,13 @@ El punto 8.1 ha definido el patrón API Gateway como punto de entrada único a l
 
 ### PASO 8.2.3 — Verificar que la carpeta `docs` contiene los documentos del punto 8.1
 
-**Procedimiento guiado.**
+Esta etapa añade dos documentos sin sobrescribir las 44 fichas y decisiones anteriores.
 
 1. Expande `docs` en Solution Explorer y ejecuta `(Get-ChildItem docs -Filter *.md).Count`.
 2. Comprueba que hay 44 documentos heredados y que incluyen los ADR-010 a ADR-031.
 3. Compara los nombres y contenidos con `docs` de `M08_API_GATEWAY/PROYECTO/8.1-introduccion-api-gateway`.
 4. Confirma que todavía no existen `docs/configuracion-basica-yarp.md` ni `docs/ADR-032-configuracion-basica-yarp.md`.
 
-**Por qué funciona así.** Esta etapa añade dos documentos sin sobrescribir las 44 fichas y decisiones anteriores.
 
 **Verificación concreta.** Confirma que todavía no existen `docs/configuracion-basica-yarp.md` ni `docs/ADR-032-configuracion-basica-yarp.md`.
 
@@ -1526,7 +1444,7 @@ El punto 8.1 ha definido el patrón API Gateway como punto de entrada único a l
 
 ### PASO 8.2.4 — Crear el documento de configuración básica de YARP en `docs`
 
-**Procedimiento guiado.**
+La configuración básica de YARP debe relacionar rutas públicas con clusters y destinos reales. Conviene documentar las direcciones y comprobar que cada backend puede responder directamente antes de situar el proxy delante.
 
 1. Crea `docs/configuracion-basica-yarp.md` dentro de la carpeta actual.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -1627,16 +1545,9 @@ El proyecto ejecutable AceriaApp.Gateway se construye en el paso 8.2.16. El cat�
 El directorio anterior se conserva intacto. Las copias del punto actual incluyen los cambios completos indicados en el manual.
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
+Define este encabezado en el documento que el alumno conservará junto al proyecto. Conserva esta explicación o instrucción operativa dentro del documento de la etapa. `` Adaptan la petición antes de enviarla al destino o la respuesta antes de devolverla al cliente. Las transformaciones declarativas se configuran en `Transforms` de la ruta. En 8.2 la propagación del identificador validado y el ajuste de Location se implementan en C#; el middleware de M07 valida la correlación antes de reenviarla. Las transformaciones del alias de Inventario se incorporan en 8.3. `` Conserva esta explicación o instrucción operativa dentro del documento de la etapa.
 
-- **Línea 1:** `# Configuración básica de YARP — Punto 8.2` Define este encabezado en el documento que el alumno conservará junto al proyecto.
-- **Línea 2:** (línea vacía) Separa visualmente dos responsabilidades; no añade una instrucción ejecutable.
-- **Línea 5:** `Biblioteca de .NET para construir proxies inversos y gateways. El proyecto AceriaApp.Gateway de este módulo utiliza Yarp.ReverseProxy 2.2.0 y tiene como destino net8.0. Se ejecuta como proceso independiente, sin acceso a las bases ni referencias al dominio.` Conserva esta explicación o instrucción operativa dentro del documento de la etapa.
-- **Línea 59:** `` Adaptan la petición antes de enviarla al destino o la respuesta antes de devolverla al cliente. Las transformaciones declarativas se configuran en `Transforms` de la ruta. En 8.2 la propagación del identificador validado y el ajuste de Location se implementan en C#; el middleware de M07 valida la correlación antes de reenviarla. Las transformaciones del alias de Inventario se incorporan en 8.3. `` Conserva esta explicación o instrucción operativa dentro del documento de la etapa.
-- **Línea 63:** `` Puede complementarse con `appsettings.Development.json`, `appsettings.Production.json` y variables de entorno según el despliegue. La configuración entregada del gateway está en `appsettings.json`; las direcciones de destino se pueden sustituir con claves como `ReverseProxy__Clusters__produccion-cluster__Destinations__produccion__Address`. El recorrido local utiliza Gateway 5100, Producción 5105 e Inventario 5106. Los nombres DNS ASCII de un entorno de contenedores solo funcionan si esa red los resuelve. `` Conserva esta explicación o instrucción operativa dentro del documento de la etapa.
-- **Línea 75:** `| Elemento | Aplicación |` Añade una fila a la tabla documental; sus columnas deben conservarse al copiarla.
-
-**Por qué funciona así.** el documento de configuración básica de YARP es el artefacto de `docs` específico del punto 8.2. No modifica los 44 documentos existentes del punto 8.1.
+`` Puede complementarse con `appsettings.Development.json`, `appsettings.Production.json` y variables de entorno según el despliegue. La configuración entregada del gateway está en `appsettings.json`; las direcciones de destino se pueden sustituir con claves como `ReverseProxy__Clusters__produccion-cluster__Destinations__produccion__Address`. El recorrido local utiliza Gateway 5100, Producción 5105 e Inventario 5106. Los nombres DNS ASCII de un entorno de contenedores solo funcionan si esa red los resuelve. `` Conserva esta explicación o instrucción operativa dentro del documento de la etapa. Añade una fila a la tabla documental; sus columnas deben conservarse al copiarla.
 
 **Verificación concreta.** El documento existe, su vista previa mantiene los encabezados y los documentos heredados conservan sus hashes.
 
@@ -1648,14 +1559,13 @@ El directorio anterior se conserva intacto. Las copias del punto actual incluyen
 
 ### PASO 8.2.5 — Crear la carpeta `ConfiguracionYarp` en el proyecto de Producción
 
-**Procedimiento guiado.**
+La carpeta separa el modelo y su validador de las implementaciones HTTP y del dominio. El catálogo describe decisiones; no modifica por sí mismo el proxy.
 
 1. En Solution Explorer expande `src/AceriaApp.Api`.
 2. Crea dentro de ese proyecto una carpeta llamada `ConfiguracionYarp`.
 3. Comprueba que su ruta es `src/AceriaApp.Api/ConfiguracionYarp` y que no está dentro de otra carpeta de catálogo.
 4. Conserva las carpetas anteriores; esta carpeta agrupa únicamente el ejercicio de análisis del punto.
 
-**Por qué funciona así.** La carpeta separa el modelo y su validador de las implementaciones HTTP y del dominio. El catálogo describe decisiones; no modifica por sí mismo el proxy.
 
 **Verificación concreta.** Conserva las carpetas anteriores; esta carpeta agrupa únicamente el ejercicio de análisis del punto.
 
@@ -1667,7 +1577,7 @@ El directorio anterior se conserva intacto. Las copias del punto actual incluyen
 
 ### PASO 8.2.6 — Crear la clase `ClusterYarp`
 
-**Procedimiento guiado.**
+ClusterYarp describe una agrupación de destinos para el catálogo docente. El proceso ejecutable depende de la configuración de ReverseProxy cargada en el gateway, no de la mera existencia de este objeto.
 
 1. Crea `src/AceriaApp.Api/ConfiguracionYarp/ClusterYarp.cs` dentro de la carpeta actual.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -1689,15 +1599,7 @@ public class ClusterYarp
 }
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
-
-- **Línea 1:** `namespace AceriaApp.Api.ConfiguracionYarp;` Sitúa los tipos en un espacio de nombres propio, separado del resto de etapas y responsabilidades.
-- **Línea 3:** `public class ClusterYarp` Declara el tipo responsable de este comportamiento; sus miembros quedan dentro del bloque siguiente.
-- **Línea 4:** `{` Abre el bloque cuyo contenido se ejecuta o inicializa dentro del contexto inmediatamente anterior.
-- **Línea 5:** `public string Identificador { get; init; } = string.Empty;` Expone la propiedad indicada; init limita su asignación a la construcción del objeto y evita cambios posteriores accidentales.
-- **Línea 9:** `}` Cierra el bloque o la expresión anterior; conserva el delimitador para mantener su alcance.
-
-**Por qué funciona así.** la clase `ClusterYarp` modela un cluster de YARP con su identificador, destinos y dos indicadores. Es la unidad de información del validador.
+Sitúa los tipos en un espacio de nombres propio, separado del resto de etapas y responsabilidades. Declara el tipo responsable de este comportamiento; sus miembros quedan dentro del bloque siguiente. Expone la propiedad indicada; init limita su asignación a la construcción del objeto y evita cambios posteriores accidentales.
 
 **Verificación concreta.** Los archivos indicados contienen todos los bloques y la compilación del proyecto termina sin errores.
 
@@ -1709,7 +1611,7 @@ public class ClusterYarp
 
 ### PASO 8.2.7 — Crear la clase `ValidadorConfiguracionYarp`
 
-**Procedimiento guiado.**
+El validador puede detectar un destino mal descrito, pero no determina su disponibilidad en red. Las pruebas de YARP deben solicitar la ruta publicada y observar el servicio que realmente responde.
 
 1. Crea `src/AceriaApp.Api/ConfiguracionYarp/ValidadorConfiguracionYarp.cs` dentro de la carpeta actual.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -1764,18 +1666,11 @@ public class ValidadorConfiguracionYarp
 public record ResultadoConfiguracionYarp(bool EsValida, IReadOnlyList<string> Errores);
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
+Declara la operación, sus parámetros y su resultado; el bloque siguiente contiene su implementación. Obtiene o prepara este valor local para las comprobaciones y operaciones que siguen. Materializa la secuencia para consultar y recorrer los mismos elementos sin repetir su enumeración.
 
-- **Línea 5:** `public ResultadoConfiguracionYarp Validar(IEnumerable<ClusterYarp> clusters)` Declara la operación, sus parámetros y su resultado; el bloque siguiente contiene su implementación.
-- **Línea 7:** `var errores = new List<string>();` Obtiene o prepara este valor local para las comprobaciones y operaciones que siguen.
-- **Línea 8:** `var lista = clusters.ToList();` Materializa la secuencia para consultar y recorrer los mismos elementos sin repetir su enumeración.
-- **Línea 10:** `if (lista.Count == 0)` Evalúa esta condición antes de continuar; el bloque asociado trata específicamente ese caso.
-- **Línea 12:** `errores.Add("No hay clusters declarados.");` Acumula un incumplimiento del contrato didáctico; el resultado final indicará que la declaración no es válida.
-- **Línea 15:** `foreach (var cluster in lista)` Recorre los elementos de la colección para aplicarles la misma comprobación.
-- **Línea 38:** `return new ResultadoConfiguracionYarp(errores.Count == 0, errores);` Devuelve el resultado calculado al llamador y termina este recorrido del método.
-- **Línea 42:** `public record ResultadoConfiguracionYarp(bool EsValida, IReadOnlyList<string> Errores);` Define un contrato de datos con los campos que el consumidor utilizará para interpretar el resultado.
+Evalúa esta condición antes de continuar; el bloque asociado trata específicamente ese caso. Acumula un incumplimiento del contrato didáctico; el resultado final indicará que la declaración no es válida. Recorre los elementos de la colección para aplicarles la misma comprobación.
 
-**Por qué funciona así.** la clase `ValidadorConfiguracionYarp` comprueba que cada cluster declara identificador, tiene destinos, tiene dirección válida y tiene configuración por entorno.
+Devuelve el resultado calculado al llamador y termina este recorrido del método. Define un contrato de datos con los campos que el consumidor utilizará para interpretar el resultado.
 
 **Verificación concreta.** Los archivos indicados contienen todos los bloques y la compilación del proyecto termina sin errores.
 
@@ -1787,7 +1682,7 @@ public record ResultadoConfiguracionYarp(bool EsValida, IReadOnlyList<string> Er
 
 ### PASO 8.2.8 — Añadir los `using` necesarios en `ValidadorConfiguracionYarp`
 
-**Procedimiento guiado.**
+Los tipos `List<string>` e `IReadOnlyList<string>` pertenecen a `System.Collections.Generic`. El método `ToList` pertenece a `System.Linq`. En proyectos con `ImplicitUsings` desactivado, hay que añadir los usings explícitos.
 
 1. Abre `src/AceriaApp.Api/ConfiguracionYarp/ValidadorConfiguracionYarp.cs` dentro de la carpeta actual.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -1844,11 +1739,7 @@ public class ValidadorConfiguracionYarp
 public record ResultadoConfiguracionYarp(bool EsValida, IReadOnlyList<string> Errores);
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
-
-- **Línea 1:** `using System.Collections.Generic;` Importa el espacio de nombres requerido por los tipos y métodos utilizados en este archivo.
-
-**Por qué funciona así.** los tipos `List<string>` e `IReadOnlyList<string>` pertenecen a `System.Collections.Generic`. El método `ToList` pertenece a `System.Linq`. En proyectos con `ImplicitUsings` desactivado, hay que añadir los usings explícitos.
+Importa el espacio de nombres requerido por los tipos y métodos utilizados en este archivo.
 
 **Verificación concreta.** Los archivos indicados contienen todos los bloques y la compilación del proyecto termina sin errores.
 
@@ -1860,7 +1751,7 @@ public record ResultadoConfiguracionYarp(bool EsValida, IReadOnlyList<string> Er
 
 ### PASO 8.2.9 — Crear la clase `CatalogoClusters`
 
-**Procedimiento guiado.**
+CatalogoClusters permite analizar varias configuraciones, aunque sus registros no sustituyen el archivo que utiliza el middleware de proxy. Contrasta ambos elementos durante la práctica.
 
 1. Crea `src/AceriaApp.Api/ConfiguracionYarp/CatalogoClusters.cs` dentro de la carpeta actual.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -1887,11 +1778,7 @@ public class CatalogoClusters
 }
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
-
-- **Línea 9:** `new() { Identificador = "ordenes-cluster", Destinos = new[] { "http://aceria-ordenes:5001/" }, TieneDireccionValida = true, TieneConfiguracionPorEntorno = true },` Asigna el valor indicado a esta variable, propiedad u opción dentro de la operación actual.
-
-**Por qué funciona así.** la clase `CatalogoClusters` contiene los clusters por defecto del proyecto. Se usan en los tests y en la validación automática.
+Asigna el valor indicado a esta variable, propiedad u opción dentro de la operación actual.
 
 **Verificación concreta.** Los archivos indicados contienen todos los bloques y la compilación del proyecto termina sin errores.
 
@@ -1903,7 +1790,7 @@ public class CatalogoClusters
 
 ### PASO 8.2.10 — Añadir el `using` necesario en `CatalogoClusters`
 
-**Procedimiento guiado.**
+El tipo `List<T>` pertenece a `System.Collections.Generic`. En proyectos con `ImplicitUsings` desactivado, hay que añadir el using explícito.
 
 1. Abre `src/AceriaApp.Api/ConfiguracionYarp/CatalogoClusters.cs` dentro de la carpeta actual.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -1931,11 +1818,6 @@ public class CatalogoClusters
 }
 ```
 
-
-
-
-**Por qué funciona así.** el tipo `List<T>` pertenece a `System.Collections.Generic`. En proyectos con `ImplicitUsings` desactivado, hay que añadir el using explícito.
-
 **Verificación concreta.** Los archivos indicados contienen todos los bloques y la compilación del proyecto termina sin errores.
 
 **Diagnóstico si falla.**
@@ -1946,7 +1828,7 @@ public class CatalogoClusters
 
 ### PASO 8.2.11 — Crear el proyecto de tests del punto 8.2
 
-**Procedimiento guiado.**
+El punto 8.2 añade un proyecto de tests específico para las clases de configuración de YARP. Se crea como proyecto nuevo sin modificar los proyectos de tests existentes.
 
 1. Crea manualmente `tests/AceriaApp.ConfiguracionYarp.Tests` y su archivo `.csproj`; al usar este bloque no se genera `UnitTest1.cs`.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -1973,13 +1855,7 @@ public class CatalogoClusters
 </Project>
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
-
-- **Línea 1:** `<Project Sdk="Microsoft.NET.Sdk">` Organiza propiedades o referencias del proyecto MSBuild; conserva la apertura y el cierre de los elementos.
-- **Línea 3:** `<TargetFramework>net8.0</TargetFramework>` Configura .NET 8 y las opciones de compilación de este proyecto.
-- **Línea 10:** `<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />` Fija la dependencia y su versión para restaurar el mismo paquete en cada equipo.
-
-**Por qué funciona así.** el punto 8.2 añade un proyecto de tests específico para las clases de configuración de YARP. Se crea como proyecto nuevo sin modificar los proyectos de tests existentes.
+Organiza propiedades o referencias del proyecto MSBuild; conserva la apertura y el cierre de los elementos. Configura .NET 8 y las opciones de compilación de este proyecto. Fija la dependencia y su versión para restaurar el mismo paquete en cada equipo.
 
 **Verificación concreta.** Los archivos indicados contienen todos los bloques y la compilación del proyecto termina sin errores.
 
@@ -1991,7 +1867,7 @@ public class CatalogoClusters
 
 ### PASO 8.2.12 — Añadir la referencia del proyecto de tests a la API de Producción
 
-**Procedimiento guiado.**
+La referencia permite que el proyecto de tests acceda a las clases de `ConfiguracionYarp` del proyecto de Producción.
 
 1. Abre `tests/AceriaApp.ConfiguracionYarp.Tests/AceriaApp.ConfiguracionYarp.Tests.csproj` y añade la referencia a `AceriaApp.Api` usando el archivo completo siguiente.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -2019,11 +1895,7 @@ public class CatalogoClusters
 </Project>
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
-
-- **Línea 10:** `<ProjectReference Include="../../src/AceriaApp.Api/AceriaApp.Api.csproj" />` Referencia el proyecto indicado mediante una ruta relativa a este archivo .csproj.
-
-**Por qué funciona así.** la referencia permite que el proyecto de tests acceda a las clases de `ConfiguracionYarp` del proyecto de Producción.
+Referencia el proyecto indicado mediante una ruta relativa a este archivo .csproj.
 
 **Verificación concreta.** Los archivos indicados contienen todos los bloques y la compilación del proyecto termina sin errores.
 
@@ -2035,7 +1907,7 @@ public class CatalogoClusters
 
 ### PASO 8.2.13 — Añadir el paquete `FluentAssertions` al proyecto de tests
 
-**Procedimiento guiado.**
+`FluentAssertions` proporciona la sintaxis de aserción usada en el curso. Se añade al nuevo proyecto de tests sin modificar los proyectos de tests existentes.
 
 1. Abre `tests/AceriaApp.ConfiguracionYarp.Tests/AceriaApp.ConfiguracionYarp.Tests.csproj` y fija FluentAssertions 6.12.2 con el archivo completo siguiente.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -2064,11 +1936,6 @@ public class CatalogoClusters
 </Project>
 ```
 
-
-
-
-**Por qué funciona así.** `FluentAssertions` proporciona la sintaxis de aserción usada en el curso. Se añade al nuevo proyecto de tests sin modificar los proyectos de tests existentes.
-
 **Verificación concreta.** Los archivos indicados contienen todos los bloques y la compilación del proyecto termina sin errores.
 
 **Diagnóstico si falla.**
@@ -2079,7 +1946,7 @@ public class CatalogoClusters
 
 ### PASO 8.2.14 — Crear el archivo `ValidadorConfiguracionYarpTests.cs`
 
-**Procedimiento guiado.**
+Los tests verifican que el validador acepta el catálogo por defecto y rechaza los clusters que violan las reglas.
 
 1. Crea `tests/AceriaApp.ConfiguracionYarp.Tests/ValidadorConfiguracionYarpTests.cs` dentro de la carpeta actual.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -2162,12 +2029,7 @@ public class ValidadorConfiguracionYarpTests
 }
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
-
-- **Línea 11:** `[Fact]` Declara una prueba individual que xUnit debe descubrir y ejecutar.
-- **Línea 16:** `resultado.EsValida.Should().BeTrue();` Comprueba esta condición observable; una diferencia hace fallar la prueba en vez de ocultar el problema.
-
-**Por qué funciona así.** los tests verifican que el validador acepta el catálogo por defecto y rechaza los clusters que violan las reglas.
+Declara una prueba individual que xUnit debe descubrir y ejecutar. Comprueba esta condición observable; una diferencia hace fallar la prueba en vez de ocultar el problema.
 
 **Verificación concreta.** Los archivos indicados contienen todos los bloques y la compilación del proyecto termina sin errores.
 
@@ -2179,7 +2041,7 @@ public class ValidadorConfiguracionYarpTests
 
 ### PASO 8.2.15 — Crear el archivo `CatalogoClustersTests.cs`
 
-**Procedimiento guiado.**
+Los tests verifican que el catálogo por defecto contiene los clusters esperados y que todos cumplen las reglas de configuración.
 
 1. Crea `tests/AceriaApp.ConfiguracionYarp.Tests/CatalogoClustersTests.cs` dentro de la carpeta actual.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -2242,11 +2104,6 @@ public class CatalogoClustersTests
 }
 ```
 
-
-
-
-**Por qué funciona así.** los tests verifican que el catálogo por defecto contiene los clusters esperados y que todos cumplen las reglas de configuración.
-
 **Verificación concreta.** Los archivos indicados contienen todos los bloques y la compilación del proyecto termina sin errores.
 
 **Diagnóstico si falla.**
@@ -2257,7 +2114,7 @@ public class CatalogoClustersTests
 
 ### PASO 8.2.16 — Compilar la solución completa
 
-**Procedimiento guiado.**
+Al conectar YARP, las comprobaciones funcionales deben asegurar que el gateway arranca y reenvía solicitudes a los procesos de Producción e Inventario. Una compilación correcta sin tráfico HTTP no demuestra enrutamiento.
 
 1. Escribe todos los archivos de ampliación funcional mostrados a continuación antes de compilar; cuando se indica reemplazar, sustituye el contenido de la copia actual.
 2. Desde la carpeta actual ejecuta `dotnet sln AceriaApp.sln add (Get-ChildItem src,tests -Recurse -Filter *.csproj | ForEach-Object FullName)` en PowerShell 7.
@@ -2276,9 +2133,6 @@ public class CatalogoClustersTests
   </ItemGroup>
 </Project>
 ```
-
-
-
 
 **Archivo:** `src/AceriaApp.Gateway/GatewayProgram.cs`. **Operación:** Crear el contenido completo.
 
@@ -2337,17 +2191,11 @@ public sealed class GatewayProgram
 }
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
+Completa esta expresión o invocación dentro de GatewayProgram.cs; se conserva íntegra para reproducir el comportamiento. Registra los servicios YARP que seleccionan destinos y reenvían peticiones HTTP. Carga rutas y clusters desde la configuración del proceso y permite su actualización.
 
-- **Línea 13:** `configurar?.Invoke(builder);` Completa esta expresión o invocación dentro de GatewayProgram.cs; se conserva íntegra para reproducir el comportamiento.
-- **Línea 16:** `builder.Services.AddReverseProxy()` Registra los servicios YARP que seleccionan destinos y reenvían peticiones HTTP.
-- **Línea 17:** `.LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"))` Carga rutas y clusters desde la configuración del proceso y permite su actualización.
-- **Línea 20:** `ruta.AddRequestTransform(contexto =>` Trabaja con la petición concreta sin convertirla en una operación de negocio nueva.
-- **Línea 22:** `// La cabecera entrante puede ser inválida: se usa el valor ya validado en el borde.` Documenta la intención de la instrucción próxima sin alterar su ejecución.
-- **Línea 23:** `contexto.ProxyRequest.Headers.Remove(ContextoCorrelacion.Cabecera);` Utiliza el identificador ya validado en el borde para que gateway y backend compartan la misma correlación.
-- **Línea 28:** `ruta.AddResponseTransform(contexto =>` Configura o comprueba la respuesta que recibe el cliente, conservando la semántica HTTP.
-- **Línea 30:** `var location = contexto.ProxyResponse?.Headers.Location;` Lee o escribe la cabecera HTTP indicada; su valor debe coincidir con el contrato de transformación.
-- **Línea 48:** `app.MapReverseProxy();` Publica las rutas YARP con su canalización de selección, balanceo y reenvío.
+Trabaja con la petición concreta sin convertirla en una operación de negocio nueva. Documenta la intención de la instrucción próxima sin alterar su ejecución. Utiliza el identificador ya validado en el borde para que gateway y backend compartan la misma correlación.
+
+Configura o comprueba la respuesta que recibe el cliente, conservando la semántica HTTP. Lee o escribe la cabecera HTTP indicada; su valor debe coincidir con el contrato de transformación. Publica las rutas YARP con su canalización de selección, balanceo y reenvío.
 
 **Archivo:** `src/AceriaApp.Gateway/appsettings.json`. **Operación:** Crear el contenido completo.
 
@@ -2419,29 +2267,19 @@ public sealed class GatewayProgram
 }
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
+Abre o cierra esta estructura JSON; las comas y delimitadores mantienen válido el documento. Establece la dirección de escucha de este proceso; conserva el nombre y el tipo json. Asigna este valor a la opción observabilidad; conserva el nombre y el tipo json.
 
-- **Línea 1:** `{` Abre o cierra esta estructura JSON; las comas y delimitadores mantienen válido el documento.
-- **Línea 2:** `"Urls": "http://localhost:5100",` Establece la dirección de escucha de este proceso; conserva el nombre y el tipo json.
-- **Línea 3:** `"Observabilidad": {` Asigna este valor a la opción observabilidad; conserva el nombre y el tipo json.
-- **Línea 4:** `"NivelMinimo": "Information"` Asigna este valor a la opción nivelminimo; conserva el nombre y el tipo json.
-- **Línea 6:** `"ReverseProxy": {` Reúne la configuración que lee addreverseproxy; conserva el nombre y el tipo json.
-- **Línea 7:** `"Routes": {` Declara las rutas públicas que yarp puede seleccionar; conserva el nombre y el tipo json.
-- **Línea 8:** `"ordenes": {` Asigna este valor a la opción ordenes; conserva el nombre y el tipo json.
-- **Línea 9:** `"ClusterId": "produccion-cluster",` Vincula la ruta con un cluster existente; conserva el nombre y el tipo json.
-- **Línea 10:** `"Match": {` Asigna este valor a la opción match; conserva el nombre y el tipo json.
-- **Línea 11:** `"Path": "/api/v1/ordenes/{**resto}"` Define el patrón público o la ruta del sondeo según su sección; conserva el nombre y el tipo json.
-- **Línea 14:** `"produccion": {` Asigna este valor a la opción produccion; conserva el nombre y el tipo json.
-- **Línea 20:** `"comunicacion": {` Asigna este valor a la opción comunicacion; conserva el nombre y el tipo json.
-- **Línea 26:** `"materiales": {` Asigna este valor a la opción materiales; conserva el nombre y el tipo json.
-- **Línea 30:** `"Methods": [` Restringe los métodos que esta ruta admite; conserva el nombre y el tipo json.
-- **Línea 36:** `"planificaciones": {` Asigna este valor a la opción planificaciones; conserva el nombre y el tipo json.
-- **Línea 47:** `"Clusters": {` Agrupa destinos que ofrecen el mismo contrato http; conserva el nombre y el tipo json.
-- **Línea 48:** `"produccion-cluster": {` Asigna este valor a la opción produccion-cluster; conserva el nombre y el tipo json.
-- **Línea 49:** `"Destinations": {` Enumera instancias del servicio, no servicios con contratos diferentes; conserva el nombre y el tipo json.
-- **Línea 51:** `"Address": "http://localhost:5105/"` Establece la url interna del destino; conserva el nombre y el tipo json.
-- **Línea 55:** `"inventario-cluster": {` Asigna este valor a la opción inventario-cluster; conserva el nombre y el tipo json.
-- **Línea 57:** `"inventario-1": {` Asigna este valor a la opción inventario-1; conserva el nombre y el tipo json.
+Asigna este valor a la opción nivelminimo; conserva el nombre y el tipo json. Reúne la configuración que lee addreverseproxy; conserva el nombre y el tipo json. Declara las rutas públicas que yarp puede seleccionar; conserva el nombre y el tipo json.
+
+Asigna este valor a la opción ordenes; conserva el nombre y el tipo json. Vincula la ruta con un cluster existente; conserva el nombre y el tipo json. Asigna este valor a la opción match; conserva el nombre y el tipo json.
+
+Define el patrón público o la ruta del sondeo según su sección; conserva el nombre y el tipo json. Asigna este valor a la opción produccion; conserva el nombre y el tipo json. Asigna este valor a la opción comunicacion; conserva el nombre y el tipo json.
+
+Asigna este valor a la opción materiales; conserva el nombre y el tipo json. Restringe los métodos que esta ruta admite; conserva el nombre y el tipo json. Asigna este valor a la opción planificaciones; conserva el nombre y el tipo json.
+
+Agrupa destinos que ofrecen el mismo contrato http; conserva el nombre y el tipo json. Asigna este valor a la opción produccion-cluster; conserva el nombre y el tipo json. Enumera instancias del servicio, no servicios con contratos diferentes; conserva el nombre y el tipo json.
+
+Establece la url interna del destino; conserva el nombre y el tipo json. Asigna este valor a la opción inventario-cluster; conserva el nombre y el tipo json. Asigna este valor a la opción inventario-1; conserva el nombre y el tipo json.
 
 **Archivo:** `src/AceriaApp.Inventario.Api/InventarioProgram.cs`. **Operación:** Reemplazar el contenido completo.
 
@@ -2502,11 +2340,7 @@ public sealed class InventarioProgram
 }
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
-
-- **Línea 11:** `builder.Services.AddLoggingAceria("Inventario", builder.Configuration);` Completa esta expresión o invocación dentro de InventarioProgram.cs; se conserva íntegra para reproducir el comportamiento.
-- **Línea 29:** `using var scope = app.Services.CreateScope();` Delimita la vida del recurso y garantiza su disposición al salir del ámbito, también si ocurre una excepción; await using permite la disposición asíncrona.
-- **Línea 31:** `await db.Database.EnsureCreatedAsync();` Espera la operación asíncrona sin bloquear el hilo; un fallo se propaga para poder detectarlo.
+Completa esta expresión o invocación dentro de InventarioProgram.cs; se conserva íntegra para reproducir el comportamiento. Delimita la vida del recurso y garantiza su disposición al salir del ámbito, también si ocurre una excepción; await using permite la disposición asíncrona. Espera la operación asíncrona sin bloquear el hilo; un fallo se propaga para poder detectarlo.
 
 **Archivo:** `tests/AceriaApp.ConfiguracionYarp.Tests/GatewayConfiguracionFuncionalTests.cs`. **Operación:** Crear el contenido completo.
 
@@ -2619,10 +2453,7 @@ public sealed class GatewayConfiguracionFuncionalTests
 }
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
-
-- **Línea 12:** `[Theory]` Declara una prueba parametrizada; cada conjunto de datos produce una ejecución.
-- **Línea 13:** `[InlineData("GET", "/api/v1/ordenes/42", "produccion")]` Proporciona un caso de entrada concreto para la prueba parametrizada.
+Declara una prueba parametrizada; cada conjunto de datos produce una ejecución. Proporciona un caso de entrada concreto para la prueba parametrizada.
 
 **Archivo:** `tests/Compartido/GatewayPruebas.cs`. **Operación:** Crear el contenido completo.
 
@@ -2795,13 +2626,9 @@ public sealed class BackendPruebas : IAsyncDisposable
 }
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
+Declara una propiedad con lectura; un accesor set, cuando aparece, permite modificar su valor según su visibilidad. Delimita una operación que necesita gestión explícita de errores o liberación de recursos. Completa esta expresión o invocación dentro de GatewayPruebas.cs; se conserva íntegra para reproducir el comportamiento.
 
-- **Línea 19:** `public BackendPruebas Produccion { get; private set; } = null!;` Declara una propiedad con lectura; un accesor set, cuando aparece, permite modificar su valor según su visibilidad.
-- **Línea 28:** `try` Delimita una operación que necesita gestión explícita de errores o liberación de recursos.
-- **Línea 35:** `builder.Configuration.Sources.Clear();` Completa esta expresión o invocación dentro de GatewayPruebas.cs; se conserva íntegra para reproducir el comportamiento.
-- **Línea 79:** `catch (OperationCanceledException) { break; }` Trata exclusivamente el error capturado en esta rama; los demás errores deben seguir siendo visibles.
-- **Línea 81:** `throw new TimeoutException(motivo);` Interrumpe la operación con un error explícito; no transforma un fallo en un resultado satisfactorio.
+Trata exclusivamente el error capturado en esta rama; los demás errores deben seguir siendo visibles. Interrumpe la operación con un error explícito; no transforma un fallo en un resultado satisfactorio.
 
 **Archivo:** `tests/AceriaApp.ConfiguracionYarp.Tests/AceriaApp.ConfiguracionYarp.Tests.csproj`. **Operación:** Reemplazar el contenido completo.
 
@@ -2829,12 +2656,7 @@ public sealed class BackendPruebas : IAsyncDisposable
 </Project>
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
-
-- **Línea 12:** `<FrameworkReference Include="Microsoft.AspNetCore.App" />` Hace disponibles las API del framework ASP.NET Core para los servidores de prueba.
-- **Línea 13:** `<Compile Include="../Compartido/GatewayPruebas.cs" Link="Compartido/GatewayPruebas.cs" />` Incluye el soporte de pruebas compartido en la compilación de este proyecto.
-
-**Por qué funciona así.** Un proceso YARP separado añade la publicación HTTP real sin introducir reglas de negocio ni acceso a SQL Server dentro del gateway.
+Hace disponibles las API del framework ASP.NET Core para los servidores de prueba. Incluye el soporte de pruebas compartido en la compilación de este proyecto.
 
 **Verificación concreta.** Ejecuta `dotnet sln AceriaApp.sln list` y verifica los 37 proyectos; el compilador debe terminar con cero errores.
 
@@ -2846,14 +2668,13 @@ public sealed class BackendPruebas : IAsyncDisposable
 
 ### PASO 8.2.17 — Ejecutar todos los tests del punto 8.2
 
-**Procedimiento guiado.**
+Una prueba de catálogo acredita su declaración. Las pruebas funcionales utilizan el proxy y servidores HTTP reales, pero la persistencia y el broker se comprueban con la suite y el recorrido completo.
 
 1. Ejecuta `dotnet test tests/AceriaApp.ConfiguracionYarp.Tests/AceriaApp.ConfiguracionYarp.Tests.csproj -c Release --no-build` en la terminal.
 2. Comprueba que se ejecutan 36 pruebas: 10 de catálogo y 26 funcionales.
 3. Si hay un fallo, identifica su nombre y revisa la regla o la respuesta esperada antes de modificar código.
 4. Confirma cero errores y cero pruebas omitidas; el reto todavía no forma parte de esta etapa.
 
-**Por qué funciona así.** Una prueba de catálogo acredita su declaración. Las pruebas funcionales utilizan el proxy y servidores HTTP reales, pero la persistencia y el broker se comprueban con la suite y el recorrido completo.
 
 **Verificación concreta.** Confirma cero errores y cero pruebas omitidas; el reto todavía no forma parte de esta etapa.
 
@@ -2865,14 +2686,13 @@ public sealed class BackendPruebas : IAsyncDisposable
 
 ### PASO 8.2.18 — Ejecutar todos los tests de la solución
 
-**Procedimiento guiado.**
+La suite completa comprueba que el nuevo punto no rompe la persistencia, la mensajería, el dominio, la observabilidad ni la resiliencia desarrollados antes.
 
 1. Configura `ACERIA_TEST_SQLSERVER` para tu SQL Server Express/LocalDB y `ACERIA_TEST_RABBITMQ` para el broker; sigue los requisitos del inicio del manual.
 2. Ejecuta `dotnet test AceriaApp.sln -c Release --no-build -m:1`.
 3. Comprueba que pasan las 451 pruebas acumuladas, incluidas las heredadas de M07, sin omisiones.
 4. Si falla la conexión, corrige el servicio, los permisos o la URI. Una prueba no ejecutada no se contabiliza como aprobada.
 
-**Por qué funciona así.** La suite completa comprueba que el nuevo punto no rompe la persistencia, la mensajería, el dominio, la observabilidad ni la resiliencia desarrollados antes.
 
 **Verificación concreta.** Si falla la conexión, corrige el servicio, los permisos o la URI. Una prueba no ejecutada no se contabiliza como aprobada.
 
@@ -2884,7 +2704,7 @@ public sealed class BackendPruebas : IAsyncDisposable
 
 ### PASO 8.2.19 — Crear el README del punto 8.2
 
-**Procedimiento guiado.**
+El README del punto 8.2 explica el objetivo, el estado, la ejecución y los añadidos. No modifica el README del punto 8.1.
 
 1. Abre `README.md` dentro de la carpeta actual.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -2925,14 +2745,9 @@ El recorrido funcional inicia Gateway en 5100, Producción en 5105 e Inventario 
 - Las 44 fichas y decisiones anteriores permanecen idénticas.
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
+`` Desde esta carpeta: `dotnet restore AceriaApp.sln`, `dotnet build AceriaApp.sln -c Release` y `dotnet test AceriaApp.sln -c Release`. Configura SQL Server/LocalDB y RabbitMQ según el manual antes de ejecutar la suite completa. `` Conserva esta explicación o instrucción operativa dentro del documento de la etapa. Registra una condición o una decisión que podrá contrastarse al revisar la etapa. `` - `docs/configuracion-basica-yarp.md`. `` Registra una condición o una decisión que podrá contrastarse al revisar la etapa.
 
-- **Línea 13:** `` Desde esta carpeta: `dotnet restore AceriaApp.sln`, `dotnet build AceriaApp.sln -c Release` y `dotnet test AceriaApp.sln -c Release`. Configura SQL Server/LocalDB y RabbitMQ según el manual antes de ejecutar la suite completa. `` Conserva esta explicación o instrucción operativa dentro del documento de la etapa.
-- **Línea 19:** `- Modelo ClusterYarp, validador ValidadorConfiguracionYarp y catálogo CatalogoClusters.` Registra una condición o una decisión que podrá contrastarse al revisar la etapa.
-- **Línea 26:** `` - `docs/configuracion-basica-yarp.md`. `` Registra una condición o una decisión que podrá contrastarse al revisar la etapa.
-- **Línea 27:** `` - `docs/ADR-032-configuracion-basica-yarp.md`. `` Registra una condición o una decisión que podrá contrastarse al revisar la etapa.
-
-**Por qué funciona así.** el README del punto 8.2 explica el objetivo, el estado, la ejecución y los añadidos. No modifica el README del punto 8.1.
+`` - `docs/ADR-032-configuracion-basica-yarp.md`. `` Registra una condición o una decisión que podrá contrastarse al revisar la etapa.
 
 **Verificación concreta.** El documento existe, su vista previa mantiene los encabezados y los documentos heredados conservan sus hashes.
 
@@ -2944,7 +2759,7 @@ El recorrido funcional inicia Gateway en 5100, Producción en 5105 e Inventario 
 
 ### PASO 8.2.20 — Crear el ADR-032 del punto 8.2
 
-**Procedimiento guiado.**
+El ADR-032 documenta la decisión de adoptar YARP. Es un artefacto nuevo del punto 8.2 que no modifica los ADR existentes.
 
 1. Crea `docs/ADR-032-configuracion-basica-yarp.md` dentro de la carpeta actual.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -2983,11 +2798,7 @@ El proyecto ejecutable AceriaApp.Gateway se construye en el paso 8.2.16. El cat�
 El directorio anterior se conserva intacto. Las copias del punto actual incluyen los cambios completos indicados en el manual.
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
-
-- **Línea 10:** `` Se adopta Yarp.ReverseProxy 2.2.0 en AceriaApp.Gateway, con destino net8.0 y proceso independiente. `appsettings.json` contiene `ReverseProxy`, con `Routes` y `Clusters`. Se publican las órdenes y comunicación de Producción y los materiales y planificaciones de Inventario; Clientes no es un backend implementado. En 8.2 el gateway escucha en 5100 y apunta a Producción 5105 e Inventario 5106; en 8.4 Inventario añade 5107 y Producción mantiene un destino. Las direcciones se pueden sustituir por configuración de entorno. La correlación se valida mediante el middleware de M07 y se propaga mediante código; Location conserva una referencia pública. Los alias y la eliminación de /inventario se incorporan en 8.3. Se comprueban tanto el catálogo como el proxy real con Kestrel; SQL y RabbitMQ se acreditan mediante integración. `` Conserva esta explicación o instrucción operativa dentro del documento de la etapa.
-
-**Por qué funciona así.** el ADR-032 documenta la decisión de adoptar YARP. Es un artefacto nuevo del punto 8.2 que no modifica los ADR existentes.
+`` Se adopta Yarp.ReverseProxy 2.2.0 en AceriaApp.Gateway, con destino net8.0 y proceso independiente. `appsettings.json` contiene `ReverseProxy`, con `Routes` y `Clusters`. Se publican las órdenes y comunicación de Producción y los materiales y planificaciones de Inventario; Clientes no es un backend implementado. En 8.2 el gateway escucha en 5100 y apunta a Producción 5105 e Inventario 5106; en 8.4 Inventario añade 5107 y Producción mantiene un destino. Las direcciones se pueden sustituir por configuración de entorno. La correlación se valida mediante el middleware de M07 y se propaga mediante código; Location conserva una referencia pública. Los alias y la eliminación de /inventario se incorporan en 8.3. Se comprueban tanto el catálogo como el proxy real con Kestrel; SQL y RabbitMQ se acreditan mediante integración. `` Conserva esta explicación o instrucción operativa dentro del documento de la etapa.
 
 **Verificación concreta.** El documento existe, su vista previa mantiene los encabezados y los documentos heredados conservan sus hashes.
 
@@ -2999,14 +2810,13 @@ El directorio anterior se conserva intacto. Las copias del punto actual incluyen
 
 ### PASO 8.2.21 — Verificar que no se ha modificado ningún archivo del punto 8.1
 
-**Procedimiento guiado.**
+La progresión modifica copias independientes. Los nuevos archivos o configuraciones de una etapa no deben alterar un punto ya entregado.
 
 1. Abre las carpetas `docs` de la etapa actual y de `M08_API_GATEWAY/PROYECTO/8.1-introduccion-api-gateway`.
 2. Compara con Get-FileHash los archivos que existían en la etapa anterior; cada hash SHA256 debe coincidir.
 3. Comprueba también que los archivos de tests heredados conservan su contenido; solo se incorporan los tests del punto.
 4. Verifica que `M08_API_GATEWAY/PROYECTO/8.1-introduccion-api-gateway` no presenta modificaciones. Los cambios completos del punto pertenecen exclusivamente a `8.2-configuracion-basica-yarp`.
 
-**Por qué funciona así.** La progresión modifica copias independientes. Los nuevos archivos o configuraciones de una etapa no deben alterar un punto ya entregado.
 
 **Verificación concreta.** Verifica que `M08_API_GATEWAY/PROYECTO/8.1-introduccion-api-gateway` no presenta modificaciones. Los cambios completos del punto pertenecen exclusivamente a `8.2-configuracion-basica-yarp`.
 
@@ -3018,14 +2828,13 @@ El directorio anterior se conserva intacto. Las copias del punto actual incluyen
 
 ### PASO 8.2.22 — Verificar la estructura del punto 8.2
 
-**Procedimiento guiado.**
+El inventario convierte la comprobación de estructura en una condición observable y detecta omisiones que una compilación aislada podría pasar por alto.
 
 1. Ejecuta `Get-ChildItem -Recurse -File` y revisa las carpetas src, tests y docs.
 2. Verifica 37 proyectos, 24 proyectos de pruebas y 46 documentos.
 3. Comprueba la presencia de las tres clases de `ConfiguracionYarp`, sus tests, el documento temático y ADR-032.
 4. Comprueba que no has introducido carpetas temporales, labs ni metaprompts dentro del entregable.
 
-**Por qué funciona así.** El inventario convierte la comprobación de estructura en una condición observable y detecta omisiones que una compilación aislada podría pasar por alto.
 
 **Verificación concreta.** Comprueba que no has introducido carpetas temporales, labs ni metaprompts dentro del entregable.
 
@@ -3037,14 +2846,13 @@ El directorio anterior se conserva intacto. Las copias del punto actual incluyen
 
 ### PASO 8.2.23 — Verificar el `.gitignore` del punto 8.2
 
-**Procedimiento guiado.**
+Las exclusiones conservan un repositorio reproducible sin binarios temporales ni datos específicos de Visual Studio.
 
 1. Abre `.gitignore` de la etapa actual.
 2. Comprueba que contiene bin/, obj/, *.user, *.suo, .vs/ y TestResults/.
 3. Compara su contenido con el archivo heredado y conserva sus exclusiones.
 4. Ejecuta `git status --short` desde la raíz del curso y verifica que los artefactos de compilación no aparecen como entregables.
 
-**Por qué funciona así.** Las exclusiones conservan un repositorio reproducible sin binarios temporales ni datos específicos de Visual Studio.
 
 **Verificación concreta.** Ejecuta `git status --short` desde la raíz del curso y verifica que los artefactos de compilación no aparecen como entregables.
 
@@ -3056,14 +2864,13 @@ El directorio anterior se conserva intacto. Las copias del punto actual incluyen
 
 ### PASO 8.2.24 — Hacer el commit del punto 8.2 y verificar el estado final
 
-**Procedimiento guiado.**
+Un commit conserva el estado comprobado. El número de commits no tiene que coincidir con el de puntos: las correcciones y revisiones también forman parte del historial.
 
 1. Desde la raíz del repositorio ejecuta `git status --short` y revisa todos los cambios de la etapa.
 2. Añade exclusivamente los archivos docentes y del proyecto con `git add M08_API_GATEWAY/PROYECTO/8.2-configuracion-basica-yarp`.
 3. Ejecuta `git commit -m "Punto 8.2: Configuración básica de YARP"` después de comprobar las pruebas.
 4. Ejecuta `git log --oneline -5` y `git status --short`; confirma el hito y revisa cualquier archivo pendiente.
 
-**Por qué funciona así.** Un commit conserva el estado comprobado. El número de commits no tiene que coincidir con el de puntos: las correcciones y revisiones también forman parte del historial.
 
 **Verificación concreta.** Ejecuta `git log --oneline -5` y `git status --short`; confirma el hito y revisa cualquier archivo pendiente.
 
@@ -3133,9 +2940,6 @@ public record ResultadoConfiguracionYarp(bool EsValida, IReadOnlyList<string> Er
 public record ResumenConfiguracionYarp(int Total, int TotalDestinos, int ConConfiguracionPorEntorno);
 ```
 
-
-
-
 ### Ampliación 2: implementar el cálculo del resumen
 
 **Archivo:** `src/AceriaApp.Api/ConfiguracionYarp/ValidadorConfiguracionYarp.cs`. **Operación:** Reemplazar el contenido completo.
@@ -3197,9 +3001,6 @@ public record ResultadoConfiguracionYarp(bool EsValida, IReadOnlyList<string> Er
 
 public record ResumenConfiguracionYarp(int Total, int TotalDestinos, int ConConfiguracionPorEntorno);
 ```
-
-
-
 
 ### Ampliación 3: verificar el resultado con el catálogo
 
@@ -3289,9 +3090,6 @@ public class ValidadorConfiguracionYarpTests
 }
 ```
 
-
-
-
 **Ejecución y resultado esperado.** En la copia optativa ejecuta `dotnet test AceriaApp.sln -c Release -m:1`. Deben pasar 452 pruebas; el proyecto `AceriaApp.ConfiguracionYarp.Tests` debe ejecutar 37. Verifica que se ejecutó `Resumen_ConCatalogoPorDefecto_CalculaTotales` y que los cuatro puntos obligatorios no cambiaron. Registra el reto en un commit independiente cuando lo hayas comprobado.
 
 ### Resultado esperado del punto
@@ -3314,20 +3112,25 @@ El punto 8.2 ha definido la configuración básica de YARP como implementación 
 
 # Punto 8.3 — Enrutamiento de peticiones
 
+## Entender cómo se transforman las rutas y se conserva la correlación
+
+Cuando el cliente utiliza un prefijo público, el backend puede esperar un camino diferente. Las reglas de YARP deben transformar la ruta sin perder el método, los datos necesarios ni los identificadores que permiten seguir la petición en los logs. Un error en el prefijo puede producir un 404 aunque el backend esté disponible; una cabecera de correlación no validada también puede romper el recorrido de observabilidad.
+
+La práctica trabajará sobre reglas de enrutamiento y pruebas de proxy HTTP real. Los catálogos no realizan transformaciones por sí solos: la configuración efectiva y los middleware determinan lo que recibe Producción o Inventario. Las comprobaciones relacionarán la solicitud pública con la ruta del servicio y con los registros de observabilidad conservados desde M07.
+
 **Carpeta de trabajo:** `M08_API_GATEWAY/PROYECTO/8.3-enrutamiento-peticiones`.
 
 **Objetivo.** Completar los 24 pasos, conservar la etapa anterior y comprobar el catálogo y el comportamiento que incorpora este punto.
 
 ### PASO 8.3.1 — Crear la carpeta del punto 8.3 a partir del punto 8.2
 
-**Procedimiento guiado.**
+La copia conserva 37 proyectos y 451 pruebas antes de incorporar los cambios del punto.
 
 1. En el Explorador de archivos localiza `M08_API_GATEWAY/PROYECTO/8.2-configuracion-basica-yarp` y comprueba que contiene `AceriaApp.sln`, `src`, `tests`, `docs` y `global.json`.
 2. Crea la carpeta `M08_API_GATEWAY/PROYECTO/8.3-enrutamiento-peticiones` y copia allí el contenido de la etapa anterior, incluidas sus carpetas ocultas de configuración.
 3. Excluye `bin`, `obj`, `TestResults` y `.vs`; abre únicamente la copia `8.3-enrutamiento-peticiones` para realizar este punto.
 4. Ejecuta `Get-ChildItem -Force` en PowerShell dentro de la copia y comprueba que las carpetas y la solución siguen presentes.
 
-**Por qué funciona así.** La copia conserva 37 proyectos y 451 pruebas antes de incorporar los cambios del punto.
 
 **Verificación concreta.** Ejecuta `Get-ChildItem -Force` en PowerShell dentro de la copia y comprueba que las carpetas y la solución siguen presentes.
 
@@ -3340,14 +3143,13 @@ El punto 8.2 ha definido la configuración básica de YARP como implementación 
 
 ### PASO 8.3.2 — Abrir la solución copiada en Visual Studio con soporte .NET 8
 
-**Procedimiento guiado.**
+La compilación comprueba que la etapa anterior está completa y que el SDK .NET 8 resuelve sus dependencias.
 
 1. Abre en Visual Studio el archivo `AceriaApp.sln` de `8.3-enrutamiento-peticiones`.
 2. Abre Terminal en esa carpeta y ejecuta `dotnet sln AceriaApp.sln list`; deben aparecer 37 proyectos.
 3. Ejecuta `dotnet restore AceriaApp.sln` y después `dotnet build AceriaApp.sln -c Release`.
 4. Comprueba que la salida termina con compilación correcta y cero errores antes de continuar.
 
-**Por qué funciona así.** La compilación comprueba que la etapa anterior está completa y que el SDK .NET 8 resuelve sus dependencias.
 
 **Verificación concreta.** Comprueba que la salida termina con compilación correcta y cero errores antes de continuar.
 
@@ -3359,14 +3161,13 @@ El punto 8.2 ha definido la configuración básica de YARP como implementación 
 
 ### PASO 8.3.3 — Verificar que la carpeta `docs` contiene los documentos del punto 8.2
 
-**Procedimiento guiado.**
+Esta etapa añade dos documentos sin sobrescribir las 46 fichas y decisiones anteriores.
 
 1. Expande `docs` en Solution Explorer y ejecuta `(Get-ChildItem docs -Filter *.md).Count`.
 2. Comprueba que hay 46 documentos heredados y que incluyen los ADR-010 a ADR-032.
 3. Compara los nombres y contenidos con `docs` de `M08_API_GATEWAY/PROYECTO/8.2-configuracion-basica-yarp`.
 4. Confirma que todavía no existen `docs/enrutamiento-peticiones.md` ni `docs/ADR-033-enrutamiento-peticiones.md`.
 
-**Por qué funciona así.** Esta etapa añade dos documentos sin sobrescribir las 46 fichas y decisiones anteriores.
 
 **Verificación concreta.** Confirma que todavía no existen `docs/enrutamiento-peticiones.md` ni `docs/ADR-033-enrutamiento-peticiones.md`.
 
@@ -3378,7 +3179,7 @@ El punto 8.2 ha definido la configuración básica de YARP como implementación 
 
 ### PASO 8.3.4 — Crear el documento de enrutamiento de peticiones en `docs`
 
-**Procedimiento guiado.**
+El documento de enrutamiento de peticiones es el artefacto de `docs` específico del punto 8.3. No modifica los 46 documentos existentes del punto 8.2.
 
 1. Crea `docs/enrutamiento-peticiones.md` dentro de la carpeta actual.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -3469,32 +3270,19 @@ La restricción Orden >= 0 del validador de catálogo y sus transformaciones obl
 El directorio anterior se conserva intacto. Las copias del punto actual incluyen los cambios completos indicados en el manual.
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
+Define este encabezado en el documento que el alumno conservará junto al proyecto. `` YARP utiliza el enrutamiento de endpoints de ASP.NET Core para seleccionar una ruta que satisfaga sus condiciones. Primero interviene el valor de `Order`: los valores menores tienen prioridad, incluidos los negativos. Entre rutas con el mismo `Order`, interviene la especificidad del patrón. La posición de una entrada en el objeto JSON no establece su prioridad; deben evitarse coincidencias ambiguas. `` Conserva esta explicación o instrucción operativa dentro del documento de la etapa. Conserva esta explicación o instrucción operativa dentro del documento de la etapa.
 
-- **Línea 1:** `# Enrutamiento de peticiones — Punto 8.3` Define este encabezado en el documento que el alumno conservará junto al proyecto.
-- **Línea 2:** (línea vacía) Separa visualmente dos responsabilidades; no añade una instrucción ejecutable.
-- **Línea 5:** `` YARP utiliza el enrutamiento de endpoints de ASP.NET Core para seleccionar una ruta que satisfaga sus condiciones. Primero interviene el valor de `Order`: los valores menores tienen prioridad, incluidos los negativos. Entre rutas con el mismo `Order`, interviene la especificidad del patrón. La posición de una entrada en el objeto JSON no establece su prioridad; deben evitarse coincidencias ambiguas. `` Conserva esta explicación o instrucción operativa dentro del documento de la etapa.
-- **Línea 9:** `Sintaxis de ASP.NET Core. Segmentos literales, parámetros, comodines y restricciones.` Conserva esta explicación o instrucción operativa dentro del documento de la etapa.
-- **Línea 21:** `` Un `Order` menor prevalece sobre uno mayor antes de comparar la especificidad. Con el mismo `Order`, un patrón específico tiene mayor precedencia que otro más general. En el alias de Inventario se utiliza `Order: -10`; no hay una restricción general de YARP que obligue a usar órdenes no negativos. `` Conserva esta explicación o instrucción operativa dentro del documento de la etapa.
-- **Línea 25:** `` - `PathRemovePrefix`: elimina un prefijo. `` Registra una condición o una decisión que podrá contrastarse al revisar la etapa.
-- **Línea 26:** `` - `PathSet`: establece una ruta fija. `` Registra una condición o una decisión que podrá contrastarse al revisar la etapa.
-- **Línea 27:** `` - `PathPattern`: aplica un patrón. `` Registra una condición o una decisión que podrá contrastarse al revisar la etapa.
-- **Línea 31:** `` - `RequestHeader` con `Set` o `Append`: fija o añade un valor de cabecera de petición. Para eliminarla se utiliza `RequestHeaderRemove`. `` Registra una condición o una decisión que podrá contrastarse al revisar la etapa.
-- **Línea 32:** `` - `ResponseHeader` con `Set` o `Append`: fija o añade un valor de cabecera de respuesta. Para eliminarla se utiliza `ResponseHeaderRemove`. `` Registra una condición o una decisión que podrá contrastarse al revisar la etapa.
-- **Línea 33:** `` - `Set` en estas transformaciones asigna un literal. Por ejemplo, `Set: generated` enviaría el texto generated; no genera un identificador. La correlación dinámica se obtiene del middleware de M07 y se propaga mediante código. `` Registra una condición o una decisión que podrá contrastarse al revisar la etapa.
-- **Línea 37:** `` - `QueryRouteParameter`: establece el nombre del parámetro de consulta; su `Set` o `Append` indica el nombre del valor de ruta del que se toma el dato. `` Registra una condición o una decisión que podrá contrastarse al revisar la etapa.
-- **Línea 38:** `` - `QueryValueParameter`: establece el nombre del parámetro de consulta; su `Set` o `Append` contiene un valor literal. En el alias se utiliza `QueryValueParameter: canal` con `Set: gateway`. `` Registra una condición o una decisión que podrá contrastarse al revisar la etapa.
-- **Línea 39:** `- Copiar dinámicamente un valor arbitrario de cabecera a la consulta requeriría una transformación personalizada; no se configura mediante una transformación integrada con un nombre inventado.` Registra una condición o una decisión que podrá contrastarse al revisar la etapa.
-- **Línea 43:** `` Las transformaciones de petición se aplican en el orden declarado dentro de `Transforms`; no existe una reordenación automática por categorías de ruta, cabecera y consulta. El alias docente declara: `` Conserva esta explicación o instrucción operativa dentro del documento de la etapa.
-- **Línea 45:** `` 1. `PathRemovePrefix: /inventario`. `` Conserva esta explicación o instrucción operativa dentro del documento de la etapa.
-- **Línea 46:** `` 2. `RequestHeader: X-Canal` con `Set: Gateway`. `` Conserva esta explicación o instrucción operativa dentro del documento de la etapa.
-- **Línea 47:** `` 3. `QueryValueParameter: canal` con `Set: gateway`. `` Conserva esta explicación o instrucción operativa dentro del documento de la etapa.
-- **Línea 49:** `` Así, `/inventario/api/v1/materiales/Acero` se reenvía como `/api/v1/materiales/Acero`, conservando `/api/v1`. El proxy añade X-Canal: Gateway y fija canal=gateway; no elimina el prefijo de versión del backend. `` Conserva esta explicación o instrucción operativa dentro del documento de la etapa.
-- **Línea 53:** `` La ruta se selecciona según el valor de una cabecera declarada en `Match.Headers`. `` Conserva esta explicación o instrucción operativa dentro del documento de la etapa.
-- **Línea 57:** `` 1. Documentar primero `Order` y después la especificidad; no confiar en el orden de escritura del JSON. `` Conserva esta explicación o instrucción operativa dentro del documento de la etapa.
-- **Línea 65:** `| Elemento | Aplicación |` Añade una fila a la tabla documental; sus columnas deben conservarse al copiarla.
+`` Un `Order` menor prevalece sobre uno mayor antes de comparar la especificidad. Con el mismo `Order`, un patrón específico tiene mayor precedencia que otro más general. En el alias de Inventario se utiliza `Order: -10`; no hay una restricción general de YARP que obligue a usar órdenes no negativos. `` Conserva esta explicación o instrucción operativa dentro del documento de la etapa. `` - `PathRemovePrefix`: elimina un prefijo. `` Registra una condición o una decisión que podrá contrastarse al revisar la etapa. `` - `PathSet`: establece una ruta fija. `` Registra una condición o una decisión que podrá contrastarse al revisar la etapa.
 
-**Por qué funciona así.** el documento de enrutamiento de peticiones es el artefacto de `docs` específico del punto 8.3. No modifica los 46 documentos existentes del punto 8.2.
+`` - `PathPattern`: aplica un patrón. `` Registra una condición o una decisión que podrá contrastarse al revisar la etapa. `` - `RequestHeader` con `Set` o `Append`: fija o añade un valor de cabecera de petición. Para eliminarla se utiliza `RequestHeaderRemove`. `` Registra una condición o una decisión que podrá contrastarse al revisar la etapa. `` - `ResponseHeader` con `Set` o `Append`: fija o añade un valor de cabecera de respuesta. Para eliminarla se utiliza `ResponseHeaderRemove`. `` Registra una condición o una decisión que podrá contrastarse al revisar la etapa.
+
+`` - `Set` en estas transformaciones asigna un literal. Por ejemplo, `Set: generated` enviaría el texto generated; no genera un identificador. La correlación dinámica se obtiene del middleware de M07 y se propaga mediante código. `` Registra una condición o una decisión que podrá contrastarse al revisar la etapa. `` - `QueryRouteParameter`: establece el nombre del parámetro de consulta; su `Set` o `Append` indica el nombre del valor de ruta del que se toma el dato. `` Registra una condición o una decisión que podrá contrastarse al revisar la etapa. `` - `QueryValueParameter`: establece el nombre del parámetro de consulta; su `Set` o `Append` contiene un valor literal. En el alias se utiliza `QueryValueParameter: canal` con `Set: gateway`. `` Registra una condición o una decisión que podrá contrastarse al revisar la etapa.
+
+Registra una condición o una decisión que podrá contrastarse al revisar la etapa. `` Las transformaciones de petición se aplican en el orden declarado dentro de `Transforms`; no existe una reordenación automática por categorías de ruta, cabecera y consulta. El alias docente declara: `` Conserva esta explicación o instrucción operativa dentro del documento de la etapa. `` 1. `PathRemovePrefix: /inventario`. `` Conserva esta explicación o instrucción operativa dentro del documento de la etapa.
+
+`` 2. `RequestHeader: X-Canal` con `Set: Gateway`. `` Conserva esta explicación o instrucción operativa dentro del documento de la etapa. `` 3. `QueryValueParameter: canal` con `Set: gateway`. `` Conserva esta explicación o instrucción operativa dentro del documento de la etapa. `` Así, `/inventario/api/v1/materiales/Acero` se reenvía como `/api/v1/materiales/Acero`, conservando `/api/v1`. El proxy añade X-Canal: Gateway y fija canal=gateway; no elimina el prefijo de versión del backend. `` Conserva esta explicación o instrucción operativa dentro del documento de la etapa.
+
+`` La ruta se selecciona según el valor de una cabecera declarada en `Match.Headers`. `` Conserva esta explicación o instrucción operativa dentro del documento de la etapa. `` 1. Documentar primero `Order` y después la especificidad; no confiar en el orden de escritura del JSON. `` Conserva esta explicación o instrucción operativa dentro del documento de la etapa. Añade una fila a la tabla documental; sus columnas deben conservarse al copiarla.
 
 **Verificación concreta.** El documento existe, su vista previa mantiene los encabezados y los documentos heredados conservan sus hashes.
 
@@ -3506,14 +3294,13 @@ El directorio anterior se conserva intacto. Las copias del punto actual incluyen
 
 ### PASO 8.3.5 — Crear la carpeta `Enrutamiento` en el proyecto de Producción
 
-**Procedimiento guiado.**
+La carpeta separa el modelo y su validador de las implementaciones HTTP y del dominio. El catálogo describe decisiones; no modifica por sí mismo el proxy.
 
 1. En Solution Explorer expande `src/AceriaApp.Api`.
 2. Crea dentro de ese proyecto una carpeta llamada `Enrutamiento`.
 3. Comprueba que su ruta es `src/AceriaApp.Api/Enrutamiento` y que no está dentro de otra carpeta de catálogo.
 4. Conserva las carpetas anteriores; esta carpeta agrupa únicamente el ejercicio de análisis del punto.
 
-**Por qué funciona así.** La carpeta separa el modelo y su validador de las implementaciones HTTP y del dominio. El catálogo describe decisiones; no modifica por sí mismo el proxy.
 
 **Verificación concreta.** Conserva las carpetas anteriores; esta carpeta agrupa únicamente el ejercicio de análisis del punto.
 
@@ -3525,7 +3312,7 @@ El directorio anterior se conserva intacto. Las copias del punto actual incluyen
 
 ### PASO 8.3.6 — Crear la clase `ReglaEnrutamiento`
 
-**Procedimiento guiado.**
+ReglaEnrutamiento describe la correspondencia entre una ruta pública y su destino. En la implementación real hay que comprobar también las transformaciones del prefijo y los parámetros de ruta que llegan al backend.
 
 1. Crea `src/AceriaApp.Api/Enrutamiento/ReglaEnrutamiento.cs` dentro de la carpeta actual.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -3549,15 +3336,7 @@ public class ReglaEnrutamiento
 }
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
-
-- **Línea 1:** `namespace AceriaApp.Api.Enrutamiento;` Sitúa los tipos en un espacio de nombres propio, separado del resto de etapas y responsabilidades.
-- **Línea 3:** `public class ReglaEnrutamiento` Declara el tipo responsable de este comportamiento; sus miembros quedan dentro del bloque siguiente.
-- **Línea 4:** `{` Abre el bloque cuyo contenido se ejecuta o inicializa dentro del contexto inmediatamente anterior.
-- **Línea 5:** `public string Patron { get; init; } = string.Empty;` Expone la propiedad indicada; init limita su asignación a la construcción del objeto y evita cambios posteriores accidentales.
-- **Línea 11:** `}` Cierra el bloque o la expresión anterior; conserva el delimitador para mantener su alcance.
-
-**Por qué funciona así.** la clase `ReglaEnrutamiento` modela una regla de enrutamiento con su patrón, método HTTP, orden y tres indicadores de transformación. Es la unidad de información del validador.
+Sitúa los tipos en un espacio de nombres propio, separado del resto de etapas y responsabilidades. Declara el tipo responsable de este comportamiento; sus miembros quedan dentro del bloque siguiente. Expone la propiedad indicada; init limita su asignación a la construcción del objeto y evita cambios posteriores accidentales.
 
 **Verificación concreta.** Los archivos indicados contienen todos los bloques y la compilación del proyecto termina sin errores.
 
@@ -3569,7 +3348,7 @@ public class ReglaEnrutamiento
 
 ### PASO 8.3.7 — Crear la clase `ValidadorEnrutamiento`
 
-**Procedimiento guiado.**
+El validador de reglas estudia conflictos y coherencia de las descripciones. La prueba de tráfico verifica otra propiedad: que la ruta pública se transforma y llega al endpoint esperado sin perder datos.
 
 1. Crea `src/AceriaApp.Api/Enrutamiento/ValidadorEnrutamiento.cs` dentro de la carpeta actual.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -3628,20 +3407,13 @@ public class ValidadorEnrutamiento
 public record ResultadoEnrutamiento(bool EsValida, IReadOnlyList<string> Errores);
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
+Asigna el valor indicado a esta variable, propiedad u opción dentro de la operación actual. Declara la operación, sus parámetros y su resultado; el bloque siguiente contiene su implementación. Obtiene o prepara este valor local para las comprobaciones y operaciones que siguen.
 
-- **Línea 5:** `private static readonly string[] MetodosPermitidos = { "GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS" };` Asigna el valor indicado a esta variable, propiedad u opción dentro de la operación actual.
-- **Línea 7:** `public ResultadoEnrutamiento Validar(IEnumerable<ReglaEnrutamiento> reglas)` Declara la operación, sus parámetros y su resultado; el bloque siguiente contiene su implementación.
-- **Línea 9:** `var errores = new List<string>();` Obtiene o prepara este valor local para las comprobaciones y operaciones que siguen.
-- **Línea 10:** `var lista = reglas.ToList();` Materializa la secuencia para consultar y recorrer los mismos elementos sin repetir su enumeración.
-- **Línea 12:** `if (lista.Count == 0)` Evalúa esta condición antes de continuar; el bloque asociado trata específicamente ese caso.
-- **Línea 14:** `errores.Add("No hay reglas declaradas.");` Acumula un incumplimiento del contrato didáctico; el resultado final indicará que la declaración no es válida.
-- **Línea 17:** `foreach (var regla in lista)` Recorre los elementos de la colección para aplicarles la misma comprobación.
-- **Línea 35:** `!regla.TieneTransformacionDeCabecera &&` Completa esta expresión o invocación dentro de ValidadorEnrutamiento.cs; se conserva íntegra para reproducir el comportamiento.
-- **Línea 42:** `return new ResultadoEnrutamiento(errores.Count == 0, errores);` Devuelve el resultado calculado al llamador y termina este recorrido del método.
-- **Línea 46:** `public record ResultadoEnrutamiento(bool EsValida, IReadOnlyList<string> Errores);` Define un contrato de datos con los campos que el consumidor utilizará para interpretar el resultado.
+Materializa la secuencia para consultar y recorrer los mismos elementos sin repetir su enumeración. Evalúa esta condición antes de continuar; el bloque asociado trata específicamente ese caso. Acumula un incumplimiento del contrato didáctico; el resultado final indicará que la declaración no es válida.
 
-**Por qué funciona así.** la clase `ValidadorEnrutamiento` comprueba que cada regla declara patrón, un método HTTP permitido, un orden no negativo y al menos una transformación.
+Recorre los elementos de la colección para aplicarles la misma comprobación. Completa esta expresión o invocación dentro de ValidadorEnrutamiento.cs; se conserva íntegra para reproducir el comportamiento. Devuelve el resultado calculado al llamador y termina este recorrido del método.
+
+Define un contrato de datos con los campos que el consumidor utilizará para interpretar el resultado.
 
 **Verificación concreta.** Los archivos indicados contienen todos los bloques y la compilación del proyecto termina sin errores.
 
@@ -3653,7 +3425,7 @@ public record ResultadoEnrutamiento(bool EsValida, IReadOnlyList<string> Errores
 
 ### PASO 8.3.8 — Añadir los `using` necesarios en `ValidadorEnrutamiento`
 
-**Procedimiento guiado.**
+Los tipos `List<string>` e `IReadOnlyList<string>` pertenecen a `System.Collections.Generic`. Los métodos `Contains` y `ToList` pertenecen a `System.Linq`. En proyectos con `ImplicitUsings` desactivado, hay que añadir los usings explícitos.
 
 1. Abre `src/AceriaApp.Api/Enrutamiento/ValidadorEnrutamiento.cs` dentro de la carpeta actual.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -3714,11 +3486,7 @@ public class ValidadorEnrutamiento
 public record ResultadoEnrutamiento(bool EsValida, IReadOnlyList<string> Errores);
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
-
-- **Línea 1:** `using System.Collections.Generic;` Importa el espacio de nombres requerido por los tipos y métodos utilizados en este archivo.
-
-**Por qué funciona así.** los tipos `List<string>` e `IReadOnlyList<string>` pertenecen a `System.Collections.Generic`. Los métodos `Contains` y `ToList` pertenecen a `System.Linq`. En proyectos con `ImplicitUsings` desactivado, hay que añadir los usings explícitos.
+Importa el espacio de nombres requerido por los tipos y métodos utilizados en este archivo.
 
 **Verificación concreta.** Los archivos indicados contienen todos los bloques y la compilación del proyecto termina sin errores.
 
@@ -3730,7 +3498,7 @@ public record ResultadoEnrutamiento(bool EsValida, IReadOnlyList<string> Errores
 
 ### PASO 8.3.9 — Crear la clase `CatalogoReglasEnrutamiento`
 
-**Procedimiento guiado.**
+CatalogoReglasEnrutamiento facilita comparar propuestas. Su resultado no cambia la tabla de rutas activa en YARP hasta que se modifique y recargue la configuración real.
 
 1. Crea `src/AceriaApp.Api/Enrutamiento/CatalogoReglasEnrutamiento.cs` dentro de la carpeta actual.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -3790,11 +3558,7 @@ public class CatalogoReglasEnrutamiento
 }
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
-
-- **Línea 9:** `new()` Completa esta expresión o invocación dentro de CatalogoReglasEnrutamiento.cs; se conserva íntegra para reproducir el comportamiento.
-
-**Por qué funciona así.** la clase `CatalogoReglasEnrutamiento` contiene las reglas por defecto del proyecto. Se usan en los tests y en la validación automática.
+Completa esta expresión o invocación dentro de CatalogoReglasEnrutamiento.cs; se conserva íntegra para reproducir el comportamiento.
 
 **Verificación concreta.** Los archivos indicados contienen todos los bloques y la compilación del proyecto termina sin errores.
 
@@ -3806,7 +3570,7 @@ public class CatalogoReglasEnrutamiento
 
 ### PASO 8.3.10 — Añadir el `using` necesario en `CatalogoReglasEnrutamiento`
 
-**Procedimiento guiado.**
+El tipo `List<T>` pertenece a `System.Collections.Generic`. En proyectos con `ImplicitUsings` desactivado, hay que añadir el using explícito.
 
 1. Abre `src/AceriaApp.Api/Enrutamiento/CatalogoReglasEnrutamiento.cs` dentro de la carpeta actual.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -3867,11 +3631,6 @@ public class CatalogoReglasEnrutamiento
 }
 ```
 
-
-
-
-**Por qué funciona así.** el tipo `List<T>` pertenece a `System.Collections.Generic`. En proyectos con `ImplicitUsings` desactivado, hay que añadir el using explícito.
-
 **Verificación concreta.** Los archivos indicados contienen todos los bloques y la compilación del proyecto termina sin errores.
 
 **Diagnóstico si falla.**
@@ -3882,7 +3641,7 @@ public class CatalogoReglasEnrutamiento
 
 ### PASO 8.3.11 — Crear el proyecto de tests del punto 8.3
 
-**Procedimiento guiado.**
+El punto 8.3 añade un proyecto de tests específico para las clases de enrutamiento. Se crea como proyecto nuevo sin modificar los proyectos de tests existentes.
 
 1. Crea manualmente `tests/AceriaApp.Enrutamiento.Tests` y su archivo `.csproj`; al usar este bloque no se genera `UnitTest1.cs`.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -3909,13 +3668,7 @@ public class CatalogoReglasEnrutamiento
 </Project>
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
-
-- **Línea 1:** `<Project Sdk="Microsoft.NET.Sdk">` Organiza propiedades o referencias del proyecto MSBuild; conserva la apertura y el cierre de los elementos.
-- **Línea 3:** `<TargetFramework>net8.0</TargetFramework>` Configura .NET 8 y las opciones de compilación de este proyecto.
-- **Línea 10:** `<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />` Fija la dependencia y su versión para restaurar el mismo paquete en cada equipo.
-
-**Por qué funciona así.** el punto 8.3 añade un proyecto de tests específico para las clases de enrutamiento. Se crea como proyecto nuevo sin modificar los proyectos de tests existentes.
+Organiza propiedades o referencias del proyecto MSBuild; conserva la apertura y el cierre de los elementos. Configura .NET 8 y las opciones de compilación de este proyecto. Fija la dependencia y su versión para restaurar el mismo paquete en cada equipo.
 
 **Verificación concreta.** Los archivos indicados contienen todos los bloques y la compilación del proyecto termina sin errores.
 
@@ -3927,7 +3680,7 @@ public class CatalogoReglasEnrutamiento
 
 ### PASO 8.3.12 — Añadir la referencia del proyecto de tests a la API de Producción
 
-**Procedimiento guiado.**
+La referencia permite que el proyecto de tests acceda a las clases de `Enrutamiento` del proyecto de Producción.
 
 1. Abre `tests/AceriaApp.Enrutamiento.Tests/AceriaApp.Enrutamiento.Tests.csproj` y añade la referencia a `AceriaApp.Api` usando el archivo completo siguiente.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -3955,11 +3708,7 @@ public class CatalogoReglasEnrutamiento
 </Project>
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
-
-- **Línea 10:** `<ProjectReference Include="../../src/AceriaApp.Api/AceriaApp.Api.csproj" />` Referencia el proyecto indicado mediante una ruta relativa a este archivo .csproj.
-
-**Por qué funciona así.** la referencia permite que el proyecto de tests acceda a las clases de `Enrutamiento` del proyecto de Producción.
+Referencia el proyecto indicado mediante una ruta relativa a este archivo .csproj.
 
 **Verificación concreta.** Los archivos indicados contienen todos los bloques y la compilación del proyecto termina sin errores.
 
@@ -3971,7 +3720,7 @@ public class CatalogoReglasEnrutamiento
 
 ### PASO 8.3.13 — Añadir el paquete `FluentAssertions` al proyecto de tests
 
-**Procedimiento guiado.**
+`FluentAssertions` proporciona la sintaxis de aserción usada en el curso. Se añade al nuevo proyecto de tests sin modificar los proyectos de tests existentes.
 
 1. Abre `tests/AceriaApp.Enrutamiento.Tests/AceriaApp.Enrutamiento.Tests.csproj` y fija FluentAssertions 6.12.2 con el archivo completo siguiente.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -4000,11 +3749,6 @@ public class CatalogoReglasEnrutamiento
 </Project>
 ```
 
-
-
-
-**Por qué funciona así.** `FluentAssertions` proporciona la sintaxis de aserción usada en el curso. Se añade al nuevo proyecto de tests sin modificar los proyectos de tests existentes.
-
 **Verificación concreta.** Los archivos indicados contienen todos los bloques y la compilación del proyecto termina sin errores.
 
 **Diagnóstico si falla.**
@@ -4015,7 +3759,7 @@ public class CatalogoReglasEnrutamiento
 
 ### PASO 8.3.14 — Crear el archivo `ValidadorEnrutamientoTests.cs`
 
-**Procedimiento guiado.**
+Los tests verifican que el validador acepta el catálogo por defecto y rechaza las reglas que violan las reglas de enrutamiento.
 
 1. Crea `tests/AceriaApp.Enrutamiento.Tests/ValidadorEnrutamientoTests.cs` dentro de la carpeta actual.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -4098,12 +3842,7 @@ public class ValidadorEnrutamientoTests
 }
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
-
-- **Línea 11:** `[Fact]` Declara una prueba individual que xUnit debe descubrir y ejecutar.
-- **Línea 16:** `resultado.EsValida.Should().BeTrue();` Comprueba esta condición observable; una diferencia hace fallar la prueba en vez de ocultar el problema.
-
-**Por qué funciona así.** los tests verifican que el validador acepta el catálogo por defecto y rechaza las reglas que violan las reglas de enrutamiento.
+Declara una prueba individual que xUnit debe descubrir y ejecutar. Comprueba esta condición observable; una diferencia hace fallar la prueba en vez de ocultar el problema.
 
 **Verificación concreta.** Los archivos indicados contienen todos los bloques y la compilación del proyecto termina sin errores.
 
@@ -4115,7 +3854,7 @@ public class ValidadorEnrutamientoTests
 
 ### PASO 8.3.15 — Crear el archivo `CatalogoReglasEnrutamientoTests.cs`
 
-**Procedimiento guiado.**
+Los tests verifican que el catálogo por defecto contiene las reglas esperadas, ordenadas ascendentemente y con las transformaciones requeridas.
 
 1. Crea `tests/AceriaApp.Enrutamiento.Tests/CatalogoReglasEnrutamientoTests.cs` dentro de la carpeta actual.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -4177,11 +3916,6 @@ public class CatalogoReglasEnrutamientoTests
 }
 ```
 
-
-
-
-**Por qué funciona así.** los tests verifican que el catálogo por defecto contiene las reglas esperadas, ordenadas ascendentemente y con las transformaciones requeridas.
-
 **Verificación concreta.** Los archivos indicados contienen todos los bloques y la compilación del proyecto termina sin errores.
 
 **Diagnóstico si falla.**
@@ -4192,7 +3926,7 @@ public class CatalogoReglasEnrutamientoTests
 
 ### PASO 8.3.16 — Compilar la solución completa
 
-**Procedimiento guiado.**
+El ensayo de enrutamiento debe relacionar respuesta, código HTTP y backend seleccionado. Una cabecera de correlación válida tiene que propagarse según la política configurada, y las rutas heredadas deben seguir funcionando.
 
 1. Escribe todos los archivos de ampliación funcional mostrados a continuación antes de compilar; cuando se indica reemplazar, sustituye el contenido de la copia actual.
 2. Desde la carpeta actual ejecuta `dotnet sln AceriaApp.sln add (Get-ChildItem src,tests -Recurse -Filter *.csproj | ForEach-Object FullName)` en PowerShell 7.
@@ -4317,37 +4051,25 @@ public class CatalogoReglasEnrutamientoTests
 }
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
+Abre o cierra esta estructura JSON; las comas y delimitadores mantienen válido el documento. Establece la dirección de escucha de este proceso; conserva el nombre y el tipo json. Asigna este valor a la opción observabilidad; conserva el nombre y el tipo json.
 
-- **Línea 1:** `{` Abre o cierra esta estructura JSON; las comas y delimitadores mantienen válido el documento.
-- **Línea 2:** `"Urls": "http://localhost:5100",` Establece la dirección de escucha de este proceso; conserva el nombre y el tipo json.
-- **Línea 3:** `"Observabilidad": {` Asigna este valor a la opción observabilidad; conserva el nombre y el tipo json.
-- **Línea 4:** `"NivelMinimo": "Information"` Asigna este valor a la opción nivelminimo; conserva el nombre y el tipo json.
-- **Línea 6:** `"ReverseProxy": {` Reúne la configuración que lee addreverseproxy; conserva el nombre y el tipo json.
-- **Línea 7:** `"Routes": {` Declara las rutas públicas que yarp puede seleccionar; conserva el nombre y el tipo json.
-- **Línea 8:** `"ordenes": {` Asigna este valor a la opción ordenes; conserva el nombre y el tipo json.
-- **Línea 9:** `"ClusterId": "produccion-cluster",` Vincula la ruta con un cluster existente; conserva el nombre y el tipo json.
-- **Línea 10:** `"Match": {` Asigna este valor a la opción match; conserva el nombre y el tipo json.
-- **Línea 11:** `"Path": "/api/v1/ordenes/{**resto}"` Define el patrón público o la ruta del sondeo según su sección; conserva el nombre y el tipo json.
-- **Línea 14:** `"produccion": {` Asigna este valor a la opción produccion; conserva el nombre y el tipo json.
-- **Línea 20:** `"comunicacion": {` Asigna este valor a la opción comunicacion; conserva el nombre y el tipo json.
-- **Línea 26:** `"materiales": {` Asigna este valor a la opción materiales; conserva el nombre y el tipo json.
-- **Línea 30:** `"Methods": [` Restringe los métodos que esta ruta admite; conserva el nombre y el tipo json.
-- **Línea 36:** `"planificaciones": {` Asigna este valor a la opción planificaciones; conserva el nombre y el tipo json.
-- **Línea 46:** `"inventario-materiales": {` Asigna este valor a la opción inventario-materiales; conserva el nombre y el tipo json.
-- **Línea 48:** `"Order": -10,` Asigna prioridad explícita; los valores menores se evalúan antes; conserva el nombre y el tipo json.
-- **Línea 56:** `"Transforms": [` Declara cambios ordenados sobre la petición reenviada; conserva el nombre y el tipo json.
-- **Línea 58:** `"PathRemovePrefix": "/inventario"` Elimina únicamente el prefijo configurado; conserva el nombre y el tipo json.
-- **Línea 61:** `"RequestHeader": "X-Canal",` Selecciona la cabecera que se transforma; conserva el nombre y el tipo json.
-- **Línea 62:** `"Set": "Gateway"` Fija un valor literal; no ejecuta código ni genera identificadores; conserva el nombre y el tipo json.
-- **Línea 65:** `"QueryValueParameter": "canal",` Selecciona un parámetro de consulta para el valor literal configurado; conserva el nombre y el tipo json.
-- **Línea 70:** `"inventario-planificaciones": {` Asigna este valor a la opción inventario-planificaciones; conserva el nombre y el tipo json.
-- **Línea 95:** `"Clusters": {` Agrupa destinos que ofrecen el mismo contrato http; conserva el nombre y el tipo json.
-- **Línea 96:** `"produccion-cluster": {` Asigna este valor a la opción produccion-cluster; conserva el nombre y el tipo json.
-- **Línea 97:** `"Destinations": {` Enumera instancias del servicio, no servicios con contratos diferentes; conserva el nombre y el tipo json.
-- **Línea 99:** `"Address": "http://localhost:5105/"` Establece la url interna del destino; conserva el nombre y el tipo json.
-- **Línea 103:** `"inventario-cluster": {` Asigna este valor a la opción inventario-cluster; conserva el nombre y el tipo json.
-- **Línea 105:** `"inventario-1": {` Asigna este valor a la opción inventario-1; conserva el nombre y el tipo json.
+Asigna este valor a la opción nivelminimo; conserva el nombre y el tipo json. Reúne la configuración que lee addreverseproxy; conserva el nombre y el tipo json. Declara las rutas públicas que yarp puede seleccionar; conserva el nombre y el tipo json.
+
+Asigna este valor a la opción ordenes; conserva el nombre y el tipo json. Vincula la ruta con un cluster existente; conserva el nombre y el tipo json. Asigna este valor a la opción match; conserva el nombre y el tipo json.
+
+Define el patrón público o la ruta del sondeo según su sección; conserva el nombre y el tipo json. Asigna este valor a la opción produccion; conserva el nombre y el tipo json. Asigna este valor a la opción comunicacion; conserva el nombre y el tipo json.
+
+Asigna este valor a la opción materiales; conserva el nombre y el tipo json. Restringe los métodos que esta ruta admite; conserva el nombre y el tipo json. Asigna este valor a la opción planificaciones; conserva el nombre y el tipo json.
+
+Asigna este valor a la opción inventario-materiales; conserva el nombre y el tipo json. Asigna prioridad explícita; los valores menores se evalúan antes; conserva el nombre y el tipo json. Declara cambios ordenados sobre la petición reenviada; conserva el nombre y el tipo json.
+
+Elimina únicamente el prefijo configurado; conserva el nombre y el tipo json. Selecciona la cabecera que se transforma; conserva el nombre y el tipo json. Fija un valor literal; no ejecuta código ni genera identificadores; conserva el nombre y el tipo json.
+
+Selecciona un parámetro de consulta para el valor literal configurado; conserva el nombre y el tipo json. Asigna este valor a la opción inventario-planificaciones; conserva el nombre y el tipo json. Agrupa destinos que ofrecen el mismo contrato http; conserva el nombre y el tipo json.
+
+Asigna este valor a la opción produccion-cluster; conserva el nombre y el tipo json. Enumera instancias del servicio, no servicios con contratos diferentes; conserva el nombre y el tipo json. Establece la url interna del destino; conserva el nombre y el tipo json.
+
+Asigna este valor a la opción inventario-cluster; conserva el nombre y el tipo json. Asigna este valor a la opción inventario-1; conserva el nombre y el tipo json.
 
 **Archivo:** `tests/AceriaApp.Enrutamiento.Tests/GatewayEnrutamientoFuncionalTests.cs`. **Operación:** Crear el contenido completo.
 
@@ -4446,15 +4168,11 @@ public sealed class GatewayEnrutamientoFuncionalTests
 }
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
+Documenta la intención de la instrucción próxima sin alterar su ejecución. Declara una prueba parametrizada; cada conjunto de datos produce una ejecución. Proporciona un caso de entrada concreto para la prueba parametrizada.
 
-- **Línea 12:** `// Detecta prefijo sin retirar y Set convertido por error en Append o literal no admitido.` Documenta la intención de la instrucción próxima sin alterar su ejecución.
-- **Línea 13:** `[Theory]` Declara una prueba parametrizada; cada conjunto de datos produce una ejecución.
-- **Línea 14:** `[InlineData("materiales/Acero")] [InlineData("planificaciones/42")]` Proporciona un caso de entrada concreto para la prueba parametrizada.
-- **Línea 17:** `await using var prueba = await GatewayPruebas.CrearAsync();` Delimita la vida del recurso y garantiza su disposición al salir del ámbito, también si ocurre una excepción; await using permite la disposición asíncrona.
-- **Línea 19:** `peticion.Headers.Add("X-Canal", "Cliente");` Lee o escribe la cabecera HTTP indicada; su valor debe coincidir con el contrato de transformación.
-- **Línea 22:** `var eco = await respuesta.Content.ReadFromJsonAsync<EcoPeticion>();` Espera la operación asíncrona sin bloquear el hilo; un fallo se propaga para poder detectarlo.
-- **Línea 70:** `builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>` Completa esta expresión o invocación dentro de GatewayEnrutamientoFuncionalTests.cs; se conserva íntegra para reproducir el comportamiento.
+Delimita la vida del recurso y garantiza su disposición al salir del ámbito, también si ocurre una excepción; await using permite la disposición asíncrona. Lee o escribe la cabecera HTTP indicada; su valor debe coincidir con el contrato de transformación. Espera la operación asíncrona sin bloquear el hilo; un fallo se propaga para poder detectarlo.
+
+Completa esta expresión o invocación dentro de GatewayEnrutamientoFuncionalTests.cs; se conserva íntegra para reproducir el comportamiento.
 
 **Archivo:** `tests/AceriaApp.Enrutamiento.Tests/AceriaApp.Enrutamiento.Tests.csproj`. **Operación:** Reemplazar el contenido completo.
 
@@ -4482,12 +4200,7 @@ public sealed class GatewayEnrutamientoFuncionalTests
 </Project>
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
-
-- **Línea 12:** `<FrameworkReference Include="Microsoft.AspNetCore.App" />` Hace disponibles las API del framework ASP.NET Core para los servidores de prueba.
-- **Línea 13:** `<Compile Include="../Compartido/GatewayPruebas.cs" Link="Compartido/GatewayPruebas.cs" />` Incluye el soporte de pruebas compartido en la compilación de este proyecto.
-
-**Por qué funciona así.** Las transformaciones declaradas se prueban contra servidores Kestrel y se mantienen las rutas de la etapa anterior.
+Hace disponibles las API del framework ASP.NET Core para los servidores de prueba. Incluye el soporte de pruebas compartido en la compilación de este proyecto.
 
 **Verificación concreta.** Ejecuta `dotnet sln AceriaApp.sln list` y verifica los 38 proyectos; el compilador debe terminar con cero errores.
 
@@ -4499,14 +4212,13 @@ public sealed class GatewayEnrutamientoFuncionalTests
 
 ### PASO 8.3.17 — Ejecutar todos los tests del punto 8.3
 
-**Procedimiento guiado.**
+Una prueba de catálogo acredita su declaración. Las pruebas funcionales utilizan el proxy y servidores HTTP reales, pero la persistencia y el broker se comprueban con la suite y el recorrido completo.
 
 1. Ejecuta `dotnet test tests/AceriaApp.Enrutamiento.Tests/AceriaApp.Enrutamiento.Tests.csproj -c Release --no-build` en la terminal.
 2. Comprueba que se ejecutan 25 pruebas: 10 de catálogo y 15 funcionales.
 3. Si hay un fallo, identifica su nombre y revisa la regla o la respuesta esperada antes de modificar código.
 4. Confirma cero errores y cero pruebas omitidas; el reto todavía no forma parte de esta etapa.
 
-**Por qué funciona así.** Una prueba de catálogo acredita su declaración. Las pruebas funcionales utilizan el proxy y servidores HTTP reales, pero la persistencia y el broker se comprueban con la suite y el recorrido completo.
 
 **Verificación concreta.** Confirma cero errores y cero pruebas omitidas; el reto todavía no forma parte de esta etapa.
 
@@ -4518,14 +4230,13 @@ public sealed class GatewayEnrutamientoFuncionalTests
 
 ### PASO 8.3.18 — Ejecutar todos los tests de la solución
 
-**Procedimiento guiado.**
+La suite completa comprueba que el nuevo punto no rompe la persistencia, la mensajería, el dominio, la observabilidad ni la resiliencia desarrollados antes.
 
 1. Configura `ACERIA_TEST_SQLSERVER` para tu SQL Server Express/LocalDB y `ACERIA_TEST_RABBITMQ` para el broker; sigue los requisitos del inicio del manual.
 2. Ejecuta `dotnet test AceriaApp.sln -c Release --no-build -m:1`.
 3. Comprueba que pasan las 476 pruebas acumuladas, incluidas las heredadas de M07, sin omisiones.
 4. Si falla la conexión, corrige el servicio, los permisos o la URI. Una prueba no ejecutada no se contabiliza como aprobada.
 
-**Por qué funciona así.** La suite completa comprueba que el nuevo punto no rompe la persistencia, la mensajería, el dominio, la observabilidad ni la resiliencia desarrollados antes.
 
 **Verificación concreta.** Si falla la conexión, corrige el servicio, los permisos o la URI. Una prueba no ejecutada no se contabiliza como aprobada.
 
@@ -4537,7 +4248,7 @@ public sealed class GatewayEnrutamientoFuncionalTests
 
 ### PASO 8.3.19 — Crear el README del punto 8.3
 
-**Procedimiento guiado.**
+El README del punto 8.3 explica el objetivo, el estado, la ejecución y los añadidos. No modifica el README del punto 8.2.
 
 1. Abre `README.md` dentro de la carpeta actual.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -4578,13 +4289,7 @@ El recorrido funcional inicia Gateway en 5100, Producción en 5105 e Inventario 
 - Las 46 fichas y decisiones anteriores permanecen idénticas.
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
-
-- **Línea 13:** `` Desde esta carpeta: `dotnet restore AceriaApp.sln`, `dotnet build AceriaApp.sln -c Release` y `dotnet test AceriaApp.sln -c Release`. Configura SQL Server/LocalDB y RabbitMQ según el manual antes de ejecutar la suite completa. `` Conserva esta explicación o instrucción operativa dentro del documento de la etapa.
-- **Línea 26:** `` - `docs/enrutamiento-peticiones.md`. `` Registra una condición o una decisión que podrá contrastarse al revisar la etapa.
-- **Línea 27:** `` - `docs/ADR-033-enrutamiento-peticiones.md`. `` Registra una condición o una decisión que podrá contrastarse al revisar la etapa.
-
-**Por qué funciona así.** el README del punto 8.3 explica el objetivo, el estado, la ejecución y los añadidos. No modifica el README del punto 8.2.
+`` Desde esta carpeta: `dotnet restore AceriaApp.sln`, `dotnet build AceriaApp.sln -c Release` y `dotnet test AceriaApp.sln -c Release`. Configura SQL Server/LocalDB y RabbitMQ según el manual antes de ejecutar la suite completa. `` Conserva esta explicación o instrucción operativa dentro del documento de la etapa. `` - `docs/enrutamiento-peticiones.md`. `` Registra una condición o una decisión que podrá contrastarse al revisar la etapa. `` - `docs/ADR-033-enrutamiento-peticiones.md`. `` Registra una condición o una decisión que podrá contrastarse al revisar la etapa.
 
 **Verificación concreta.** El documento existe, su vista previa mantiene los encabezados y los documentos heredados conservan sus hashes.
 
@@ -4596,7 +4301,7 @@ El recorrido funcional inicia Gateway en 5100, Producción en 5105 e Inventario 
 
 ### PASO 8.3.20 — Crear el ADR-033 del punto 8.3
 
-**Procedimiento guiado.**
+El ADR-033 documenta la decisión sobre el enrutamiento de peticiones. Es un artefacto nuevo del punto 8.3 que no modifica los ADR existentes.
 
 1. Crea `docs/ADR-033-enrutamiento-peticiones.md` dentro de la carpeta actual.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -4635,11 +4340,7 @@ Orden >= 0 y las transformaciones obligatorias son reglas del catálogo, no requ
 El directorio anterior se conserva intacto. Las copias del punto actual incluyen los cambios completos indicados en el manual.
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
-
-- **Línea 10:** `` Se documenta la selección de endpoints de ASP.NET Core: primero el menor `Order`, después la especificidad cuando Order coincide. Los órdenes negativos son válidos y la posición en el objeto JSON no establece la prioridad. Los recursos de Inventario y sus alias permiten GET y HEAD. Los alias `/inventario/api/v1/materiales/{**resto}` y `/inventario/api/v1/planificaciones/{**resto}` usan Order -10 y transformaciones en su orden declarado: eliminar solo `/inventario`, fijar `X-Canal: Gateway` y fijar `canal=gateway` mediante `QueryValueParameter`. No se elimina `/api/v1`. `QueryRouteParameter` obtiene un valor de ruta; `QueryValueParameter` usa un literal con Set o Append. Set en una cabecera también asigna un literal, no genera valores dinámicos. La correlación validada procede del middleware de M07 y se propaga por código. Los tests Kestrel comprueban coincidencia, métodos y transformaciones; el catálogo mantiene reglas pedagógicas propias. `` Conserva esta explicación o instrucción operativa dentro del documento de la etapa.
-
-**Por qué funciona así.** el ADR-033 documenta la decisión sobre el enrutamiento de peticiones. Es un artefacto nuevo del punto 8.3 que no modifica los ADR existentes.
+`` Se documenta la selección de endpoints de ASP.NET Core: primero el menor `Order`, después la especificidad cuando Order coincide. Los órdenes negativos son válidos y la posición en el objeto JSON no establece la prioridad. Los recursos de Inventario y sus alias permiten GET y HEAD. Los alias `/inventario/api/v1/materiales/{**resto}` y `/inventario/api/v1/planificaciones/{**resto}` usan Order -10 y transformaciones en su orden declarado: eliminar solo `/inventario`, fijar `X-Canal: Gateway` y fijar `canal=gateway` mediante `QueryValueParameter`. No se elimina `/api/v1`. `QueryRouteParameter` obtiene un valor de ruta; `QueryValueParameter` usa un literal con Set o Append. Set en una cabecera también asigna un literal, no genera valores dinámicos. La correlación validada procede del middleware de M07 y se propaga por código. Los tests Kestrel comprueban coincidencia, métodos y transformaciones; el catálogo mantiene reglas pedagógicas propias. `` Conserva esta explicación o instrucción operativa dentro del documento de la etapa.
 
 **Verificación concreta.** El documento existe, su vista previa mantiene los encabezados y los documentos heredados conservan sus hashes.
 
@@ -4651,14 +4352,13 @@ El directorio anterior se conserva intacto. Las copias del punto actual incluyen
 
 ### PASO 8.3.21 — Verificar que no se ha modificado ningún archivo del punto 8.2
 
-**Procedimiento guiado.**
+La progresión modifica copias independientes. Los nuevos archivos o configuraciones de una etapa no deben alterar un punto ya entregado.
 
 1. Abre las carpetas `docs` de la etapa actual y de `M08_API_GATEWAY/PROYECTO/8.2-configuracion-basica-yarp`.
 2. Compara con Get-FileHash los archivos que existían en la etapa anterior; cada hash SHA256 debe coincidir.
 3. Comprueba también que los archivos de tests heredados conservan su contenido; solo se incorporan los tests del punto.
 4. Verifica que `M08_API_GATEWAY/PROYECTO/8.2-configuracion-basica-yarp` no presenta modificaciones. Los cambios completos del punto pertenecen exclusivamente a `8.3-enrutamiento-peticiones`.
 
-**Por qué funciona así.** La progresión modifica copias independientes. Los nuevos archivos o configuraciones de una etapa no deben alterar un punto ya entregado.
 
 **Verificación concreta.** Verifica que `M08_API_GATEWAY/PROYECTO/8.2-configuracion-basica-yarp` no presenta modificaciones. Los cambios completos del punto pertenecen exclusivamente a `8.3-enrutamiento-peticiones`.
 
@@ -4670,14 +4370,13 @@ El directorio anterior se conserva intacto. Las copias del punto actual incluyen
 
 ### PASO 8.3.22 — Verificar la estructura del punto 8.3
 
-**Procedimiento guiado.**
+El inventario convierte la comprobación de estructura en una condición observable y detecta omisiones que una compilación aislada podría pasar por alto.
 
 1. Ejecuta `Get-ChildItem -Recurse -File` y revisa las carpetas src, tests y docs.
 2. Verifica 38 proyectos, 25 proyectos de pruebas y 48 documentos.
 3. Comprueba la presencia de las tres clases de `Enrutamiento`, sus tests, el documento temático y ADR-033.
 4. Comprueba que no has introducido carpetas temporales, labs ni metaprompts dentro del entregable.
 
-**Por qué funciona así.** El inventario convierte la comprobación de estructura en una condición observable y detecta omisiones que una compilación aislada podría pasar por alto.
 
 **Verificación concreta.** Comprueba que no has introducido carpetas temporales, labs ni metaprompts dentro del entregable.
 
@@ -4689,14 +4388,13 @@ El directorio anterior se conserva intacto. Las copias del punto actual incluyen
 
 ### PASO 8.3.23 — Verificar el `.gitignore` del punto 8.3
 
-**Procedimiento guiado.**
+Las exclusiones conservan un repositorio reproducible sin binarios temporales ni datos específicos de Visual Studio.
 
 1. Abre `.gitignore` de la etapa actual.
 2. Comprueba que contiene bin/, obj/, *.user, *.suo, .vs/ y TestResults/.
 3. Compara su contenido con el archivo heredado y conserva sus exclusiones.
 4. Ejecuta `git status --short` desde la raíz del curso y verifica que los artefactos de compilación no aparecen como entregables.
 
-**Por qué funciona así.** Las exclusiones conservan un repositorio reproducible sin binarios temporales ni datos específicos de Visual Studio.
 
 **Verificación concreta.** Ejecuta `git status --short` desde la raíz del curso y verifica que los artefactos de compilación no aparecen como entregables.
 
@@ -4708,14 +4406,13 @@ El directorio anterior se conserva intacto. Las copias del punto actual incluyen
 
 ### PASO 8.3.24 — Hacer el commit del punto 8.3 y verificar el estado final
 
-**Procedimiento guiado.**
+Un commit conserva el estado comprobado. El número de commits no tiene que coincidir con el de puntos: las correcciones y revisiones también forman parte del historial.
 
 1. Desde la raíz del repositorio ejecuta `git status --short` y revisa todos los cambios de la etapa.
 2. Añade exclusivamente los archivos docentes y del proyecto con `git add M08_API_GATEWAY/PROYECTO/8.3-enrutamiento-peticiones`.
 3. Ejecuta `git commit -m "Punto 8.3: Enrutamiento de peticiones"` después de comprobar las pruebas.
 4. Ejecuta `git log --oneline -5` y `git status --short`; confirma el hito y revisa cualquier archivo pendiente.
 
-**Por qué funciona así.** Un commit conserva el estado comprobado. El número de commits no tiene que coincidir con el de puntos: las correcciones y revisiones también forman parte del historial.
 
 **Verificación concreta.** Ejecuta `git log --oneline -5` y `git status --short`; confirma el hito y revisa cualquier archivo pendiente.
 
@@ -4789,9 +4486,6 @@ public record ResultadoEnrutamiento(bool EsValida, IReadOnlyList<string> Errores
 public record ResumenEnrutamiento(int Total, int ConTransformacionRuta, int ConTransformacionCabecera, int ConTransformacionConsulta);
 ```
 
-
-
-
 ### Ampliación 2: implementar el cálculo del resumen
 
 **Archivo:** `src/AceriaApp.Api/Enrutamiento/ValidadorEnrutamiento.cs`. **Operación:** Reemplazar el contenido completo.
@@ -4858,9 +4552,6 @@ public record ResultadoEnrutamiento(bool EsValida, IReadOnlyList<string> Errores
 
 public record ResumenEnrutamiento(int Total, int ConTransformacionRuta, int ConTransformacionCabecera, int ConTransformacionConsulta);
 ```
-
-
-
 
 ### Ampliación 3: verificar el resultado con el catálogo
 
@@ -4951,9 +4642,6 @@ public class ValidadorEnrutamientoTests
 }
 ```
 
-
-
-
 **Ejecución y resultado esperado.** En la copia optativa ejecuta `dotnet test AceriaApp.sln -c Release -m:1`. Deben pasar 477 pruebas; el proyecto `AceriaApp.Enrutamiento.Tests` debe ejecutar 26. Verifica que se ejecutó `Resumen_ConCatalogoPorDefecto_CalculaTotales` y que los cuatro puntos obligatorios no cambiaron. Registra el reto en un commit independiente cuando lo hayas comprobado.
 
 ### Resultado esperado del punto
@@ -4976,20 +4664,25 @@ El punto 8.3 ha definido el enrutamiento de peticiones en YARP con patrones, pre
 
 # Punto 8.4 — Balanceo de carga básico
 
+## Distribuir solicitudes entre destinos sin atribuir alta disponibilidad automática
+
+El balanceo de carga decide qué instancia recibe cada nueva petición cuando existen varios destinos equivalentes. Esto no significa que una regla RoundRobin repare por sí sola una instancia caída ni que el gateway garantice alta disponibilidad del sistema completo. Conviene diferenciar selección de destino, salud de las instancias y recuperación ante fallos.
+
+En el cierre de M08 combinaremos la configuración de YARP con ensayos de distribución y regresión de las rutas anteriores. Una lista de clusters válida es solo el punto de partida; el comportamiento debe observarse con backends accesibles, respuestas verificables y registros que permitan identificar qué destino atendió cada solicitud. El alcance docente no incluye una solución productiva completa de identidad, TLS ni cuotas.
+
 **Carpeta de trabajo:** `M08_API_GATEWAY/PROYECTO/8.4-balanceo-carga`.
 
 **Objetivo.** Completar los 24 pasos, conservar la etapa anterior y comprobar el catálogo y el comportamiento que incorpora este punto.
 
 ### PASO 8.4.1 — Crear la carpeta del punto 8.4 a partir del punto 8.3
 
-**Procedimiento guiado.**
+La copia conserva 38 proyectos y 476 pruebas antes de incorporar los cambios del punto.
 
 1. En el Explorador de archivos localiza `M08_API_GATEWAY/PROYECTO/8.3-enrutamiento-peticiones` y comprueba que contiene `AceriaApp.sln`, `src`, `tests`, `docs` y `global.json`.
 2. Crea la carpeta `M08_API_GATEWAY/PROYECTO/8.4-balanceo-carga` y copia allí el contenido de la etapa anterior, incluidas sus carpetas ocultas de configuración.
 3. Excluye `bin`, `obj`, `TestResults` y `.vs`; abre únicamente la copia `8.4-balanceo-carga` para realizar este punto.
 4. Ejecuta `Get-ChildItem -Force` en PowerShell dentro de la copia y comprueba que las carpetas y la solución siguen presentes.
 
-**Por qué funciona así.** La copia conserva 38 proyectos y 476 pruebas antes de incorporar los cambios del punto.
 
 **Verificación concreta.** Ejecuta `Get-ChildItem -Force` en PowerShell dentro de la copia y comprueba que las carpetas y la solución siguen presentes.
 
@@ -5002,14 +4695,13 @@ El punto 8.3 ha definido el enrutamiento de peticiones en YARP con patrones, pre
 
 ### PASO 8.4.2 — Abrir la solución copiada en Visual Studio con soporte .NET 8
 
-**Procedimiento guiado.**
+La compilación comprueba que la etapa anterior está completa y que el SDK .NET 8 resuelve sus dependencias.
 
 1. Abre en Visual Studio el archivo `AceriaApp.sln` de `8.4-balanceo-carga`.
 2. Abre Terminal en esa carpeta y ejecuta `dotnet sln AceriaApp.sln list`; deben aparecer 38 proyectos.
 3. Ejecuta `dotnet restore AceriaApp.sln` y después `dotnet build AceriaApp.sln -c Release`.
 4. Comprueba que la salida termina con compilación correcta y cero errores antes de continuar.
 
-**Por qué funciona así.** La compilación comprueba que la etapa anterior está completa y que el SDK .NET 8 resuelve sus dependencias.
 
 **Verificación concreta.** Comprueba que la salida termina con compilación correcta y cero errores antes de continuar.
 
@@ -5021,14 +4713,13 @@ El punto 8.3 ha definido el enrutamiento de peticiones en YARP con patrones, pre
 
 ### PASO 8.4.3 — Verificar que la carpeta `docs` contiene los documentos del punto 8.3
 
-**Procedimiento guiado.**
+Esta etapa añade dos documentos sin sobrescribir las 48 fichas y decisiones anteriores.
 
 1. Expande `docs` en Solution Explorer y ejecuta `(Get-ChildItem docs -Filter *.md).Count`.
 2. Comprueba que hay 48 documentos heredados y que incluyen los ADR-010 a ADR-033.
 3. Compara los nombres y contenidos con `docs` de `M08_API_GATEWAY/PROYECTO/8.3-enrutamiento-peticiones`.
 4. Confirma que todavía no existen `docs/balanceo-carga.md` ni `docs/ADR-034-balanceo-carga.md`.
 
-**Por qué funciona así.** Esta etapa añade dos documentos sin sobrescribir las 48 fichas y decisiones anteriores.
 
 **Verificación concreta.** Confirma que todavía no existen `docs/balanceo-carga.md` ni `docs/ADR-034-balanceo-carga.md`.
 
@@ -5040,7 +4731,7 @@ El punto 8.3 ha definido el enrutamiento de peticiones en YARP con patrones, pre
 
 ### PASO 8.4.4 — Crear el documento de balanceo de carga en `docs`
 
-**Procedimiento guiado.**
+El balanceo se estudia como selección de un destino entre varias instancias equivalentes. No hay que confundir esa política con recuperación garantizada si los servidores no están preparados o carecen de health checks.
 
 1. Crea `docs/balanceo-carga.md` dentro de la carpeta actual.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -5164,18 +4855,11 @@ El comportamiento a verificar es reparto entre ambas identidades, retirada de un
 El directorio anterior se conserva intacto. Las copias del punto actual incluyen los cambios completos indicados en el manual.
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
+Define este encabezado en el documento que el alumno conservará junto al proyecto. Conserva esta explicación o instrucción operativa dentro del documento de la etapa. Registra una condición o una decisión que podrá contrastarse al revisar la etapa.
 
-- **Línea 1:** `# Balanceo de carga básico — Punto 8.4` Define este encabezado en el documento que el alumno conservará junto al proyecto.
-- **Línea 2:** (línea vacía) Separa visualmente dos responsabilidades; no añade una instrucción ejecutable.
-- **Línea 5:** `Distribución del tráfico entre varias instancias de un servicio.` Conserva esta explicación o instrucción operativa dentro del documento de la etapa.
-- **Línea 9:** `- RoundRobin: distribución cíclica.` Registra una condición o una decisión que podrá contrastarse al revisar la etapa.
-- **Línea 39:** `` YARP no incorpora una propiedad nativa `Weight` en la configuración de destinos utilizada aquí. Un dato Weight en metadatos solo tendría efecto si una extensión lo interpretara y una política personalizada seleccionara los destinos según ese dato. El indicador TienePesos del catálogo expresa una decisión conceptual; no instala esa extensión. El laboratorio utiliza dos destinos equivalentes de Inventario sin ponderación. `` Conserva esta explicación o instrucción operativa dentro del documento de la etapa.
-- **Línea 43:** `` La propiedad `LoadBalancingPolicy` del cluster configura el algoritmo. Este módulo fija `RoundRobin` expresamente en inventario-cluster; no depende del algoritmo predeterminado de YARP. La sobrecarga sin argumentos de `MapReverseProxy()` incorpora el middleware de balanceo. El reparto cíclico se aplica a solicitudes nuevas entre destinos disponibles; no garantiza igual duración de trabajo ni reintenta escrituras. `` Conserva esta explicación o instrucción operativa dentro del documento de la etapa.
-- **Línea 47:** `` El cluster de Inventario activa sondeos a `/health/ready`, con intervalo y timeout de un segundo, política `ConsecutiveFailures` y umbral de dos fallos consecutivos. `AvailableDestinationsPolicy: HealthyAndUnknown` permite destinos sanos o todavía no clasificados y excluye los marcados Unhealthy. Si no queda ninguno disponible, devuelve 503; una petición ya asignada puede fallar durante la detección. Un sondeo satisfactorio permite reincorporar la instancia recuperada sin reiniciar el gateway. Estos checks deben configurarse: declarar su intención en el catálogo no los activa. `` Conserva esta explicación o instrucción operativa dentro del documento de la etapa.
-- **Línea 85:** `| Módulo | Tema | Puntos |` Añade una fila a la tabla documental; sus columnas deben conservarse al copiarla.
+`` YARP no incorpora una propiedad nativa `Weight` en la configuración de destinos utilizada aquí. Un dato Weight en metadatos solo tendría efecto si una extensión lo interpretara y una política personalizada seleccionara los destinos según ese dato. El indicador TienePesos del catálogo expresa una decisión conceptual; no instala esa extensión. El laboratorio utiliza dos destinos equivalentes de Inventario sin ponderación. `` Conserva esta explicación o instrucción operativa dentro del documento de la etapa. `` La propiedad `LoadBalancingPolicy` del cluster configura el algoritmo. Este módulo fija `RoundRobin` expresamente en inventario-cluster; no depende del algoritmo predeterminado de YARP. La sobrecarga sin argumentos de `MapReverseProxy()` incorpora el middleware de balanceo. El reparto cíclico se aplica a solicitudes nuevas entre destinos disponibles; no garantiza igual duración de trabajo ni reintenta escrituras. `` Conserva esta explicación o instrucción operativa dentro del documento de la etapa. `` El cluster de Inventario activa sondeos a `/health/ready`, con intervalo y timeout de un segundo, política `ConsecutiveFailures` y umbral de dos fallos consecutivos. `AvailableDestinationsPolicy: HealthyAndUnknown` permite destinos sanos o todavía no clasificados y excluye los marcados Unhealthy. Si no queda ninguno disponible, devuelve 503; una petición ya asignada puede fallar durante la detección. Un sondeo satisfactorio permite reincorporar la instancia recuperada sin reiniciar el gateway. Estos checks deben configurarse: declarar su intención en el catálogo no los activa. `` Conserva esta explicación o instrucción operativa dentro del documento de la etapa.
 
-**Por qué funciona así.** el documento de balanceo de carga es el artefacto de `docs` específico del punto 8.4. Incluye el cierre del módulo 8 y el cierre del curso. No modifica los 48 documentos existentes del punto 8.3.
+Añade una fila a la tabla documental; sus columnas deben conservarse al copiarla.
 
 **Verificación concreta.** El documento existe, su vista previa mantiene los encabezados y los documentos heredados conservan sus hashes.
 
@@ -5187,14 +4871,13 @@ El directorio anterior se conserva intacto. Las copias del punto actual incluyen
 
 ### PASO 8.4.5 — Crear la carpeta `Balanceo` en el proyecto de Producción
 
-**Procedimiento guiado.**
+La carpeta separa el modelo y su validador de las implementaciones HTTP y del dominio. El catálogo describe decisiones; no modifica por sí mismo el proxy.
 
 1. En Solution Explorer expande `src/AceriaApp.Api`.
 2. Crea dentro de ese proyecto una carpeta llamada `Balanceo`.
 3. Comprueba que su ruta es `src/AceriaApp.Api/Balanceo` y que no está dentro de otra carpeta de catálogo.
 4. Conserva las carpetas anteriores; esta carpeta agrupa únicamente el ejercicio de análisis del punto.
 
-**Por qué funciona así.** La carpeta separa el modelo y su validador de las implementaciones HTTP y del dominio. El catálogo describe decisiones; no modifica por sí mismo el proxy.
 
 **Verificación concreta.** Conserva las carpetas anteriores; esta carpeta agrupa únicamente el ejercicio de análisis del punto.
 
@@ -5206,7 +4889,7 @@ El directorio anterior se conserva intacto. Las copias del punto actual incluyen
 
 ### PASO 8.4.6 — Crear la clase `ClusterBalanceo`
 
-**Procedimiento guiado.**
+ClusterBalanceo contiene las características que queremos comparar. Los algoritmos reales actúan sobre destinos configurados en YARP; un campo que declara RoundRobin no distribuye por sí mismo las solicitudes.
 
 1. Crea `src/AceriaApp.Api/Balanceo/ClusterBalanceo.cs` dentro de la carpeta actual.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -5229,15 +4912,7 @@ public class ClusterBalanceo
 }
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
-
-- **Línea 1:** `namespace AceriaApp.Api.Balanceo;` Sitúa los tipos en un espacio de nombres propio, separado del resto de etapas y responsabilidades.
-- **Línea 3:** `public class ClusterBalanceo` Declara el tipo responsable de este comportamiento; sus miembros quedan dentro del bloque siguiente.
-- **Línea 4:** `{` Abre el bloque cuyo contenido se ejecuta o inicializa dentro del contexto inmediatamente anterior.
-- **Línea 5:** `public string Identificador { get; init; } = string.Empty;` Expone la propiedad indicada; init limita su asignación a la construcción del objeto y evita cambios posteriores accidentales.
-- **Línea 10:** `}` Cierra el bloque o la expresión anterior; conserva el delimitador para mantener su alcance.
-
-**Por qué funciona así.** la clase `ClusterBalanceo` modela un cluster con su identificador, política, número de destinos y dos indicadores. Es la unidad de información del validador.
+Sitúa los tipos en un espacio de nombres propio, separado del resto de etapas y responsabilidades. Declara el tipo responsable de este comportamiento; sus miembros quedan dentro del bloque siguiente. Expone la propiedad indicada; init limita su asignación a la construcción del objeto y evita cambios posteriores accidentales.
 
 **Verificación concreta.** Los archivos indicados contienen todos los bloques y la compilación del proyecto termina sin errores.
 
@@ -5249,7 +4924,7 @@ public class ClusterBalanceo
 
 ### PASO 8.4.7 — Crear la clase `ValidadorBalanceo`
 
-**Procedimiento guiado.**
+El validador de balanceo comprueba la descripción del escenario, mientras que una prueba de tráfico permite observar a qué instancia llegó cada petición. La segunda evidencia no puede deducirse de la primera.
 
 1. Crea `src/AceriaApp.Api/Balanceo/ValidadorBalanceo.cs` dentro de la carpeta actual.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -5306,19 +4981,11 @@ public class ValidadorBalanceo
 public record ResultadoBalanceo(bool EsValida, IReadOnlyList<string> Errores);
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
+Trabaja con la petición concreta sin convertirla en una operación de negocio nueva. Declara la operación, sus parámetros y su resultado; el bloque siguiente contiene su implementación. Obtiene o prepara este valor local para las comprobaciones y operaciones que siguen.
 
-- **Línea 5:** `private static readonly string[] PoliticasPermitidas = { "RoundRobin", "Random", "LeastRequests", "PowerOfTwoChoices" };` Trabaja con la petición concreta sin convertirla en una operación de negocio nueva.
-- **Línea 7:** `public ResultadoBalanceo Validar(IEnumerable<ClusterBalanceo> clusters)` Declara la operación, sus parámetros y su resultado; el bloque siguiente contiene su implementación.
-- **Línea 9:** `var errores = new List<string>();` Obtiene o prepara este valor local para las comprobaciones y operaciones que siguen.
-- **Línea 10:** `var lista = clusters.ToList();` Materializa la secuencia para consultar y recorrer los mismos elementos sin repetir su enumeración.
-- **Línea 12:** `if (lista.Count == 0)` Evalúa esta condición antes de continuar; el bloque asociado trata específicamente ese caso.
-- **Línea 14:** `errores.Add("No hay clusters declarados.");` Acumula un incumplimiento del contrato didáctico; el resultado final indicará que la declaración no es válida.
-- **Línea 17:** `foreach (var cluster in lista)` Recorre los elementos de la colección para aplicarles la misma comprobación.
-- **Línea 40:** `return new ResultadoBalanceo(errores.Count == 0, errores);` Devuelve el resultado calculado al llamador y termina este recorrido del método.
-- **Línea 44:** `public record ResultadoBalanceo(bool EsValida, IReadOnlyList<string> Errores);` Define un contrato de datos con los campos que el consumidor utilizará para interpretar el resultado.
+Materializa la secuencia para consultar y recorrer los mismos elementos sin repetir su enumeración. Evalúa esta condición antes de continuar; el bloque asociado trata específicamente ese caso. Acumula un incumplimiento del contrato didáctico; el resultado final indicará que la declaración no es válida.
 
-**Por qué funciona así.** la clase `ValidadorBalanceo` comprueba que cada cluster declara identificador, tiene una política permitida, tiene al menos dos destinos y está combinado con health checks.
+Recorre los elementos de la colección para aplicarles la misma comprobación. Devuelve el resultado calculado al llamador y termina este recorrido del método. Define un contrato de datos con los campos que el consumidor utilizará para interpretar el resultado.
 
 **Verificación concreta.** Los archivos indicados contienen todos los bloques y la compilación del proyecto termina sin errores.
 
@@ -5330,7 +4997,7 @@ public record ResultadoBalanceo(bool EsValida, IReadOnlyList<string> Errores);
 
 ### PASO 8.4.8 — Añadir los `using` necesarios en `ValidadorBalanceo`
 
-**Procedimiento guiado.**
+Los tipos `List<string>` e `IReadOnlyList<string>` pertenecen a `System.Collections.Generic`. Los métodos `Contains` y `ToList` pertenecen a `System.Linq`. En proyectos con `ImplicitUsings` desactivado, hay que añadir los usings explícitos.
 
 1. Abre `src/AceriaApp.Api/Balanceo/ValidadorBalanceo.cs` dentro de la carpeta actual.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -5389,11 +5056,7 @@ public class ValidadorBalanceo
 public record ResultadoBalanceo(bool EsValida, IReadOnlyList<string> Errores);
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
-
-- **Línea 1:** `using System.Collections.Generic;` Importa el espacio de nombres requerido por los tipos y métodos utilizados en este archivo.
-
-**Por qué funciona así.** los tipos `List<string>` e `IReadOnlyList<string>` pertenecen a `System.Collections.Generic`. Los métodos `Contains` y `ToList` pertenecen a `System.Linq`. En proyectos con `ImplicitUsings` desactivado, hay que añadir los usings explícitos.
+Importa el espacio de nombres requerido por los tipos y métodos utilizados en este archivo.
 
 **Verificación concreta.** Los archivos indicados contienen todos los bloques y la compilación del proyecto termina sin errores.
 
@@ -5405,7 +5068,7 @@ public record ResultadoBalanceo(bool EsValida, IReadOnlyList<string> Errores);
 
 ### PASO 8.4.9 — Crear la clase `CatalogoClustersBalanceo`
 
-**Procedimiento guiado.**
+CatalogoClustersBalanceo clasifica alternativas para el análisis. Conviene comprobar que existe más de un destino accesible antes de interpretar un supuesto reparto de carga como un resultado real.
 
 1. Crea `src/AceriaApp.Api/Balanceo/CatalogoClustersBalanceo.cs` dentro de la carpeta actual.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -5432,11 +5095,7 @@ public class CatalogoClustersBalanceo
 }
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
-
-- **Línea 9:** `new() { Identificador = "ordenes-cluster", Politica = "RoundRobin", NumeroDeDestinos = 3, TienePesos = false, CombinadoConHealthChecks = true },` Asigna el valor indicado a esta variable, propiedad u opción dentro de la operación actual.
-
-**Por qué funciona así.** la clase `CatalogoClustersBalanceo` contiene los clusters por defecto del proyecto. Se usan en los tests y en la validación automática.
+Asigna el valor indicado a esta variable, propiedad u opción dentro de la operación actual.
 
 **Verificación concreta.** Los archivos indicados contienen todos los bloques y la compilación del proyecto termina sin errores.
 
@@ -5448,7 +5107,7 @@ public class CatalogoClustersBalanceo
 
 ### PASO 8.4.10 — Añadir el `using` necesario en `CatalogoClustersBalanceo`
 
-**Procedimiento guiado.**
+El tipo `List<T>` pertenece a `System.Collections.Generic`. En proyectos con `ImplicitUsings` desactivado, hay que añadir el using explícito.
 
 1. Abre `src/AceriaApp.Api/Balanceo/CatalogoClustersBalanceo.cs` dentro de la carpeta actual.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -5476,11 +5135,6 @@ public class CatalogoClustersBalanceo
 }
 ```
 
-
-
-
-**Por qué funciona así.** el tipo `List<T>` pertenece a `System.Collections.Generic`. En proyectos con `ImplicitUsings` desactivado, hay que añadir el using explícito.
-
 **Verificación concreta.** Los archivos indicados contienen todos los bloques y la compilación del proyecto termina sin errores.
 
 **Diagnóstico si falla.**
@@ -5491,7 +5145,7 @@ public class CatalogoClustersBalanceo
 
 ### PASO 8.4.11 — Crear el proyecto de tests del punto 8.4
 
-**Procedimiento guiado.**
+El punto 8.4 añade un proyecto de tests específico para las clases de balanceo. Se crea como proyecto nuevo sin modificar los proyectos de tests existentes.
 
 1. Crea manualmente `tests/AceriaApp.Balanceo.Tests` y su archivo `.csproj`; al usar este bloque no se genera `UnitTest1.cs`.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -5518,13 +5172,7 @@ public class CatalogoClustersBalanceo
 </Project>
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
-
-- **Línea 1:** `<Project Sdk="Microsoft.NET.Sdk">` Organiza propiedades o referencias del proyecto MSBuild; conserva la apertura y el cierre de los elementos.
-- **Línea 3:** `<TargetFramework>net8.0</TargetFramework>` Configura .NET 8 y las opciones de compilación de este proyecto.
-- **Línea 10:** `<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />` Fija la dependencia y su versión para restaurar el mismo paquete en cada equipo.
-
-**Por qué funciona así.** el punto 8.4 añade un proyecto de tests específico para las clases de balanceo. Se crea como proyecto nuevo sin modificar los proyectos de tests existentes.
+Organiza propiedades o referencias del proyecto MSBuild; conserva la apertura y el cierre de los elementos. Configura .NET 8 y las opciones de compilación de este proyecto. Fija la dependencia y su versión para restaurar el mismo paquete en cada equipo.
 
 **Verificación concreta.** Los archivos indicados contienen todos los bloques y la compilación del proyecto termina sin errores.
 
@@ -5536,7 +5184,7 @@ public class CatalogoClustersBalanceo
 
 ### PASO 8.4.12 — Añadir la referencia del proyecto de tests a la API de Producción
 
-**Procedimiento guiado.**
+La referencia permite que el proyecto de tests acceda a las clases de `Balanceo` del proyecto de Producción.
 
 1. Abre `tests/AceriaApp.Balanceo.Tests/AceriaApp.Balanceo.Tests.csproj` y añade la referencia a `AceriaApp.Api` usando el archivo completo siguiente.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -5564,11 +5212,7 @@ public class CatalogoClustersBalanceo
 </Project>
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
-
-- **Línea 10:** `<ProjectReference Include="../../src/AceriaApp.Api/AceriaApp.Api.csproj" />` Referencia el proyecto indicado mediante una ruta relativa a este archivo .csproj.
-
-**Por qué funciona así.** la referencia permite que el proyecto de tests acceda a las clases de `Balanceo` del proyecto de Producción.
+Referencia el proyecto indicado mediante una ruta relativa a este archivo .csproj.
 
 **Verificación concreta.** Los archivos indicados contienen todos los bloques y la compilación del proyecto termina sin errores.
 
@@ -5580,7 +5224,7 @@ public class CatalogoClustersBalanceo
 
 ### PASO 8.4.13 — Añadir el paquete `FluentAssertions` al proyecto de tests
 
-**Procedimiento guiado.**
+`FluentAssertions` proporciona la sintaxis de aserción usada en el curso. Se añade al nuevo proyecto de tests sin modificar los proyectos de tests existentes.
 
 1. Abre `tests/AceriaApp.Balanceo.Tests/AceriaApp.Balanceo.Tests.csproj` y fija FluentAssertions 6.12.2 con el archivo completo siguiente.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -5609,11 +5253,6 @@ public class CatalogoClustersBalanceo
 </Project>
 ```
 
-
-
-
-**Por qué funciona así.** `FluentAssertions` proporciona la sintaxis de aserción usada en el curso. Se añade al nuevo proyecto de tests sin modificar los proyectos de tests existentes.
-
 **Verificación concreta.** Los archivos indicados contienen todos los bloques y la compilación del proyecto termina sin errores.
 
 **Diagnóstico si falla.**
@@ -5624,7 +5263,7 @@ public class CatalogoClustersBalanceo
 
 ### PASO 8.4.14 — Crear el archivo `ValidadorBalanceoTests.cs`
 
-**Procedimiento guiado.**
+Los tests verifican que el validador acepta el catálogo por defecto y rechaza los clusters que violan las reglas del balanceo.
 
 1. Crea `tests/AceriaApp.Balanceo.Tests/ValidadorBalanceoTests.cs` dentro de la carpeta actual.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -5707,12 +5346,7 @@ public class ValidadorBalanceoTests
 }
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
-
-- **Línea 11:** `[Fact]` Declara una prueba individual que xUnit debe descubrir y ejecutar.
-- **Línea 16:** `resultado.EsValida.Should().BeTrue();` Comprueba esta condición observable; una diferencia hace fallar la prueba en vez de ocultar el problema.
-
-**Por qué funciona así.** los tests verifican que el validador acepta el catálogo por defecto y rechaza los clusters que violan las reglas del balanceo.
+Declara una prueba individual que xUnit debe descubrir y ejecutar. Comprueba esta condición observable; una diferencia hace fallar la prueba en vez de ocultar el problema.
 
 **Verificación concreta.** Los archivos indicados contienen todos los bloques y la compilación del proyecto termina sin errores.
 
@@ -5724,7 +5358,7 @@ public class ValidadorBalanceoTests
 
 ### PASO 8.4.15 — Crear el archivo `CatalogoClustersBalanceoTests.cs`
 
-**Procedimiento guiado.**
+Los tests verifican que el catálogo por defecto contiene los clusters esperados y que todos cumplen las reglas del balanceo.
 
 1. Crea `tests/AceriaApp.Balanceo.Tests/CatalogoClustersBalanceoTests.cs` dentro de la carpeta actual.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -5787,11 +5421,6 @@ public class CatalogoClustersBalanceoTests
 }
 ```
 
-
-
-
-**Por qué funciona así.** los tests verifican que el catálogo por defecto contiene los clusters esperados y que todos cumplen las reglas del balanceo.
-
 **Verificación concreta.** Los archivos indicados contienen todos los bloques y la compilación del proyecto termina sin errores.
 
 **Diagnóstico si falla.**
@@ -5802,7 +5431,7 @@ public class CatalogoClustersBalanceoTests
 
 ### PASO 8.4.16 — Compilar la solución completa
 
-**Procedimiento guiado.**
+Para terminar hay que compilar, arrancar el gateway, comprobar las rutas anteriores y observar la distribución entre destinos equivalentes. Las políticas declaradas no sustituyen la evidencia de peticiones y respuestas.
 
 1. Escribe todos los archivos de ampliación funcional mostrados a continuación antes de compilar; cuando se indica reemplazar, sustituye el contenido de la copia actual.
 2. Desde la carpeta actual ejecuta `dotnet sln AceriaApp.sln add (Get-ChildItem src,tests -Recurse -Filter *.csproj | ForEach-Object FullName)` en PowerShell 7.
@@ -5944,48 +5573,33 @@ public class CatalogoClustersBalanceoTests
 }
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
+Abre o cierra esta estructura JSON; las comas y delimitadores mantienen válido el documento. Establece la dirección de escucha de este proceso; conserva el nombre y el tipo json. Asigna este valor a la opción observabilidad; conserva el nombre y el tipo json.
 
-- **Línea 1:** `{` Abre o cierra esta estructura JSON; las comas y delimitadores mantienen válido el documento.
-- **Línea 2:** `"Urls": "http://localhost:5100",` Establece la dirección de escucha de este proceso; conserva el nombre y el tipo json.
-- **Línea 3:** `"Observabilidad": {` Asigna este valor a la opción observabilidad; conserva el nombre y el tipo json.
-- **Línea 4:** `"NivelMinimo": "Information"` Asigna este valor a la opción nivelminimo; conserva el nombre y el tipo json.
-- **Línea 6:** `"ReverseProxy": {` Reúne la configuración que lee addreverseproxy; conserva el nombre y el tipo json.
-- **Línea 7:** `"Routes": {` Declara las rutas públicas que yarp puede seleccionar; conserva el nombre y el tipo json.
-- **Línea 8:** `"ordenes": {` Asigna este valor a la opción ordenes; conserva el nombre y el tipo json.
-- **Línea 9:** `"ClusterId": "produccion-cluster",` Vincula la ruta con un cluster existente; conserva el nombre y el tipo json.
-- **Línea 10:** `"Match": {` Asigna este valor a la opción match; conserva el nombre y el tipo json.
-- **Línea 11:** `"Path": "/api/v1/ordenes/{**resto}"` Define el patrón público o la ruta del sondeo según su sección; conserva el nombre y el tipo json.
-- **Línea 14:** `"produccion": {` Asigna este valor a la opción produccion; conserva el nombre y el tipo json.
-- **Línea 20:** `"comunicacion": {` Asigna este valor a la opción comunicacion; conserva el nombre y el tipo json.
-- **Línea 26:** `"materiales": {` Asigna este valor a la opción materiales; conserva el nombre y el tipo json.
-- **Línea 30:** `"Methods": [` Restringe los métodos que esta ruta admite; conserva el nombre y el tipo json.
-- **Línea 36:** `"planificaciones": {` Asigna este valor a la opción planificaciones; conserva el nombre y el tipo json.
-- **Línea 46:** `"inventario-materiales": {` Asigna este valor a la opción inventario-materiales; conserva el nombre y el tipo json.
-- **Línea 48:** `"Order": -10,` Asigna prioridad explícita; los valores menores se evalúan antes; conserva el nombre y el tipo json.
-- **Línea 56:** `"Transforms": [` Declara cambios ordenados sobre la petición reenviada; conserva el nombre y el tipo json.
-- **Línea 58:** `"PathRemovePrefix": "/inventario"` Elimina únicamente el prefijo configurado; conserva el nombre y el tipo json.
-- **Línea 61:** `"RequestHeader": "X-Canal",` Selecciona la cabecera que se transforma; conserva el nombre y el tipo json.
-- **Línea 62:** `"Set": "Gateway"` Fija un valor literal; no ejecuta código ni genera identificadores; conserva el nombre y el tipo json.
-- **Línea 65:** `"QueryValueParameter": "canal",` Selecciona un parámetro de consulta para el valor literal configurado; conserva el nombre y el tipo json.
-- **Línea 70:** `"inventario-planificaciones": {` Asigna este valor a la opción inventario-planificaciones; conserva el nombre y el tipo json.
-- **Línea 95:** `"Clusters": {` Agrupa destinos que ofrecen el mismo contrato http; conserva el nombre y el tipo json.
-- **Línea 96:** `"produccion-cluster": {` Asigna este valor a la opción produccion-cluster; conserva el nombre y el tipo json.
-- **Línea 97:** `"Destinations": {` Enumera instancias del servicio, no servicios con contratos diferentes; conserva el nombre y el tipo json.
-- **Línea 99:** `"Address": "http://localhost:5105/"` Establece la url interna del destino; conserva el nombre y el tipo json.
-- **Línea 103:** `"inventario-cluster": {` Asigna este valor a la opción inventario-cluster; conserva el nombre y el tipo json.
-- **Línea 105:** `"inventario-1": {` Asigna este valor a la opción inventario-1; conserva el nombre y el tipo json.
-- **Línea 108:** `"inventario-2": {` Asigna este valor a la opción inventario-2; conserva el nombre y el tipo json.
-- **Línea 112:** `"LoadBalancingPolicy": "RoundRobin",` Elige el algoritmo con el que se reparte entre destinos disponibles; conserva el nombre y el tipo json.
-- **Línea 113:** `"HealthCheck": {` Configura la evaluación de disponibilidad de destinos; conserva el nombre y el tipo json.
-- **Línea 114:** `"AvailableDestinationsPolicy": "HealthyAndUnknown",` Asigna este valor a la opción availabledestinationspolicy; conserva el nombre y el tipo json.
-- **Línea 115:** `"Active": {` Habilita sondeos independientes de las peticiones del cliente; conserva el nombre y el tipo json.
-- **Línea 116:** `"Enabled": true,` Activa o desactiva la función de su sección; conserva el nombre y el tipo json.
-- **Línea 117:** `"Interval": "00:00:01",` Fija el intervalo entre sondeos de disponibilidad; conserva el nombre y el tipo json.
-- **Línea 118:** `"Timeout": "00:00:01",` Limita la espera del sondeo; conserva el nombre y el tipo json.
-- **Línea 119:** `"Policy": "ConsecutiveFailures",` Selecciona la política que interpreta los resultados de salud; conserva el nombre y el tipo json.
-- **Línea 123:** `"Metadata": {` Asigna este valor a la opción metadata; conserva el nombre y el tipo json.
-- **Línea 124:** `"ConsecutiveFailuresHealthPolicy.Threshold": "2"` Asigna este valor a la opción consecutivefailureshealthpolicy.threshold; conserva el nombre y el tipo json.
+Asigna este valor a la opción nivelminimo; conserva el nombre y el tipo json. Reúne la configuración que lee addreverseproxy; conserva el nombre y el tipo json. Declara las rutas públicas que yarp puede seleccionar; conserva el nombre y el tipo json.
+
+Asigna este valor a la opción ordenes; conserva el nombre y el tipo json. Vincula la ruta con un cluster existente; conserva el nombre y el tipo json. Asigna este valor a la opción match; conserva el nombre y el tipo json.
+
+Define el patrón público o la ruta del sondeo según su sección; conserva el nombre y el tipo json. Asigna este valor a la opción produccion; conserva el nombre y el tipo json. Asigna este valor a la opción comunicacion; conserva el nombre y el tipo json.
+
+Asigna este valor a la opción materiales; conserva el nombre y el tipo json. Restringe los métodos que esta ruta admite; conserva el nombre y el tipo json. Asigna este valor a la opción planificaciones; conserva el nombre y el tipo json.
+
+Asigna este valor a la opción inventario-materiales; conserva el nombre y el tipo json. Asigna prioridad explícita; los valores menores se evalúan antes; conserva el nombre y el tipo json. Declara cambios ordenados sobre la petición reenviada; conserva el nombre y el tipo json.
+
+Elimina únicamente el prefijo configurado; conserva el nombre y el tipo json. Selecciona la cabecera que se transforma; conserva el nombre y el tipo json. Fija un valor literal; no ejecuta código ni genera identificadores; conserva el nombre y el tipo json.
+
+Selecciona un parámetro de consulta para el valor literal configurado; conserva el nombre y el tipo json. Asigna este valor a la opción inventario-planificaciones; conserva el nombre y el tipo json. Agrupa destinos que ofrecen el mismo contrato http; conserva el nombre y el tipo json.
+
+Asigna este valor a la opción produccion-cluster; conserva el nombre y el tipo json. Enumera instancias del servicio, no servicios con contratos diferentes; conserva el nombre y el tipo json. Establece la url interna del destino; conserva el nombre y el tipo json.
+
+Asigna este valor a la opción inventario-cluster; conserva el nombre y el tipo json. Asigna este valor a la opción inventario-1; conserva el nombre y el tipo json. Asigna este valor a la opción inventario-2; conserva el nombre y el tipo json.
+
+Elige el algoritmo con el que se reparte entre destinos disponibles; conserva el nombre y el tipo json. Configura la evaluación de disponibilidad de destinos; conserva el nombre y el tipo json. Asigna este valor a la opción availabledestinationspolicy; conserva el nombre y el tipo json.
+
+Habilita sondeos independientes de las peticiones del cliente; conserva el nombre y el tipo json. Activa o desactiva la función de su sección; conserva el nombre y el tipo json. Fija el intervalo entre sondeos de disponibilidad; conserva el nombre y el tipo json.
+
+Limita la espera del sondeo; conserva el nombre y el tipo json. Selecciona la política que interpreta los resultados de salud; conserva el nombre y el tipo json. Asigna este valor a la opción metadata; conserva el nombre y el tipo json.
+
+Asigna este valor a la opción consecutivefailureshealthpolicy.threshold; conserva el nombre y el tipo json.
 
 **Archivo:** `src/AceriaApp.Inventario.Api/InventarioProgram.cs`. **Operación:** Reemplazar el contenido completo.
 
@@ -6052,12 +5666,9 @@ public sealed class InventarioProgram
 }
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
+Completa esta expresión o invocación dentro de InventarioProgram.cs; se conserva íntegra para reproducir el comportamiento. Lee o escribe la cabecera HTTP indicada; su valor debe coincidir con el contrato de transformación. Espera la operación asíncrona sin bloquear el hilo; un fallo se propaga para poder detectarlo.
 
-- **Línea 11:** `builder.Services.AddLoggingAceria("Inventario", builder.Configuration);` Completa esta expresión o invocación dentro de InventarioProgram.cs; se conserva íntegra para reproducir el comportamiento.
-- **Línea 28:** `contexto.Response.Headers["X-Instancia"] = instancia;` Lee o escribe la cabecera HTTP indicada; su valor debe coincidir con el contrato de transformación.
-- **Línea 29:** `await siguiente();` Espera la operación asíncrona sin bloquear el hilo; un fallo se propaga para poder detectarlo.
-- **Línea 35:** `using var scope = app.Services.CreateScope();` Delimita la vida del recurso y garantiza su disposición al salir del ámbito, también si ocurre una excepción; await using permite la disposición asíncrona.
+Delimita la vida del recurso y garantiza su disposición al salir del ámbito, también si ocurre una excepción; await using permite la disposición asíncrona.
 
 **Archivo:** `tests/AceriaApp.Balanceo.Tests/GatewayBalanceoFuncionalTests.cs`. **Operación:** Crear el contenido completo.
 
@@ -6165,10 +5776,7 @@ public sealed class GatewayBalanceoFuncionalTests
 }
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
-
-- **Línea 12:** `// Detecta pérdida del middleware de balanceo o sustitución accidental de RoundRobin.` Documenta la intención de la instrucción próxima sin alterar su ejecución.
-- **Línea 99:** `}, $"El destino {destinoId} no alcanzó el estado activo {salud}.");` Completa esta expresión o invocación dentro de GatewayBalanceoFuncionalTests.cs; se conserva íntegra para reproducir el comportamiento.
+Documenta la intención de la instrucción próxima sin alterar su ejecución. Completa esta expresión o invocación dentro de GatewayBalanceoFuncionalTests.cs; se conserva íntegra para reproducir el comportamiento.
 
 **Archivo:** `tests/AceriaApp.Balanceo.Tests/AceriaApp.Balanceo.Tests.csproj`. **Operación:** Reemplazar el contenido completo.
 
@@ -6196,12 +5804,7 @@ public sealed class GatewayBalanceoFuncionalTests
 </Project>
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
-
-- **Línea 12:** `<FrameworkReference Include="Microsoft.AspNetCore.App" />` Hace disponibles las API del framework ASP.NET Core para los servidores de prueba.
-- **Línea 13:** `<Compile Include="../Compartido/GatewayPruebas.cs" Link="Compartido/GatewayPruebas.cs" />` Incluye el soporte de pruebas compartido en la compilación de este proyecto.
-
-**Por qué funciona así.** Las dos instancias de Inventario comparten la misma base de datos; la cabecera de instancia permite observar el reparto y los sondeos retiran destinos no disponibles.
+Hace disponibles las API del framework ASP.NET Core para los servidores de prueba. Incluye el soporte de pruebas compartido en la compilación de este proyecto.
 
 **Verificación concreta.** Ejecuta `dotnet sln AceriaApp.sln list` y verifica los 39 proyectos; el compilador debe terminar con cero errores.
 
@@ -6213,14 +5816,13 @@ public sealed class GatewayBalanceoFuncionalTests
 
 ### PASO 8.4.17 — Ejecutar todos los tests del punto 8.4
 
-**Procedimiento guiado.**
+Una prueba de catálogo acredita su declaración. Las pruebas funcionales utilizan el proxy y servidores HTTP reales, pero la persistencia y el broker se comprueban con la suite y el recorrido completo.
 
 1. Ejecuta `dotnet test tests/AceriaApp.Balanceo.Tests/AceriaApp.Balanceo.Tests.csproj -c Release --no-build` en la terminal.
 2. Comprueba que se ejecutan 15 pruebas: 10 de catálogo y 5 funcionales.
 3. Si hay un fallo, identifica su nombre y revisa la regla o la respuesta esperada antes de modificar código.
 4. Confirma cero errores y cero pruebas omitidas; el reto todavía no forma parte de esta etapa.
 
-**Por qué funciona así.** Una prueba de catálogo acredita su declaración. Las pruebas funcionales utilizan el proxy y servidores HTTP reales, pero la persistencia y el broker se comprueban con la suite y el recorrido completo.
 
 **Verificación concreta.** Confirma cero errores y cero pruebas omitidas; el reto todavía no forma parte de esta etapa.
 
@@ -6232,14 +5834,13 @@ public sealed class GatewayBalanceoFuncionalTests
 
 ### PASO 8.4.18 — Ejecutar todos los tests de la solución
 
-**Procedimiento guiado.**
+La suite completa comprueba que el nuevo punto no rompe la persistencia, la mensajería, el dominio, la observabilidad ni la resiliencia desarrollados antes.
 
 1. Configura `ACERIA_TEST_SQLSERVER` para tu SQL Server Express/LocalDB y `ACERIA_TEST_RABBITMQ` para el broker; sigue los requisitos del inicio del manual.
 2. Ejecuta `dotnet test AceriaApp.sln -c Release --no-build -m:1`.
 3. Comprueba que pasan las 491 pruebas acumuladas, incluidas las heredadas de M07, sin omisiones.
 4. Si falla la conexión, corrige el servicio, los permisos o la URI. Una prueba no ejecutada no se contabiliza como aprobada.
 
-**Por qué funciona así.** La suite completa comprueba que el nuevo punto no rompe la persistencia, la mensajería, el dominio, la observabilidad ni la resiliencia desarrollados antes.
 
 **Verificación concreta.** Si falla la conexión, corrige el servicio, los permisos o la URI. Una prueba no ejecutada no se contabiliza como aprobada.
 
@@ -6251,7 +5852,7 @@ public sealed class GatewayBalanceoFuncionalTests
 
 ### PASO 8.4.19 — Crear el README del punto 8.4
 
-**Procedimiento guiado.**
+El README del punto 8.4 explica el objetivo, el estado, la ejecución y los añadidos. No modifica el README del punto 8.3.
 
 1. Abre `README.md` dentro de la carpeta actual.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -6292,13 +5893,7 @@ El recorrido funcional inicia Gateway en 5100, Producción en 5105 e Inventario 
 - Las 48 fichas y decisiones anteriores permanecen idénticas.
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
-
-- **Línea 13:** `` Desde esta carpeta: `dotnet restore AceriaApp.sln`, `dotnet build AceriaApp.sln -c Release` y `dotnet test AceriaApp.sln -c Release`. Configura SQL Server/LocalDB y RabbitMQ según el manual antes de ejecutar la suite completa. `` Conserva esta explicación o instrucción operativa dentro del documento de la etapa.
-- **Línea 26:** `` - `docs/balanceo-carga.md`. `` Registra una condición o una decisión que podrá contrastarse al revisar la etapa.
-- **Línea 27:** `` - `docs/ADR-034-balanceo-carga.md`. `` Registra una condición o una decisión que podrá contrastarse al revisar la etapa.
-
-**Por qué funciona así.** el README del punto 8.4 explica el objetivo, el estado, la ejecución y los añadidos. No modifica el README del punto 8.3.
+`` Desde esta carpeta: `dotnet restore AceriaApp.sln`, `dotnet build AceriaApp.sln -c Release` y `dotnet test AceriaApp.sln -c Release`. Configura SQL Server/LocalDB y RabbitMQ según el manual antes de ejecutar la suite completa. `` Conserva esta explicación o instrucción operativa dentro del documento de la etapa. `` - `docs/balanceo-carga.md`. `` Registra una condición o una decisión que podrá contrastarse al revisar la etapa. `` - `docs/ADR-034-balanceo-carga.md`. `` Registra una condición o una decisión que podrá contrastarse al revisar la etapa.
 
 **Verificación concreta.** El documento existe, su vista previa mantiene los encabezados y los documentos heredados conservan sus hashes.
 
@@ -6310,7 +5905,7 @@ El recorrido funcional inicia Gateway en 5100, Producción en 5105 e Inventario 
 
 ### PASO 8.4.20 — Crear el ADR-034 del punto 8.4
 
-**Procedimiento guiado.**
+El ADR-034 documenta la decisión sobre el balanceo y cierra el curso. Es un artefacto nuevo del punto 8.4 que no modifica los ADR existentes.
 
 1. Crea `docs/ADR-034-balanceo-carga.md` dentro de la carpeta actual.
 2. Copia el contenido completo de cada bloque siguiente; respeta rutas, espacios de nombres y versiones.
@@ -6349,11 +5944,7 @@ TienePesos expresa una intención de diseño, sin extensión ponderada implement
 El directorio anterior se conserva intacto. Las copias del punto actual incluyen los cambios completos indicados en el manual.
 ```
 
-**Lectura selectiva del archivo: decisiones y comprobaciones relevantes.**
-
-- **Línea 10:** `` Se fija `LoadBalancingPolicy: RoundRobin` en inventario-cluster, con destinos 5106 y 5107. produccion-cluster conserva el destino 5105 y el gateway escucha en 5100. YARP también ofrece Random, LeastRequests y PowerOfTwoChoices, pero no se dejan implícitos en el ejercicio. No se configura una propiedad nativa Weight ni una política ponderada: los metadatos solo producirían ponderación si una extensión adicional los interpretara. Inventario utiliza sondeos activos a `/health/ready` con intervalo y timeout de un segundo, ConsecutiveFailures y umbral dos. `HealthyAndUnknown` excluye destinos Unhealthy y devuelve 503 si ninguno permanece disponible; permite reincorporar un destino recuperado sin reiniciar el gateway. La validación incluye reparto observable con X-Instancia, caída parcial, caída total y recuperación real. El cierre exige 39 proyectos, 26 proyectos de pruebas, 50 documentos y 491 pruebas esperadas en 8.4 sin omisiones, con evidencia Linux, Windows y PDF de la misma revisión. El recorrido conserva ocho módulos y 34 puntos; esos objetivos no constituyen un PASS antes de ejecutar CI y revisar las evidencias. `` Conserva esta explicación o instrucción operativa dentro del documento de la etapa.
-
-**Por qué funciona así.** el ADR-034 documenta la decisión sobre el balanceo y cierra el curso. Es un artefacto nuevo del punto 8.4 que no modifica los ADR existentes.
+`` Se fija `LoadBalancingPolicy: RoundRobin` en inventario-cluster, con destinos 5106 y 5107. produccion-cluster conserva el destino 5105 y el gateway escucha en 5100. YARP también ofrece Random, LeastRequests y PowerOfTwoChoices, pero no se dejan implícitos en el ejercicio. No se configura una propiedad nativa Weight ni una política ponderada: los metadatos solo producirían ponderación si una extensión adicional los interpretara. Inventario utiliza sondeos activos a `/health/ready` con intervalo y timeout de un segundo, ConsecutiveFailures y umbral dos. `HealthyAndUnknown` excluye destinos Unhealthy y devuelve 503 si ninguno permanece disponible; permite reincorporar un destino recuperado sin reiniciar el gateway. La validación incluye reparto observable con X-Instancia, caída parcial, caída total y recuperación real. El cierre exige 39 proyectos, 26 proyectos de pruebas, 50 documentos y 491 pruebas esperadas en 8.4 sin omisiones, con evidencia Linux, Windows y PDF de la misma revisión. El recorrido conserva ocho módulos y 34 puntos; esos objetivos no constituyen un PASS antes de ejecutar CI y revisar las evidencias. `` Conserva esta explicación o instrucción operativa dentro del documento de la etapa.
 
 **Verificación concreta.** El documento existe, su vista previa mantiene los encabezados y los documentos heredados conservan sus hashes.
 
@@ -6365,14 +5956,13 @@ El directorio anterior se conserva intacto. Las copias del punto actual incluyen
 
 ### PASO 8.4.21 — Verificar que no se ha modificado ningún archivo del punto 8.3
 
-**Procedimiento guiado.**
+La progresión modifica copias independientes. Los nuevos archivos o configuraciones de una etapa no deben alterar un punto ya entregado.
 
 1. Abre las carpetas `docs` de la etapa actual y de `M08_API_GATEWAY/PROYECTO/8.3-enrutamiento-peticiones`.
 2. Compara con Get-FileHash los archivos que existían en la etapa anterior; cada hash SHA256 debe coincidir.
 3. Comprueba también que los archivos de tests heredados conservan su contenido; solo se incorporan los tests del punto.
 4. Verifica que `M08_API_GATEWAY/PROYECTO/8.3-enrutamiento-peticiones` no presenta modificaciones. Los cambios completos del punto pertenecen exclusivamente a `8.4-balanceo-carga`.
 
-**Por qué funciona así.** La progresión modifica copias independientes. Los nuevos archivos o configuraciones de una etapa no deben alterar un punto ya entregado.
 
 **Verificación concreta.** Verifica que `M08_API_GATEWAY/PROYECTO/8.3-enrutamiento-peticiones` no presenta modificaciones. Los cambios completos del punto pertenecen exclusivamente a `8.4-balanceo-carga`.
 
@@ -6384,14 +5974,13 @@ El directorio anterior se conserva intacto. Las copias del punto actual incluyen
 
 ### PASO 8.4.22 — Verificar la estructura del punto 8.4 y la estructura completa del curso
 
-**Procedimiento guiado.**
+El inventario convierte la comprobación de estructura en una condición observable y detecta omisiones que una compilación aislada podría pasar por alto.
 
 1. Ejecuta `Get-ChildItem -Recurse -File` y revisa las carpetas src, tests y docs.
 2. Verifica 39 proyectos, 26 proyectos de pruebas y 50 documentos.
 3. Comprueba la presencia de las tres clases de `Balanceo`, sus tests, el documento temático y ADR-034.
 4. Comprueba que no has introducido carpetas temporales, labs ni metaprompts dentro del entregable. El curso conserva ocho módulos y 34 puntos acumulativos.
 
-**Por qué funciona así.** El inventario convierte la comprobación de estructura en una condición observable y detecta omisiones que una compilación aislada podría pasar por alto.
 
 **Verificación concreta.** Comprueba que no has introducido carpetas temporales, labs ni metaprompts dentro del entregable. El curso conserva ocho módulos y 34 puntos acumulativos.
 
@@ -6403,14 +5992,13 @@ El directorio anterior se conserva intacto. Las copias del punto actual incluyen
 
 ### PASO 8.4.23 — Verificar el `.gitignore` del punto 8.4
 
-**Procedimiento guiado.**
+Las exclusiones conservan un repositorio reproducible sin binarios temporales ni datos específicos de Visual Studio.
 
 1. Abre `.gitignore` de la etapa actual.
 2. Comprueba que contiene bin/, obj/, *.user, *.suo, .vs/ y TestResults/.
 3. Compara su contenido con el archivo heredado y conserva sus exclusiones.
 4. Ejecuta `git status --short` desde la raíz del curso y verifica que los artefactos de compilación no aparecen como entregables.
 
-**Por qué funciona así.** Las exclusiones conservan un repositorio reproducible sin binarios temporales ni datos específicos de Visual Studio.
 
 **Verificación concreta.** Ejecuta `git status --short` desde la raíz del curso y verifica que los artefactos de compilación no aparecen como entregables.
 
@@ -6422,14 +6010,13 @@ El directorio anterior se conserva intacto. Las copias del punto actual incluyen
 
 ### PASO 8.4.24 — Hacer el commit del punto 8.4 y verificar el estado final del curso
 
-**Procedimiento guiado.**
+Un commit conserva el estado comprobado. El número de commits no tiene que coincidir con el de puntos: las correcciones y revisiones también forman parte del historial.
 
 1. Desde la raíz del repositorio ejecuta `git status --short` y revisa todos los cambios de la etapa.
 2. Añade exclusivamente los archivos docentes y del proyecto con `git add M08_API_GATEWAY/PROYECTO/8.4-balanceo-carga`.
 3. Ejecuta `git commit -m "Punto 8.4: Balanceo de carga básico"` después de comprobar las pruebas.
 4. Ejecuta `git log --oneline -5` y `git status --short`; confirma el hito y revisa cualquier archivo pendiente.
 
-**Por qué funciona así.** Un commit conserva el estado comprobado. El número de commits no tiene que coincidir con el de puntos: las correcciones y revisiones también forman parte del historial.
 
 **Verificación concreta.** Ejecuta `git log --oneline -5` y `git status --short`; confirma el hito y revisa cualquier archivo pendiente.
 
@@ -6501,9 +6088,6 @@ public record ResultadoBalanceo(bool EsValida, IReadOnlyList<string> Errores);
 public record ResumenBalanceo(int Total, int TotalDestinos, int ConPesos, int ConHealthChecks);
 ```
 
-
-
-
 ### Ampliación 2: implementar el cálculo del resumen
 
 **Archivo:** `src/AceriaApp.Api/Balanceo/ValidadorBalanceo.cs`. **Operación:** Reemplazar el contenido completo.
@@ -6568,9 +6152,6 @@ public record ResultadoBalanceo(bool EsValida, IReadOnlyList<string> Errores);
 
 public record ResumenBalanceo(int Total, int TotalDestinos, int ConPesos, int ConHealthChecks);
 ```
-
-
-
 
 ### Ampliación 3: verificar el resultado con el catálogo
 
@@ -6661,9 +6242,6 @@ public class ValidadorBalanceoTests
 }
 ```
 
-
-
-
 **Ejecución y resultado esperado.** En la copia optativa ejecuta `dotnet test AceriaApp.sln -c Release -m:1`. Deben pasar 492 pruebas; el proyecto `AceriaApp.Balanceo.Tests` debe ejecutar 16. Verifica que se ejecutó `Resumen_ConCatalogoPorDefecto_CalculaTotales` y que los cuatro puntos obligatorios no cambiaron. Registra el reto en un commit independiente cuando lo hayas comprobado.
 
 ### Resultado esperado del punto
@@ -6718,8 +6296,6 @@ $env:ASPNETCORE_URLS = "http://localhost:5105"
 dotnet run --project src/AceriaApp.Api --no-launch-profile
 ```
 
-
-
 Comprueba `Invoke-RestMethod http://localhost:5105/health/ready` y `Invoke-RestMethod http://localhost:5106/health/ready`: ambos deben informar Healthy. Una respuesta Unhealthy requiere revisar conexiones y servicios antes de continuar.
 
 ## Recorrido 8.2: publicar recursos y conservar HTTP
@@ -6731,8 +6307,6 @@ $env:ASPNETCORE_ENVIRONMENT = "Development"
 $env:ASPNETCORE_URLS = "http://localhost:5100"
 dotnet run --project src/AceriaApp.Gateway --no-launch-profile
 ```
-
-
 
 Consulta `Invoke-WebRequest http://localhost:5100/api/v1/materiales/Acero`: el cuerpo debe devolver material Acero y stock 300. Envía una cabecera `X-Correlation-ID` válida y comprueba la misma cabecera en la respuesta. Consulta un material inexistente: el gateway debe conservar el 404 del servicio. Una ruta no publicada debe devolver 404 y no convertirse en un acceso genérico al backend.
 
@@ -6768,8 +6342,6 @@ $env:ASPNETCORE_URLS = "http://localhost:5107"
 $env:Inventario__Instancia = "inventario-2"
 dotnet run --project src/AceriaApp.Inventario.Api --no-launch-profile
 ```
-
-
 
 Solicita diez veces el material Acero mediante el gateway y registra X-Instancia:
 
