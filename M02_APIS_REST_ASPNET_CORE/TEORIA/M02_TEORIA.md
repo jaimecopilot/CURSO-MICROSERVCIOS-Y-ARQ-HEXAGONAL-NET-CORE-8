@@ -463,12 +463,12 @@ Objetivos de aprendizaje:
 - Añadir al proyecto AceriaApp una clase de validación de combinaciones verbo-código y un catálogo de recursos del dominio.
 
 
----
 
+Al ampliar el sistema con escrituras, cambia la responsabilidad del servidor: ya no basta con mostrar órdenes existentes. Cada verbo modifica expectativas sobre identidad, estado y persistencia, y por ello debe tener comprobaciones que el consumidor pueda observar.
 
-### Bloque 1 — El recurso como unidad de diseño
+### El recurso como unidad de diseño
 
-Un recurso es una entidad identificable que puede ser referenciada y manipulada a través de una API. No es lo mismo que una entidad de base de datos ni que una clase del dominio. Un recurso es una abstracción que agrupa los datos y las operaciones que el cliente puede realizar sobre ellos. Un recurso puede corresponder a una fila de una tabla, a una vista que combina varias tablas o a un agregado de negocio. La decisión de qué constituye un recurso se toma desde la perspectiva del cliente, no desde la perspectiva del modelo de datos. Un recurso bien definido expone solo los datos que el cliente necesita y solo las operaciones que el cliente puede realizar.
+Una API no se diseña sumando métodos a una clase, sino delimitando los recursos con los que puede trabajar un consumidor. En el caso de una acería, una orden de producción es una unidad reconocible: posee identidad, cambia de estado y contiene información que otras operaciones necesitan consultar. No obstante, el recurso REST no debe confundirse con una fila SQL ni con la entidad de dominio completa. La representación pública puede ocultar campos internos y ofrecer relaciones adecuadas para quien consulta. Identificar primero esa unidad evita que el contrato dependa accidentalmente de cómo EF Core organiza sus tablas. Cuando añadamos las líneas de una orden tendremos que decidir si conviene presentarlas dentro del recurso principal o mediante operaciones específicas, sin convertir cada relación de persistencia en una ruta.
 
 Recursos del dominio de la acería:  
   
@@ -478,11 +478,9 @@ Recursos del dominio de la acería:
 - **Cliente** → empresa compradora.
 - **Movimiento** → movimiento de inventario.
 
-- **Línea 1:** Orden → recurso que representa una orden de producción.
-- **Línea 2:** LineaOrden → recurso que representa una línea de una orden.
-- **Línea 3:** Material → recurso que representa una materia prima.
-- **Línea 4:** Cliente → recurso que representa una empresa compradora.
-- **Línea 5:** Movimiento → recurso que representa un movimiento de inventario.
+
+En el esquema se distinguen Órdenes, Líneas, Materiales y Clientes como posibles recursos o relaciones de la acería. Lo importante es que cada uno tiene un significado funcional y puede necesitar contratos propios; su presencia en el análisis no significa que existan cuatro servicios programados en esta etapa.
+
 
 Cada recurso tiene una representación por defecto y puede tener representaciones alternativas. La representación por defecto es la que el servidor devuelve cuando el cliente no especifica ninguna preferencia. La representación alternativa se negocia con la cabecera Accept. El recurso también tiene un estado interno que el servidor gestiona, pero que no se expone directamente al cliente. El cliente solo ve la representación, no el estado. Esta separación entre recurso y representación es una de las propiedades más importantes del estilo REST y la que permite que el mismo recurso se consuma desde clientes con formatos distintos.
 
@@ -491,9 +489,9 @@ La identificación de recursos del dominio de la acería sigue un criterio de ne
 
 ---
 
-### Bloque 2 — Representaciones del recurso
+### Representaciones del recurso
 
-Una representación es la forma concreta en la que un recurso se transmite entre cliente y servidor. La representación por defecto en las APIs REST modernas es JSON. JSON es un formato de texto ligero, legible y ampliamente soportado. Otras representaciones posibles son XML, YAML, CSV o binario. La representación se selecciona mediante negociación de contenido. El cliente envía la cabecera Accept con los formatos que acepta, y el servidor responde con el formato que puede generar. Si el servidor no puede generar ninguno de los formatos solicitados, responde con el código 406 Not Acceptable.
+La representación de un recurso debe responder a la pregunta del consumidor, no reflejar sin más todas las propiedades de la clase que se utiliza internamente. Al crear una orden, el cliente proporciona los datos necesarios para iniciar el proceso, mientras que el servidor es responsable de asignar identificador, fecha y estado inicial. Por eso conviene distinguir un `CrearOrdenRequest` de una representación `OrdenDto` destinada a consultas. La diferencia no es un formalismo: impide que una solicitud altere valores que deben estar protegidos por reglas del negocio. En ASP.NET Core, los records y la serialización JSON permiten describir ambos contratos de manera explícita, pero será el código quien convierta los datos de entrada en cambios válidos del modelo.
 
 ```csharp
 public record OrdenRepresentacion(  
@@ -505,31 +503,25 @@ public record OrdenRepresentacion(
 
 ```
 
-- **Línea 1:** public record OrdenRepresentacion( → declara la representación de una orden.
-- **Línea 2:** Guid Id, → identificador de la orden.
-- **Línea 3:** string Cliente, → nombre del cliente.
-- **Línea 4:** string Material, → material solicitado.
-- **Línea 5:** int Cantidad, → cantidad solicitada.
-- **Línea 6:** DateTime FechaCreacion); → fecha de creación.
+
+La representación pública declara identificador y datos relevantes para el consumidor sin obligarlo a conocer la entidad de EF Core. Para crear una orden hace falta un contrato de entrada diferente: el cliente no debería decidir el identificador ni el estado final que asigna el negocio.
+
 
 La representación no contiene toda la información del recurso: contiene solo la información que el cliente necesita. Si el recurso Orden tiene veinte propiedades internas, la representación puede exponer solo cinco. La selección de qué propiedades se exponen se realiza en función de los casos de uso del cliente. Una representación de colección puede exponer menos propiedades que una representación de detalle. La distinción entre representación de colección y representación de detalle es una práctica habitual para reducir el tamaño de las respuestas y mejorar el rendimiento.
 
 
 ---
 
-
-
-#### Del concepto a ASP.NET Core 8: Contrato de entrada
+#### Contrato de entrada en AceriaApp
 
 El servidor debe recibir solamente Cliente, Material y Cantidad en CrearOrdenRequest. El ID, el Estado y la FechaCreacion pertenecen al control interno del servicio. Por eso no reutilizamos Orden como cuerpo de entrada. Este diseño protege el contrato público y delimita claramente los datos que el cliente puede modificar.
 
-**Aplicación en el proyecto real.** Este comportamiento está materializado en `Contratos/ContratosOrden.cs` del estado `2.2-recursos-verbos-codigos`. Busca la instrucción `CrearOrdenRequest` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
+En `Contratos/ContratosOrden.cs`, `CrearOrdenRequest` separa la entrada del cliente de la representación de una orden almacenada. Así se evita que las decisiones del servidor sobre identidad, fecha y estado puedan manipularse desde el cuerpo de la petición.
 
-**Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
 
-### Bloque 3 — Verbos HTTP y su semántica completa
+### Verbos HTTP y su semántica completa
 
-Los verbos HTTP tienen una semántica definida por el estándar y por las convenciones del ecosistema REST. El verbo GET recupera una representación del recurso. El verbo POST crea un recurso nuevo. El verbo PUT reemplaza un recurso existente. El verbo PATCH modifica parcialmente un recurso existente. El verbo DELETE elimina un recurso existente. Cada verbo tiene tres propiedades: seguridad, idempotencia y cacheabilidad. La seguridad indica si el verbo modifica el estado del servidor. La idempotencia indica si ejecutar el verbo varias veces produce el mismo resultado que ejecutarlo una vez. La cacheabilidad indica si la respuesta puede almacenarse en caché.
+GET, POST, PUT, PATCH y DELETE expresan expectativas distintas. Un GET pide observar un recurso y no debe producir cambios de negocio; POST solicita una operación cuyo resultado puede ser la creación de una nueva identidad; PUT representa la sustitución de un recurso conocido; PATCH aplica una modificación parcial; DELETE pide retirarlo. Conviene comprender además dos propiedades de HTTP: una operación segura está destinada a no modificar el estado y una idempotente tiene el mismo efecto previsto si se repite. PUT y DELETE son idempotentes respecto al estado, aunque no deban devolver exactamente la misma respuesta cada vez. PATCH puede ser idempotente o no según la transformación elegida. Estas propiedades son fundamentales al decidir qué operaciones admite un reintento automático y cuáles necesitan protección adicional.
 
 ![Figura del punto 2.2: Cómo relacionar verbos HTTP con resultados](IMAGENES/m02-2-2-verbo-codigo.svg)
 
@@ -545,20 +537,18 @@ PUT     | No     | Sí          | No
 PATCH   | No     | No          | No  
 DELETE  | No     | Sí          | No
 
-- **Línea 1:** GET → seguro, idempotente, cacheable.
-- **Línea 2:** POST → no seguro, no idempotente, no cacheable.
-- **Línea 3:** PUT → no seguro, idempotente, no cacheable.
-- **Línea 4:** PATCH → no seguro, no idempotente, no cacheable.
-- **Línea 5:** DELETE → no seguro, idempotente, no cacheable.
+
+La tabla de métodos ayuda a separar seguridad de idempotencia. Una petición puede modificar el sistema y seguir siendo idempotente, como una sustitución PUT. En cambio, añadir una unidad de cantidad mediante PATCH se comporta de forma distinta a establecerla en un valor concreto, por lo que su semántica debe quedar definida en el contrato.
+
 
 La elección del verbo correcto no es una cuestión de preferencia: es una cuestión de semántica. Si se usa POST para reemplazar un recurso, se pierde la idempotencia y los reintentos pueden duplicar la operación. Si se usa GET para crear un recurso, se pierde la seguridad y los rastreadores pueden crear recursos sin querer. La semántica correcta de los verbos es la base de la comunicación fiable entre cliente y servidor. Un endpoint que usa el verbo incorrecto es un endpoint que falla en producción de formas difíciles de diagnosticar.
 
 
 ---
 
-### Bloque 4 — Verbos en colecciones y en recursos concretos
+### Verbos en colecciones y en recursos concretos
 
-La combinación de verbo y URI define la operación. Los verbos se aplican de forma distinta a colecciones y a recursos concretos. Sobre una colección, GET devuelve la lista, POST crea un elemento nuevo y DELETE elimina la colección completa. Sobre un recurso concreto, GET devuelve el recurso, PUT lo reemplaza, PATCH lo modifica parcialmente y DELETE lo elimina. La combinación de verbo y URI produce operaciones con semántica clara y predecible. La previsibilidad permite que el cliente sepa qué esperar sin consultar la documentación.
+La combinación de URI y verbo identifica la intención de una petición. `GET /api/v1/ordenes` solicita una colección; `POST` sobre esa misma colección puede crear un elemento; un `GET` con identificador recupera una orden específica y `PUT` o `PATCH` operan sobre ella. Este diseño resulta predecible porque las rutas nombran recursos y los métodos expresan la acción. Sin embargo, no todas las operaciones del negocio caben naturalmente en una sustitución CRUD. Planificar una orden, por ejemplo, puede requerir una transición explícita que respete invariantes y genere eventos. Antes de elegir un verbo debemos precisar si la API modifica una representación, ejecuta una transición o inicia un proceso asíncrono. La semántica del negocio no desaparece detrás del método HTTP.
 
 Combinaciones verbo-URI:  
   
@@ -569,25 +559,20 @@ Combinaciones verbo-URI:
 - **PATCH  /api/v1/ordenes/{id}** → modificar orden.
 - **DELETE /api/v1/ordenes/{id}** → eliminar orden.
 
-- **Línea 1:** GET /api/v1/ordenes → recupera la colección.
-- **Línea 2:** POST /api/v1/ordenes → crea un elemento nuevo.
-- **Línea 3:** GET /api/v1/ordenes/{id} → recupera un recurso concreto.
-- **Línea 4:** PUT /api/v1/ordenes/{id} → reemplaza el recurso concreto.
-- **Línea 5:** PATCH /api/v1/ordenes/{id} → modifica parcialmente el recurso.
-- **Línea 6:** DELETE /api/v1/ordenes/{id} → elimina el recurso concreto.
+
+Las rutas de colección y recurso individual permiten que el mismo recurso admita distintas operaciones sin incorporar verbos al nombre de la URI. Al probarlas, la decisión correcta depende de que el resultado HTTP corresponda a la operación real, y no de que el servidor acepte superficialmente el método elegido.
+
 
 La combinación de verbo y URI también determina el código de respuesta adecuado. GET sobre una colección devuelve 200 con la lista. POST sobre una colección devuelve 201 con la cabecera Location y el recurso creado. GET sobre un recurso concreto devuelve 200 o 404. PUT y PATCH devuelven 200 con el recurso actualizado o 204 sin cuerpo. DELETE devuelve 204 o 404. La relación entre verbo, URI y código de respuesta es sistemática y predecible.
 
 
 ---
 
-
-
-#### Del concepto a ASP.NET Core 8: POST y creación
+#### POST y creación en AceriaApp
 
 MapPost convierte un cuerpo JSON en CrearOrdenRequest. Al construir Orden y añadirla al DbContext todavía no se ha confirmado una inserción; SaveChangesAsync ejecuta la escritura. CreatedAtRoute utiliza el nombre ObtenerOrdenPorId para incluir un vínculo al recurso y devolver 201 Created. En prácticas se enviará POST y se seguirá Location con GET para demostrar persistencia real.
 
-**Aplicación en el proyecto real.** Este comportamiento está materializado en `Program.cs` del estado `2.2-recursos-verbos-codigos`. Busca la instrucción `MapPost` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
+`MapPost` incorpora la creación a `Program.cs`. Para considerar que funciona, no basta con encontrar la ruta: una petición válida debe modificar SQL Server y responder con el estado y la identidad de la nueva orden.
 
 **Código de referencia probado:** `src/AceriaApp.Api/Program.cs`
 
@@ -612,11 +597,10 @@ app.MapPost("/api/v1/ordenes",async (CrearOrdenRequest request,AceriaDbContext d
 ;
 ```
 
-**Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
 
-### Bloque 5 — Códigos de respuesta y su relación con el verbo
+### Códigos de respuesta y su relación con el verbo
 
-Los códigos de respuesta expresan el resultado de la operación. La relación entre verbo y código de respuesta es sistemática. GET devuelve 200 si encuentra el recurso y 404 si no lo encuentra. POST devuelve 201 si crea el recurso y 400 si la petición es inválida. PUT devuelve 200 o 204 si reemplaza el recurso y 404 si no existe. PATCH devuelve 200 o 204 si modifica el recurso y 404 si no existe. DELETE devuelve 204 si elimina el recurso y 404 si no existe. La sistematicidad de la relación permite al cliente anticipar el código de respuesta.
+El código de estado debe reflejar lo que ocurrió, no simplemente la intención del cliente. Si se crea una orden y el servidor devuelve su ubicación, `201 Created` es una respuesta apropiada. Una lectura correcta puede devolver `200 OK`; una eliminación completada sin representación puede utilizar `204 No Content`. La ausencia de un identificador puede traducirse a `404 Not Found`, mientras que una transición prohibida por el estado de la orden puede expresar un conflicto. La elección debe ser estable para que los consumidores sepan si necesitan corregir su petición, refrescar información o comunicar una incidencia. Las pruebas HTTP deben cubrir tanto el camino satisfactorio como los errores, porque una clase que compila no demuestra que la ruta publica el estado correcto.
 
 Relación verbo-código:  
   
@@ -627,21 +611,18 @@ Relación verbo-código:
 - **PATCH  /ordenes/{id}** → 200 OK | 204 No Content | 404 Not Found
 - **DELETE /ordenes/{id}** → 204 No Content | 404 Not Found
 
-- **Línea 1:** GET /ordenes → 200 OK → recuperación exitosa de la colección.
-- **Línea 2:** POST /ordenes → 201 Created → creación exitosa del recurso.
-- **Línea 3:** GET /ordenes/{id} → 200 OK | 404 → recuperación exitosa o recurso no encontrado.
-- **Línea 4:** PUT /ordenes/{id} → 200 | 204 | 404 → reemplazo exitoso o recurso no encontrado.
-- **Línea 5:** PATCH /ordenes/{id} → 200 | 204 | 404 → modificación exitosa o recurso no encontrado.
-- **Línea 6:** DELETE /ordenes/{id} → 204 | 404 → eliminación exitosa o recurso no encontrado.
+
+La correspondencia entre verbo, situación y estado describe ejemplos frecuentes, no una tabla de valores válidos en cualquier contexto. El 201 exige una creación efectivamente realizada, el 404 una ausencia comprobada y el 409 un conflicto definido por las reglas del recurso. La prueba debe verificar la situación que origina cada código.
+
 
 La elección entre 200 y 204 depende de si la respuesta incluye un cuerpo. 200 indica éxito con cuerpo. 204 indica éxito sin cuerpo. En un PUT o PATCH, si el servidor devuelve el recurso actualizado, usa 200. Si no devuelve nada, usa 204. En un DELETE, el servidor usa 204 porque el recurso ya no existe y no hay cuerpo que devolver. La elección entre 200 y 204 es una decisión de diseño que se documenta y se mantiene consistente en toda la API.
 
 
 ---
 
-### Bloque 6 — Códigos de error del cliente
+### Códigos de error del cliente
 
-Los códigos de error del cliente se agrupan en la familia 4xx. Los más usados son 400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not Found, 405 Method Not Allowed, 409 Conflict y 422 Unprocessable Entity. El código 400 indica que la petición está mal formada o tiene un error de sintaxis. El código 401 indica que falta autenticación. El código 403 indica que la autenticación es correcta pero el cliente no tiene permisos. El código 404 indica que el recurso no existe. El código 405 indica que el verbo no está permitido sobre el recurso. El código 409 indica un conflicto de estado. El código 422 indica que la entidad es sintácticamente correcta pero semánticamente inválida.
+Los errores atribuibles a la solicitud del cliente requieren respuestas precisas. Un JSON que no puede interpretarse o un campo obligatorio que falta suele justificar un 400; una identidad no autenticada requiere 401 y una operación prohibida para una identidad conocida puede justificar 403. Si el recurso no existe, el 404 expresa algo distinto de un conflicto de versión o estado. El 422 puede resultar útil para determinados contenidos semánticamente inválidos, siempre que el contrato acuerde cuándo utilizarlo frente a 400. No conviene elegir códigos por comodidad o inventar estados personalizados que el cliente deba aprender desde cero. En AceriaApp diferenciaremos entre validación de entrada y reglas del negocio para que el consumidor reciba información suficiente sin exponer detalles internos.
 
 Códigos de error del cliente:  
   
@@ -653,32 +634,25 @@ Códigos de error del cliente:
 - **409 Conflict** → conflicto de estado.
 - **422 Unprocessable Entity** → entidad semánticamente inválida.
 
-- **Línea 1:** 400 Bad Request → petición mal formada.
-- **Línea 2:** 401 Unauthorized → falta autenticación.
-- **Línea 3:** 403 Forbidden → autenticación correcta, sin permisos.
-- **Línea 4:** 404 Not Found → recurso no encontrado.
-- **Línea 5:** 405 Method Not Allowed → verbo no permitido.
-- **Línea 6:** 409 Conflict → conflicto de estado.
-- **Línea 7:** 422 Unprocessable Entity → entidad semánticamente inválida.
+
+Los estados 400, 401, 403, 404, 409 y 422 no son intercambiables. Distinguirlos permite a un cliente decidir si debe identificarse, corregir datos, abandonar una acción prohibida o actualizar una versión de recurso. La seguridad exige además no divulgar datos internos por medio del cuerpo de error.
+
 
 La distinción entre 400 y 422 es una de las más sutiles. El código 400 se usa cuando la petición no se puede procesar por un error de formato o de sintaxis. El código 422 se usa cuando la petición se puede procesar pero la entidad no cumple las reglas de negocio. Un JSON mal formado produce 400. Un JSON bien formado con un campo Cantidad negativo produce 422. La distinción permite al cliente distinguir entre un error de programación y un error de datos. La distinción también permite a las herramientas de monitorización separar los errores de infraestructura de los errores de negocio.
 
 
 ---
 
-
-
-#### Del concepto a ASP.NET Core 8: PUT y sustitución
+#### PUT y sustitución en AceriaApp
 
 El ejemplo PUT reemplaza los campos editables de una orden ya existente, conservando los valores que controla el servidor. No debe inventar una nueva orden cuando el identificador no existe: en nuestro contrato responde 404. Cuando una orden ya está finalizada la regla del dominio impide editarla y se comunica un conflicto 409.
 
-**Aplicación en el proyecto real.** Este comportamiento está materializado en `Program.cs` del estado `2.2-recursos-verbos-codigos`. Busca la instrucción `MapPut` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
+`MapPut` permite estudiar la sustitución de un recurso concreto. La prueba debe comprobar qué sucede si existe la orden y qué respuesta se devuelve cuando el identificador no corresponde a ningún registro.
 
-**Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
 
-### Bloque 7 — Códigos de error del servidor
+### Códigos de error del servidor
 
-Los códigos de error del servidor se agrupan en la familia 5xx. Los más usados son 500 Internal Server Error, 501 Not Implemented, 502 Bad Gateway, 503 Service Unavailable y 504 Gateway Timeout. El código 500 indica un error no controlado del servidor. El código 501 indica que el servidor no implementa la funcionalidad solicitada. El código 502 indica que un servidor intermedio recibió una respuesta inválida del servidor destino. El código 503 indica que el servicio no está disponible temporalmente. El código 504 indica que un servidor intermedio no recibió respuesta del servidor destino a tiempo.
+Un error del servidor no significa que el cliente haya construido mal la solicitud. Una conexión SQL caída, una excepción inesperada o una dependencia remota indisponible requieren tratamiento distinto de un recurso inexistente. Los estados 5xx sirven para indicar fallos del procesamiento o de la infraestructura, pero no deberían ser la respuesta genérica a cualquier validación fallida. También es importante no mostrar trazas, nombres de servidores ni cadenas de conexión al consumidor. La API debe registrar información diagnóstica adecuada para los operadores y publicar al exterior un error seguro y estable. Este criterio prepara la introducción posterior de observabilidad y resiliencia: devolver un código correcto es el comienzo, pero también tendremos que comprender por qué falló la operación.
 
 Códigos de error del servidor:  
   
@@ -688,20 +662,18 @@ Códigos de error del servidor:
 - **503 Service Unavailable** → servicio no disponible.
 - **504 Gateway Timeout** → timeout en servidor intermedio.
 
-- **Línea 1:** 500 Internal Server Error → error no controlado.
-- **Línea 2:** 501 Not Implemented → funcionalidad no implementada.
-- **Línea 3:** 502 Bad Gateway → respuesta inválida del servidor destino.
-- **Línea 4:** 503 Service Unavailable → servicio no disponible.
-- **Línea 5:** 504 Gateway Timeout → timeout en servidor intermedio.
+
+Los códigos 5xx expresan problemas del procesamiento o de dependencias. Una incidencia de base de datos puede requerir un 500 o 503 según el comportamiento del servicio; un 501 tiene significado específico y no debería usarse para cualquier ruta que todavía no hayamos escrito. Es importante que los registros internos expliquen más que la respuesta pública.
+
 
 La elección del código 5xx adecuado es importante para la monitorización y para la comunicación con el cliente. Un 500 indica un error del servidor que requiere investigación. Un 503 indica que el servicio no está disponible temporalmente y que el cliente puede reintentar más tarde. Un 504 indica que un servidor intermedio no recibió respuesta a tiempo. La distinción permite a los sistemas de monitorización clasificar los errores y generar alertas específicas para cada tipo. La práctica de devolver siempre 500 para cualquier error del servidor oculta información valiosa.
 
 
 ---
 
-### Bloque 8 — Problem details como formato de error
+### Problem details como formato de error
 
-El formato problem details está definido en la RFC 7807 y describe la estructura de un error en una API REST. Los campos principales son type, title, status, detail e instance. El campo type identifica el tipo de error con una URI. El campo title es un resumen legible del error. El campo status es el código HTTP. El campo detail explica el error concreto. El campo instance identifica la instancia concreta del error. El formato se usa en todas las respuestas de error para que el cliente pueda procesarlas de forma uniforme.
+El formato Problem Details proporciona una forma uniforme de describir errores HTTP con campos como `type`, `title`, `status` y `detail`. Esa estructura evita que cada endpoint improvise una respuesta diferente y ayuda a que los clientes interpreten incidencias con la misma lógica. No elimina la necesidad de seleccionar correctamente el estado ni de redactar mensajes adecuados. El campo `detail` debe explicar el problema al consumidor sin revelar información sensible de infraestructura; para errores de validación puede resultar útil incluir qué propiedad es incorrecta y qué condición se ha incumplido. En AceriaApp utilizaremos ese formato para demostrar que el contrato de error forma parte de la API tanto como la representación de una orden válida.
 
 ![Figura del punto 2.2: Los campos principales de Problem Details](IMAGENES/m02-2-2-problem-details.svg)
 
@@ -718,26 +690,20 @@ El formato problem details está definido en la RFC 7807 y describe la estructur
 
 ```
 
-- **Línea 1:** { → abre el objeto de error.
-- **Línea 2:** "type": "https://acería.local/errores/validacion", → identifica el tipo de error.
-- **Línea 3:** "title": "Error de validación", → resumen legible del error.
-- **Línea 4:** "status": 400, → código HTTP del error.
-- **Línea 5:** "detail": "El campo Cantidad debe ser mayor que cero.", → detalle del error.
-- **Línea 6:** "instance": "/api/v1/ordenes" → instancia concreta del error.
-- **Línea 7:** } → cierra el objeto de error.
+
+El cuerpo Problem Details expresa de forma estructurada un error concreto. `title` facilita reconocerlo, `status` lo relaciona con HTTP y `detail` puede ofrecer información útil sobre la petición. No hay que confundir esa representación con el registro técnico completo de una excepción.
+
 
 El formato problem details se implementa en ASP.NET Core con la clase Results.Problem. La clase acepta los campos title, detail, statusCode y otros opcionales. La implementación por defecto usa el tipo about:blank cuando no se especifica. La adopción del formato evita la duplicación de estructuras de error y facilita la integración con herramientas de monitorización. El formato se usa en todos los endpoints que devuelven errores.
 
 
 ---
 
-
-
-#### Del concepto a ASP.NET Core 8: PATCH especializado
+#### PATCH especializado en AceriaApp
 
 El endpoint PATCH de este curso cambia exclusivamente Cantidad. La elección de una ruta especializada para ese campo evita introducir JSON Patch en un módulo introductorio. El alumno comprobará que Cliente y Material no cambian después de aplicar la modificación parcial.
 
-**Aplicación en el proyecto real.** Este comportamiento está materializado en `Program.cs` del estado `2.2-recursos-verbos-codigos`. Busca la instrucción `MapPatch` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
+`MapPatch` ofrece un cambio parcial definido por el contrato del ejercicio, no una modificación arbitraria de toda propiedad del modelo. Conviene verificar tanto el dato que cambia como las reglas que protegen el resto del estado.
 
 **Código de referencia probado:** `src/AceriaApp.Api/Program.cs`
 
@@ -764,11 +730,10 @@ app.MapPatch("/api/v1/ordenes/{id:guid}/cantidad",
 ;
 ```
 
-**Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
 
-### Bloque 9 — Catálogo de recursos y combinaciones válidas
+### Catálogo de recursos y combinaciones válidas
 
-Un catálogo de recursos es una lista estructurada de los recursos que expone la API, con sus URIs, sus verbos permitidos y sus códigos de respuesta esperados. El catálogo sirve como contrato de referencia para el equipo y como base para la documentación automática. La estructura del catálogo incluye el nombre del recurso, la URI base, los verbos permitidos y los códigos de respuesta esperados para cada verbo. La validación automática del catálogo comprueba que las combinaciones de verbo y código son coherentes. La coherencia del catálogo es la base de la previsibilidad de la API.
+Cuando el dominio ofrece varias rutas y verbos, es fácil introducir combinaciones contradictorias. Un catálogo de recursos permite revisar qué operaciones se aceptan y qué estados deberían devolver antes de implementar cada manejador. Su valor no está en construir un validador abstracto que apruebe una tabla de pares verbo-código, sino en contrastar esa tabla con el comportamiento real. Por ejemplo, un `POST` que declara creación pero nunca guarda la orden no se vuelve correcto por figurar junto al código 201. Del mismo modo, una ruta de borrado debe comprobar la identidad y las reglas de estado que correspondan. Los catálogos son útiles para discutir decisiones, pero las peticiones HTTP y SQL demuestran su ejecución.
 
 Catálogo de recursos:  
   
@@ -779,20 +744,18 @@ Orden        | /api/v1/ordenes/{id}      | GET, PUT, PATCH, DELETE
 LineaOrden   | /api/v1/ordenes/{id}/lineas | GET, POST  
 Material     | /api/v1/materiales        | GET, POST
 
-- **Línea 1:** Recurso | URI base | Verbos permitidos → cabecera de la tabla.
-- **Línea 2:** Orden | /api/v1/ordenes | GET, POST → colección de órdenes.
-- **Línea 3:** Orden | /api/v1/ordenes/{id} | GET, PUT, PATCH, DELETE → orden concreta.
-- **Línea 4:** LineaOrden | /api/v1/ordenes/{id}/lineas | GET, POST → colección de líneas.
-- **Línea 5:** Material | /api/v1/materiales | GET, POST → colección de materiales.
+
+El catálogo relaciona recursos y verbos para revisar la superficie de la API antes de programarla. La tabla sirve como guía de implementación y pruebas, pero no demuestra automáticamente que las operaciones preserven las reglas de creación, edición o eliminación del dominio.
+
 
 La validación automática del catálogo comprueba tres cosas: que los verbos permitidos sean coherentes con la URI, que los códigos de respuesta sean coherentes con los verbos y que las URIs sigan las reglas de diseño. La comprobación se realiza con una clase de validación que recorre el catálogo y devuelve la lista de incoherencias. La validación automática evita que un endpoint con un verbo incorrecto o un código de respuesta inadecuado llegue a producción. La validación se ejecuta en los tests y en el pipeline de compilación.
 
 
 ---
 
-### Bloque 10 — Aplicación al proyecto del curso
+### Aplicación al proyecto del curso
 
-El proyecto del curso aplica los conceptos de recursos, verbos y códigos de respuesta en cada endpoint. Los recursos se identifican con URIs que siguen las cinco reglas del punto 2.1. Los verbos se eligen según su semántica. Los códigos de respuesta se eligen según la relación sistemática entre verbo y resultado. El formato problem details se usa en todos los errores. El catálogo de recursos se documenta y se valida automáticamente. La aplicación conjunta produce una API predecible y coherente.
+En la etapa 2.2 ampliamos el recurso de órdenes con contratos explícitos de entrada y las operaciones de creación, sustitución, modificación parcial y eliminación. El recorrido debe conservar la coherencia con las dos consultas GET ya implementadas: una orden creada debería poder recuperarse, y los cambios posteriores deberían observarse en la misma persistencia. En cada verbo habrá que distinguir identificadores, validaciones, transiciones de estado y códigos HTTP. Así el alumno comprenderá por qué se devuelve un 201, un 404 o un 409 y podrá demostrarlo con una petición real. No se pretende generar una lista de endpoints por completar un catálogo, sino construir una interfaz que represente de forma coherente el ciclo de vida de una orden.
 
 Aplicación al proyecto del curso:  
   
@@ -803,12 +766,9 @@ Aplicación al proyecto del curso:
 - **Catálogo documentado** → docs/catalogo-recursos.md.
 - **Validación automática** → clase ValidadorCatalogoRecursos.
 
-- **Línea 1:** Recursos identificados → lista de recursos del dominio.
-- **Línea 2:** Verbos por recurso → combinaciones verbo-URI.
-- **Línea 3:** Códigos por verbo → relación sistemática verbo-código.
-- **Línea 4:** Formato de error → problem details.
-- **Línea 5:** Catálogo documentado → documento de catálogo.
-- **Línea 6:** Validación automática → clase de validación.
+
+La etapa incorpora contratos y manejadores REST sobre la misma persistencia que las consultas de 2.1. Las operaciones deben poder encadenarse en pruebas reales: crear, consultar, modificar, volver a consultar y eliminar según las reglas definidas. Esa secuencia proporciona más evidencia que una comprobación aislada del nombre del método.
+
 
 La aplicación de estos conceptos prepara el proyecto para el punto 2.3, donde se estudiará la validación de peticiones con FluentValidation. La validación de peticiones se apoya en los recursos y en los códigos de respuesta definidos en el punto 2.2. El punto 2.3 usará los recursos del catálogo para validar las peticiones de creación y de modificación. El punto 2.2 establece la base que se aplicará en los dos puntos siguientes del módulo 2.
 
@@ -834,13 +794,12 @@ La aplicación de estos conceptos prepara el proyecto para el punto 2.3, donde s
 
 
 
-#### Del concepto a ASP.NET Core 8: DELETE, estado e idempotencia
+#### DELETE, estado e idempotencia en AceriaApp
 
 DELETE busca el recurso y ejecuta Remove y SaveChangesAsync. La primera eliminación devuelve 204; la consulta posterior devuelve 404. La idempotencia describe el estado final del sistema, no la obligación de devolver exactamente el mismo código en peticiones repetidas. Para reproducir 409 se añade la transición POST finalizar y se intenta editar una orden cuyo estado ya no permite modificaciones.
 
-**Aplicación en el proyecto real.** Este comportamiento está materializado en `Program.cs` del estado `2.2-recursos-verbos-codigos`. Busca la instrucción `MapDelete` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
+`MapDelete` completa el ciclo del recurso, pero su semántica debe definirse con cuidado ante peticiones repetidas o identificadores inexistentes. La comprobación incluye la respuesta y la persistencia resultante, no solo el registro del endpoint.
 
-**Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
 
 ## Punto 2.3 — Validación de peticiones
 
