@@ -1,0 +1,41 @@
+name: Reconstruir M02 desde los bloques del manual
+
+on:
+  push:
+    branches: [version-corregida]
+    paths:
+      - 'M02_APIS_REST_ASPNET_CORE/PRACTICAS/M02_PRACTICAS.md'
+      - 'tools/reconstruir_m02_incremental.py'
+      - '.github/workflows/auditar-m02-incremental.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: m02-reconstructor-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  reconstruir:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: version-corregida
+          sparse-checkout: |
+            M02_APIS_REST_ASPNET_CORE
+            tools
+          sparse-checkout-cone-mode: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Aplicar fragmentos y comparar con 2.2-2.4 de referencia
+        run: python tools/reconstruir_m02_incremental.py --report AUDITORIA_RECONSTRUCCION_M02.md
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: auditoria-reconstruccion-m02
+          path: AUDITORIA_RECONSTRUCCION_M02.md
+          retention-days: 30
