@@ -4,6 +4,7 @@ on:
   push:
     branches: [version-corregida]
     paths:
+      - 'tools/auditar_reconstruccion_practicas.py'
       - 'M06_COMUNICACION_MICROSERVICIOS/PRACTICAS/M06_PRACTICAS.md'
       - 'M07_OBSERVABILIDAD_RESILIENCIA/PRACTICAS/M07_PRACTICAS.md'
       - 'M08_API_GATEWAY/PRACTICAS/M08_PRACTICAS.md'
@@ -85,7 +86,7 @@ jobs:
         shell: pwsh
         run: |
           $env:ACERIA_SQL_EVIDENCE_DIR = Join-Path $env:RUNNER_TEMP 'evidencia-sql-m06'
-          python tools/validar_practicas_m06_m08_windows.py --module 6 --report M06_WINDOWS_VALIDACION.md
+          python tools/validar_practicas_m06_m08_windows.py --module 6 --reconstruir-incremental --report M06_WINDOWS_VALIDACION.md
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -160,7 +161,7 @@ jobs:
         shell: pwsh
         run: |
           $env:ACERIA_SQL_EVIDENCE_DIR = Join-Path $env:RUNNER_TEMP 'evidencia-sql-m07'
-          python tools/validar_practicas_m06_m08_windows.py --module 7 --report M07_WINDOWS_VALIDACION.md
+          python tools/validar_practicas_m06_m08_windows.py --module 7 --reconstruir-incremental --report M07_WINDOWS_VALIDACION.md
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -235,7 +236,7 @@ jobs:
         shell: pwsh
         run: |
           $env:ACERIA_SQL_EVIDENCE_DIR = Join-Path $env:RUNNER_TEMP 'evidencia-sql-m08'
-          python tools/validar_practicas_m06_m08_windows.py --module 8 --report M08_WINDOWS_VALIDACION.md
+          python tools/validar_practicas_m06_m08_windows.py --module 8 --reconstruir-incremental --report M08_WINDOWS_VALIDACION.md
       - uses: actions/upload-artifact@v4
         if: always()
         with:
