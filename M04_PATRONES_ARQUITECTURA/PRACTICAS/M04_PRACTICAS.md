@@ -705,7 +705,7 @@ Las pruebas funcionales deben ejecutar el mismo caso de uso primero con un doble
 4. Verifica `Build succeeded.` y `0 Error(s)`. Si hay advertencias, revisa su causa; en el paso siguiente ejecutarás las pruebas del comportamiento completo.
 
 
-**Integración funcional.** Conserva las dependencias de los tests de catálogo y añade Testcontainers.MsSql, el helper compartido y WebApplicationFactory para las pruebas funcionales.
+Conserva las dependencias de los tests de catálogo y añade Testcontainers.MsSql, el helper compartido y WebApplicationFactory para las pruebas funcionales.
 
 **Archivo:** `tests/AceriaApp.Repository.Tests/AceriaApp.Repository.Tests.csproj`. **Operación:** Reemplazar el contenido completo.
 
@@ -731,7 +731,7 @@ Compila para .NET 8, igual que los proyectos heredados. Fija el cliente de conte
 Compila el helper heredado que crea y elimina únicamente la base aislada de cada prueba, sin añadir otro proyecto a la solución.
 
 
-**Integración funcional.** Ejecuta el mismo puerto con un doble sin EF y con el adaptador EF Core sobre SQL Server. Comprueba normalización, capacidad, lectura entre contextos y persistencia de la transición de dominio. Son pruebas de caracterización del contrato real heredado de M3.
+Ejecuta el mismo puerto con un doble sin EF y con el adaptador EF Core sobre SQL Server. Comprueba normalización, capacidad, lectura entre contextos y persistencia de la transición de dominio. Son pruebas de caracterización del contrato real heredado de M3.
 
 **Archivo:** `tests/AceriaApp.Repository.Tests/RepositoryFuncionalesTests.cs`. **Operación:** Crear.
 
@@ -1902,7 +1902,7 @@ La integración muestra cómo se comparte el DbContext dentro del ámbito de la 
 4. Verifica `Build succeeded.` y `0 Error(s)`. Si hay advertencias, revisa su causa; en el paso siguiente ejecutarás las pruebas del comportamiento completo.
 
 
-**Integración funcional.** Expone /api/v1/patrones/ordenes sin alterar los endpoints heredados. 4.2 usa el caso transaccional; 4.3 enruta por ISender; 4.4 traduce Result a 201/200 y ProblemDetails 400/404/409 con código estable.
+Expone /api/v1/patrones/ordenes sin alterar los endpoints heredados. 4.2 usa el caso transaccional; 4.3 enruta por ISender; 4.4 traduce Result a 201/200 y ProblemDetails 400/404/409 con código estable.
 
 **Archivo:** `src/AceriaApp.Api/Patrones/PatronesOrdenesEndpoints.cs`. **Operación:** Crear.
 
@@ -1939,7 +1939,7 @@ public static class PatronesOrdenesEndpoints
 Aísla la ruta de este módulo y conserva los endpoints existentes de M02 y M03. Devuelve 201 y una cabecera Location calculada con la ruta de lectura nombrada y el identificador creado.
 
 
-**Integración funcional.** Integra únicamente registros y mapeo del endpoint de patrones. Conserva íntegros los endpoints, documentación y arranque de M2/M3; en 4.5 reemplaza registros repetidos por AddPatronesOrdenes().
+Integra únicamente registros y mapeo del endpoint de patrones. Conserva íntegros los endpoints, documentación y arranque de M2/M3; en 4.5 reemplaza registros repetidos por AddPatronesOrdenes().
 
 **Archivo:** `src/AceriaApp.Api/Program.cs`. **Operación:** Reemplazar el contenido completo.
 
@@ -2116,7 +2116,7 @@ Permite mapear los endpoints del módulo desde la raíz de composición. Permite
 Durante esta etapa se registra explícitamente el puerto de escritura con su adaptador. La unidad de trabajo comparte el contexto Scoped de la petición. Publica las rutas del nuevo flujo después de construir la aplicación y antes de ejecutarla.
 
 
-**Integración funcional.** Separa el contrato de staging del repositorio autocontenido de M3. Agregar prepara una entidad; Obtener devuelve una entidad seguida por el mismo contexto. No confirma cambios.
+Separa el contrato de staging del repositorio autocontenido de M3. Agregar prepara una entidad; Obtener devuelve una entidad seguida por el mismo contexto. No confirma cambios.
 
 **Archivo:** `src/AceriaApp.Hexagonal.Aplicacion/Patrones/IOrdenTrabajoRepositorio.cs`. **Operación:** Crear.
 
@@ -2136,7 +2136,7 @@ public interface IOrdenTrabajoRepositorio
 Define el puerto que necesita el caso de uso; no depende de DbContext ni de SQL Server. Devuelve una entidad del dominio o null si no existe; el token permite propagar cancelación. Prepara una entidad en el contexto compartido. Este contrato no confirma cambios, porque esa decisión corresponde a la unidad de trabajo.
 
 
-**Integración funcional.** Define en Aplicación el límite explícito de confirmación. Devuelve el número de entradas guardadas y propaga CancellationToken.
+Define en Aplicación el límite explícito de confirmación. Devuelve el número de entradas guardadas y propaga CancellationToken.
 
 **Archivo:** `src/AceriaApp.Hexagonal.Aplicacion/Patrones/IUnitOfWork.cs`. **Operación:** Crear.
 
@@ -2153,7 +2153,7 @@ public interface IUnitOfWork
 La aplicación declara la frontera de persistencia y la infraestructura la implementa. Expone una única confirmación asincrónica del conjunto de cambios preparados; devuelve el número de entradas guardadas y propaga la cancelación.
 
 
-**Integración funcional.** Coordina la regla de capacidad, el agregado al repositorio y un único commit. Es la variante inicial de 4.2 y permanece como referencia ejecutable al introducir Result en 4.4.
+Coordina la regla de capacidad, el agregado al repositorio y un único commit. Es la variante inicial de 4.2 y permanece como referencia ejecutable al introducir Result en 4.4.
 
 **Archivo:** `src/AceriaApp.Hexagonal.Aplicacion/Patrones/OrdenesTransaccionales.cs`. **Operación:** Crear.
 
@@ -2182,7 +2182,7 @@ El caso de uso depende de dos puertos. No instancia repositorios ni conoce el pr
 Prepara el cambio a través del repositorio; aún no hay confirmación. El caso de uso decide el momento de confirmar y propaga el mismo token de cancelación. La consulta se delega al puerto sin introducir consultas EF en la aplicación.
 
 
-**Integración funcional.** Confirma todos los cambios seguidos por el contexto mediante un único SaveChangesAsync. EF Core usa su transacción automática en el proveedor relacional; el alcance se limita a esta base de datos, sin prometer atomicidad de servicios externos.
+Confirma todos los cambios seguidos por el contexto mediante un único SaveChangesAsync. EF Core usa su transacción automática en el proveedor relacional; el alcance se limita a esta base de datos, sin prometer atomicidad de servicios externos.
 
 **Archivo:** `src/AceriaApp.Hexagonal.Infraestructura/Patrones/EfUnitOfWork.cs`. **Operación:** Crear.
 
@@ -2202,7 +2202,7 @@ public sealed class EfUnitOfWork(HexagonalDbContext db) : IUnitOfWork
 La implementación de infraestructura recibe el mismo HexagonalDbContext que utiliza el repositorio del ámbito. Confirma todos los cambios pendientes con una sola llamada. El proveedor relacional usa una transacción automática cuando es necesaria; si falla el lote, se revierte. El token se transmite a EF Core.
 
 
-**Integración funcional.** Implementa staging y lectura con seguimiento sobre HexagonalDbContext. No llama SaveChanges: varios cambios pueden confirmarse juntos mediante IUnitOfWork.
+Implementa staging y lectura con seguimiento sobre HexagonalDbContext. No llama SaveChanges: varios cambios pueden confirmarse juntos mediante IUnitOfWork.
 
 **Archivo:** `src/AceriaApp.Hexagonal.Infraestructura/Patrones/OrdenTrabajoRepositorio.cs`. **Operación:** Crear.
 
@@ -2226,7 +2226,7 @@ public sealed class OrdenTrabajoRepositorio(HexagonalDbContext db) : IOrdenTraba
 Recibe por constructor el contexto del ámbito actual y cumple el puerto de la aplicación. Consulta por identificador con seguimiento de EF Core; la entidad recuperada permanece asociada al contexto compartido. Añade la entidad al seguimiento sin llamar a SaveChanges. Un segundo contexto todavía no debe observarla antes del commit.
 
 
-**Integración funcional.** Conserva las dependencias de los tests de catálogo y añade Testcontainers.MsSql, el helper compartido y WebApplicationFactory para las pruebas funcionales.
+Conserva las dependencias de los tests de catálogo y añade Testcontainers.MsSql, el helper compartido y WebApplicationFactory para las pruebas funcionales.
 
 **Archivo:** `tests/AceriaApp.UnitOfWork.Tests/AceriaApp.UnitOfWork.Tests.csproj`. **Operación:** Reemplazar el contenido completo.
 
@@ -2252,7 +2252,7 @@ Compila para .NET 8, igual que los proyectos heredados. Fija el cliente de conte
 Compila el helper heredado que crea y elimina únicamente la base aislada de cada prueba, sin añadir otro proyecto a la solución.
 
 
-**Integración funcional.** Prueba staging, confirmación, abandono del ámbito y persistencia entre contextos. La prueba de atomicidad limita los lotes a un comando únicamente al inyectar el fallo y lo provoca antes del segundo INSERT, después de verificar uno ejecutado. WhenNeeded deja cero filas; el control negativo Never deja una. Así se demuestra rollback después de una escritura real, sin EF InMemory.
+Prueba staging, confirmación, abandono del ámbito y persistencia entre contextos. La prueba de atomicidad limita los lotes a un comando únicamente al inyectar el fallo y lo provoca antes del segundo INSERT, después de verificar uno ejecutado. WhenNeeded deja cero filas; el control negativo Never deja una. Así se demuestra rollback después de una escritura real, sin EF InMemory.
 
 **Archivo:** `tests/AceriaApp.UnitOfWork.Tests/UnitOfWorkFuncionalesTests.cs`. **Operación:** Crear.
 
@@ -2878,7 +2878,7 @@ MediatR solo aporta una capacidad de mediación cuando los mensajes y sus maneja
 4. Guarda el archivo. La integración de servicios viene incluida en MediatR 12 y se registrará con el ensamblado de los manejadores durante la integración funcional.
 
 
-**Integración funcional.** Instala MediatR 12.4.1 en la capa que define mensajes y handlers, y Logging.Abstractions 8.0.3 para el pipeline. El dominio permanece sin dependencias de infraestructura.
+Instala MediatR 12.4.1 en la capa que define mensajes y handlers, y Logging.Abstractions 8.0.3 para el pipeline. El dominio permanece sin dependencias de infraestructura.
 
 **Archivo:** `src/AceriaApp.Hexagonal.Aplicacion/AceriaApp.Hexagonal.Aplicacion.csproj`. **Operación:** Reemplazar el contenido completo.
 
@@ -3430,7 +3430,7 @@ El resultado de MediatR debe comprobarse desde el host real y también con el ca
 4. Verifica `Build succeeded.` y `0 Error(s)`. Si hay advertencias, revisa su causa; en el paso siguiente ejecutarás las pruebas del comportamiento completo.
 
 
-**Integración funcional.** Expone /api/v1/patrones/ordenes sin alterar los endpoints heredados. 4.2 usa el caso transaccional; 4.3 enruta por ISender; 4.4 traduce Result a 201/200 y ProblemDetails 400/404/409 con código estable.
+Expone /api/v1/patrones/ordenes sin alterar los endpoints heredados. 4.2 usa el caso transaccional; 4.3 enruta por ISender; 4.4 traduce Result a 201/200 y ProblemDetails 400/404/409 con código estable.
 
 **Archivo:** `src/AceriaApp.Api/Patrones/PatronesOrdenesEndpoints.cs`. **Operación:** Reemplazar el contenido completo.
 
@@ -3470,7 +3470,7 @@ Aísla la ruta de este módulo y conserva los endpoints existentes de M02 y M03.
 Devuelve 201 y una cabecera Location calculada con la ruta de lectura nombrada y el identificador creado.
 
 
-**Integración funcional.** Integra únicamente registros y mapeo del endpoint de patrones. Conserva íntegros los endpoints, documentación y arranque de M2/M3; en 4.5 reemplaza registros repetidos por AddPatronesOrdenes().
+Integra únicamente registros y mapeo del endpoint de patrones. Conserva íntegros los endpoints, documentación y arranque de M2/M3; en 4.5 reemplaza registros repetidos por AddPatronesOrdenes().
 
 **Archivo:** `src/AceriaApp.Api/Program.cs`. **Operación:** Reemplazar el contenido completo.
 
@@ -3655,7 +3655,7 @@ Durante esta etapa se registra explícitamente el puerto de escritura con su ada
 Registra el logging como comportamiento transversal del mediador. Publica las rutas del nuevo flujo después de construir la aplicación y antes de ejecutarla.
 
 
-**Integración funcional.** Implementa IPipelineBehavior con logging de inicio y fin del tipo de petición. Propaga cancelación y excepciones; nunca registra datos del cliente ni hace casts de TResponse.
+Implementa IPipelineBehavior con logging de inicio y fin del tipo de petición. Propaga cancelación y excepciones; nunca registra datos del cliente ni hace casts de TResponse.
 
 **Archivo:** `src/AceriaApp.Hexagonal.Aplicacion/Patrones/LoggingBehavior.cs`. **Operación:** Crear.
 
@@ -3687,7 +3687,7 @@ Registra solo el nombre del tipo. No serializa el contenido del comando ni datos
 Entrega la respuesta original sin transformarla.
 
 
-**Integración funcional.** Define command y query tipados y handlers que invocan el caso de uso real. En 4.4 los mensajes pasan a `Result<OrdenHexagonal>` y se añade FinalizarOrdenCommand, conservando el mismo flujo MediatR.
+Define command y query tipados y handlers que invocan el caso de uso real. En 4.4 los mensajes pasan a `Result<OrdenHexagonal>` y se añade FinalizarOrdenCommand, conservando el mismo flujo MediatR.
 
 **Archivo:** `src/AceriaApp.Hexagonal.Aplicacion/Patrones/MensajesOrden.cs`. **Operación:** Crear.
 
@@ -3716,7 +3716,7 @@ El comando transporta los datos de entrada e implementa IRequest con su tipo de 
 Delega la operación completa y transmite la cancelación. La regla de negocio y la confirmación siguen en el caso de uso. MediatR asocia esta clase al contrato de consulta; su único trabajo es delegar la lectura.
 
 
-**Integración funcional.** Conserva las dependencias de los tests de catálogo y añade Testcontainers.MsSql, el helper compartido y WebApplicationFactory para las pruebas funcionales.
+Conserva las dependencias de los tests de catálogo y añade Testcontainers.MsSql, el helper compartido y WebApplicationFactory para las pruebas funcionales.
 
 **Archivo:** `tests/AceriaApp.Mediator.Tests/AceriaApp.Mediator.Tests.csproj`. **Operación:** Reemplazar el contenido completo.
 
@@ -3742,7 +3742,7 @@ Compila para .NET 8, igual que los proyectos heredados. Fija el cliente de conte
 Compila el helper heredado que crea y elimina únicamente la base aislada de cada prueba, sin añadir otro proyecto a la solución.
 
 
-**Integración funcional.** Verifica persistencia y consulta mediante ISender, ejecución observable del pipeline sin payloads y cancelación sin efectos persistidos. En 4.4 adapta la lectura a Result.Valor y registra OrdenesConResultado.
+Verifica persistencia y consulta mediante ISender, ejecución observable del pipeline sin payloads y cancelación sin efectos persistidos. En 4.4 adapta la lectura a Result.Valor y registra OrdenesConResultado.
 
 **Archivo:** `tests/AceriaApp.Mediator.Tests/MediatorFuncionalesTests.cs`. **Operación:** Crear.
 
@@ -4891,7 +4891,7 @@ El recorrido HTTP convierte un resultado de aplicación en códigos estables, co
 4. Verifica `Build succeeded.` y `0 Error(s)`. Si hay advertencias, revisa su causa; en el paso siguiente ejecutarás las pruebas del comportamiento completo.
 
 
-**Integración funcional.** Expone /api/v1/patrones/ordenes sin alterar los endpoints heredados. 4.2 usa el caso transaccional; 4.3 enruta por ISender; 4.4 traduce Result a 201/200 y ProblemDetails 400/404/409 con código estable.
+Expone /api/v1/patrones/ordenes sin alterar los endpoints heredados. 4.2 usa el caso transaccional; 4.3 enruta por ISender; 4.4 traduce Result a 201/200 y ProblemDetails 400/404/409 con código estable.
 
 **Archivo:** `src/AceriaApp.Api/Patrones/PatronesOrdenesEndpoints.cs`. **Operación:** Reemplazar el contenido completo.
 
@@ -4949,7 +4949,7 @@ Centraliza la traducción del error de aplicación al cuerpo Problem Details de 
 Una transición incompatible con el estado del recurso produce 409. Añade el código estable del error como extensión de Problem Details para que el cliente no dependa del texto.
 
 
-**Integración funcional.** Integra únicamente registros y mapeo del endpoint de patrones. Conserva íntegros los endpoints, documentación y arranque de M2/M3; en 4.5 reemplaza registros repetidos por AddPatronesOrdenes().
+Integra únicamente registros y mapeo del endpoint de patrones. Conserva íntegros los endpoints, documentación y arranque de M2/M3; en 4.5 reemplaza registros repetidos por AddPatronesOrdenes().
 
 **Archivo:** `src/AceriaApp.Api/Program.cs`. **Operación:** Reemplazar el contenido completo.
 
@@ -5135,7 +5135,7 @@ Durante esta etapa se registra explícitamente el puerto de escritura con su ada
 Conecta MediatR con los manejadores reales del ensamblado de aplicación. Registra el logging como comportamiento transversal del mediador. Publica las rutas del nuevo flujo después de construir la aplicación y antes de ejecutarla.
 
 
-**Integración funcional.** Define command y query tipados y handlers que invocan el caso de uso real. En 4.4 los mensajes pasan a `Result<OrdenHexagonal>` y se añade FinalizarOrdenCommand, conservando el mismo flujo MediatR.
+Define command y query tipados y handlers que invocan el caso de uso real. En 4.4 los mensajes pasan a `Result<OrdenHexagonal>` y se añade FinalizarOrdenCommand, conservando el mismo flujo MediatR.
 
 **Archivo:** `src/AceriaApp.Hexagonal.Aplicacion/Patrones/MensajesOrden.cs`. **Operación:** Reemplazar el contenido completo.
 
@@ -5171,7 +5171,7 @@ El manejador recibe el caso de uso por constructor; no recibe DbContext ni const
 El manejador de finalización devuelve el mismo resultado explícito que produce el caso de uso.
 
 
-**Integración funcional.** Integra errores esperados de validación, ausencia y conflicto sin excepciones de negocio. Solo hace commit en creación válida o transición válida. Las excepciones operacionales y la cancelación siguen propagándose.
+Integra errores esperados de validación, ausencia y conflicto sin excepciones de negocio. Solo hace commit en creación válida o transición válida. Las excepciones operacionales y la cancelación siguen propagándose.
 
 **Archivo:** `src/AceriaApp.Hexagonal.Aplicacion/Patrones/OrdenesConResultado.cs`. **Operación:** Crear.
 
@@ -5223,7 +5223,7 @@ Prepara la nueva entidad solo después de superar la validación. Confirma el ca
 Devuelve el fallo de lectura sin acceder al valor inexistente. Una segunda finalización produce conflicto y no vuelve a modificar ni confirmar la orden. El dominio realiza la transición válida. El contexto conserva el seguimiento de la entidad recuperada.
 
 
-**Integración funcional.** Implementa un `Result<T>` inmutable con constructor privado y factories que rechazan null. El éxito contiene valor y el fallo un error tipado; acceder a la rama incorrecta lanza. Error valida código, descripción y tipo. No colisiona con el ejemplo del catálogo en API.
+Implementa un `Result<T>` inmutable con constructor privado y factories que rechazan null. El éxito contiene valor y el fallo un error tipado; acceder a la rama incorrecta lanza. Error valida código, descripción y tipo. No colisiona con el ejemplo del catálogo en API.
 
 **Archivo:** `src/AceriaApp.Hexagonal.Aplicacion/Patrones/Result.cs`. **Operación:** Crear.
 
@@ -5273,7 +5273,7 @@ Permite leer el error únicamente en un fallo, evitando estados ambiguos. El con
 La fábrica pública controla la creación del éxito y rechaza un valor nulo. La fábrica pública controla la creación del fallo y rechaza un error nulo.
 
 
-**Integración funcional.** Verifica persistencia y consulta mediante ISender, ejecución observable del pipeline sin payloads y cancelación sin efectos persistidos. En 4.4 adapta la lectura a Result.Valor y registra OrdenesConResultado.
+Verifica persistencia y consulta mediante ISender, ejecución observable del pipeline sin payloads y cancelación sin efectos persistidos. En 4.4 adapta la lectura a Result.Valor y registra OrdenesConResultado.
 
 **Archivo:** `tests/AceriaApp.Mediator.Tests/MediatorFuncionalesTests.cs`. **Operación:** Reemplazar el contenido completo.
 
@@ -5388,7 +5388,7 @@ En `var store = BaseSqlServer.Crear();` se asigna una base SQL Server aislada al
 En `catch { await fixture.DisposeAsync(); throw; }` se si falla la inicialización, libera también la base temporal. Libera los servicios antes de eliminar la base que les pertenece.
 
 
-**Integración funcional.** Conserva las dependencias de los tests de catálogo y añade Testcontainers.MsSql, el helper compartido y WebApplicationFactory para las pruebas funcionales.
+Conserva las dependencias de los tests de catálogo y añade Testcontainers.MsSql, el helper compartido y WebApplicationFactory para las pruebas funcionales.
 
 **Archivo:** `tests/AceriaApp.ResultPattern.Tests/AceriaApp.ResultPattern.Tests.csproj`. **Operación:** Reemplazar el contenido completo.
 
@@ -5414,7 +5414,7 @@ Compila para .NET 8, igual que los proyectos heredados. Fija el cliente de conte
 Compila el helper heredado que crea y elimina únicamente la base aislada de cada prueba, sin añadir otro proyecto a la solución.
 
 
-**Integración funcional.** Prueba invariantes de Result y flujo HTTP real con WebApplicationFactory y SQL Server: 201 con Location, 400 sin persistencia, 404 de lectura y finalización, y 409 al repetir la transición.
+Prueba invariantes de Result y flujo HTTP real con WebApplicationFactory y SQL Server: 201 con Location, 400 sin persistencia, 404 de lectura y finalización, y 409 al repetir la transición.
 
 **Archivo:** `tests/AceriaApp.ResultPattern.Tests/ResultFuncionalesTests.cs`. **Operación:** Crear.
 
@@ -6586,7 +6586,7 @@ Componer los servicios exige asignar correctamente puertos, implementaciones y �
 4. Verifica `Build succeeded.` y `0 Error(s)`. Si hay advertencias, revisa su causa; en el paso siguiente ejecutarás las pruebas del comportamiento completo.
 
 
-**Integración funcional.** Integra únicamente registros y mapeo del endpoint de patrones. Conserva íntegros los endpoints, documentación y arranque de M2/M3; en 4.5 reemplaza registros repetidos por AddPatronesOrdenes().
+Integra únicamente registros y mapeo del endpoint de patrones. Conserva íntegros los endpoints, documentación y arranque de M2/M3; en 4.5 reemplaza registros repetidos por AddPatronesOrdenes().
 
 **Archivo:** `src/AceriaApp.Api/Program.cs`. **Operación:** Reemplazar el contenido completo.
 
@@ -6760,7 +6760,7 @@ Permite mapear los endpoints del módulo desde la raíz de composición. Permite
 Sustituye los registros repetidos del flujo por un método de extensión; se conserva el registro previo del contexto. Publica las rutas del nuevo flujo después de construir la aplicación y antes de ejecutarla.
 
 
-**Integración funcional.** Centraliza registros del flujo real. Requiere HexagonalDbContext registrado por AddServiciosHexagonales; repositorio, UoW, casos de uso y servicios MediatR se resuelven dentro del mismo ámbito. El pipeline abierto no captura dependencias scoped en un singleton.
+Centraliza registros del flujo real. Requiere HexagonalDbContext registrado por AddServiciosHexagonales; repositorio, UoW, casos de uso y servicios MediatR se resuelven dentro del mismo ámbito. El pipeline abierto no captura dependencias scoped en un singleton.
 
 **Archivo:** `src/AceriaApp.Hexagonal.Infraestructura/Patrones/ServiciosPatrones.cs`. **Operación:** Crear.
 
@@ -6798,7 +6798,7 @@ Registra la unidad de trabajo con el mismo ciclo Scoped del contexto; las resolu
 Descubre los manejadores en el ensamblado de la capa de aplicación. Evita capturar un servicio del ámbito desde un manejador de vida más larga. Añade el comportamiento genérico de logging alrededor de todos los manejadores compatibles.
 
 
-**Integración funcional.** Conserva las dependencias de los tests de catálogo y añade Testcontainers.MsSql, el helper compartido y WebApplicationFactory para las pruebas funcionales.
+Conserva las dependencias de los tests de catálogo y añade Testcontainers.MsSql, el helper compartido y WebApplicationFactory para las pruebas funcionales.
 
 **Archivo:** `tests/AceriaApp.InyeccionDependencias.Tests/AceriaApp.InyeccionDependencias.Tests.csproj`. **Operación:** Reemplazar el contenido completo.
 
@@ -6824,7 +6824,7 @@ Compila para .NET 8, igual que los proyectos heredados. Fija el cliente de conte
 Compila el helper heredado que crea y elimina únicamente la base aislada de cada prueba, sin añadir otro proyecto a la solución.
 
 
-**Integración funcional.** Comprueba aislamiento entre ámbitos, ejecución del flujo con la extensión real y rechazo de resolución scoped desde raíz. Añade un singleton cautivo solo en la prueba y verifica que ValidateScopes junto a ValidateOnBuild lo detectan.
+Comprueba aislamiento entre ámbitos, ejecución del flujo con la extensión real y rechazo de resolución scoped desde raíz. Añade un singleton cautivo solo en la prueba y verifica que ValidateScopes junto a ValidateOnBuild lo detectan.
 
 **Archivo:** `tests/AceriaApp.InyeccionDependencias.Tests/InyeccionFuncionalesTests.cs`. **Operación:** Crear.
 
