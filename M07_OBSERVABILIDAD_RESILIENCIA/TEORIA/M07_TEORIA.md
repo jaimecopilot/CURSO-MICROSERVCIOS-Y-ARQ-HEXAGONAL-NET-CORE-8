@@ -51,8 +51,6 @@ Servicio C → evento → destino de logs.
 Correlación → identificador común.
 ```
 
-`Servicio A → evento → destino de logs.` primer servicio; `Servicio B → evento → destino de logs.` segundo servicio; `Servicio C → evento → destino de logs.` tercer servicio; `Correlación → identificador común.` identificador para correlacionar.
-
 Registra eventos; pueden ser texto libre o eventos estructurados, siendo estos últimos preferibles para análisis automático; asocia cada evento con un nivel; y permite la correlación entre servicios. Estas propiedades aportan evidencia de ejecución y ayudan al diagnóstico; no garantizan por sí solas observabilidad completa ni auditoría duradera.
 
 Los errores se diagnostican con información precisa; al mismo tiempo, el comportamiento del sistema se audita. Ambas condiciones permiten que el sistema sea mantenible y que los problemas se resuelvan con rapidez.
@@ -81,10 +79,6 @@ Warning     → situación anómala.
 Error       → error que impide una operación.
 Critical    → error que afecta a todo el sistema.
 ```
-
-`Trace       → información muy detallada.` información muy detallada; `Debug       → información de depuración.` información de depuración; `Information → operación normal.` operación normal; `Warning     → situación anómala.` situación anómala.
-
-`Error       → error que impide una operación.` error que impide una operación; `Critical    → error que afecta a todo el sistema.` error que afecta a todo el sistema.
 
 Los niveles se caracterizan por tres propiedades. Cada nivel tiene un uso específico; el nivel mínimo se configura por entorno; y los niveles permiten filtrar los eventos. Estas condiciones permiten que el logging sea útil sin generar ruido excesivo.
 
@@ -348,10 +342,6 @@ Nivel          → configurado por entorno.
 Validación     → coherencia y comportamiento real.
 ```
 
-`Biblioteca     → Serilog.` Serilog; `Sinks          → consola JSON.` consola JSON; `Enrichers      → LogContext.` LogContext; `Correlación    → X-Correlation-Id.` X-Correlation-Id.
-
-`Nivel          → configurado por entorno.` configurado por entorno; `Validación     → coherencia y comportamiento real.` coherencia y comportamiento real.
-
 La aplicación del logging prepara el proyecto para los puntos 7.2, 7.3 y 7.4. El punto 7.2 estudiará los health checks. El punto 7.3 estudiará la gestión de excepciones. El punto 7.4 estudiará el retry y el circuit breaker mediante Polly. El punto 7.1 establece la base que se aplicará en los tres puntos siguientes.
 
 El catálogo de conceptos ayuda a discutir decisiones, pero la observabilidad se acredita con eventos emitidos por procesos reales. El módulo conserva ese análisis y lo acompaña de middleware, propagación HTTP y pruebas de salida JSON. Una validación de cadenas no prueba esas capacidades.
@@ -408,8 +398,6 @@ Respuesta: 200 OK → disponible.
 Respuesta: 503 Service Unavailable → no disponible.
 ```
 
-`Orquestador → consulta health check → Servicio.` el orquestador consulta el estado; `Respuesta: 200 OK → disponible.` el servicio está disponible; `Respuesta: 503 Service Unavailable → no disponible.` el servicio no está disponible.
-
 Expone el estado del servicio; se consulta de forma periódica; y permite traducir el estado interno a una decisión operativa. Estas condiciones permiten que los sistemas externos tomen decisiones sobre el servicio.
 
 Los servicios no disponibles se detectan de forma automática. Por otra parte, una plataforma configurada puede reiniciar procesos o retirar instancias del balanceador sin intervención manual. Ambas condiciones permiten que el sistema sea más resiliente.
@@ -435,8 +423,6 @@ Liveness  → el servicio está vivo. Si falla, se reinicia.
 Readiness → el servicio está listo. Si falla, se retira del balanceador.
 Startup   → margen de arranque; al agotar el umbral puede reiniciarse.
 ```
-
-`Liveness  → el servicio está vivo. Si falla, se reinicia.` el servicio está vivo; `Readiness → el servicio está listo. Si falla, se retira del balanceador.` el servicio está listo; `Startup   → margen de arranque; al agotar el umbral puede reiniciarse.` el servicio ha arrancado.
 
 Los tres tipos se caracterizan por tres propiedades. Cada tipo tiene un propósito específico; cada tipo se consulta en un momento distinto; y cada tipo provoca una decisión distinta, aunque los ejecute el mismo orquestador. Estas condiciones permiten que el sistema detecte problemas de forma precisa.
 
@@ -465,8 +451,6 @@ Disponibilidad:
 503 Service Unavailable → servicio no disponible.
 Sin respuesta → fallo de observación: proceso, red o timeout.
 ```
-
-`200 OK → servicio disponible.` el servicio responde; `503 Service Unavailable → servicio no disponible.` el servicio responde con error; `Sin respuesta → fallo de observación: proceso, red o timeout.` no se obtuvo respuesta; la causa requiere diagnóstico.
 
 Se mide de forma automática; se expone con health checks; y se usa para tomar decisiones. Estas condiciones permiten que el sistema sea observable y gestionable.
 
@@ -613,8 +597,6 @@ Dockerfile → HEALTHCHECK.
 Kubernetes → livenessProbe, readinessProbe, startupProbe.
 ```
 
-`Dockerfile → HEALTHCHECK.` health check en Docker; `Kubernetes → livenessProbe, readinessProbe, startupProbe.` health checks en Kubernetes.
-
 Los health checks se definen en la configuración del contenedor; el orquestador consulta los endpoints; y las acciones configuradas pueden ejecutarse de forma automática. Estas condiciones permiten que el sistema sea auto-recuperable.
 
 El contenedor empaqueta el proceso; el orquestador aplica una política sobre las sondas. Docker HEALTHCHECK marca un estado de salud, pero Docker por sí solo no reinicia automáticamente un contenedor solo por estar unhealthy. Kubernetes sí aplica acciones según el tipo de probe y sus umbrales.
@@ -638,8 +620,6 @@ Instancia 1 → 200 OK → recibe tráfico.
 Instancia 2 → 503 → no recibe tráfico.
 Instancia 3 → 200 OK → recibe tráfico.
 ```
-
-`Instancia 1 → 200 OK → recibe tráfico.` primera instancia disponible; `Instancia 2 → 503 → no recibe tráfico.` segunda instancia no disponible; `Instancia 3 → 200 OK → recibe tráfico.` tercera instancia disponible.
 
 El balanceador consulta periódicamente; el balanceador retira las instancias no disponibles; y el tráfico se distribuye solo entre instancias disponibles. Estas condiciones permiten que el sistema sea tolerante a fallos.
 
@@ -701,10 +681,6 @@ Formato            → JSON.
 Validación         → coherencia y dependencias reales.
 ```
 
-`Endpoint liveness  → /health/live.` /health/live; `Endpoint readiness → /health/ready.` /health/ready; `Comprobaciones     → SQL y broker cuando se habilitan workers.` SQL y broker cuando se habilitan workers; `Formato            → JSON.` JSON.
-
-`Validación         → coherencia y dependencias reales.` coherencia y dependencias reales.
-
 La aplicación de health checks prepara el proyecto para los puntos 7.3 y 7.4. El punto 7.3 estudiará la gestión de excepciones. El punto 7.4 estudiará el retry y el circuit breaker mediante Polly. El punto 7.2 establece la base que se aplicará en los dos puntos siguientes.
 
 El módulo añade dos rutas con significado diferente y conserva /health de Inventario. MapSaludAceria expone live sin checks externos y ready con tres comprobaciones SQL en Producción y una en Inventario; RabbitMQ se añade si WorkersActivos está habilitado. El contrato se verifica sobre las API ejecutadas, además del catálogo.
@@ -759,8 +735,6 @@ Gestión de excepciones:
 Excepción → captura → registro → traducción → respuesta.
 ```
 
-`Excepción → captura → registro → traducción → respuesta.` flujo de la gestión.
-
 Captura las excepciones no controladas; registra la excepción con contexto; y traduce la excepción en una respuesta uniforme. Estas condiciones permiten que el sistema sea predecible y diagnosticable.
 
 El cliente recibe una respuesta coherente. También el equipo dispone de información para diagnosticar. Ambas condiciones permiten que el sistema sea robusto y observable.
@@ -783,8 +757,6 @@ Una cantidad inválida, una orden inexistente y la caída inesperada de una depe
 Excepciones esperadas    → patrón Result.
 Excepciones excepcionales → excepciones.
 ```
-
-`Excepciones esperadas    → patrón Result.` se representan como valores; `Excepciones excepcionales → excepciones.` se representan como excepciones.
 
 Las excepciones esperadas no se capturan con `try/catch`; al mismo tiempo, las excepciones excepcionales se capturan en el manejador global. Ambas condiciones permiten que el flujo de errores sea explícito y controlado.
 
@@ -1038,10 +1010,6 @@ Registro             → Serilog.
 Validación           → coherencia y respuestas reales.
 ```
 
-`Manejador global     → IExceptionHandler y UseExceptionHandler.` IExceptionHandler y UseExceptionHandler; `Formato              → Problem details.` Problem details; `Excepciones esperadas → Result.` Result; `Excepciones excepcionales → manejador global.` manejador global.
-
-`Registro             → Serilog.` Serilog; `Validación           → coherencia y respuestas reales.` coherencia y respuestas reales.
-
 La aplicación de la gestión de excepciones prepara el proyecto para el punto 7.4. El punto 7.4 estudiará el retry y el circuit breaker mediante Polly. El punto 7.3 establece la base que se aplicará en el punto 7.4.
 
 El resultado del punto es un límite HTTP predecible: fallos inesperados con ProblemDetails, resultados esperados preservados y contexto seguro para diagnóstico. La biblioteca compartida evita que las API de Producción e Inventario implementen versiones incompatibles de esa regla.
@@ -1100,8 +1068,6 @@ Timeout        → limita el tiempo de espera.
 Bulkhead       → aísla recursos por operación.
 ```
 
-`Retry          → reintenta operaciones fallidas.` reintenta operaciones fallidas; `CircuitBreaker → corta el flujo cuando el destino falla.` corta el flujo cuando el destino falla; `Timeout        → limita el tiempo de espera.` limita el tiempo de espera; `Bulkhead       → aísla recursos por operación.` aísla recursos por operación.
-
 Los fallos se contienen dentro de límites definidos; el sistema puede recuperarse automáticamente cuando el recurso vuelve a estar disponible; y la degradación es controlada. Estas condiciones permiten que el sistema sea robusto y predecible.
 
 El sistema tolera fallos transitorios; al mismo tiempo, el sistema evita la saturación por fallos en cascada. Ambas condiciones permiten que el sistema sea tolerante a fallos.
@@ -1158,8 +1124,6 @@ Cerrado     → operaciones normales.
 Abierto     → operaciones fallan inmediatamente.
 Semiabierto → operación de prueba.
 ```
-
-`Cerrado     → operaciones normales.` operaciones normales; `Abierto     → operaciones fallan inmediatamente.` operaciones fallan inmediatamente; `Semiabierto → operación de prueba.` operación de prueba.
 
 Evita la saturación del destino; falla rápido cuando el destino no está disponible; y se recupera de forma automática. Estas condiciones permiten que el sistema sea tolerante a fallos sostenidos.
 
@@ -1385,10 +1349,6 @@ Registro          → reintentos y aperturas.
 Validación        → coherencia, estrategias y HTTP real.
 Cierre del módulo → resumen del estado del proyecto.
 ```
-
-`Cliente HTTP      → políticas de retry, circuit breaker y timeout.` políticas de retry, circuit breaker y timeout; `Parámetros        → ajustados por destino.` ajustados por destino; `Registro          → reintentos y aperturas.` reintentos y aperturas; `Validación        → coherencia, estrategias y HTTP real.` coherencia, estrategias y HTTP real.
-
-`Cierre del módulo → resumen del estado del proyecto.` resumen del estado del proyecto.
 
 El proyecto tiene una base sólida de observabilidad y resiliencia; al mismo tiempo, cada mecanismo tiene límites y pruebas documentados. Ambas condiciones permiten que el sistema evolucione hacia la arquitectura de microservicios completa.
 
