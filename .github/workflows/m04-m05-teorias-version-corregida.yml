@@ -2,7 +2,9 @@ name: M04 y M05 teorias corregidas - PDF y auditoria
 on:
   push:
     branches: ['resguardo/tecnico-m01-m08-20261112']
-    paths: ['.github/workflows/m04-m05-teorias-version-corregida.yml']
+    paths:
+      - '.github/workflows/m04-m05-teorias-version-corregida.yml'
+      - '.github/scripts/m04_m05_regenerar_teorias_editoriales.py'
   workflow_dispatch:
 permissions:
   contents: write
