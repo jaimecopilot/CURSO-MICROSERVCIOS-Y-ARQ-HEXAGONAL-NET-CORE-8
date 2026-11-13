@@ -68,7 +68,7 @@ jobs:
           }
           body { font-family: 'DejaVu Sans', 'Liberation Sans', sans-serif; font-size: 9.2pt; line-height: 1.49; color: #202733; }
           h1 { font-size: 17pt; color: #162942; margin: 18pt 0 11pt; break-after: avoid; }
-          h1:not(:first-of-type) { break-before: page; }
+          /* La cabecera de documentos incrustados no fuerza páginas en blanco. */
           h2 { font-size: 13pt; color: #254365; margin: 17pt 0 8pt; break-after: avoid; }
           h3 { font-size: 11pt; color: #2e5678; margin: 13pt 0 6pt; break-after: avoid; }
           h4 { font-size: 10pt; color: #2e5678; margin: 11pt 0 5pt; break-after: avoid; }
@@ -166,5 +166,7 @@ jobs:
             echo "No hay cambios de PDF"
           else
             git commit -m "Actualizar PDF de prácticas y cabeceras M01-M05"
+            git fetch origin version-corregida
+            git rebase origin/version-corregida
             git push origin HEAD:version-corregida
           fi
