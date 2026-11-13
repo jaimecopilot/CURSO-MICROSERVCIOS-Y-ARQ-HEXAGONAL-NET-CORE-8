@@ -7,6 +7,9 @@ on:
       - 'M06_COMUNICACION_MICROSERVICIOS/PRACTICAS/M06_PRACTICAS.md'
       - 'M07_OBSERVABILIDAD_RESILIENCIA/PRACTICAS/M07_PRACTICAS.md'
       - 'M08_API_GATEWAY/PRACTICAS/M08_PRACTICAS.md'
+      - 'M06_COMUNICACION_MICROSERVICIOS/PROYECTO/**'
+      - 'M07_OBSERVABILIDAD_RESILIENCIA/PROYECTO/**'
+      - 'M08_API_GATEWAY/PROYECTO/**'
       - 'tools/validar_practicas_m06_m08_windows.py'
       - '.github/workflows/m06-m08-practicas-windows-e2e.yml'
   workflow_dispatch:
