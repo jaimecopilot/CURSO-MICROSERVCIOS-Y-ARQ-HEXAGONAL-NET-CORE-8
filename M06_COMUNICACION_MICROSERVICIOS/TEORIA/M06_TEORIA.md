@@ -6,7 +6,9 @@
 
 La teoría del módulo 6 enlaza el modelo de Producción construido hasta M05 con una nueva frontera real, `Inventario.Api`. El objetivo es comprender qué sucede cuando dos procesos colaboran y dejan de compartir memoria y transacciones. Se estudian por separado la consulta HTTP y la propagación de hechos mediante RabbitMQ, antes de combinarlas para justificar las decisiones de diseño.
 
-Los fragmentos muestran ideas concretas y los diagramas ayudan a relacionarlas con los servicios; las prácticas contienen los archivos completos, la configuración de los entornos y las comprobaciones ejecutables. La lectura de existencias sigue siendo informativa: ni la consulta ni el evento reservan o descuentan stock. Los diagramas se conservan en SVG y PNG.**Punto de partida.** Se continúa desde `M05_DDD_CQRS/PROYECTO/5.5-dominio-aceria`. La API heredada mantiene el contexto de Producción, sus entidades, value objects, casos de uso, commands, queries y persistencia SQL Server. El módulo añade `Inventario.Api` como proceso independiente. La frontera de red obliga a diseñar errores, cancelación y contratos; no autoriza a compartir tablas ni entidades entre contextos.
+Los fragmentos muestran ideas concretas y los diagramas ayudan a relacionarlas con los servicios; las prácticas contienen los archivos completos, la configuración de los entornos y las comprobaciones ejecutables. La lectura de existencias sigue siendo informativa: ni la consulta ni el evento reservan o descuentan stock. Los diagramas se conservan en SVG y PNG.
+
+**Punto de partida.** Se continúa desde `M05_DDD_CQRS/PROYECTO/5.5-dominio-aceria`. La API heredada mantiene el contexto de Producción, sus entidades, value objects, casos de uso, commands, queries y persistencia SQL Server. El módulo añade `Inventario.Api` como proceso independiente. La frontera de red obliga a diseñar errores, cancelación y contratos; no autoriza a compartir tablas ni entidades entre contextos.
 
 **Recorrido funcional.** El punto 6.1 consulta disponibilidad informativa mediante el puerto `IClienteInventario` y un cliente HTTP tipado. El punto 6.2 comunica `OrdenPlanificadaV1` con outbox SQL unido al cambio de estado de Producción, RabbitMQ y un consumidor con inbox SQL que registra una proyección de planificación en Inventario. El punto 6.3 combina consulta HTTP, planificación local y outbox, respuesta `202 Accepted` y propagación en segundo plano. La lectura de la proyección es eventual. Ninguno de esos pasos reserva ni descuenta stock.
 
@@ -18,7 +20,7 @@ Los fragmentos muestran ideas concretas y los diagramas ayudan a relacionarlas c
 
 ![Mapa de comunicación del módulo 6](../GRAFICOS/comunicacion_microservicios.svg)
 
-*Interpretación del mapa:* Producción confirma estado y outbox en una transacción local. La consulta HTTP es informativa. Publicador, broker y consumidor propagan el hecho a otra transacción local, con posible retraso y reentrega.
+El mapa muestra cómo Producción confirma estado y outbox en una transacción local. La consulta HTTP es informativa. Publicador, broker y consumidor propagan el hecho a otra transacción local, con posible retraso y reentrega.
 
 ---
 
@@ -38,6 +40,7 @@ Los fragmentos muestran ideas concretas y los diagramas ayudan a relacionarlas c
 ## Comprender la dependencia temporal de una llamada HTTP
 
 La consulta de inventario nos permite estudiar qué significa necesitar una respuesta remota, cómo se representa ese contrato en .NET y qué riesgos aparecen al esperar a otro proceso. Analizaremos primero la interacción HTTP, después la separación mediante un cliente tipado y finalmente la evidencia que debe obtenerse antes de considerar fiable la integración.
+
 ### Definición de comunicación síncrona
 
 Cuando un caso de uso necesita consultar otro servicio antes de decidir, aparece una dependencia temporal: la petición de Producción no puede concluir correctamente sin conocer el resultado de Inventario. Esta interacción es síncrona desde el punto de vista del negocio, aunque el código emplee `async` y `await` para no ocupar un hilo durante la espera de E/S. Conviene separar esos dos significados de «síncrono». El cliente envía una solicitud, recibe una respuesta o un fallo y debe interpretar ambos. HTTP/1.1 y HTTP/2 se transportan sobre TCP; HTTP/3 utiliza QUIC sobre UDP. Ninguna versión elimina la necesidad de acotar el tiempo de espera ni de saber qué hacer si el destino no responde.
@@ -49,11 +52,11 @@ Servicio A → petición HTTP → Servicio B.
 Servicio A ← respuesta HTTP ← Servicio B.
 ```
 
-la operación petición HTTP → Servicio B.` → el servicio A envía la petición; `Servicio A ← respuesta HTTP ← Servicio B.` el servicio A recibe la respuesta.
+El esquema representa los dos sentidos del intercambio: la petición sale del servicio A hacia el B y la respuesta regresa al solicitante antes de que pueda proseguir la operación dependiente.
 
-La comunicación síncrona se caracteriza por tres propiedades. La primera es que el emisor espera la respuesta. La segunda es que el receptor debe estar disponible en el momento de la petición. La tercera es que la comunicación tiene un tiempo de espera máximo. Las tres propiedades permiten que la interacción sea simple pero introducen acoplamiento temporal.
+En este recorrido, el emisor espera la respuesta; también el receptor debe estar disponible en el momento de la petición, y finalmente la comunicación tiene un tiempo de espera máximo. En conjunto, estas condiciones hacen que la interacción sea simple pero introducen acoplamiento temporal.
 
-La aplicación de la comunicación síncrona tiene dos consecuencias prácticas. La primera es que el flujo de datos es directo y fácil de seguir. La segunda es que el fallo del servicio destino afecta al servicio origen. La combinación de ambas permite que la comunicación sea simple pero también frágil ante fallos.
+En la práctica, el flujo de datos es directo y fácil de seguir y el fallo del servicio destino afecta al servicio origen. Así, la comunicación sea simple pero también frágil ante fallos.
 
 Distingue dos niveles de asincronía. En el nivel del programa, un método devuelve Task y libera el hilo mientras espera E/S. En el nivel del negocio, Producción sigue necesitando el resultado de Inventario para decidir su siguiente paso. Usar async no rompe esa dependencia temporal.
 
@@ -82,7 +85,7 @@ if (material is null) throw new InvalidDataException("Respuesta JSON vacía.");
 
 `using var response = await httpClient.GetAsync("api/v1/materiales/CHAPA-3MM", ct);` envía GET con cancelación y dispone la respuesta al salir del ámbito; el cliente ya está inyectado; `response.EnsureSuccessStatusCode();` rechaza estados distintos de 2xx; el siguiente bloque distingue específicamente 404; `var material = await response.Content.ReadFromJsonAsync<MaterialDto>(cancellationToken: ct);` deserializa el contrato y propaga el token también durante la lectura; `if (material is null) throw new InvalidDataException("Respuesta JSON vacía.");` rechaza un cuerpo que no contiene el DTO esperado, en vez de inventar un resultado válido.
 
-HTTP como protocolo se caracteriza por tres propiedades. La primera es que es un protocolo de petición-respuesta. La segunda es que está soportado por todas las plataformas. La tercera es que se integra con herramientas de monitorización. Las tres propiedades permiten que la comunicación síncrona sea universal y observable.
+Es un protocolo de petición-respuesta, está soportado por todas las plataformas y se integra con herramientas de monitorización. En conjunto, estas condiciones hacen que la comunicación síncrona sea universal y observable.
 
 El contrato HTTP incluye ruta, método, códigos de estado, tipo de contenido y cuerpo. Una conexión exitosa solo indica que hubo intercambio de bytes; una respuesta 200 con un cuerpo incompatible sigue incumpliendo el contrato que necesita el consumidor.
 
@@ -130,7 +133,7 @@ public sealed class ClienteInventarioHttp(HttpClient httpClient) : IClienteInven
 
 `using var response = await httpClient.GetAsync(ruta, ct);` envía la solicitud con cancelación y garantiza la disposición de la respuesta; `response.EnsureSuccessStatusCode();` propaga como error técnico un 500, 503 u otro estado no satisfactorio; `return await response.Content.ReadFromJsonAsync<MaterialDto>(cancellationToken: ct)` deserializa JSON con el token de cancelación; `return material is not null && material.Stock >= cantidad;` compara el dato recibido; no reserva stock ni protege frente a otras operaciones.
 
-El cliente tipado se caracteriza por tres propiedades. La primera es que encapsula las llamadas al servicio destino. La segunda es que expone métodos específicos del servicio. La tercera es que centraliza la configuración. Las tres propiedades permiten que la comunicación síncrona sea mantenible y testeable.
+Encapsula las llamadas al servicio destino; expone métodos específicos del servicio; y centraliza la configuración. En conjunto, estas condiciones hacen que la comunicación síncrona sea mantenible y testeable.
 
 El puerto IClienteInventario expresa lo que necesita Producción, mientras el adaptador sabe de URL, códigos HTTP y JSON. Esta separación permite probar el caso de uso con un doble del puerto y probar el mapeo del adaptador con respuestas HTTP controladas.
 
@@ -163,7 +166,7 @@ builder.Services.AddHttpClient<IClienteInventario, ClienteInventarioHttp>(client
 
 `client.DefaultRequestHeaders.Accept.ParseAdd("application/json");` solicita una representación JSON mediante Accept; `});` cierra el registro de dependencias.
 
-La configuración del cliente tipado tiene dos consecuencias prácticas. La primera es que la configuración se centraliza en un único punto. La segunda es que la factoría administra los manejadores subyacentes y sus conexiones. La combinación de ambas permite que la comunicación síncrona sea robusta y mantenible.
+La configuración se centraliza en un único punto. También la factoría administra los manejadores subyacentes y sus conexiones. Así, la comunicación síncrona sea robusta y mantenible.
 
 Centralizar configuración permite cambiar el destino por entorno sin recompilar el dominio. La configuración debe validar que la URL existe, es absoluta y usa un esquema admitido. Un operador debería descubrir un error de configuración al arrancar, no tras la primera petición de un usuario.
 
@@ -186,9 +189,9 @@ Servicio A espera → Servicio B responde → Servicio A continúa.
 Servicio A espera → Servicio B no responde → Servicio A falla.
 ```
 
-la operación Servicio B responde → Servicio A continúa.` → caso exitoso; la operación Servicio B no responde → Servicio A falla.` → caso de fallo.
+El esquema contrasta una respuesta recibida con la imposibilidad de completar la operación cuando el destino no contesta; no implica que las demás funciones del servicio de origen dejen de atender peticiones.
 
-El acoplamiento temporal tiene dos consecuencias prácticas. La primera es que la disponibilidad del servicio destino afecta al servicio origen. La segunda es que la latencia del servicio destino afecta a la latencia del servicio origen. La combinación de ambas permite que la comunicación síncrona sea directa pero también frágil.
+En la práctica, la disponibilidad del servicio destino afecta al servicio origen y la latencia del servicio destino afecta a la latencia del servicio origen. Así, la comunicación síncrona sea directa pero también frágil.
 
 Una cadena síncrona suma dependencias de tiempo y disponibilidad. Si A necesita B y B necesita C, el usuario de A observa retrasos y fallos de toda la cadena. El diseño debe justificar cada dependencia antes de añadir políticas que solo intentan amortiguarla.
 
@@ -215,7 +218,7 @@ Disponibilidad.
 
 `Fallo en cascada.` primer riesgo; `Latencia acumulada.` segundo riesgo; `Saturación.` tercer riesgo; `Disponibilidad.` cuarto riesgo.
 
-Los riesgos tienen dos consecuencias prácticas. La primera es que la comunicación síncrona requiere políticas de resiliencia. La segunda es que la comunicación síncrona requiere monitorización. La combinación de ambas permite que los riesgos se mitiguen con timeouts, reintentos y circuit breakers.
+Los riesgos tienen dos consecuencias prácticas. La comunicación síncrona requiere políticas de resiliencia; por su parte, la comunicación síncrona requiere monitorización. Así, los riesgos se mitiguen con timeouts, reintentos y circuit breakers.
 
 Un fallo en cascada aparece cuando cada servicio conserva demasiadas solicitudes mientras espera a otro. Aunque await no bloquee un hilo durante E/S, las tareas pendientes consumen memoria, conexiones, tiempo y capacidad de concurrencia. La programación asíncrona no sustituye el control de carga.
 
@@ -241,7 +244,7 @@ response.EnsureSuccessStatusCode();
 
 `using var limite = CancellationTokenSource.CreateLinkedTokenSource(ct);` combina cancelación del llamador con un presupuesto local de espera; `limite.CancelAfter(TimeSpan.FromSeconds(2));` solicita cancelación al agotarse dos segundos; no deshace trabajo remoto ya confirmado; `using var response = await httpClient.GetAsync("api/v1/materiales/CHAPA-3MM", limite.Token);` propaga el presupuesto a la llamada y dispone la respuesta; `response.EnsureSuccessStatusCode();` no transforma una respuesta de error en éxito; los reintentos se deciden por separado.
 
-La mitigación de los riesgos tiene dos consecuencias prácticas. La primera es que la comunicación síncrona se vuelve más robusta. La segunda es que la comunicación síncrona se vuelve más compleja. La combinación de ambas permite que los riesgos se controlen a costa de añadir código.
+La comunicación síncrona se vuelve más robusta; a la vez, la comunicación síncrona se vuelve más compleja. Así, los riesgos se controlen a costa de añadir código.
 
 Ordena las decisiones: presupuesto total, timeout por intento, errores transitorios, número máximo de reintentos, espera con jitter y límites de concurrencia. Un reintento es una nueva ejecución y exige saber si repetir la operación puede alterar el negocio.
 
@@ -264,9 +267,9 @@ Servicio A crea orden → Servicio B descuenta stock.
 Si Servicio B falla → Servicio A debe compensar.
 ```
 
-la operación Servicio B descuenta stock.` → operación distribuida; la operación Servicio A debe compensar.` → compensación manual.
+El diagrama presenta una operación distribuida hipotética en la que el segundo servicio descuenta existencias y el primero podría necesitar compensar un cambio local. No describe una reserva implementada por AceriaApp.
 
-El ejemplo de crear una orden y descontar stock es conceptual; no corresponde a una capacidad implementada del módulo. La consistencia tiene dos consecuencias prácticas. La primera es que la operación distribuida no es atómica. La segunda es que la compensación se implementa explícitamente. La combinación de ambas permite que el sistema mantenga la coherencia a costa de añadir complejidad.
+El ejemplo de crear una orden y descontar stock es conceptual; no corresponde a una capacidad implementada del módulo. La operación distribuida no es atómica. También la compensación se implementa explícitamente. Así, el sistema mantenga la coherencia a costa de añadir complejidad.
 
 La regla importante es qué datos deben cambiar juntos. Dos servicios tienen normalmente transacciones locales diferentes. Una respuesta HTTP de éxito de Inventario no hace atómico un commit posterior de Producción; un fallo entre ambos deja un estado intermedio que necesita tratamiento.
 
@@ -300,7 +303,7 @@ Consistencia: diseñar invariantes, no inferirlas del protocolo.
 
 `Trabajo diferible: considerar mensajería.` el procesamiento diferido puede reducir dependencia temporal; `Consistencia: diseñar invariantes, no inferirlas del protocolo.` la consistencia depende de las fronteras de datos y coordinación.
 
-La decisión tiene dos consecuencias prácticas. La primera es que la comunicación síncrona se aplica donde aporta valor. La segunda es que la comunicación asíncrona se aplica donde la síncrona no es adecuada. La combinación de ambas permite que el sistema elija el estilo adecuado a cada operación.
+En la práctica, la comunicación síncrona se aplica donde aporta valor y la comunicación asíncrona se aplica donde la síncrona no es adecuada. Así, el sistema elija el estilo adecuado a cada operación.
 
 Formula la pregunta del actor antes de elegir transporte: «¿qué hay ahora?», «¿se aceptó mi solicitud?» y «¿terminó el trabajo?» son preguntas diferentes. Una respuesta HTTP puede contestar cualquiera si el contrato define su alcance, mientras un evento comunica un hecho a destinatarios desacoplados.
 
@@ -371,6 +374,7 @@ Verifica casos satisfactorios y de fallo con el servicio remoto activo, detenido
 ## Comunicar hechos sin esperar a sus consumidores
 
 Una planificación pertenece a Producción aunque Inventario deba conocerla. Separaremos la confirmación local del transporte del evento, estudiaremos las garantías de RabbitMQ y veremos por qué outbox e inbox son necesarios para soportar fallos y reentregas sin inventar una transacción global.
+
 ### Definición de comunicación asíncrona
 
 En una comunicación asíncrona basada en eventos, quien produce un hecho confirmado no necesita esperar a que todos sus consumidores finalicen el trabajo. Producción puede registrar que una orden fue planificada y preparar su publicación; Inventario actualizará su proyección cuando reciba el mensaje. La llamada al broker sí puede implicar una confirmación técnica y, al usar `await`, esperar esa E/S no bloquea un hilo del servidor. Lo decisivo es que el flujo de negocio ya no necesita una respuesta inmediata del consumidor. Esta separación introduce nuevos problemas que hay que diseñar: durabilidad, retrasos, duplicados, orden y recuperación.
@@ -382,11 +386,11 @@ Servicio A → publica evento → Broker → Servicio B consume.
 Servicio A continúa sin esperar el efecto del consumidor.
 ```
 
-la operación publica evento → Broker → Servicio B consume.` → flujo asíncrono; `Servicio A continúa sin esperar el efecto del consumidor.` el productor no espera la finalización remota; la confirmación técnica tiene otro alcance.
+El mensaje pasa del productor al broker y de allí al consumidor. El proceso emisor continúa sin esperar a que se complete el efecto remoto, aunque la confirmación técnica de publicación sea una operación distinta.
 
-La comunicación asíncrona se caracteriza por tres propiedades. La primera es que el publicador no espera el efecto de negocio del consumidor. La segunda es que el publicador y el consumidor no necesitan estar disponibles al mismo tiempo. La tercera es que el broker almacena y enruta mensajes según la topología y las políticas configuradas; la aplicación sigue siendo responsable de publicar, confirmar, reintentar y procesar correctamente. Las tres propiedades permiten que la interacción sea desacoplada temporalmente.
+El publicador no espera el efecto de negocio del consumidor, el publicador y el consumidor no necesitan estar disponibles al mismo tiempo y el broker almacena y enruta mensajes según la topología y las políticas configuradas; la aplicación sigue siendo responsable de publicar, confirmar, reintentar y procesar correctamente. En conjunto, estas condiciones hacen que la interacción sea desacoplada temporalmente.
 
-La aplicación de la comunicación asíncrona tiene dos consecuencias prácticas. La primera es que el publicador no depende de la disponibilidad del consumidor. La segunda es que el consumidor no necesita invocar una instancia concreta del publicador, aunque depende del significado, esquema y reglas de evolución de su contrato. La combinación de ambas permite que el sistema sea más resiliente y más evolutivo.
+El publicador no depende de la disponibilidad del consumidor; a la vez, el consumidor no necesita invocar una instancia concreta del publicador, aunque depende del significado, esquema y reglas de evolución de su contrato. Así, el sistema sea más resiliente y más evolutivo.
 
 El desacoplamiento temporal desplaza la espera, no elimina dependencias. Producción no espera el efecto remoto, pero necesita confirmar su propio estado y conservar el evento pendiente. El publicador necesita después conectarse al broker, y el consumidor necesita su base de datos.
 
@@ -407,9 +411,9 @@ Eventos de dominio    → dentro de un contexto.
 Eventos de integración → entre contextos.
 ```
 
-la operación dentro de un contexto.` → expresa el paso o la relación indicada en el ejemplo; la operación entre contextos.` → segundo tipo.
+La primera relación se mantiene dentro del contexto que origina el hecho; la segunda publica una representación apropiada para que otro contexto lo conozca.
 
-La distinción entre eventos de dominio y de integración tiene dos consecuencias prácticas. La primera es que el modelo del dominio no conoce el broker. La segunda es que los eventos de integración se diseñan como contratos públicos. La combinación de ambas permite que el dominio sea independiente de la infraestructura de mensajería.
+El modelo del dominio no conoce el broker. También los eventos de integración se diseñan como contratos públicos. Así, el dominio sea independiente de la infraestructura de mensajería.
 
 Un evento de dominio expresa un hecho útil dentro del modelo; un evento de integración publica una parte estable de ese hecho para otros contextos. No es obligatorio serializar directamente el objeto interno. La traducción permite ocultar detalles que cambiarán con el diseño del agregado.
 
@@ -440,7 +444,7 @@ public sealed record OrdenPlanificadaV1(
 
 `DateTimeOffset OcurridoEnUtc,` expresa el instante con zona UTC; no constituye un orden global; `IReadOnlyList<LineaPlanificadaV1> Lineas,` incluye las líneas necesarias para construir la proyección sin consultar tablas ajenas; `int Version = 1);` declara la versión admitida del contrato; el consumidor valida este valor.
 
-El evento se caracteriza por tres propiedades. La primera es que es inmutable. La segunda es que contiene la información necesaria para que el consumidor reaccione. La tercera es que su nombre expresa un hecho ya ocurrido, como `OrdenPlanificada`, y no una instrucción como `PlanificarOrden`. Las tres propiedades permiten que el evento sea un contrato estable y explícito.
+Es inmutable. Al mismo tiempo, contiene la información necesaria para que el consumidor reaccione; además, su nombre expresa un hecho ya ocurrido, como `OrdenPlanificada`, y no una instrucción como `PlanificarOrden`. En conjunto, estas condiciones hacen que el evento sea un contrato estable y explícito.
 
 Estos contratos pertenecen a `AceriaApp.Comunicacion.Contratos`. El consumidor valida `Version`, la identidad y el contenido; una versión incompatible exige una estrategia de convivencia. La clave primaria por EventoId, el índice único por OrdenId y la huella del contenido permiten detectar duplicados y rechazar una identidad reutilizada con otro payload.
 
@@ -556,7 +560,7 @@ Confirmación del broker y ack del consumidor son distintos.
 
 `Otra suscripción necesita otra cola y su enlace.` cada suscripción independiente tiene su propia copia; `Confirmación del broker y ack del consumidor son distintos.` confirmar publicación no significa haber confirmado el efecto SQL remoto.
 
-El broker se caracteriza por tres propiedades. La primera es que proporciona almacenamiento, enrutamiento y confirmaciones bajo condiciones de operación definidas. La segunda es que desacopla al publicador del consumidor. La tercera es que permite varios consumidores. Las tres propiedades permiten que el sistema sea escalable y resiliente.
+Proporciona almacenamiento, enrutamiento y confirmaciones bajo condiciones de operación definidas, desacopla al publicador del consumidor y permite varios consumidores. En conjunto, estas condiciones hacen que el sistema sea escalable y resiliente.
 
 En RabbitMQ, exchange, binding y cola tienen responsabilidades diferentes. El exchange aplica reglas de enrutamiento; la cola conserva mensajes y los ofrece a consumidores. La durabilidad de la cola conserva su definición, mientras la persistencia del mensaje expresa cómo debe almacenarse su contenido.
 
@@ -585,7 +589,7 @@ Curso: outbox + confirms + ack manual + inbox transaccional.
 
 `Curso: outbox + confirms + ack manual + inbox transaccional.` combina mecanismos de transporte con atomicidad y deduplicación locales.
 
-Las garantías de entrega tienen dos consecuencias prácticas. La primera es que la entrega como mínimo una vez requiere idempotencia en el consumidor. La segunda es que un efecto local único requiere deduplicación persistente y una transacción que incluya el efecto. Un registro inbox separado de la actualización de negocio deja una ventana de pérdida o duplicación. La combinación de ambas permite que el sistema elija la garantía adecuada a cada operación.
+Las garantías de entrega tienen dos consecuencias prácticas. La entrega como mínimo una vez requiere idempotencia en el consumidor; a la vez, un efecto local único requiere deduplicación persistente y una transacción que incluya el efecto. Un registro inbox separado de la actualización de negocio deja una ventana de pérdida o duplicación. Así, el sistema elija la garantía adecuada a cada operación.
 
 Las confirmaciones del publicador cubren el tramo hacia el broker; los acknowledgements del consumidor cubren el tramo de entrega hacia la aplicación. Ninguna de ellas convierte automáticamente dos bases de datos y un broker en una transacción única.
 
@@ -616,7 +620,7 @@ Resiliencia.
 
 `Desacoplamiento temporal.` primer beneficio; `Desacoplamiento de conocimiento.` segundo beneficio; `Escalabilidad.` tercer beneficio; `Resiliencia.` cuarto beneficio.
 
-Los beneficios tienen dos consecuencias prácticas. La primera es que el sistema se adapta mejor a las cargas desiguales. La segunda es que el sistema tolera mejor los fallos. La combinación de ambas permite que el sistema sea más robusto.
+Los beneficios tienen dos consecuencias prácticas. El sistema se adapta mejor a las cargas desiguales. También el sistema tolera mejor los fallos. Así, el sistema sea más robusto.
 
 Una cola permite desacoplar ritmo de llegada y ritmo de trabajo durante un intervalo. Esa elasticidad es útil cuando Inventario puede ponerse al día después de un pico. El beneficio se mide por retraso tolerable y recuperación, no solo por haber introducido un broker.
 
@@ -643,7 +647,7 @@ Observabilidad.
 
 `Complejidad.` primer coste; `Consistencia eventual.` segundo coste; `Idempotencia.` tercer coste; `Observabilidad.` cuarto coste.
 
-Los costes tienen dos consecuencias prácticas. La primera es que la comunicación asíncrona no se aplica en todos los contextos. La segunda es que su aplicación se concentra donde aporta valor. La combinación de ambas permite que el esfuerzo se invierta donde produce beneficio.
+Los costes tienen dos consecuencias prácticas. En la práctica, la comunicación asíncrona no se aplica en todos los contextos y su aplicación se concentra donde aporta valor. Así, el esfuerzo se invierta donde produce beneficio.
 
 La consistencia eventual significa que una vista derivada puede retrasarse respecto de la fuente y debe converger cuando el sistema se recupera. No equivale a aceptar cualquier divergencia indefinida. El contrato debe definir un plazo razonable y cómo detectar una planificación que no progresa.
 
@@ -727,11 +731,11 @@ Interacción B → comunicación asíncrona.
 Interacción C → comunicación híbrida.
 ```
 
-la operación comunicación síncrona.` → primera interacción; la operación comunicación asíncrona.` → segunda interacción; la operación comunicación híbrida.` → tercera interacción.
+La representación compara el intercambio HTTP, la propagación por eventos y la combinación de ambos estilos en un único recorrido de negocio.
 
-La decisión se caracteriza por tres propiedades. La primera es que se toma por interacción y no por sistema. La segunda es que se basa en criterios explícitos. La tercera es que se documenta para que sea trazable. Las tres propiedades permiten que la elección sea razonada y que se revise cuando cambien las circunstancias.
+Se toma por interacción y no por sistema, se basa en criterios explícitos y se documenta para que sea trazable. En conjunto, estas condiciones hacen que la elección sea razonada y que se revise cuando cambien las circunstancias.
 
-La aplicación de la decisión tiene dos consecuencias prácticas. La primera es que el sistema se adapta a las necesidades de cada interacción. La segunda es que la arquitectura es más flexible. La combinación de ambas permite que el sistema sea coherente y mantenible.
+El sistema se adapta a las necesidades de cada interacción; a la vez, la arquitectura es más flexible. Así, el sistema sea coherente y mantenible.
 
 La unidad de decisión es una interacción con una necesidad concreta. Elegir «todos los servicios usan eventos» oculta diferencias entre consultar un dato, aceptar una intención y notificar un hecho. Una misma orden puede recorrer las tres formas a lo largo de su vida.
 
@@ -757,7 +761,7 @@ Resultado más tarde: estado consultable y plazo observable.
 
 `Respuesta que necesita el actor:` distingue el significado de la respuesta; `Resultado remoto ahora: evaluar petición-respuesta.` el siguiente paso depende del resultado; `Aceptación duradera ahora: HTTP 202 y trabajo posterior.` aceptar no equivale a completar; `Resultado más tarde: estado consultable y plazo observable.` el retraso requiere una experiencia de usuario y una política de recuperación.
 
-El criterio tiene dos consecuencias prácticas. La primera es que una interacción puede devolver aceptación inmediata y completar el trabajo después. La segunda es que un proceso de fondo también puede necesitar una respuesta HTTP para dar su siguiente paso. La combinación de ambas permite que el estilo se ajuste a la naturaleza de la operación.
+Una interacción puede devolver aceptación inmediata y completar el trabajo después. También un proceso de fondo también puede necesitar una respuesta HTTP para dar su siguiente paso. Así, el estilo se ajuste a la naturaleza de la operación.
 
 La palabra «inmediata» requiere un plazo y un significado. Un actor puede necesitar un número de seguimiento en dos segundos y aceptar el resultado final después. Ese diseño permite una confirmación síncrona de aceptación y procesamiento asíncrono sin engañar al usuario.
 
@@ -815,7 +819,7 @@ HTTP o eventos: no sustituyen la frontera de consistencia.
 
 `HTTP o eventos: no sustituyen la frontera de consistencia.` ambos estilos requieren un diseño explícito de los datos.
 
-El criterio tiene dos consecuencias prácticas. La primera es que una Saga coordina transacciones locales con compensaciones y estados intermedios; no proporciona aislamiento ni atomicidad ACID global. Two-Phase Commit es una coordinación transaccional diferente, con participantes compatibles y costes de disponibilidad. La segunda es que la consistencia eventual exige convergencia y recuperación; algunas operaciones necesitan compensación y otras solo una proyección idempotente. La combinación de ambas permite que el estilo se ajuste a los requisitos de consistencia.
+En la práctica, una Saga coordina transacciones locales con compensaciones y estados intermedios; no proporciona aislamiento ni atomicidad ACID global. Two-Phase Commit es una coordinación transaccional diferente, con participantes compatibles y costes de disponibilidad y la consistencia eventual exige convergencia y recuperación; algunas operaciones necesitan compensación y otras solo una proyección idempotente. Así, el estilo se ajuste a los requisitos de consistencia.
 
 Una invariante necesita un propietario capaz de hacerla cumplir en su frontera transaccional. Si no se permite que el stock disponible baje de cero, consultar desde Producción y guardar en otra base no protege esa regla. Inventario necesitaría una operación autoritativa de reserva o consumo.
 
@@ -849,7 +853,7 @@ Reutilizar conexiones en HTTP y en mensajería.
 
 `Medir percentiles de latencia, backlog y edad del pendiente.` hace visible la saturación y el retraso; `Reutilizar conexiones en HTTP y en mensajería.` evita deducir el protocolo solo de la frecuencia.
 
-El criterio tiene dos consecuencias prácticas. La primera es que las tasas y tamaños condicionan capacidad, almacenamiento y límites del broker. La segunda es que hay que evaluar la concurrencia y reutilización de conexiones en ambos estilos. La combinación de ambas permite que el estilo se ajuste a la carga del sistema.
+Las tasas y tamaños condicionan capacidad, almacenamiento y límites del broker; por su parte, hay que evaluar la concurrencia y reutilización de conexiones en ambos estilos. Así, el estilo se ajuste a la carga del sistema.
 
 La capacidad se razona con tasas y tiempo. Si entran cien eventos por segundo y salen ochenta, se acumulan veinte cada segundo mientras persista esa diferencia. Una cola ofrece un lugar para esperar, pero aumenta almacenamiento y latencia del resultado final.
 
@@ -878,7 +882,7 @@ Mensajes antiguos pueden permanecer pendientes.
 
 `Mensajes antiguos pueden permanecer pendientes.` el consumidor debe tolerar contratos emitidos antes de su despliegue.
 
-El criterio tiene dos consecuencias prácticas. La primera es que la autonomía requiere contratos estables. La segunda es que incluso un equipo coordinado necesita compatibilidad durante un despliegue gradual y con mensajes antiguos pendientes. La combinación de ambas permite que el estilo se ajuste a la organización del equipo.
+La autonomía requiere contratos estables; a la vez, incluso un equipo coordinado necesita compatibilidad durante un despliegue gradual y con mensajes antiguos pendientes. Así, el estilo se ajuste a la organización del equipo.
 
 La autonomía real depende de poder desplegar cambios compatibles, identificar propietarios y mantener contratos antiguos durante la transición. El transporte no elimina conversaciones entre equipos sobre significado, datos obligatorios o eliminación de campos.
 
@@ -908,7 +912,7 @@ Asignar responsables y comprobar restauración.
 
 `Recuperar mensajes inválidos o pendientes.` un error permanente necesita tratamiento definido; `Asignar responsables y comprobar restauración.` la operación incluye personas y procedimientos.
 
-El criterio tiene dos consecuencias prácticas. La primera es que la madurez operativa requiere inversión en herramientas. La segunda es que la falta de madurez requiere simplicidad. La combinación de ambas permite que el estilo se ajuste a la capacidad del equipo.
+La madurez operativa requiere inversión en herramientas. También la falta de madurez requiere simplicidad. Así, el estilo se ajuste a la capacidad del equipo.
 
 Operar mensajería significa saber qué hacer cuando el trabajo deja de avanzar. Tener un broker encendido no demuestra que las rutas existan, el publicador reciba confirmación o el consumidor pueda confirmar SQL. Cada tramo necesita señales observables.
 
@@ -938,7 +942,7 @@ Consultar la proyección, que puede aparecer después.
 
 `Publicar y consumir en segundo plano.` los trabajadores conservan y deduplican la entrega; `Consultar la proyección, que puede aparecer después.` la consulta HTTP posterior puede no ver todavía el evento.
 
-Los patrones híbridos tienen dos consecuencias prácticas. La primera es que combinan las ventajas de ambos estilos. La segunda es que añaden complejidad a la implementación. La combinación de ambas permite que el sistema se adapte a interacciones complejas.
+Los patrones híbridos tienen dos consecuencias prácticas. En la práctica, combinan las ventajas de ambos estilos y añaden complejidad a la implementación. Así, el sistema se adapte a interacciones complejas.
 
 Un flujo híbrido debe conservar el significado de cada etapa. La consulta de stock produce una observación. El commit local produce una orden planificada y un evento pendiente. La publicación produce aceptación por el broker. El consumo produce una proyección de Inventario.
 
@@ -972,7 +976,7 @@ Métricas y criterio para revisar la decisión.
 
 `Política de fallo, duplicados y recuperación.` explica cómo se mantiene la corrección ante fallos; `Métricas y criterio para revisar la decisión.` hace que la decisión sea revisable con evidencia.
 
-La matriz tiene dos consecuencias prácticas. La primera es que la decisión se basa en criterios explícitos. La segunda es que la decisión se documenta y se revisa. La combinación de ambas permite que la elección sea razonada y trazable.
+La decisión se basa en criterios explícitos; por su parte, la decisión se documenta y se revisa. Así, la elección sea razonada y trazable.
 
 | Criterio | Petición-respuesta HTTP | Eventos y procesamiento diferido |
 |---|---|---|
