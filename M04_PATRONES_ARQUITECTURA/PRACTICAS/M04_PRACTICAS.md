@@ -1139,7 +1139,7 @@ public void Resumen_ConCatalogoPorDefecto_CalculaMedia()
 }
 ```
 
-**Paso 7:** Explicar línea por línea:
+**Paso 7:** Interpretar el test y explicar qué comportamiento acredita:
 
 Marca el método como test de xUnit. Declara el test. Invoca el método.
 Verifica el total. Verifica el total de métodos. Verifica la media.
@@ -2686,7 +2686,7 @@ public void Resumen_ConCatalogoPorDefecto_CalculaMedia()
 }
 ```
 
-**Paso 7:** Explicar línea por línea:
+**Paso 7:** Interpretar el test y explicar qué comportamiento acredita:
 
 Marca el método como test de xUnit. Declara el test. Invoca el método.
 Verifica el total. Verifica el total de repositorios. Verifica la media.
@@ -4148,7 +4148,7 @@ public void Resumen_ConCatalogoPorDefecto_CuentaPorTipo()
 }
 ```
 
-**Paso 7:** Explicar línea por línea:
+**Paso 7:** Interpretar el test y explicar qué comportamiento acredita:
 
 Marca el método como test de xUnit. Declara el test. Invoca el método.
 Verifica el total. Verifica los comandos. Verifica las consultas.
@@ -5841,7 +5841,7 @@ public void Resumen_ConCatalogoPorDefecto_CalculaTotales()
 }
 ```
 
-**Paso 7:** Explicar línea por línea:
+**Paso 7:** Interpretar el test y explicar qué comportamiento acredita:
 
 Marca el método como test de xUnit. Declara el test. Invoca el método.
 Verifica el total. Verifica las operaciones que usan Result. Verifica el total de errores.
@@ -7221,7 +7221,7 @@ public void Resumen_ConCatalogoPorDefecto_CuentaPorCiclo()
 }
 ```
 
-**Paso 7:** Explicar línea por línea:
+**Paso 7:** Interpretar el test y explicar qué comportamiento acredita:
 
 Marca el método como test de xUnit. Declara el test. Invoca el método.
 Verifica el total. Verifica los Scoped. Verifica los Singleton.
