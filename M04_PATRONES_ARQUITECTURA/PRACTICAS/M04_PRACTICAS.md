@@ -1074,12 +1074,11 @@ public record ResumenRepositorios(
     double MediaMetodos);
 ```
 
-**Paso 2:** Explicar línea por línea:
+**Paso 2:** Explicar el propósito del fragmento y las decisiones que contiene:
 
-- **Línea 1:** `public record ResumenRepositorios(` → declara un contrato inmutable.
-- **Línea 2:** `int Total,` → número total de repositorios.
-- **Línea 3:** `int TotalMetodos,` → número total de métodos.
-- **Línea 4:** `double MediaMetodos);` → media de métodos por repositorio.
+La declaración `public record ResumenRepositorios(` declara un contrato inmutable. Número total de repositorios. Número total de métodos.
+Media de métodos por repositorio.
+
 
 **Paso 3:** En `ValidadorRepositorios.cs`, añadir el siguiente método estático dentro de la clase:
 
@@ -1107,16 +1106,11 @@ public static ResumenRepositorios Resumen(IEnumerable<Repositorio> repositorios)
 }
 ```
 
-**Paso 4:** Explicar línea por línea:
+**Paso 4:** Explicar el propósito del fragmento y las decisiones que contiene:
 
-- **Línea 1:** `public static ResumenRepositorios Resumen(IEnumerable<Repositorio> repositorios)` → declara el método.
-- **Línea 2:** `{` → abre el cuerpo.
-- **Línea 3:** `var lista = repositorios.ToList();` → materializa la lista.
-- **Línea 4:** `var total = lista.Count;` → cuenta los repositorios.
-- **Línea 5:** `var metodos = lista.Sum(r => r.NumeroDeMetodos);` → suma los métodos.
-- **Línea 6:** `var media = total == 0 ? 0 : (double)metodos / total;` → calcula la media con protección contra división por cero.
-- **Línea 7:** `return new ResumenRepositorios(total, metodos, media);` → devuelve el resumen.
-- **Línea 8:** `}` → cierra el cuerpo.
+La declaración `public static ResumenRepositorios Resumen(IEnumerable<Repositorio> repos` declara el método. Materializa la lista. Cuenta los repositorios.
+Suma los métodos. Calcula la media con protección contra división por cero. Devuelve el resumen.
+
 
 **Paso 5:** Guardar el archivo con `Ctrl+S`.
 
@@ -1147,14 +1141,9 @@ public void Resumen_ConCatalogoPorDefecto_CalculaMedia()
 
 **Paso 7:** Explicar línea por línea:
 
-- **Línea 1:** `[Fact]` → marca el método como test de xUnit.
-- **Línea 2:** `public void Resumen_ConCatalogoPorDefecto_CalculaMedia()` → declara el test.
-- **Línea 3:** `{` → abre el cuerpo.
-- **Línea 4:** `var resumen = ValidadorRepositorios.Resumen(CatalogoRepositorios.RepositoriosPorDefecto());` → invoca el método.
-- **Línea 6:** `resumen.Total.Should().Be(3);` → verifica el total.
-- **Línea 7:** `resumen.TotalMetodos.Should().Be(14);` → verifica el total de métodos.
-- **Línea 8:** `resumen.MediaMetodos.Should().BeApproximately(4.67, 0.01);` → verifica la media.
-- **Línea 9:** `}` → cierra el cuerpo.
+Marca el método como test de xUnit. Declara el test. Invoca el método.
+Verifica el total. Verifica el total de métodos. Verifica la media.
+
 
 **Paso 8:** Ejecuta `dotnet test tests/AceriaApp.Repository.Tests/AceriaApp.Repository.Tests.csproj -c Release` en la copia optativa. Deben pasar 13 tests del proyecto, incluido el nuevo resumen. Ejecuta después `dotnet test AceriaApp.sln -c Release` y exige 63 pruebas aprobadas.
 
@@ -2632,12 +2621,11 @@ public record ResumenUnidades(
     double MediaRepositorios);
 ```
 
-**Paso 2:** Explicar línea por línea:
+**Paso 2:** Explicar el propósito del fragmento y las decisiones que contiene:
 
-- **Línea 1:** `public record ResumenUnidades(` → declara un contrato inmutable.
-- **Línea 2:** `int Total,` → número total de unidades de trabajo.
-- **Línea 3:** `int TotalRepositorios,` → número total de repositorios coordinados.
-- **Línea 4:** `double MediaRepositorios);` → media de repositorios por unidad.
+La declaración `public record ResumenUnidades(` declara un contrato inmutable. Número total de unidades de trabajo. Número total de repositorios coordinados.
+Media de repositorios por unidad.
+
 
 **Paso 3:** En `ValidadorUnidadesDeTrabajo.cs`, añadir el siguiente método estático dentro de la clase:
 
@@ -2665,16 +2653,11 @@ public static ResumenUnidades Resumen(IEnumerable<UnidadDeTrabajo> unidades)
 }
 ```
 
-**Paso 4:** Explicar línea por línea:
+**Paso 4:** Explicar el propósito del fragmento y las decisiones que contiene:
 
-- **Línea 1:** `public static ResumenUnidades Resumen(IEnumerable<UnidadDeTrabajo> unidades)` → declara el método.
-- **Línea 2:** `{` → abre el cuerpo.
-- **Línea 3:** `var lista = unidades.ToList();` → materializa la lista.
-- **Línea 4:** `var total = lista.Count;` → cuenta las unidades.
-- **Línea 5:** `var repositorios = lista.Sum(u => u.RepositoriosCoordinados);` → suma los repositorios.
-- **Línea 6:** `var media = total == 0 ? 0 : (double)repositorios / total;` → calcula la media con protección contra división por cero.
-- **Línea 7:** `return new ResumenUnidades(total, repositorios, media);` → devuelve el resumen.
-- **Línea 8:** `}` → cierra el cuerpo.
+La declaración `public static ResumenUnidades Resumen(IEnumerable<UnidadDeTrabajo> unida` declara el método. Materializa la lista. Cuenta las unidades.
+Suma los repositorios. Calcula la media con protección contra división por cero. Devuelve el resumen.
+
 
 **Paso 5:** Guardar el archivo con `Ctrl+S`.
 
@@ -2705,14 +2688,9 @@ public void Resumen_ConCatalogoPorDefecto_CalculaMedia()
 
 **Paso 7:** Explicar línea por línea:
 
-- **Línea 1:** `[Fact]` → marca el método como test de xUnit.
-- **Línea 2:** `public void Resumen_ConCatalogoPorDefecto_CalculaMedia()` → declara el test.
-- **Línea 3:** `{` → abre el cuerpo.
-- **Línea 4:** `var resumen = ValidadorUnidadesDeTrabajo.Resumen(CatalogoUnidadesDeTrabajo.UnidadesPorDefecto());` → invoca el método.
-- **Línea 6:** `resumen.Total.Should().Be(2);` → verifica el total.
-- **Línea 7:** `resumen.TotalRepositorios.Should().Be(6);` → verifica el total de repositorios.
-- **Línea 8:** `resumen.MediaRepositorios.Should().Be(3.0);` → verifica la media.
-- **Línea 9:** `}` → cierra el cuerpo.
+Marca el método como test de xUnit. Declara el test. Invoca el método.
+Verifica el total. Verifica el total de repositorios. Verifica la media.
+
 
 **Paso 8:** Ejecuta `dotnet test tests/AceriaApp.UnitOfWork.Tests/AceriaApp.UnitOfWork.Tests.csproj -c Release` en la copia optativa. Deben pasar 16 tests del proyecto, incluido el nuevo resumen. Ejecuta después `dotnet test AceriaApp.sln -c Release` y exige 78 pruebas aprobadas.
 
@@ -4104,13 +4082,11 @@ public record ResumenMensajes(
     int Notificaciones);
 ```
 
-**Paso 2:** Explicar línea por línea:
+**Paso 2:** Explicar el propósito del fragmento y las decisiones que contiene:
 
-- **Línea 1:** `public record ResumenMensajes(` → declara un contrato inmutable.
-- **Línea 2:** `int Total,` → número total de mensajes.
-- **Línea 3:** `int Comandos,` → número de comandos.
-- **Línea 4:** `int Consultas,` → número de consultas.
-- **Línea 5:** `int Notificaciones);` → número de notificaciones.
+La declaración `public record ResumenMensajes(` declara un contrato inmutable. Número total de mensajes. Número de comandos.
+Número de consultas. Número de notificaciones.
+
 
 **Paso 3:** En `ValidadorMensajes.cs`, añadir el siguiente método estático dentro de la clase:
 
@@ -4138,16 +4114,11 @@ public static ResumenMensajes Resumen(IEnumerable<Mensaje> mensajes)
 }
 ```
 
-**Paso 4:** Explicar línea por línea:
+**Paso 4:** Explicar el propósito del fragmento y las decisiones que contiene:
 
-- **Línea 1:** `public static ResumenMensajes Resumen(IEnumerable<Mensaje> mensajes)` → declara el método.
-- **Línea 2:** `{` → abre el cuerpo.
-- **Línea 3:** `var lista = mensajes.ToList();` → materializa la lista.
-- **Línea 4:** `var comandos = lista.Count(m => m.Tipo == "Comando");` → cuenta los comandos.
-- **Línea 5:** `var consultas = lista.Count(m => m.Tipo == "Consulta");` → cuenta las consultas.
-- **Línea 6:** `var notificaciones = lista.Count(m => m.Tipo == "Notificacion");` → cuenta las notificaciones.
-- **Línea 7:** `return new ResumenMensajes(lista.Count, comandos, consultas, notificaciones);` → devuelve el resumen.
-- **Línea 8:** `}` → cierra el cuerpo.
+La declaración `public static ResumenMensajes Resumen(IEnumerable<Mensaje> mensajes)` declara el método. Materializa la lista. Cuenta los comandos.
+Cuenta las consultas. Cuenta las notificaciones. Devuelve el resumen.
+
 
 **Paso 5:** Guardar el archivo con `Ctrl+S`.
 
@@ -4179,15 +4150,10 @@ public void Resumen_ConCatalogoPorDefecto_CuentaPorTipo()
 
 **Paso 7:** Explicar línea por línea:
 
-- **Línea 1:** `[Fact]` → marca el método como test de xUnit.
-- **Línea 2:** `public void Resumen_ConCatalogoPorDefecto_CuentaPorTipo()` → declara el test.
-- **Línea 3:** `{` → abre el cuerpo.
-- **Línea 4:** `var resumen = ValidadorMensajes.Resumen(CatalogoMensajes.MensajesPorDefecto());` → invoca el método.
-- **Línea 6:** `resumen.Total.Should().Be(5);` → verifica el total.
-- **Línea 7:** `resumen.Comandos.Should().Be(2);` → verifica los comandos.
-- **Línea 8:** `resumen.Consultas.Should().Be(2);` → verifica las consultas.
-- **Línea 9:** `resumen.Notificaciones.Should().Be(1);` → verifica las notificaciones.
-- **Línea 10:** `}` → cierra el cuerpo.
+Marca el método como test de xUnit. Declara el test. Invoca el método.
+Verifica el total. Verifica los comandos. Verifica las consultas.
+Verifica las notificaciones.
+
 
 **Paso 8:** Ejecuta `dotnet test tests/AceriaApp.Mediator.Tests/AceriaApp.Mediator.Tests.csproj -c Release` en la copia optativa. Deben pasar 14 tests del proyecto, incluido el nuevo resumen. Ejecuta después `dotnet test AceriaApp.sln -c Release` y exige 91 pruebas aprobadas.
 
@@ -5811,12 +5777,11 @@ public record ResumenOperaciones(
     int TotalErroresEsperados);
 ```
 
-**Paso 2:** Explicar línea por línea:
+**Paso 2:** Explicar el propósito del fragmento y las decisiones que contiene:
 
-- **Línea 1:** `public record ResumenOperaciones(` → declara un contrato inmutable.
-- **Línea 2:** `int Total,` → número total de operaciones.
-- **Línea 3:** `int UsanResult,` → número de operaciones que usan Result.
-- **Línea 4:** `int TotalErroresEsperados);` → número total de errores esperados.
+La declaración `public record ResumenOperaciones(` declara un contrato inmutable. Número total de operaciones. Número de operaciones que usan Result.
+Número total de errores esperados.
+
 
 **Paso 3:** En `ValidadorResultados.cs`, añadir el siguiente método estático dentro de la clase:
 
@@ -5843,15 +5808,11 @@ public static ResumenOperaciones Resumen(IEnumerable<ResultadoOperacion> operaci
 }
 ```
 
-**Paso 4:** Explicar línea por línea:
+**Paso 4:** Explicar el propósito del fragmento y las decisiones que contiene:
 
-- **Línea 1:** `public static ResumenOperaciones Resumen(IEnumerable<ResultadoOperacion> operaciones)` → declara el método.
-- **Línea 2:** `{` → abre el cuerpo.
-- **Línea 3:** `var lista = operaciones.ToList();` → materializa la lista.
-- **Línea 4:** `var usanResult = lista.Count(o => o.UsaResult);` → cuenta las operaciones que usan Result.
-- **Línea 5:** `var totalErrores = lista.Sum(o => o.NumeroDeErroresEsperados);` → suma los errores esperados.
-- **Línea 6:** `return new ResumenOperaciones(lista.Count, usanResult, totalErrores);` → devuelve el resumen.
-- **Línea 7:** `}` → cierra el cuerpo.
+La declaración `public static ResumenOperaciones Resumen(IEnumerable<ResultadoOperacion>` declara el método. Materializa la lista. Cuenta las operaciones que usan Result.
+Suma los errores esperados. Devuelve el resumen.
+
 
 **Paso 5:** Guardar el archivo con `Ctrl+S`.
 
@@ -5882,14 +5843,9 @@ public void Resumen_ConCatalogoPorDefecto_CalculaTotales()
 
 **Paso 7:** Explicar línea por línea:
 
-- **Línea 1:** `[Fact]` → marca el método como test de xUnit.
-- **Línea 2:** `public void Resumen_ConCatalogoPorDefecto_CalculaTotales()` → declara el test.
-- **Línea 3:** `{` → abre el cuerpo.
-- **Línea 4:** `var resumen = ValidadorResultados.Resumen(CatalogoResultados.OperacionesPorDefecto());` → invoca el método.
-- **Línea 6:** `resumen.Total.Should().Be(4);` → verifica el total.
-- **Línea 7:** `resumen.UsanResult.Should().Be(4);` → verifica las operaciones que usan Result.
-- **Línea 8:** `resumen.TotalErroresEsperados.Should().Be(6);` → verifica el total de errores.
-- **Línea 9:** `}` → cierra el cuerpo.
+Marca el método como test de xUnit. Declara el test. Invoca el método.
+Verifica el total. Verifica las operaciones que usan Result. Verifica el total de errores.
+
 
 **Paso 8:** Ejecuta `dotnet test tests/AceriaApp.ResultPattern.Tests/AceriaApp.ResultPattern.Tests.csproj -c Release` en la copia optativa. Deben pasar 16 tests del proyecto, incluido el nuevo resumen. Ejecuta después `dotnet test AceriaApp.sln -c Release` y exige 106 pruebas aprobadas.
 
@@ -7199,13 +7155,11 @@ public record ResumenInyeccion(
     int Transient);
 ```
 
-**Paso 2:** Explicar línea por línea:
+**Paso 2:** Explicar el propósito del fragmento y las decisiones que contiene:
 
-- **Línea 1:** `public record ResumenInyeccion(` → declara un contrato inmutable.
-- **Línea 2:** `int Total,` → número total de registros.
-- **Línea 3:** `int Scoped,` → número de registros con ciclo Scoped.
-- **Línea 4:** `int Singleton,` → número de registros con ciclo Singleton.
-- **Línea 5:** `int Transient);` → número de registros con ciclo Transient.
+La declaración `public record ResumenInyeccion(` declara un contrato inmutable. Número total de registros. Número de registros con ciclo Scoped.
+Número de registros con ciclo Singleton. Número de registros con ciclo Transient.
+
 
 **Paso 3:** En `ValidadorInyeccionDependencias.cs`, añadir el siguiente método estático dentro de la clase:
 
@@ -7233,16 +7187,11 @@ public static ResumenInyeccion Resumen(IEnumerable<RegistroInyeccion> registros)
 }
 ```
 
-**Paso 4:** Explicar línea por línea:
+**Paso 4:** Explicar el propósito del fragmento y las decisiones que contiene:
 
-- **Línea 1:** `public static ResumenInyeccion Resumen(IEnumerable<RegistroInyeccion> registros)` → declara el método.
-- **Línea 2:** `{` → abre el cuerpo.
-- **Línea 3:** `var lista = registros.ToList();` → materializa la lista.
-- **Línea 4:** `var scoped = lista.Count(r => r.Ciclo == "Scoped");` → cuenta los Scoped.
-- **Línea 5:** `var singleton = lista.Count(r => r.Ciclo == "Singleton");` → cuenta los Singleton.
-- **Línea 6:** `var transient = lista.Count(r => r.Ciclo == "Transient");` → cuenta los Transient.
-- **Línea 7:** `return new ResumenInyeccion(lista.Count, scoped, singleton, transient);` → devuelve el resumen.
-- **Línea 8:** `}` → cierra el cuerpo.
+La declaración `public static ResumenInyeccion Resumen(IEnumerable<RegistroInyeccion> re` declara el método. Materializa la lista. Cuenta los Scoped.
+Cuenta los Singleton. Cuenta los Transient. Devuelve el resumen.
+
 
 **Paso 5:** Guardar el archivo con `Ctrl+S`.
 
@@ -7274,15 +7223,10 @@ public void Resumen_ConCatalogoPorDefecto_CuentaPorCiclo()
 
 **Paso 7:** Explicar línea por línea:
 
-- **Línea 1:** `[Fact]` → marca el método como test de xUnit.
-- **Línea 2:** `public void Resumen_ConCatalogoPorDefecto_CuentaPorCiclo()` → declara el test.
-- **Línea 3:** `{` → abre el cuerpo.
-- **Línea 4:** `var resumen = ValidadorInyeccionDependencias.Resumen(CatalogoInyeccion.RegistrosPorDefecto());` → invoca el método.
-- **Línea 6:** `resumen.Total.Should().Be(5);` → verifica el total.
-- **Línea 7:** `resumen.Scoped.Should().Be(4);` → verifica los Scoped.
-- **Línea 8:** `resumen.Singleton.Should().Be(1);` → verifica los Singleton.
-- **Línea 9:** `resumen.Transient.Should().Be(0);` → verifica los Transient.
-- **Línea 10:** `}` → cierra el cuerpo.
+Marca el método como test de xUnit. Declara el test. Invoca el método.
+Verifica el total. Verifica los Scoped. Verifica los Singleton.
+Verifica los Transient.
+
 
 **Paso 8:** Ejecuta `dotnet test tests/AceriaApp.InyeccionDependencias.Tests/AceriaApp.InyeccionDependencias.Tests.csproj -c Release` en la copia optativa. Deben pasar 14 tests del proyecto, incluido el nuevo resumen. Ejecuta después `dotnet test AceriaApp.sln -c Release` y exige 119 pruebas aprobadas.
 
