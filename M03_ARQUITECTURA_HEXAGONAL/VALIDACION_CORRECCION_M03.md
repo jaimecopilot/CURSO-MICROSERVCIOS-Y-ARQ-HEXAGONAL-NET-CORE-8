@@ -13,7 +13,7 @@
 - Se sustituyeron los 96 encabezamientos de aprendizaje mecánicos por una secuencia explicativa situada junto a cada procedimiento.
 - Se añadieron introducciones narrativas a cada punto y explicaciones técnicas detalladas de conceptos clave: dependencias, puertos y adaptadores, separación de proyectos y composición de ASP.NET Core.
 - Se conservan intactos los **69 bloques originales de código**, sus referencias de archivo y las instrucciones de ejecución.
-- PDF `PRACTICAS/M03_PRACTICAS.pdf`: **78 páginas**, con las tres líneas de cabecera verificadas en todas ellas.
+- PDF `PRACTICAS/M03_PRACTICAS.pdf`: **75 páginas actuales**, con las tres líneas de cabecera verificadas en todas ellas.
 
 ## Pruebas reales de Windows con SQL Server Express
 
@@ -55,3 +55,5 @@ El auditor valida los 96 identificadores de paso y la existencia de archivos de 
 - Cabeceras: `tools/pdf_running_headers.py`.
 
 **Conclusión:** M03 queda cerrado técnicamente para esta pasada de corrección de redacción en `version-corregida`. No se modifica el código de `PROYECTO` ni se fusionan los cambios en `main`.
+
+**Verificación editorial de paginación actual:** [auditoría de los 17 PDF y 1.219 páginas](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43516616292). La prueba automatizada comprueba cabeceras, contenido extraíble y márgenes; la aprobación visual final sigue correspondiendo al autor.
