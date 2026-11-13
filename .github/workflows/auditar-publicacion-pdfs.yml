@@ -4,12 +4,7 @@ on:
   push:
     branches: [version-corregida]
     paths:
-      - 'M??_*/TEORIA/*.md'
-      - 'M??_*/TEORIA/*.pdf'
-      - 'M??_*/PRACTICAS/*.md'
-      - 'M??_*/PRACTICAS/*.pdf'
       - 'tools/validar_publicacion_pdf.py'
-      - 'tools/pdf_running_headers.py'
       - '.github/workflows/auditar-publicacion-pdfs.yml'
   workflow_dispatch:
 
