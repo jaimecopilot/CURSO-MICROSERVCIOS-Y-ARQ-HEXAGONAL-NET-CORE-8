@@ -33,11 +33,15 @@ El punto de partida es `M04_PATRONES_ARQUITECTURA/PROYECTO/4.5-inyeccion-depende
 
 ---
 
-## Desarrollo teórico
+## Comprender el negocio antes de construir el modelo
 
-### Bloque 1 — Definición de Domain-Driven Design
 
-Domain-Driven Design es un enfoque de diseño de software que sitúa el dominio del negocio en el centro del proceso de desarrollo. El enfoque fue formulado por Eric Evans en 2003 y se ha convertido en una referencia para el diseño de sistemas complejos. DDD no es un framework ni una biblioteca: es un conjunto de principios y patrones que guían la colaboración entre expertos del negocio y desarrolladores. Su objetivo es que el código refleje el modelo mental del negocio y que las decisiones técnicas se tomen con conocimiento del dominio. La aplicación de DDD es especialmente relevante en sistemas con reglas de negocio complejas.
+
+Partiremos de las palabras con las que una acería organiza sus decisiones. A partir de ellas distinguiremos contextos, reglas y responsabilidades, para que las entidades y contratos posteriores no sean simplemente una reproducción de tablas.
+
+### Definición de Domain-Driven Design
+
+Domain-Driven Design propone que las decisiones fundamentales del software nazcan de comprender el negocio y de trabajar con quienes conocen sus reglas, no únicamente de escoger frameworks. Una acería utiliza conceptos como orden de fabricación, lote, materia prima y colada, cuyos significados afectan a la forma correcta de registrar y modificar información. Si empezamos diseñando tablas o endpoints sin aclarar esas nociones, podemos construir una API que funciona técnicamente y, sin embargo, permite operaciones que la producción real no admite. DDD combina colaboración, lenguaje compartido y modelos que evolucionan conforme se aprende sobre el dominio. En AceriaApp lo aplicaremos sin confundirlo con la obligación de desplegar microservicios ni de utilizar un patrón para cada objeto. La cuestión es identificar las reglas importantes y representar de manera explícita su significado.
 
 ```text
 DDD en el centro del desarrollo:
@@ -45,33 +49,29 @@ DDD en el centro del desarrollo:
 Negocio  ↔  Lenguaje ubicuo  ↔  Código
 ```
 
-- **Línea 1:** `DDD en el centro del desarrollo:` → identifica el tema de las líneas siguientes.
-
-- **Línea 3:** `Negocio  ↔  Lenguaje ubicuo  ↔  Código` → relaciona expertos, vocabulario compartido e implementación mediante colaboración y retroalimentación.
+La relación entre negocio, lenguaje y código debe ser de doble dirección: los expertos ayudan a precisar los términos y el comportamiento del software permite comprobar si esos términos siguen representando las reglas. DDD no significa convertir una lista de sustantivos en clases sin más.
 
 DDD se caracteriza por tres propiedades. La primera es que el dominio es el centro del diseño: las decisiones técnicas se subordinan a las necesidades del negocio. La segunda es que el lenguaje es compartido: negocio y desarrollo usan el mismo vocabulario. La tercera es que el modelo evoluciona: el diseño se refina a medida que se comprende mejor el dominio. Las tres propiedades permiten que el sistema resuelva problemas reales del negocio y no problemas técnicos imaginarios.
 
 La aplicación de DDD tiene dos consecuencias prácticas. La primera es que el código refleja el lenguaje del negocio. La segunda es que el equipo comparte un modelo mental común. La combinación de ambas reduce la brecha entre negocio y desarrollo y facilita la evolución del sistema. DDD se aplica con más intensidad en el núcleo del dominio y con menos intensidad en los dominios de soporte.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Empieza por una regla y por las palabras que usa quien la necesita. Una clase llamada Dominio no aporta DDD si el comportamiento sigue oculto en el controlador.
 
-**La decisión arquitectónica.** Empieza por una regla y por las palabras que usa quien la necesita. Una clase llamada Dominio no aporta DDD si el comportamiento sigue oculto en el controlador.
+En Producción, una orden pasa de Borrador a Planificada y después a Finalizada. Ese vocabulario permite hablar de transiciones válidas y escribir pruebas comprensibles para quien planifica la planta.
 
-**Ejemplo concreto en AceriaApp.** En Producción, una orden pasa de Borrador a Planificada y después a Finalizada. Ese vocabulario permite hablar de transiciones válidas y escribir pruebas comprensibles para quien planifica la planta.
+El límite de 500 unidades es una regla didáctica del curso. No representa una capacidad industrial universal; un sistema real necesitaría acordar unidades, productos y capacidades con expertos.
 
-**Riesgo, alternativa y límite.** El límite de 500 unidades es una regla didáctica del curso. No representa una capacidad industrial universal; un sistema real necesitaría acordar unidades, productos y capacidades con expertos.
-
-**Comprobación técnica y aprendizaje.** Escribe ejemplos aceptados y rechazados antes de elegir tablas. Una prueba que impide finalizar un borrador demuestra una regla; una lista de nombres de contextos solo demuestra clasificación.
+Escribe ejemplos aceptados y rechazados antes de elegir tablas. Una prueba que impide finalizar un borrador demuestra una regla; una lista de nombres de contextos solo demuestra clasificación.
 
 ![Diagrama explicativo del punto 5.1, bloque 1](IMAGENES/5-1-lenguaje.svg)
 
-*Interpretación del gráfico:* El vocabulario conecta observaciones del negocio, reglas y ejemplos ejecutables; no es una traducción mecánica de tablas. La figura se distribuye en SVG vectorial y PNG.
+El vocabulario conecta observaciones del negocio, reglas y ejemplos ejecutables; no es una traducción mecánica de tablas. La figura se distribuye en SVG vectorial y PNG.
 
 ---
 
-### Bloque 2 — El dominio y los subdominios
+### El dominio y los subdominios
 
-El dominio es el área de conocimiento sobre la que opera el sistema. El dominio se descompone en subdominios. Cada subdominio es un área de conocimiento con un modelo propio. Los subdominios se clasifican en tres tipos: núcleo, soporte y genérico. El subdominio núcleo es el que aporta valor diferencial al negocio. El subdominio de soporte es el que apoya al núcleo sin aportar valor diferencial. El subdominio genérico es el que se resuelve con soluciones existentes. La clasificación permite priorizar el esfuerzo de diseño.
+El dominio completo de una empresa suele abarcar capacidades con prioridades y conocimientos distintos. En una acería, Producción organiza órdenes y procesos de fabricación; Aprovisionamiento negocia compras y recepción de material; Clientes mantiene información comercial, y otras capacidades proporcionan servicios generales. La clasificación de subdominios ayuda a decidir dónde invertir esfuerzo de modelado. Un subdominio núcleo contiene conocimiento diferencial que puede justificar más colaboración y diseño propio; un subdominio genérico quizá pueda utilizar soluciones existentes. Esta clasificación es contextual y puede cambiar: Inventario puede ser una capacidad decisiva si la optimización del material condiciona todo el negocio. Antes de crear servicios debemos comprender quién toma cada decisión y qué reglas pertenecen a cada ámbito.
 
 ```text
 Tipos de subdominio:
@@ -81,33 +81,25 @@ Soporte     → apoya al núcleo.
 Genérico    → se resuelve con soluciones existentes.
 ```
 
-- **Línea 1:** `Tipos de subdominio:` → identifica el tema de las líneas siguientes.
-
-- **Línea 3:** `Núcleo      → aporta valor diferencial.` → subdominio que aporta valor diferencial.
-
-- **Línea 4:** `Soporte     → apoya al núcleo.` → subdominio que apoya al núcleo.
-
-- **Línea 5:** `Genérico    → se resuelve con soluciones existentes.` → subdominio que se resuelve con soluciones existentes.
+Núcleo, soporte y genérico describen tipos de inversión en conocimiento del negocio, no tamaños fijos de microservicios. El lugar que ocupa Inventario dependerá de la estrategia de la acería y puede cambiar cuando se comprenda mejor su importancia.
 
 La clasificación de subdominios tiene dos consecuencias prácticas. La primera es que el esfuerzo de diseño se concentra en el núcleo. La segunda es que los subdominios genéricos se resuelven con soluciones estándar. La combinación de ambas permite que el equipo invierta su tiempo donde aporta más valor.
 
 En el dominio de la acería, el subdominio núcleo es la producción de acero. El subdominio de soporte es la gestión de inventario. El subdominio genérico es la gestión de identidades y accesos. La clasificación se documenta en el ADR del punto y se revisa cuando cambia el contexto del negocio.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Clasifica subdominios por valor diferencial para esta organización, no por la popularidad de un patrón ni por el número de tablas.
 
-**La decisión arquitectónica.** Clasifica subdominios por valor diferencial para esta organización, no por la popularidad de un patrón ni por el número de tablas.
+Producción se trata como núcleo; Aprovisionamiento y Clientes como soporte. Identidad y acceso puede resolverse como capacidad genérica. Esa clasificación guía dónde se implementa comportamiento propio.
 
-**Ejemplo concreto en AceriaApp.** Producción se trata como núcleo; Aprovisionamiento y Clientes como soporte. Identidad y acceso puede resolverse como capacidad genérica. Esa clasificación guía dónde se implementa comportamiento propio.
+El mismo subdominio puede ser núcleo en otra empresa: para un proveedor de gestión de identidades, autenticación no sería necesariamente genérica. Tampoco subdominio y contexto son sinónimos exactos.
 
-**Riesgo, alternativa y límite.** El mismo subdominio puede ser núcleo en otra empresa: para un proveedor de gestión de identidades, autenticación no sería necesariamente genérica. Tampoco subdominio y contexto son sinónimos exactos.
-
-**Comprobación técnica y aprendizaje.** Justifica cada clasificación con una regla o una ventaja de negocio. Revisa el ADR si cambia el producto; contar contextos no demuestra que la frontera elegida sea correcta.
+Justifica cada clasificación con una regla o una ventaja de negocio. Revisa el ADR si cambia el producto; contar contextos no demuestra que la frontera elegida sea correcta.
 
 ---
 
-### Bloque 3 — El contexto delimitado
+### El contexto delimitado
 
-Un contexto delimitado es una frontera dentro de la cual un modelo es consistente y un término tiene un significado preciso. El contexto delimita dónde se aplica un modelo y dónde empieza otro modelo distinto. La frontera no es técnica: es conceptual. Un mismo término puede tener significados distintos en contextos distintos. En el dominio de la acería, el término "orden" significa una orden de producción en el contexto de planta y una orden de compra en el contexto de aprovisionamiento. Los dos significados son válidos y necesitan modelos explícitos; reunirlos en una clase ambigua llamada `Orden` ocultaría sus diferencias.
+Un contexto delimitado establece el espacio en el que un modelo y su vocabulario tienen un significado coherente. La palabra «orden» puede describir una orden de fabricación en Producción y una orden de compra en Aprovisionamiento; no deberían compartir automáticamente estados, restricciones ni el mismo agregado por utilizar el mismo sustantivo. El límite protege la coherencia interna y obliga a expresar cómo se traducen los conceptos cuando dos contextos colaboran. No exige que cada contexto sea un microservicio ni que disponga de un servidor propio: pueden coexistir en un monolito modular hasta que exista una razón operativa para separarlos. En AceriaApp los límites del modelo se estudiarán antes de decidir cómo desplegarlos.
 
 ```text
 Contextos delimitados en la acería:
@@ -117,37 +109,29 @@ Contexto de aprovisionamiento → "orden" = orden de compra.
 Contexto de clientes        → "cliente" = empresa compradora.
 ```
 
-- **Línea 1:** `Contextos delimitados en la acería:` → identifica el tema de las líneas siguientes.
-
-- **Línea 3:** `Contexto de producción      → "orden" = orden de fabricación.` → primer contexto delimitado.
-
-- **Línea 4:** `Contexto de aprovisionamiento → "orden" = orden de compra.` → segundo contexto delimitado.
-
-- **Línea 5:** `Contexto de clientes        → "cliente" = empresa compradora.` → tercer contexto delimitado.
+La frontera de un contexto evita que «orden» signifique simultáneamente fabricación y compra dentro de un único modelo. Para integrar esos contextos hacen falta contratos o traducciones explícitas de los conceptos que comparten.
 
 El contexto delimitado se caracteriza por tres propiedades. La primera es que el modelo es consistente dentro de la frontera. La segunda es que los términos tienen un significado preciso dentro de la frontera. La tercera es que la frontera se define por el negocio, no por la técnica. Las tres propiedades permiten que cada contexto tenga su propio modelo sin interferir con los demás.
 
 La definición de contextos delimitados tiene dos consecuencias prácticas. La primera es que cada contexto puede tener su propio modelo de datos. La segunda es que la comunicación entre contextos se realiza con contratos explícitos. La combinación de ambas permite que los equipos trabajen de forma autónoma en cada contexto. Un contexto delimitado puede implementarse como módulo de un monolito o como uno o varios servicios, según sus límites de responsabilidad, operación y despliegue. No impone una correspondencia obligatoria de uno a uno.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Una frontera debe separar significados y propiedad del modelo. Una carpeta ayuda a expresar la frontera, pero las referencias entre proyectos permiten comprobarla.
 
-**La decisión arquitectónica.** Una frontera debe separar significados y propiedad del modelo. Una carpeta ayuda a expresar la frontera, pero las referencias entre proyectos permiten comprobarla.
+`AceriaApp.Produccion.Dominio` contiene el modelo de Producción y se conserva separado de las capas `AceriaApp.Hexagonal.*` de M3/M4. La API compone ambos recorridos sin fusionar sus órdenes.
 
-**Ejemplo concreto en AceriaApp.** `AceriaApp.Produccion.Dominio` contiene el modelo de Producción y se conserva separado de las capas `AceriaApp.Hexagonal.*` de M3/M4. La API compone ambos recorridos sin fusionar sus órdenes.
+No compartas una entidad mutable `Orden` entre compras y producción para ahorrar un mapeo. El acoplamiento permitiría que una regla de compra alterase el modelo de fabricación.
 
-**Riesgo, alternativa y límite.** No compartas una entidad mutable `Orden` entre compras y producción para ahorrar un mapeo. El acoplamiento permitiría que una regla de compra alterase el modelo de fabricación.
-
-**Comprobación técnica y aprendizaje.** Comprueba las referencias de proyecto: el dominio de Producción no necesita EF Core, ASP.NET Core ni el dominio hexagonal anterior. Una interfaz de integración puede traducir identificadores cuando aparezca otro contexto.
+Comprueba las referencias de proyecto: el dominio de Producción no necesita EF Core, ASP.NET Core ni el dominio hexagonal anterior. Una interfaz de integración puede traducir identificadores cuando aparezca otro contexto.
 
 ![Diagrama explicativo del punto 5.1, bloque 3](IMAGENES/5-1-contextos.svg)
 
-*Interpretación del gráfico:* La frontera separa significados. Producción está implementada; los otros contextos orientan el mapa conceptual. La figura se distribuye en SVG vectorial y PNG.
+La frontera separa significados. Producción está implementada; los otros contextos orientan el mapa conceptual. La figura se distribuye en SVG vectorial y PNG.
 
 ---
 
-### Bloque 4 — El lenguaje ubicuo
+### El lenguaje ubicuo
 
-El lenguaje ubicuo es el vocabulario común que usan negocio y desarrollo para describir el dominio. El lenguaje se construye de forma colaborativa entre expertos del negocio y desarrolladores. El lenguaje se refleja en el código: los nombres de las clases, los métodos y las variables coinciden con el lenguaje del negocio. El lenguaje evoluciona a medida que se comprende mejor el dominio. El lenguaje es específico de cada contexto delimitado.
+El lenguaje ubicuo es el vocabulario que expertos y desarrolladores acuerdan para hablar de un contexto y que después se refleja en el código, las pruebas y la documentación. Si el responsable de fabricación utiliza «planificar», el modelo no debería llamar indiscriminadamente «guardar» a cualquier transición que cambie una orden. Elegir nombres claros facilita detectar contradicciones entre lo que la aplicación permite y lo que el negocio espera. Ese lenguaje no se redacta una sola vez y se archiva: evoluciona cuando descubrimos nuevas reglas o excepciones. En AceriaApp distinguiremos los términos de Producción de los de compras y clientes, y utilizaremos los nombres para ubicar responsabilidades. La consistencia del vocabulario reduce malentendidos, pero no sustituye pruebas de las invariantes.
 
 ```csharp
 public sealed class OrdenDeProduccion
@@ -172,63 +156,23 @@ public sealed class OrdenDeProduccion
 }
 ```
 
-- **Línea 1:** `public sealed class OrdenDeProduccion` → declara la clase del ejemplo con responsabilidad explícita.
-
-- **Línea 2:** `{` → abre el bloque actual.
-
-- **Línea 3:** `public Guid Id { get; } = Guid.NewGuid();` → expone el estado con la mutabilidad indicada por sus accesores.
-
-- **Línea 4:** `public string Comprador { get; }` → expone el estado con la mutabilidad indicada por sus accesores.
-
-- **Línea 5:** `public string MaterialSolicitado { get; private set; } = "";` → expone el estado con la mutabilidad indicada por sus accesores.
-
-- **Línea 6:** `public bool Cancelada { get; private set; }` → expone el estado con la mutabilidad indicada por sus accesores.
-
-- **Línea 7:** `public OrdenDeProduccion(string comprador, string material)` → construye la orden con comprador y material obligatorios.
-
-- **Línea 8:** `{` → abre el bloque actual.
-
-- **Línea 9:** `ArgumentException.ThrowIfNullOrWhiteSpace(comprador);` → rechaza texto nulo, vacío o compuesto solo de espacios.
-
-- **Línea 10:** `Comprador = comprador;` → conserva el comprador previamente validado.
-
-- **Línea 11:** `AsignarMaterial(material);` → invoca el método que valida el material antes de asignarlo.
-
-- **Línea 12:** `}` → cierra el bloque actual.
-
-- **Línea 13:** `public void AsignarMaterial(string material)` → permite cambiar el material mediante una operación que protege el estado.
-
-- **Línea 14:** `{` → abre el bloque actual.
-
-- **Línea 15:** `if (Cancelada) throw new InvalidOperationException("La orden está cancelada.");` → rechaza la entrada o transición inválida antes de confirmar cambios.
-
-- **Línea 16:** `ArgumentException.ThrowIfNullOrWhiteSpace(material);` → rechaza texto nulo, vacío o compuesto solo de espacios.
-
-- **Línea 17:** `MaterialSolicitado = material;` → asigna el material solo después de validar estado y texto.
-
-- **Línea 18:** `}` → cierra el bloque actual.
-
-- **Línea 19:** `public void Cancelar() => Cancelada = true;` → marca la orden como cancelada en esta variante didáctica.
-
-- **Línea 20:** `}` → cierra el bloque actual.
+El lenguaje ubicuo identifica expresiones que los expertos y el código utilizan con el mismo significado. Una operación llamada PlanificarOrden debe conservar ese sentido, incluido qué estados permite y qué errores debe producir.
 
 El lenguaje ubicuo se caracteriza por tres propiedades. La primera es que se construye de forma colaborativa: negocio y desarrollo lo acuerdan. La segunda es que se refleja en el código: los nombres coinciden con el lenguaje del negocio. La tercera es que evoluciona con el dominio: el lenguaje se refina a medida que se comprende mejor. Las tres propiedades permiten que el código sea legible para el negocio y que la comunicación sea precisa.
 
-#### Ampliación didáctica aplicada a AceriaApp
+El lenguaje ubicuo debe nombrar también acciones y restricciones. Usa `Planificar` y `Finalizar` cuando tengan significados concretos, en lugar de un `ActualizarEstado` que acepte cualquier texto.
 
-**La decisión arquitectónica.** El lenguaje ubicuo debe nombrar también acciones y restricciones. Usa `Planificar` y `Finalizar` cuando tengan significados concretos, en lugar de un `ActualizarEstado` que acepte cualquier texto.
+`OrdenProduccion` expresa la orden del nuevo contexto; `LineaDeOrden` expresa un elemento de esa orden. La expresión línea de producción podría significar una instalación física y no es un sinónimo automático.
 
-**Ejemplo concreto en AceriaApp.** `OrdenProduccion` expresa la orden del nuevo contexto; `LineaDeOrden` expresa un elemento de esa orden. La expresión línea de producción podría significar una instalación física y no es un sinónimo automático.
+El fragmento `OrdenDeProduccion` es una variante breve para estudiar lenguaje y encapsulación. No sustituye los tipos específicos de la práctica ni introduce cancelación en su máquina de estados.
 
-**Riesgo, alternativa y límite.** El fragmento `OrdenDeProduccion` es una variante breve para estudiar lenguaje y encapsulación. No sustituye los tipos específicos de la práctica ni introduce cancelación en su máquina de estados.
-
-**Comprobación técnica y aprendizaje.** Contrasta nombres de métodos, mensajes, pruebas y glosario. Si un mismo término significa dos cosas en un mismo contexto, acláralo antes de multiplicar clases.
+Contrasta nombres de métodos, mensajes, pruebas y glosario. Si un mismo término significa dos cosas en un mismo contexto, acláralo antes de multiplicar clases.
 
 ---
 
-### Bloque 5 — El modelo del dominio
+### El modelo del dominio
 
-El modelo del dominio es la representación del conocimiento del negocio en el código. El modelo incluye las entidades, los value objects, los agregados y los servicios de dominio. El modelo se construye de forma iterativa: se empieza con una versión simple y se refina a medida que se comprende mejor el dominio. El modelo no intenta reflejar todas las relaciones del negocio: refleja las relaciones que son relevantes para el problema. La simplicidad del modelo es una virtud.
+Un modelo del dominio no pretende copiar toda la realidad de la empresa. Selecciona las entidades, valores, relaciones y comportamientos necesarios para resolver decisiones concretas. Una orden de producción necesita proteger cantidad, material, estado y transiciones permitidas; no es necesario incorporar de inmediato todos los campos que un sistema de gestión industrial podría almacenar. Las entidades conservan identidad, los objetos de valor expresan conceptos que se comparan por atributos y los agregados delimitan qué reglas deben mantenerse consistentes durante una operación. El modelo se refina a partir de casos de negocio, no de un listado cerrado de clases. En AceriaApp la calidad se observará cuando una operación inválida no pueda dejar el agregado en un estado contradictorio.
 
 ```text
 Elementos del modelo del dominio:
@@ -239,60 +183,46 @@ Agregados          → fronteras de consistencia con una raíz.
 Servicios dominio  → reglas que no encajan en una entidad o value object.
 ```
 
-- **Línea 1:** `Elementos del modelo del dominio:` → identifica el tema de las líneas siguientes.
-
-- **Línea 3:** `Entidades          → objetos con identidad propia.` → objetos con identidad propia.
-
-- **Línea 4:** `Value objects      → objetos sin identidad propia.` → objetos sin identidad propia.
-
-- **Línea 5:** `Agregados          → fronteras de consistencia con una raíz.` → grupos de objetos con una raíz.
-
-- **Línea 6:** `Servicios dominio  → reglas que no encajan en una entidad o value object.` → operaciones sin estado.
+Entidades, objetos de valor, agregados y servicios de dominio cumplen funciones diferentes. La selección depende de identidad, invariantes y límites de consistencia, no de asignar un tipo de clase por cada tabla SQL.
 
 El modelo del dominio se caracteriza por tres propiedades. La primera es que refleja el conocimiento del negocio. La segunda es que es iterativo: se refina a medida que se comprende mejor. La tercera es que es simple: refleja solo las relaciones relevantes. Las tres propiedades permiten que el modelo sea comprensible y mantenible.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Modela solo los conceptos necesarios para proteger las reglas actuales. Una raíz de agregado no es una carpeta que contiene todas las entidades relacionadas.
 
-**La decisión arquitectónica.** Modela solo los conceptos necesarios para proteger las reglas actuales. Una raíz de agregado no es una carpeta que contiene todas las entidades relacionadas.
+La orden controla sus líneas y la cantidad total. La restricción de capacidad pertenece a esa frontera, porque añadir una línea debe dejar válida la orden completa.
 
-**Ejemplo concreto en AceriaApp.** La orden controla sus líneas y la cantidad total. La restricción de capacidad pertenece a esa frontera, porque añadir una línea debe dejar válida la orden completa.
+Los servicios de dominio alojan reglas que no encajan naturalmente en una entidad o value object; no son un contenedor general de persistencia y HTTP. Añadirlos sin necesidad puede vaciar de comportamiento a las entidades.
 
-**Riesgo, alternativa y límite.** Los servicios de dominio alojan reglas que no encajan naturalmente en una entidad o value object; no son un contenedor general de persistencia y HTTP. Añadirlos sin necesidad puede vaciar de comportamiento a las entidades.
-
-**Comprobación técnica y aprendizaje.** Para cada regla, identifica quién la protege y qué estado necesita. Si la misma validación se repite en API, repositorio y handler, comprueba qué parte es defensa de entrada y qué parte debe ser única en el dominio.
+Para cada regla, identifica quién la protege y qué estado necesita. Si la misma validación se repite en API, repositorio y handler, comprueba qué parte es defensa de entrada y qué parte debe ser única en el dominio.
 
 ---
 
-### Bloque 6 — DDD estratégico y táctico
+### DDD estratégico y táctico
 
-DDD se divide en dos niveles: estratégico y táctico. El nivel estratégico se ocupa de la organización del dominio en contextos delimitados y de la definición del lenguaje ubicuo. El nivel táctico se ocupa de la implementación del modelo dentro de cada contexto: entidades, value objects, agregados, repositorios y servicios de dominio. El nivel estratégico define el qué. El nivel táctico define el cómo. Los dos niveles se complementan.
+DDD estratégico y táctico responden a escalas distintas del problema. El enfoque estratégico estudia qué subdominios existen, cómo se delimitan sus modelos y qué relaciones necesitan mantener; el táctico proporciona patrones para expresar identidad, valor, agregados y persistencia dentro de cada contexto. Si diseñamos entidades muy cuidadas pero mezclamos reglas de Producción y Aprovisionamiento en un único modelo ambiguo, los patrones tácticos no corregirán esa frontera. Del mismo modo, un mapa de contextos no demuestra que una orden pueda finalizar de forma segura. En AceriaApp combinaremos ambas miradas: primero acordamos qué significa cada concepto y luego construimos objetos que hagan cumplir sus reglas. El diseño tiene sentido cuando la estrategia y el código se apoyan mutuamente.
 
 ```text
 DDD estratégico    → contextos delimitados y lenguaje ubicuo.
 DDD táctico        → entidades, value objects, agregados, repositorios.
 ```
 
-- **Línea 1:** `DDD estratégico    → contextos delimitados y lenguaje ubicuo.` → contextos delimitados y lenguaje ubicuo.
-
-- **Línea 2:** `DDD táctico        → entidades, value objects, agregados, repositorios.` → entidades, value objects, agregados, repositorios.
+La estrategia delimita contextos y el diseño táctico expresa las reglas dentro de ellos. Ambos enfoques necesitan contrastarse: un mapa coherente sin comportamiento y un agregado correcto en una frontera equivocada ofrecen garantías incompletas.
 
 La separación entre los dos niveles tiene dos consecuencias prácticas. La primera es que las decisiones estratégicas orientan las tácticas y se revisan con lo aprendido al implementar. La segunda es que el nivel táctico se aplica dentro de cada contexto delimitado. La combinación de ambas permite que el diseño sea coherente con el negocio y con la organización del equipo.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Usa las decisiones estratégicas para elegir fronteras y las tácticas para preservar reglas dentro de ellas. El aprendizaje puede obligar a revisar ambas.
 
-**La decisión arquitectónica.** Usa las decisiones estratégicas para elegir fronteras y las tácticas para preservar reglas dentro de ellas. El aprendizaje puede obligar a revisar ambas.
+La separación de Producción es estratégica; elegir `CantidadProduccion`, una colección de líneas y métodos de transición es táctico. La solución continúa ejecutándose como una API compuesta.
 
-**Ejemplo concreto en AceriaApp.** La separación de Producción es estratégica; elegir `CantidadProduccion`, una colección de líneas y métodos de transición es táctico. La solución continúa ejecutándose como una API compuesta.
+Crear agregados antes de entender el negocio puede convertir cada tabla en un agregado sin criterio. Dibujar contextos sin implementar ninguna frontera produce el problema inverso.
 
-**Riesgo, alternativa y límite.** Crear agregados antes de entender el negocio puede convertir cada tabla en un agregado sin criterio. Dibujar contextos sin implementar ninguna frontera produce el problema inverso.
-
-**Comprobación técnica y aprendizaje.** En el ADR distingue la decisión de contexto, la regla de agregado y el mecanismo de persistencia. Cada nivel debe tener una razón y una prueba o evidencia apropiada.
+En el ADR distingue la decisión de contexto, la regla de agregado y el mecanismo de persistencia. Cada nivel debe tener una razón y una prueba o evidencia apropiada.
 
 ---
 
-### Bloque 7 — DDD y microservicios
+### DDD y microservicios
 
-DDD y microservicios pueden complementarse. DDD aporta criterios para descubrir fronteras del modelo y del lenguaje; los microservicios permiten desplegar capacidades de forma independiente. Un contexto es un candidato para delimitar un servicio, no una orden de crear un proceso nuevo. Un monolito modular puede albergar varios contextos y un contexto amplio puede requerir varios componentes desplegables. Antes de distribuirlos se consideran consistencia, comunicación, equipos y coste operativo.
+DDD puede ayudar a delimitar microservicios porque ofrece fronteras de modelo basadas en capacidades del negocio, pero no determina automáticamente una topología de despliegue. Un contexto delimitado puede mantenerse como módulo de un monolito, y una capacidad compleja podría necesitar varios procesos técnicos sin duplicar su propiedad funcional. Elegir un servicio por entidad suele crear dependencias remotas innecesarias y operaciones difíciles de coordinar. En AceriaApp comenzaremos por el contexto de Producción y su modelo coherente, mientras Aprovisionamiento y Clientes podrán aparecer como contextos de análisis sin fingir que todas sus APIs ya están ejecutadas. Cuando incorporemos comunicación entre procesos, los contratos respetarán las fronteras del modelo que aquí se han establecido.
 
 ```text
 DDD + microservicios:
@@ -302,35 +232,27 @@ Lenguaje ubicuo      →  contrato público del servicio.
 Agregado             →  frontera de invariantes y consistencia local.
 ```
 
-- **Línea 1:** `DDD + microservicios:` → identifica el tema de las líneas siguientes.
-
-- **Línea 3:** `Contexto delimitado  →  frontera del modelo; módulo o servicio según necesidad.` → relaciona el concepto con su responsabilidad dentro del ejemplo.
-
-- **Línea 4:** `Lenguaje ubicuo      →  contrato público del servicio.` → relaciona el concepto con su responsabilidad dentro del ejemplo.
-
-- **Línea 5:** `Agregado             →  frontera de invariantes y consistencia local.` → relaciona el concepto con su responsabilidad dentro del ejemplo.
+La correspondencia entre contextos y posibles servicios debe leerse como decisión de diseño, no como despliegue obligatorio. Un contexto puede permanecer dentro de un monolito modular y conservar sus propias reglas y contratos.
 
 La combinación de DDD y microservicios tiene dos consecuencias prácticas. La primera es que las fronteras del negocio orientan los límites de los servicios. La segunda es que cada servicio tiene su propio modelo y su propio lenguaje. La combinación de ambas permite que los servicios sean autónomos y que la arquitectura sea sostenible.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Separa la frontera del modelo de la frontera del despliegue. Solo distribuye una capacidad cuando sus beneficios compensen comunicación, recuperación y operación.
 
-**La decisión arquitectónica.** Separa la frontera del modelo de la frontera del despliegue. Solo distribuye una capacidad cuando sus beneficios compensen comunicación, recuperación y operación.
+El módulo añade proyectos de Producción a la misma solución. Esto demuestra aislamiento del código sin inventar un servicio remoto de compras ni una transacción distribuida.
 
-**Ejemplo concreto en AceriaApp.** El módulo añade proyectos de Producción a la misma solución. Esto demuestra aislamiento del código sin inventar un servicio remoto de compras ni una transacción distribuida.
+Un proceso por contexto no garantiza autonomía si comparten tablas y entidades. Un monolito modular puede preservar mejor los contratos mientras el equipo descubre el dominio.
 
-**Riesgo, alternativa y límite.** Un proceso por contexto no garantiza autonomía si comparten tablas y entidades. Un monolito modular puede preservar mejor los contratos mientras el equipo descubre el dominio.
-
-**Comprobación técnica y aprendizaje.** Explica qué cambiaría al extraer Producción: composición, credenciales, contrato de red, latencia y fallos. Sus invariantes deberían conservarse, pero una llamada local no puede tratarse como una llamada remota infalible.
+Explica qué cambiaría al extraer Producción: composición, credenciales, contrato de red, latencia y fallos. Sus invariantes deberían conservarse, pero una llamada local no puede tratarse como una llamada remota infalible.
 
 ![Diagrama explicativo del punto 5.1, bloque 7](IMAGENES/5-1-despliegue.svg)
 
-*Interpretación del gráfico:* Un contexto es una frontera de modelo; su despliegue puede permanecer modular o separarse cuando exista una razón operativa. La figura se distribuye en SVG vectorial y PNG.
+Un contexto es una frontera de modelo; su despliegue puede permanecer modular o separarse cuando exista una razón operativa. La figura se distribuye en SVG vectorial y PNG.
 
 ---
 
-### Bloque 8 — Beneficios de DDD
+### Beneficios de DDD
 
-DDD aporta cuatro beneficios principales. El primero es la comunicación: el lenguaje ubicuo mejora la comunicación entre negocio y desarrollo. El segundo es la alineación: los límites del sistema coinciden con los límites del negocio. El tercero es la mantenibilidad: el código refleja el modelo mental del negocio. El cuarto es la evolución: el modelo se refina a medida que se comprende mejor el dominio. Los cuatro beneficios se materializan a lo largo del tiempo y no de forma inmediata.
+El principal beneficio de DDD es reducir la distancia entre las decisiones del negocio y las estructuras que el software utiliza para aplicarlas. Una regla de cantidad de fabricación debería reconocerse en los términos y métodos del dominio, no esconderse en un controlador o en una consulta SQL. El lenguaje compartido facilita revisar cambios con expertos y permite formular pruebas comprensibles para quienes conocen el proceso. La evolución del modelo también ayuda a localizar modificaciones cuando aparecen nuevas restricciones. Estas ventajas son especialmente visibles en dominios complejos o con cambios frecuentes; para operaciones CRUD muy simples podría resultar suficiente un diseño menos elaborado. En AceriaApp utilizaremos DDD donde aporta claridad a las reglas reales, sin convertir cada concepto en un patrón por obligación.
 
 ```text
 Beneficios de DDD:
@@ -341,33 +263,23 @@ Mantenibilidad   → código refleja el modelo.
 Evolución        → refinamiento continuo.
 ```
 
-- **Línea 1:** `Beneficios de DDD:` → identifica el tema de las líneas siguientes.
-
-- **Línea 3:** `Comunicación     → lenguaje ubicuo.` → lenguaje ubicuo.
-
-- **Línea 4:** `Alineación       → límites del sistema = límites del negocio.` → límites coincidentes.
-
-- **Línea 5:** `Mantenibilidad   → código refleja el modelo.` → código legible.
-
-- **Línea 6:** `Evolución        → refinamiento continuo.` → refinamiento continuo.
+Los beneficios del lenguaje compartido y del modelo localizado se aprecian cuando una modificación del negocio cambia pocas piezas y puede revisarse con quienes conocen el proceso. No son propiedades que se garanticen con un diagrama.
 
 Los beneficios de DDD tienen dos consecuencias prácticas. La primera es que el sistema resuelve problemas reales del negocio. La segunda es que el equipo comparte un modelo mental común. La combinación de ambas reduce la brecha entre negocio y desarrollo y facilita la evolución del sistema.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Evalúa los beneficios por cambios de negocio que se vuelven comprensibles y localizables. El número de clases no mide calidad de DDD.
 
-**La decisión arquitectónica.** Evalúa los beneficios por cambios de negocio que se vuelven comprensibles y localizables. El número de clases no mide calidad de DDD.
+Si se cambia la capacidad didáctica de una orden, la regla debe identificarse en el agregado y sus pruebas. El adaptador HTTP solo traduce el resultado de la operación.
 
-**Ejemplo concreto en AceriaApp.** Si se cambia la capacidad didáctica de una orden, la regla debe identificarse en el agregado y sus pruebas. El adaptador HTTP solo traduce el resultado de la operación.
+Un lenguaje compartido no elimina todos los errores. Reglas incompletas y ejemplos ambiguos siguen produciendo comportamientos incorrectos aunque los nombres sean consistentes.
 
-**Riesgo, alternativa y límite.** Un lenguaje compartido no elimina todos los errores. Reglas incompletas y ejemplos ambiguos siguen produciendo comportamientos incorrectos aunque los nombres sean consistentes.
-
-**Comprobación técnica y aprendizaje.** Recorre una petición rechazada desde el caso de uso hasta la regla y su prueba. Comprueba si un experto puede reconocer la intención y explicar el rechazo sin entender EF Core.
+Recorre una petición rechazada desde el caso de uso hasta la regla y su prueba. Comprueba si un experto puede reconocer la intención y explicar el rechazo sin entender EF Core.
 
 ---
 
-### Bloque 9 — Costes de DDD
+### Costes de DDD
 
-DDD también tiene costes. El primer coste es la inversión inicial en la construcción del lenguaje ubicuo. El segundo coste es la necesidad de colaboración continua entre negocio y desarrollo. El tercer coste es la complejidad adicional del modelo. El cuarto coste es la dificultad de aplicar DDD en dominios poco comprendidos. Los costes se aceptan cuando el dominio es complejo y el valor diferencial lo justifica.
+Aplicar DDD tiene costes. Requiere colaboración sostenida con expertos, discusión de términos ambiguos y revisión del modelo cuando se descubren excepciones del proceso. También introduce tipos, invariantes y fronteras que pueden parecer excesivos si el problema se reduce a guardar un registro sin reglas relevantes. El error sería confundir complejidad útil del dominio con complejidad accidental de una solución sobrearquitecturada. En una acería existen procesos donde una transición incorrecta puede provocar pérdidas materiales, de modo que representar esas reglas merece atención. Para otras capacidades administrativas puede no ser necesario el mismo nivel de modelado. El criterio será la importancia y variabilidad del conocimiento del negocio, no el número de patrones utilizados.
 
 ```text
 Costes de DDD:
@@ -378,33 +290,23 @@ Complejidad adicional   → modelo más elaborado.
 Dificultad en dominios poco comprendidos.
 ```
 
-- **Línea 1:** `Costes de DDD:` → identifica el tema de las líneas siguientes.
-
-- **Línea 3:** `Inversión inicial       → construcción del lenguaje.` → construcción del lenguaje.
-
-- **Línea 4:** `Colaboración continua   → negocio y desarrollo juntos.` → negocio y desarrollo juntos.
-
-- **Línea 5:** `Complejidad adicional   → modelo más elaborado.` → modelo más elaborado.
-
-- **Línea 6:** `Dificultad en dominios poco comprendidos.` → DDD requiere comprensión.
+El coste de DDD incluye reuniones, decisiones sobre invariantes y mantenimiento del lenguaje. Ese esfuerzo se justifica sobre todo cuando el conocimiento del negocio tiene importancia suficiente para evitar errores difíciles de corregir.
 
 Los costes de DDD tienen dos consecuencias prácticas. La primera es que DDD no se aplica en todos los dominios. La segunda es que su aplicación se concentra en el núcleo del negocio. La combinación de ambas permite que el esfuerzo se invierta donde aporta más valor.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Aplica el nivel de modelado que justifiquen las reglas. No necesitas agregados complejos para cada catálogo de referencia.
 
-**La decisión arquitectónica.** Aplica el nivel de modelado que justifiquen las reglas. No necesitas agregados complejos para cada catálogo de referencia.
+El curso invierte en Producción porque hay capacidad, líneas y una secuencia de estados. Los contextos conceptuales de Clientes y Aprovisionamiento permanecen documentados sin simular implementaciones inexistentes.
 
-**Ejemplo concreto en AceriaApp.** El curso invierte en Producción porque hay capacidad, líneas y una secuencia de estados. Los contextos conceptuales de Clientes y Aprovisionamiento permanecen documentados sin simular implementaciones inexistentes.
+El modelado también cuesta coordinación y mantenimiento de pruebas. Reducir todo a CRUD puede ocultar reglas, pero envolver cada cadena en varios tipos sin semántica añade trabajo sin beneficio.
 
-**Riesgo, alternativa y límite.** El modelado también cuesta coordinación y mantenimiento de pruebas. Reducir todo a CRUD puede ocultar reglas, pero envolver cada cadena en varios tipos sin semántica añade trabajo sin beneficio.
-
-**Comprobación técnica y aprendizaje.** Para cada abstracción nueva, escribe la regla o dependencia que protege. Si no puedes explicarla, considera una representación más sencilla y conserva la decisión revisable.
+Para cada abstracción nueva, escribe la regla o dependencia que protege. Si no puedes explicarla, considera una representación más sencilla y conserva la decisión revisable.
 
 ---
 
-### Bloque 10 — Aplicación al proyecto del curso
+### Aplicación al proyecto del curso
 
-El proyecto del curso aplica DDD en el módulo 5. El dominio de la acería se descompone en contextos delimitados: producción, aprovisionamiento y clientes. El lenguaje ubicuo se construye con los términos del negocio: orden de producción, material, cliente. El contexto de Producción se materializa primero en proyectos propios dentro de la solución. Aprovisionamiento y Clientes se estudian como contextos conceptuales; extraerlos a servicios será una decisión posterior, no una capacidad ya desplegada. La validación del catálogo comprueba metadatos de la descomposición; la compilación y las pruebas de dominio comprueban además el aislamiento y el comportamiento del contexto implementado.
+El punto 5.1 aplicará DDD al mapa conceptual de AceriaApp, distinguiendo Producción, Aprovisionamiento y Clientes y definiendo vocabulario para las órdenes. El ejercicio incorpora un catálogo de contextos y comprobaciones que ayudan a razonar sobre límites, pero esas clases no pueden determinar por sí solas si el negocio fue dividido correctamente. La evidencia arquitectónica combina la justificación escrita con reglas que más adelante serán implementadas y probadas sobre el agregado de Producción. También se conservarán las operaciones de la API anterior para permitir una evolución acumulativa. Así el alumno comprenderá qué parte del diseño es una hipótesis de modelo, cuál es una regla ejecutable y cuál requiere aún colaboración con expertos del dominio.
 
 ```text
 Aplicación al proyecto del curso:
@@ -415,31 +317,21 @@ Implementación    → contexto Producción aislado dentro de la solución.
 Validación        → test de coherencia de contextos.
 ```
 
-- **Línea 1:** `Aplicación al proyecto del curso:` → identifica el tema de las líneas siguientes.
-
-- **Línea 3:** `Contextos         → producción, aprovisionamiento, clientes.` → producción, aprovisionamiento, clientes.
-
-- **Línea 4:** `Lenguaje ubicuo   → términos del negocio.` → términos del negocio.
-
-- **Línea 5:** `Implementación    → contexto Producción aislado dentro de la solución.` → relaciona el concepto con su responsabilidad dentro del ejemplo.
-
-- **Línea 6:** `Validación        → test de coherencia de contextos.` → test de coherencia.
+El resumen de contextos de AceriaApp orienta la creación posterior del agregado de Producción. Las clases que validan la descripción del mapa no certifican por sí solas que existan todos los servicios ni que el modelo represente exhaustivamente la acería.
 
 La aplicación de DDD prepara el proyecto para los puntos 5.2 a 5.5. El punto 5.2 estudiará las entidades y los value objects. El punto 5.3 estudiará los casos de uso. El punto 5.4 estudiará la separación entre commands y queries. El punto 5.5 aplicará DDD al dominio de la acería. El punto 5.1 establece la base que se aplicará en los cuatro puntos siguientes.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Distingue tres evidencias: un catálogo describe, un proyecto separa y una prueba ejecuta. Ninguna sustituye por completo a las otras.
 
-**La decisión arquitectónica.** Distingue tres evidencias: un catálogo describe, un proyecto separa y una prueba ejecuta. Ninguna sustituye por completo a las otras.
+5.1 introduce el contexto de dominio de Producción; 5.2 profundiza en entidades y value objects; 5.3 añade aplicación e infraestructura; 5.4 separa CQRS y 5.5 completa el flujo HTTP.
 
-**Ejemplo concreto en AceriaApp.** 5.1 introduce el contexto de dominio de Producción; 5.2 profundiza en entidades y value objects; 5.3 añade aplicación e infraestructura; 5.4 separa CQRS y 5.5 completa el flujo HTTP.
+Los nombres de Aprovisionamiento y Clientes en un catálogo no significan que existan endpoints, bases de datos o microservicios para esos contextos.
 
-**Riesgo, alternativa y límite.** Los nombres de Aprovisionamiento y Clientes en un catálogo no significan que existan endpoints, bases de datos o microservicios para esos contextos.
-
-**Comprobación técnica y aprendizaje.** Parte del snapshot final de M4, con 14 proyectos y 118 pruebas en su línea base, y verifica el inventario nuevo desde los archivos y la ejecución del punto. No reutilices recuentos de una versión anterior del curso.
+Parte del snapshot final de M4, con 14 proyectos y 118 pruebas en su línea base, y verifica el inventario nuevo desde los archivos y la ejecución del punto. No reutilices recuentos de una versión anterior del curso.
 
 ---
 
-### Resumen rápido de la teoría
+### Qué aporta DDD al modelo de AceriaApp
 
 - Domain-Driven Design es un enfoque que sitúa el dominio del negocio en el centro del proceso de desarrollo.
 - El dominio se descompone en subdominios: núcleo, soporte y genérico.
