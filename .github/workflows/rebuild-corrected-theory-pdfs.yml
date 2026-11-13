@@ -16,6 +16,10 @@ on:
       - 'tools/pdf_running_headers.py'
   workflow_dispatch:
 
+concurrency:
+  group: curso-pdf-version-corregida
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
@@ -146,6 +150,11 @@ jobs:
 
       - name: Publicar los PDF en la misma rama
         run: |
+          git fetch origin version-corregida
+          if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/version-corregida)" ]; then
+            echo "La rama avanzó después del checkout; una ejecución posterior regenerará los PDF actuales"
+            exit 0
+          fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -- \
@@ -166,7 +175,5 @@ jobs:
             echo "No hay cambios de PDF"
           else
             git commit -m "Actualizar PDF de prácticas y cabeceras M01-M05"
-            git fetch origin version-corregida
-            git rebase origin/version-corregida
             git push origin HEAD:version-corregida
           fi
