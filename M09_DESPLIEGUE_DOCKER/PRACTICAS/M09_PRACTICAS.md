@@ -449,17 +449,21 @@ Detendremos **solo** `inventario-2`. El gateway debe continuar atendiendo las co
 docker compose --env-file .\.env -f .\docker\compose.fullstack.yml stop inventario-2
 $destinoSano = $false
 foreach ($intento in 1..45) {
-  $respuesta = Invoke-WebRequest "$gateway/api/v1/materiales/Acero" -SkipHttpErrorCheck
-  if ($respuesta.StatusCode -eq 200 -and
-      [string]$respuesta.Headers['X-Instancia'] -eq 'inventario-1') {
-    $destinoSano = $true
-    break
+  try {
+    $respuesta = Invoke-WebRequest "$gateway/api/v1/materiales/Acero" -TimeoutSec 5 -SkipHttpErrorCheck
+    if ($respuesta.StatusCode -eq 200 -and
+        [string]$respuesta.Headers['X-Instancia'] -eq 'inventario-1') {
+      $destinoSano = $true
+      break
+    }
+  } catch {
+    # Puede haber una conexión transitoria mientras YARP detecta la caída.
   }
   Start-Sleep -Seconds 2
 }
 if (-not $destinoSano) { throw 'YARP no recuperó el servicio mediante Inventario 1.' }
 foreach ($intento in 1..10) {
-  $respuesta = Invoke-WebRequest "$gateway/api/v1/materiales/Acero" -SkipHttpErrorCheck
+  $respuesta = Invoke-WebRequest "$gateway/api/v1/materiales/Acero" -TimeoutSec 10 -SkipHttpErrorCheck
   if ($respuesta.StatusCode -ne 200 -or
       [string]$respuesta.Headers['X-Instancia'] -ne 'inventario-1') {
     throw 'Una petición no fue atendida por el destino superviviente.'
@@ -479,10 +483,20 @@ Ahora la dependencia que interrumpiremos es el broker. A diferencia del paso ant
 
 ```powershell
 docker compose --env-file .\.env -f .\docker\compose.fullstack.yml stop rabbitmq
-$degradada = Invoke-WebRequest 'http://localhost:5106/health/ready' -SkipHttpErrorCheck
-Write-Host "Inventario readiness sin broker: $($degradada.StatusCode)"
+try {
+  $degradada = Invoke-WebRequest 'http://localhost:5106/health/ready' -TimeoutSec 5 -SkipHttpErrorCheck
+  Write-Host "Readiness de Inventario sin broker: HTTP $($degradada.StatusCode)"
+} catch {
+  Write-Host "Inventario no responde con RabbitMQ detenido: $($_.Exception.Message)"
+}
 docker compose --env-file .\.env -f .\docker\compose.fullstack.yml start rabbitmq
-docker compose --env-file .\.env -f .\docker\compose.fullstack.yml exec -T rabbitmq rabbitmq-diagnostics -q ping
+$brokerListo = $false
+foreach ($intento in 1..45) {
+  docker compose --env-file .\.env -f .\docker\compose.fullstack.yml exec -T rabbitmq rabbitmq-diagnostics -q ping 2>$null | Out-Null
+  if ($LASTEXITCODE -eq 0) { $brokerListo = $true; break }
+  Start-Sleep -Seconds 2
+}
+if (-not $brokerListo) { throw 'RabbitMQ no recuperó su diagnóstico de salud.' }
 ```
 
 Observa la respuesta HTTP de `/health/ready` y anota si comunica indisponibilidad mientras RabbitMQ está detenido. Tras iniciarlo, `rabbitmq-diagnostics -q ping` debe volver a responder correctamente; si la inicialización no ha concluido, repite la consulta después de unos segundos antes de diagnosticar un fallo permanente.
@@ -499,8 +513,12 @@ docker compose --env-file .\.env -f .\docker\compose.fullstack.yml restart inven
 foreach ($puerto in @(5105,5106,5107)) {
   $preparado = $false
   foreach ($intento in 1..45) {
-    $r = Invoke-WebRequest "http://localhost:$puerto/health/ready" -SkipHttpErrorCheck
-    if ($r.StatusCode -eq 200) { $preparado = $true; break }
+    try {
+      $r = Invoke-WebRequest "http://localhost:$puerto/health/ready" -TimeoutSec 5 -SkipHttpErrorCheck
+      if ($r.StatusCode -eq 200) { $preparado = $true; break }
+    } catch {
+      # La API aún está iniciándose: volver a consultar readiness.
+    }
     Start-Sleep -Seconds 2
   }
   if (-not $preparado) { throw "La API del puerto $puerto no recuperó readiness." }
