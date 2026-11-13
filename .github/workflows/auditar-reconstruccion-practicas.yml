@@ -24,6 +24,13 @@ on:
       - '.github/workflows/auditar-reconstruccion-practicas.yml'
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONIOENCODING: utf-8
+
 permissions:
   contents: read
 
