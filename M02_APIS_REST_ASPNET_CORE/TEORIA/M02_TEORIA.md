@@ -813,12 +813,12 @@ Objetivos de aprendizaje:
 - Añadir al proyecto AceriaApp una clase de validación de peticiones con FluentValidation y un test unitario que verifique la validación.
 
 
----
 
+El recorrido de la validación debe entenderse desde la petición que llega a la API hasta el efecto que se permite o se rechaza. Cada comprobación tendrá sentido cuando podamos identificar quién la ejecuta y cuál es la respuesta que observa el cliente.
 
-### Bloque 1 — La validación como contrato de entrada
+### La validación como contrato de entrada
 
-La validación de peticiones es el proceso de comprobar que los datos recibidos cumplen las reglas definidas por el servicio. Sin validación, el servicio procesa datos incorrectos y produce resultados incorrectos o falla de forma imprevisible. La validación es un contrato de entrada: define qué datos acepta el servicio y qué datos rechaza. El contrato se documenta y se verifica en cada petición. La validación no es una tarea opcional ni una capa de defensa secundaria: es la primera línea de defensa de la API. Un servicio sin validación es un servicio que delega la responsabilidad de los datos al cliente.
+Recibir una petición HTTP no significa que sus datos sean adecuados para modificar el negocio. El cliente puede enviar un JSON incompleto, números fuera de rango o una combinación de propiedades que contradiga el estado actual de una orden. La validación establece una frontera en la que la API convierte datos externos, necesariamente poco fiables, en solicitudes que la aplicación puede comprender y procesar. Para hacerlo bien debemos separar errores de formato, reglas sobre valores y condiciones del negocio. Estas capas no son pasos burocráticos: permiten responder con mensajes precisos y evitan que el dominio dependa de comprobaciones repetidas en cada endpoint. En AceriaApp utilizaremos `CrearOrdenRequest` como entrada y mantendremos diferenciada la representación que devuelve la consulta.
 
 ![Figura del punto 2.3: Recorrido de una petición por los tres niveles de validación](IMAGENES/m02-2-3-niveles-validacion.svg)
 
@@ -829,12 +829,9 @@ Flujo de la validación:
 - **Cliente** → Petición → Validación sintáctica → Validación semántica
        → Validación de negocio → Procesamiento → Respuesta
 
-- **Línea 1:** Cliente → Petición → el cliente envía la petición al servidor.
-- **Línea 2:** → Validación sintáctica → primera comprobación, formato correcto.
-- **Línea 3:** → Validación semántica → segunda comprobación, significado correcto.
-- **Línea 4:** → Validación de negocio → tercera comprobación, reglas del dominio.
-- **Línea 5:** → Procesamiento → se procesa la petición si pasa las tres validaciones.
-- **Línea 6:** → Respuesta → se devuelve el resultado al cliente.
+
+El recorrido de la petición diferencia deserialización, comprobación de valores y regla de negocio. Cada etapa puede detener la operación antes de la persistencia, pero sus responsabilidades son distintas. En particular, el dominio no debería depender de que el consumidor utilice siempre una determinada ruta HTTP.
+
 
 La validación se organiza en tres niveles que se aplican de forma secuencial. El primer nivel es la validación sintáctica, que comprueba que el formato de la petición es correcto. El segundo nivel es la validación semántica, que comprueba que los valores tienen sentido en el contexto del recurso. El tercer nivel es la validación de negocio, que comprueba que los datos cumplen las reglas del dominio. Los tres niveles se aplican en orden: si falla el primero, no se aplican los siguientes. La aplicación secuencial evita procesar datos que no pueden ser válidos en ningún caso.
 
@@ -843,9 +840,9 @@ La ausencia de validación produce tres consecuencias medibles. La primera es el
 
 ---
 
-### Bloque 2 — Validación sintáctica
+### Validación sintáctica
 
-La validación sintáctica comprueba que la petición tiene el formato correcto. Se aplica antes de cualquier otra validación. En una API REST, la validación sintáctica incluye la comprobación del tipo de contenido, la comprobación del formato JSON, la comprobación de los tipos de datos de los campos y la comprobación de la presencia de los campos obligatorios. Un JSON mal formado produce un código 400 con un mensaje que indica el error de sintaxis. Un campo con un tipo incorrecto produce un código 400 con un mensaje que indica el campo y el tipo esperado. La validación sintáctica la realiza el framework en la mayoría de los casos.
+Antes de decidir si una orden puede crearse, el servidor debe poder interpretar la petición. Si se esperaba un número y llega una cadena, o el JSON no tiene una estructura válida, el procesamiento puede fallar sin haber alcanzado ninguna regla de la acería. Esta es la validación sintáctica. ASP.NET Core y el serializador contribuyen a esa comprobación, pero el programador debe conocer qué valores son obligatorios, qué sucede con los nulos y cómo se transforma el error en una respuesta HTTP. Declarar una propiedad como `int` no equivale a exigir que su valor sea estrictamente positivo. Por eso distinguimos la forma de la petición de su significado: las decisiones sobre cantidades, clientes o materiales pertenecen a comprobaciones posteriores.
 
 ```csharp
 public record CrearOrdenRequest(  
@@ -855,29 +852,25 @@ public record CrearOrdenRequest(
 
 ```
 
-- **Línea 1:** public record CrearOrdenRequest( → declara el contrato de entrada.
-- **Línea 2:** string Cliente, → campo obligatorio de tipo string.
-- **Línea 3:** string Material, → campo obligatorio de tipo string.
-- **Línea 4:** int Cantidad); → campo obligatorio de tipo entero.
+
+El `record CrearOrdenRequest` establece tipos de entrada, pero las restricciones del negocio no se deducen automáticamente de `string` o `int`. La conversión del JSON y las reglas sobre valores deben probarse por separado para que el cliente reciba el error correcto.
+
 
 La validación sintáctica se apoya en el sistema de tipos del lenguaje. Un record con tipos no anulables obliga al framework a rechazar peticiones que no incluyan los campos. Un record con tipos anulables permite que los campos sean opcionales. La elección entre tipos anulables y no anulables es una decisión de diseño que se documenta en el contrato. La validación sintáctica también se apoya en los atributos de enlace de parámetros, que indican de dónde se obtiene cada valor. La combinación de tipos y atributos define la primera línea de defensa de la API.
 
 
 ---
 
-
-
-#### Del concepto a ASP.NET Core 8: Niveles de validación
+#### Niveles de validación en AceriaApp
 
 ASP.NET Core comprueba aspectos de la deserialización del JSON, FluentValidation aplica reglas semánticas y el manejador aplica decisiones del dominio. Un cuerpo con cantidad 0 falla la semántica; cantidad 501 satisface el rango del contrato pero supera el límite de negocio de 500. El objetivo es demostrar por qué el primer caso produce 400 y el segundo 422.
 
-**Aplicación en el proyecto real.** Este comportamiento está materializado en `Validacion/Validadores.cs` del estado `2.3-validacion-peticiones`. Busca la instrucción `RuleFor` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
+`Validacion/Validadores.cs` define reglas con `RuleFor`, pero el valor de la clase depende de que cada regla proteja un dato relevante. Las pruebas aisladas deben mostrar qué entradas acepta y rechaza.
 
-**Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
 
-### Bloque 3 — Validación semántica
+### Validación semántica
 
-La validación semántica comprueba que los valores de la petición tienen sentido en el contexto del recurso. Se aplica después de la validación sintáctica. En una API REST, la validación semántica incluye la comprobación de rangos, la comprobación de formatos específicos, la comprobación de longitudes máximas y mínimas y la comprobación de coherencia entre campos. Un campo Cantidad con valor negativo falla la validación semántica. Un campo Email con formato incorrecto falla la validación semántica. Un campo FechaFin anterior a FechaInicio falla la validación semántica. La validación semántica se implementa con reglas específicas para cada campo.
+Una solicitud sintácticamente correcta aún puede ser absurda desde el punto de vista de la operación. El número de unidades puede ser negativo, el identificador puede estar vacío o el nombre de cliente puede superar un límite publicado. Estas condiciones son semánticas porque interpretan el valor de propiedades ya convertidas a tipos válidos. FluentValidation permite expresar reglas legibles, asociar mensajes y componerlas en un validador dedicado al contrato de entrada. Eso facilita probarlas sin arrancar una API completa, pero no significa que reemplazará todas las invariantes del dominio. La aplicación todavía debe impedir que se registre una orden inválida si otro punto de entrada omite el validador HTTP. En AceriaApp convendrá contrastar tanto una petición válida como cada límite relevante de los datos.
 
 ```csharp
 public class CrearOrdenRequestValidator : AbstractValidator<CrearOrdenRequest>  
@@ -900,30 +893,18 @@ public class CrearOrdenRequestValidator : AbstractValidator<CrearOrdenRequest>
 
 ```
 
-- **Línea 1:** public class CrearOrdenRequestValidator : AbstractValidator<CrearOrdenRequest> → declara el validador.
-- **Línea 2:** { → abre el cuerpo de la clase.
-- **Línea 3:** public CrearOrdenRequestValidator() → constructor del validador.
-- **Línea 4:** { → abre el cuerpo del constructor.
-- **Línea 5:** RuleFor(x => x.Cliente) → comienza la regla para el campo Cliente.
-- **Línea 6:** .NotEmpty().WithMessage("El cliente es obligatorio.") → no puede estar vacío.
-- **Línea 7:** .MaximumLength(100).WithMessage("El cliente no puede superar 100 caracteres."); → longitud máxima.
-- **Línea 8:** RuleFor(x => x.Material) → comienza la regla para el campo Material.
-- **Línea 9:** .NotEmpty().WithMessage("El material es obligatorio.") → no puede estar vacío.
-- **Línea 10:** .MaximumLength(100).WithMessage("El material no puede superar 100 caracteres."); → longitud máxima.
-- **Línea 11:** RuleFor(x => x.Cantidad) → comienza la regla para el campo Cantidad.
-- **Línea 12:** .GreaterThan(0).WithMessage("La cantidad debe ser mayor que cero.") → mayor que cero.
-- **Línea 13:** .LessThanOrEqualTo(10000).WithMessage("La cantidad no puede superar 10000."); → límite superior.
-- **Línea 14:** } → cierra el constructor.
-- **Línea 15:** } → cierra la clase.
+
+El validador asocia condiciones a propiedades concretas del contrato y puede producir mensajes específicos. Una regla de longitud y otra de positividad son verificables con tests unitarios; las reglas que requieren conocer el estado persistido necesitan además un caso de uso o el dominio.
+
 
 La validación semántica tiene dos consecuencias prácticas. La primera es que cada campo tiene reglas explícitas y documentadas. La segunda es que los mensajes de error son específicos y útiles para el cliente. La combinación de ambas mejora la experiencia del consumidor y reduce el tiempo de integración. La validación semántica no comprueba reglas de negocio: comprueba que los valores son coherentes en el contexto del recurso. Las reglas de negocio se aplican en el siguiente nivel.
 
 
 ---
 
-### Bloque 4 — Validación de negocio
+### Validación de negocio
 
-La validación de negocio comprueba que los datos cumplen las reglas del dominio. Se aplica después de la validación semántica. En una API REST, la validación de negocio incluye la comprobación de unicidad, la comprobación de existencia de referencias y la comprobación de reglas específicas del dominio. Un Cliente que no existe falla la validación de negocio. Un Material que está bloqueado falla la validación de negocio. Una Orden con más líneas de las permitidas falla la validación de negocio. La validación de negocio se implementa en la capa de aplicación o en el dominio, no en el validador de la petición.
+Existen reglas que solo pueden decidirse conociendo el estado o las políticas del negocio. Una orden puede tener una cantidad formalmente válida y, aun así, superar la capacidad permitida o intentar una transición que el proceso de producción no admite. A diferencia de la sintaxis y de muchas validaciones del contrato, estas condiciones deben protegerse en el modelo o en el caso de uso, porque también pueden activarse desde procesos internos, tareas o mensajería. Duplicarlas de forma inconexa en el endpoint y en el dominio genera resultados contradictorios. El adaptador HTTP debe traducir un rechazo de negocio a una respuesta comprensible, sin convertirse en propietario de la regla. La etapa 2.3 permite reconocer esta diferencia antes de ampliar el comportamiento de DDD en los módulos posteriores.
 
 ```csharp
 public class OrdenServicio  
@@ -952,39 +933,20 @@ public class OrdenServicio
 
 ```
 
-- **Línea 1:** public class OrdenServicio → declara el servicio de aplicación.
-- **Línea 2:** { → abre el cuerpo de la clase.
-- **Línea 3:** private readonly AceriaDbContext _db; → campo para el contexto de base de datos.
-- **Línea 4:** public OrdenServicio(AceriaDbContext db) → constructor.
-- **Línea 5:** { → abre el cuerpo del constructor.
-- **Línea 6:** _db = db; → asigna el contexto al campo.
-- **Línea 7:** } → cierra el constructor.
-- **Línea 8:** public async Task<bool> ClienteExisteAsync(string cliente) → método de comprobación de cliente.
-- **Línea 9:** { → abre el cuerpo del método.
-- **Línea 10:** return await _db.Clientes.AnyAsync(c => c.Nombre == cliente); → comprueba existencia.
-- **Línea 11:** } → cierra el método.
-- **Línea 12:** public async Task<bool> MaterialDisponibleAsync(string material, int cantidad) → método de comprobación de stock.
-- **Línea 13:** { → abre el cuerpo del método.
-- **Línea 14:** var stock = await _db.Materiales → consulta el stock.
-- **Línea 15:** .Where(m => m.Nombre == material) → filtra por nombre.
-- **Línea 16:** .Select(m => m.Stock) → proyecta el stock.
-- **Línea 17:** .FirstOrDefaultAsync(); → obtiene el primer resultado.
-- **Línea 18:** return stock >= cantidad; → comprueba disponibilidad.
-- **Línea 19:** } → cierra el método.
-- **Línea 20:** } → cierra la clase.
+
+El servicio de aplicación representa el lugar donde debe resolverse la operación con sus invariantes. Rechazar una cantidad o estado prohibido no debería depender exclusivamente de que una petición haya atravesado un filtro de ASP.NET Core.
+
 
 La validación de negocio tiene dos consecuencias prácticas. La primera es que se separa de la validación sintáctica y semántica. La segunda es que requiere acceso a datos externos al propio validador. La separación permite que la validación de negocio se implemente en la capa de aplicación o en el dominio, donde tiene acceso a los repositorios y a los servicios necesarios. La validación de negocio no se realiza en el validador de la petición porque el validador no tiene acceso a la base de datos. La separación por niveles es la clave para mantener la validación como un contrato claro y mantenible.
 
 
 ---
 
-
-
-#### Del concepto a ASP.NET Core 8: Validador semántico
+#### Validador semántico en AceriaApp
 
 CrearOrdenValidator deriva de AbstractValidator y declara reglas NotEmpty, MaximumLength e InclusiveBetween. El validador es código C# ejecutable, no una anotación narrativa. Permite reutilizar reglas en POST y PUT y establecer pruebas de frontera cuando la cantidad es 0, 1, 500, 501 y 10001.
 
-**Aplicación en el proyecto real.** Este comportamiento está materializado en `Validacion/Validadores.cs` del estado `2.3-validacion-peticiones`. Busca la instrucción `CrearOrdenValidator` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
+`CrearOrdenValidator` concentra la validación de la solicitud de creación sin obligar al endpoint a repetir cada condición. El alcance de esa clase debe quedar diferenciado de las invariantes que protege el dominio.
 
 **Código de referencia probado:** `src/AceriaApp.Api/Validacion/Validadores.cs`
 
@@ -1010,27 +972,28 @@ public sealed class ActualizarCantidadValidator : AbstractValidator<ActualizarCa
 // FIN PASO 2.3.3
 ```
 
-**Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
 
-### Bloque 5 — FluentValidation en ASP.NET Core
+### FluentValidation en ASP.NET Core
 
-FluentValidation es una biblioteca para definir reglas de validación de forma fluida y testeable. Se integra con ASP.NET Core mediante la clase AbstractValidator<T> y el método RuleFor. Cada regla se compone de una expresión lambda que selecciona el campo, un método de validación y un mensaje de error. La biblioteca ofrece más de treinta métodos de validación entre los que se incluyen NotEmpty, MaximumLength, GreaterThan, EmailAddress, RegularExpression, Must y Custom. La combinación de métodos permite expresar reglas complejas de forma legible.
+FluentValidation ofrece una manera expresiva de declarar condiciones sobre los objetos que recibe la API. A través de `AbstractValidator<T>` y `RuleFor`, la validación de cantidad, longitud o formato queda separada de la lógica de enrutamiento. Sus reglas pueden ejecutarse de manera aislada durante las pruebas y reutilizarse cuando el mismo contrato llega desde diferentes endpoints. Pero registrar el validador en el contenedor de ASP.NET Core no hace que se invoque automáticamente en cualquier Minimal API: alguien debe integrarlo en el recorrido de petición. Tampoco resulta prudente utilizarlo como reemplazo de todas las reglas del dominio, en especial aquellas que necesitan información de persistencia o transiciones de estado. Cada validación debe tener una justificación y un resultado concreto.
 
 ```csharp
 builder.Services.AddValidatorsFromAssemblyContaining<CrearOrdenRequestValidator>();
 
 ```
 
-- **Línea 1:** builder.Services.AddValidatorsFromAssemblyContaining<CrearOrdenRequestValidator>(); → registra todos los validadores del ensamblado.
+
+El registro mediante `AddValidatorsFromAssemblyContaining` permite que el contenedor encuentre validadores, pero no implica automáticamente que cada endpoint los ejecute. Es esencial distinguir disponibilidad de la dependencia y activación efectiva del comportamiento.
+
 
 La integración con ASP.NET Core se realiza en el contenedor de dependencias. El método AddValidatorsFromAssemblyContaining registra todos los validadores del ensamblado que contiene el tipo especificado. Los validadores se inyectan en los endpoints o en los manejadores de MediatR. La validación se ejecuta antes de la lógica de negocio y devuelve una lista de errores si falla. La lista se transforma en una respuesta problem details con código 400. La integración con el contenedor y con el formato de error es la que permite que la validación sea transparente para la lógica de negocio.
 
 
 ---
 
-### Bloque 6 — Integración de la validación con Minimal API
+### Integración de la validación con Minimal API
 
-En Minimal API, la validación se integra con un filtro de endpoint o con un manejador de excepciones. El filtro se ejecuta antes del manejador del endpoint y devuelve una respuesta problem details si la validación falla. El manejador se ejecuta solo si la validación pasa. La integración con Minimal API requiere registrar el filtro o el manejador en el contenedor y aplicarlo a los endpoints que lo necesitan. La aplicación selectiva del filtro permite que solo los endpoints con validación lo usen.
+Los filtros de endpoint permiten intervenir antes y después de que una Minimal API ejecute su manejador. Un filtro de validación puede resolver el validador correspondiente, comprobar el cuerpo ya enlazado y detener la ejecución cuando detecta errores, evitando que el endpoint persista una orden inválida. La ubicación de ese filtro importa: debe ejecutarse antes de realizar el efecto, y su resultado debe mantener el contrato HTTP acordado. La reutilización mediante un filtro genérico evita copiar reglas en todas las rutas, pero exige comprobar que los tipos y parámetros se corresponden con la petición efectiva. El alumno deberá seguir una llamada de creación válida y otra inválida para observar cuándo se invoca el filtro y si el manejador llega realmente a ejecutarse.
 
 ![Figura del punto 2.3: Ejecución del filtro antes del manejador Minimal API](IMAGENES/m02-2-3-filtro-validacion.svg)
 
@@ -1072,52 +1035,25 @@ public class ValidationFilter<T> : IEndpointFilter where T : class
 
 ```
 
-- **Línea 1:** public class ValidationFilter<T> : IEndpointFilter where T : class → declara el filtro genérico.
-- **Línea 2:** { → abre el cuerpo de la clase.
-- **Línea 3:** private readonly IValidator<T> _validator; → campo para el validador.
-- **Línea 4:** public ValidationFilter(IValidator<T> validator) → constructor.
-- **Línea 5:** { → abre el cuerpo del constructor.
-- **Línea 6:** _validator = validator; → asigna el validador.
-- **Línea 7:** } → cierra el constructor.
-- **Línea 8:** public async ValueTask<object?> InvokeAsync( → método de invocación del filtro.
-- **Línea 9:** EndpointFilterInvocationContext context, → contexto de la petición.
-- **Línea 10:** EndpointFilterDelegate next) → siguiente paso en la cadena.
-- **Línea 11:** { → abre el cuerpo del método.
-- **Línea 12:** var request = context.Arguments.OfType<T>().FirstOrDefault(); → obtiene la petición.
-- **Línea 13:** if (request is null) → comprueba si la petición es nula.
-- **Línea 14:** { → abre el bloque de error.
-- **Línea 15:** return Results.BadRequest(); → devuelve 400.
-- **Línea 16:** } → cierra el bloque de error.
-- **Línea 17:** var result = await _validator.ValidateAsync(request); → ejecuta la validación.
-- **Línea 18:** if (!result.IsValid) → comprueba si hay errores.
-- **Línea 19:** { → abre el bloque de error.
-- **Línea 20:** var errores = result.Errors → comienza la agrupación de errores.
-- **Línea 21:** .GroupBy(e => e.PropertyName) → agrupa por nombre de propiedad.
-- **Línea 22:** .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray()); → construye el diccionario.
-- **Línea 23:** return Results.ValidationProblem(errores); → devuelve 400 con problem details.
-- **Línea 24:** } → cierra el bloque de error.
-- **Línea 25:** return await next(context); → continúa la cadena.
-- **Línea 26:** } → cierra el método.
-- **Línea 27:** } → cierra la clase.
+
+El filtro genérico recibe el contexto de invocación, localiza los datos de entrada y llama al validador antes del siguiente paso de la canalización. Si aparecen errores, debe devolver una respuesta HTTP sin ejecutar el manejador; la prueba debe demostrar precisamente esa ausencia de efecto.
+
 
 El filtro genérico se aplica a los endpoints que lo necesitan. La aplicación se realiza con la extensión AddEndpointFilter. El filtro obtiene el validador del contenedor de dependencias y ejecuta la validación. Si la validación falla, devuelve una respuesta problem details con código 400 y los errores agrupados por propiedad. Si la validación pasa, continúa la cadena y ejecuta el manejador del endpoint. La integración con Minimal API es transparente para la lógica de negocio.
 
 
 ---
 
-
-
-#### Del concepto a ASP.NET Core 8: Filtro de endpoint
+#### Filtro de endpoint en AceriaApp
 
 ValidationFilter recibe el argumento de la petición, ejecuta ValidateAsync y agrupa errores por propiedad. Si hay fallos devuelve Results.ValidationProblem con el campo errors; solo cuando IsValid es verdadero continúa mediante next(context). Omitir esa condición permitiría procesar datos rechazados.
 
-**Aplicación en el proyecto real.** Este comportamiento está materializado en `Validacion/ValidationFilter.cs` del estado `2.3-validacion-peticiones`. Busca la instrucción `InvokeAsync` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
+`ValidationFilter.cs` ejecuta `InvokeAsync` durante el recorrido HTTP. La prueba decisiva consiste en comprobar que no se llama al manejador cuando el cuerpo es inválido y que se devuelve un error estructurado.
 
-**Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
 
-### Bloque 7 — Mensajes de error y localización
+### Mensajes de error y localización
 
-Los mensajes de error de la validación deben ser claros y útiles para el cliente. Un mensaje como "Valor inválido" no aporta información. Un mensaje como "La cantidad debe ser mayor que cero" aporta información concreta. Los mensajes se definen en el validador con el método WithMessage. La localización de los mensajes permite que la API devuelva mensajes en el idioma del cliente. La localización se implementa con recursos o con un proveedor de mensajes. La adopción de mensajes específicos y localizados mejora la experiencia del consumidor y reduce el tiempo de integración.
+Una validación útil no solo rechaza una petición: explica qué puede corregir el consumidor. Decir «datos incorrectos» resulta insuficiente cuando el cliente necesita saber si faltó el nombre, si una cantidad es demasiado grande o si el formato no era aceptable. Los mensajes deben asociarse a campos y reglas específicas, con términos comprensibles para quien utiliza el contrato. La localización del texto puede formar parte del diseño cuando los consumidores operan en varios idiomas, pero no debe modificar el significado de las condiciones ni volver inestables los códigos de error. Conviene separar mensajes para personas de identificadores o tipos de error que un programa pueda manejar. En AceriaApp comprobaremos mensajes concretos para entradas inválidas, sin convertirlos en sustitutos de las pruebas del comportamiento.
 
 ```csharp
 RuleFor(x => x.Cantidad)  
@@ -1126,18 +1062,18 @@ RuleFor(x => x.Cantidad)
 
 ```
 
-- **Línea 1:** RuleFor(x => x.Cantidad) → comienza la regla para el campo Cantidad.
-- **Línea 2:** .GreaterThan(0).WithMessage("La cantidad debe ser mayor que cero.") → regla y mensaje.
-- **Línea 3:** .LessThanOrEqualTo(10000).WithMessage("La cantidad no puede superar 10000."); → regla y mensaje.
+
+Las reglas sobre cantidad producen mensajes útiles solo si se asocian a la condición concreta. Un consumidor debe poder comprender el límite y corregir la petición; un mensaje genérico impide distinguir una cantidad negativa de otra que exceda el máximo permitido.
+
 
 La adopción de mensajes específicos tiene dos consecuencias prácticas. La primera es que el cliente sabe exactamente qué ha fallado. La segunda es que el soporte puede reproducir el error con el mensaje. La localización se aplica de forma opcional según los requisitos del proyecto. El curso usa mensajes en español sin localización porque el alcance no lo requiere. La adopción de mensajes específicos es independiente de la localización y se aplica en todos los casos.
 
 
 ---
 
-### Bloque 8 — Validación y códigos de respuesta
+### Validación y códigos de respuesta
 
-La validación fallida produce un código de respuesta específico. El código 400 Bad Request se usa cuando la petición no cumple el contrato de entrada. El código 422 Unprocessable Entity se usa cuando la petición es sintácticamente correcta pero semánticamente inválida. La elección entre 400 y 422 depende del nivel de validación que haya fallado. Si falla la validación sintáctica o semántica, se devuelve 400. Si falla la validación de negocio, se devuelve 422. La distinción permite al cliente distinguir entre un error de datos y un error de negocio.
+La respuesta HTTP depende del tipo de rechazo. Si el cuerpo no puede deserializarse o una propiedad incumple una condición declarada del contrato, suele utilizarse un 400. Si se intenta una acción incompatible con el estado actual del recurso, un 409 puede expresar mejor el conflicto. No todas las fallas son culpa del cliente: una base inaccesible o una excepción de infraestructura pertenece a otro grupo de respuestas. La precisión importa porque un consumidor puede corregir y repetir una solicitud mal formada, pero no resolver un fallo del servidor cambiando el nombre del cliente. Por ello los tests deben cubrir ruta, estado y cuerpo de error. La coherencia se evalúa sobre una petición real, no únicamente sobre la tabla de códigos del manual.
 
 Códigos de respuesta según el nivel de validación:  
   
@@ -1145,22 +1081,20 @@ Códigos de respuesta según el nivel de validación:
 - **Semántica fallida** → 400 Bad Request.
 - **Negocio fallida** → 422 Unprocessable Entity.
 
-- **Línea 1:** Sintáctica fallida → error de formato, código 400.
-- **Línea 2:** Semántica fallida → error de valores, código 400.
-- **Línea 3:** Negocio fallida → error de reglas, código 422.
+
+Los ejemplos de 400, 409 y 500 muestran distintos orígenes del fallo. Conviene mantener una correspondencia estable entre validación de entrada, conflicto de reglas de negocio y error del servidor, en lugar de traducir toda excepción al mismo estado.
+
 
 La distinción entre 400 y 422 tiene dos consecuencias prácticas. La primera es que el cliente puede reaccionar de forma distinta a cada código. La segunda es que las herramientas de monitorización pueden separar los errores de datos de los errores de negocio. La separación permite generar alertas específicas para cada tipo de error. El curso usa 400 para errores sintácticos y semánticos y 422 para errores de negocio.
 
 
 ---
 
-
-
-#### Del concepto a ASP.NET Core 8: Registrar no es ejecutar
+#### Registrar no es ejecutar en AceriaApp
 
 AddValidatorsFromAssemblyContaining registra servicios en el contenedor, pero no aplica reglas de manera automática a un endpoint. Para ejecutar la validación se utiliza AddEndpointFilter en POST, PUT y PATCH con el contrato correspondiente. Los tests deben comprobar el comportamiento HTTP, no limitarse a instanciar un validador.
 
-**Aplicación en el proyecto real.** Este comportamiento está materializado en `Program.cs` del estado `2.3-validacion-peticiones`. Busca la instrucción `AddEndpointFilter` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
+Registrar `AddEndpointFilter` en `Program.cs` conecta la validación con los endpoints correspondientes. No es suficiente que el validador exista en DI; debe observarse su efecto sobre peticiones reales.
 
 **Código de referencia probado:** `src/AceriaApp.Api/Validacion/ValidationFilter.cs`
 
@@ -1190,11 +1124,10 @@ public sealed class ValidationFilter<T>(IValidator<T> validator): IEndpointFilte
 // FIN PASO 2.3.4
 ```
 
-**Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
 
-### Bloque 9 — Validación y problem details
+### Validación y problem details
 
-La respuesta de validación fallida usa el formato problem details con el campo errors que contiene el diccionario de errores por propiedad. El campo errors no forma parte del estándar original de la RFC 7807, pero se ha convertido en una extensión ampliamente adoptada. La estructura del campo errors es un diccionario donde la clave es el nombre de la propiedad y el valor es una lista de mensajes de error. La estructura permite al cliente procesar los errores de forma uniforme.
+Problem Details ofrece una representación estructurada para explicar por qué una solicitud no se ha podido completar. Un error de validación puede incluir el estado 400, un título y detalles de los campos afectados, mientras que un conflicto del dominio necesita una descripción diferente. Lo importante es que el cuerpo no contradiga el código HTTP ni revele excepciones internas. También debe definirse cómo se combinan varias reglas fallidas: devolver solo el primer problema, agrupar campos o proporcionar un conjunto de errores, según el contrato. La integración con ASP.NET Core permite producir esta información de forma coherente entre endpoints, siempre que los filtros y manejadores compartan criterios. En AceriaApp compararemos entradas válidas y fallidas para demostrar esa uniformidad.
 
 ```json
 {  
@@ -1209,24 +1142,18 @@ La respuesta de validación fallida usa el formato problem details con el campo 
 
 ```
 
-- **Línea 1:** { → abre el objeto de error.
-- **Línea 2:** "type": "https://tools.ietf.org/html/rfc7231#section-6.5.1", → tipo del error.
-- **Línea 3:** "title": "One or more validation errors occurred.", → resumen.
-- **Línea 4:** "status": 400, → código HTTP.
-- **Línea 5:** "errors": { → abre el diccionario de errores.
-- **Línea 6:** "Cliente": ["El cliente es obligatorio."], → error del campo Cliente.
-- **Línea 7:** "Cantidad": ["La cantidad debe ser mayor que cero."] → error del campo Cantidad.
-- **Línea 8:** } → cierra el diccionario de errores.
-- **Línea 9:** } → cierra el objeto de error.
+
+El objeto Problem Details conserva una estructura que los clientes pueden interpretar. Su valor reside en la coherencia entre `type`, `title`, `status` y los detalles, no en el número de campos que se envían. Evitar la divulgación de excepciones internas sigue siendo esencial.
+
 
 La estructura del campo errors tiene dos consecuencias prácticas. La primera es que el cliente puede mostrar los errores junto a los campos correspondientes. La segunda es que el cliente puede procesar los errores de forma uniforme sin analizar el mensaje. La adopción del formato problem details con el campo errors es la práctica más común en las APIs REST modernas. El curso usa este formato en todos los endpoints que devuelven errores de validación.
 
 
 ---
 
-### Bloque 10 — Aplicación al proyecto del curso
+### Aplicación al proyecto del curso
 
-El proyecto del curso aplica la validación de peticiones en tres niveles. La validación sintáctica se aplica con tipos no anulables en los record de petición. La validación semántica se aplica con FluentValidation. La validación de negocio se aplica en la capa de aplicación con acceso a la base de datos. La integración con Minimal API se realiza con un filtro genérico. La respuesta de validación fallida usa problem details con código 400. La respuesta de validación de negocio fallida usa problem details con código 422.
+La etapa 2.3 incorpora validadores, una integración con Minimal APIs y pruebas del recorrido de creación. Partiremos de la versión REST anterior y añadiremos el tratamiento de entradas sin duplicar lógica en todos los endpoints. La prueba relevante es que una orden válida llegue a persistirse y una inválida devuelva un error coherente sin alterar la base; también debe quedar claro cuándo se ha incumplido una regla de dominio y no una condición de formato. Los catálogos de validación pueden ayudar a discutir reglas, pero no acreditan por sí solos que el filtro se haya ejecutado. Debemos comprobarlo mediante HTTP, xUnit y SQL Server. Solo así la validación dejará de ser una lista de funciones para convertirse en una garantía observable para el consumidor.
 
 Aplicación al proyecto del curso:  
   
@@ -1236,11 +1163,9 @@ Aplicación al proyecto del curso:
 - **Integración** → filtro genérico.
 - **Respuesta** → problem details 400 o 422.
 
-- **Línea 1:** Sintáctica → tipos no anulables en los records.
-- **Línea 2:** Semántica → reglas con FluentValidation.
-- **Línea 3:** Negocio → comprobaciones en la capa de aplicación.
-- **Línea 4:** Integración → filtro genérico en Minimal API.
-- **Línea 5:** Respuesta → problem details con 400 o 422.
+
+El esquema final conecta sintaxis, validación semántica, reglas de negocio y respuestas estructuradas. A partir de aquí la evidencia es una petición real cuyo resultado puede contrastarse con el estado de SQL Server y con las aserciones de los tests.
+
 
 La aplicación de la validación prepara el proyecto para el punto 2.4, donde se estudiará la documentación OpenAPI de los endpoints validados. La documentación OpenAPI incluye los esquemas de petición y de respuesta, y los códigos de error. El punto 2.4 usará los validadores definidos en el punto 2.3 para generar la documentación automática. El punto 2.3 establece la base que se aplicará en el punto 2.4.
 
@@ -1266,13 +1191,12 @@ La aplicación de la validación prepara el proyecto para el punto 2.4, donde se
 
 
 
-#### Del concepto a ASP.NET Core 8: Problem Details y conflictos
+#### Problem Details y conflictos en AceriaApp
 
 Un error de validación 400 debe ofrecer mensajes por propiedad. Una capacidad de taller incumplida se documenta en el contrato como 422. Intentar modificar una orden finalizada genera un 409 porque depende del estado persistido. La diferencia permite a los clientes automatizar el tratamiento de errores.
 
-**Aplicación en el proyecto real.** Este comportamiento está materializado en `Program.cs` del estado `2.3-validacion-peticiones`. Busca la instrucción `Results.Problem` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
+La construcción de `Results.Problem` proporciona una respuesta de error con estado y campos coherentes. La prueba debe comprobar el resultado HTTP exacto y descartar que el servidor haya persistido una orden inválida.
 
-**Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
 
 ## Punto 2.4 — Documentación mediante OpenAPI (Swagger)
 
