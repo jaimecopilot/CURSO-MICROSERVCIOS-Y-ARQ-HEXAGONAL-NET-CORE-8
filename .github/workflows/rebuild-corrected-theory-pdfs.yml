@@ -5,6 +5,8 @@ on:
     branches: [version-corregida]
     paths:
       - 'M01_INTRODUCCION_MICROSERVICIOS/PRACTICAS/M01_PRACTICAS.md'
+      - 'M02_APIS_REST_ASPNET_CORE/PRACTICAS/M02_PRACTICAS.md'
+      - 'M03_ARQUITECTURA_HEXAGONAL/PRACTICAS/M03_PRACTICAS.md'
       - 'M06_COMUNICACION_MICROSERVICIOS/TEORIA/M06_TEORIA.md'
       - 'M07_OBSERVABILIDAD_RESILIENCIA/TEORIA/M07_TEORIA.md'
       - 'M08_API_GATEWAY/TEORIA/M08_TEORIA.md'
@@ -51,6 +53,8 @@ jobs:
               Path("M07_OBSERVABILIDAD_RESILIENCIA/TEORIA/M07_TEORIA.md"),
               Path("M08_API_GATEWAY/TEORIA/M08_TEORIA.md"),
               Path("M01_INTRODUCCION_MICROSERVICIOS/PRACTICAS/M01_PRACTICAS.md"),
+              Path("M02_APIS_REST_ASPNET_CORE/PRACTICAS/M02_PRACTICAS.md"),
+              Path("M03_ARQUITECTURA_HEXAGONAL/PRACTICAS/M03_PRACTICAS.md"),
           ]
           style = """
           @page {
@@ -105,6 +109,8 @@ jobs:
             "M07_OBSERVABILIDAD_RESILIENCIA/TEORIA/M07_TEORIA.pdf": ("Punto 7.1", "Punto 7.2", "Punto 7.3", "Punto 7.4"),
             "M08_API_GATEWAY/TEORIA/M08_TEORIA.pdf": ("Punto 8.1", "Punto 8.2", "Punto 8.3", "Punto 8.4"),
             "M01_INTRODUCCION_MICROSERVICIOS/PRACTICAS/M01_PRACTICAS.pdf": ("Punto 1.1", "Punto 1.2", "Punto 1.3", "Punto 1.4", "Punto 1.5"),
+            "M02_APIS_REST_ASPNET_CORE/PRACTICAS/M02_PRACTICAS.pdf": ("Punto 2.1", "Punto 2.2", "Punto 2.3", "Punto 2.4"),
+            "M03_ARQUITECTURA_HEXAGONAL/PRACTICAS/M03_PRACTICAS.pdf": ("Punto 3.1", "Punto 3.2", "Punto 3.3", "Punto 3.4"),
           }
           for file, headings in cases.items():
               doc = fitz.open(file)
@@ -124,7 +130,7 @@ jobs:
       - name: Aplicar cabeceras de teoría en M01-M08
         run: python tools/pdf_running_headers.py
 
-      - name: Aplicar cabeceras de prácticas en M01
+      - name: Aplicar cabeceras de prácticas en M01-M03
         run: python tools/pdf_running_headers.py --practicas
 
       - name: Validar por separado todas las cabeceras
@@ -145,7 +151,9 @@ jobs:
             M06_COMUNICACION_MICROSERVICIOS/TEORIA/M06_TEORIA.pdf \
             M07_OBSERVABILIDAD_RESILIENCIA/TEORIA/M07_TEORIA.pdf \
             M08_API_GATEWAY/TEORIA/M08_TEORIA.pdf \
-            M01_INTRODUCCION_MICROSERVICIOS/PRACTICAS/M01_PRACTICAS.pdf
+            M01_INTRODUCCION_MICROSERVICIOS/PRACTICAS/M01_PRACTICAS.pdf \
+            M02_APIS_REST_ASPNET_CORE/PRACTICAS/M02_PRACTICAS.pdf \
+            M03_ARQUITECTURA_HEXAGONAL/PRACTICAS/M03_PRACTICAS.pdf
           if git diff --cached --quiet; then
             echo "No hay cambios de PDF"
           else
