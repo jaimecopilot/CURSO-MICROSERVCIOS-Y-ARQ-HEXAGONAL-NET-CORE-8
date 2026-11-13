@@ -87,7 +87,21 @@ def tests(num, stages, env, reconstruir_incremental=False):
     counts=[]
     for index,slug in enumerate(stages,1):
         stage=workroot/slug
-        if reconstruir_incremental and index == 1 and num >= 3:
+        if reconstruir_incremental and num == 2:
+            from reconstruir_m02_incremental import stage1, stage2, stage3, stage4, inspect
+            if index > 1:
+                previous=workroot/stages[index-2]
+                shutil.copytree(previous,stage,
+                    ignore=shutil.ignore_patterns("bin","obj","TestResults",
+                                                  "_test_results","_trx",".qa"))
+            else:
+                stage.mkdir(parents=True)
+            (stage1,stage2,stage3,stage4)[index-1](stage)
+            status=inspect(index,stage)
+            if not status["pass"]:
+                raise RuntimeError(f"M02 {index} no coincide con la práctica: {status}")
+            print(f"M02 {index}: proyecto reconstruido desde pasos, paridad de código PASS",flush=True)
+        elif reconstruir_incremental and index == 1 and num >= 3:
             from auditar_continuidad_modular import materializar_limite
             materializar_limite(num,stage)
         elif reconstruir_incremental and index >= 2:
@@ -188,8 +202,6 @@ def main():
     ap.add_argument("--report",type=str)
     args=ap.parse_args()
     stages,records=audit(args.module)
-    if args.reconstruir_incremental and args.module==2:
-        raise RuntimeError("M02 no tiene aún todas las operaciones de reconstrucción marcadas")
     lines=[f"# M0{args.module} — Evidencia de validación", "",
            "**Pasos:** 96/96.",f"**Marcadores con archivos existentes:** {len(records)}.", ""]
     if not args.audit_only:
@@ -203,10 +215,11 @@ def main():
            for r in report])
         result=smoke(args.module,final_stage,env)
         lines.extend(["","**E2E SQL/HTTP:** "+json.dumps(result,ensure_ascii=False),
-            "","Se han ejecutado los snapshots de referencia y no todas las "
-            "acciones gráficas de Visual Studio.",
-            "Reconstrucción desde las prácticas de los puntos 1..N: "
-            + str(bool(args.reconstruir_incremental))])
+            "","Código obtenido desde prácticas corregidas: "
+            + str(bool(args.reconstruir_incremental)),
+            "La primera etapa M02 se crea desde vacío cuando se activa este modo; "
+            "las siguientes reutilizan la salida reconstruida anterior. "
+            "No se simulan los clics de Visual Studio."])
     if args.report:
         destination=Path(args.report);destination.parent.mkdir(parents=True,exist_ok=True)
         destination.write_text("\n".join(lines)+"\n",encoding="utf-8")
