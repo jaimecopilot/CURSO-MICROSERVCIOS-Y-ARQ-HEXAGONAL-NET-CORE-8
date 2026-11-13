@@ -1,0 +1,103 @@
+name: M09 Docker Compose integral E2E (Linux CI, NO certifica Windows Desktop)
+
+on:
+  push:
+    branches: [version-corregida]
+    paths:
+      - 'M09_DESPLIEGUE_DOCKER/PROYECTO/**'
+      - 'M09_DESPLIEGUE_DOCKER/PRACTICAS/M09_PRACTICAS.md'
+      - 'M08_API_GATEWAY/PROYECTO/8.4-balanceo-carga/**'
+      - '.github/workflows/m09-docker-fullstack-e2e-linux.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: m09-docker-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  m09-e2e:
+    name: SQL Server + RabbitMQ + Producción + Inventario x2 + YARP
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      COMPOSE_PROJECT_NAME: aceria-curso-docker
+      DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: version-corregida
+          sparse-checkout: |
+            M08_API_GATEWAY/PROYECTO/8.4-balanceo-carga
+            M09_DESPLIEGUE_DOCKER
+          sparse-checkout-cone-mode: true
+
+      - name: Comprobar motor e infraestructura del runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker version
+          docker compose version
+          docker info --format '{{.OSType}}'
+          pwsh -NoProfile -Command '$PSVersionTable.PSVersion.ToString()'
+          df -h /
+
+      - name: Generar clave SQL local sin registrarla en logs
+        shell: bash
+        working-directory: M09_DESPLIEGUE_DOCKER/PROYECTO
+        run: |
+          set -euo pipefail
+          umask 077
+          secret="$(openssl rand -hex 20)Aa1!"
+          printf 'ACERIA_SA_PASSWORD=%s\n' "$secret" > .env
+          docker compose --env-file .env -f docker/compose.fullstack.yml config --quiet
+
+      - name: Validar configuración de Docker sin levantar servicios
+        shell: pwsh
+        working-directory: M09_DESPLIEGUE_DOCKER/PROYECTO
+        run: |
+          $ErrorActionPreference = 'Stop'
+          ./EJECUTAR_DOCKER_WINDOWS.ps1 -Accion preparar -PermitirLinuxEnCI
+
+      - name: Construir y probar todo AceriaApp mediante HTTP, SQL y AMQP reales
+        shell: pwsh
+        working-directory: M09_DESPLIEGUE_DOCKER/PROYECTO
+        run: |
+          $ErrorActionPreference = 'Stop'
+          ./EJECUTAR_DOCKER_WINDOWS.ps1 -Accion levantar -PermitirLinuxEnCI
+
+      - name: Repetir prueba integral sin reconstruir imágenes
+        shell: pwsh
+        working-directory: M09_DESPLIEGUE_DOCKER/PROYECTO
+        run: |
+          $ErrorActionPreference = 'Stop'
+          ./EJECUTAR_DOCKER_WINDOWS.ps1 -Accion verificar -PermitirLinuxEnCI
+
+      - name: Conservar diagnóstico sin imprimir contraseñas
+        if: always()
+        shell: bash
+        working-directory: M09_DESPLIEGUE_DOCKER/PROYECTO
+        run: |
+          mkdir -p .qa
+          docker compose --env-file .env -f docker/compose.fullstack.yml ps > .qa/compose-ps.txt 2>&1 || true
+          docker compose --env-file .env -f docker/compose.fullstack.yml logs --no-color \
+            --tail 160 sqlserver rabbitmq produccion inventario-1 inventario-2 gateway \
+            > .qa/compose-logs.txt 2>&1 || true
+          # No adjuntar nunca .env ni la configuración interpolada.
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: m09-e2e-linux-no-certifica-windows
+          path: M09_DESPLIEGUE_DOCKER/PROYECTO/.qa/
+          include-hidden-files: true
+          retention-days: 30
+
+      - name: Limpiar laboratorio efímero
+        if: always()
+        shell: bash
+        working-directory: M09_DESPLIEGUE_DOCKER/PROYECTO
+        run: |
+          docker compose --env-file .env -f docker/compose.fullstack.yml down -v --remove-orphans || true
