@@ -159,7 +159,10 @@ def run_stages(module: int, env: dict[str, str],
               "copia aislada, restore, build, xUnit ===", flush=True)
         src = ROOT / cfg["folder"] / "PROYECTO" / stage
         dest = base / f"p{point}"
-        if reconstruir_incremental and point >= 2:
+        if reconstruir_incremental and point == 1:
+            from auditar_continuidad_modular import materializar_limite
+            materializar_limite(module,dest)
+        elif reconstruir_incremental and point >= 2:
             from auditar_reconstruccion_practicas import materializar_etapa
             materializar_etapa(module,point,dest)
         else:
@@ -240,7 +243,7 @@ def main() -> None:
                 "El total suma varias ejecuciones acumuladas, no tests distintos.",
                 "",
                 "Límites: la compilación y los E2E de los proyectos de referencia",
-                "Reconstrucción incremental desde el manual en las etapas 2..N: "
+                "Reconstrucción desde las prácticas de los puntos 1..N: "
                 + str(bool(args.reconstruir_incremental)),
                 "no equivalen a reproducir manualmente todos los clics de",
                 "Visual Studio ni a ejecutar los retos optativos.",
