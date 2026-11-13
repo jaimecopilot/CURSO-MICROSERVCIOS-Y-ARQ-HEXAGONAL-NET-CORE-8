@@ -1213,11 +1213,15 @@ El contenido del punto 3.3 se aplica al servicio de órdenes que ya funciona en 
 
 ---
 
-## Desarrollo teórico
+## Conectar HTTP, casos de uso y persistencia
 
-### Bloque 1 — ASP.NET Core como adaptador de entrada
 
-ASP.NET Core actúa como adaptador de entrada en la arquitectura hexagonal. Los endpoints de Minimal API reciben peticiones HTTP y las traducen en llamadas a los puertos de entrada del núcleo. El adaptador de entrada no contiene reglas de negocio: solo traduce entre el protocolo HTTP y los casos de uso. La traducción incluye el enlace de parámetros, la validación de la petición y la construcción de la respuesta. El núcleo no conoce ASP.NET Core ni HTTP. La separación permite que el mismo núcleo se exponga en otros protocolos.
+
+El objetivo será comprender una petición real y el recorrido de sus dependencias: el endpoint recibe, el caso de uso coordina y el adaptador guarda. Al probar cada frontera podremos distinguir una arquitectura efectiva de un simple catálogo de clases.
+
+### ASP.NET Core como adaptador de entrada
+
+En ASP.NET Core podemos implementar una arquitectura hexagonal sin abandonar las Minimal APIs. La diferencia reside en qué hace el endpoint: recibe HTTP, interpreta la entrada, llama al caso de uso y devuelve una respuesta, mientras las reglas de una orden permanecen en el dominio. Si el manejador modifica directamente un DbContext y decide allí todas las transiciones, el nombre de una carpeta no cambia ese acoplamiento. AceriaApp conservará las rutas de M02 y añadirá rutas hexagonales que permiten comparar ambos recorridos dentro del mismo host. Así se comprueba una mejora de organización sin confundirla con la creación de un nuevo microservicio.
 
 ```csharp
 app.MapPost("/api/v1/ordenes", async (
@@ -1229,32 +1233,24 @@ app.MapPost("/api/v1/ordenes", async (
 });
 ```
 
-- **Línea 1:** `app.MapPost("/api/v1/ordenes", async (` → declara el endpoint HTTP.
-- **Línea 2:** `CrearOrdenRequest request,` → recibe la petición.
-- **Línea 3:** `IOrdenServicio servicio) =>` → inyecta el puerto de entrada.
-- **Línea 4:** `{` → abre el cuerpo del lambda.
-- **Línea 5:** `var id = await servicio.CrearOrdenAsync(request.Cliente, request.Material, request.Cantidad);` → invoca el caso de uso.
-- **Línea 6:** `return Results.Created($"/api/v1/ordenes/{id}", new { id });` → devuelve 201 con la ubicación.
-- **Línea 7:** `});` → cierra el lambda.
+
+La ruta ASP.NET Core convierte datos HTTP en una llamada de aplicación. La diferencia importante es que el manejador deja de conocer el contexto SQL y no decide dentro de la función de transporte las reglas del agregado.
+
 
 El adaptador de entrada se caracteriza por tres propiedades. La primera es que traduce entre HTTP y los puertos de entrada. La segunda es que no contiene reglas de negocio. La tercera es que puede sustituirse por otro adaptador sin modificar el núcleo. Las tres propiedades permiten que el mismo caso de uso se exponga en HTTP, gRPC o mensajería.
 
----
 
+ASP.NET Core es el marco externo que recibe peticiones y entrega respuestas. En arquitectura hexagonal actúa como adaptador de entrada: traduce rutas, parámetros y cuerpos JSON en llamadas a casos de uso. En el grupo hexagonal `MapGet`, `MapPost` y el POST de finalización son deliberadamente pequeños y no reciben `HexagonalDbContext` como parámetro.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Esta decisión permite mantener una API mínima y comprensible sin sacrificar la separación. La facilidad de escribir EF Core directamente dentro de una lambda fue útil para M02, pero en M03 servimos el mismo dominio mediante `OrdenesCasoUso`. La infraestructura sigue existiendo; simplemente se resuelve detrás del puerto cuando el caso de uso la necesita.
 
-**La decisión arquitectónica.** ASP.NET Core es el marco externo que recibe peticiones y entrega respuestas. En arquitectura hexagonal actúa como adaptador de entrada: traduce rutas, parámetros y cuerpos JSON en llamadas a casos de uso. En el grupo hexagonal `MapGet`, `MapPost` y el POST de finalización son deliberadamente pequeños y no reciben `HexagonalDbContext` como parámetro.
+El adaptador traduce entradas incompletas en 400 y exceso de capacidad en 422, pero no debe decidir que una orden ya finalizada vuelva a `Pendiente`. Esa regla vive en dominio y una excepción correspondiente se convierte en 409. Cambiar el protocolo externo podría cambiar la forma de transportar un conflicto, pero no el significado de intentar finalizar dos veces.
 
-**Ejemplo concreto en AceriaApp.** Esta decisión permite mantener una API mínima y comprensible sin sacrificar la separación. La facilidad de escribir EF Core directamente dentro de una lambda fue útil para M02, pero en M03 servimos el mismo dominio mediante `OrdenesCasoUso`. La infraestructura sigue existiendo; simplemente se resuelve detrás del puerto cuando el caso de uso la necesita.
+La verificación debe recorrer el servidor real en un host de pruebas y confirmar 201→Location→GET, 400, 422 y 409. Abrir Swagger muestra documentación, pero no garantiza que todos los casos de uso hayan sido conectados.
 
-**Riesgo, alternativa y límite.** El adaptador traduce entradas incompletas en 400 y exceso de capacidad en 422, pero no debe decidir que una orden ya finalizada vuelva a `Pendiente`. Esa regla vive en dominio y una excepción correspondiente se convierte en 409. Cambiar el protocolo externo podría cambiar la forma de transportar un conflicto, pero no el significado de intentar finalizar dos veces.
+### ASP.NET Core como contenedor de dependencias
 
-**Comprobación técnica y aprendizaje.** La verificación debe recorrer el servidor real en un host de pruebas y confirmar 201→Location→GET, 400, 422 y 409. Abrir Swagger muestra documentación, pero no garantiza que todos los casos de uso hayan sido conectados.
-
-### Bloque 2 — ASP.NET Core como contenedor de dependencias
-
-ASP.NET Core incluye un contenedor de dependencias integrado. El contenedor registra las implementaciones de los puertos y las inyecta en los endpoints. La configuración del contenedor se realiza en el arranque del proyecto de presentación. Cada puerto se asocia con una implementación concreta. La asociación se realiza con los métodos `AddScoped`, `AddTransient` y `AddSingleton`. La elección del ciclo de vida depende del estado que mantiene la implementación.
+El contenedor de dependencias ayuda a conectar las piezas, pero no diseña sus contratos. El caso de uso declara que necesita `IOrdenRepositorio` y el adaptador de infraestructura lo implementa con SQL Server. En el arranque, ASP.NET Core registra qué implementación corresponde al puerto y cómo debe construirse. Esa elección pertenece al borde de la aplicación: el núcleo no necesita importar EF Core ni consultar el contenedor para resolver sus colaboradores. La prueba de calidad consiste en poder sustituir el repositorio por un doble durante un test de aplicación, manteniendo intacta la lógica que crea o finaliza órdenes.
 
 ```csharp
 builder.Services.AddScoped<IOrdenRepositorio, OrdenRepositorioSqlServer>();
@@ -1263,33 +1259,28 @@ builder.Services.AddDbContext<AceriaDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("AceriaDb")));
 ```
 
-- **Línea 1:** `builder.Services.AddScoped<IOrdenRepositorio, OrdenRepositorioSqlServer>();` → registra el adaptador de salida con ciclo scoped.
-- **Línea 2:** `builder.Services.AddScoped<IOrdenServicio, OrdenServicio>();` → registra el puerto de entrada con ciclo scoped.
-- **Línea 3:** `builder.Services.AddDbContext<AceriaDbContext>(options =>` → registra el contexto de EF Core.
-- **Línea 4:** `options.UseSqlServer(builder.Configuration.GetConnectionString("AceriaDb")));` → configura SQL Server Express.
+
+`AddScoped` relaciona un puerto con su implementación y permite al contenedor resolver el caso de uso. La inversión de dependencias proviene del contrato definido por la aplicación, no del método de registro.
+
 
 El contenedor de dependencias tiene dos consecuencias prácticas. La primera es que el núcleo no conoce la implementación concreta. La segunda es que la implementación puede sustituirse cambiando el registro. La combinación de ambas permite que el núcleo se pruebe con adaptadores en memoria y que la infraestructura evolucione con independencia del núcleo.
 
----
 
+El contenedor de dependencias no crea la lógica de negocio; solo construye un grafo de objetos según registros explícitos. En `ServiciosHexagonales.AddServiciosHexagonales`, el `IOrdenRepositorio` se asocia con `OrdenRepositorioSqlServer`, y `OrdenesCasoUso` recibe la interfaz. Cuando ASP.NET Core construye una petición, resuelve el caso de uso y sus dependencias con el scope correspondiente.
 
-#### Ampliación didáctica aplicada a AceriaApp
+El host es el lugar apropiado para elegir conexiones, proveedor de datos y adaptadores. Por eso la API puede referenciar infraestructura como raíz de composición; esa relación no autoriza que el dominio o los casos de uso importen los mismos tipos externos. En el código de inicio se utiliza `builder.Services.AddServiciosHexagonales(builder.Configuration)` antes de `builder.Build()`.
 
-**La decisión arquitectónica.** El contenedor de dependencias no crea la lógica de negocio; solo construye un grafo de objetos según registros explícitos. En `ServiciosHexagonales.AddServiciosHexagonales`, el `IOrdenRepositorio` se asocia con `OrdenRepositorioSqlServer`, y `OrdenesCasoUso` recibe la interfaz. Cuando ASP.NET Core construye una petición, resuelve el caso de uso y sus dependencias con el scope correspondiente.
+Hay que distinguir registrar un servicio de invocarlo. Si olvidamos la llamada `AddServiciosHexagonales`, el endpoint podrá compilar y aparecer en la tabla de rutas, pero la primera petición fallará al no resolverse `OrdenesCasoUso` o `IOrdenRepositorio`. Un test de construcción de host puede detectar este error antes del despliegue.
 
-**Ejemplo concreto en AceriaApp.** El host es el lugar apropiado para elegir conexiones, proveedor de datos y adaptadores. Por eso la API puede referenciar infraestructura como raíz de composición; esa relación no autoriza que el dominio o los casos de uso importen los mismos tipos externos. En el código de inicio se utiliza `builder.Services.AddServiciosHexagonales(builder.Configuration)` antes de `builder.Build()`.
-
-**Riesgo, alternativa y límite.** Hay que distinguir registrar un servicio de invocarlo. Si olvidamos la llamada `AddServiciosHexagonales`, el endpoint podrá compilar y aparecer en la tabla de rutas, pero la primera petición fallará al no resolverse `OrdenesCasoUso` o `IOrdenRepositorio`. Un test de construcción de host puede detectar este error antes del despliegue.
-
-**Comprobación técnica y aprendizaje.** Inspecciona la colección de servicios o realiza una prueba que resuelva `IOrdenRepositorio` dentro de un scope. Después ejecuta POST→GET: la primera prueba demuestra que DI conoce el registro y la segunda que las dependencias construidas producen el comportamiento esperado.
+Inspecciona la colección de servicios o realiza una prueba que resuelva `IOrdenRepositorio` dentro de un scope. Después ejecuta POST→GET: la primera prueba demuestra que DI conoce el registro y la segunda que las dependencias construidas producen el comportamiento esperado.
 
 ![Diagrama explicativo del punto 3.4, bloque 2](IMAGENES/3-4-di.svg)
 
-*Interpretación del gráfico:* identifica las referencias de código que admite el diseño y distingue esas relaciones de las llamadas en ejecución. La figura está disponible como SVG vectorial y como PNG para consulta externa.
+identifica las referencias de código que admite el diseño y distingue esas relaciones de las llamadas en ejecución. La figura está disponible como SVG vectorial y como PNG para consulta externa.
 
-### Bloque 3 — Ciclos de vida en el contenedor
+### Ciclos de vida en el contenedor
 
-El contenedor de ASP.NET Core ofrece tres ciclos de vida: `Transient`, `Scoped` y `Singleton`. `Transient` crea una instancia nueva en cada resolución. `Scoped` crea una instancia nueva por ámbito de petición. `Singleton` crea una única instancia para toda la aplicación. La elección del ciclo depende del estado que mantiene la implementación. Los repositorios y los servicios de aplicación usan `Scoped` porque comparten el contexto de base de datos de la petición. Los adaptadores sin estado pueden usar `Singleton`.
+Las dependencias deben registrarse con una duración compatible con su comportamiento. Una instancia `Transient` se crea por resolución, una `Scoped` se mantiene durante un ámbito y una `Singleton` suele compartirse durante la vida del host. EF Core registra habitualmente DbContext como scoped porque representa una unidad de trabajo y no se debe utilizar simultáneamente desde varios hilos. Un repositorio que depende de ese contexto no debería registrarse como singleton. El objetivo del ejemplo es reconocer por qué esas decisiones tienen consecuencias reales en concurrencia, pruebas y recursos, no memorizar tres etiquetas.
 
 ```text
 Ciclos de vida:
@@ -1299,28 +1290,24 @@ Scoped    → una instancia por ámbito de petición.
 Singleton → una instancia por aplicación.
 ```
 
-- **Línea 1:** `Transient` → nueva instancia en cada resolución.
-- **Línea 2:** `Scoped` → una instancia por ámbito de petición.
-- **Línea 3:** `Singleton` → una instancia por aplicación.
+
+La comparación entre Transient, Scoped y Singleton debe interpretarse teniendo en cuenta los colaboradores de cada objeto. Un repositorio que utiliza DbContext scoped necesita un ciclo compatible para no compartir una instancia inadecuadamente.
+
 
 La elección del ciclo tiene dos consecuencias prácticas. La primera es que el ciclo incorrecto produce errores de concurrencia o de memoria. La segunda es que el ciclo correcto mantiene el rendimiento y la coherencia. La combinación de ambas permite que el contenedor gestione los recursos de forma eficiente. El curso usa `Scoped` para la mayoría de los servicios y `Singleton` para los adaptadores sin estado.
 
----
 
+Los ciclos de vida de DI determinan durante cuánto tiempo se reutiliza un objeto. `Transient` crea instancias en cada resolución; `Scoped` mantiene la misma instancia dentro de un scope HTTP; `Singleton` reutiliza una instancia durante la vida del host. La elección afecta a estado compartido, rendimiento y seguridad frente a concurrencia, especialmente al utilizar objetos no diseñados como thread-safe.
 
-#### Ampliación didáctica aplicada a AceriaApp
+EF Core `DbContext` se registra normalmente como Scoped. El repositorio que conserva una referencia a ese contexto también debería ser Scoped, y el caso de uso que lo recibe puede utilizar el mismo alcance. No es correcto registrar un repositorio que contiene `DbContext` como Singleton: el host podría intentar combinar una instancia global con un contexto de petición, provocando errores de ciclo de vida.
 
-**La decisión arquitectónica.** Los ciclos de vida de DI determinan durante cuánto tiempo se reutiliza un objeto. `Transient` crea instancias en cada resolución; `Scoped` mantiene la misma instancia dentro de un scope HTTP; `Singleton` reutiliza una instancia durante la vida del host. La elección afecta a estado compartido, rendimiento y seguridad frente a concurrencia, especialmente al utilizar objetos no diseñados como thread-safe.
+Un caso de uso sin estado propio podría ser Transient o Scoped según cómo se componga; aquí se elige Scoped por coherencia del flujo y sencillez didáctica. Tampoco debemos usar Singleton solo porque parece más rápido: reutilizar estado accidental entre solicitudes HTTP introduce comportamientos que un test aislado no siempre detecta.
 
-**Ejemplo concreto en AceriaApp.** EF Core `DbContext` se registra normalmente como Scoped. El repositorio que conserva una referencia a ese contexto también debería ser Scoped, y el caso de uso que lo recibe puede utilizar el mismo alcance. No es correcto registrar un repositorio que contiene `DbContext` como Singleton: el host podría intentar combinar una instancia global con un contexto de petición, provocando errores de ciclo de vida.
+Para comprobar el alcance, crea dos scopes y resuelve el mismo servicio dos veces dentro de cada uno. Debe reutilizarse en el mismo scope cuando se registra Scoped, mientras otro scope recibe una instancia distinta. Completa con la prueba HTTP para demostrar que la configuración soporta peticiones normales.
 
-**Riesgo, alternativa y límite.** Un caso de uso sin estado propio podría ser Transient o Scoped según cómo se componga; aquí se elige Scoped por coherencia del flujo y sencillez didáctica. Tampoco debemos usar Singleton solo porque parece más rápido: reutilizar estado accidental entre solicitudes HTTP introduce comportamientos que un test aislado no siempre detecta.
+### Registro de adaptadores de salida
 
-**Comprobación técnica y aprendizaje.** Para comprobar el alcance, crea dos scopes y resuelve el mismo servicio dos veces dentro de cada uno. Debe reutilizarse en el mismo scope cuando se registra Scoped, mientras otro scope recibe una instancia distinta. Completa con la prueba HTTP para demostrar que la configuración soporta peticiones normales.
-
-### Bloque 4 — Registro de adaptadores de salida
-
-Los adaptadores de salida se registran en el contenedor de dependencias con el ciclo adecuado. El repositorio de base de datos se registra con `Scoped` porque comparte el `DbContext` de la petición. El cliente HTTP se registra con `Scoped` o `Singleton` según el uso. El publicador de eventos se registra con `Scoped` o `Singleton` según la conexión al broker. La elección del ciclo depende del recurso que gestiona el adaptador.
+Registrar los adaptadores de salida significa proporcionar al núcleo capacidades técnicas sin introducirlas en sus proyectos. `OrdenRepositorioSqlServer` utiliza `HexagonalDbContext` para persistir órdenes, pero el caso de uso conoce únicamente `IOrdenRepositorio`. El host configura ambos, incluida la conexión a SQL Server, y los entrega a cada petición. Este diseño permite comprobar el caso de uso con una implementación controlada y comprobar el repositorio con el motor relacional real. Son pruebas diferentes: una protege la orquestación y otra demuestra que se conservan datos.
 
 ```csharp
 builder.Services.AddScoped<IOrdenRepositorio, OrdenRepositorioSqlServer>();
@@ -1332,32 +1319,24 @@ builder.Services.AddHttpClient<IClienteInventario, ClienteInventarioHttp>(client
 });
 ```
 
-- **Línea 1:** `builder.Services.AddScoped<IOrdenRepositorio, OrdenRepositorioSqlServer>();` → repositorio con ciclo scoped.
-- **Línea 2:** `builder.Services.AddScoped<IInventarioRepositorio, InventarioRepositorioSqlServer>();` → repositorio con ciclo scoped.
-- **Línea 3:** `builder.Services.AddSingleton<IPublicadorEventos, PublicadorEventosRabbitMq>();` → publicador con ciclo singleton.
-- **Línea 4:** `builder.Services.AddHttpClient<IClienteInventario, ClienteInventarioHttp>(client =>` → cliente HTTP tipado.
-- **Línea 5:** `{` → abre el bloque de configuración.
-- **Línea 6:** `client.BaseAddress = new Uri("http://acería-inventario");` → URL base del cliente.
-- **Línea 7:** `});` → cierra el bloque.
+
+Registrar el repositorio y el contexto permite que el núcleo obtenga persistencia sin conocer EF Core. Si falta el registro de cualquiera de ellos, los tests del grafo deben detectar que el host no puede resolver la operación.
+
 
 El registro de adaptadores tiene dos consecuencias prácticas. La primera es que cada adaptador tiene su ciclo adecuado. La segunda es que los adaptadores pueden sustituirse cambiando el registro. La combinación de ambas permite que la infraestructura evolucione con independencia del núcleo.
 
----
 
+Registrar el adaptador de salida significa elegir una implementación concreta para el puerto que conoce la aplicación. `AddScoped<IOrdenRepositorio, OrdenRepositorioSqlServer>()` en `ServiciosHexagonales` proporciona esa correspondencia. El caso de uso no contiene esa línea: su constructor permanece independiente de la tecnología, y el host decide qué adaptador se utilizará.
 
-#### Ampliación didáctica aplicada a AceriaApp
+La configuración incluye además `HexagonalDbContext` con `UseSqlServer` y la cadena `AceriaHexagonal`. Esta segunda conexión se mantiene separada de `AceriaApp` de M02 para que el ejercicio hexagonal no reescriba las tablas anteriores. La opción es didáctica, no una obligación de que cada arquitectura hexagonal tenga su propia base de datos.
 
-**La decisión arquitectónica.** Registrar el adaptador de salida significa elegir una implementación concreta para el puerto que conoce la aplicación. `AddScoped<IOrdenRepositorio, OrdenRepositorioSqlServer>()` en `ServiciosHexagonales` proporciona esa correspondencia. El caso de uso no contiene esa línea: su constructor permanece independiente de la tecnología, y el host decide qué adaptador se utilizará.
+Si el equipo introdujera un adaptador de mensajería en lugar de repositorio, debería definir otro puerto y registrarlo sin obligar a `OrdenesCasoUso` a conocer la biblioteca del bus. No debemos registrar cualquier clase externa en dominio por comodidad: la raíz de composición es una frontera de infraestructura.
 
-**Ejemplo concreto en AceriaApp.** La configuración incluye además `HexagonalDbContext` con `UseSqlServer` y la cadena `AceriaHexagonal`. Esta segunda conexión se mantiene separada de `AceriaApp` de M02 para que el ejercicio hexagonal no reescriba las tablas anteriores. La opción es didáctica, no una obligación de que cada arquitectura hexagonal tenga su propia base de datos.
+La evidencia de corrección incluye resolver `IOrdenRepositorio` y comprobar que se obtiene `OrdenRepositorioSqlServer`, además de validar que los tests pueden dirigir el contexto a otra base SQL Server sin recompilar el puerto. Un doble de repositorio puede comprobar orquestación, pero la prueba de infraestructura conserva el adaptador y su proveedor reales.
 
-**Riesgo, alternativa y límite.** Si el equipo introdujera un adaptador de mensajería en lugar de repositorio, debería definir otro puerto y registrarlo sin obligar a `OrdenesCasoUso` a conocer la biblioteca del bus. No debemos registrar cualquier clase externa en dominio por comodidad: la raíz de composición es una frontera de infraestructura.
+### Endpoints como adaptadores de entrada
 
-**Comprobación técnica y aprendizaje.** La evidencia de corrección incluye resolver `IOrdenRepositorio` y comprobar que se obtiene `OrdenRepositorioSqlServer`, además de validar que los tests pueden dirigir el contexto a otra base SQL Server sin recompilar el puerto. Un doble de repositorio puede comprobar orquestación, pero la prueba de infraestructura conserva el adaptador y su proveedor reales.
-
-### Bloque 5 — Endpoints como adaptadores de entrada
-
-Los endpoints de Minimal API se agrupan por recurso en clases estáticas de extensión. Cada clase agrupa los endpoints de un recurso y los registra con un método de extensión. La agrupación facilita la lectura y el mantenimiento. La separación entre endpoints y lógica de negocio se mantiene: los endpoints solo invocan los puertos de entrada. La organización por recurso sigue la organización del catálogo de recursos del punto 2.2.
+Un endpoint HTTP debe tener una responsabilidad de traducción. Recibe una ruta, un cuerpo o un identificador, los transforma en argumentos de aplicación, invoca una operación y decide qué respuesta HTTP corresponde a su resultado. El dominio es quien protege los estados válidos de una orden; la infraestructura es quien guarda los cambios. Si todo eso se concentra otra vez en `MapPost`, habremos reproducido el diseño anterior con nombres nuevos. Los endpoints hexagonales de AceriaApp permitirán mostrar la diferencia mediante pruebas de creación, consulta y finalización.
 
 ```csharp
 public static class OrdenesEndpoints
@@ -1378,44 +1357,28 @@ public static class OrdenesEndpoints
 }
 ```
 
-- **Línea 1:** `public static class OrdenesEndpoints` → clase estática de endpoints.
-- **Línea 2:** `{` → abre el cuerpo.
-- **Línea 3:** `public static void MapOrdenesEndpoints(this WebApplication app)` → método de extensión.
-- **Línea 4:** `{` → abre el cuerpo del método.
-- **Línea 5:** `app.MapGet("/api/v1/ordenes", async (IOrdenServicio servicio) =>` → endpoint GET.
-- **Línea 6:** `await servicio.ListarOrdenesAsync());` → invoca el puerto de entrada.
-- **Línea 7:** `app.MapPost("/api/v1/ordenes", async (` → endpoint POST.
-- **Línea 8:** `CrearOrdenRequest request,` → recibe la petición.
-- **Línea 9:** `IOrdenServicio servicio) =>` → inyecta el puerto de entrada.
-- **Línea 10:** `{` → abre el cuerpo del lambda.
-- **Línea 11:** `var id = await servicio.CrearOrdenAsync(request.Cliente, request.Material, request.Cantidad);` → invoca el caso de uso.
-- **Línea 12:** `return Results.Created($"/api/v1/ordenes/{id}", new { id });` → devuelve 201.
-- **Línea 13:** `});` → cierra el lambda.
-- **Línea 14:** `}` → cierra el método.
-- **Línea 15:** `}` → cierra la clase.
+
+La clase de endpoints mapea rutas y construye respuestas HTTP, delegando la creación y recuperación de órdenes al caso de uso. Un test funcional debe demostrar que la petición llega a la lógica correcta.
+
 
 La agrupación de endpoints tiene dos consecuencias prácticas. La primera es que la lectura del código mejora. La segunda es que la configuración del arranque se simplifica con una llamada por recurso. La combinación de ambas reduce el coste de mantenimiento y facilita la incorporación de nuevos miembros al equipo.
 
----
 
+Un endpoint expresivo muestra con claridad verbo, recurso, entradas y resultado. En la API hexagonal la colección se publica en `/api/v1/hexagonal/ordenes`, un miembro se consulta por `/api/v1/hexagonal/ordenes/{id:guid}` y la transición se expone como POST a `/{id:guid}/finalizar`. Esta última representa un cambio de estado específico, no una operación CRUD genérica.
 
-#### Ampliación didáctica aplicada a AceriaApp
+El adaptador HTTP convierte `CrearOrdenHexagonalRequest` en argumentos del caso de uso y después transforma la entidad mediante `OrdenHexagonalDto.Desde`. Esto evita publicar directamente todos los detalles internos y permite conservar un contrato estable si cambian invariantes o persistencia. Las respuestas posibles —201, 400, 422 y 409— deben documentarse según el flujo real.
 
-**La decisión arquitectónica.** Un endpoint expresivo muestra con claridad verbo, recurso, entradas y resultado. En la API hexagonal la colección se publica en `/api/v1/hexagonal/ordenes`, un miembro se consulta por `/api/v1/hexagonal/ordenes/{id:guid}` y la transición se expone como POST a `/{id:guid}/finalizar`. Esta última representa un cambio de estado específico, no una operación CRUD genérica.
+Un error es repetir consultas EF Core dentro de los endpoints «por eficiencia». A corto plazo parece menos código, pero reintroduce la dependencia que pretendíamos aislar. También es un error crear rutas duplicadas con el mismo verbo y patrón al introducir el nuevo adaptador; por eso M03 utiliza un prefijo propio que no compite con las rutas M02.
 
-**Ejemplo concreto en AceriaApp.** El adaptador HTTP convierte `CrearOrdenHexagonalRequest` en argumentos del caso de uso y después transforma la entidad mediante `OrdenHexagonalDto.Desde`. Esto evita publicar directamente todos los detalles internos y permite conservar un contrato estable si cambian invariantes o persistencia. Las respuestas posibles —201, 400, 422 y 409— deben documentarse según el flujo real.
-
-**Riesgo, alternativa y límite.** Un error es repetir consultas EF Core dentro de los endpoints «por eficiencia». A corto plazo parece menos código, pero reintroduce la dependencia que pretendíamos aislar. También es un error crear rutas duplicadas con el mismo verbo y patrón al introducir el nuevo adaptador; por eso M03 utiliza un prefijo propio que no compite con las rutas M02.
-
-**Comprobación técnica y aprendizaje.** Ejecuta con el cliente HTTP un POST válido, extrae la cabecera Location y realiza el GET correspondiente. Prueba a continuación una cantidad no positiva, una cantidad superior a 500 y dos finalizaciones del mismo GUID; así se recorren los principales contratos de error.
+Ejecuta con el cliente HTTP un POST válido, extrae la cabecera Location y realiza el GET correspondiente. Prueba a continuación una cantidad no positiva, una cantidad superior a 500 y dos finalizaciones del mismo GUID; así se recorren los principales contratos de error.
 
 ![Diagrama explicativo del punto 3.4, bloque 5](IMAGENES/3-4-recorrido.svg)
 
-*Interpretación del gráfico:* identifica las referencias de código que admite el diseño y distingue esas relaciones de las llamadas en ejecución. La figura está disponible como SVG vectorial y como PNG para consulta externa.
+identifica las referencias de código que admite el diseño y distingue esas relaciones de las llamadas en ejecución. La figura está disponible como SVG vectorial y como PNG para consulta externa.
 
-### Bloque 6 — Repositorios como adaptadores de salida
+### Repositorios como adaptadores de salida
 
-Los repositorios se implementan como adaptadores de salida en el proyecto de infraestructura. Cada repositorio implementa un puerto de salida definido en la aplicación. La implementación usa el `DbContext` para acceder a la base de datos. El repositorio traduce las operaciones del puerto en consultas de EF Core. La traducción mantiene el núcleo independiente de EF Core.
+El repositorio de salida traduce las operaciones del puerto a EF Core. Cuando una orden se guarda, el adaptador conoce qué DbSet usar, cómo gestionar el contexto y cuándo confirmar cambios. El núcleo no necesita recibir una consulta IQueryable ni construir SQL: necesita una operación con significado de negocio. Para afirmar que el adaptador cumple su contrato, hay que crear la entidad, persistirla y recuperarla desde otro contexto, evitando que una caché local dé una falsa impresión de éxito. Esa evidencia complementa los tests rápidos del dominio.
 
 ```csharp
 public class OrdenRepositorioSqlServer : IOrdenRepositorio
@@ -1445,46 +1408,24 @@ public class OrdenRepositorioSqlServer : IOrdenRepositorio
 }
 ```
 
-- **Línea 1:** `public class OrdenRepositorioSqlServer : IOrdenRepositorio` → adaptador de salida.
-- **Línea 2:** `{` → abre el cuerpo.
-- **Línea 3:** `private readonly AceriaDbContext _db;` → dependencia del contexto.
-- **Línea 4:** `public OrdenRepositorioSqlServer(AceriaDbContext db)` → constructor.
-- **Línea 5:** `{` → abre el cuerpo del constructor.
-- **Línea 6:** `_db = db;` → asigna el contexto.
-- **Línea 7:** `}` → cierra el constructor.
-- **Línea 8:** `public async Task AddAsync(Orden orden)` → implementación del método.
-- **Línea 9:** `{` → abre el cuerpo.
-- **Línea 10:** `_db.Ordenes.Add(orden);` → añade la orden.
-- **Línea 11:** `await _db.SaveChangesAsync();` → persiste los cambios.
-- **Línea 12:** `}` → cierra el método.
-- **Línea 13:** `public async Task<Orden?> GetByIdAsync(Guid id)` → consulta por identificador.
-- **Línea 14:** `{` → abre el cuerpo.
-- **Línea 15:** `return await _db.Ordenes.AsNoTracking().FirstOrDefaultAsync(o => o.Id == id);` → devuelve la orden o null.
-- **Línea 16:** `}` → cierra el método.
-- **Línea 17:** `public async Task<List<Orden>> ListarAsync()` → lista todas las órdenes.
-- **Línea 18:** `{` → abre el cuerpo.
-- **Línea 19:** `return await _db.Ordenes.AsNoTracking().ToListAsync();` → devuelve la lista.
-- **Línea 20:** `}` → cierra el método.
-- **Línea 21:** `}` → cierra la clase.
+
+El adaptador EF Core implementa operaciones del puerto y conoce el contexto relacional. Para validar su comportamiento, se deben comprobar escrituras y lecturas desde contextos independientes contra SQL Server real.
+
 
 El repositorio se caracteriza por tres propiedades. La primera es que implementa un puerto de salida. La segunda es que conoce EF Core y la base de datos. La tercera es que puede sustituirse por otro adaptador. Las tres propiedades permiten que el núcleo se pruebe con adaptadores en memoria y que la base de datos evolucione con independencia del núcleo.
 
----
 
+Un repositorio no es toda la infraestructura: es una implementación concreta de un contrato de persistencia definido por la aplicación. `OrdenRepositorioSqlServer` usa EF Core para listar y obtener órdenes, agregarlas y guardar su estado. El caso de uso no elige consultas, tabla ni motor SQL, y eso le permite mantener una interfaz de operación de negocio en lugar de programación de datos.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Para una búsqueda por GUID, el adaptador devuelve una entidad o `null` sin decidir que debe responder 404. Para la finalización, una entidad recuperada desde el contexto cambia de estado por `OrdenHexagonal.Finalizar()` y después se confirma con `GuardarAsync`. Los detalles de seguimiento, mapeo y transacción quedan en el adaptador externo.
 
-**La decisión arquitectónica.** Un repositorio no es toda la infraestructura: es una implementación concreta de un contrato de persistencia definido por la aplicación. `OrdenRepositorioSqlServer` usa EF Core para listar y obtener órdenes, agregarlas y guardar su estado. El caso de uso no elige consultas, tabla ni motor SQL, y eso le permite mantener una interfaz de operación de negocio en lugar de programación de datos.
+La semántica del contrato importa: un repositorio que devuelve datos obsoletos o no persiste los cambios aunque complete el `Task` rompe las expectativas de aplicación. Por eso conviene probar con un almacén temporal que se crea una orden y que sigue accesible en otra petición del mismo host. El contrato `IOrdenRepositorio` no puede garantizar por sí solo esa propiedad.
 
-**Ejemplo concreto en AceriaApp.** Para una búsqueda por GUID, el adaptador devuelve una entidad o `null` sin decidir que debe responder 404. Para la finalización, una entidad recuperada desde el contexto cambia de estado por `OrdenHexagonal.Finalizar()` y después se confirma con `GuardarAsync`. Los detalles de seguimiento, mapeo y transacción quedan en el adaptador externo.
+Una prueba de infraestructura comprueba el mapeo y el comportamiento de guardado con el proveedor SQL Server y una base controlada por el test. Una lectura desde un contexto nuevo verifica la persistencia. El éxito de esos casos no sustituye pruebas específicas de concurrencia, rendimiento o configuración de producción cuando sean necesarias.
 
-**Riesgo, alternativa y límite.** La semántica del contrato importa: un repositorio que devuelve datos obsoletos o no persiste los cambios aunque complete el `Task` rompe las expectativas de aplicación. Por eso conviene probar con un almacén temporal que se crea una orden y que sigue accesible en otra petición del mismo host. El contrato `IOrdenRepositorio` no puede garantizar por sí solo esa propiedad.
+### Configuración del arranque
 
-**Comprobación técnica y aprendizaje.** Una prueba de infraestructura comprueba el mapeo y el comportamiento de guardado con el proveedor SQL Server y una base controlada por el test. Una lectura desde un contexto nuevo verifica la persistencia. El éxito de esos casos no sustituye pruebas específicas de concurrencia, rendimiento o configuración de producción cuando sean necesarias.
-
-### Bloque 7 — Configuración del arranque
-
-La configuración del arranque se organiza con métodos de extensión. Cada grupo de servicios se registra con un método de extensión específico. Los métodos de extensión se agrupan en archivos separados. La organización reduce el tamaño del archivo `Program.cs` y facilita el mantenimiento. La configuración se compone con llamadas encadenadas.
+La configuración de arranque reúne decisiones técnicas que la aplicación debe poder cambiar sin reescribir sus reglas. `Program.cs` registra servicios, conexiones, rutas y, cuando corresponda, la documentación HTTP. Los métodos de extensión ayudan a mantenerlo legible, pero no convierten automáticamente la solución en hexagonal. Importa que los tipos de infraestructura permanezcan en el exterior del núcleo y que los endpoints dependan de capacidades de aplicación. En AceriaApp el arranque incorpora la nueva funcionalidad sin desactivar las rutas de M02, que siguen formando parte del contrato docente.
 
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
@@ -1503,35 +1444,24 @@ app.MapOrdenesEndpoints();
 app.Run();
 ```
 
-- **Línea 1:** `var builder = WebApplication.CreateBuilder(args);` → crea el constructor.
-- **Línea 2:** `builder.Services.AddDocumentacionOpenApi(new MetadatosApi());` → registra la documentación.
-- **Línea 3:** `builder.Services.AddValidacion();` → registra los validadores.
-- **Línea 4:** `builder.Services.AddPersistencia(builder.Configuration);` → registra la persistencia.
-- **Línea 5:** `builder.Services.AddRepositorios();` → registra los repositorios.
-- **Línea 6:** `builder.Services.AddServiciosAplicacion();` → registra los servicios de aplicación.
-- **Línea 7:** `var app = builder.Build();` → construye la aplicación.
-- **Línea 8:** `app.UseDocumentacionOpenApi(new ConfiguracionOpenApi());` → habilita la documentación.
-- **Línea 9:** `app.MapOrdenesEndpoints();` → registra los endpoints de órdenes.
-- **Línea 10:** `app.Run();` → arranca el servidor.
+
+Las llamadas de configuración del arranque componen el host, registran los adaptadores y publican los endpoints. La arquitectura no se demuestra por el número de métodos de extensión, sino por las dependencias efectivas.
+
 
 La configuración del arranque tiene dos consecuencias prácticas. La primera es que el archivo `Program.cs` se mantiene corto y legible. La segunda es que cada grupo de servicios se registra en un método de extensión que puede probarse de forma aislada. La combinación de ambas reduce el coste de mantenimiento y facilita la incorporación de nuevos servicios.
 
----
 
+El arranque de una aplicación bien organizada concentra las decisiones que necesitan conocer detalles concretos. En `Program.cs` los registros de servicios ocurren antes de `builder.Build()`, la configuración de middleware y endpoints después y finalmente `app.Run()` inicia el servidor. Este orden no es estilístico: el contenedor se construye al realizar `Build` y no admite añadir servicios del modo habitual después.
 
-#### Ampliación didáctica aplicada a AceriaApp
+La incorporación de M03 es incremental. Se conservan los registros de M02, se llama a `AddServiciosHexagonales` y se mapea un grupo adicional de rutas. En Development, la inicialización de la base hexagonal se condiciona al entorno y a `SkipDatabaseInitialization`. En los tests esta opción deja la creación del esquema a la factoría, después de configurar sus conexiones SQL Server aisladas. En producción usaríamos migraciones y una política de despliegue controlada, no `EnsureCreated` en cada arranque.
 
-**La decisión arquitectónica.** El arranque de una aplicación bien organizada concentra las decisiones que necesitan conocer detalles concretos. En `Program.cs` los registros de servicios ocurren antes de `builder.Build()`, la configuración de middleware y endpoints después y finalmente `app.Run()` inicia el servidor. Este orden no es estilístico: el contenedor se construye al realizar `Build` y no admite añadir servicios del modo habitual después.
+Hay dos configuraciones de persistencia con fines didácticos, `AceriaApp` y `AceriaHexagonal`. Sus nombres deben coincidir exactamente con las claves de `appsettings.json`. Confundirlas puede causar errores de conexión o la creación de objetos en el almacén equivocado. La elección de conexiones no debe filtrarse al dominio ni a los puertos.
 
-**Ejemplo concreto en AceriaApp.** La incorporación de M03 es incremental. Se conservan los registros de M02, se llama a `AddServiciosHexagonales` y se mapea un grupo adicional de rutas. En Development, la inicialización de la base hexagonal se condiciona al entorno y a `SkipDatabaseInitialization`. En los tests esta opción deja la creación del esquema a la factoría, después de configurar sus conexiones SQL Server aisladas. En producción usaríamos migraciones y una política de despliegue controlada, no `EnsureCreated` en cada arranque.
+La comprobación de arranque incluye compilar sin duplicar `app.Run`, resolver las dependencias del grupo hexagonal y ejecutar una petición real. Un endpoint visible sin contexto inicializado o un servicio sin registro DI no cumple el criterio de integración.
 
-**Riesgo, alternativa y límite.** Hay dos configuraciones de persistencia con fines didácticos, `AceriaApp` y `AceriaHexagonal`. Sus nombres deben coincidir exactamente con las claves de `appsettings.json`. Confundirlas puede causar errores de conexión o la creación de objetos en el almacén equivocado. La elección de conexiones no debe filtrarse al dominio ni a los puertos.
+### Pruebas de la configuración
 
-**Comprobación técnica y aprendizaje.** La comprobación de arranque incluye compilar sin duplicar `app.Run`, resolver las dependencias del grupo hexagonal y ejecutar una petición real. Un endpoint visible sin contexto inicializado o un servicio sin registro DI no cumple el criterio de integración.
-
-### Bloque 8 — Pruebas de la configuración
-
-La configuración del contenedor se prueba con tests que verifican los registros. Los tests comprueban que cada puerto tiene una implementación registrada. Los tests también comprueban que el ciclo de vida es el adecuado. La verificación automática evita que se olvide un registro o que se use un ciclo incorrecto. La verificación se integra en la suite de tests del proyecto.
+Una solución puede compilar aunque un puerto no tenga implementación registrada, aunque un DbContext esté configurado con un valor incorrecto o aunque el host no pueda construir un caso de uso. Por eso las pruebas de configuración deben ir más allá del análisis estático de proyectos: necesitan resolver el servicio y, cuando corresponde, enviar peticiones HTTP reales. También se requieren pruebas de persistencia para comprobar SQL Server. Al separar niveles podemos localizar si el fallo proviene de una regla, del registro de DI, del adaptador o del protocolo.
 
 ```csharp
 [Fact]
@@ -1547,38 +1477,28 @@ public void Contenedor_TieneRegistradoIOrdenServicio()
 }
 ```
 
-- **Línea 1:** `[Fact]` → marca el método como test.
-- **Línea 2:** `public void Contenedor_TieneRegistradoIOrdenServicio()` → declara el test.
-- **Línea 3:** `{` → abre el cuerpo.
-- **Línea 4:** `var services = new ServiceCollection();` → crea una colección de servicios.
-- **Línea 5:** `services.AddServiciosAplicacion();` → registra los servicios.
-- **Línea 6:** `var descriptor = services.FirstOrDefault(s => s.ServiceType == typeof(IOrdenServicio));` → busca el descriptor.
-- **Línea 7:** `descriptor.Should().NotBeNull();` → verifica que existe.
-- **Línea 8:** `descriptor!.Lifetime.Should().Be(ServiceLifetime.Scoped);` → verifica el ciclo de vida.
-- **Línea 9:** `}` → cierra el cuerpo.
+
+Un test del registro de dependencias comprueba que el contenedor construye lo que el caso de uso necesita. La prueba HTTP posterior demuestra que esa composición sirve una operación y no solo un objeto resoluble.
+
 
 Los tests de configuración tienen dos consecuencias prácticas. La primera es que la configuración se verifica de forma automática. La segunda es que los errores de registro se detectan en la suite de tests. La combinación de ambas permite que la configuración evolucione con seguridad y que los errores se detecten antes de producción.
 
----
 
+Un test de configuración confirma que el sistema puede construir su grafo de dependencias y que se expone el adaptador esperado. Sin embargo, registrar servicios no garantiza que sus operaciones hagan lo correcto. Por eso el diseño de prueba debe combinar la validación de DI, la dirección de referencias y las peticiones HTTP que recorren aplicación y persistencia.
 
-#### Ampliación didáctica aplicada a AceriaApp
+En los tests de M03 `HexagonalFactory` hereda de `WebApplicationFactory<Program>`, utiliza Development y asume la inicialización del esquema. Configura los dos contextos EF Core con `UseSqlServer` y conexiones a bases diferentes, evitando que los datos de rutas antiguas y hexagonales se mezclen. Con esa composición se verifica GET vacío, POST→GET, entrada inválida, capacidad y finalización doble.
 
-**La decisión arquitectónica.** Un test de configuración confirma que el sistema puede construir su grafo de dependencias y que se expone el adaptador esperado. Sin embargo, registrar servicios no garantiza que sus operaciones hagan lo correcto. Por eso el diseño de prueba debe combinar la validación de DI, la dirección de referencias y las peticiones HTTP que recorren aplicación y persistencia.
+La prueba HTTP sobre SQL Server comprueba un recorrido funcional, pero no todas las propiedades de la arquitectura. Los tests HTTP podrían pasar aunque alguien añadiera una referencia indebida en un `.csproj`; por eso el E2E también inspecciona las dependencias de ensamblados. La cobertura se define por preguntas independientes y no solo por el contador xUnit.
 
-**Ejemplo concreto en AceriaApp.** En los tests de M03 `HexagonalFactory` hereda de `WebApplicationFactory<Program>`, utiliza Development y asume la inicialización del esquema. Configura los dos contextos EF Core con `UseSqlServer` y conexiones a bases diferentes, evitando que los datos de rutas antiguas y hexagonales se mezclen. Con esa composición se verifica GET vacío, POST→GET, entrada inválida, capacidad y finalización doble.
-
-**Riesgo, alternativa y límite.** La prueba HTTP sobre SQL Server comprueba un recorrido funcional, pero no todas las propiedades de la arquitectura. Los tests HTTP podrían pasar aunque alguien añadiera una referencia indebida en un `.csproj`; por eso el E2E también inspecciona las dependencias de ensamblados. La cobertura se define por preguntas independientes y no solo por el contador xUnit.
-
-**Comprobación técnica y aprendizaje.** La condición de aceptación del laboratorio es reproducir los proyectos desde fragmentos del manual y ejecutar las mismas pruebas sobre ese resultado. Si solo se compila el proyecto final del repositorio, no habremos demostrado que el alumno puede construirlo siguiendo la guía.
+La condición de aceptación del laboratorio es reproducir los proyectos desde fragmentos del manual y ejecutar las mismas pruebas sobre ese resultado. Si solo se compila el proyecto final del repositorio, no habremos demostrado que el alumno puede construirlo siguiendo la guía.
 
 ![Diagrama explicativo del punto 3.4, bloque 8](IMAGENES/3-4-pruebas.svg)
 
-*Interpretación del gráfico:* identifica las referencias de código que admite el diseño y distingue esas relaciones de las llamadas en ejecución. La figura está disponible como SVG vectorial y como PNG para consulta externa.
+identifica las referencias de código que admite el diseño y distingue esas relaciones de las llamadas en ejecución. La figura está disponible como SVG vectorial y como PNG para consulta externa.
 
-### Bloque 9 — Organización de archivos en ASP.NET Core
+### Organización de archivos en ASP.NET Core
 
-La organización de archivos en ASP.NET Core sigue la arquitectura hexagonal. Los endpoints se agrupan en clases de extensión por recurso. Los repositorios se agrupan en clases por recurso. Los métodos de extensión se agrupan por área de configuración. La organización facilita la lectura y el mantenimiento del proyecto. La organización se refleja en la estructura de carpetas del proyecto.
+La distribución de archivos facilita que el lector encuentre qué pertenece a un caso de uso y qué se limita a traducir HTTP o acceder a SQL. Agrupar rutas por recursos, interfaces por capacidad y adaptadores por tecnología puede ayudar, siempre que no cree una jerarquía más compleja que la propia aplicación. Los nombres de carpetas no sustituyen la revisión de referencias entre proyectos. En AceriaApp resulta más revelador seguir una orden desde el endpoint hasta el dominio y el repositorio que observar un árbol de directorios aparentemente perfecto.
 
 ```text
 Estructura del proyecto de presentación:
@@ -1594,34 +1514,24 @@ AceriaApp.Monolito.Api/
 └── appsettings.json
 ```
 
-- **Línea 1:** `AceriaApp.Monolito.Api/` → proyecto de presentación.
-- **Línea 2:** `Program.cs` → punto de entrada.
-- **Línea 3:** `Endpoints/` → carpeta de endpoints.
-- **Línea 4:** `OrdenesEndpoints.cs` → endpoints de órdenes.
-- **Línea 5:** `Configuracion/` → carpeta de configuración.
-- **Línea 6:** `PersistenciaExtensions.cs` → extensión de persistencia.
-- **Línea 7:** `RepositoriosExtensions.cs` → extensión de repositorios.
-- **Línea 8:** `ServiciosAplicacionExtensions.cs` → extensión de servicios.
-- **Línea 9:** `appsettings.json` → configuración.
+
+El árbol de proyectos ayuda a encontrar dominio, aplicación, infraestructura y API. Sin revisar las referencias de compilación, un nombre de carpeta no garantiza que la dirección de las dependencias sea la adecuada.
+
 
 La organización de archivos tiene dos consecuencias prácticas. La primera es que cada grupo de funcionalidad tiene su archivo. La segunda es que el archivo `Program.cs` se mantiene corto. La combinación de ambas reduce el coste de mantenimiento y facilita la incorporación de nuevos miembros al equipo.
 
----
 
+Organizar carpetas mejora la orientación del alumno, pero la arquitectura depende del contenido y de las referencias. En la API existe una carpeta `Hexagonal` con el adaptador HTTP y se mantienen las carpetas anteriores de contratos, validación y documentación. Fuera de la API viven las bibliotecas de Dominio, Aplicación e Infraestructura, que expresan fronteras reales por proyecto.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Cada fichero debe tener un destino preciso en las prácticas. `IOrdenRepositorio.cs` pertenece a Aplicación, `HexagonalDbContext.cs` a Infraestructura, `OrdenHexagonal.cs` a Dominio y `HexagonalOrdenesEndpoints.cs` al proyecto web. Situar una interfaz dentro del proyecto web para «tener todo cerca» impediría que el caso de uso dependiera de ella sin conocer el host.
 
-**La decisión arquitectónica.** Organizar carpetas mejora la orientación del alumno, pero la arquitectura depende del contenido y de las referencias. En la API existe una carpeta `Hexagonal` con el adaptador HTTP y se mantienen las carpetas anteriores de contratos, validación y documentación. Fuera de la API viven las bibliotecas de Dominio, Aplicación e Infraestructura, que expresan fronteras reales por proyecto.
+Una carpeta llamada `PuertosAdaptadores` que contiene clases para catalogar puertos es útil en el punto 3.2, pero no reemplaza la interfaz real que se crea en 3.3. Si la documentación confunde ambos niveles, el alumno puede creer que un diagrama es una implementación. El archivo y el `.csproj` deben confirmar qué responsabilidad se incorporó en cada paso.
 
-**Ejemplo concreto en AceriaApp.** Cada fichero debe tener un destino preciso en las prácticas. `IOrdenRepositorio.cs` pertenece a Aplicación, `HexagonalDbContext.cs` a Infraestructura, `OrdenHexagonal.cs` a Dominio y `HexagonalOrdenesEndpoints.cs` al proyecto web. Situar una interfaz dentro del proyecto web para «tener todo cerca» impediría que el caso de uso dependiera de ella sin conocer el host.
+El E2E compara las rutas de código generadas desde el Markdown con las previstas para cada etapa. Una referencia en el manual a un archivo inexistente debe fallar, porque obligaría al alumno a adivinar dónde crear o modificar la pieza.
 
-**Riesgo, alternativa y límite.** Una carpeta llamada `PuertosAdaptadores` que contiene clases para catalogar puertos es útil en el punto 3.2, pero no reemplaza la interfaz real que se crea en 3.3. Si la documentación confunde ambos niveles, el alumno puede creer que un diagrama es una implementación. El archivo y el `.csproj` deben confirmar qué responsabilidad se incorporó en cada paso.
+### Aplicación al proyecto del curso
 
-**Comprobación técnica y aprendizaje.** El E2E compara las rutas de código generadas desde el Markdown con las previstas para cada etapa. Una referencia en el manual a un archivo inexistente debe fallar, porque obligaría al alumno a adivinar dónde crear o modificar la pieza.
-
-### Bloque 10 — Aplicación al proyecto del curso
-
-El proyecto del curso aplica la implementación de la arquitectura hexagonal en ASP.NET Core. Los endpoints se agrupan en clases de extensión. Los repositorios se implementan como adaptadores de salida. Los servicios de aplicación se implementan como puertos de entrada. El contenedor de dependencias se configura con métodos de extensión. La configuración se valida con tests que verifican los registros. El módulo 3 se cierra con el resumen del estado del proyecto.
+El cierre de M03 exige demostrar el recorrido completo. Los endpoints anteriores de M02 deben continuar funcionando mientras el nuevo grupo hexagonal permite crear, consultar y finalizar una orden usando un caso de uso, su puerto y un adaptador EF Core. El dominio conserva sus reglas sin conocer HTTP ni SQL; el host compone el sistema; las pruebas comprueban dependencias y persistencia real. Esta evidencia permite afirmar que hemos implementado una parte hexagonal de AceriaApp. No implicaría que todas las rutas antiguas se han transformado ni que las bibliotecas sean ya microservicios independientes.
 
 ```text
 Aplicación al proyecto del curso:
@@ -1634,18 +1544,15 @@ Validación        → tests de registros.
 Cierre del módulo → resumen del estado en docs.
 ```
 
-- **Línea 1:** `Endpoints` → clases de extensión por recurso.
-- **Línea 2:** `Repositorios` → adaptadores de salida.
-- **Línea 3:** `Servicios` → puertos de entrada.
-- **Línea 4:** `Contenedor` → configuración con métodos de extensión.
-- **Línea 5:** `Validación` → tests de registros.
-- **Línea 6:** `Cierre del módulo` → resumen del estado en `docs`.
+
+La distribución final permite seguir una orden desde HTTP hasta su confirmación SQL, mientras las clases del núcleo siguen siendo independientes de ambos mecanismos. Esa secuencia es la que debe demostrar el alumno.
+
 
 La implementación de la arquitectura hexagonal cierra el módulo 3 y prepara el terreno para el módulo 4. El módulo 4 estudiará los patrones de arquitectura: Repository, Unit of Work, Mediator y Result Pattern. La arquitectura hexagonal es la base sobre la que se aplican los patrones. El punto 3.4 cierra el módulo 3 con el resumen del estado del proyecto.
 
 ---
 
-### Resumen rápido de la teoría
+### Comprobaciones para cerrar el módulo
 
 - ASP.NET Core actúa como adaptador de entrada y como contenedor de dependencias.
 - El contenedor registra las implementaciones de los puertos y las inyecta en los endpoints.
@@ -1656,18 +1563,14 @@ La implementación de la arquitectura hexagonal cierra el módulo 3 y prepara el
 - La configuración del arranque se organiza con métodos de extensión.
 - La configuración se valida con tests que verifican los registros.
 
----
 
+El resultado que queremos al finalizar M03 es una aplicación que conserva M02 y demuestra una ruta nueva verdaderamente hexagonal. La solución final contiene una entidad independiente de HTTP/SQL, un caso de uso de aplicación, un puerto de repositorio, un adaptador EF Core y endpoints Minimal API que consumen el caso de uso. La composición se establece por DI y los tests verifican su funcionamiento.
 
-#### Ampliación didáctica aplicada a AceriaApp
+El alumno debe poder recorrer la teoría de los cuatro puntos para entender cada decisión y seguir las prácticas para escribir las piezas en su orden. Por eso cada fragmento del laboratorio tiene una ruta, un tipo de operación —crear, insertar o reemplazar— y un paso. El E2E aplica esos fragmentos sin copiar los archivos C# terminados y confirma compilación y pruebas. Solo entonces se publica la carpeta de referencia correspondiente.
 
-**La decisión arquitectónica.** El resultado que queremos al finalizar M03 es una aplicación que conserva M02 y demuestra una ruta nueva verdaderamente hexagonal. La solución final contiene una entidad independiente de HTTP/SQL, un caso de uso de aplicación, un puerto de repositorio, un adaptador EF Core y endpoints Minimal API que consumen el caso de uso. La composición se establece por DI y los tests verifican su funcionamiento.
+El número de proyectos y pruebas debe comprobarse sobre la solución de cada etapa. Un catálogo que enumera componentes no demuestra que estén implementados ni registrados. Ejecutar las pruebas y revisar las referencias permite identificar qué componentes incorpora cada punto y cuáles participan realmente en la aplicación.
 
-**Ejemplo concreto en AceriaApp.** El alumno debe poder recorrer la teoría de los cuatro puntos para entender cada decisión y seguir las prácticas para escribir las piezas en su orden. Por eso cada fragmento del laboratorio tiene una ruta, un tipo de operación —crear, insertar o reemplazar— y un paso. El E2E aplica esos fragmentos sin copiar los archivos C# terminados y confirma compilación y pruebas. Solo entonces se publica la carpeta de referencia correspondiente.
-
-**Riesgo, alternativa y límite.** El número de proyectos y pruebas debe comprobarse sobre la solución de cada etapa. Un catálogo que enumera componentes no demuestra que estén implementados ni registrados. Ejecutar las pruebas y revisar las referencias permite identificar qué componentes incorpora cada punto y cuáles participan realmente en la aplicación.
-
-**Comprobación técnica y aprendizaje.** Como cierre, solicita tres demostraciones: ejecutar el GET viejo de M02, crear y recuperar una orden por el nuevo endpoint hexagonal, y explicar por qué `OrdenesCasoUso` no referencia `HexagonalDbContext`. Esa triangulación enlaza compatibilidad, comportamiento y arquitectura sin declarar terminado algo que solo compila.
+Como cierre, solicita tres demostraciones: ejecutar el GET viejo de M02, crear y recuperar una orden por el nuevo endpoint hexagonal, y explicar por qué `OrdenesCasoUso` no referencia `HexagonalDbContext`. Esa triangulación enlaza compatibilidad, comportamiento y arquitectura sin declarar terminado algo que solo compila.
 
 
 ## Estudio integrador 3.4 — Una orden de principio a fin y la evidencia E2E
@@ -1696,7 +1599,7 @@ El nombre `OrdenRepositorioSqlServer` puede llevar a pensar que el repositorio e
 
 ![Relación entre caso de uso, puerto, adaptador, proveedor y SQL Server](IMAGENES/3-4-sqlserver-adaptadores.svg)
 
-*Interpretación del gráfico:* La flecha discontinua representa la implementación del contrato. El recorrido de ejecución parte de HTTP y alcanza el motor mediante el adaptador. El dominio no necesita una referencia a Docker, Testcontainers, EF Core ni SQL Server. La figura está disponible en SVG y PNG.
+La flecha discontinua representa la implementación del contrato. El recorrido de ejecución parte de HTTP y alcanza el motor mediante el adaptador. El dominio no necesita una referencia a Docker, Testcontainers, EF Core ni SQL Server. La figura está disponible en SVG y PNG.
 
 | Pieza de AceriaApp | Responsabilidad | Qué cambia al usar un servidor de pruebas |
 |---|---|---|
@@ -1723,12 +1626,9 @@ services.AddDbContext<HexagonalDbContext>(options =>
     options.UseSqlServer(_hexagonal.ConnectionString));
 ```
 
-- **Línea 1:** Obtiene una base única para el contexto de las rutas heredadas. Su nombre no coincide con la base del alumno.
-- **Línea 2:** Obtiene otra base para el contexto hexagonal. Un caso no comparte filas con otro por reutilizar una conexión global al mismo esquema.
-- **Línea 3:** Registra el contexto que consume la API construida en M02.
-- **Línea 4:** Mantiene SQL Server como proveedor y usa la conexión aislada heredada.
-- **Línea 5:** Registra el contexto que utiliza el adaptador hexagonal.
-- **Línea 6:** Conecta ese contexto a su propia base. No modifica el puerto ni las reglas de `OrdenHexagonal`.
+
+La factoría de tests prepara bases SQL independientes para la API heredada y la nueva parte hexagonal. Así pueden comprobarse ambos recorridos sin compartir accidentalmente el mismo conjunto de datos.
+
 
 La opción `SkipDatabaseInitialization` no significa «ejecutar sin base de datos». Significa que la factoría asume la preparación del esquema sobre sus conexiones de pruebas. Primero se configura el host; después se resuelven los contextos correctos y se crean sus tablas. Al terminar, se liberan los contextos y el host antes de eliminar las bases. Ese orden permite que la limpieza encuentre recursos que ya no están en uso.
 
