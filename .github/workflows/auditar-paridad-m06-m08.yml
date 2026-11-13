@@ -4,6 +4,12 @@ on:
   push:
     branches: [version-corregida]
     paths:
+      - 'M06_COMUNICACION_MICROSERVICIOS/PRACTICAS/M06_PRACTICAS.md'
+      - 'M07_OBSERVABILIDAD_RESILIENCIA/PRACTICAS/M07_PRACTICAS.md'
+      - 'M08_API_GATEWAY/PRACTICAS/M08_PRACTICAS.md'
+      - 'M06_COMUNICACION_MICROSERVICIOS/PROYECTO/**'
+      - 'M07_OBSERVABILIDAD_RESILIENCIA/PROYECTO/**'
+      - 'M08_API_GATEWAY/PROYECTO/**'
       - 'tools/auditar_paridad_m06_m08.py'
       - '.github/workflows/auditar-paridad-m06-m08.yml'
   workflow_dispatch:
