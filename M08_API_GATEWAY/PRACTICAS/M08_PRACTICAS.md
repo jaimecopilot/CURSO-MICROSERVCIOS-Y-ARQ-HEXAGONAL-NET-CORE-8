@@ -6272,9 +6272,7 @@ $env:Comunicacion__WorkersActivos = "false"
 $env:Comunicacion__InventarioUrl = "http://localhost:5106/"
 ```
 
-- **Línea 1:** `$env:ConnectionStrings__AceriaApp = "Server=(localdb)\MSSQLLocalDB;Database=AceriaM08Api;Integrated Security=True;TrustServerCertificate=True"` Configura una conexión SQL Server de esta terminal; el nombre después de __ coincide con el contexto que la aplicación lee.
-- **Línea 5:** `$env:Comunicacion__WorkersActivos = "false"` Establece la opción de entorno para el proceso que se iniciará desde esta terminal.
-
+Configura una conexión SQL Server de esta terminal; el nombre después de __ coincide con el contexto que la aplicación lee. Establece la opción de entorno para el proceso que se iniciará desde esta terminal.
 
 Estas conexiones usan cuatro bases para los modelos acumulados del curso. EnsureCreated es una ayuda de Development, no una política de migraciones para producción. Las dos instancias de Inventario deben compartir AceriaM08Inventario para observar el mismo estado persistente. Primero inicia una instancia y espera a que complete la inicialización de tablas; después inicia la segunda.
 
@@ -6286,8 +6284,7 @@ $env:Inventario__Instancia = "inventario-1"
 dotnet run --project src/AceriaApp.Inventario.Api --no-launch-profile
 ```
 
-- **Línea 3:** `dotnet run --project src/AceriaApp.Inventario.Api --no-launch-profile` Compila e inicia el proyecto indicado sin sobrescribir el puerto mediante launchSettings.
-
+Compila e inicia el proyecto indicado sin sobrescribir el puerto mediante launchSettings.
 
 En la terminal de Producción:
 
@@ -6319,11 +6316,9 @@ $response.StatusCode
 $response.Headers.Location
 ```
 
-- **Línea 1:** `$body = @{ cliente="Cliente M08"; material="Acero"; cantidad=5 } | ConvertTo-Json` Serializa el cuerpo con los nombres de propiedad del contrato REST de órdenes.
-- **Línea 2:** `$response = Invoke-WebRequest http://localhost:5100/api/v1/ordenes -Method Post -ContentType application/json -Body $body` Envía la petición HTTP y conserva estado y cabeceras para comprobar el contrato del gateway.
-- **Línea 3:** `$response.StatusCode` Muestra el código de estado devuelto por el servicio a través del proxy.
-- **Línea 4:** `$response.Headers.Location` Muestra la referencia al recurso creado; debe poder consultarse desde la entrada pública.
+Serializa el cuerpo con los nombres de propiedad del contrato REST de órdenes. Envía la petición HTTP y conserva estado y cabeceras para comprobar el contrato del gateway. Muestra el código de estado devuelto por el servicio a través del proxy.
 
+Muestra la referencia al recurso creado; debe poder consultarse desde la entrada pública.
 
 El resultado esperado es 201. Sigue Location a través del gateway y verifica que el recurso coincide con el cuerpo devuelto. No sustituyas una respuesta de validación 400/422 por un 200. Si el proceso de Producción no está disponible, la respuesta del proxy debe ser un error de gateway, nunca una orden creada ficticia.
 
@@ -6351,9 +6346,7 @@ Solicita diez veces el material Acero mediante el gateway y registra X-Instancia
 }
 ```
 
-- **Línea 1:** `1..10 | ForEach-Object {` Repite la solicitud para observar el reparto entre destinos disponibles.
-- **Línea 3:** `}` Cierra el bloque de PowerShell que agrupa la operación repetida.
-
+Repite la solicitud para observar el reparto entre destinos disponibles.
 
 Con ambas instancias sanas deben observarse inventario-1 e inventario-2. Detén Inventario 2 con Ctrl+C. Durante la detección todavía puede fallar una petición ya asignada; tras los sondeos fallidos, las nuevas solicitudes deben ir a Inventario 1. El intervalo es un segundo y el umbral es dos fallos consecutivos; no equivale a una garantía de tiempo real exacto. Repite la petición hasta observar diez respuestas correctas seguidas de la instancia superviviente.
 
@@ -6369,7 +6362,8 @@ Abre cinco terminales PowerShell: A para Inventario 1, B para Inventario 2, C pa
 Set-Location M08_API_GATEWAY/PROYECTO/8.4-balanceo-carga
 ```
 
-- **Línea 1:** `Set-Location M08_API_GATEWAY/PROYECTO/8.4-balanceo-carga` Sitúa todos los comandos y proyectos relativos en la etapa final del módulo.
+Sitúa todos los comandos y proyectos relativos en la etapa final del módulo.
+
 
 ### Iniciar LocalDB y RabbitMQ
 
@@ -6389,17 +6383,14 @@ foreach ($intento in 1..30) {
 if (-not $brokerListo) { throw "RabbitMQ no respondió al diagnóstico." }
 ```
 
-- **Línea 1:** `sqllocaldb start MSSQLLocalDB` Inicia la instancia LocalDB con la que trabajarán los servicios Windows.
-- **Línea 2:** `if ($LASTEXITCODE -ne 0) { throw "No se pudo iniciar MSSQLLocalDB." }` Detiene el procedimiento si falla la herramienta de SQL Server.
-- **Línea 3:** `docker compose up -d rabbitmq` Inicia el servicio RabbitMQ declarado en compose.yml conservando su volumen.
-- **Línea 4:** `if ($LASTEXITCODE -ne 0) { throw "No se pudo iniciar RabbitMQ." }` No continúa si Docker informa de un fallo de creación o arranque.
-- **Línea 5:** `$brokerListo = $false` Registra si el broker ha respondido a su comprobación de salud.
-- **Línea 6:** `foreach ($intento in 1..30) {` Permite hasta treinta comprobaciones durante el arranque del broker.
-- **Línea 7:** `    docker compose exec -T rabbitmq rabbitmq-diagnostics -q ping` Ejecuta el diagnóstico dentro del broker, sin requerir terminal interactiva.
-- **Línea 8:** `    if ($LASTEXITCODE -eq 0) { $brokerListo = $true; break }` Confirma disponibilidad solo cuando el diagnóstico devuelve código cero.
-- **Línea 9:** `    Start-Sleep -Seconds 2` Espera entre comprobaciones mientras RabbitMQ termina de arrancar.
-- **Línea 10:** `}` Cierra el bucle de espera del broker.
-- **Línea 11:** `if (-not $brokerListo) { throw "RabbitMQ no respondió al diagnóstico." }` Exige un broker disponible antes de activar productores y consumidores.
+Inicia la instancia LocalDB con la que trabajarán los servicios Windows. Detiene el procedimiento si falla la herramienta de SQL Server. Inicia el servicio RabbitMQ declarado en compose.yml conservando su volumen.
+
+No continúa si Docker informa de un fallo de creación o arranque. Registra si el broker ha respondido a su comprobación de salud. Permite hasta treinta comprobaciones durante el arranque del broker.
+
+Ejecuta el diagnóstico dentro del broker, sin requerir terminal interactiva. Confirma disponibilidad solo cuando el diagnóstico devuelve código cero. Espera entre comprobaciones mientras RabbitMQ termina de arrancar.
+
+Exige un broker disponible antes de activar productores y consumidores.
+
 
 ### Configurar y arrancar los cuatro procesos
 
@@ -6417,15 +6408,12 @@ $env:Comunicacion__Prefijo = "aceria-m08-manual"
 $env:Comunicacion__WorkersActivos = "true"
 ```
 
-- **Línea 1:** `$env:ASPNETCORE_ENVIRONMENT = "Development"` Selecciona la inicialización didáctica de bases y tablas prevista por los servicios.
-- **Línea 2:** `$env:ConnectionStrings__AceriaApp = "Server=(localdb)\MSSQLLocalDB;Database=AceriaM08Api;Integrated Security=True;TrustServerCertificate=True"` Configura la base del API REST acumulado, con autenticación de Windows.
-- **Línea 3:** `$env:ConnectionStrings__AceriaHexagonal = "Server=(localdb)\MSSQLLocalDB;Database=AceriaM08Hexagonal;Integrated Security=True;TrustServerCertificate=True"` Configura la base independiente del contexto hexagonal.
-- **Línea 4:** `$env:ConnectionStrings__AceriaProduccion = "Server=(localdb)\MSSQLLocalDB;Database=AceriaM08Produccion;Integrated Security=True;TrustServerCertificate=True"` Configura la base de las órdenes DDD y del outbox transaccional de Producción.
-- **Línea 5:** `$env:ConnectionStrings__AceriaInventario = "Server=(localdb)\MSSQLLocalDB;Database=AceriaM08Inventario;Integrated Security=True;TrustServerCertificate=True"` Configura la base compartida de existencias, proyecciones e identificación de eventos recibidos.
-- **Línea 6:** `$env:Comunicacion__InventarioUrl = "http://localhost:5106/"` Fija el cliente interno de Producción hacia Inventario 1 para la consulta informativa de disponibilidad.
-- **Línea 7:** `$env:Comunicacion__RabbitMqUri = "amqp://curso:curso-local@localhost:5672/"` Configura el broker real de laboratorio para la publicación y recepción de eventos.
-- **Línea 8:** `$env:Comunicacion__Prefijo = "aceria-m08-manual"` Agrupa los recursos RabbitMQ de este recorrido; el mismo valor enlaza productor y consumidores.
-- **Línea 9:** `$env:Comunicacion__WorkersActivos = "true"` Activa el publicador outbox de Producción y los consumidores de Inventario.
+Selecciona la inicialización didáctica de bases y tablas prevista por los servicios. Configura la base del API REST acumulado, con autenticación de Windows. Configura la base independiente del contexto hexagonal.
+
+Configura la base de las órdenes DDD y del outbox transaccional de Producción. Configura la base compartida de existencias, proyecciones e identificación de eventos recibidos. Fija el cliente interno de Producción hacia Inventario 1 para la consulta informativa de disponibilidad.
+
+Configura el broker real de laboratorio para la publicación y recepción de eventos. Agrupa los recursos RabbitMQ de este recorrido; el mismo valor enlaza productor y consumidores. Activa el publicador outbox de Producción y los consumidores de Inventario.
+
 
 En A inicia primero Inventario 1:
 
@@ -6435,9 +6423,8 @@ $env:Inventario__Instancia = "inventario-1"
 dotnet run --project src/AceriaApp.Inventario.Api --no-launch-profile
 ```
 
-- **Línea 1:** `$env:ASPNETCORE_URLS = "http://localhost:5106"` Reserva el puerto docente de Inventario 1.
-- **Línea 2:** `$env:Inventario__Instancia = "inventario-1"` Identifica sus respuestas mediante la cabecera X-Instancia.
-- **Línea 3:** `dotnet run --project src/AceriaApp.Inventario.Api --no-launch-profile` Inicia el servicio real y conserva el puerto definido en esta terminal.
+Reserva el puerto docente de Inventario 1. Identifica sus respuestas mediante la cabecera X-Instancia. Inicia el servicio real y conserva el puerto definido en esta terminal.
+
 
 En E espera a que `Invoke-RestMethod http://localhost:5106/health/ready` responda con `estado` igual a `Healthy`. Así la primera instancia termina de crear y sembrar la base antes de arrancar la segunda. En B:
 
@@ -6447,9 +6434,8 @@ $env:Inventario__Instancia = "inventario-2"
 dotnet run --project src/AceriaApp.Inventario.Api --no-launch-profile
 ```
 
-- **Línea 1:** `$env:ASPNETCORE_URLS = "http://localhost:5107"` Asigna un puerto distinto a la segunda instancia que comparte el modelo y la base.
-- **Línea 2:** `$env:Inventario__Instancia = "inventario-2"` Permite observar el segundo destino del balanceador.
-- **Línea 3:** `dotnet run --project src/AceriaApp.Inventario.Api --no-launch-profile` Inicia el segundo consumidor sobre el mismo broker y la misma base Inventario.
+Asigna un puerto distinto a la segunda instancia que comparte el modelo y la base. Permite observar el segundo destino del balanceador. Inicia el segundo consumidor sobre el mismo broker y la misma base Inventario.
+
 
 En C:
 
@@ -6458,8 +6444,8 @@ $env:ASPNETCORE_URLS = "http://localhost:5105"
 dotnet run --project src/AceriaApp.Api --no-launch-profile
 ```
 
-- **Línea 1:** `$env:ASPNETCORE_URLS = "http://localhost:5105"` Publica Producción en el destino que conoce la configuración YARP.
-- **Línea 2:** `dotnet run --project src/AceriaApp.Api --no-launch-profile` Inicia Producción con sus bases SQL y el publicador outbox activado.
+Publica Producción en el destino que conoce la configuración YARP. Inicia Producción con sus bases SQL y el publicador outbox activado.
+
 
 En D:
 
@@ -6468,8 +6454,8 @@ $env:ASPNETCORE_ENVIRONMENT = "Development"
 dotnet run --project src/AceriaApp.Gateway --no-launch-profile -- --urls http://localhost:5100
 ```
 
-- **Línea 1:** `$env:ASPNETCORE_ENVIRONMENT = "Development"` Selecciona el entorno docente del proceso de entrada.
-- **Línea 2:** `dotnet run --project src/AceriaApp.Gateway --no-launch-profile -- --urls http://localhost:5100` Inicia YARP en el puerto público explícito; los destinos del appsettings de 8.4 son 5105, 5106 y 5107.
+Selecciona el entorno docente del proceso de entrada. Inicia YARP en el puerto público explícito; los destinos del appsettings de 8.4 son 5105, 5106 y 5107.
+
 
 En E comprueba todos los procesos antes de escribir una orden:
 
@@ -6484,14 +6470,12 @@ foreach ($puerto in 5105,5106,5107) {
 (Invoke-RestMethod "$gateway/api/v1/materiales/Acero").stock
 ```
 
-- **Línea 1:** `$gateway = "http://localhost:5100"` Define la única entrada pública utilizada por las operaciones de negocio siguientes.
-- **Línea 2:** `$vivo = Invoke-RestMethod "$gateway/health/live"` Consulta la liveness propia del proceso gateway.
-- **Línea 3:** `if ($vivo.servicio -ne "Gateway" -or $vivo.estado -ne "vivo") { throw "Gateway no está vivo." }` Respeta el contrato de liveness de Gateway, diferente del contrato Healthy de los backends.
-- **Línea 4:** `foreach ($puerto in 5105,5106,5107) {` Recorre Producción y las dos instancias de Inventario.
-- **Línea 5:** `    $salud = Invoke-RestMethod "http://localhost:$puerto/health/ready"` Comprueba directamente SQL y RabbitMQ en el backend que se va a utilizar.
-- **Línea 6:** `    if ($salud.estado -ne "Healthy") { throw "Backend $puerto no está preparado." }` Detiene el recorrido si una dependencia no está disponible.
-- **Línea 7:** `}` Finaliza las comprobaciones de readiness de los tres servicios.
-- **Línea 8:** `(Invoke-RestMethod "$gateway/api/v1/materiales/Acero").stock` Comprueba el recorrido YARP hacia Inventario; la base nueva contiene stock 300 de Acero.
+Define la única entrada pública utilizada por las operaciones de negocio siguientes. Consulta la liveness propia del proceso gateway. Respeta el contrato de liveness de Gateway, diferente del contrato Healthy de los backends.
+
+Recorre Producción y las dos instancias de Inventario. Comprueba directamente SQL y RabbitMQ en el backend que se va a utilizar. Detiene el recorrido si una dependencia no está disponible.
+
+Comprueba el recorrido YARP hacia Inventario; la base nueva contiene stock 300 de Acero.
+
 
 ### Crear una orden de dos líneas y planificarla
 
@@ -6519,25 +6503,20 @@ if ($repetida.StatusCode -ne 409) { throw "La segunda planificación esperaba 40
 $confirmacion
 ```
 
-- **Línea 1:** `$cuerpo = @{ cliente = "Axia M08 eventos"; material = "Acero"; cantidad = 20 } | ConvertTo-Json` Serializa el contrato de creación de una orden DDD y su primera línea.
-- **Línea 2:** `$creada = Invoke-WebRequest -Uri "$gateway/api/v1/produccion/ordenes" -Method Post -ContentType "application/json" -Body $cuerpo -SkipHttpErrorCheck` Envía la creación a Producción a través del gateway y conserva la respuesta HTTP.
-- **Línea 3:** `if ($creada.StatusCode -ne 201) { throw "Creación esperaba 201: $($creada.Content)" }` Exige creación real y muestra el cuerpo si el contrato falla.
-- **Línea 4:** `$ordenId = [string](($creada.Content | ConvertFrom-Json).id)` Extrae el identificador devuelto en el cuerpo id de la creación.
-- **Línea 5:** `if ([guid]$ordenId -eq [guid]::Empty) { throw "La orden no tiene un identificador válido." }` Verifica que el identificador corresponde a un GUID no vacío.
-- **Línea 6:** `$ordenUri = "$gateway/api/v1/produccion/ordenes/$ordenId"` Construye la consulta pública de esta orden concreta.
-- **Línea 7:** `$segundaLinea = @{ material = "Inoxidable"; cantidad = 10 } | ConvertTo-Json` Serializa la segunda línea del agregado, con material distinto y cantidad10.
-- **Línea 8:** `$agregada = Invoke-WebRequest -Uri "$ordenUri/lineas" -Method Post -ContentType "application/json" -Body $segundaLinea -SkipHttpErrorCheck` Solicita el cambio del agregado mediante su endpoint de líneas.
-- **Línea 9:** `if ($agregada.StatusCode -ne 200) { throw "Añadir línea esperaba 200: $($agregada.Content)" }` Comprueba que la segunda línea fue aceptada antes de planificar.
-- **Línea 10:** `$borrador = Invoke-RestMethod $ordenUri` Lee el agregado persistido mediante la entrada pública.
-- **Línea 11:** `if ($borrador.estado -ne "Borrador" -or $borrador.cantidadTotal -ne 30 -or @($borrador.lineas).Count -ne 2) { throw "La orden no tiene sus dos líneas y total 30." }` Contrasta estado, número de líneas y suma antes de realizar la transición.
-- **Línea 12:** `$planificarUri = "$gateway/api/v1/comunicacion/ordenes/$ordenId/planificar"` Elige el flujo integrado que consulta disponibilidad y escribe la planificación con outbox.
-- **Línea 13:** `$aceptada = Invoke-WebRequest -Uri $planificarUri -Method Post -ContentType "application/json" -Body "{}" -SkipHttpErrorCheck` Solicita la planificación una vez; el cuerpo vacío mantiene explícito el contrato utilizado por el smoke.
-- **Línea 14:** `if ($aceptada.StatusCode -ne 202) { throw "Planificación esperaba 202: $($aceptada.Content)" }` Exige la aceptación del flujo; una respuesta distinta no se trata como éxito.
-- **Línea 15:** `$confirmacion = $aceptada.Content | ConvertFrom-Json` Lee ordenId, estado y propagacion de la aceptación.
-- **Línea 16:** `if ($confirmacion.ordenId -ne $ordenId -or $confirmacion.estado -ne "Planificada") { throw "La aceptación pertenece a otra orden o estado." }` Relaciona el202 con la misma orden que se creó y planificó.
-- **Línea 17:** `$repetida = Invoke-WebRequest -Uri $planificarUri -Method Post -ContentType "application/json" -Body "{}" -SkipHttpErrorCheck` Repite expresamente la operación para comprobar que una orden ya planificada no vuelve a transicionar.
-- **Línea 18:** `if ($repetida.StatusCode -ne 409) { throw "La segunda planificación esperaba 409: $($repetida.Content)" }` Comprueba el conflicto del segundo intento, conservando el código real del backend.
-- **Línea 19:** `$confirmacion` Muestra la aceptación original; propagacion Pendiente no implica que el consumidor ya haya recibido el evento.
+Serializa el contrato de creación de una orden DDD y su primera línea. Envía la creación a Producción a través del gateway y conserva la respuesta HTTP. Exige creación real y muestra el cuerpo si el contrato falla.
+
+Extrae el identificador devuelto en el cuerpo id de la creación. Verifica que el identificador corresponde a un GUID no vacío. Construye la consulta pública de esta orden concreta.
+
+Serializa la segunda línea del agregado, con material distinto y cantidad10. Solicita el cambio del agregado mediante su endpoint de líneas. Comprueba que la segunda línea fue aceptada antes de planificar.
+
+Lee el agregado persistido mediante la entrada pública. Contrasta estado, número de líneas y suma antes de realizar la transición. Elige el flujo integrado que consulta disponibilidad y escribe la planificación con outbox.
+
+Solicita la planificación una vez; el cuerpo vacío mantiene explícito el contrato utilizado por el smoke. Exige la aceptación del flujo; una respuesta distinta no se trata como éxito. Lee ordenId, estado y propagacion de la aceptación.
+
+Relaciona el202 con la misma orden que se creó y planificó. Repite expresamente la operación para comprobar que una orden ya planificada no vuelve a transicionar. Comprueba el conflicto del segundo intento, conservando el código real del backend.
+
+Muestra la aceptación original; propagacion Pendiente no implica que el consumidor ya haya recibido el evento.
+
 
 El202 confirma la planificación y la escritura transaccional del evento pendiente. El publicador outbox envía al broker y los consumidores registran la proyección con su identificación de evento. El409 del segundo intento impide una segunda transición; no es el mecanismo de deduplicación del consumidor. La consulta de disponibilidad es informativa y no reserva ni descuenta stock.
 
@@ -6562,20 +6541,16 @@ if ([guid]$eventoId -eq [guid]::Empty) { throw "La proyección no identifica su 
 $proyeccion | Format-List eventoId,ordenId,cantidadTotal
 ```
 
-- **Línea 1:** `$proyeccionUri = "$gateway/api/v1/planificaciones/$ordenId"` Construye la consulta pública de la proyección que mantiene Inventario.
-- **Línea 2:** `$limite = [DateTime]::UtcNow.AddSeconds(60)` Fija un límite de espera de sesenta segundos para la entrega asíncrona.
-- **Línea 3:** `$proyeccion = $null` Inicializa la evidencia observada, sin asumir que el evento ya se ha recibido.
-- **Línea 4:** `while ([DateTime]::UtcNow -lt $limite) {` Repite las lecturas hasta obtener la proyección o agotar el límite.
-- **Línea 5:** `    $respuesta = Invoke-WebRequest -Uri $proyeccionUri -SkipHttpErrorCheck` Consulta a Inventario a través del gateway y conserva un404 como respuesta HTTP comprobable.
-- **Línea 6:** `    if ($respuesta.StatusCode -eq 200) { $proyeccion = $respuesta.Content | ConvertFrom-Json; break }` Solo acepta y deserializa una proyección cuando el backend responde200.
-- **Línea 7:** `    if ($respuesta.StatusCode -ne 404) { throw "Consulta de proyección falló: $($respuesta.StatusCode) $($respuesta.Content)" }` Distingue la ausencia temporal de otros errores;503 o500 no se ocultan como entrega pendiente.
-- **Línea 8:** `    Start-Sleep -Milliseconds 500` Espacia las lecturas mientras publicador y consumidor completan la entrega.
-- **Línea 9:** `}` Cierra la espera acotada de la proyección.
-- **Línea 10:** `if ($null -eq $proyeccion) { throw "No llegó la proyección dentro del límite." }` Hace visible que no se ha demostrado la entrega si nunca aparece un200.
-- **Línea 11:** `if ($proyeccion.ordenId -ne $ordenId -or $proyeccion.cantidadTotal -ne 30) { throw "La proyección no coincide con la orden de dos líneas." }` Exige identidad y cantidad, evitando aceptar un evento de otra operación.
-- **Línea 12:** `$eventoId = [string]$proyeccion.eventoId` Conserva el identificador de la entrega realmente observada.
-- **Línea 13:** `if ([guid]$eventoId -eq [guid]::Empty) { throw "La proyección no identifica su evento." }` Exige un identificador de evento GUID no vacío.
-- **Línea 14:** `$proyeccion | Format-List eventoId,ordenId,cantidadTotal` Muestra la evidencia que debe conservarse igual después del reinicio.
+Construye la consulta pública de la proyección que mantiene Inventario. Fija un límite de espera de sesenta segundos para la entrega asíncrona. Inicializa la evidencia observada, sin asumir que el evento ya se ha recibido.
+
+Repite las lecturas hasta obtener la proyección o agotar el límite. Consulta a Inventario a través del gateway y conserva un404 como respuesta HTTP comprobable. Solo acepta y deserializa una proyección cuando el backend responde200.
+
+Distingue la ausencia temporal de otros errores;503 o500 no se ocultan como entrega pendiente. Espacia las lecturas mientras publicador y consumidor completan la entrega. Hace visible que no se ha demostrado la entrega si nunca aparece un200.
+
+Exige identidad y cantidad, evitando aceptar un evento de otra operación. Conserva el identificador de la entrega realmente observada. Exige un identificador de evento GUID no vacío.
+
+Muestra la evidencia que debe conservarse igual después del reinicio.
+
 
 Con ambos consumidores activos, la entrega puede procesarla cualquiera de las instancias. Las dos leen la misma base `AceriaM08Inventario`, por lo que la respuesta debe ser equivalente con cualquiera de los valores de X-Instancia. La tabla de planificaciones mantiene `EventoId` como clave y un índice único por `OrdenId`; el receptor compara la huella del contenido si se vuelve a entregar el mismo evento. El gateway no publica mensajes ni sustituye ese trabajo.
 
@@ -6592,12 +6567,10 @@ $guardada | Format-List id,estado,cantidadTotal,lineas
 $recibida | Format-List eventoId,ordenId,cantidadTotal
 ```
 
-- **Línea 1:** `$guardada = Invoke-RestMethod $ordenUri` Vuelve a obtener la misma orden después de reiniciar el proceso que la gestiona.
-- **Línea 2:** `if ($guardada.id -ne $ordenId -or $guardada.estado -ne "Planificada" -or $guardada.cantidadTotal -ne 30 -or @($guardada.lineas).Count -ne 2) { throw "La orden persistida no conserva estado, líneas y total." }` Exige que SQL haya conservado el agregado completo y su transición, además del identificador.
-- **Línea 3:** `$recibida = Invoke-RestMethod $proyeccionUri` Consulta la proyección ya almacenada después de reiniciar ambos procesos de Inventario.
-- **Línea 4:** `if ($recibida.ordenId -ne $ordenId -or $recibida.cantidadTotal -ne 30 -or $recibida.eventoId -ne $eventoId) { throw "La proyección persistida cambió o desapareció." }` Comprueba que se conserva la entrega original, no una nueva planificación con un identificador diferente.
-- **Línea 5:** `$guardada | Format-List id,estado,cantidadTotal,lineas` Muestra la orden SQL recuperada para compararla con el estado previo.
-- **Línea 6:** `$recibida | Format-List eventoId,ordenId,cantidadTotal` Muestra la proyección SQL recuperada con el mismo evento que se observó antes.
+Vuelve a obtener la misma orden después de reiniciar el proceso que la gestiona. Exige que SQL haya conservado el agregado completo y su transición, además del identificador. Consulta la proyección ya almacenada después de reiniciar ambos procesos de Inventario.
+
+Comprueba que se conserva la entrega original, no una nueva planificación con un identificador diferente. Muestra la orden SQL recuperada para compararla con el estado previo. Muestra la proyección SQL recuperada con el mismo evento que se observó antes.
+
 
 **Resultado esperado.** La orden conserva estado Planificada, dos líneas y cantidadTotal30; la proyección conserva el mismo ordenId, eventoId y total 30. Estos resultados se obtienen consultando procesos reiniciados y las mismas bases. Si el proceso todavía no ha completado su arranque o el gateway no ha restituido un destino, termina primero las comprobaciones de readiness y repite las lecturas. No vuelvas a crear la orden ni a planificarla para corregir una comprobación de persistencia.
 
