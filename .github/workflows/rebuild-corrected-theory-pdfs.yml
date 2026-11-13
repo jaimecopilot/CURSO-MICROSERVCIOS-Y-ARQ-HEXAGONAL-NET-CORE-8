@@ -127,6 +127,12 @@ jobs:
               assert not doc.needs_pass, file
               assert 20 <= len(doc) <= 180, f"{file}: numero de paginas anomalo {len(doc)}"
               full_text = " ".join(page.get_text("text") for page in doc)
+              if "/PRACTICAS/M04_PRACTICAS.pdf" in file or "/PRACTICAS/M05_PRACTICAS.pdf" in file:
+                  near_empty = [
+                      i + 1 for i, page in enumerate(doc)
+                      if len(page.get_text("text").strip()) < 20
+                  ]
+                  assert not near_empty, f"{file}: paginas vacias o casi vacias {near_empty}"
               for heading in headings:
                   assert heading in full_text, f"{file}: falta {heading}"
               for page_index in sorted({0, len(doc)//2, len(doc)-1}):
