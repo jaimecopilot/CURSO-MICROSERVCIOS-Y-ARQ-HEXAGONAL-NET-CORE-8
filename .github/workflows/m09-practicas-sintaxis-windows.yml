@@ -90,7 +90,27 @@ jobs:
               throw "No se localizo el elemento $identificador"
             }
           }
-          if ((Get-Content -Raw "$root/.gitignore") -notmatch '(?m)^\.env$') {
+          if ((Get-Content -Raw "$root/.gitignore") -notmatch '(?m)^/?\.env\r?) {
+            throw "El .env de laboratorio no esta ignorado por Git"
+          }
+          if ($doc -notmatch '-ConfirmarBorradoDatos') {
+            throw "No se explica la confirmacion destructiva"
+          }
+          Write-Host 'PASS: los seis servicios, seis acciones, codigo M08, volumenes y secretos son coherentes'
+
+      - name: Validar sintaxis del script de despliegue
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $code = Get-Content -Raw 'M09_DESPLIEGUE_DOCKER/PROYECTO/EJECUTAR_DOCKER_WINDOWS.ps1'
+          $tokens = $null
+          $errores = $null
+          [void][System.Management.Automation.Language.Parser]::ParseInput($code,[ref]$tokens,[ref]$errores)
+          if (@($errores).Count -ne 0) {
+            throw ((@($errores) | ForEach-Object { $_.Message }) -join '; ')
+          }
+          Write-Host 'PASS: script original de M09 sin errores de sintaxis'
+) {
             throw "El .env de laboratorio no esta ignorado por Git"
           }
           if ($doc -notmatch '-ConfirmarBorradoDatos') {
