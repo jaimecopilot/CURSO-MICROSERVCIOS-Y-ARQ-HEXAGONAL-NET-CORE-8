@@ -448,11 +448,15 @@ El contenido del punto 3.1 se aplica al servicio de órdenes que ya funciona en 
 
 ---
 
-## Desarrollo teórico
+## Puertos como contratos, adaptadores como decisiones externas
 
-### Bloque 1 — El puerto como frontera del núcleo
 
-Un puerto es una interfaz que define cómo el núcleo de la aplicación se comunica con el exterior. El puerto no es una clase concreta: es un contrato que especifica las operaciones que el núcleo ofrece o requiere. Los puertos se definen en las capas interiores, donde reside el núcleo, y se implementan en las capas exteriores, donde residen los adaptadores. Un puerto puede ser de entrada o de salida. Los puertos de entrada describen lo que el núcleo ofrece al exterior. Los puertos de salida describen lo que el núcleo necesita del exterior. La separación entre puertos de entrada y de salida es una de las propiedades que distingue la arquitectura hexagonal de las capas apiladas.
+
+Para comprender una operación hexagonal seguiremos qué necesita la aplicación, qué ofrece hacia fuera y dónde quedan las decisiones sobre HTTP o SQL. Esa dirección es más reveladora que el número de interfaces presentes en la solución.
+
+### El puerto como frontera del núcleo
+
+Una arquitectura hexagonal necesita expresar qué operaciones ofrece su núcleo y qué capacidades necesita obtener de tecnologías externas. Los puertos describen esos contratos en términos comprensibles para la aplicación, antes de decidir quién los implementará. Por ejemplo, un caso de uso de AceriaApp puede necesitar guardar una orden y recuperarla por identificador, pero ese contrato no debería exigir EF Core ni una conexión SQL. Al situar la abstracción cerca de la lógica que la necesita, podemos comprender y probar el comportamiento sin arrancar toda la infraestructura. La dificultad no está en escribir una interfaz C#, sino en escoger sus métodos y tipos para que reflejen necesidades estables del dominio. Si el puerto publica tablas, transacciones o estructuras específicas de un proveedor, la tecnología ya habrá invadido la frontera que pretendíamos preservar.
 
 ```text
 Puertos del núcleo:
@@ -467,38 +471,30 @@ Puertos de salida (lo que el núcleo necesita):
 - IPublicadorEventos
 ```
 
-- **Línea 1:** `Puertos de entrada (lo que el núcleo ofrece):` → título de los puertos de entrada.
-- **Línea 2:** `- IOrdenServicio` → puerto de entrada del servicio de órdenes.
-- **Línea 3:** `- IInventarioServicio` → puerto de entrada del servicio de inventario.
-- **Línea 4:** `Puertos de salida (lo que el núcleo necesita):` → título de los puertos de salida.
-- **Línea 5:** `- IOrdenRepositorio` → puerto de salida del repositorio de órdenes.
-- **Línea 6:** `- IInventarioRepositorio` → puerto de salida del repositorio de inventario.
-- **Línea 7:** `- IPublicadorEventos` → puerto de salida del publicador de eventos.
+
+En el esquema los puertos de entrada describen acciones que un actor puede pedir al núcleo y los de salida describen dependencias que este necesita utilizar. La clasificación es útil para discutir responsabilidades, pero solo se materializa cuando las interfaces tienen operaciones significativas y el código respeta su dirección de dependencia.
+
 
 El puerto es una frontera del núcleo. Su definición establece qué operaciones se ofrecen y qué operaciones se requieren. La frontera no depende del protocolo ni de la tecnología: un mismo puerto de entrada puede ser invocado desde HTTP, desde gRPC o desde una cola de mensajes. Un mismo puerto de salida puede ser implementado por un repositorio de base de datos, por un cliente HTTP o por un repositorio en memoria. La independencia entre puerto y tecnología es la que permite que el núcleo sea estable a lo largo del tiempo.
 
 La definición de puertos se realiza en las capas interiores. Los puertos de entrada se definen en la capa de aplicación, que es la que expone los casos de uso. Los puertos de salida también se definen en la capa de aplicación, porque son las operaciones que los casos de uso necesitan del exterior. El dominio no define puertos: el dominio solo contiene entidades, value objects y reglas de negocio. La separación entre dominio y puertos es la que garantiza que el dominio sea independiente de cualquier contrato de comunicación.
 
----
 
+Un puerto expresa una capacidad que el núcleo necesita ofrecer o consumir. Su principal propiedad es la estabilidad semántica: los nombres y tipos describen el lenguaje de operaciones de órdenes, no la tecnología del consumidor. En nuestro ejemplo `IOrdenRepositorio` es un puerto de salida porque los casos de uso necesitan recuperar y guardar órdenes sin decidir el proveedor de almacenamiento.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Definir el puerto desde la aplicación permite preguntar qué operaciones usa realmente el caso de uso: `ListarAsync`, `ObtenerAsync`, `AgregarAsync`, `GuardarAsync`. No añadimos consultas SQL arbitrarias ni `IQueryable`, porque eso trasladaría el modelo de consulta del adaptador a la aplicación. Los tipos de entrada y salida son `OrdenHexagonal`, `Guid` y `CancellationToken`, todos utilizables sin EF Core.
 
-**La decisión arquitectónica.** Un puerto expresa una capacidad que el núcleo necesita ofrecer o consumir. Su principal propiedad es la estabilidad semántica: los nombres y tipos describen el lenguaje de operaciones de órdenes, no la tecnología del consumidor. En nuestro ejemplo `IOrdenRepositorio` es un puerto de salida porque los casos de uso necesitan recuperar y guardar órdenes sin decidir el proveedor de almacenamiento.
+Un puerto no es necesariamente una interfaz de C#: puede representarse con mensajes, contratos o funciones. En este curso utilizamos interfaces porque .NET y su contenedor de DI facilitan comprobar implementaciones. El puerto tampoco garantiza automáticamente un buen dominio; podría ser técnicamente estable y, sin embargo, exponer una operación que no tiene sentido para una orden.
 
-**Ejemplo concreto en AceriaApp.** Definir el puerto desde la aplicación permite preguntar qué operaciones usa realmente el caso de uso: `ListarAsync`, `ObtenerAsync`, `AgregarAsync`, `GuardarAsync`. No añadimos consultas SQL arbitrarias ni `IQueryable`, porque eso trasladaría el modelo de consulta del adaptador a la aplicación. Los tipos de entrada y salida son `OrdenHexagonal`, `Guid` y `CancellationToken`, todos utilizables sin EF Core.
-
-**Riesgo, alternativa y límite.** Un puerto no es necesariamente una interfaz de C#: puede representarse con mensajes, contratos o funciones. En este curso utilizamos interfaces porque .NET y su contenedor de DI facilitan comprobar implementaciones. El puerto tampoco garantiza automáticamente un buen dominio; podría ser técnicamente estable y, sin embargo, exponer una operación que no tiene sentido para una orden.
-
-**Comprobación técnica y aprendizaje.** Identifica las operaciones que el caso de uso invoca. Si suprimes un método no utilizado y el caso de uso no cambia, probablemente el contrato tenía más superficie de la necesaria. Si debes introducir `DbSet<OrdenHexagonal>` en la interfaz, la abstracción dejó de ser tecnológica-neutral.
+Identifica las operaciones que el caso de uso invoca. Si suprimes un método no utilizado y el caso de uso no cambia, probablemente el contrato tenía más superficie de la necesaria. Si debes introducir `DbSet<OrdenHexagonal>` en la interfaz, la abstracción dejó de ser tecnológica-neutral.
 
 ![Diagrama explicativo del punto 3.2, bloque 1](IMAGENES/3-2-puertos.svg)
 
-*Interpretación del gráfico:* identifica las referencias de código que admite el diseño y distingue esas relaciones de las llamadas en ejecución. La figura está disponible como SVG vectorial y como PNG para consulta externa.
+identifica las referencias de código que admite el diseño y distingue esas relaciones de las llamadas en ejecución. La figura está disponible como SVG vectorial y como PNG para consulta externa.
 
-### Bloque 2 — El adaptador como implementación del puerto
+### El adaptador como implementación del puerto
 
-Un adaptador es una clase que implementa un puerto y conecta el núcleo con una tecnología concreta. Los adaptadores se sitúan en las capas exteriores y dependen de las interfaces definidas en el núcleo. Un adaptador de entrada recibe peticiones del exterior y las traduce en llamadas a los puertos de entrada. Un adaptador de salida implementa un puerto de salida y traduce las llamadas del núcleo en operaciones sobre la tecnología concreta. Los adaptadores son intercambiables: se puede sustituir un adaptador de base de datos por un adaptador en memoria sin modificar el núcleo.
+El adaptador traduce las operaciones de un puerto al lenguaje de una tecnología o de un protocolo concreto. `OrdenRepositorioSqlServer`, por ejemplo, puede implementar `IOrdenRepositorio` utilizando `HexagonalDbContext`, mientras el caso de uso permanece ajeno a EF Core. La implementación decide cómo consultar, guardar y confirmar datos, y debe respetar las garantías que anuncia el contrato. El mismo principio se aplica a una entrada HTTP: un handler transforma una petición en una llamada a aplicación y convierte su resultado en una respuesta. En AceriaApp distinguiremos ambas direcciones, porque aunque los adaptadores compartan el objetivo de conectar sistemas, sus responsabilidades y sus pruebas no son idénticas. Una interfaz solo aporta desacoplamiento si el consumidor puede utilizarla sin conocer la implementación.
 
 ```csharp
 // Puerto de salida definido en la aplicación
@@ -525,44 +521,24 @@ public class OrdenRepositorioSqlServer : IOrdenRepositorio
 }
 ```
 
-- **Línea 1:** `// Puerto de salida definido en la aplicación` → comentario de ubicación.
-- **Línea 2:** `public interface IOrdenRepositorio` → puerto de salida.
-- **Línea 3:** `{` → abre el cuerpo.
-- **Línea 4:** `Task AddAsync(Orden orden);` → método del puerto.
-- **Línea 5:** `}` → cierra el cuerpo.
-- **Línea 6:** `// Adaptador de salida en la infraestructura` → comentario de ubicación.
-- **Línea 7:** `public class OrdenRepositorioSqlServer : IOrdenRepositorio` → adaptador concreto.
-- **Línea 8:** `{` → abre el cuerpo.
-- **Línea 9:** `private readonly AceriaDbContext _db;` → dependencia del contexto.
-- **Línea 10:** `public OrdenRepositorioSqlServer(AceriaDbContext db)` → constructor.
-- **Línea 11:** `{` → abre el cuerpo del constructor.
-- **Línea 12:** `_db = db;` → asigna el contexto.
-- **Línea 13:** `}` → cierra el constructor.
-- **Línea 14:** `public async Task AddAsync(Orden orden)` → implementación del método.
-- **Línea 15:** `{` → abre el cuerpo del método.
-- **Línea 16:** `_db.Ordenes.Add(orden);` → añade al contexto.
-- **Línea 17:** `await _db.SaveChangesAsync();` → persiste los cambios.
-- **Línea 18:** `}` → cierra el método.
-- **Línea 19:** `}` → cierra la clase.
+
+La interfaz del repositorio y su implementación EF Core muestran dos piezas distintas. El caso de uso se compila contra la primera, mientras el adaptador contiene las operaciones concretas de SQL Server. Para comprobar el límite hay que revisar sus referencias y no limitarse a reconocer el uso de `interface` y `class`.
+
 
 El adaptador es la única pieza del sistema que conoce la tecnología concreta. El adaptador de base de datos conoce EF Core. El adaptador HTTP conoce HttpClient. El adaptador de mensajería conoce el broker. El núcleo no conoce ninguna de estas tecnologías. La separación permite que el núcleo se pruebe sin infraestructura y que la infraestructura se sustituya sin modificar el núcleo. La separación también permite que un mismo puerto tenga varios adaptadores según el contexto de ejecución.
 
----
 
+Un adaptador implementa o consume un puerto usando un protocolo o tecnología. `OrdenRepositorioSqlServer` es el adaptador de salida real: aplica el contrato y conoce `HexagonalDbContext`, que a su vez conoce EF Core. La implementación no cambia la idea de «obtener una orden», pero sí define cómo traducir esa petición a una consulta y cómo confirmar los cambios con `SaveChangesAsync`.
 
-#### Ampliación didáctica aplicada a AceriaApp
+También existe un adaptador de entrada: `HexagonalOrdenesEndpoints`. Este recibe rutas HTTP, interpreta DTOs y convierte el resultado de los casos de uso en `Results.Ok`, `Results.NotFound`, `Results.CreatedAtRoute` y `Results.Problem`. La capa de aplicación no contiene rutas ni códigos de respuesta; por eso el mismo caso de uso podría servir a un consumidor de consola o a un proceso de integración.
 
-**La decisión arquitectónica.** Un adaptador implementa o consume un puerto usando un protocolo o tecnología. `OrdenRepositorioSqlServer` es el adaptador de salida real: aplica el contrato y conoce `HexagonalDbContext`, que a su vez conoce EF Core. La implementación no cambia la idea de «obtener una orden», pero sí define cómo traducir esa petición a una consulta y cómo confirmar los cambios con `SaveChangesAsync`.
+No conviene convertir el adaptador en dueño de las reglas de negocio. Si el repositorio SQL decide que una orden finalizada puede editarse, tendríamos una segunda política escondida en infraestructura; si el endpoint HTTP repite reglas del dominio en cada ruta, las futuras interfaces divergirían. Adaptar formato y protocolo no es equivalente a gobernar el ciclo de vida de la entidad.
 
-**Ejemplo concreto en AceriaApp.** También existe un adaptador de entrada: `HexagonalOrdenesEndpoints`. Este recibe rutas HTTP, interpreta DTOs y convierte el resultado de los casos de uso en `Results.Ok`, `Results.NotFound`, `Results.CreatedAtRoute` y `Results.Problem`. La capa de aplicación no contiene rutas ni códigos de respuesta; por eso el mismo caso de uso podría servir a un consumidor de consola o a un proceso de integración.
+El criterio de aceptación consiste en verificar que `OrdenRepositorioSqlServer : IOrdenRepositorio` y que los endpoints usan `OrdenesCasoUso`. El adaptador HTTP no debe inyectar `HexagonalDbContext` para realizar búsquedas; eso haría saltar el puerto.
 
-**Riesgo, alternativa y límite.** No conviene convertir el adaptador en dueño de las reglas de negocio. Si el repositorio SQL decide que una orden finalizada puede editarse, tendríamos una segunda política escondida en infraestructura; si el endpoint HTTP repite reglas del dominio en cada ruta, las futuras interfaces divergirían. Adaptar formato y protocolo no es equivalente a gobernar el ciclo de vida de la entidad.
+### Puertos de entrada
 
-**Comprobación técnica y aprendizaje.** El criterio de aceptación consiste en verificar que `OrdenRepositorioSqlServer : IOrdenRepositorio` y que los endpoints usan `OrdenesCasoUso`. El adaptador HTTP no debe inyectar `HexagonalDbContext` para realizar búsquedas; eso haría saltar el puerto.
-
-### Bloque 3 — Puertos de entrada
-
-Un puerto de entrada define una operación que el núcleo ofrece al exterior. Los puertos de entrada se definen como interfaces en la capa de aplicación. Cada método de la interfaz corresponde a un caso de uso. El nombre del método describe la operación en términos del negocio. Los parámetros de entrada son los datos necesarios para ejecutar la operación. El valor de retorno es el resultado de la operación. Los adaptadores de entrada implementan los puertos de entrada y los invocan desde el protocolo correspondiente.
+Los puertos de entrada representan acciones que la aplicación ofrece al exterior. Crear una orden, obtenerla o finalizar su proceso son capacidades del negocio que podrían invocarse desde HTTP, una consola o una tarea programada. Un puerto de entrada debe describir esas operaciones con tipos y nombres vinculados al caso de uso, no con `HttpContext`, códigos de estado ni objetos de controladores. Así, la decisión sobre si una orden puede finalizar permanece en el núcleo y no se duplica en cada adaptador. En AceriaApp la separación permitirá comparar una ruta Minimal API con una llamada directa al caso de uso desde una prueba. Ambas deben observar las mismas invariantes aunque sus mecanismos de entrada sean distintos.
 
 ```csharp
 public interface IOrdenServicio
@@ -573,31 +549,24 @@ public interface IOrdenServicio
 }
 ```
 
-- **Línea 1:** `public interface IOrdenServicio` → puerto de entrada.
-- **Línea 2:** `{` → abre el cuerpo.
-- **Línea 3:** `Task<Guid> CrearOrdenAsync(string cliente, string material, int cantidad);` → caso de uso de creación.
-- **Línea 4:** `Task<OrdenDto?> ObtenerOrdenAsync(Guid id);` → caso de uso de consulta.
-- **Línea 5:** `Task CancelarOrdenAsync(Guid id);` → caso de uso de cancelación.
-- **Línea 6:** `}` → cierra el cuerpo.
+
+El puerto de entrada define las operaciones de órdenes sin parámetros HTTP. El adaptador que lo invoque decidirá cómo obtener los datos y presentar la respuesta; el caso de uso conservará la misma semántica de creación, consulta o finalización.
+
 
 Los puertos de entrada se caracterizan por tres propiedades. La primera es que describen operaciones en términos del negocio. La segunda es que no dependen del protocolo de comunicación. La tercera es que agrupan los casos de uso de una misma capacidad de negocio. Las tres propiedades permiten que el núcleo se exponga en distintos protocolos sin modificar su código. La definición de puertos de entrada es el primer paso para desacoplar el núcleo del exterior.
 
----
 
+Los puertos de entrada permiten invocar capacidades del sistema sin obligarlo a conocer el canal. En una versión más elaborada podríamos declarar `ICrearOrden`, `IConsultarOrdenes` o un mediador de comandos. La decisión debe responder a necesidades de reutilización y prueba; no es correcto afirmar que todo caso de uso requiera obligatoriamente una interfaz adicional.
 
-#### Ampliación didáctica aplicada a AceriaApp
+En M03 mostramos `OrdenesCasoUso` como servicio de aplicación invocado por el adaptador HTTP. Esta clase es una superficie de entrada suficientemente explícita para el alcance del taller: expone `CrearAsync`, `ListarAsync`, `ObtenerAsync` y `FinalizarAsync`. La tecnología HTTP solo aparece en la capa que traduce las peticiones, no en las firmas de esos métodos.
 
-**La decisión arquitectónica.** Los puertos de entrada permiten invocar capacidades del sistema sin obligarlo a conocer el canal. En una versión más elaborada podríamos declarar `ICrearOrden`, `IConsultarOrdenes` o un mediador de comandos. La decisión debe responder a necesidades de reutilización y prueba; no es correcto afirmar que todo caso de uso requiera obligatoriamente una interfaz adicional.
+Un error habitual es trasladar `HttpContext`, `IResult` o el objeto de `HttpRequest` a los parámetros del caso de uso. Esto simplifica temporalmente el mapeo en el endpoint, pero bloquea cualquier cliente no HTTP y vuelve frágiles los tests de aplicación. Un contrato de entrada recibe valores de negocio y ofrece resultados interpretables por distintos adaptadores.
 
-**Ejemplo concreto en AceriaApp.** En M03 mostramos `OrdenesCasoUso` como servicio de aplicación invocado por el adaptador HTTP. Esta clase es una superficie de entrada suficientemente explícita para el alcance del taller: expone `CrearAsync`, `ListarAsync`, `ObtenerAsync` y `FinalizarAsync`. La tecnología HTTP solo aparece en la capa que traduce las peticiones, no en las firmas de esos métodos.
+Diseña una segunda entrada hipotética desde un proceso de importación CSV: ¿qué datos usaría para llamar a `CrearAsync`? Debería utilizar cliente, material y cantidad, no construir artificialmente una petición HTTP. Esta prueba mental verifica la calidad del límite.
 
-**Riesgo, alternativa y límite.** Un error habitual es trasladar `HttpContext`, `IResult` o el objeto de `HttpRequest` a los parámetros del caso de uso. Esto simplifica temporalmente el mapeo en el endpoint, pero bloquea cualquier cliente no HTTP y vuelve frágiles los tests de aplicación. Un contrato de entrada recibe valores de negocio y ofrece resultados interpretables por distintos adaptadores.
+### Puertos de salida
 
-**Comprobación técnica y aprendizaje.** Diseña una segunda entrada hipotética desde un proceso de importación CSV: ¿qué datos usaría para llamar a `CrearAsync`? Debería utilizar cliente, material y cantidad, no construir artificialmente una petición HTTP. Esta prueba mental verifica la calidad del límite.
-
-### Bloque 4 — Puertos de salida
-
-Un puerto de salida define una operación que el núcleo necesita del exterior. Los puertos de salida se definen como interfaces en la capa de aplicación. Cada método de la interfaz corresponde a una operación sobre el exterior. El nombre del método describe la operación en términos técnicos. Los parámetros de entrada son los datos que el núcleo envía al exterior. El valor de retorno es la respuesta del exterior. Los adaptadores de salida implementan los puertos de salida y los invocan desde la tecnología correspondiente.
+Los puertos de salida expresan dependencias que el núcleo necesita para realizar un trabajo: obtener una orden persistida, confirmar cambios o consultar información ofrecida por otro sistema. La aplicación decide qué operación requiere, pero no cómo se ejecuta sobre SQL Server o un servicio HTTP. Eso no significa que todas las llamadas al exterior necesiten una interfaz independiente; conviene agrupar operaciones que pertenecen a la misma responsabilidad y evitar contratos tan genéricos que filtren detalles tecnológicos. `IOrdenRepositorio` es útil si declara acciones propias del caso de uso de órdenes; una interfaz que solo replica todos los métodos de `DbContext` no habrá ganado autonomía. El puerto debe ser lo bastante pequeño para probarlo y lo bastante expresivo para describir una capacidad completa.
 
 ```csharp
 public interface IOrdenRepositorio
@@ -614,40 +583,28 @@ public interface IPublicadorEventos
 }
 ```
 
-- **Línea 1:** `public interface IOrdenRepositorio` → puerto de salida del repositorio.
-- **Línea 2:** `{` → abre el cuerpo.
-- **Línea 3:** `Task AddAsync(Orden orden);` → añadir una orden.
-- **Línea 4:** `Task<Orden?> GetByIdAsync(Guid id);` → obtener una orden por identificador.
-- **Línea 5:** `Task UpdateAsync(Orden orden);` → actualizar una orden.
-- **Línea 6:** `Task DeleteAsync(Guid id);` → eliminar una orden.
-- **Línea 7:** `}` → cierra el cuerpo.
-- **Línea 8:** `public interface IPublicadorEventos` → puerto de salida del publicador.
-- **Línea 9:** `{` → abre el cuerpo.
-- **Línea 10:** `Task PublicarAsync(string tipo, object contenido);` → publicar un evento.
-- **Línea 11:** `}` → cierra el cuerpo.
+
+El contrato de salida describe qué necesita la aplicación para recuperar y guardar órdenes. Si incluyera tipos de EF Core o una conexión SQL, el cambio de proveedor afectaría al núcleo y debilitaría la frontera que la interfaz pretende proteger.
+
 
 Los puertos de salida se caracterizan por tres propiedades. La primera es que describen operaciones técnicas que el núcleo necesita. La segunda es que no dependen de la tecnología concreta. La tercera es que agrupan las operaciones sobre un mismo recurso externo. Las tres propiedades permiten que el núcleo se pruebe con adaptadores en memoria y que la infraestructura se sustituya sin modificar el núcleo.
 
----
 
+Los puertos de salida corresponden a efectos que el núcleo solicita pero que no debe ejecutar directamente. Persistencia, mensajería, correo, reloj del sistema y archivos pueden necesitar puertos cuando sus implementaciones son variables y significativas. En el caso de órdenes, necesitamos almacenar datos, por eso presentamos `IOrdenRepositorio` en la aplicación y un adaptador EF Core externo.
 
-#### Ampliación didáctica aplicada a AceriaApp
+La interfaz debe usar términos del negocio y ser lo bastante pequeña para expresar las necesidades del proceso. `GuardarAsync` significa confirmar el estado de una orden existente, no exponer `SaveChangesAsync` de EF Core como un detalle de transacción arbitrario. El adaptador decidirá si utiliza tracking, `Update` o un patrón de unidad de trabajo, siempre manteniendo el resultado comprometido.
 
-**La decisión arquitectónica.** Los puertos de salida corresponden a efectos que el núcleo solicita pero que no debe ejecutar directamente. Persistencia, mensajería, correo, reloj del sistema y archivos pueden necesitar puertos cuando sus implementaciones son variables y significativas. En el caso de órdenes, necesitamos almacenar datos, por eso presentamos `IOrdenRepositorio` en la aplicación y un adaptador EF Core externo.
+No todas las dependencias necesitan puerto. Si una función pura de cálculo opera exclusivamente sobre tipos de dominio, introducir una interfaz puede añadir ceremonia sin beneficio. La decisión sobre un puerto debe justificarse por el efecto externo, la sustituibilidad y la facilidad de prueba, no por la regla mecánica «una interfaz por clase».
 
-**Ejemplo concreto en AceriaApp.** La interfaz debe usar términos del negocio y ser lo bastante pequeña para expresar las necesidades del proceso. `GuardarAsync` significa confirmar el estado de una orden existente, no exponer `SaveChangesAsync` de EF Core como un detalle de transacción arbitrario. El adaptador decidirá si utiliza tracking, `Update` o un patrón de unidad de trabajo, siempre manteniendo el resultado comprometido.
-
-**Riesgo, alternativa y límite.** No todas las dependencias necesitan puerto. Si una función pura de cálculo opera exclusivamente sobre tipos de dominio, introducir una interfaz puede añadir ceremonia sin beneficio. La decisión sobre un puerto debe justificarse por el efecto externo, la sustituibilidad y la facilidad de prueba, no por la regla mecánica «una interfaz por clase».
-
-**Comprobación técnica y aprendizaje.** Para comprobar el diseño, sustituye conceptualmente `OrdenRepositorioSqlServer` por un repositorio en memoria que conserva datos por GUID. Si el servicio de aplicación ni siquiera necesita recompilar porque la interfaz permanece idéntica, el límite ha hecho su trabajo.
+Para comprobar el diseño, sustituye conceptualmente `OrdenRepositorioSqlServer` por un repositorio en memoria que conserva datos por GUID. Si el servicio de aplicación ni siquiera necesita recompilar porque la interfaz permanece idéntica, el límite ha hecho su trabajo.
 
 ![Diagrama explicativo del punto 3.2, bloque 4](IMAGENES/3-2-contratos.svg)
 
-*Interpretación del gráfico:* identifica las referencias de código que admite el diseño y distingue esas relaciones de las llamadas en ejecución. La figura está disponible como SVG vectorial y como PNG para consulta externa.
+identifica las referencias de código que admite el diseño y distingue esas relaciones de las llamadas en ejecución. La figura está disponible como SVG vectorial y como PNG para consulta externa.
 
-### Bloque 5 — Adaptadores de entrada
+### Adaptadores de entrada
 
-Un adaptador de entrada recibe peticiones del exterior y las traduce en llamadas a los puertos de entrada. Los adaptadores de entrada se sitúan en la capa de presentación. Cada adaptador de entrada corresponde a un protocolo de comunicación. El adaptador HTTP recibe peticiones HTTP y las traduce en llamadas a los métodos del puerto de entrada. El adaptador de mensajería recibe mensajes y los traduce en llamadas a los métodos del puerto de entrada. El adaptador de consola recibe argumentos y los traduce en llamadas a los métodos del puerto de entrada.
+Un adaptador de entrada conoce el protocolo por el que llega la operación y prepara los datos para el núcleo. En ASP.NET Core esto implica resolver una ruta, interpretar el identificador o JSON de la solicitud, invocar el caso de uso y construir la respuesta HTTP adecuada. Ese trabajo técnico es importante, pero no debería convertir el handler en propietario de reglas de fabricación o persistencia. Si mañana añadimos una consola administrativa, su adaptador podría reutilizar el mismo caso de uso sin copiar las validaciones de estado. En AceriaApp el grupo `HexagonalOrdenesEndpoints` mostrará esta separación: para responder a una petición depende de una capacidad de aplicación, no de `HexagonalDbContext`. La prueba HTTP comprobará la traducción y la prueba de dominio protegerá las reglas.
 
 ```csharp
 app.MapPost("/api/v1/ordenes", async (
@@ -659,36 +616,28 @@ app.MapPost("/api/v1/ordenes", async (
 });
 ```
 
-- **Línea 1:** `app.MapPost("/api/v1/ordenes", async (` → declara el endpoint HTTP.
-- **Línea 2:** `CrearOrdenRequest request,` → recibe la petición.
-- **Línea 3:** `IOrdenServicio servicio) =>` → inyecta el puerto de entrada.
-- **Línea 4:** `{` → abre el cuerpo del lambda.
-- **Línea 5:** `var id = await servicio.CrearOrdenAsync(request.Cliente, request.Material, request.Cantidad);` → invoca el caso de uso.
-- **Línea 6:** `return Results.Created($"/api/v1/ordenes/{id}", new { id });` → devuelve 201 con la ubicación.
-- **Línea 7:** `});` → cierra el lambda.
+
+La ruta de creación recibe una solicitud HTTP y llama a la aplicación. Su responsabilidad es transformar datos y resultados, no duplicar el estado interno del agregado. Una prueba de integración debe comprobar que la operación conserva el comportamiento que garantiza el dominio.
+
 
 Los adaptadores de entrada se caracterizan por tres propiedades. La primera es que traducen entre el protocolo y los puertos de entrada. La segunda es que no contienen reglas de negocio. La tercera es que pueden coexistir varios adaptadores para el mismo puerto. Las tres propiedades permiten que el mismo caso de uso se exponga en HTTP, gRPC y mensajería sin modificar el núcleo.
 
----
 
+El adaptador de entrada ASP.NET Core debe ser estrecho: recibe una petición, identifica una operación y responde. En M03 `MapGroup("/api/v1/hexagonal/ordenes")` agrupa los endpoints de órdenes; `MapGet`, `MapPost` y la ruta `/finalizar` no implementan consultas SQL. Se apoyan en `OrdenesCasoUso`, inyectado automáticamente por DI.
 
-#### Ampliación didáctica aplicada a AceriaApp
+En creación, el request público `CrearOrdenHexagonalRequest` representa el JSON que entiende el consumidor. El adaptador comprueba que no faltan datos y traduce el error de contrato a 400; un exceso de capacidad se traduce a 422. Cuando la aplicación devuelve una nueva entidad, `CreatedAtRoute` genera `Location` para recuperar esa misma orden. La cabecera forma parte del contrato REST y debe mantenerse al migrar la implementación.
 
-**La decisión arquitectónica.** El adaptador de entrada ASP.NET Core debe ser estrecho: recibe una petición, identifica una operación y responde. En M03 `MapGroup("/api/v1/hexagonal/ordenes")` agrupa los endpoints de órdenes; `MapGet`, `MapPost` y la ruta `/finalizar` no implementan consultas SQL. Se apoyan en `OrdenesCasoUso`, inyectado automáticamente por DI.
+En el límite HTTP puede haber decisiones sobre autenticación, negociación de contenido, versión de ruta y serialización. Ninguna de ellas debe obligar a la entidad a conocer el framework. Si se desea exponer un mismo caso de uso por gRPC, crearemos otro adaptador que comprenda el contrato gRPC pero preserve la lógica de aplicación.
 
-**Ejemplo concreto en AceriaApp.** En creación, el request público `CrearOrdenHexagonalRequest` representa el JSON que entiende el consumidor. El adaptador comprueba que no faltan datos y traduce el error de contrato a 400; un exceso de capacidad se traduce a 422. Cuando la aplicación devuelve una nueva entidad, `CreatedAtRoute` genera `Location` para recuperar esa misma orden. La cabecera forma parte del contrato REST y debe mantenerse al migrar la implementación.
-
-**Riesgo, alternativa y límite.** En el límite HTTP puede haber decisiones sobre autenticación, negociación de contenido, versión de ruta y serialización. Ninguna de ellas debe obligar a la entidad a conocer el framework. Si se desea exponer un mismo caso de uso por gRPC, crearemos otro adaptador que comprenda el contrato gRPC pero preserve la lógica de aplicación.
-
-**Comprobación técnica y aprendizaje.** La prueba específica debe comprobar 201 y cabecera `Location`, después GET 200. Una prueba que solo afirma que el endpoint aparece en Swagger demuestra documentación, no que la dependencia con la aplicación esté conectada.
+La prueba específica debe comprobar 201 y cabecera `Location`, después GET 200. Una prueba que solo afirma que el endpoint aparece en Swagger demuestra documentación, no que la dependencia con la aplicación esté conectada.
 
 ![Diagrama explicativo del punto 3.2, bloque 5](IMAGENES/3-2-entrada.svg)
 
-*Interpretación del gráfico:* identifica las referencias de código que admite el diseño y distingue esas relaciones de las llamadas en ejecución. La figura está disponible como SVG vectorial y como PNG para consulta externa.
+identifica las referencias de código que admite el diseño y distingue esas relaciones de las llamadas en ejecución. La figura está disponible como SVG vectorial y como PNG para consulta externa.
 
-### Bloque 6 — Adaptadores de salida
+### Adaptadores de salida
 
-Un adaptador de salida implementa un puerto de salida y traduce las llamadas del núcleo en operaciones sobre la tecnología concreta. Los adaptadores de salida se sitúan en la capa de infraestructura. Cada adaptador de salida corresponde a una tecnología concreta. El adaptador de base de datos traduce las llamadas del repositorio en consultas SQL. El adaptador HTTP traduce las llamadas del cliente en peticiones HTTP. El adaptador de mensajería traduce las llamadas del publicador en mensajes al broker. Los adaptadores de salida son intercambiables.
+Un adaptador de salida conoce una tecnología y utiliza sus APIs para cumplir una necesidad declarada por el núcleo. El repositorio SQL Server es el ejemplo que se construirá realmente en M03: mapea entidades del dominio a EF Core y ejecuta operaciones de persistencia. Un publicador de eventos o un cliente HTTP podrían ser otros adaptadores en etapas posteriores, pero no debemos afirmar que existen simplemente porque aparecen como ejemplo en la teoría. La ventaja del puerto aparece cuando el caso de uso conserva su lógica mientras sustituimos la implementación real por un doble en una prueba. El coste de esa flexibilidad es mantener bien definidos los contratos y comprobar que ambas implementaciones cumplen lo que prometen. El adaptador no debe modificar silenciosamente las reglas del agregado.
 
 ```csharp
 public class PublicadorEventosRabbitMq : IPublicadorEventos
@@ -714,71 +663,48 @@ public class PublicadorEventosRabbitMq : IPublicadorEventos
 }
 ```
 
-- **Línea 1:** `public class PublicadorEventosRabbitMq : IPublicadorEventos` → adaptador concreto.
-- **Línea 2:** `{` → abre el cuerpo.
-- **Línea 3:** `private readonly IConnection _connection;` → dependencia de la conexión.
-- **Línea 4:** `public PublicadorEventosRabbitMq(IConnection connection)` → constructor.
-- **Línea 5:** `{` → abre el cuerpo del constructor.
-- **Línea 6:** `_connection = connection;` → asigna la conexión.
-- **Línea 7:** `}` → cierra el constructor.
-- **Línea 8:** `public async Task PublicarAsync(string tipo, object contenido)` → implementación del método.
-- **Línea 9:** `{` → abre el cuerpo del método.
-- **Línea 10:** `using var canal = _connection.CreateModel();` → crea un canal.
-- **Línea 11:** `var cuerpo = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(contenido));` → serializa el contenido.
-- **Línea 12:** `canal.BasicPublish(` → publica el mensaje.
-- **Línea 13:** `exchange: "acería.eventos",` → nombre del exchange.
-- **Línea 14:** `routingKey: tipo,` → clave de enrutamiento.
-- **Línea 15:** `basicProperties: null,` → propiedades por defecto.
-- **Línea 16:** `body: cuerpo);` → cuerpo del mensaje.
-- **Línea 17:** `await Task.CompletedTask;` → completa la tarea.
-- **Línea 18:** `}` → cierra el método.
-- **Línea 19:** `}` → cierra la clase.
+
+El publicador RabbitMQ mostrado es una posible implementación de un puerto de salida, no una funcionalidad que M03 ya haya desplegado. Su valor conceptual es mostrar que la publicación de un hecho puede definirse sin que el caso de uso conozca el SDK del broker.
+
 
 Los adaptadores de salida se caracterizan por tres propiedades. La primera es que implementan un puerto de salida. La segunda es que conocen la tecnología concreta. La tercera es que pueden sustituirse sin modificar el núcleo. Las tres propiedades permiten que la infraestructura evolucione con independencia del núcleo y que el núcleo se pruebe con adaptadores en memoria.
 
----
 
+El adaptador de salida proporciona una realización concreta del puerto. EF Core convierte los objetos del dominio en operaciones de almacenamiento; los métodos del repositorio traducen los requisitos de la aplicación a consultas y modificaciones. Esa traducción tiene aspectos importantes: lectura sin seguimiento cuando no se modificarán entidades, persistencia explícita cuando cambie el estado y tratamiento correcto de la cancelación.
 
-#### Ampliación didáctica aplicada a AceriaApp
+El contrato `IOrdenRepositorio.ObtenerAsync` devuelve una orden o `null`; la implementación usa `FirstOrDefaultAsync`. Un `null` no significa un error de infraestructura, sino ausencia de un elemento concreto. El caso de uso decide si continuar o detenerse; el adaptador HTTP lo traduce en un código 404. Esta distribución de responsabilidades impide que el repositorio incluya detalles del protocolo externo.
 
-**La decisión arquitectónica.** El adaptador de salida proporciona una realización concreta del puerto. EF Core convierte los objetos del dominio en operaciones de almacenamiento; los métodos del repositorio traducen los requisitos de la aplicación a consultas y modificaciones. Esa traducción tiene aspectos importantes: lectura sin seguimiento cuando no se modificarán entidades, persistencia explícita cuando cambie el estado y tratamiento correcto de la cancelación.
+Evita que el puerto exponga `DbContextOptions`, `EntityEntry` o `IQueryable`. Sería una abstracción nominal: las pruebas de aplicación volverían a requerir EF Core y el diseño no podría sustituir el motor SQL sin una revisión en cascada. El repositorio implementa el contrato, no lo define.
 
-**Ejemplo concreto en AceriaApp.** El contrato `IOrdenRepositorio.ObtenerAsync` devuelve una orden o `null`; la implementación usa `FirstOrDefaultAsync`. Un `null` no significa un error de infraestructura, sino ausencia de un elemento concreto. El caso de uso decide si continuar o detenerse; el adaptador HTTP lo traduce en un código 404. Esta distribución de responsabilidades impide que el repositorio incluya detalles del protocolo externo.
+Para verificar el adaptador, el test de integración configura `HexagonalDbContext` con `UseSqlServer` y una base aislada obtenida mediante `BaseSqlServer`. El recorrido POST→GET une ruta, caso de uso, puerto, adaptador y motor SQL Server real. El entorno puede obtener el servidor mediante Testcontainers o mediante `ACERIA_TEST_SQLSERVER`; ninguno de esos caminos sustituye el proveedor por uno en memoria.
 
-**Riesgo, alternativa y límite.** Evita que el puerto exponga `DbContextOptions`, `EntityEntry` o `IQueryable`. Sería una abstracción nominal: las pruebas de aplicación volverían a requerir EF Core y el diseño no podría sustituir el motor SQL sin una revisión en cascada. El repositorio implementa el contrato, no lo define.
+### Relación entre puertos, adaptadores e inversión de dependencias
 
-**Comprobación técnica y aprendizaje.** Para verificar el adaptador, el test de integración configura `HexagonalDbContext` con `UseSqlServer` y una base aislada obtenida mediante `BaseSqlServer`. El recorrido POST→GET une ruta, caso de uso, puerto, adaptador y motor SQL Server real. El entorno puede obtener el servidor mediante Testcontainers o mediante `ACERIA_TEST_SQLSERVER`; ninguno de esos caminos sustituye el proveedor por uno en memoria.
-
-### Bloque 7 — Relación entre puertos, adaptadores e inversión de dependencias
-
-La relación entre puertos, adaptadores e inversión de dependencias es directa. El puerto se define en el núcleo. El adaptador se define en el exterior. La inversión de dependencias permite que el núcleo dependa del puerto y que el adaptador lo implemente. Sin inversión, el núcleo dependería del adaptador y la regla de dependencia se violaría. La inversión se materializa con la inyección de dependencias: el contenedor resuelve la implementación concreta en tiempo de ejecución y la inyecta en el núcleo.
+La inversión de dependencias determina quién conoce a quién en el código compilado. El caso de uso puede llamar al repositorio, pero su proyecto depende de la interfaz `IOrdenRepositorio`; es `OrdenRepositorioSqlServer` el que implementa y, por tanto, conoce ese contrato. ASP.NET Core enlaza ambas piezas al construir el grafo de objetos mediante DI. Esta dirección permite que aplicación y dominio permanezcan independientes de SQL Server incluso cuando la ejecución normal termina almacenando datos en ese motor. No conviene confundir el sentido de la llamada con la referencia de proyecto: durante la operación se invoca el adaptador, pero en la arquitectura el adaptador depende de la definición del puerto. Las pruebas y los `.csproj` permiten demostrar esta propiedad.
 
 ```csharp
 builder.Services.AddScoped<IOrdenRepositorio, OrdenRepositorioSqlServer>();
 builder.Services.AddScoped<IOrdenServicio, OrdenServicio>();
 ```
 
-- **Línea 1:** `builder.Services.AddScoped<IOrdenRepositorio, OrdenRepositorioSqlServer>();` → registra el adaptador de salida.
-- **Línea 2:** `builder.Services.AddScoped<IOrdenServicio, OrdenServicio>();` → registra el puerto de entrada.
+
+El registro de `IOrdenRepositorio` con una implementación concreta demuestra dónde se elige el adaptador en el host. La inversión de dependencias no consiste en que la interfaz «cree» el repositorio; consiste en que el núcleo no necesita referenciar a su implementación.
+
 
 La inversión de dependencias tiene dos consecuencias prácticas. La primera es que el núcleo no conoce la implementación concreta. La segunda es que la implementación puede sustituirse sin modificar el núcleo. La combinación de ambas permite que el núcleo se pruebe con adaptadores en memoria y que la infraestructura evolucione con independencia del núcleo. La inversión es la técnica que hace posible la arquitectura hexagonal en la práctica.
 
----
 
+La inversión de dependencias se ve claramente cuando dibujamos dos diagramas: uno de llamadas y otro de referencias. Durante una petición el caso de uso invoca un método implementado por infraestructura, por lo que parece que «aplicación llama a SQL». Pero en el `.csproj` de aplicación no hay referencia a infraestructura. Esto es posible porque la interfaz del puerto está declarada en aplicación, y el código de infraestructura depende de ese contrato.
 
-#### Ampliación didáctica aplicada a AceriaApp
+El ensamblado `AceriaApp.Hexagonal.Infraestructura` conoce `IOrdenRepositorio` y lo implementa; el proyecto `AceriaApp.Hexagonal.Aplicacion` solo conoce la interfaz y la entidad. El proyecto de arranque `AceriaApp.Api` referencia ambos para establecer el enlace con `AddScoped<IOrdenRepositorio, OrdenRepositorioSqlServer>()`. Esta dependencia del extremo de composición está justificada y no invierte la regla hacia el dominio.
 
-**La decisión arquitectónica.** La inversión de dependencias se ve claramente cuando dibujamos dos diagramas: uno de llamadas y otro de referencias. Durante una petición el caso de uso invoca un método implementado por infraestructura, por lo que parece que «aplicación llama a SQL». Pero en el `.csproj` de aplicación no hay referencia a infraestructura. Esto es posible porque la interfaz del puerto está declarada en aplicación, y el código de infraestructura depende de ese contrato.
+A veces se crea la interfaz dentro de infraestructura «porque allí está la clase concreta» y después se hace que aplicación la referencie. Esto deja el contrato en el lado equivocado: para cambiar detalles externos hay que tocar la capa que debía permanecer estable. La ubicación de la interfaz es por tanto una decisión arquitectónica y no una preferencia de organización de archivos.
 
-**Ejemplo concreto en AceriaApp.** El ensamblado `AceriaApp.Hexagonal.Infraestructura` conoce `IOrdenRepositorio` y lo implementa; el proyecto `AceriaApp.Hexagonal.Aplicacion` solo conoce la interfaz y la entidad. El proyecto de arranque `AceriaApp.Api` referencia ambos para establecer el enlace con `AddScoped<IOrdenRepositorio, OrdenRepositorioSqlServer>()`. Esta dependencia del extremo de composición está justificada y no invierte la regla hacia el dominio.
+Ejecuta la comprobación estructural: dominio sin referencias y aplicación sin infraestructura. A continuación confirma por HTTP que el adaptador EF Core realmente puede obtener y guardar. Solo la combinación de ambas evidencias certifica que no estamos ante una arquitectura dibujada sin uso.
 
-**Riesgo, alternativa y límite.** A veces se crea la interfaz dentro de infraestructura «porque allí está la clase concreta» y después se hace que aplicación la referencie. Esto deja el contrato en el lado equivocado: para cambiar detalles externos hay que tocar la capa que debía permanecer estable. La ubicación de la interfaz es por tanto una decisión arquitectónica y no una preferencia de organización de archivos.
+### Puertos primarios y secundarios
 
-**Comprobación técnica y aprendizaje.** Ejecuta la comprobación estructural: dominio sin referencias y aplicación sin infraestructura. A continuación confirma por HTTP que el adaptador EF Core realmente puede obtener y guardar. Solo la combinación de ambas evidencias certifica que no estamos ante una arquitectura dibujada sin uso.
-
-### Bloque 8 — Puertos primarios y secundarios
-
-Los puertos se clasifican en primarios y secundarios según la dirección de la comunicación. Los puertos primarios son los que el exterior invoca para usar el núcleo. Coinciden con los puertos de entrada. Los puertos secundarios son los que el núcleo invoca para usar el exterior. Coinciden con los puertos de salida. La terminología varía según los autores: algunos usan "driving" y "driven", otros usan "entrada" y "salida". En el curso se usan "puertos de entrada" y "puertos de salida" de forma consistente.
+La terminología de puertos primarios o secundarios intenta describir desde qué lado se inicia una interacción y qué dependencia necesita resolver el núcleo. Los puertos primarios suelen expresar operaciones que actores externos solicitan a la aplicación; los secundarios representan servicios técnicos o externos que esta utiliza para completar esas operaciones. No siempre conviene convertir esta distinción en una taxonomía rígida: la misma aplicación puede recibir comandos de HTTP, CLI o mensajería, y consumir repositorios o clientes remotos. Lo decisivo es que el contrato permanezca en la frontera adecuada y que su propósito sea claro. En AceriaApp las operaciones de órdenes deberían definirse independientemente de quién las invoca, mientras la recuperación y almacenamiento se expresan mediante un puerto de salida.
 
 ```text
 Clasificación de puertos:
@@ -792,31 +718,24 @@ Puertos secundarios (driven):
 - IPublicadorEventos (el núcleo lo invoca).
 ```
 
-- **Línea 1:** `Puertos primarios (driving):` → título de los puertos primarios.
-- **Línea 2:** `- IOrdenServicio (el exterior lo invoca).` → puerto de entrada.
-- **Línea 3:** `- IInventarioServicio (el exterior lo invoca).` → puerto de entrada.
-- **Línea 4:** `Puertos secundarios (driven):` → título de los puertos secundarios.
-- **Línea 5:** `- IOrdenRepositorio (el núcleo lo invoca).` → puerto de salida.
-- **Línea 6:** `- IPublicadorEventos (el núcleo lo invoca).` → puerto de salida.
+
+La distinción entre primarios y secundarios refleja qué operación ofrece el núcleo y qué servicio externo necesita. No fija la tecnología de entrada ni obliga a utilizar un controlador por caso de uso. Una misma operación puede ser llamada por HTTP o por otra entrada legítima.
+
 
 La clasificación en primarios y secundarios tiene dos consecuencias prácticas. La primera es que ayuda a identificar qué puertos son invocados por el exterior y qué puertos son invocados por el núcleo. La segunda es que facilita la organización del código: los puertos primarios se agrupan con los casos de uso y los secundarios con los servicios externos. La clasificación es útil para comunicar la arquitectura entre los miembros del equipo.
 
----
 
+La nomenclatura primario/secundario describe quién inicia la interacción respecto al núcleo, no la importancia comercial del componente. Un puerto primario permite entrar para ejecutar una capacidad; un secundario representa un recurso externo que el núcleo solicita. Un endpoint HTTP es un adaptador de entrada, mientras un repositorio de SQL Server es un adaptador de salida.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Para una petición de creación, el cliente inicia la llamada al adaptador HTTP. Este invoca `CrearAsync`, que solicita almacenamiento mediante el puerto secundario. La dirección de llamadas va del exterior a aplicación y de aplicación al exterior, pero el núcleo no depende de las implementaciones. El puerto define el contrato que deben cumplir los colaboradores.
 
-**La decisión arquitectónica.** La nomenclatura primario/secundario describe quién inicia la interacción respecto al núcleo, no la importancia comercial del componente. Un puerto primario permite entrar para ejecutar una capacidad; un secundario representa un recurso externo que el núcleo solicita. Un endpoint HTTP es un adaptador de entrada, mientras un repositorio de SQL Server es un adaptador de salida.
+Un error común es definir como primario cualquier componente con tráfico de red o llamar secundario al que tenga menos código. La clasificación depende de la función de la frontera, no del tamaño ni del protocolo. Una cola de mensajes podría ser entrada si recibe órdenes externas y salida si publica eventos generados por el sistema.
 
-**Ejemplo concreto en AceriaApp.** Para una petición de creación, el cliente inicia la llamada al adaptador HTTP. Este invoca `CrearAsync`, que solicita almacenamiento mediante el puerto secundario. La dirección de llamadas va del exterior a aplicación y de aplicación al exterior, pero el núcleo no depende de las implementaciones. El puerto define el contrato que deben cumplir los colaboradores.
+Dibuja dos casos: HTTP POST para recibir una orden y una hipotética publicación `OrdenFinalizada` hacia un bus de eventos. El primero exige adaptador de entrada; el segundo requiere un puerto de salida para publicar, si realmente forma parte del proceso de negocio.
 
-**Riesgo, alternativa y límite.** Un error común es definir como primario cualquier componente con tráfico de red o llamar secundario al que tenga menos código. La clasificación depende de la función de la frontera, no del tamaño ni del protocolo. Una cola de mensajes podría ser entrada si recibe órdenes externas y salida si publica eventos generados por el sistema.
+### Cuándo definir un puerto
 
-**Comprobación técnica y aprendizaje.** Dibuja dos casos: HTTP POST para recibir una orden y una hipotética publicación `OrdenFinalizada` hacia un bus de eventos. El primero exige adaptador de entrada; el segundo requiere un puerto de salida para publicar, si realmente forma parte del proceso de negocio.
-
-### Bloque 9 — Cuándo definir un puerto
-
-La definición de un puerto no es obligatoria para todas las dependencias. Se define un puerto cuando la dependencia debe poder sustituirse sin modificar el núcleo. Se define un puerto cuando la dependencia es externa al núcleo: base de datos, servicios HTTP, mensajería, sistema de archivos. Se define un puerto cuando la dependencia requiere pruebas con dobles. No se define un puerto para dependencias internas del núcleo, como las clases del dominio o los servicios internos de la aplicación. La decisión de definir un puerto se basa en la necesidad de sustituir la dependencia.
+Una interfaz tiene coste de diseño y mantenimiento, por lo que no deberíamos introducir un puerto por cada llamada de biblioteca. Resulta útil definirlo cuando protege una regla estable frente a una dependencia cambiante, permite ejecutar un caso de uso desde varias entradas o facilita pruebas significativas. Si una clase utilitaria no representa una frontera relevante, envolverla automáticamente en una interfaz puede añadir navegación sin desacoplar nada. Para decidir, estudiamos qué necesita el núcleo, qué alternativas de implementación existen y qué errores queremos poder simular. En AceriaApp el repositorio tiene sentido porque la persistencia es una dependencia real y el modelo de órdenes debe poder probarse sin SQL. Un simple catálogo de puertos hipotéticos no demuestra esa separación hasta que el código los utiliza.
 
 ```text
 Cuándo definir un puerto:
@@ -829,31 +748,24 @@ Reloj del sistema       → puerto de salida.
 Clase interna del dominio → no se define puerto.
 ```
 
-- **Línea 1:** `Base de datos` → puerto de salida.
-- **Línea 2:** `Cliente HTTP` → puerto de salida.
-- **Línea 3:** `Publicador de eventos` → puerto de salida.
-- **Línea 4:** `Servicio de archivos` → puerto de salida.
-- **Línea 5:** `Reloj del sistema` → puerto de salida.
-- **Línea 6:** `Clase interna del dominio` → no se define puerto.
+
+La tabla de posibles puertos ayuda a reconocer fronteras tecnológicas que podrían variar. No todas ellas merecen una interfaz en el proyecto actual: su introducción debe justificarse por necesidades reales de prueba, sustitución o claridad del diseño.
+
 
 La decisión de definir un puerto tiene dos consecuencias prácticas. La primera es que añade una interfaz y una indirección. La segunda es que facilita la sustitución y las pruebas. La combinación de ambas permite que el núcleo sea testeable y que la infraestructura evolucione con independencia del núcleo. La decisión se revisa al final de cada módulo para asegurar que los puertos siguen siendo necesarios.
 
----
 
+Antes de introducir un puerto hay que saber qué problema resuelve. En el taller, el repositorio de órdenes es un puerto justificado porque persiste datos fuera de la memoria del caso de uso y queremos probar la coordinación sin levantar SQL Server. Una interfaz adicional para un cálculo trivial y puro no aporta el mismo valor. La calidad se aprecia por los cambios que deja de propagar.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Imagina que el equipo cambia SQL Server por PostgreSQL. Si las firmas de `IOrdenRepositorio` no contienen expresiones SQL específicas, el caso de uso puede conservar su código y solo cambiar el adaptador, su configuración y sus pruebas. En cambio, si el puerto devuelve `DbSet` o exige operaciones de `SaveChanges`, el cambio de proveedor afectará a los consumidores.
 
-**La decisión arquitectónica.** Antes de introducir un puerto hay que saber qué problema resuelve. En el taller, el repositorio de órdenes es un puerto justificado porque persiste datos fuera de la memoria del caso de uso y queremos probar la coordinación sin levantar SQL Server. Una interfaz adicional para un cálculo trivial y puro no aporta el mismo valor. La calidad se aprecia por los cambios que deja de propagar.
+Un puerto tampoco debe ser un contrato genérico de base de datos que permita cualquier consulta. Esa flexibilidad aparente obliga a los casos de uso a conocer detalles de persistencia. Es preferible agrupar operaciones relacionadas con las necesidades de órdenes y mantener invariantes del dominio dentro del propio dominio.
 
-**Ejemplo concreto en AceriaApp.** Imagina que el equipo cambia SQL Server por PostgreSQL. Si las firmas de `IOrdenRepositorio` no contienen expresiones SQL específicas, el caso de uso puede conservar su código y solo cambiar el adaptador, su configuración y sus pruebas. En cambio, si el puerto devuelve `DbSet` o exige operaciones de `SaveChanges`, el cambio de proveedor afectará a los consumidores.
+Para cada interfaz propuesta escribe: quién la utiliza, qué tecnología oculta, qué caso de uso la necesita, qué operación no debería exponer y cómo la simularías en un test. Si no hay una respuesta concreta, considera posponer su creación.
 
-**Riesgo, alternativa y límite.** Un puerto tampoco debe ser un contrato genérico de base de datos que permita cualquier consulta. Esa flexibilidad aparente obliga a los casos de uso a conocer detalles de persistencia. Es preferible agrupar operaciones relacionadas con las necesidades de órdenes y mantener invariantes del dominio dentro del propio dominio.
+### Aplicación al proyecto del curso
 
-**Comprobación técnica y aprendizaje.** Para cada interfaz propuesta escribe: quién la utiliza, qué tecnología oculta, qué caso de uso la necesita, qué operación no debería exponer y cómo la simularías en un test. Si no hay una respuesta concreta, considera posponer su creación.
-
-### Bloque 10 — Aplicación al proyecto del curso
-
-El proyecto del curso aplica los puertos y adaptadores en el módulo 3. Los puertos de entrada se definen en la capa de aplicación y agrupan los casos de uso de cada capacidad de negocio. Los puertos de salida se definen en la capa de aplicación y agrupan las operaciones sobre recursos externos. Los adaptadores de entrada se sitúan en la capa de presentación y traducen entre el protocolo y los puertos de entrada. Los adaptadores de salida se sitúan en la capa de infraestructura y traducen entre los puertos de salida y la tecnología concreta. La inversión de dependencias se aplica con el contenedor de dependencias.
+La etapa 3.2 permite pasar del vocabulario arquitectónico a contratos concretos. Identificaremos operaciones ofrecidas por los casos de uso y necesidades de persistencia, dibujaremos qué adaptadores interactuarán con cada puerto y comprobaremos con tests las relaciones que declaramos. Sin embargo, en esta etapa las clases de catálogo son todavía un apoyo didáctico; la separación en proyectos y la conexión del repositorio real se incorporarán en 3.3 y 3.4. Esta progresión mantiene el funcionamiento de la API REST anterior y permite comparar su enfoque directo con una ruta hexagonal adicional, sin afirmar que todos sus endpoints ya han sido refactorizados. Al terminar, la pregunta importante será qué contrato conoce el núcleo y qué tecnología permanece fuera.
 
 ```text
 Aplicación al proyecto del curso:
@@ -865,17 +777,15 @@ Adaptadores salida   → repositorios SQL Server, publicador de eventos.
 Inversión            → registro en el contenedor de dependencias.
 ```
 
-- **Línea 1:** `Puertos de entrada` → interfaces de casos de uso.
-- **Línea 2:** `Puertos de salida` → interfaces de operaciones sobre recursos externos.
-- **Línea 3:** `Adaptadores entrada` → endpoints de Minimal API.
-- **Línea 4:** `Adaptadores salida` → repositorios SQL Server, publicador de eventos.
-- **Línea 5:** `Inversión` → registro en el contenedor.
+
+El mapa final reúne los puertos y adaptadores que la solución pretende conectar. El objetivo de aprendizaje no es enumerarlos, sino explicar qué clase posee cada contrato, qué proyecto conoce a quién y qué prueba detectaría una dependencia invertida.
+
 
 La aplicación de los puertos y adaptadores prepara el proyecto para los puntos 3.3 y 3.4. El punto 3.3 estudiará la separación entre dominio, aplicación e infraestructura con detalle. El punto 3.4 estudiará la implementación de la arquitectura hexagonal en ASP.NET Core. El punto 3.2 establece los conceptos que se aplicarán en los dos puntos siguientes.
 
 ---
 
-### Resumen rápido de la teoría
+### Qué hemos separado en el diseño
 
 - Un puerto es una interfaz que define cómo el núcleo se comunica con el exterior.
 - Un adaptador es una clase que implementa un puerto y conecta el núcleo con una tecnología concreta.
@@ -886,18 +796,14 @@ La aplicación de los puertos y adaptadores prepara el proyecto para los puntos 
 - La inversión de dependencias permite que el núcleo dependa de los puertos y que los adaptadores los implementen.
 - Los puertos se definen en el núcleo y los adaptadores en el exterior.
 
----
 
+Al final de 3.2, el alumno habrá catalogado puertos y adaptadores y comprobado sus reglas mediante tests. Eso refuerza la comprensión, pero no debemos confundir el catálogo con la implementación final de una API hexagonal. En la secuencia de este curso, los proyectos físicos llegan en 3.3, y la ruta real que utiliza un repositorio a través de un puerto se registra en 3.4.
 
-#### Ampliación didáctica aplicada a AceriaApp
+La transición de M02 a M03 debe respetar los contratos ya publicados. M02 mantiene `/api/v1/ordenes`; M03 expone un grupo adicional `/api/v1/hexagonal/ordenes`. Esta decisión didáctica evita atribuir a las rutas existentes una refactorización que todavía no realizamos y permite comparar dos estilos de implementación en una solución real.
 
-**La decisión arquitectónica.** Al final de 3.2, el alumno habrá catalogado puertos y adaptadores y comprobado sus reglas mediante tests. Eso refuerza la comprensión, pero no debemos confundir el catálogo con la implementación final de una API hexagonal. En la secuencia de este curso, los proyectos físicos llegan en 3.3, y la ruta real que utiliza un repositorio a través de un puerto se registra en 3.4.
+Un ejercicio valioso consiste en comparar la firma de un GET M02 con la del GET hexagonal. En M02 se inyecta `AceriaDbContext`; en M03 se inyecta `OrdenesCasoUso`. Las respuestas a los clientes pueden ser equivalentes, pero las dependencias y los lugares de prueba han cambiado. Esta es la evidencia de que el puerto no es únicamente un nombre.
 
-**Ejemplo concreto en AceriaApp.** La transición de M02 a M03 debe respetar los contratos ya publicados. M02 mantiene `/api/v1/ordenes`; M03 expone un grupo adicional `/api/v1/hexagonal/ordenes`. Esta decisión didáctica evita atribuir a las rutas existentes una refactorización que todavía no realizamos y permite comparar dos estilos de implementación en una solución real.
-
-**Riesgo, alternativa y límite.** Un ejercicio valioso consiste en comparar la firma de un GET M02 con la del GET hexagonal. En M02 se inyecta `AceriaDbContext`; en M03 se inyecta `OrdenesCasoUso`. Las respuestas a los clientes pueden ser equivalentes, pero las dependencias y los lugares de prueba han cambiado. Esta es la evidencia de que el puerto no es únicamente un nombre.
-
-**Comprobación técnica y aprendizaje.** Al evaluar la etapa, exige que todos los tests acumulados del curso sigan pasando y que las dos carpetas de proyectos se correspondan con sus pasos de laboratorio. No marques 3.2 «hexagonal completa» hasta conectar los adaptadores reales en la etapa 3.4.
+Al evaluar la etapa, exige que todos los tests acumulados del curso sigan pasando y que las dos carpetas de proyectos se correspondan con sus pasos de laboratorio. No marques 3.2 «hexagonal completa» hasta conectar los adaptadores reales en la etapa 3.4.
 
 
 ## Estudio integrador 3.2 — Un mismo caso de uso, dos entradas posibles
