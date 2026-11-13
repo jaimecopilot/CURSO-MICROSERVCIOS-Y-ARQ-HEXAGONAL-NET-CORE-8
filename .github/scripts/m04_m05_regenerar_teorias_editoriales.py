@@ -13,17 +13,17 @@ ROOT=Path.cwd()
 BASE=ROOT / "_base_main"
 OUT=Path("/tmp/teorias_m04_m05_auditoria.json")
 CSS_TEXT="""
-@page {size:A4; margin:18mm 18mm 21mm 18mm; @bottom-right{content:counter(page);font-size:8pt;color:#6b7280}}
+@page {size:A4; margin:17mm 18mm 19mm 18mm; @bottom-right{content:counter(page);font-size:8pt;color:#6b7280}}
 html {font-family:"DejaVu Sans",sans-serif;color:#172b42;font-size:9.35pt}
 body{line-height:1.48}
 h1,h2,h3,h4{color:#173b57;line-height:1.27;break-after:avoid}
 h1{font-size:19.5pt;margin:17pt 0 11pt}
 h2{font-size:14.1pt;margin:16pt 0 10pt;break-before:auto}
-h3{font-size:11.2pt;margin:13pt 0 8pt}
+h3{font-size:11.2pt;margin:12pt 0 7pt}
 h4{font-size:9.8pt;margin:10pt 0 7pt}
-p{margin:5pt 0 9pt;orphans:2;widows:2}
-ul,ol{padding-left:19pt;margin:7pt 0 10pt} li{margin:4pt 0}
-hr{border:0;border-top:.65pt solid #d1dce7;margin:16pt 0}
+p{margin:5pt 0 8pt;orphans:2;widows:2}
+ul,ol{padding-left:19pt;margin:7pt 0 10pt} li{margin:3pt 0}
+hr{border:0;border-top:.65pt solid #d1dce7;margin:14pt 0}
 img{max-width:100%;max-height:165mm;height:auto;display:block;margin:11pt auto}
 code,pre{font-family:"DejaVu Sans Mono",monospace;overflow-wrap:anywhere}
 code{font-size:.88em}
