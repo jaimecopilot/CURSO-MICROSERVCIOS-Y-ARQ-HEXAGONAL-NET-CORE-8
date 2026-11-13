@@ -1,4 +1,4 @@
-name: Regenerar PDF de teorias corregidas
+name: Validar teorias y cabeceras de M01 a M08
 
 on:
   push:
@@ -8,6 +8,7 @@ on:
       - 'M07_OBSERVABILIDAD_RESILIENCIA/TEORIA/M07_TEORIA.md'
       - 'M08_API_GATEWAY/TEORIA/M08_TEORIA.md'
       - '.github/workflows/rebuild-corrected-theory-pdfs.yml'
+      - 'tools/pdf_running_headers.py'
   workflow_dispatch:
 
 permissions:
@@ -117,14 +118,28 @@ jobs:
               print(f"VALIDADO: {file} | {len(doc)} paginas | {len(full_text.split()):,} palabras extraibles")
           PY
 
+      - name: Aplicar cabeceras del curso en todas las paginas de M01-M08
+        run: python tools/pdf_running_headers.py
+
+      - name: Validar por separado todas las cabeceras
+        run: python tools/pdf_running_headers.py --check
+
       - name: Publicar los PDF en la misma rama
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add --             M06_COMUNICACION_MICROSERVICIOS/TEORIA/M06_TEORIA.pdf             M07_OBSERVABILIDAD_RESILIENCIA/TEORIA/M07_TEORIA.pdf             M08_API_GATEWAY/TEORIA/M08_TEORIA.pdf
+          git add -- \
+            M01_INTRODUCCION_MICROSERVICIOS/TEORIA/M01_TEORIA.pdf \
+            M02_APIS_REST_ASPNET_CORE/TEORIA/M02_TEORIA.pdf \
+            M03_ARQUITECTURA_HEXAGONAL/TEORIA/M03_TEORIA.pdf \
+            M04_PATRONES_ARQUITECTURA/TEORIA/M04_TEORIA.pdf \
+            M05_DDD_CQRS/TEORIA/M05_TEORIA.pdf \
+            M06_COMUNICACION_MICROSERVICIOS/TEORIA/M06_TEORIA.pdf \
+            M07_OBSERVABILIDAD_RESILIENCIA/TEORIA/M07_TEORIA.pdf \
+            M08_API_GATEWAY/TEORIA/M08_TEORIA.pdf
           if git diff --cached --quiet; then
             echo "No hay cambios de PDF"
           else
-            git commit -m "Regenerar PDF de M06-M08 desde version-corregida"
+            git commit -m "Encabezados del curso, modulo y autor en teorias M01-M08"
             git push origin HEAD:version-corregida
           fi
