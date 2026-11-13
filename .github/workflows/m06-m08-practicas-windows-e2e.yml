@@ -5,6 +5,7 @@ on:
     branches: [version-corregida]
     paths:
       - 'tools/auditar_reconstruccion_practicas.py'
+      - 'tools/auditar_continuidad_modular.py'
       - 'M06_COMUNICACION_MICROSERVICIOS/PRACTICAS/M06_PRACTICAS.md'
       - 'M07_OBSERVABILIDAD_RESILIENCIA/PRACTICAS/M07_PRACTICAS.md'
       - 'M08_API_GATEWAY/PRACTICAS/M08_PRACTICAS.md'
@@ -35,6 +36,7 @@ jobs:
         with:
           ref: version-corregida
           sparse-checkout: |
+            M05_DDD_CQRS
             M06_COMUNICACION_MICROSERVICIOS
             tools
           sparse-checkout-cone-mode: true
@@ -110,6 +112,7 @@ jobs:
         with:
           ref: version-corregida
           sparse-checkout: |
+            M06_COMUNICACION_MICROSERVICIOS
             M07_OBSERVABILIDAD_RESILIENCIA
             tools
           sparse-checkout-cone-mode: true
@@ -185,6 +188,7 @@ jobs:
         with:
           ref: version-corregida
           sparse-checkout: |
+            M07_OBSERVABILIDAD_RESILIENCIA
             M08_API_GATEWAY
             tools
           sparse-checkout-cone-mode: true
