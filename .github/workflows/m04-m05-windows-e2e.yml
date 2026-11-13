@@ -5,6 +5,7 @@ on:
     branches: [version-corregida]
     paths:
       - 'tools/auditar_reconstruccion_practicas.py'
+      - 'tools/auditar_continuidad_modular.py'
       - 'M04_PATRONES_ARQUITECTURA/PRACTICAS/M04_PRACTICAS.md'
       - 'M05_DDD_CQRS/PRACTICAS/M05_PRACTICAS.md'
       - 'M04_PATRONES_ARQUITECTURA/PROYECTO/**'
@@ -32,6 +33,7 @@ jobs:
         with:
           ref: version-corregida
           sparse-checkout: |
+            M03_ARQUITECTURA_HEXAGONAL
             M04_PATRONES_ARQUITECTURA
             M05_DDD_CQRS
             tools
@@ -82,6 +84,7 @@ jobs:
         with:
           ref: version-corregida
           sparse-checkout: |
+            M03_ARQUITECTURA_HEXAGONAL
             M04_PATRONES_ARQUITECTURA
             M05_DDD_CQRS
             tools
