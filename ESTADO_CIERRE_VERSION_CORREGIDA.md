@@ -23,8 +23,8 @@ Un PASS de PDF, una compilación de referencia o la existencia de un marcador no
 - Corregida la auditoría de paridad M06/M08 para que **falle** si detecta discrepancias.
 - Creado `tools/auditar_reconstruccion_practicas.py`: compara cambios entre etapas; aplica sólo operaciones que constan en el manual a una copia de la etapa anterior; registra proyectos nuevos con `dotnet sln add`; compara texto con el proyecto final y compara semánticamente las soluciones .sln. **No copia el destino para fabricar un PASS**.
 - Materializadas y comprobadas **19/19 transiciones internas** de M03–M08: **310 archivos de texto** iguales con normalización inocua y **19 soluciones .sln** equivalentes por membresía, sobre **329 cambios**.
-- También materializadas las **6/6 transiciones entre módulos** (M02→M03 hasta M07→M08), sin divergencias. Se ha preparado una reconstrucción acumulativa de **25 etapas consecutivas M03.1–M08.4** que utiliza el resultado construido en cada punto como origen del siguiente; debe consultarse su ejecución antes de certificarla.
-- Conectados los validadores Windows de M03–M08 al modo `--reconstruir-incremental`, incluyendo el primer punto construido desde el último proyecto del módulo precedente. En M02 se conserva el E2E previo, pero no se habilita una falsa reconstrucción: faltan metadatos de operación.
+- También materializadas las **6/6 transiciones entre módulos** (M02→M03 hasta M07→M08), sin divergencias. Se han reconstruido sucesivamente **29/29 etapas M02.1–M08.4**, empezando M02.1 desde una carpeta vacía y reutilizando siempre el resultado generado en la etapa anterior. [Prueba acumulativa PASS](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43519922250).
+- Conectados los validadores Windows de M03–M08 al modo `--reconstruir-incremental`, incluyendo el primer punto construido desde el último proyecto del módulo precedente. M02 dispone ya del reconstructor específico `tools/reconstruir_m02_incremental.py`, que obtiene sus cuatro etapas desde cero mediante los fragmentos del Markdown; las pruebas xUnit/SQL/HTTP Windows se han conectado a las copias reconstruidas y su ejecución más reciente debe verificarse.
 - Creada auditoría PDF reproducible y muestras visuales en `tools/validar_publicacion_pdf.py`: **17 PDF, 1.219 páginas, 1.219 cabeceras**, sin páginas sin cuerpo ni bloques detectados fuera de página. La inspección visual completa sigue pendiente.
 - Corregidos los números de páginas desactualizados en los informes M01 y M03.
 
@@ -33,7 +33,7 @@ Un PASS de PDF, una compilación de referencia o la existencia de un marcador no
 | Módulo | Revisión editorial | Reconstrucción desde práctica | E2E sobre código |
 |---|---|---|---|
 | M01 | Material corregido, aprobación del autor pendiente | Activación y comprobación de bloques del primer módulo; no simula todos los clics | Windows SQL/HTTP PASS histórico |
-| M02 | Material corregido, aprobación pendiente | **Brecha**: sus operaciones están descritas en prosa/código, pero sólo 12 marcadores identifican rutas; la reconstrucción automática necesita codificar inserciones y reemplazos | E2E de proyectos de referencia Windows SQL/HTTP PASS |
+| M02 | Material corregido, aprobación pendiente | **4/4 etapas construidas desde carpeta vacía**, sin divergencias de código; README descriptivo aparte | E2E sobre reconstrucción en Windows/SQL/HTTP: pendiente de resultado reciente; E2E de referencia PASS |
 | M03 | Corregido, aprobación pendiente | 3 transiciones materializadas: 43 archivos de texto + 3 soluciones semánticas | E2E sobre etapas reconstruidas Windows/SQL PASS |
 | M04 | Corregido, aprobación pendiente | 4 transiciones: 61 archivos + 4 soluciones | E2E reconstruido en Windows/SQL: consultar la última ejecución |
 | M05 | Corregido, aprobación pendiente | 4 transiciones: 68 archivos + 4 soluciones | E2E reconstruido en Windows/SQL: consultar la última ejecución |
@@ -42,21 +42,20 @@ Un PASS de PDF, una compilación de referencia o la existencia de un marcador no
 | M08 | Corregido, aprobación pendiente | 3 transiciones: 38 archivos + 3 soluciones | E2E reconstruido Windows/SQL/RabbitMQ: consultar la última ejecución |
 | M09 | Prácticas corregidas, aprobación pendiente | Comandos PowerShell y seis servicios Compose validados en estructura/sintaxis | **Docker Desktop físico Windows pendiente** |
 
-**Límite de M03–M08:** las seis transiciones iniciales sí se han construido desde el final del módulo precedente. Las 19 transiciones internas y las seis transiciones modulares pasaron una prueba de materialización; la ejecución acumulativa de los 25 puntos en una misma cadena se debe confirmar por su workflow. No se replican los clics de Visual Studio.
+**Alcance:** M02–M08 son 29 puntos construidos acumulativamente desde M02.1 vacío. El resultado está contrastado con el código entregado y la solución .sln por membresía. Esta prueba de reconstrucción de archivos no ejecuta necesariamente cada una de las acciones gráficas del alumno ni equivale por sí sola al E2E integrado de todos los servicios.
 
-## 4. Brecha precisa de M02
+## 4. Cierre de la antigua brecha de M02
 
-La auditoría incremental en M02 ha encontrado **16 modificaciones** respecto a etapas anteriores (2.2–2.4), repartidas en:
-- **13 cambios sin operación de escritura identificada por marcador:** incluye `README.md`, `Program.cs`, validadores, contratos, pruebas y configuración de OpenAPI.
-- **3 cambios con marcador de referencia**, pero sin semántica `crear/reemplazar/insertar` aplicable por el reconstructor.
-- La primera muestra de `Program.cs` del punto 2.1 es intencionalmente un **esqueleto intermedio**, no el archivo final; no debe exigirse que coincida por sí sola con el snapshot 2.1.
+Se ha creado `tools/reconstruir_m02_incremental.py`. El reconstructor utiliza el Markdown de prácticas y sus fragmentos de C#, XML, HTTP y JSON para crear primero M02.1 desde una **carpeta vacía**, y después M02.2, M02.3 y M02.4 a partir de la etapa reconstruida anterior. Su resultado ha sido comparado con todos los archivos de código de los cuatro snapshots canónicos: **4/4 PASS, 0 diferencias de código**. No utiliza el código de la etapa final para fabricar los archivos.
 
-**Acción requerida:** aprovechar los fragmentos que ya existen en el manual M02, asignarles operaciones explícitas con punto y ruta, resolver el orden de cambios de `Program.cs`, reconstruir 2.1–2.4 sin leer el código del destino y activar xUnit/SQL/HTTP sobre esas copias.
+Los `README.md` descriptivos quedan excluidos de esta comparación automática y requieren lectura editorial separada. La siguiente evidencia es el E2E Windows SQL/HTTP del mismo material reconstruido, no de una copia canónica, además de la evaluación de la reproducibilidad pedagógica de cada instrucción de Visual Studio.
 
-No se debe añadir un apéndice artificial de código final ni declarar la trazabilidad cerrada por mera coincidencia de rutas.
+[Reconstrucción M02 desde vacío](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43519740684).
 
 ## 5. Evidencias
 
+- [M02 creado desde cero 4/4](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43519740684).
+- [Cadena íntegra M02.1–M08.4, 29/29](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43519922250).
 - [Reconstrucción 19/19 interna de M03–M08](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43515823932).
 - [Reconstrucción 6/6 de los límites M02→M03 hasta M07→M08](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43517914444).
 - [Reconstrucción acumulativa de 25 etapas, consultar resultado](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43518461160).
@@ -68,11 +67,10 @@ No se debe añadir un apéndice artificial de código final ni declarar la traza
 
 ## 6. Pendientes para publicación definitiva
 
-1. Materialización íntegra de M02, especialmente Program.cs y cambios incrementales.
-2. Certificación de la cadena completa de 25 pasos M03–M08 sobre resultados reconstruidos sucesivamente, empezando en M02 2.4; su workflow existe y la ejecución debe comprobarse.
-3. E2E Windows/SQL/RabbitMQ de M03–M08 con la nueva reconstrucción del primer punto desde el módulo anterior; los E2E previos de las 19 transiciones internas resultaron satisfactorios.
-4. Ensayo M09 con Docker Desktop sobre Windows real.
-5. Revisión humana de la presentación de los PDF, especialmente las muestras y el cuerpo de cada módulo; verificación editorial final.
-6. Decisión del autor sobre publicación y fusión a `main`.
+1. Verificar el resultado de xUnit/HTTP/SQL sobre M02 reconstruido y la última regresión Windows de continuidad M03–M08. La reconstrucción acumulativa **29/29** ya pasó.
+2. Validar el laboratorio de M09 en Docker real (CI Linux es evidencia adicional, no Docker Desktop Windows) y ejecutar la práctica físicamente en Windows.
+3. Completar comprobaciones editoriales de los pasos de alumno y `README.md` del material entregado.
+4. Revisión humana de los PDF, especialmente la presentación de código y las muestras de las 1.219 páginas.
+5. Aprobación editorial del autor y decisión de publicación/fusión a `main`.
 
 **Importante:** Este archivo es un estado trazable, no un certificado prematuro de finalización. La rama `main` no se modifica.
