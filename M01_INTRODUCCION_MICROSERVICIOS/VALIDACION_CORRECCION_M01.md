@@ -10,11 +10,11 @@
 ## 1. Material de prácticas
 
 - Manual revisado: `PRACTICAS/M01_PRACTICAS.md`.
-- PDF sincronizado: `PRACTICAS/M01_PRACTICAS.pdf`, 86 páginas.
+- PDF sincronizado: `PRACTICAS/M01_PRACTICAS.pdf`, **85 páginas actuales**.
 - Cinco puntos conservados: 1.1 a 1.5.
 - 120 pasos y 52 fragmentos de código conservados.
 - Sustituidas 25 explicaciones mecánicas de código por explicaciones funcionales. Se corrigieron introducciones, contradicciones entre «crear» y «comprobar» elementos ya preparados, y afirmaciones impropias sobre el alcance de indicadores de arquitectura.
-- Cabecera `ARQUITECTURA HEXAGONAL Y MICROSERVICIOS / PRÁCTICAS MÓDULO 1 / JAIME GALLO` validada en las 86 páginas.
+- Cabecera `ARQUITECTURA HEXAGONAL Y MICROSERVICIOS / PRÁCTICAS MÓDULO 1 / JAIME GALLO` validada en las **85 páginas del PDF actual**.
 - Ningún archivo de `PROYECTO` fue alterado por la revisión; los ejemplos de código del manual se conservaron.
 
 ## 2. Reconstrucción en Windows
@@ -63,3 +63,5 @@ La comprobación es **real**, pero no autoriza afirmaciones más amplias que las
 - Cabeceras: `tools/pdf_running_headers.py`.
 
 **Conclusión:** M01 puede considerarse **cerrado técnicamente para esta revisión** en la rama `version-corregida`. No se ha fusionado con `main`. El autor mantiene la aprobación editorial y la publicación definitiva.
+
+**Verificación editorial de paginación actual:** [auditoría de los 17 PDF y 1.219 páginas](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43516616292). La prueba automatizada comprueba cabeceras, contenido extraíble y márgenes; la aprobación visual final sigue correspondiendo al autor.
