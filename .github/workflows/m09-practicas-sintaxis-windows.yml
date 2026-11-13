@@ -90,7 +90,7 @@ jobs:
               throw "No se localizo el elemento $identificador"
             }
           }
-          if ((Get-Content -Raw "$root/.gitignore") -notmatch '(?m)^/?\.env\r?) {
+          if ((Get-Content -Raw "$root/.gitignore") -notmatch '(?m)^/?\.env\r?$') {
             throw "El .env de laboratorio no esta ignorado por Git"
           }
           if ($doc -notmatch '-ConfirmarBorradoDatos') {
