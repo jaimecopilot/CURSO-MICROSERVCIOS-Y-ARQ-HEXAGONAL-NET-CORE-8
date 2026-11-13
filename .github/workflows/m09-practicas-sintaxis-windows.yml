@@ -98,15 +98,20 @@ jobs:
           }
           Write-Host 'PASS: los seis servicios, seis acciones, codigo M08, volumenes y secretos son coherentes'
 
-      - name: Validar sintaxis del script de despliegue
+      - name: Validar sintaxis de ambos scripts de despliegue y fallos
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          $code = Get-Content -Raw 'M09_DESPLIEGUE_DOCKER/PROYECTO/EJECUTAR_DOCKER_WINDOWS.ps1'
-          $tokens = $null
-          $errores = $null
-          [void][System.Management.Automation.Language.Parser]::ParseInput($code,[ref]$tokens,[ref]$errores)
-          if (@($errores).Count -ne 0) {
-            throw ((@($errores) | ForEach-Object { $_.Message }) -join '; ')
+          foreach ($path in @(
+            'M09_DESPLIEGUE_DOCKER/PROYECTO/EJECUTAR_DOCKER_WINDOWS.ps1',
+            'M09_DESPLIEGUE_DOCKER/PROYECTO/VALIDAR_FALLOS_DOCKER_WINDOWS.ps1'
+          )) {
+            $code = Get-Content -Raw $path
+            $tokens = $null
+            $errores = $null
+            [void][System.Management.Automation.Language.Parser]::ParseInput($code,[ref]$tokens,[ref]$errores)
+            if (@($errores).Count -ne 0) {
+              throw "$path : $((@($errores) | ForEach-Object { $_.Message }) -join '; ')"
+            }
+            Write-Host "PASS: $path sin errores de sintaxis"
           }
-          Write-Host 'PASS: script original de M09 sin errores de sintaxis'
