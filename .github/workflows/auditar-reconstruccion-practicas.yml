@@ -47,6 +47,27 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Materializar y comparar físicamente los 19 puntos M03-M08
+        shell: bash
+        run: |
+          python - <<'PY'
+          import sys
+          import tempfile
+          from pathlib import Path
+          sys.path.insert(0, str(Path("tools").resolve()))
+          from auditar_reconstruccion_practicas import materializar_etapa, CONFIG
+          total = 0
+          for module in range(3,9):
+              for point in range(2, len(CONFIG[module][1]) + 1):
+                  with tempfile.TemporaryDirectory(prefix=f"m{module}p{point}_") as folder:
+                      materializar_etapa(module,point,Path(folder)/"resultado")
+                  total += 1
+          assert total == 19, f"Se esperaban 19 transiciones, se reconstruyeron {total}"
+          print(f"PASS: {total}/19 etapas materializadas y comparadas sin copiar destino")
+          PY
       - name: Reconstruccion incremental diagnostica
         run: |
           python tools/auditar_reconstruccion_practicas.py --report AUDITORIA_RECONSTRUCCION_PRACTICAS.md
