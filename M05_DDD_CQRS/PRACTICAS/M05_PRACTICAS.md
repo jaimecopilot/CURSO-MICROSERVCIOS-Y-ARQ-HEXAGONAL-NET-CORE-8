@@ -1209,13 +1209,11 @@ public record ResumenContextos(
     int Genericos);
 ```
 
-**Paso 2:** Explicar línea por línea:
+**Paso 2:** Explicar el propósito del fragmento y las decisiones que contiene:
 
-- **Línea 1:** `public record ResumenContextos(` → declara un contrato inmutable.
-- **Línea 2:** `int Total,` → número total de contextos.
-- **Línea 3:** `int Nucleos,` → número de contextos núcleo.
-- **Línea 4:** `int Soportes,` → número de contextos de soporte.
-- **Línea 5:** `int Genericos);` → número de contextos genéricos.
+La declaración `public record ResumenContextos(` declara un contrato inmutable. Número total de contextos. Número de contextos núcleo.
+Número de contextos de soporte. Número de contextos genéricos.
+
 
 **Paso 3:** En `ValidadorContextos.cs`, añadir el siguiente método estático dentro de la clase:
 
@@ -1243,16 +1241,11 @@ public static ResumenContextos Resumen(IEnumerable<ContextoDelimitado> contextos
 }
 ```
 
-**Paso 4:** Explicar línea por línea:
+**Paso 4:** Explicar el propósito del fragmento y las decisiones que contiene:
 
-- **Línea 1:** `public static ResumenContextos Resumen(IEnumerable<ContextoDelimitado> contextos)` → declara el método.
-- **Línea 2:** `{` → abre el cuerpo.
-- **Línea 3:** `var lista = contextos.ToList();` → materializa la lista.
-- **Línea 4:** `var nucleos = lista.Count(c => c.TipoDeSubdominio == "Nucleo");` → cuenta los núcleos.
-- **Línea 5:** `var soportes = lista.Count(c => c.TipoDeSubdominio == "Soporte");` → cuenta los soportes.
-- **Línea 6:** `var genericos = lista.Count(c => c.TipoDeSubdominio == "Generico");` → cuenta los genéricos.
-- **Línea 7:** `return new ResumenContextos(lista.Count, nucleos, soportes, genericos);` → devuelve el resumen.
-- **Línea 8:** `}` → cierra el cuerpo.
+La declaración `public static ResumenContextos Resumen(IEnumerable<ContextoDelimitado> c` declara el método. Materializa la lista. Cuenta los núcleos.
+Cuenta los soportes. Cuenta los genéricos. Devuelve el resumen.
+
 
 **Paso 5:** Guardar el archivo con `Ctrl+S`.
 
@@ -1284,15 +1277,10 @@ public void Resumen_ConCatalogoPorDefecto_CuentaPorTipo()
 
 **Paso 7:** Explicar línea por línea:
 
-- **Línea 1:** `[Fact]` → marca el método como test de xUnit.
-- **Línea 2:** `public void Resumen_ConCatalogoPorDefecto_CuentaPorTipo()` → declara el test.
-- **Línea 3:** `{` → abre el cuerpo.
-- **Línea 4:** `var resumen = ValidadorContextos.Resumen(CatalogoContextos.ContextosPorDefecto());` → invoca el método.
-- **Línea 6:** `resumen.Total.Should().Be(4);` → verifica el total.
-- **Línea 7:** `resumen.Nucleos.Should().Be(1);` → verifica los núcleos.
-- **Línea 8:** `resumen.Soportes.Should().Be(2);` → verifica los soportes.
-- **Línea 9:** `resumen.Genericos.Should().Be(1);` → verifica los genéricos.
-- **Línea 10:** `}` → cierra el cuerpo.
+Marca el método como test de xUnit. Declara el test. Invoca el método.
+Verifica el total. Verifica los núcleos. Verifica los soportes.
+Verifica los genéricos.
+
 
 **Paso 8:** Ejecuta `dotnet test tests/AceriaApp.Ddd.Tests/AceriaApp.Ddd.Tests.csproj -c Release` en la copia optativa. Deben pasar 17 tests del proyecto, incluido el nuevo resumen. Ejecuta después `dotnet test AceriaApp.sln -c Release` y exige 135 pruebas aprobadas.
 
@@ -2579,13 +2567,11 @@ public record ResumenModelo(
     int ValidanInvariantes);
 ```
 
-**Paso 2:** Explicar línea por línea:
+**Paso 2:** Explicar el propósito del fragmento y las decisiones que contiene:
 
-- **Línea 1:** `public record ResumenModelo(` → declara un contrato inmutable.
-- **Línea 2:** `int Total,` → número total de elementos.
-- **Línea 3:** `int Entidades,` → número de entidades.
-- **Línea 4:** `int ValueObjects,` → número de value objects.
-- **Línea 5:** `int ValidanInvariantes);` → número de elementos que validan invariantes.
+La declaración `public record ResumenModelo(` declara un contrato inmutable. Número total de elementos. Número de entidades.
+Número de value objects. Número de elementos que validan invariantes.
+
 
 **Paso 3:** En `ValidadorModeloDominio.cs`, añadir el siguiente método estático dentro de la clase:
 
@@ -2613,16 +2599,11 @@ public static ResumenModelo Resumen(IEnumerable<ElementoModelo> elementos)
 }
 ```
 
-**Paso 4:** Explicar línea por línea:
+**Paso 4:** Explicar el propósito del fragmento y las decisiones que contiene:
 
-- **Línea 1:** `public static ResumenModelo Resumen(IEnumerable<ElementoModelo> elementos)` → declara el método.
-- **Línea 2:** `{` → abre el cuerpo.
-- **Línea 3:** `var lista = elementos.ToList();` → materializa la lista.
-- **Línea 4:** `var entidades = lista.Count(e => e.Tipo == "Entidad");` → cuenta las entidades.
-- **Línea 5:** `var valueObjects = lista.Count(e => e.Tipo == "ValueObject");` → cuenta los value objects.
-- **Línea 6:** `var validan = lista.Count(e => e.ValidaInvariantes);` → cuenta los que validan invariantes.
-- **Línea 7:** `return new ResumenModelo(lista.Count, entidades, valueObjects, validan);` → devuelve el resumen.
-- **Línea 8:** `}` → cierra el cuerpo.
+La declaración `public static ResumenModelo Resumen(IEnumerable<ElementoModelo> elemento` declara el método. Materializa la lista. Cuenta las entidades.
+Cuenta los value objects. Cuenta los que validan invariantes. Devuelve el resumen.
+
 
 **Paso 5:** Guardar el archivo con `Ctrl+S`.
 
@@ -2654,15 +2635,10 @@ public void Resumen_ConCatalogoPorDefecto_CalculaTotales()
 
 **Paso 7:** Explicar línea por línea:
 
-- **Línea 1:** `[Fact]` → marca el método como test de xUnit.
-- **Línea 2:** `public void Resumen_ConCatalogoPorDefecto_CalculaTotales()` → declara el test.
-- **Línea 3:** `{` → abre el cuerpo.
-- **Línea 4:** `var resumen = ValidadorModeloDominio.Resumen(CatalogoModelo.ElementosPorDefecto());` → invoca el método.
-- **Línea 6:** `resumen.Total.Should().Be(6);` → verifica el total.
-- **Línea 7:** `resumen.Entidades.Should().Be(3);` → verifica las entidades.
-- **Línea 8:** `resumen.ValueObjects.Should().Be(3);` → verifica los value objects.
-- **Línea 9:** `resumen.ValidanInvariantes.Should().Be(6);` → verifica los que validan invariantes.
-- **Línea 10:** `}` → cierra el cuerpo.
+Marca el método como test de xUnit. Declara el test. Invoca el método.
+Verifica el total. Verifica las entidades. Verifica los value objects.
+Verifica los que validan invariantes.
+
 
 **Paso 8:** Ejecuta `dotnet test tests/AceriaApp.ModeloDominio.Tests/AceriaApp.ModeloDominio.Tests.csproj -c Release` en la copia optativa. Deben pasar 20 tests del proyecto, incluido el nuevo resumen. Ejecuta después `dotnet test AceriaApp.sln -c Release` y exige 154 pruebas aprobadas.
 
@@ -4409,13 +4385,11 @@ public record ResumenCasosDeUso(
     int CoordinanUnidadDeTrabajo);
 ```
 
-**Paso 2:** Explicar línea por línea:
+**Paso 2:** Explicar el propósito del fragmento y las decisiones que contiene:
 
-- **Línea 1:** `public record ResumenCasosDeUso(` → declara un contrato inmutable.
-- **Línea 2:** `int Total,` → número total de casos de uso.
-- **Línea 3:** `int Escrituras,` → número de casos de escritura.
-- **Línea 4:** `int Lecturas,` → número de casos de lectura.
-- **Línea 5:** `int CoordinanUnidadDeTrabajo);` → número de casos que coordinan la unidad.
+La declaración `public record ResumenCasosDeUso(` declara un contrato inmutable. Número total de casos de uso. Número de casos de escritura.
+Número de casos de lectura. Número de casos que coordinan la unidad.
+
 
 **Paso 3:** En `ValidadorCasosDeUso.cs`, añadir el siguiente método estático dentro de la clase:
 
@@ -4443,16 +4417,11 @@ public static ResumenCasosDeUso Resumen(IEnumerable<CasoDeUso> casos)
 }
 ```
 
-**Paso 4:** Explicar línea por línea:
+**Paso 4:** Explicar el propósito del fragmento y las decisiones que contiene:
 
-- **Línea 1:** `public static ResumenCasosDeUso Resumen(IEnumerable<CasoDeUso> casos)` → declara el método.
-- **Línea 2:** `{` → abre el cuerpo.
-- **Línea 3:** `var lista = casos.ToList();` → materializa la lista.
-- **Línea 4:** `var escrituras = lista.Count(c => c.Tipo == "Escritura");` → cuenta las escrituras.
-- **Línea 5:** `var lecturas = lista.Count(c => c.Tipo == "Lectura");` → cuenta las lecturas.
-- **Línea 6:** `var coordinan = lista.Count(c => c.CoordinaUnidadDeTrabajo);` → cuenta los que coordinan.
-- **Línea 7:** `return new ResumenCasosDeUso(lista.Count, escrituras, lecturas, coordinan);` → devuelve el resumen.
-- **Línea 8:** `}` → cierra el cuerpo.
+La declaración `public static ResumenCasosDeUso Resumen(IEnumerable<CasoDeUso> casos)` declara el método. Materializa la lista. Cuenta las escrituras.
+Cuenta las lecturas. Cuenta los que coordinan. Devuelve el resumen.
+
 
 **Paso 5:** Guardar el archivo con `Ctrl+S`.
 
@@ -4484,15 +4453,10 @@ public void Resumen_ConCatalogoPorDefecto_CalculaTotales()
 
 **Paso 7:** Explicar línea por línea:
 
-- **Línea 1:** `[Fact]` → marca el método como test de xUnit.
-- **Línea 2:** `public void Resumen_ConCatalogoPorDefecto_CalculaTotales()` → declara el test.
-- **Línea 3:** `{` → abre el cuerpo.
-- **Línea 4:** `var resumen = ValidadorCasosDeUso.Resumen(CatalogoCasosDeUso.CasosPorDefecto());` → invoca el método.
-- **Línea 6:** `resumen.Total.Should().Be(4);` → verifica el total.
-- **Línea 7:** `resumen.Escrituras.Should().Be(2);` → verifica las escrituras.
-- **Línea 8:** `resumen.Lecturas.Should().Be(2);` → verifica las lecturas.
-- **Línea 9:** `resumen.CoordinanUnidadDeTrabajo.Should().Be(2);` → verifica los que coordinan.
-- **Línea 10:** `}` → cierra el cuerpo.
+Marca el método como test de xUnit. Declara el test. Invoca el método.
+Verifica el total. Verifica las escrituras. Verifica las lecturas.
+Verifica los que coordinan.
+
 
 **Paso 8:** Ejecuta `dotnet test tests/AceriaApp.CasosDeUso.Tests/AceriaApp.CasosDeUso.Tests.csproj -c Release` en la copia optativa. Deben pasar 20 tests del proyecto, incluido el nuevo resumen. Ejecuta después `dotnet test AceriaApp.sln -c Release` y exige 173 pruebas aprobadas.
 
@@ -5902,13 +5866,11 @@ public record ResumenCqrs(
     int DevuelvenResult);
 ```
 
-**Paso 2:** Explicar línea por línea:
+**Paso 2:** Explicar el propósito del fragmento y las decisiones que contiene:
 
-- **Línea 1:** `public record ResumenCqrs(` → declara un contrato inmutable.
-- **Línea 2:** `int Total,` → número total de mensajes.
-- **Línea 3:** `int Commands,` → número de commands.
-- **Línea 4:** `int Queries,` → número de queries.
-- **Línea 5:** `int DevuelvenResult);` → número de mensajes que devuelven Result.
+La declaración `public record ResumenCqrs(` declara un contrato inmutable. Número total de mensajes. Número de commands.
+Número de queries. Número de mensajes que devuelven Result.
+
 
 **Paso 3:** En `ValidadorCqrs.cs`, añadir el siguiente método estático dentro de la clase:
 
@@ -5936,16 +5898,11 @@ public static ResumenCqrs Resumen(IEnumerable<MensajeCqrs> mensajes)
 }
 ```
 
-**Paso 4:** Explicar línea por línea:
+**Paso 4:** Explicar el propósito del fragmento y las decisiones que contiene:
 
-- **Línea 1:** `public static ResumenCqrs Resumen(IEnumerable<MensajeCqrs> mensajes)` → declara el método.
-- **Línea 2:** `{` → abre el cuerpo.
-- **Línea 3:** `var lista = mensajes.ToList();` → materializa la lista.
-- **Línea 4:** `var commands = lista.Count(m => m.Tipo == "Command");` → cuenta los commands.
-- **Línea 5:** `var queries = lista.Count(m => m.Tipo == "Query");` → cuenta las queries.
-- **Línea 6:** `var devuelven = lista.Count(m => m.DevuelveResult);` → cuenta los que devuelven Result.
-- **Línea 7:** `return new ResumenCqrs(lista.Count, commands, queries, devuelven);` → devuelve el resumen.
-- **Línea 8:** `}` → cierra el cuerpo.
+La declaración `public static ResumenCqrs Resumen(IEnumerable<MensajeCqrs> mensajes)` declara el método. Materializa la lista. Cuenta los commands.
+Cuenta las queries. Cuenta los que devuelven Result. Devuelve el resumen.
+
 
 **Paso 5:** Guardar el archivo con `Ctrl+S`.
 
@@ -5977,15 +5934,10 @@ public void Resumen_ConCatalogoPorDefecto_CalculaTotales()
 
 **Paso 7:** Explicar línea por línea:
 
-- **Línea 1:** `[Fact]` → marca el método como test de xUnit.
-- **Línea 2:** `public void Resumen_ConCatalogoPorDefecto_CalculaTotales()` → declara el test.
-- **Línea 3:** `{` → abre el cuerpo.
-- **Línea 4:** `var resumen = ValidadorCqrs.Resumen(CatalogoCqrs.MensajesPorDefecto());` → invoca el método.
-- **Línea 6:** `resumen.Total.Should().Be(4);` → verifica el total.
-- **Línea 7:** `resumen.Commands.Should().Be(2);` → verifica los commands.
-- **Línea 8:** `resumen.Queries.Should().Be(2);` → verifica las queries.
-- **Línea 9:** `resumen.DevuelvenResult.Should().Be(4);` → verifica los que devuelven Result.
-- **Línea 10:** `}` → cierra el cuerpo.
+Marca el método como test de xUnit. Declara el test. Invoca el método.
+Verifica el total. Verifica los commands. Verifica las queries.
+Verifica los que devuelven Result.
+
 
 **Paso 8:** Ejecuta `dotnet test tests/AceriaApp.Cqrs.Tests/AceriaApp.Cqrs.Tests.csproj -c Release` en la copia optativa. Deben pasar 19 tests del proyecto, incluido el nuevo resumen. Ejecuta después `dotnet test AceriaApp.sln -c Release` y exige 191 pruebas aprobadas.
 
@@ -7377,14 +7329,11 @@ public record ResumenDominioAceria(
     int RaicesDeAgregado);
 ```
 
-**Paso 2:** Explicar línea por línea:
+**Paso 2:** Explicar el propósito del fragmento y las decisiones que contiene:
 
-- **Línea 1:** `public record ResumenDominioAceria(` → declara un contrato inmutable.
-- **Línea 2:** `int Total,` → número total de elementos.
-- **Línea 3:** `int Agregados,` → número de agregados.
-- **Línea 4:** `int Entidades,` → número de entidades.
-- **Línea 5:** `int ValueObjects,` → número de value objects.
-- **Línea 6:** `int RaicesDeAgregado);` → número de raíces de agregado.
+La declaración `public record ResumenDominioAceria(` declara un contrato inmutable. Número total de elementos. Número de agregados.
+Número de entidades. Número de value objects. Número de raíces de agregado.
+
 
 **Paso 3:** En `ValidadorDominioAceria.cs`, añadir el siguiente método estático dentro de la clase:
 
@@ -7413,17 +7362,12 @@ public static ResumenDominioAceria Resumen(IEnumerable<ElementoAceria> elementos
 }
 ```
 
-**Paso 4:** Explicar línea por línea:
+**Paso 4:** Explicar el propósito del fragmento y las decisiones que contiene:
 
-- **Línea 1:** `public static ResumenDominioAceria Resumen(IEnumerable<ElementoAceria> elementos)` → declara el método.
-- **Línea 2:** `{` → abre el cuerpo.
-- **Línea 3:** `var lista = elementos.ToList();` → materializa la lista.
-- **Línea 4:** `var agregados = lista.Count(e => e.Tipo == "Agregado");` → cuenta los agregados.
-- **Línea 5:** `var entidades = lista.Count(e => e.Tipo == "Entidad");` → cuenta las entidades.
-- **Línea 6:** `var valueObjects = lista.Count(e => e.Tipo == "ValueObject");` → cuenta los value objects.
-- **Línea 7:** `var raices = lista.Count(e => e.EsRaizDeAgregado);` → cuenta las raíces.
-- **Línea 8:** `return new ResumenDominioAceria(lista.Count, agregados, entidades, valueObjects, raices);` → devuelve el resumen.
-- **Línea 9:** `}` → cierra el cuerpo.
+La declaración `public static ResumenDominioAceria Resumen(IEnumerable<ElementoAceria> e` declara el método. Materializa la lista. Cuenta los agregados.
+Cuenta las entidades. Cuenta los value objects. Cuenta las raíces.
+Devuelve el resumen.
+
 
 **Paso 5:** Guardar el archivo con `Ctrl+S`.
 
@@ -7456,16 +7400,10 @@ public void Resumen_ConCatalogoPorDefecto_CalculaTotales()
 
 **Paso 7:** Explicar línea por línea:
 
-- **Línea 1:** `[Fact]` → marca el método como test de xUnit.
-- **Línea 2:** `public void Resumen_ConCatalogoPorDefecto_CalculaTotales()` → declara el test.
-- **Línea 3:** `{` → abre el cuerpo.
-- **Línea 4:** `var resumen = ValidadorDominioAceria.Resumen(CatalogoAceria.ElementosPorDefecto());` → invoca el método.
-- **Línea 6:** `resumen.Total.Should().Be(10);` → verifica el total.
-- **Línea 7:** `resumen.Agregados.Should().Be(3);` → verifica los agregados.
-- **Línea 8:** `resumen.Entidades.Should().Be(4);` → verifica las entidades.
-- **Línea 9:** `resumen.ValueObjects.Should().Be(3);` → verifica los value objects.
-- **Línea 10:** `resumen.RaicesDeAgregado.Should().Be(3);` → verifica las raíces.
-- **Línea 11:** `}` → cierra el cuerpo.
+Marca el método como test de xUnit. Declara el test. Invoca el método.
+Verifica el total. Verifica los agregados. Verifica las entidades.
+Verifica los value objects. Verifica las raíces.
+
 
 **Paso 8:** Ejecuta `dotnet test tests/AceriaApp.DominioAceria.Tests/AceriaApp.DominioAceria.Tests.csproj -c Release` en la copia optativa. Deben pasar 19 tests del proyecto, incluido el nuevo resumen. Ejecuta después `dotnet test AceriaApp.sln -c Release` y exige 209 pruebas aprobadas.
 
