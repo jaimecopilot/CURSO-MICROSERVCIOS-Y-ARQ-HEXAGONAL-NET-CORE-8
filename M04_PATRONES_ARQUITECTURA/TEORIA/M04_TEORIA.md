@@ -391,11 +391,15 @@ Relaciona cada puerto activo con su registro DI, adaptador y prueba. Usa los nom
 
 ---
 
-## Desarrollo teórico
+## De los cambios preparados a la confirmación real
 
-### Bloque 1 — Definición del patrón Unit of Work
 
-El patrón Unit of Work es una abstracción que coordina las operaciones de varios repositorios en una única transacción. Su propósito es garantizar que un conjunto de cambios se aplica de forma atómica: o se aplican todos o no se aplica ninguno. La unidad de trabajo mantiene el seguimiento de los objetos que han sido modificados durante una operación y los persiste en bloque. La interfaz de la unidad de trabajo se define en la capa de aplicación. La implementación se sitúa en la capa de infraestructura.
+
+Utilizaremos el recorrido de una orden para distinguir el estado que conoce EF Core de lo que SQL Server ha confirmado. Desde ahí podremos evaluar qué valor aporta coordinar repositorios y cómo demostrar atomicidad ante un fallo.
+
+### Definición del patrón Unit of Work
+
+Una unidad de trabajo sirve para delimitar qué modificaciones deben confirmarse como una sola operación de persistencia. Cuando un caso de uso incorpora una orden y registra un movimiento asociado, no debería aceptar que una de las escrituras quede guardada y la otra desaparezca si ambas forman parte de una misma decisión del negocio. Unit of Work expresa esa frontera de confirmación y permite coordinar repositorios sin convertir cada uno en dueño del momento del commit. En AceriaApp utilizaremos un puerto de aplicación y una implementación de infraestructura que se apoya en EF Core. Esto no significa inventar un gestor de transacciones desde cero: `DbContext` ya conoce cambios y puede confirmarlos con `SaveChangesAsync`. La abstracción añadida tiene sentido cuando ayuda al caso de uso a expresar explícitamente cuándo una operación está completa.
 
 ```text
 Patrón Unit of Work:
@@ -407,32 +411,26 @@ Aplicación → IUnitOfWork (puerto)
 Infraestructura → EfUnitOfWork (adaptador)
 ```
 
-- **Línea 1:** `Aplicación → IUnitOfWork (puerto)` → la aplicación define el puerto.
-- **Línea 2:** `↑` → la flecha indica que la infraestructura implementa el puerto.
-- **Línea 3:** `| implementa` → la infraestructura implementa el puerto.
-- **Línea 4:** `Infraestructura → EfUnitOfWork (adaptador)` → la infraestructura contiene el adaptador.
+
+La interfaz `IUnitOfWork` pertenece a la aplicación, y su implementación EF Core reside en infraestructura. Ese dibujo muestra dónde se define la necesidad de confirmar cambios y dónde se decide cómo hacerlo. No supone que cualquier base remota participe en la misma transacción.
+
 
 La unidad de trabajo se caracteriza por tres propiedades. La primera es que mantiene el seguimiento de los cambios: sabe qué entidades han sido añadidas, modificadas o eliminadas durante una operación. La segunda es que coordina la persistencia: aplica todos los cambios en una única transacción. La tercera es que expone una operación de confirmación: el cliente decide cuándo se aplican los cambios. Las tres propiedades permiten que la aplicación controle la atomicidad de las operaciones sin acoplar los repositorios entre sí.
 
 La aplicación del patrón Unit of Work tiene dos consecuencias prácticas. La primera es que las operaciones complejas que afectan a varias entidades se ejecutan de forma atómica. La segunda es que los repositorios no gestionan transacciones: solo añaden, modifican o eliminan entidades. La combinación de ambas permite que la aplicación controle la atomicidad sin acoplar los repositorios. La unidad de trabajo es la pieza que coordina los repositorios en una operación compleja.
 
----
 
+Una unidad de trabajo reúne cambios relacionados durante un caso de uso. Atomicidad significa que la operación confirmada se aplica completa dentro del recurso transaccional cubierto.
 
+OrdenesTransaccionales registra órdenes mediante el puerto de trabajo y confirma por IUnitOfWork. Ambos adaptadores comparten HexagonalDbContext dentro del ámbito de DI.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Una transacción no garantiza por sí sola idempotencia de reintentos ni evita todas las carreras. Aislamiento, concurrencia y repetición son decisiones diferentes.
 
-**La decisión arquitectónica.** Una unidad de trabajo reúne cambios relacionados durante un caso de uso. Atomicidad significa que la operación confirmada se aplica completa dentro del recurso transaccional cubierto.
+Formula una operación con dos cambios y provoca el fallo del segundo. Comprueba la base de datos desde un contexto nuevo para detectar cualquier escritura parcial.
 
-**Ejemplo concreto en AceriaApp.** OrdenesTransaccionales registra órdenes mediante el puerto de trabajo y confirma por IUnitOfWork. Ambos adaptadores comparten HexagonalDbContext dentro del ámbito de DI.
+### Relación entre Unit of Work y Repository
 
-**Riesgo, alternativa y límite.** Una transacción no garantiza por sí sola idempotencia de reintentos ni evita todas las carreras. Aislamiento, concurrencia y repetición son decisiones diferentes.
-
-**Comprobación técnica y aprendizaje.** Formula una operación con dos cambios y provoca el fallo del segundo. Comprueba la base de datos desde un contexto nuevo para detectar cualquier escritura parcial.
-
-### Bloque 2 — Relación entre Unit of Work y Repository
-
-El patrón Repository y el patrón Unit of Work se complementan. El repositorio gestiona las operaciones sobre una entidad concreta. La unidad de trabajo coordina las operaciones que participan en el mismo ámbito de persistencia. El repositorio no confirma los cambios: los deja pendientes. La unidad de trabajo confirma los cambios de todos los repositorios en una única transacción. La separación entre ambos permite que cada pieza tenga una responsabilidad clara.
+Repository y Unit of Work resuelven preguntas diferentes. El repositorio responde a qué entidad o agregado se consulta o modifica; la unidad de trabajo responde a cuándo se confirma el conjunto de cambios preparados. Si un repositorio llama a `SaveChangesAsync` en cada método, el caso de uso pierde parte del control sobre la atomicidad cuando necesita coordinar varias operaciones. Al definir `CommitAsync` en un contrato de aplicación podemos declarar que la confirmación es un acto separado de agregar una orden al contexto. No obstante, hay que diseñar bien la frontera: un único `DbContext` con seguimiento de cambios ya funciona como unidad de trabajo para muchas aplicaciones. La interfaz adicional es útil si hace más claras las transacciones y las pruebas, no por cumplir una regla formal.
 
 ```csharp
 public interface IUnitOfWork
@@ -441,36 +439,30 @@ public interface IUnitOfWork
 }
 ```
 
-- **Línea 1:** `public interface IUnitOfWork` → interfaz de la unidad de trabajo.
-- **Línea 2:** `{` → abre el cuerpo.
-- **Línea 3:** `Task<int> CommitAsync(CancellationToken ct = default);` → método de confirmación.
-- **Línea 4:** `}` → cierra el cuerpo.
+
+`CommitAsync` expresa el momento de confirmación del conjunto de modificaciones preparadas. La semántica debe acordarse con los métodos de Repository: si cada uno confirma por su cuenta, el puerto de unidad de trabajo aporta poco control adicional.
+
 
 La relación entre ambos patrones tiene dos consecuencias prácticas. La primera es que el repositorio se mantiene simple: no gestiona transacciones. La segunda es que el puerto se mantiene pequeño: no necesita enumerar las entidades, aunque el contexto de infraestructura las conozca. La combinación de ambas permite que la aplicación componga operaciones complejas a partir de operaciones simples. La composición se realiza en la capa de aplicación con la unidad de trabajo como coordinadora.
 
 La ausencia de la unidad de trabajo produce tres síntomas reconocibles. El primero es la duplicación de la gestión de transacciones en cada repositorio. El segundo es la dificultad de coordinar varias operaciones en una única transacción. El tercero es el riesgo de confirmar cambios parciales. Los tres síntomas motivan revisar el límite transaccional; un DbContext compartido ya puede cubrirlo sin otra clase. La corrección se aplica en la capa de aplicación, donde se compone la operación compleja.
 
----
 
+El repositorio expresa acceso a un agregado y la unidad expresa el límite de confirmación. La aplicación decide dónde termina la operación de negocio.
 
+El repositorio de trabajo no llama a SaveChanges. Su método AgregarAsync deja una entrada Added, y CommitAsync envía al proveedor todos los cambios del contexto compartido.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Un DbContext ya ofrece estas responsabilidades. El puerto adicional aporta independencia a aplicación; no debe duplicar manualmente el seguimiento que el ORM resuelve.
 
-**La decisión arquitectónica.** El repositorio expresa acceso a un agregado y la unidad expresa el límite de confirmación. La aplicación decide dónde termina la operación de negocio.
-
-**Ejemplo concreto en AceriaApp.** El repositorio de trabajo no llama a SaveChanges. Su método AgregarAsync deja una entrada Added, y CommitAsync envía al proveedor todos los cambios del contexto compartido.
-
-**Riesgo, alternativa y límite.** Un DbContext ya ofrece estas responsabilidades. El puerto adicional aporta independencia a aplicación; no debe duplicar manualmente el seguimiento que el ORM resuelve.
-
-**Comprobación técnica y aprendizaje.** Busca SaveChanges en los adaptadores de M4 y verifica que la confirmación del flujo transaccional está centralizada. El repositorio heredado de M3 es una variante distinta.
+Busca SaveChanges en los adaptadores de M4 y verifica que la confirmación del flujo transaccional está centralizada. El repositorio heredado de M3 es una variante distinta.
 
 ![Diagrama explicativo del punto 4.2, bloque 2](IMAGENES/4-2-compartida.svg)
 
-*Interpretación del gráfico:* Los dos puertos comparten una misma instancia de contexto y una misma frontera de confirmación. La figura se distribuye en SVG vectorial y PNG.
+Los dos puertos comparten una misma instancia de contexto y una misma frontera de confirmación. La figura se distribuye en SVG vectorial y PNG.
 
-### Bloque 3 — Responsabilidades de la unidad de trabajo
+### Responsabilidades de la unidad de trabajo
 
-La unidad de trabajo tiene tres responsabilidades principales. La primera es mantener el seguimiento de las entidades modificadas durante una operación. El ORM mantiene identidades y estados de seguimiento. El mapa de identidad evita materializar varias instancias seguidas con la misma clave; el seguimiento de cambios registra además qué debe persistirse. El estado puede ser añadido, modificado, eliminado o sin cambios. La segunda responsabilidad es coordinar la persistencia: aplicar todos los cambios en una única transacción. La tercera responsabilidad es exponer la operación de confirmación: el cliente decide cuándo se aplican los cambios.
+La unidad de trabajo debe confirmar o descartar un conjunto coherente de cambios en su ámbito de persistencia. En EF Core esa responsabilidad se apoya en el contexto y, cuando se necesita una secuencia de operaciones o varias llamadas de guardado, en una transacción explícita del proveedor. Una interfaz puede ofrecer `CommitAsync` y, si está justificado, una forma de cancelar una operación, pero eso no garantiza por sí mismo que todo rollback sea posible después de confirmar. La semántica depende de cuándo se materializaron las escrituras, qué conexión se utiliza y qué excepciones ocurrieron. En AceriaApp el alumno deberá distinguir cambios pendientes del `ChangeTracker` de filas realmente confirmadas y luego comprobar con otro contexto qué quedó almacenado.
 
 Ejemplo de una **variante con reversión explícita**. Para implementarla se debe definir y conservar la transacción abierta; no se usa como sustituto del puerto mínimo de los bloques 5 y 7.
 
@@ -482,33 +474,26 @@ public interface IUnidadTransaccional
 }
 ```
 
-- **Línea 1:** `public interface IUnidadTransaccional` → interfaz de la unidad de trabajo.
-- **Línea 2:** `{` → abre el cuerpo.
-- **Línea 3:** `Task<int> CommitAsync(CancellationToken ct = default);` → método de confirmación.
-- **Línea 4:** `Task RollbackAsync();` → método de reversión.
-- **Línea 5:** `}` → cierra el cuerpo.
+
+El contrato de confirmación y cancelación obliga a precisar cuándo puede realizarse un rollback. Descartar cambios pendientes antes de escribir no equivale a revertir una transacción ya confirmada; el comportamiento de cada operación depende del proveedor y de la frontera temporal.
+
 
 La confirmación se expresa con `CommitAsync`. Algunas interfaces añaden `RollbackAsync`, pero ese nombre exige definir si revierte una transacción abierta o descarta cambios que todavía no se han enviado. No son equivalentes. Una interfaz mínima puede exponer solo confirmación y dejar que la eliminación del ámbito descarte el trabajo no confirmado.
 
 La definición de las responsabilidades tiene dos consecuencias prácticas. La primera es que la unidad de trabajo es una abstracción de la transacción, no del dominio. La segunda es que el puerto puede ocultar las entidades concretas mientras la implementación gestiona sus cambios pendientes. La combinación de ambas permite que la unidad de trabajo sea simple y sustituible. La unidad de trabajo se limita a las operaciones básicas de confirmación y reversión.
 
----
 
+Confirmar, deshacer una transacción abierta y abandonar cambios en memoria son operaciones diferentes. El contrato debe decir cuál ofrece, especialmente si usa la palabra Rollback.
 
+El puerto mínimo de M4 expone CommitAsync(ct). Si no se confirma y se desecha el ámbito, los cambios preparados desaparecen con el contexto sin haberse persistido.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Un RollbackAsync que solo espera Task.CompletedTask promete un efecto que no realiza. Marcar entradas Unchanged tampoco deshace escrituras ya confirmadas en SQL Server.
 
-**La decisión arquitectónica.** Confirmar, deshacer una transacción abierta y abandonar cambios en memoria son operaciones diferentes. El contrato debe decir cuál ofrece, especialmente si usa la palabra Rollback.
+Comprueba por separado el estado del objeto y el estado almacenado. Después de una reversión, no reutilices ciegamente objetos que todavía contienen valores del intento fallido.
 
-**Ejemplo concreto en AceriaApp.** El puerto mínimo de M4 expone CommitAsync(ct). Si no se confirma y se desecha el ámbito, los cambios preparados desaparecen con el contexto sin haberse persistido.
+### Lo que una unidad de trabajo no debe hacer
 
-**Riesgo, alternativa y límite.** Un RollbackAsync que solo espera Task.CompletedTask promete un efecto que no realiza. Marcar entradas Unchanged tampoco deshace escrituras ya confirmadas en SQL Server.
-
-**Comprobación técnica y aprendizaje.** Comprueba por separado el estado del objeto y el estado almacenado. Después de una reversión, no reutilices ciegamente objetos que todavía contienen valores del intento fallido.
-
-### Bloque 4 — Lo que una unidad de trabajo no debe hacer
-
-Una unidad de trabajo no debe contener reglas de negocio. Las reglas de negocio residen en las entidades del dominio. El contrato de unidad de trabajo no necesita enumerar entidades concretas; su implementación sí puede conocerlas mediante el contexto. Una unidad de trabajo no debe transformar entidades en DTOs. Una unidad de trabajo no debe ejecutar consultas complejas. Una unidad de trabajo no debe gestionar la lógica de los repositorios.
+La unidad de trabajo no debe apropiarse de reglas de una orden ni de consultas que pertenecen a sus repositorios. Su función no es decidir si un lote supera una capacidad, construir DTOs ni transformar un fallo de SQL en una respuesta HTTP de negocio. Esas decisiones necesitan fronteras claras: dominio para invariantes, aplicación para coordinación y adaptadores para tecnología y protocolo. El diseño pierde claridad cuando `IUnitOfWork` se convierte en una interfaz enorme que contiene un método por cada entidad. En AceriaApp se busca un contrato de confirmación que colabore con los repositorios del mismo contexto, conservando la posibilidad de probar la coordinación por separado y de observar el commit real contra SQL Server.
 
 ```text
 Lo que una unidad de trabajo no debe hacer:
@@ -520,31 +505,24 @@ Lo que una unidad de trabajo no debe hacer:
 - Gestionar la lógica de los repositorios.
 ```
 
-- **Línea 1:** `- Contener reglas de negocio.` → las reglas residen en el dominio.
-- **Línea 2:** `- Exponer detalles de cada entidad en el puerto de confirmación.` → la unidad de trabajo gestiona cambios pendientes.
-- **Línea 3:** `- Transformar entidades en DTOs.` → la transformación reside en la aplicación.
-- **Línea 4:** `- Ejecutar consultas complejas.` → las consultas residen en los repositorios.
-- **Línea 5:** `- Gestionar la lógica de los repositorios.` → los repositorios gestionan su propia lógica.
+
+La lista delimita responsabilidades: la unidad de trabajo no debería validar el negocio ni decidir respuestas HTTP, sino coordinar la persistencia. Al mantener estas tareas en dominio, aplicación y adaptadores se evita que una sola clase concentre todas las decisiones.
+
 
 La delimitación de responsabilidades tiene dos consecuencias prácticas. La primera es que la unidad de trabajo se mantiene simple y cohesionada. La segunda es que las reglas de negocio y las validaciones no se duplican entre la unidad de trabajo y el dominio. La combinación de ambas permite que la unidad de trabajo sea sustituible sin afectar a la lógica de negocio. La disciplina en la delimitación es lo que distingue una unidad de trabajo correcta de una que acumula responsabilidades.
 
----
 
+La unidad debe coordinar persistencia; no decidir precios, cantidades máximas ni respuestas HTTP. La política de cuándo confirmar corresponde al caso de uso.
 
+OrdenHexagonal protege cantidad positiva; OrdenesTransaccionales coordina el alta; el adaptador EfUnitOfWork delega la escritura en EF Core. Son responsabilidades distintas aunque compartan una petición.
 
-#### Ampliación didáctica aplicada a AceriaApp
+El contexto conoce el modelo y las relaciones. Eso no vulnera por sí mismo el patrón: la abstracción del núcleo puede seguir siendo una operación de confirmación pequeña.
 
-**La decisión arquitectónica.** La unidad debe coordinar persistencia; no decidir precios, cantidades máximas ni respuestas HTTP. La política de cuándo confirmar corresponde al caso de uso.
+Lee los parámetros de CommitAsync. No debería recibir HttpContext ni instrucciones de negocio ajenas a persistencia; sí puede recibir un CancellationToken.
 
-**Ejemplo concreto en AceriaApp.** OrdenHexagonal protege cantidad positiva; OrdenesTransaccionales coordina el alta; el adaptador EfUnitOfWork delega la escritura en EF Core. Son responsabilidades distintas aunque compartan una petición.
+### Seguimiento de cambios
 
-**Riesgo, alternativa y límite.** El contexto conoce el modelo y las relaciones. Eso no vulnera por sí mismo el patrón: la abstracción del núcleo puede seguir siendo una operación de confirmación pequeña.
-
-**Comprobación técnica y aprendizaje.** Lee los parámetros de CommitAsync. No debería recibir HttpContext ni instrucciones de negocio ajenas a persistencia; sí puede recibir un CancellationToken.
-
-### Bloque 5 — Seguimiento de cambios
-
-El seguimiento de cambios es la primera responsabilidad de la unidad de trabajo. La unidad de trabajo registra cada operación que modifica una entidad. El registro incluye el tipo de operación y la entidad afectada. Cuando el cliente confirma los cambios, la unidad de trabajo aplica todas las operaciones en el orden adecuado. EF Core calcula el orden según el grafo de dependencias, claves foráneas y restricciones. No existe una regla general que ordene siempre todas las inserciones antes de todas las eliminaciones.
+El seguimiento de cambios de EF Core permite registrar operaciones sobre entidades sin enviarlas inmediatamente a SQL Server. `Add` o una modificación de propiedades deja el contexto en un estado preparado; `SaveChangesAsync` calcula y ejecuta las operaciones que deben persistirse. Esta separación ayuda a comprender por qué el código puede parecer correcto en memoria antes de que exista ninguna fila en la base. Un adaptador `EfUnitOfWork` que llama a `SaveChangesAsync` centraliza ese momento, pero su robustez depende del mismo proveedor, las restricciones y la transacción que use el contexto. La comprobación didáctica debe leer desde otra instancia de `DbContext` después de confirmar, porque consultar entidades ya seguidas por el primer contexto puede ocultar una escritura que nunca ocurrió.
 
 ```csharp
 public sealed class EfUnitOfWork(HexagonalDbContext db) : IUnitOfWork
@@ -554,31 +532,24 @@ public sealed class EfUnitOfWork(HexagonalDbContext db) : IUnitOfWork
 }
 ```
 
-- **Línea 1:** `public sealed class EfUnitOfWork(HexagonalDbContext db) : IUnitOfWork` → recibe el mismo contexto scoped que usan los repositorios.
-- **Línea 2:** `{` → abre la implementación del puerto mínimo.
-- **Línea 3:** `public Task<int> CommitAsync(CancellationToken ct = default) =>` → expone la confirmación y propaga cancelación.
-- **Línea 4:** `db.SaveChangesAsync(ct);` → delega el seguimiento y la escritura atómica en EF Core.
-- **Línea 5:** `}` → cierra la clase.
+
+El ejemplo `EfUnitOfWork` delega `CommitAsync` a `SaveChangesAsync`. La diferencia didáctica es que el caso de uso conoce una operación de confirmación y no el método concreto de EF Core. La base real sigue siendo quien determina las garantías transaccionales.
+
 
 El seguimiento de cambios tiene dos consecuencias prácticas. La primera es que la unidad de trabajo conoce el estado de cada entidad. La segunda es que la confirmación aplica todos los cambios en una única transacción. La combinación de ambas permite que la aplicación controle la atomicidad de las operaciones. El seguimiento de cambios se delega en el `DbContext` de EF Core cuando se usa Entity Framework Core.
 
----
 
+El seguimiento compara valores y estados para producir las operaciones necesarias. No es una lista artesanal de SQL que la aplicación deba mantener.
 
+Una OrdenHexagonal nueva se añade al contexto y queda pendiente. Una entidad recuperada con seguimiento puede modificarse mediante un método de dominio y guardarse en el siguiente commit.
 
-#### Ampliación didáctica aplicada a AceriaApp
+AsNoTracking evita ese seguimiento normal. Además, DbContext no permite operaciones concurrentes: no ejecutes consultas paralelas con la misma instancia por usar métodos asíncronos.
 
-**La decisión arquitectónica.** El seguimiento compara valores y estados para producir las operaciones necesarias. No es una lista artesanal de SQL que la aplicación deba mantener.
+Inspecciona ChangeTracker.Entries durante una prueba y contrasta el estado antes y después de SaveChanges. No confundas ese estado de memoria con la durabilidad de una transacción externa.
 
-**Ejemplo concreto en AceriaApp.** Una OrdenHexagonal nueva se añade al contexto y queda pendiente. Una entidad recuperada con seguimiento puede modificarse mediante un método de dominio y guardarse en el siguiente commit.
+### EF Core como unidad de trabajo
 
-**Riesgo, alternativa y límite.** AsNoTracking evita ese seguimiento normal. Además, DbContext no permite operaciones concurrentes: no ejecutes consultas paralelas con la misma instancia por usar métodos asíncronos.
-
-**Comprobación técnica y aprendizaje.** Inspecciona ChangeTracker.Entries durante una prueba y contrasta el estado antes y después de SaveChanges. No confundas ese estado de memoria con la durabilidad de una transacción externa.
-
-### Bloque 6 — EF Core como unidad de trabajo
-
-Entity Framework Core implementa el patrón Unit of Work en su clase `DbContext`. El `DbContext` sigue las entidades cargadas con seguimiento y las adjuntadas o añadidas. Las consultas `AsNoTracking` no incorporan sus resultados al seguimiento normal. El método `SaveChanges` confirma los cambios pendientes. El método `SaveChangesAsync` confirma los cambios de forma asíncrona. Los `DbSet` ofrecen una abstracción de colección con responsabilidades semejantes a Repository. La implementación de ambos patrones en la misma clase es una decisión de diseño de EF Core.
+EF Core proporciona mecanismos transaccionales que deben analizarse sobre el motor real. Cuando una llamada a `SaveChangesAsync` ejecuta varias modificaciones con un proveedor relacional, su comportamiento de transacción depende de las opciones configuradas y del conjunto de operaciones. Si necesitamos coordinar varias llamadas de guardado dentro de una única operación de negocio, podemos abrir una transacción explícita y confirmar al final. El ejemplo de AceriaApp muestra precisamente el uso de `BeginTransactionAsync`, `CommitAsync` y `RollbackAsync`. Debemos verificar qué sucede cuando una restricción SQL impide una de las escrituras y comprobar con una conexión nueva si los cambios anteriores se han revertido. Un `catch` que lanza de nuevo la excepción no es prueba de atomicidad.
 
 **Contexto del ejemplo:** se supone un modelo didáctico con conjuntos `Ordenes` y `Movimientos`. Ilustra cambios en dos agregados; el contexto de órdenes de la práctica no incorpora automáticamente un `DbSet` de movimientos. `_db`, `orden` y `movimiento` son el contexto y los objetos preparados por el caso de uso.
 
@@ -598,43 +569,28 @@ catch
 }
 ```
 
-- **Línea 1:** `await using var tx = await _db.Database.BeginTransactionAsync();` → abre una transacción.
-- **Línea 2:** `try` → inicia el bloque protegido.
-- **Línea 3:** `{` → abre el bloque.
-- **Línea 4:** `_db.Ordenes.Add(orden);` → añade la orden.
-- **Línea 5:** `_db.Movimientos.Add(movimiento);` → añade el movimiento.
-- **Línea 6:** `await _db.SaveChangesAsync();` → persiste los cambios.
-- **Línea 7:** `await tx.CommitAsync();` → confirma la transacción.
-- **Línea 8:** `}` → cierra el bloque.
-- **Línea 9:** `catch` → captura cualquier error.
-- **Línea 10:** `{` → abre el bloque de error.
-- **Línea 11:** `await tx.RollbackAsync();` → revierte la transacción.
-- **Línea 12:** `throw;` → propaga la excepción.
-- **Línea 13:** `}` → cierra el bloque de error.
+
+La transacción explícita rodea las escrituras y se confirma solo cuando todas han terminado satisfactoriamente. Ante una excepción se solicita rollback y se propaga el error. Para demostrarlo hay que leer filas desde una nueva conexión, no quedarse en la estructura del `try/catch`.
+
 
 La implementación de EF Core tiene dos consecuencias prácticas. La primera es que el `DbContext` ya implementa el patrón Unit of Work de forma nativa. La segunda es que los `DbSet` ya cubren muchas operaciones de un repositorio. La combinación de ambas permite que el proyecto use EF Core directamente sin necesidad de envoltorios adicionales. Sin embargo, la separación entre los patrones facilita las pruebas y la sustitución de la tecnología.
 
----
 
+Una llamada a SaveChanges usa atomicidad del proveedor relacional por defecto. Una transacción explícita es útil si necesitas cubrir varias llamadas u otras operaciones compatibles.
 
+El ejemplo muestra begin, guardado y commit explícitos. Con una sola llamada de guardado, suele bastar la transacción implícita del proveedor de EF Core.
 
-#### Ampliación didáctica aplicada a AceriaApp
+SaveChanges dentro de una transacción abierta todavía no equivale a commit final. Reintentos configurados requieren ejecutar la transacción completa mediante la estrategia correspondiente.
 
-**La decisión arquitectónica.** Una llamada a SaveChanges usa atomicidad del proveedor relacional por defecto. Una transacción explícita es útil si necesitas cubrir varias llamadas u otras operaciones compatibles.
-
-**Ejemplo concreto en AceriaApp.** El ejemplo muestra begin, guardado y commit explícitos. Con una sola llamada de guardado, suele bastar la transacción implícita del proveedor de EF Core.
-
-**Riesgo, alternativa y límite.** SaveChanges dentro de una transacción abierta todavía no equivale a commit final. Reintentos configurados requieren ejecutar la transacción completa mediante la estrategia correspondiente.
-
-**Comprobación técnica y aprendizaje.** La práctica usa `UseSqlServer` y un motor SQL Server real para comprobar restricciones y persistencia. EF Core InMemory no reproduce transacciones relacionales ni demuestra que el rollback SQL funcione; SQLite tiene transacciones, pero no valida el comportamiento específico de SQL Server.
+La práctica usa `UseSqlServer` y un motor SQL Server real para comprobar restricciones y persistencia. EF Core InMemory no reproduce transacciones relacionales ni demuestra que el rollback SQL funcione; SQLite tiene transacciones, pero no valida el comportamiento específico de SQL Server.
 
 ![Diagrama explicativo del punto 4.2, bloque 6](IMAGENES/4-2-transaccion.svg)
 
-*Interpretación del gráfico:* Guardar dentro de una transacción abierta y confirmar esa transacción son pasos distintos. La rama de fallo cancela su persistencia. La figura se distribuye en SVG vectorial y PNG.
+Guardar dentro de una transacción abierta y confirmar esa transacción son pasos distintos. La rama de fallo cancela su persistencia. La figura se distribuye en SVG vectorial y PNG.
 
-### Bloque 7 — Unidad de trabajo personalizada
+### Unidad de trabajo personalizada
 
-Una unidad de trabajo personalizada envuelve el `DbContext` y expone solo las operaciones necesarias para la aplicación. La personalización tiene dos objetivos. El primero es desacoplar la aplicación de EF Core: la aplicación solo conoce la interfaz `IUnitOfWork`. El segundo es exponer solo las operaciones que la aplicación necesita: la interfaz es más pequeña que la del `DbContext`. La personalización facilita las pruebas y la sustitución de la tecnología de persistencia.
+Una unidad de trabajo personalizada puede ofrecer un contrato ajustado a las necesidades de la aplicación, por ejemplo confirmar cambios sin exponer métodos de EF Core a los casos de uso. Su implementación puede delegar en el contexto y proporcionar operaciones auxiliares de limpieza para escenarios muy concretos. Sin embargo, métodos como `ChangeTracker.Clear` no son un rollback de SQL: descartan entidades seguidas por ese contexto y no deshacen datos ya confirmados en el servidor. Esa distinción importa cuando un flujo falla después de preparar cambios. Una implementación propia debe documentar con precisión qué garantiza y qué deja en manos del proveedor de almacenamiento. En el proyecto las pruebas deben demostrar la frontera y evitar presentar una clase envoltorio como si añadiera automáticamente transacciones distribuidas.
 
 ```csharp
 public interface IUnitOfWork
@@ -649,36 +605,24 @@ public sealed class EfUnitOfWork(HexagonalDbContext db) : IUnitOfWork
 }
 ```
 
-- **Línea 1:** `public interface IUnitOfWork` → declara un puerto mínimo en aplicación.
-- **Línea 2:** `{` → abre el contrato.
-- **Línea 3:** `Task<int> CommitAsync(CancellationToken ct = default);` → confirma los cambios pendientes del contexto compartido.
-- **Línea 4:** `}` → cierra el contrato.
-- **Línea 5:** `public sealed class EfUnitOfWork(HexagonalDbContext db) : IUnitOfWork` → implementa el puerto en infraestructura con un contexto externo.
-- **Línea 6:** `{` → abre la implementación.
-- **Línea 7:** `public Task<int> CommitAsync(CancellationToken ct = default) =>` → acepta cancelación desde el caso de uso.
-- **Línea 8:** `db.SaveChangesAsync(ct);` → guarda las entradas modificadas; no confirma una transacción externa.
-- **Línea 9:** `public void DescartarCambiosPendientes() => db.ChangeTracker.Clear();` → abandona el seguimiento local; este método no revierte datos ya confirmados.
-- **Línea 10:** `}` → cierra la implementación.
+
+La clase personalizada incluye confirmación y limpieza del seguimiento. `ChangeTracker.Clear` puede liberar entidades pendientes o seguidas, pero no revierte una escritura que SQL Server haya confirmado. El alumno debe reconocer el límite exacto de cada operación.
+
 
 La unidad de trabajo personalizada tiene dos consecuencias prácticas. La primera es que la aplicación solo conoce la interfaz `IUnitOfWork`. La segunda es que la implementación puede sustituirse sin modificar la aplicación. La combinación de ambas permite que el núcleo se pruebe con una unidad de trabajo en memoria y que la tecnología de persistencia evolucione con independencia del núcleo.
 
----
 
+Una interfaz personalizada debe ser más pequeña y más clara que el detalle que encapsula. Ocultar DbContext no obliga a reimplementar todos sus métodos.
 
+CommitAsync devuelve el número de entradas de estado guardadas por EF Core. No representa necesariamente el número exacto de filas SQL afectadas ni es un identificador de negocio.
 
-#### Ampliación didáctica aplicada a AceriaApp
+ChangeTracker.Clear abandona seguimiento. No restaura propiedades de los objetos que conserva el llamador, no hace rollback de una transacción abierta y no revierte un commit anterior.
 
-**La decisión arquitectónica.** Una interfaz personalizada debe ser más pequeña y más clara que el detalle que encapsula. Ocultar DbContext no obliga a reimplementar todos sus métodos.
+Tras abandonar o revertir una operación fallida, termina el ámbito y usa un contexto nuevo para continuar cuando sea necesario. Haz explícita esa política de ciclo de vida.
 
-**Ejemplo concreto en AceriaApp.** CommitAsync devuelve el número de entradas de estado guardadas por EF Core. No representa necesariamente el número exacto de filas SQL afectadas ni es un identificador de negocio.
+### Unidad de trabajo y transacciones distribuidas
 
-**Riesgo, alternativa y límite.** ChangeTracker.Clear abandona seguimiento. No restaura propiedades de los objetos que conserva el llamador, no hace rollback de una transacción abierta y no revierte un commit anterior.
-
-**Comprobación técnica y aprendizaje.** Tras abandonar o revertir una operación fallida, termina el ámbito y usa un contexto nuevo para continuar cuando sea necesario. Haz explícita esa política de ciclo de vida.
-
-### Bloque 8 — Unidad de trabajo y transacciones distribuidas
-
-Una unidad de trabajo coordina las operaciones de varios repositorios en una única transacción. En los ejemplos del curso la transacción es local y usa una base de datos y una conexión compartida. Cuando las operaciones afectan a varias bases de datos o a varios servicios, la transacción local no es suficiente. Entre servicios pueden usarse sagas con compensaciones y outbox para publicación fiable. Two-Phase Commit es un protocolo distinto que requiere participantes compatibles y tiene costes operativos; una saga no proporciona la misma atomicidad que una transacción ACID. La unidad de trabajo se limita a la transacción local.
+La atomicidad de un `DbContext` no alcanza por sí sola a varios microservicios que poseen bases y transacciones distintas. Una operación de Producción puede confirmarse localmente y no conseguir que Inventario procese el evento en el mismo instante. En ese escenario necesitaremos mensajería, entrega fiable, idempotencia o mecanismos de compensación que coordinen el negocio; Unit of Work local no reemplaza esas estrategias. Es importante enseñar esta frontera antes de introducir comunicación distribuida, porque el nombre «unidad de trabajo» puede sugerir erróneamente que toda acción empresarial se confirma de una vez. AceriaApp utilizará transacciones locales por servicio y estudiará más adelante cómo se propagan cambios a otro proceso mediante eventos y patrones outbox/inbox.
 
 ```text
 Alcance de la unidad de trabajo:
@@ -687,32 +631,28 @@ Transacción local    → una única base de datos.
 Transacción distribuida → varias bases de datos o servicios.
 ```
 
-- **Línea 1:** `Transacción local → una única base de datos.` → alcance de la unidad de trabajo.
-- **Línea 2:** `Transacción distribuida → varias bases de datos o servicios.` → requiere patrones adicionales.
+
+La comparación entre transacción local y distribuida explica por qué una unidad de trabajo no puede garantizar atomicidad entre Producción e Inventario sin otro mecanismo de coordinación. Las fronteras de propiedad de datos importan tanto como el nombre del patrón.
+
 
 El alcance de la unidad de trabajo tiene dos consecuencias prácticas. La primera es que la implementación puede garantizar atomicidad dentro de la transacción local que realmente comparte. La segunda es que la atomicidad entre bases de datos requiere patrones adicionales. La combinación de ambas define el ámbito de aplicación de la unidad de trabajo. La unidad de trabajo se aplica a las transacciones locales y se complementa con patrones distribuidos cuando es necesario.
 
----
 
+La atomicidad local termina donde acaba la transacción compartida. Enviar un correo o publicar en un broker introduce efectos que no revierten con un rollback de SQL.
 
+Si se confirma una orden y después falla la publicación, la orden sigue guardada. Un outbox conserva el hecho pendiente junto con la orden para enviarlo posteriormente.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Una saga compensa pasos ya aplicados y admite estados intermedios; no convierte toda la conversación entre servicios en una transacción ACID única.
 
-**La decisión arquitectónica.** La atomicidad local termina donde acaba la transacción compartida. Enviar un correo o publicar en un broker introduce efectos que no revierten con un rollback de SQL.
-
-**Ejemplo concreto en AceriaApp.** Si se confirma una orden y después falla la publicación, la orden sigue guardada. Un outbox conserva el hecho pendiente junto con la orden para enviarlo posteriormente.
-
-**Riesgo, alternativa y límite.** Una saga compensa pasos ya aplicados y admite estados intermedios; no convierte toda la conversación entre servicios en una transacción ACID única.
-
-**Comprobación técnica y aprendizaje.** Dibuja qué recursos cubre la transacción y qué sucede si cae el proceso tras confirmar. Una notificación MediatR en memoria no elimina esa ventana de fallo.
+Dibuja qué recursos cubre la transacción y qué sucede si cae el proceso tras confirmar. Una notificación MediatR en memoria no elimina esa ventana de fallo.
 
 ![Diagrama explicativo del punto 4.2, bloque 8](IMAGENES/4-2-limites.svg)
 
-*Interpretación del gráfico:* Identifica qué recursos cubre la transacción local y qué efectos necesitan un diseño adicional de entrega o compensación. La figura se distribuye en SVG vectorial y PNG.
+Identifica qué recursos cubre la transacción local y qué efectos necesitan un diseño adicional de entrega o compensación. La figura se distribuye en SVG vectorial y PNG.
 
-### Bloque 9 — Cuándo usar el patrón Unit of Work
+### Cuándo usar el patrón Unit of Work
 
-El patrón Unit of Work se usa cuando una operación afecta a varias entidades y debe ejecutarse de forma atómica. El patrón se usa cuando la aplicación necesita coordinar varios repositorios. El patrón se usa cuando se quiere desacoplar la aplicación de la tecnología de transacciones. Una operación sobre una sola entidad también puede formar una unidad de trabajo. Lo que puede ser innecesario es crear un envoltorio adicional cuando el DbContext ya satisface el requisito de confirmación y aislamiento.
+Tiene sentido introducir Unit of Work cuando un caso de uso modifica varias entidades dentro de una misma frontera transaccional o cuando necesitamos controlar explícitamente qué repositorios participan en una confirmación. En operaciones sencillas con un solo contexto puede bastar utilizar el `DbContext` en infraestructura sin otro envoltorio. En cualquiera de los casos, conviene que la aplicación comprenda el momento de éxito y fallo, y que las pruebas documenten qué sucede ante una excepción. Para AceriaApp la separación permite comparar el resultado esperado del caso de uso con la evidencia de filas almacenadas en SQL Server. No debe confundirse facilitar un mock de `CommitAsync` con certificar la atomicidad del proveedor.
 
 ```text
 Cuándo usar Unit of Work:
@@ -724,31 +664,24 @@ Operación con una entidad      → DbContext puede bastar.
 Sin requisito de atomicidad    → evaluar abstracción.
 ```
 
-- **Línea 1:** `Operación con varias entidades → sí.` → el patrón aporta atomicidad.
-- **Línea 2:** `Coordinación de repositorios → sí.` → el patrón coordina las operaciones.
-- **Línea 3:** `Desacoplamiento de transacciones → sí.` → el patrón desacopla la aplicación.
-- **Línea 4:** `Operación con una entidad → DbContext puede bastar.` → no siempre hace falta otro envoltorio.
-- **Línea 5:** `Sin requisito de atomicidad → evaluar abstracción.` → el beneficio debe justificar la abstracción.
+
+La tabla muestra cuándo una abstracción explícita de commit ayuda a coordinar varios repositorios y cuándo `DbContext` puede ofrecer suficiente estructura. La decisión debe basarse en un requisito de atomicidad comprobable y no en agregar interfaces por rutina.
+
 
 La decisión de usar el patrón tiene dos consecuencias prácticas. La primera es que la aplicación gana independencia de la tecnología de transacciones. La segunda es que la aplicación añade una capa de indirección. La combinación de ambas se valora según el contexto del proyecto. El curso aplica el patrón porque el dominio tiene operaciones que afectan a varias entidades.
 
----
 
+El patrón puede existir aunque solo haya una entidad modificada. La decisión relevante es si necesitas otra abstracción sobre la unidad que ya proporciona EF Core.
 
+AceriaApp añade IUnitOfWork para que aplicación ordene la confirmación sin importar DbContext. El valor pedagógico es ver y probar esa frontera.
 
-#### Ampliación didáctica aplicada a AceriaApp
+No mantengas transacciones abiertas mientras esperas al usuario o a un servicio remoto lento. El bloqueo de recursos debe corresponder al trabajo de persistencia necesario.
 
-**La decisión arquitectónica.** El patrón puede existir aunque solo haya una entidad modificada. La decisión relevante es si necesitas otra abstracción sobre la unidad que ya proporciona EF Core.
+Documenta quién inicia la operación, quién confirma y quién termina el ámbito. Si hay más de un responsable de confirmar, revisa el diseño antes de añadir más repositorios.
 
-**Ejemplo concreto en AceriaApp.** AceriaApp añade IUnitOfWork para que aplicación ordene la confirmación sin importar DbContext. El valor pedagógico es ver y probar esa frontera.
+### Aplicación al proyecto del curso
 
-**Riesgo, alternativa y límite.** No mantengas transacciones abiertas mientras esperas al usuario o a un servicio remoto lento. El bloqueo de recursos debe corresponder al trabajo de persistencia necesario.
-
-**Comprobación técnica y aprendizaje.** Documenta quién inicia la operación, quién confirma y quién termina el ámbito. Si hay más de un responsable de confirmar, revisa el diseño antes de añadir más repositorios.
-
-### Bloque 10 — Aplicación al proyecto del curso
-
-El proyecto del curso aplica el patrón Unit of Work en el módulo 4. La unidad de trabajo se define como puerto en la capa de aplicación. Se implementa como adaptador en la capa de infraestructura. Los repositorios no confirman los cambios: los dejan pendientes. La unidad de trabajo confirma los cambios de todos los repositorios en una única transacción. La validación combina el catálogo con pruebas de confirmación y ausencia de persistencia parcial en una base relacional.
+El recorrido de esta etapa conecta los repositorios de órdenes con una confirmación coordinada a través de `IUnitOfWork` y `EfUnitOfWork`. El alumno podrá reconocer cuándo se preparan cambios, quién decide confirmarlos y cuál es la evidencia que demuestra su persistencia. El ejemplo de SQL Server provoca un fallo controlado y compara el estado final de la base con y sin política transaccional, de modo que se pueda observar una diferencia real. Esta comprobación es más rigurosa que contar métodos ejecutados o comprobar solamente que se lanzó una excepción. La teoría del patrón debe servir para explicar el experimento de integración, mientras las prácticas indican cómo construirlo y ejecutarlo sobre el proveedor elegido.
 
 ```text
 Aplicación al proyecto del curso:
@@ -760,29 +693,22 @@ Unidad de trabajo   → confirma los cambios.
 Validación          → test de coherencia.
 ```
 
-- **Línea 1:** `Puerto de salida` → interfaz de la unidad de trabajo en la aplicación.
-- **Línea 2:** `Adaptador de salida` → implementación en la infraestructura.
-- **Línea 3:** `Repositorios` → no confirman cambios.
-- **Línea 4:** `Unidad de trabajo` → confirma los cambios.
-- **Línea 5:** `Validación` → test de coherencia.
+
+El mapa final distingue puerto, adaptador y repositorios que preparan cambios. La confirmación se ejerce en el punto acordado por el caso de uso y debe estar respaldada por pruebas SQL que demuestren el efecto completo.
+
 
 La aplicación del patrón Unit of Work prepara el proyecto para los puntos 4.3, 4.4 y 4.5. El punto 4.3 estudiará el patrón Mediator. El punto 4.4 estudiará el Result Pattern. El punto 4.5 estudiará la inyección de dependencias. El punto 4.2 establece la base que se aplicará en los tres puntos siguientes.
 
----
 
+El catálogo describe el patrón y las pruebas relacionales demuestran el comportamiento. Ambas piezas deben hablar del mismo límite de confirmación.
 
+La progresión conserva el comportamiento previo y añade el flujo de trabajo con IOrdenTrabajoRepositorio, IUnitOfWork y OrdenesTransaccionales. No atribuyas staging al repositorio heredado que guarda inmediatamente.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Una prueba con fake que cuenta commits demuestra orquestación, pero no atomicidad SQL. Una prueba real de restricciones detecta fallos que el fake nunca produciría.
 
-**La decisión arquitectónica.** El catálogo describe el patrón y las pruebas relacionales demuestran el comportamiento. Ambas piezas deben hablar del mismo límite de confirmación.
+Ejecuta un alta válida y un fallo que deje la base sin cambios parciales. El punto siguiente reutiliza esos puertos desde un manejador MediatR.
 
-**Ejemplo concreto en AceriaApp.** La progresión conserva el comportamiento previo y añade el flujo de trabajo con IOrdenTrabajoRepositorio, IUnitOfWork y OrdenesTransaccionales. No atribuyas staging al repositorio heredado que guarda inmediatamente.
-
-**Riesgo, alternativa y límite.** Una prueba con fake que cuenta commits demuestra orquestación, pero no atomicidad SQL. Una prueba real de restricciones detecta fallos que el fake nunca produciría.
-
-**Comprobación técnica y aprendizaje.** Ejecuta un alta válida y un fallo que deje la base sin cambios parciales. El punto siguiente reutiliza esos puertos desde un manejador MediatR.
-
-### Resumen rápido de la teoría
+### Alcance de la unidad de trabajo
 
 - El patrón Unit of Work es una abstracción que coordina las operaciones de varios repositorios en una única transacción.
 - Una unidad de trabajo tiene tres responsabilidades: mantener el seguimiento de cambios, coordinar la persistencia y exponer la operación de confirmación.
@@ -823,7 +749,7 @@ Para distinguir ambos casos se necesita **una escritura real anterior al fallo**
 
 ![Rollback sobre SQL Server con lectura nueva y control sin transacción](IMAGENES/4-2-sqlserver-rollback.svg)
 
-*Interpretación del gráfico:* Las dos ramas repiten el mismo fallo controlado. La rama transaccional deja cero filas; el control sin transacción conserva la primera. La diferencia demuestra que la prueba es capaz de detectar una persistencia parcial. La figura se distribuye en SVG y PNG.
+Las dos ramas repiten el mismo fallo controlado. La rama transaccional deja cero filas; el control sin transacción conserva la primera. La diferencia demuestra que la prueba es capaz de detectar una persistencia parcial. La figura se distribuye en SVG y PNG.
 
 El test utiliza `AutoTransactionBehavior.WhenNeeded`, el comportamiento habitual, y lo contrasta con `AutoTransactionBehavior.Never` en una base independiente. La segunda variante es un **control negativo**: se elimina deliberadamente la protección que se está comprobando para ver si cambia el resultado. No es una recomendación para la configuración de la API.
 
@@ -839,13 +765,9 @@ var filasEsperadas = transacciones == AutoTransactionBehavior.Never ? 1 : 0;
 Assert.Equal(filasEsperadas, await verificacion.Ordenes.CountAsync());
 ```
 
-- **Línea 1:** Selecciona la política que se está examinando en ese caso aislado. Las entidades ya se han preparado en el contexto.
-- **Línea 2:** Exige que el fallo de persistencia se manifieste como la excepción esperada. Un test que no alcanza el error no debe pasar.
-- **Línea 3:** Invoca la misma implementación de unidad de trabajo que utiliza el caso de uso.
-- **Línea 4:** Comprueba que una escritura se ejecutó antes del fallo. Sin esta observación, cero filas no demostraría una reversión.
-- **Línea 5:** Abre otro contexto contra la misma base de ese caso. La comprobación no depende del seguimiento del contexto que falló.
-- **Línea 6:** Expresa la diferencia esperada: el control sin transacción conserva una fila; el caso protegido no conserva ninguna.
-- **Línea 7:** Consulta SQL Server y contrasta las filas persistidas con esa expectativa.
+
+El fragmento compara el resultado de dos políticas transaccionales ante un error. Que se lance `DbUpdateException` no basta para afirmar qué filas quedaron guardadas: la consulta desde otro contexto y la comparación de cantidades permiten comprobar el efecto de la opción elegida.
+
 
 ### Recuperar la aplicación después de un fallo
 
