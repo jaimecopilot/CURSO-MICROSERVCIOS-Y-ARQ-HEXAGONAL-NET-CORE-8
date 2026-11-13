@@ -16,13 +16,9 @@ Objetivos de aprendizaje:
 - Comprender el principio de interfaz uniforme y su aplicación en ASP.NET Core.
 - Añadir al proyecto AceriaApp un documento de diseño de APIs REST y una clase de validación de URIs REST.
 
+### Definición de REST
 
----
-
-
-### Bloque 1 — Definición de REST
-
-REST es un estilo arquitectónico definido por Roy Fielding en su tesis doctoral de 2000. No es un protocolo ni un estándar, sino un conjunto de restricciones que, aplicadas de forma conjunta, producen un sistema con propiedades específicas. Las restricciones son seis: cliente-servidor, sin estado, cacheable, interfaz uniforme, sistema en capas y código bajo demanda. Cada restricción aporta una propiedad al sistema. La restricción de cliente-servidor separa las responsabilidades de la interfaz de usuario y del almacenamiento de datos. La restricción de sin estado garantiza que cada petición contenga toda la información necesaria para ser procesada. La restricción de cacheable permite que las respuestas se almacenen para reducir la carga. La restricción de interfaz uniforme simplifica la arquitectura global.
+Cuando una API ofrece información sobre las órdenes de una acería, lo primero que debe decidirse es qué recursos podrán conocer sus consumidores y cómo van a interactuar con ellos. REST aporta un conjunto de restricciones arquitectónicas para organizar esa interacción; no es un sinónimo de HTTP ni una biblioteca de ASP.NET Core. Una interfaz puede utilizar verbos y rutas HTTP sin satisfacer por ello todas las restricciones de REST. En este curso construiremos primero una API con recursos identificables, operaciones coherentes, representaciones JSON y ausencia de estado de sesión en el servidor; después examinaremos qué otras condiciones, como enlaces hipermedia, serían necesarias para aplicar el estilo de forma más completa. La cuestión docente no es memorizar una etiqueta, sino comprender qué garantías obtiene el consumidor al tratar las órdenes como recursos.
 
 ![Figura del punto 2.1: Las seis restricciones de REST y su función](IMAGENES/m02-2-1-rest-restricciones.svg)
 
@@ -37,23 +33,20 @@ Restricciones de REST:
 5. Sistema en capas  
 6. Código bajo demanda (opcional)
 
-- **Línea 1:** 1. Cliente-servidor → primera restricción, separa interfaz y almacenamiento.
-- **Línea 2:** 2. Sin estado → segunda restricción, cada petición contiene toda la información.
-- **Línea 3:** 3. Cacheable → tercera restricción, las respuestas se pueden almacenar.
-- **Línea 4:** 4. Interfaz uniforme → cuarta restricción, simplifica la arquitectura.
-- **Línea 5:** 5. Sistema en capas → quinta restricción, permite intermediarios.
-- **Línea 6:** 6. Código bajo demanda → sexta restricción, opcional.
 
-Las seis restricciones no son obligatorias por separado: son un conjunto. Un sistema que aplica cinco de las seis no es REST, es un sistema parcialmente REST. La restricción de interfaz uniforme es la que más impacto tiene en el diseño de una API. Se descompone en cuatro sub-restricciones: identificación de recursos, manipulación de recursos a través de representaciones, mensajes auto-descriptivos e hipermedia como motor del estado de la aplicación. Las cuatro sub-restricciones guían el diseño de las URIs y de los métodos HTTP. El curso aplica las cuatro sub-restricciones al diseño de la API de la acería.
+Las restricciones esenciales de REST incluyen separación cliente-servidor, ausencia de estado de sesión entre peticiones, caché declarativa, interfaz uniforme y sistema en capas. La transferencia de código ejecutable al cliente es una restricción **opcional**; no debe exigirse para considerar REST una arquitectura. Tampoco basta enumerar las restricciones para decir que nuestra API las aplica en su totalidad: el uso de hipermedia en las transiciones del cliente tiene implicaciones adicionales que este laboratorio no implementa completamente.
+
+
+REST combina restricciones obligatorias con la posibilidad opcional de código bajo demanda; por tanto, la falta de esta última no impide que una arquitectura cumpla el estilo. En cambio, usar verbos HTTP y JSON no basta por sí solo para afirmar que una API implementa la interfaz uniforme completa. La restricción de interfaz uniforme es la que más impacto tiene en el diseño de una API. Se descompone en cuatro sub-restricciones: identificación de recursos, manipulación de recursos a través de representaciones, mensajes auto-descriptivos e hipermedia como motor del estado de la aplicación. Las cuatro sub-restricciones guían el diseño de las URIs y de los métodos HTTP. El curso aplica las cuatro sub-restricciones al diseño de la API de la acería.
 
 La aplicación de las seis restricciones produce un sistema con propiedades medibles: escalabilidad, simplicidad, modificabilidad y visibilidad. La propiedad de escalabilidad se obtiene de la restricción sin estado y de la restricción cacheable. La propiedad de simplicidad se obtiene de la restricción de interfaz uniforme. La propiedad de modificabilidad se obtiene de la restricción de sistema en capas. La propiedad de visibilidad se obtiene de la restricción de mensajes auto-descriptivos. Las cuatro propiedades son las razones por las que REST se ha convertido en el estilo dominante para APIs web.
 
 
 ---
 
-### Bloque 2 — Recursos como unidad central del diseño
+### Recursos como unidad central del diseño
 
-Un recurso es cualquier entidad identificable que puede ser referenciada y manipulada. En una API REST, los recursos son la unidad central del diseño. Una orden es un recurso. Un material es un recurso. Un cliente es un recurso. La colección de órdenes también es un recurso. Cada recurso se identifica con una URI única. La URI no describe acciones, describe entidades. La diferencia entre una URI que describe acciones y una URI que describe entidades es la diferencia entre RPC y REST. Una URI como /api/crearOrden describe una acción. Una URI como /api/v1/ordenes describe una entidad.
+Una orden de fabricación existe como concepto del negocio, pero la representación que recibe un cliente no tiene por qué ser idéntica a la entidad que EF Core almacena. La URI identifica el recurso; el DTO describe los datos de una respuesta concreta; y el estado interno puede incluir propiedades que no se exponen o que no deben modificarse desde fuera. Por ejemplo, `/api/v1/ordenes` identifica una colección y `/api/v1/ordenes/{id}` identifica una orden determinada. Esta separación permite modificar la persistencia sin cambiar innecesariamente el contrato público. También obliga a decidir qué significa que una orden no exista, quién puede cambiarla y qué relaciones merecen una ruta independiente. Un recurso no equivale automáticamente a una tabla, un controlador o una clase de C#.
 
 ![Figura del punto 2.1: De la colección al recurso y sus relaciones](IMAGENES/m02-2-1-uris.svg)
 
@@ -67,30 +60,25 @@ URIs de recursos:
 - **/api/v1/materiales** → colección de materiales.
 - **/api/v1/clientes** → colección de clientes.
 
-- **Línea 1:** /api/v1/ordenes → recurso de colección de órdenes.
-- **Línea 2:** /api/v1/ordenes/{id} → recurso de orden concreta.
-- **Línea 3:** /api/v1/ordenes/{id}/lineas → recurso de líneas de una orden.
-- **Línea 4:** /api/v1/materiales → recurso de colección de materiales.
-- **Línea 5:** /api/v1/clientes → recurso de colección de clientes.
+
+La distinción entre colección y recurso individual organiza el contrato: el identificador pertenece a la ruta del recurso concreto, mientras que la colección permite descubrir o filtrar sus elementos. La ruta de líneas muestra una relación subordinada; `materiales` y `clientes` son dominios conceptuales que no se convierten automáticamente en APIs ejecutables en la primera etapa.
+
 
 La identificación de recursos con URIs tiene tres consecuencias prácticas. La primera es que las URIs se construyen con sustantivos en plural para las colecciones. La segunda es que las relaciones entre recursos se expresan con anidamiento de URIs. La tercera es que las URIs no contienen verbos. Las tres consecuencias se aplican de forma uniforme en toda la API. La uniformidad es lo que permite que un cliente genérico pueda navegar la API sin conocerla de antemano. La uniformidad también facilita la documentación automática con OpenAPI.
 
 
 ---
 
-
-
-#### Del concepto a ASP.NET Core 8: Recurso y representación
+#### Recurso y representación en AceriaApp
 
 REST identifica órdenes mediante una URI estable. ASP.NET Core no pide implementar un validador de cadenas para disponer de enrutamiento: la llamada MapGet asocia un verbo y una plantilla de ruta al manejador real. Hay que distinguir la entidad Orden, que EF Core persiste, de la representación pública que recibe el consumidor. Conocer los atributos Id, Cliente, Material, Cantidad, Estado y FechaCreacion permite justificar después por qué no todos se aceptan como entrada.
 
-**Aplicación en el proyecto real.** Este comportamiento está materializado en `Modelo/Orden.cs` del estado `2.1-diseno-apis-rest`. Busca la instrucción `Orden` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
+La clase `Orden` define el objeto que EF Core puede persistir; su identidad y atributos no deben confundirse con el contrato HTTP completo. La teoría prepara la decisión sobre qué propiedades serán visibles al consultar o crear una orden, que se verificará sobre peticiones reales.
 
-**Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
 
-### Bloque 3 — Representaciones y negociación de contenido
+### Representaciones y negociación de contenido
 
-Un recurso es un concepto abstracto. Su representación es la forma concreta en la que se transmite. Un mismo recurso puede tener varias representaciones: JSON, XML, texto plano. La representación se selecciona mediante negociación de contenido. El cliente envía la cabecera Accept con los formatos que acepta. El servidor responde con el formato que puede generar. La negociación evita que el cliente tenga que especificar el formato en la URI. La representación JSON es la más común en APIs REST modernas. El curso usa JSON como representación por defecto.
+El cliente y el servidor intercambian representaciones de recursos, no copias de sus objetos internos. JSON resulta una elección natural para esta API por su amplia compatibilidad con herramientas HTTP y ASP.NET Core, pero el diseño debe distinguir entre el dato del recurso y la forma de transmitirlo. Una cabecera `Accept` puede expresar formatos que el cliente comprende; el servidor decide cuáles ofrece realmente y puede responder que no existe una representación aceptable. En nuestro laboratorio la representación ordinaria será JSON y los DTO determinarán qué campos aparecen. Esta decisión mejora la estabilidad del contrato y evita que propiedades de navegación o detalles privados de EF Core pasen involuntariamente a la respuesta. La negociación de contenido no reemplaza el diseño de un modelo de salida adecuado.
 
 ```csharp
 // El cliente envía:  
@@ -101,19 +89,18 @@ app.MapGet("/api/v1/ordenes", async (AceriaDbContext db) =>
 
 ```
 
-- **Línea 1:** // El cliente envía: → comentario que indica el ejemplo.
-- **Línea 2:** // Accept: application/json → cabecera del cliente.
-- **Línea 3:** app.MapGet("/api/v1/ordenes", async (AceriaDbContext db) => → declara el endpoint GET.
-- **Línea 4:** await db.Ordenes.AsNoTracking().ToListAsync()); → devuelve la lista en JSON.
+
+El ejemplo vincula una ruta GET con una consulta de EF Core sin seguimiento de cambios. Al devolver la colección el framework la serializa según la configuración de salida. La cabecera `Accept` solo influye si el servidor dispone de los formatos solicitados; no demuestra que el endpoint ofrezca negociación con varios serializadores.
+
 
 La representación tiene dos consecuencias prácticas. La primera es que la misma URI puede devolver formatos distintos según la cabecera Accept. La segunda es que el servidor puede devolver 406 Not Acceptable si no puede generar ningún formato solicitado. La negociación de contenido es una de las sub-restricciones de la interfaz uniforme. Su aplicación correcta evita que el cliente tenga que usar URIs distintas para formatos distintos.
 
 
 ---
 
-### Bloque 4 — Métodos HTTP y su semántica
+### Métodos HTTP y su semántica
 
-Los métodos HTTP expresan la operación que se realiza sobre el recurso. Cada método tiene una semántica definida por el estándar. Los métodos principales son cinco: GET, POST, PUT, PATCH y DELETE. GET recupera una representación del recurso. POST crea un recurso nuevo. PUT reemplaza un recurso existente. PATCH modifica parcialmente un recurso existente. DELETE elimina un recurso existente. Cada método tiene dos propiedades importantes: idempotencia y seguridad. Un método es seguro si no modifica el estado del servidor. Un método es idempotente si ejecutarlo varias veces produce el mismo resultado que ejecutarlo una vez.
+Los métodos HTTP tienen una semántica que los consumidores necesitan poder anticipar. GET recupera una representación sin solicitar cambios de estado; POST suele procesar una creación u otra acción definida por la colección; PUT expresa sustitución del estado del recurso; PATCH aplica un cambio parcial; y DELETE solicita eliminación. Las propiedades de seguridad e idempotencia son especialmente importantes: un GET debe ser seguro, mientras que PUT y DELETE son idempotentes respecto al efecto previsto, aunque la respuesta pueda variar entre llamadas. PATCH puede ser idempotente en algunos diseños y no en otros; no conviene asignarle una propiedad universal. Estas diferencias condicionan cachés, reintentos y pruebas. Al diseñar AceriaApp, el verbo tiene que corresponder con lo que la operación hace realmente.
 
 Métodos HTTP:  
   
@@ -124,25 +111,20 @@ Métodos HTTP:
 - **PATCH   /api/v1/ordenes/{id}** → modificar orden. No seguro, no idempotente.
 - **DELETE  /api/v1/ordenes/{id}** → eliminar orden. No seguro, idempotente.
 
-- **Línea 1:** GET /api/v1/ordenes → recupera la colección. Seguro e idempotente.
-- **Línea 2:** GET /api/v1/ordenes/{id} → recupera una orden. Seguro e idempotente.
-- **Línea 3:** POST /api/v1/ordenes → crea una orden. No seguro, no idempotente.
-- **Línea 4:** PUT /api/v1/ordenes/{id} → reemplaza una orden. No seguro, idempotente.
-- **Línea 5:** PATCH /api/v1/ordenes/{id} → modifica parcialmente. No seguro, no idempotente.
-- **Línea 6:** DELETE /api/v1/ordenes/{id} → elimina una orden. No seguro, idempotente.
+
+La elección de método determina qué efecto puede esperar un cliente, con independencia del nombre del método C# que se ejecute internamente. La idempotencia de PUT y DELETE se refiere a su efecto sobre el recurso; un PATCH que asigna una cantidad concreta podría ser idempotente, mientras que uno que incrementa la cantidad no lo sería.
+
 
 La semántica de los métodos tiene dos consecuencias prácticas. La primera es que los métodos seguros pueden ser cacheados por intermediarios sin riesgo. La segunda es que los métodos idempotentes pueden ser reintentados sin riesgo de duplicación. La combinación de ambas propiedades determina qué métodos pueden reintentarse automáticamente. GET, PUT y DELETE pueden reintentarse. POST y PATCH no pueden reintentarse sin una clave de idempotencia. La semántica correcta de los métodos es la base de la comunicación fiable.
 
 
 ---
 
-
-
-#### Del concepto a ASP.NET Core 8: DTO público
+#### DTO público en AceriaApp
 
 El record OrdenDto representa el JSON de salida. El método Desde transforma explícitamente la entidad a una representación. Esta distinción reduce el acoplamiento entre el esquema de la tabla y el contrato HTTP. Si se cambiara una propiedad interna de Orden no tendría por qué aparecer automáticamente en la respuesta; el método de conversión es precisamente el lugar donde decidir qué se publica.
 
-**Aplicación en el proyecto real.** Este comportamiento está materializado en `Modelo/OrdenDto.cs` del estado `2.1-diseno-apis-rest`. Busca la instrucción `OrdenDto` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
+El DTO `OrdenDto` permite decidir qué campos expone una respuesta. El alumno podrá comparar su representación JSON con la entidad de persistencia y comprobar por qué un cambio interno no debería filtrarse automáticamente al consumidor.
 
 **Código de referencia probado:** `src/AceriaApp.Api/Modelo/OrdenDto.cs`
 
@@ -159,11 +141,10 @@ public sealed record OrdenDto(Guid Id, string Cliente, string Material,
 // FIN PASO 2.1.5
 ```
 
-**Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
 
-### Bloque 5 — Códigos de estado HTTP
+### Códigos de estado HTTP
 
-Los códigos de estado HTTP expresan el resultado de la operación. Se organizan en cinco familias: 1xx informativos, 2xx éxito, 3xx redirección, 4xx error del cliente, 5xx error del servidor. Cada familia tiene códigos específicos para situaciones concretas. Los códigos más usados en APIs REST son 200 OK, 201 Created, 204 No Content, 400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not Found, 409 Conflict, 422 Unprocessable Entity y 500 Internal Server Error. La elección del código adecuado permite que el cliente distinga entre situaciones distintas sin analizar el cuerpo de la respuesta.
+Un código HTTP informa al consumidor sobre el resultado de una interacción y debe ser coherente con el método y el estado del recurso. Cuando una creación tiene éxito puede devolverse `201 Created` y la URI del recurso; una lectura existente normalmente responde `200 OK`, mientras que una operación completada sin cuerpo puede utilizar `204 No Content`. Si el identificador no corresponde a ninguna orden, `404 Not Found` proporciona una señal distinta de una petición mal formada o de un conflicto de estado. Los códigos no son adornos del endpoint: permiten a un cliente decidir si debe corregir la solicitud, continuar o informar de un problema. Tampoco sustituyen un cuerpo de error claro y seguro cuando este sea útil. En el laboratorio probaremos explícitamente las respuestas esperadas.
 
 Códigos de estado habituales:  
   
@@ -178,25 +159,18 @@ Códigos de estado habituales:
 - **422 Unprocessable Entity** → entidad semánticamente inválida.
 - **500 Internal Server Error** → error del servidor.
 
-- **Línea 1:** 200 OK → operación exitosa con cuerpo.
-- **Línea 2:** 201 Created → recurso creado, con cabecera Location.
-- **Línea 3:** 204 No Content → operación exitosa sin cuerpo.
-- **Línea 4:** 400 Bad Request → error de validación o formato.
-- **Línea 5:** 401 Unauthorized → falta autenticación.
-- **Línea 6:** 403 Forbidden → sin permisos.
-- **Línea 7:** 404 Not Found → recurso no encontrado.
-- **Línea 8:** 409 Conflict → conflicto de estado.
-- **Línea 9:** 422 Unprocessable Entity → entidad semánticamente inválida.
-- **Línea 10:** 500 Internal Server Error → error del servidor.
+
+Los estados de éxito, error de cliente y error interno permiten distinguir una creación, una búsqueda sin resultado y un fallo inesperado. La regla de AceriaApp es seleccionar el código según la situación comprobada, no devolver un estado fijo para todos los caminos. Cuando existe un error describible, puede acompañarse de un cuerpo estructurado sin filtrar detalles del servidor.
+
 
 La elección del código de estado tiene dos consecuencias prácticas. La primera es que el cliente puede reaccionar de forma distinta a cada código sin analizar el cuerpo. La segunda es que los intermediarios pueden cachear o no cachear según el código. Los códigos 2xx son cacheables según las cabeceras. Los códigos 4xx y 5xx no son cacheables por defecto. La elección correcta del código es la base de la comunicación predecible entre cliente y servidor.
 
 
 ---
 
-### Bloque 6 — Diseño de URIs en APIs REST
+### Diseño de URIs en APIs REST
 
-El diseño de URIs sigue cinco reglas prácticas. La primera es usar sustantivos en plural para las colecciones. La segunda es usar el identificador del recurso concreto después de la colección. La tercera es anidar las relaciones con sub-rutas. La cuarta es no incluir verbos en las URIs. La quinta es versionar la API en la propia URI. La aplicación conjunta de las cinco reglas produce URIs predecibles y consistentes. La consistencia permite que un cliente genérico pueda navegar la API sin conocerla de antemano.
+Una URI debería ser estable, comprensible y expresar la identidad de un recurso sin describir cómo se implementa el servidor. En AceriaApp, `/api/v1/ordenes` comunica una colección; añadir un identificador permite consultar una orden concreta. Las relaciones pueden expresarse mediante subrecursos, por ejemplo las líneas de una orden, cuando esa estructura resulte útil para el consumidor. No existe una obligación universal de utilizar sustantivos plurales o anidamientos profundos: son convenciones prácticas que ayudan a producir interfaces predecibles. Conviene evitar rutas que expongan detalles internos o cambios de la estructura SQL. La versión del contrato en la ruta es también una decisión explícita, no una garantía automática de compatibilidad. La API será coherente cuando un consumidor pueda deducir las operaciones disponibles sin conocer el código C# que las atiende.
 
 Reglas de diseño de URIs:  
   
@@ -206,30 +180,25 @@ Reglas de diseño de URIs:
 - **4. Sin verbos** → no /crearOrden.
 - **5. Versionado en la URI** → /api/v1/ordenes.
 
-- **Línea 1:** 1. Sustantivos en plural → colecciones con sustantivo plural.
-- **Línea 2:** 2. Identificador tras colección → identificador después de la colección.
-- **Línea 3:** 3. Anidamiento de relaciones → sub-rutas para relaciones.
-- **Línea 4:** 4. Sin verbos → las URIs no contienen verbos.
-- **Línea 5:** 5. Versionado en la URI → la versión va en la URI.
+
+Las convenciones de rutas facilitan reconocer qué representa cada segmento, pero no deberían convertirse en un detector automático de «REST correcto». Una URI que anida líneas bajo una orden solo será útil si refleja las consultas y modificaciones que realmente necesita el cliente; la sintaxis no decide por sí sola dónde pertenecen las reglas de negocio.
+
 
 Las cinco reglas se aplican de forma uniforme en toda la API. La uniformidad es lo que distingue una API REST de una API RPC. La uniformidad también facilita la documentación automática con OpenAPI, la generación de clientes y la integración con herramientas de monitorización. La violación de cualquiera de las cinco reglas rompe la uniformidad y obliga al cliente a conocer la API de antemano. El curso aplica las cinco reglas al diseño de la API de la acería.
 
 
 ---
 
-
-
-#### Del concepto a ASP.NET Core 8: Persistencia mediante EF Core
+#### Persistencia mediante EF Core en AceriaApp
 
 El contexto contiene DbSet<Orden> y las restricciones de las columnas. La API se ejecuta sobre SQL Server Express LocalDB en el ordenador del alumno. Registrar AddDbContext permite que los endpoints reciban el contexto mediante inyección de dependencias: no hay que crear el contexto con new dentro de cada manejador. Los tests conservan el proveedor SQL Server y cambian la conexión por la de una base aislada. El motor puede ser una instancia LocalDB configurada para pruebas o SQL Server en un contenedor administrado por Testcontainers. El estudio integrador de este punto explica ese recorrido.
 
-**Aplicación en el proyecto real.** Este comportamiento está materializado en `Datos/AceriaDbContext.cs` del estado `2.1-diseno-apis-rest`. Busca la instrucción `AceriaDbContext` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
+`AceriaDbContext` relaciona las entidades con SQL Server. La evidencia relevante es obtener una orden desde una base de pruebas real y conservar la separación entre la configuración del proveedor y los tipos que definen el contrato público.
 
-**Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
 
-### Bloque 7 — Interfaz uniforme en ASP.NET Core
+### Interfaz uniforme en ASP.NET Core
 
-La interfaz uniforme se materializa en ASP.NET Core con cuatro elementos. El primero es el enrutamiento, que asocia URIs a manejadores. El segundo es el enlace de parámetros, que asocia partes de la petición a parámetros del manejador. El tercero es la serialización, que convierte objetos a JSON y viceversa. El cuarto es la negociación de contenido, que selecciona el formato de la respuesta. Los cuatro elementos se configuran en el arranque de la aplicación. La configuración correcta produce una API uniforme sin código repetido en cada endpoint.
+Minimal APIs permite expresar con pocas instrucciones una interfaz HTTP completa, pero esa brevedad no garantiza por sí sola un diseño REST correcto. En `Program.cs`, una llamada como `MapGet` asocia una ruta a un manejador; la inyección de dependencias aporta los servicios necesarios y `Results.Ok` o `Results.NotFound` permiten construir respuestas precisas. Lo importante es que la configuración técnica permanezca alineada con la semántica del recurso. Un endpoint no debería devolver datos internos solo porque resulta cómodo serializar la entidad, ni debería convertir una orden ausente en una colección vacía. A medida que se añadan verbos y validación, mantendremos esta correspondencia entre propósito, entrada y resultado. El código será el mecanismo para realizar una decisión ya comprendida, no su sustituto.
 
 ```csharp
 var builder = WebApplication.CreateBuilder(args);  
@@ -251,27 +220,18 @@ app.Run();
 
 ```
 
-- **Línea 1:** var builder = WebApplication.CreateBuilder(args); → crea el constructor de la aplicación.
-- **Línea 2:** builder.Services.AddEndpointsApiExplorer(); → habilita la exploración de endpoints.
-- **Línea 3:** builder.Services.AddSwaggerGen(); → registra el generador de Swagger.
-- **Línea 4:** var app = builder.Build(); → construye la aplicación.
-- **Línea 5:** app.MapGet("/api/v1/ordenes", async (AceriaDbContext db) => → declara el endpoint de colección.
-- **Línea 6:** await db.Ordenes.AsNoTracking().ToListAsync()); → devuelve la lista.
-- **Línea 7:** app.MapGet("/api/v1/ordenes/{id:guid}", async (Guid id, AceriaDbContext db) => → declara el endpoint de detalle.
-- **Línea 8:** { → abre el cuerpo del lambda.
-- **Línea 9:** var orden = await db.Ordenes.AsNoTracking().FirstOrDefaultAsync(o => o.Id == id); → consulta la orden.
-- **Línea 10:** return orden is not null ? Results.Ok(orden) : Results.NotFound(); → devuelve 200 o 404.
-- **Línea 11:** }); → cierra el lambda.
-- **Línea 12:** app.Run(); → arranca el servidor.
+
+El arranque de Minimal API configura el host y mapea dos rutas. En el GET individual, EF Core busca una orden por identificador y el manejador elige `Ok` o `NotFound`. El comportamiento real de la ruta se comprueba enviando peticiones con un identificador existente y otro ausente, no contando llamadas a `MapGet`.
+
 
 La configuración de la interfaz uniforme tiene dos consecuencias prácticas. La primera es que los endpoints siguen un patrón común que facilita la lectura. La segunda es que la documentación OpenAPI se genera automáticamente a partir de los endpoints. La combinación de ambas reduce el coste de mantenimiento y mejora la experiencia del consumidor. La interfaz uniforme es una de las propiedades más valiosas de REST.
 
 
 ---
 
-### Bloque 8 — Recursos anidados y relaciones
+### Recursos anidados y relaciones
 
-Los recursos pueden anidarse para expresar relaciones. Una orden tiene líneas. Una línea tiene materiales. Las relaciones se expresan con sub-rutas. La URI /api/v1/ordenes/{id}/lineas expresa la colección de líneas de una orden concreta. La URI /api/v1/ordenes/{id}/lineas/{lineaId} expresa una línea concreta. El anidamiento tiene un límite práctico: no se anidan más de dos niveles para evitar URIs excesivamente largas. Las relaciones que superan dos niveles se expresan con recursos independientes y parámetros de consulta.
+Una orden puede contener líneas, materiales asociados y otros elementos relacionados. La pregunta arquitectónica es si el consumidor necesita tratarlos como recursos por derecho propio o como parte de la representación de la orden. La ruta `/ordenes/{id}/lineas` comunica una relación subordinada útil cuando las líneas carecen de identidad práctica fuera de su orden. En otros escenarios puede resultar preferible una colección independiente con filtros. El anidamiento excesivo hace que el contrato dependa de la forma de recorrer el dominio y puede dificultar cambios posteriores. Por eso conviene diseñar relaciones a partir de operaciones de los consumidores y restricciones de negocio, no copiando todas las claves foráneas de SQL Server. El primer módulo de API utilizará relaciones sencillas y una representación pública controlada.
 
 Anidamiento de recursos:  
   
@@ -284,24 +244,20 @@ Alternativa sin anidar:
   
 - **/api/v1/lineas?ordenId={id}** → líneas filtradas por orden.
 
-- **Línea 1:** /api/v1/ordenes → colección de órdenes.
-- **Línea 2:** /api/v1/ordenes/{id} → orden concreta.
-- **Línea 3:** /api/v1/ordenes/{id}/lineas → líneas de una orden.
-- **Línea 4:** /api/v1/ordenes/{id}/lineas/{lid} → línea concreta.
-- **Línea 5:** /api/v1/lineas?ordenId={id} → alternativa sin anidar.
+
+Una relación puede representarse en la URI, en un enlace de la representación o mediante una consulta filtrada. La elección afecta a la estabilidad del contrato cuando evoluciona el modelo interno. Por eso conviene comparar cómo consultaría un cliente las líneas de una orden sin obligarlo a conocer todas las tablas intermedias.
+
 
 El anidamiento tiene dos consecuencias prácticas. La primera es que las relaciones se expresan de forma natural. La segunda es que las URIs pueden volverse largas si se anidan demasiados niveles. La regla práctica es anidar solo cuando la relación es de composición: la línea no existe sin la orden. Cuando la relación es de asociación, se usa un recurso independiente con parámetros de consulta. La distinción entre composición y asociación es la clave para decidir cuándo anidar.
 
 
 ---
 
-
-
-#### Del concepto a ASP.NET Core 8: Endpoint GET de colección
+#### Endpoint GET de colección en AceriaApp
 
 El manejador obtiene AceriaDbContext, usa AsNoTracking para consultar sin seguimiento y devuelve Results.Ok con una secuencia de DTOs. En una colección vacía se responde 200 y una lista JSON vacía, pues la colección como recurso existe aunque no contenga elementos. La respuesta debe inspeccionarse desde AceriaApp.http, no deducirse de que el código compile.
 
-**Aplicación en el proyecto real.** Este comportamiento está materializado en `Program.cs` del estado `2.1-diseno-apis-rest`. Busca la instrucción `MapGet` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
+En `Program.cs`, `MapGet` relaciona la colección de órdenes con una consulta. La comprobación consiste en llamar a la ruta, observar el estado HTTP y contrastar el contenido JSON con lo que se ha persistido.
 
 **Código de referencia probado:** `src/AceriaApp.Api/Program.cs`
 
@@ -318,11 +274,10 @@ app.MapGet("/api/v1/ordenes",async (AceriaDbContext db,CancellationToken ct)=>
 ;
 ```
 
-**Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
 
-### Bloque 9 — Paginación, filtrado y ordenación
+### Paginación, filtrado y ordenación
 
-Las colecciones grandes no se devuelven completas. Se paginan con parámetros de consulta. Los parámetros habituales son page y pageSize para la paginación, filter para el filtrado y sort para la ordenación. Los parámetros de consulta se expresan con el signo ? después de la URI. La respuesta incluye metadatos de paginación: número de página, tamaño de página, total de elementos y total de páginas. Los metadatos permiten al cliente construir la interfaz de navegación sin conocer la colección completa.
+Una colección de órdenes puede crecer mucho más allá de los ejemplos con dos o tres registros. Ofrecer siempre la colección completa incrementa tiempo de consulta, tráfico y memoria; por ello resulta conveniente introducir paginación y límites de tamaño desde el diseño del contrato. También necesitamos filtros que expresen búsquedas reales del usuario y reglas previsibles de ordenación. Los parámetros `page`, `pageSize` o `sort` son posibles decisiones de interfaz, no funciones que EF Core implemente automáticamente solo por aparecer en una URI. Hay que aplicar sus valores a una consulta SQL, validar rangos y definir qué sucede si el cliente pide una página inexistente. En AceriaApp distinguiremos entre una demostración del contrato y la implementación efectiva de esas opciones en una etapa concreta.
 
 Paginación, filtrado y ordenación:  
   
@@ -343,24 +298,18 @@ Respuesta con metadatos:
 
 ```
 
-- **Línea 1:** GET /api/v1/ordenes?page=1&pageSize=20 → paginación.
-- **Línea 2:** GET /api/v1/ordenes?filter=cliente:ACX-001 → filtrado.
-- **Línea 3:** GET /api/v1/ordenes?sort=fechaCreacion:desc → ordenación.
-- **Línea 4:** { → abre el objeto de respuesta.
-- **Línea 5:** "items": [ ... ], → lista de elementos de la página.
-- **Línea 6:** "page": 1, → número de página actual.
-- **Línea 7:** "pageSize": 20, → tamaño de página.
-- **Línea 8:** "totalItems": 145, → total de elementos.
-- **Línea 9:** "totalPages": 8 → total de páginas.
+
+En la consulta paginada los parámetros deben terminar influyendo en `Skip`, `Take`, ordenación y filtros de la base. Si se devuelve un envoltorio con total de elementos y número de páginas, esos metadatos también deben corresponder a los datos realmente consultados. Dejar el ejemplo como simple cadena de URI no demuestra que exista paginación implementada.
+
 
 La paginación tiene dos consecuencias prácticas. La primera es que las respuestas se mantienen pequeñas y predecibles. La segunda es que el cliente puede construir la interfaz de navegación con los metadatos. La ausencia de paginación en colecciones grandes produce respuestas lentas, consumo elevado de memoria y dificultad para el cliente. La paginación es una buena práctica obligatoria en cualquier API REST que exponga colecciones.
 
 
 ---
 
-### Bloque 10 — Aplicación del diseño REST al proyecto del curso
+### Aplicación del diseño REST al proyecto del curso
 
-El proyecto del curso aplica el diseño REST en cada endpoint. Los recursos se identifican con URIs que siguen las cinco reglas. Los métodos HTTP expresan la semántica de la operación. Los códigos de estado expresan el resultado. Las representaciones se negocian con la cabecera Accept. Las colecciones se paginan con parámetros de consulta. Las relaciones se anidan con sub-rutas. El diseño se documenta en un documento de diseño de APIs REST y se audita con una clase de validación de URIs.
+El diseño de REST se concreta cuando podemos seguir la petición de un cliente hasta la respuesta que observa. Para AceriaApp decidimos primero qué URI identifica cada orden, qué datos contiene `OrdenDto`, cómo se obtiene la información mediante EF Core y qué resultados HTTP corresponden a una lectura con o sin coincidencias. Esa secuencia conecta contrato y persistencia sin confundir ambas capas. El recorrido debe probarse contra SQL Server real cuando se afirma que existe persistencia y contra un servidor HTTP cuando se afirma que la ruta funciona. La etapa 2.1 conservará un alcance modesto: una colección GET y una consulta por identificador, suficientes para observar representación, enrutamiento y uso de la base. Los siguientes puntos ampliarán las operaciones sin redefinir arbitrariamente el recurso.
 
 Aplicación al proyecto del curso:  
   
@@ -371,12 +320,9 @@ Aplicación al proyecto del curso:
 - **Paginación** → page, pageSize.
 - **Relaciones anidadas** → /ordenes/{id}/lineas.
 
-- **Línea 1:** Recursos identificados → URIs que siguen las cinco reglas.
-- **Línea 2:** Métodos HTTP con semántica → métodos con semántica definida.
-- **Línea 3:** Códigos de estado → códigos adecuados a cada situación.
-- **Línea 4:** Representaciones → JSON por defecto.
-- **Línea 5:** Paginación → parámetros de consulta.
-- **Línea 6:** Relaciones anidadas → sub-rutas para relaciones.
+
+El catálogo resume los acuerdos visibles para un consumidor de AceriaApp: recursos, rutas, métodos, estados de respuesta y representación JSON. Su utilidad es detectar incoherencias, por ejemplo una ruta que devuelve un código de éxito cuando no encontró el recurso. El catálogo es una herramienta de diseño; solo las pruebas HTTP demuestran que el servidor sigue el acuerdo.
+
 
 La aplicación del diseño REST prepara el proyecto para los puntos posteriores del módulo 2. El punto 2.2 estudiará los recursos, verbos y códigos con detalle. El punto 2.3 estudiará la validación de peticiones. El punto 2.4 estudiará la documentación OpenAPI. La base del diseño REST es el fundamento de los tres puntos siguientes. El punto 2.1 establece los conceptos que se aplicarán en los tres puntos siguientes.
 
@@ -400,13 +346,12 @@ La aplicación del diseño REST prepara el proyecto para los puntos posteriores 
 
 
 
-#### Del concepto a ASP.NET Core 8: GET individual y pruebas HTTP
+#### GET individual y pruebas HTTP en AceriaApp
 
 La plantilla {id:guid} restringe el parámetro de ruta a GUID válidos. El manejador consulta una orden específica y decide entre Results.Ok y Results.NotFound. Una petición a un GUID inexistente no debería convertirse en 500 ni en una respuesta 200 con contenido vacío. WebApplicationFactory inicia la aplicación en memoria y permite comprobar 200 y 404 sobre los endpoints auténticos.
 
-**Aplicación en el proyecto real.** Este comportamiento está materializado en `Program.cs` del estado `2.1-diseno-apis-rest`. Busca la instrucción `ObtenerOrdenPorId` y sigue su ejecución con un punto de interrupción. En las prácticas no se pedirá únicamente crear una clase: el alumno construirá el recurso, enviará la petición y observará el código HTTP y, cuando proceda, la escritura en SQL Server Express LocalDB.
+El GET individual asocia un identificador con una búsqueda real y trata expresamente la ausencia del recurso. La diferencia entre `200` y `404` debe aparecer en las pruebas, porque es una parte esencial del contrato y no solo de la implementación interna.
 
-**Qué debe saber explicar el alumno.** Qué parte del contrato REST se resuelve en ASP.NET Core, qué parte escribe el programador, qué objeto se inyecta, qué ocurre si la entrada falla y por qué la respuesta HTTP es la indicada. Esta comprobación enlaza la explicación teórica con las acciones posteriores.
 
 ### Estudio integrador 2.1 — Probar HTTP y persistencia con SQL Server real
 
@@ -443,12 +388,9 @@ await contenedor.StartAsync();
 var cadenaServidor = contenedor.GetConnectionString();
 ```
 
-- **Línea 1:** `MsSqlBuilder` prepara la configuración de un contenedor SQL Server. Todavía no hay un servidor ejecutándose.
-- **Línea 2:** `WithImage` fija la imagen del laboratorio. Así, una ejecución posterior no adopta otra etiqueta por usar `latest`.
-- **Línea 3:** `MSSQL_PID` selecciona la edición Express del motor.
-- **Línea 4:** `Build` crea el objeto con el que se gestionará el contenedor; no equivale a arrancarlo.
-- **Línea 5:** `StartAsync` inicia el recurso y espera su disponibilidad. Si no hay un Docker utilizable o el motor no arranca, la preparación debe fallar.
-- **Línea 6:** `GetConnectionString` devuelve la dirección, el puerto publicado y las credenciales del servidor de pruebas. El test no debe inventar una conexión fija a `localhost,1433`.
+
+El constructor de Testcontainers prepara un SQL Server Express temporal para pruebas y permite aislar el entorno sin usar datos de la API cotidiana. Fijar la imagen evita variaciones accidentales; obtener la cadena de conexión después de iniciar el contenedor permite registrar un `DbContext` contra el servidor que realmente se ha levantado.
+
 
 El puerto **1433** pertenece al servidor dentro del contenedor. Docker puede publicarlo en otro puerto libre del host. Dos ejecuciones no tienen que competir por un único puerto del ordenador. El alumno usa la cadena devuelta por el helper; modificar el puerto a mano rompe esa separación. [La documentación de Testcontainers detalla cómo obtener las direcciones y puertos asignados](https://dotnet.testcontainers.org/api/create_docker_network/).
 
@@ -468,9 +410,9 @@ dotnet test
 Remove-Item Env:ACERIA_TEST_SQLSERVER
 ```
 
-- **Línea 1:** Define la conexión del servidor de pruebas en la sesión actual. `master` es el punto de entrada administrativo; los datos del caso se guardarán en otra base con nombre único.
-- **Línea 2:** Ejecuta las pruebas de la solución situada en el directorio actual. La factoría utiliza la base aislada creada por el helper.
-- **Línea 3:** Elimina la variable de esa sesión. La siguiente ejecución vuelve a la rama Docker si no recibe otra configuración.
+
+La variable `ACERIA_TEST_SQLSERVER` permite utilizar SQL Server Express LocalDB en Windows en lugar de arrancar el contenedor. El valor de `master` se usa para crear bases de prueba independientes; no significa que las entidades del ejercicio se graben en la base `master`. Al terminar se retira la variable para no contaminar sesiones posteriores.
+
 
 `TrustServerCertificate=True` corresponde aquí a una conexión de laboratorio. No describe por sí sola una política de certificados para producción. La alternativa LocalDB permite ejecutar estas pruebas en Windows sin arrancar Docker, pero sigue requiriendo un motor SQL Server operativo. Una configuración inválida, un servicio detenido o una descarga fallida no se transforman en pruebas omitidas ni activan InMemory como sustituto.
 
@@ -484,9 +426,9 @@ services.AddDbContext<AceriaDbContext>(options =>
     options.UseSqlServer(_base.ConnectionString));
 ```
 
-- **Línea 1:** Reserva una base aislada mediante el helper del namespace `AceriaApp.PruebasSqlServer`. Su duración queda vinculada a la factoría.
-- **Línea 2:** Registra el contexto que recibirán los endpoints mediante inyección de dependencias. En la factoría se retira antes el registro de opciones que traía la aplicación.
-- **Línea 3:** Mantiene el proveedor `UseSqlServer` y cambia únicamente la conexión. El test ejercita traducción SQL, restricciones y persistencia del motor utilizado por el curso.
+
+La factoría de pruebas obtiene una base aislada a través del helper `BaseSqlServer.Crear()` y configura EF Core con su cadena. Así un test comprueba persistencia real y puede limpiar sus datos sin alterar otros casos. La duración de la factoría determina el ciclo de vida de los recursos de prueba, y una ejecución correcta debe verificar tanto los resultados como la limpieza.
+
 
 | Momento | Qué sucede | Qué permite comprobar |
 |---|---|---|
