@@ -76,7 +76,7 @@ jobs:
           cat AUDITORIA_RECONSTRUCCION_PRACTICAS.md
       - name: Auditar continuidad de primeros puntos M03-M08 desde el módulo previo
         run: |
-          python tools/auditar_continuidad_modular.py --report AUDITORIA_CONTINUIDAD_MODULAR.md
+          python tools/auditar_continuidad_modular.py --materializar --report AUDITORIA_CONTINUIDAD_MODULAR.md
           cat AUDITORIA_CONTINUIDAD_MODULAR.md
       - uses: actions/upload-artifact@v4
         if: always()
