@@ -1518,11 +1518,15 @@ Si en otro diseño se construye una base de lectura separada mediante eventos, a
 
 ---
 
-## Desarrollo teórico
+## Fronteras del negocio y comportamiento ejecutable de Producción
 
-### Bloque 1 — El dominio de la acería
 
-El dominio de la acería es el área de conocimiento del negocio siderúrgico. Incluye la producción de acero, la gestión de materias primas, la gestión de clientes y la facturación. El dominio se organiza en contextos delimitados que reflejan las áreas del negocio. Cada contexto tiene su propio lenguaje ubicuo, su propio modelo y sus propias reglas. El dominio de la acería es lo suficientemente complejo para justificar la aplicación de DDD. La complejidad proviene de la variedad de materiales, la diversidad de procesos y la coordinación entre áreas.
+
+Aprovecharemos el recorrido de una orden de fabricación para relacionar vocabulario, agregado, casos de uso y consultas. Los demás contextos nos ayudarán a entender las fronteras, sin atribuirles código que todavía no existe.
+
+### El dominio de la acería
+
+La aplicación de DDD a una acería comienza por comprender qué decisiones corresponden a cada capacidad del negocio, no por diseñar una clase común que acumule todos sus datos. Producción necesita seguir órdenes de fabricación y sus estados; Aprovisionamiento se ocupa de compras y recepción de materiales; Clientes mantiene información comercial; y Facturación tiene reglas propias. Estas capacidades pueden colaborar, pero no deberían compartir indiscriminadamente un único modelo de «orden» si sus significados y ciclos de vida difieren. El contexto en que se utiliza una palabra determina sus invariantes y sus contratos. En AceriaApp desarrollaremos especialmente el modelo de Producción y utilizaremos los otros ámbitos para razonar sobre límites y posibles integraciones. No afirmaremos que todos esos contextos tengan ya una API desplegada por aparecer en un esquema conceptual.
 
 ```text
 Dominio de la acería:
@@ -1533,37 +1537,27 @@ Clientes           → registro de clientes.
 Facturación        → emisión de facturas.
 ```
 
-- **Línea 1:** `Dominio de la acería:` → identifica el tema de las líneas siguientes.
-
-- **Línea 3:** `Producción         → órdenes de fabricación.` → contexto de fabricación.
-
-- **Línea 4:** `Aprovisionamiento  → órdenes de compra.` → contexto de compras.
-
-- **Línea 5:** `Clientes           → registro de clientes.` → contexto de clientes.
-
-- **Línea 6:** `Facturación        → emisión de facturas.` → contexto de facturación.
+El mapa separa Producción, Aprovisionamiento, Clientes y Facturación por responsabilidades del negocio. Las fronteras son hipótesis de modelado que deben contrastarse con sus reglas y propietarios, no un inventario de servicios ya ejecutables.
 
 El dominio de la acería se caracteriza por tres propiedades. La primera es que tiene varios subdominios con lenguajes distintos. La segunda es que los subdominios se coordinan para producir el resultado final. La tercera es que las reglas del negocio son específicas de cada subdominio. Las tres propiedades permiten que el dominio sea un caso de estudio representativo para la aplicación de DDD.
 
 La aplicación de DDD al dominio de la acería tiene dos consecuencias prácticas. La primera es que el modelo refleja el lenguaje del negocio siderúrgico. La segunda es que cada contexto puede mantener su modelo dentro de un módulo propio o de un servicio, según la decisión de despliegue. La combinación de ambas permite que el sistema sea mantenible y que evolucione con el negocio.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Usa el mapa de la acería para explicar límites, pero elige un recorrido vertical pequeño que se pueda ejecutar y probar de extremo a extremo.
 
-**La decisión arquitectónica.** Usa el mapa de la acería para explicar límites, pero elige un recorrido vertical pequeño que se pueda ejecutar y probar de extremo a extremo.
+El módulo implementa órdenes de Producción con cliente, material, cantidades, líneas y estados. Aprovisionamiento, Clientes y Facturación ayudan a explicar otros significados del negocio.
 
-**Ejemplo concreto en AceriaApp.** El módulo implementa órdenes de Producción con cliente, material, cantidades, líneas y estados. Aprovisionamiento, Clientes y Facturación ayudan a explicar otros significados del negocio.
+El caso didáctico no controla hornos ni certifica procesos industriales. Temperatura, colada y producto terminado son ejemplos de posibles conceptos que exigirían reglas y datos adicionales.
 
-**Riesgo, alternativa y límite.** El caso didáctico no controla hornos ni certifica procesos industriales. Temperatura, colada y producto terminado son ejemplos de posibles conceptos que exigirían reglas y datos adicionales.
-
-**Comprobación técnica y aprendizaje.** Separa en el mapa lo conceptual y lo implementado. Para cada capacidad ejecutable, señala una clase, una operación de aplicación y una prueba que la ejercite.
+Separa en el mapa lo conceptual y lo implementado. Para cada capacidad ejecutable, señala una clase, una operación de aplicación y una prueba que la ejercite.
 
 ---
 
-### Bloque 2 — Contexto de producción
+### Contexto de producción
 
 **Alcance del modelo.** Este bloque describe el mapa conceptual de la acería. La implementación del módulo se concentra en Producción; los nombres de otros contextos y las capacidades no presentes en la práctica son variantes de diseño, no servicios ya implementados.
 
-El contexto de producción es el subdominio núcleo de la acería. Contiene las reglas de fabricación del acero. Las entidades principales son la orden de producción, la línea de producción y el producto terminado. Los value objects principales son la cantidad, el peso y la temperatura. Los invariantes principales son la cantidad mínima, la temperatura de fusión y la secuencia de operaciones. El contexto de producción aporta el valor diferencial al negocio.
+El contexto de Producción responde a preguntas como qué se va a fabricar, en qué cantidad y cuándo puede considerarse terminada una orden. Su agregado principal necesita identidad, estado y operaciones que impidan transiciones incompatibles con el proceso. Los objetos de valor permiten expresar cantidades o materiales sin convertir cualquier atributo en una entidad con vida propia. Una operación de finalización debe comprobar el estado vigente de la orden y conservar su coherencia aunque se ejecute desde HTTP u otro canal. El modelo no debe incorporar la topología de RabbitMQ ni las tablas SQL como si fuesen reglas de fabricación. En AceriaApp `OrdenProduccion` representará esa frontera y sus tests demostrarán el comportamiento antes de probar la persistencia con EF Core.
 
 ```text
 Contexto de producción:
@@ -1573,37 +1567,29 @@ Value objects   → Cantidad, Peso, Temperatura.
 Invariantes     → cantidad mínima, temperatura de fusión, secuencia.
 ```
 
-- **Línea 1:** `Contexto de producción:` → identifica el tema de las líneas siguientes.
-
-- **Línea 3:** `Entidades       → OrdenProduccion, LineaProduccion, ProductoTerminado.` → OrdenProduccion, LineaProduccion, ProductoTerminado.
-
-- **Línea 4:** `Value objects   → Cantidad, Peso, Temperatura.` → Cantidad, Peso, Temperatura.
-
-- **Línea 5:** `Invariantes     → cantidad mínima, temperatura de fusión, secuencia.` → cantidad mínima, temperatura de fusión, secuencia.
+El contexto de Producción se centra en órdenes de fabricación y restricciones de cantidad, material y estado. El esquema no sustituye las invariantes del agregado: estas deben ejecutarse y probarse en sus métodos.
 
 El contexto de producción se caracteriza por tres propiedades. La primera es que contiene las reglas específicas de la fabricación. La segunda es que coordina varios elementos del dominio. La tercera es que su modelo refleja el lenguaje del negocio siderúrgico. Las tres propiedades permiten que el contexto sea el núcleo del sistema.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Concentra las invariantes de la orden en la raíz. El estado debe limitar qué operaciones pueden modificar sus líneas y cuándo se permite finalizar.
 
-**La decisión arquitectónica.** Concentra las invariantes de la orden en la raíz. El estado debe limitar qué operaciones pueden modificar sus líneas y cuándo se permite finalizar.
+La secuencia es Borrador → Planificada → Finalizada. La primera línea se crea con la orden; las líneas adicionales deben respetar la capacidad total de 500 unidades y las transiciones permitidas.
 
-**Ejemplo concreto en AceriaApp.** La secuencia es Borrador → Planificada → Finalizada. La primera línea se crea con la orden; las líneas adicionales deben respetar la capacidad total de 500 unidades y las transiciones permitidas.
+La figura conceptual menciona instalaciones y producto terminado, pero el tipo `LineaDeOrden` es un hijo de la orden. No representa una máquina física ni demuestra medición de temperatura.
 
-**Riesgo, alternativa y límite.** La figura conceptual menciona instalaciones y producto terminado, pero el tipo `LineaDeOrden` es un hijo de la orden. No representa una máquina física ni demuestra medición de temperatura.
-
-**Comprobación técnica y aprendizaje.** Comprueba el estado inicial, cada transición válida y los saltos rechazados. Verifica que una operación rechazada no altere cantidad total, líneas ni estado.
+Comprueba el estado inicial, cada transición válida y los saltos rechazados. Verifica que una operación rechazada no altere cantidad total, líneas ni estado.
 
 ![Diagrama explicativo del punto 5.5, bloque 2](IMAGENES/5-5-estados.svg)
 
-*Interpretación del gráfico:* Solo las transiciones definidas se aceptan. Las flechas describen estados del ejercicio, no fases de un proceso industrial real. La figura se distribuye en SVG vectorial y PNG.
+Solo las transiciones definidas se aceptan. Las flechas describen estados del ejercicio, no fases de un proceso industrial real. La figura se distribuye en SVG vectorial y PNG.
 
 ---
 
-### Bloque 3 — Contexto de aprovisionamiento
+### Contexto de aprovisionamiento
 
 **Alcance del modelo.** Este bloque describe el mapa conceptual de la acería. La implementación del módulo se concentra en Producción; los nombres de otros contextos y las capacidades no presentes en la práctica son variantes de diseño, no servicios ya implementados.
 
-El contexto de aprovisionamiento es un subdominio de soporte de la acería. Contiene las reglas de compra de materias primas. Las entidades principales son la orden de compra, el proveedor y el material. Los value objects principales son la cantidad, el precio y la fecha de entrega. Los invariantes principales son la cantidad mínima del pedido, el plazo de entrega y las condiciones de pago. El contexto de aprovisionamiento apoya al núcleo sin aportar valor diferencial.
+Aprovisionamiento trabaja con órdenes de compra, proveedores, recepción de materiales y condiciones comerciales. Aunque también utilice la palabra «orden», la identidad, los estados y las reglas pueden diferir de una orden de fabricación. Una compra puede estar pendiente de proveedor, parcialmente recibida o condicionada por un plazo; no es correcto forzar esas transiciones dentro del agregado de Producción para reutilizar código. Los datos que ambos contextos necesitan intercambiar deben expresarse mediante contratos o hechos concretos, por ejemplo la recepción de un lote de material. En esta etapa AceriaApp estudia ese contexto como una frontera de negocio, sin presentarlo como un servicio programado ni una garantía ya comprobada de abastecimiento.
 
 ```text
 Contexto de aprovisionamiento:
@@ -1613,33 +1599,25 @@ Value objects   → Cantidad, Precio, FechaEntrega.
 Invariantes     → cantidad mínima, plazo, condiciones de pago.
 ```
 
-- **Línea 1:** `Contexto de aprovisionamiento:` → identifica el tema de las líneas siguientes.
-
-- **Línea 3:** `Entidades       → OrdenCompra, Proveedor, Material.` → OrdenCompra, Proveedor, Material.
-
-- **Línea 4:** `Value objects   → Cantidad, Precio, FechaEntrega.` → Cantidad, Precio, FechaEntrega.
-
-- **Línea 5:** `Invariantes     → cantidad mínima, plazo, condiciones de pago.` → cantidad mínima, plazo, condiciones de pago.
+Aprovisionamiento utiliza órdenes de compra y relaciones con proveedores, con estados diferentes de una orden de fabricación. Compartir un nombre no autoriza reutilizar indiscriminadamente el mismo modelo.
 
 El contexto de aprovisionamiento se caracteriza por tres propiedades. La primera es que contiene las reglas de compra. La segunda es que coordina varios elementos del dominio. La tercera es que su modelo refleja el lenguaje del negocio de compras. Las tres propiedades permiten que el contexto apoye al núcleo del sistema.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Un futuro contexto de compras debe tener reglas y propiedad de datos propias. Producción no debe modificar directamente sus órdenes de compra.
 
-**La decisión arquitectónica.** Un futuro contexto de compras debe tener reglas y propiedad de datos propias. Producción no debe modificar directamente sus órdenes de compra.
+Producción usa el nombre del material necesario para su orden. Si después se conectan compras o inventario, un contrato explícito podrá comunicar disponibilidad o recepción.
 
-**Ejemplo concreto en AceriaApp.** Producción usa el nombre del material necesario para su orden. Si después se conectan compras o inventario, un contrato explícito podrá comunicar disponibilidad o recepción.
+Compartir una tabla de materiales entre contextos puede facilitar una primera consulta y a la vez permitir cambios que rompan ambos modelos. Una reserva distribuida requiere tratar ausencia, retraso y compensación.
 
-**Riesgo, alternativa y límite.** Compartir una tabla de materiales entre contextos puede facilitar una primera consulta y a la vez permitir cambios que rompan ambos modelos. Una reserva distribuida requiere tratar ausencia, retraso y compensación.
-
-**Comprobación técnica y aprendizaje.** Documenta qué significa material en cada contexto y qué dato mínimo intercambiarían. Este módulo no comprueba stock ni crea proveedores porque esas capacidades siguen siendo conceptuales.
+Documenta qué significa material en cada contexto y qué dato mínimo intercambiarían. Este módulo no comprueba stock ni crea proveedores porque esas capacidades siguen siendo conceptuales.
 
 ---
 
-### Bloque 4 — Contexto de clientes
+### Contexto de clientes
 
 **Alcance del modelo.** Este bloque describe el mapa conceptual de la acería. La implementación del módulo se concentra en Producción; los nombres de otros contextos y las capacidades no presentes en la práctica son variantes de diseño, no servicios ya implementados.
 
-El contexto de clientes es un subdominio de soporte de la acería. Contiene las reglas de gestión de clientes. Las entidades principales son el cliente y el contacto. Los value objects principales son la dirección, el teléfono y el correo. Los invariantes principales son la razón social obligatoria, el identificador fiscal único y la dirección completa. El contexto de clientes apoya al núcleo sin aportar valor diferencial.
+El contexto de Clientes describe relaciones comerciales, datos de contacto y las reglas que permiten mantener una identidad de cliente consistente. El nombre, el identificador fiscal y las direcciones cumplen propósitos diferentes y pueden necesitar validaciones específicas. Una orden de fabricación puede referenciar un cliente, pero eso no obliga a incorporar todo su expediente comercial en el agregado de Producción. Conviene evitar que una actualización de datos de contacto afecte a la persistencia de órdenes pasadas de forma no prevista. En AceriaApp el modelo de Clientes orienta el diseño futuro de contratos y referencias, pero se distingue del comportamiento ejecutable que se implementa sobre Producción. Esta separación permite estudiar contextos sin simular que todas sus reglas ya se han probado.
 
 ```text
 Contexto de clientes:
@@ -1649,33 +1627,25 @@ Value objects   → Direccion, Telefono, Correo.
 Invariantes     → razón social, identificador fiscal, dirección completa.
 ```
 
-- **Línea 1:** `Contexto de clientes:` → identifica el tema de las líneas siguientes.
-
-- **Línea 3:** `Entidades       → Cliente, Contacto.` → Cliente, Contacto.
-
-- **Línea 4:** `Value objects   → Direccion, Telefono, Correo.` → Direccion, Telefono, Correo.
-
-- **Línea 5:** `Invariantes     → razón social, identificador fiscal, dirección completa.` → razón social, identificador fiscal, dirección completa.
+Clientes conserva datos comerciales y de contacto que Producción puede necesitar referenciar. El agregado de órdenes no debería permitir que una modificación de dirección altere sin control decisiones de fabricación ya confirmadas.
 
 El contexto de clientes se caracteriza por tres propiedades. La primera es que contiene las reglas de gestión de clientes. La segunda es que coordina varios elementos del dominio. La tercera es que su modelo refleja el lenguaje del negocio comercial. Las tres propiedades permiten que el contexto apoye al núcleo del sistema.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Distingue el dato que necesita Producción del expediente comercial completo. Una referencia o copia puede ser suficiente según el requisito de trazabilidad.
 
-**La decisión arquitectónica.** Distingue el dato que necesita Producción del expediente comercial completo. Una referencia o copia puede ser suficiente según el requisito de trazabilidad.
+La orden conserva el cliente necesario para el ejemplo. El mapa conceptual de Clientes añade contactos, dirección fiscal y reglas de identificación, pero no existe un servicio comercial completo en este módulo.
 
-**Ejemplo concreto en AceriaApp.** La orden conserva el cliente necesario para el ejemplo. El mapa conceptual de Clientes añade contactos, dirección fiscal y reglas de identificación, pero no existe un servicio comercial completo en este módulo.
+Una cadena con el nombre del cliente no demuestra que el cliente esté registrado ni que un identificador fiscal sea único. Esas garantías requieren contrato, persistencia y pruebas propias.
 
-**Riesgo, alternativa y límite.** Una cadena con el nombre del cliente no demuestra que el cliente esté registrado ni que un identificador fiscal sea único. Esas garantías requieren contrato, persistencia y pruebas propias.
-
-**Comprobación técnica y aprendizaje.** Explica qué ocurriría si cambia la razón social: actualizar la orden histórica o conservar la copia original son decisiones diferentes que deben acordarse antes de implementar integración.
+Explica qué ocurriría si cambia la razón social: actualizar la orden histórica o conservar la copia original son decisiones diferentes que deben acordarse antes de implementar integración.
 
 ---
 
-### Bloque 5 — Agregados del dominio de la acería
+### Agregados del dominio de la acería
 
 **Alcance del modelo.** Este bloque describe el mapa conceptual de la acería. La implementación del módulo se concentra en Producción; los nombres de otros contextos y las capacidades no presentes en la práctica son variantes de diseño, no servicios ya implementados.
 
-Un agregado es un grupo de entidades y value objects que se tratan como una unidad. El agregado tiene una raíz que controla las modificaciones y la preservación de invariantes; los hijos pueden exponerse para lectura sin permitir mutaciones que salten la raíz. Los agregados definen fronteras de consistencia para sus invariantes; conviene mantenerlos pequeños y diseñar explícitamente la coordinación entre agregados. En el dominio de la acería, el agregado `OrdenProduccion` agrupa la orden y sus líneas. El agregado `OrdenCompra` agrupa la orden y sus líneas de compra. El agregado `Cliente` agrupa el cliente y sus contactos.
+Un agregado establece el límite dentro del cual ciertas invariantes deben mantenerse coherentes al realizar una operación. Una orden de producción puede ser raíz de líneas de fabricación que no deberían modificarse de forma arbitraria desde fuera; una orden de compra y un cliente pueden tener agregados distintos según sus reglas. El criterio no es contener todos los datos relacionados en una estructura enorme, sino proteger las modificaciones que el negocio considera indivisibles. Un agregado demasiado grande puede provocar bloqueos y cambios difíciles de coordinar; uno demasiado pequeño puede obligar a realizar varias operaciones para mantener una sola regla. En AceriaApp comenzaremos por `OrdenProduccion` y evaluaremos sus transiciones, dejando para la comunicación entre contextos los hechos que no pertenecen a su transacción local.
 
 ```text
 Agregados del dominio:
@@ -1685,35 +1655,27 @@ OrdenCompra      → raíz: OrdenCompra. Contiene: LineaCompra.
 Cliente          → raíz: Cliente. Contiene: Contacto.
 ```
 
-- **Línea 1:** `Agregados del dominio:` → identifica el tema de las líneas siguientes.
-
-- **Línea 3:** `OrdenProduccion  → raíz: OrdenProduccion. Contiene: LineaProduccion.` → raíz OrdenProduccion con LineaProduccion.
-
-- **Línea 4:** `OrdenCompra      → raíz: OrdenCompra. Contiene: LineaCompra.` → raíz OrdenCompra con LineaCompra.
-
-- **Línea 5:** `Cliente          → raíz: Cliente. Contiene: Contacto.` → raíz Cliente con Contacto.
+La raíz del agregado controla modificaciones de elementos que dependen de ella. La frontera debe justificarse por reglas de consistencia y no solo por las relaciones que muestra una base de datos.
 
 Los agregados del dominio de la acería se caracterizan por tres propiedades. La primera es que tienen una raíz única. La segunda es que agrupan varias entidades y value objects. La tercera es que definen los límites transaccionales. Las tres propiedades facilitan preservar invariantes; la atomicidad al persistir requiere además un adaptador transaccional correcto.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Delimita el agregado por lo que debe permanecer consistente en una operación. La relación entre objetos por sí sola no obliga a incluirlos en la misma frontera.
 
-**La decisión arquitectónica.** Delimita el agregado por lo que debe permanecer consistente en una operación. La relación entre objetos por sí sola no obliga a incluirlos en la misma frontera.
+`OrdenProduccion` controla `LineaDeOrden` y el total. Añadir una línea pasa por la raíz; el repositorio recupera la orden con la información necesaria para proteger la capacidad.
 
-**Ejemplo concreto en AceriaApp.** `OrdenProduccion` controla `LineaDeOrden` y el total. Añadir una línea pasa por la raíz; el repositorio recupera la orden con la información necesaria para proteger la capacidad.
+Incluir todas las órdenes de un cliente en un solo agregado aumentaría carga y contención. Las referencias entre agregados suelen expresarse con identidades y contratos de coordinación.
 
-**Riesgo, alternativa y límite.** Incluir todas las órdenes de un cliente en un solo agregado aumentaría carga y contención. Las referencias entre agregados suelen expresarse con identidades y contratos de coordinación.
-
-**Comprobación técnica y aprendizaje.** Prueba el total tras varias líneas y el rechazo al exceder 500. Verifica que la colección expuesta no permita introducir una línea que la raíz no haya validado.
+Prueba el total tras varias líneas y el rechazo al exceder 500. Verifica que la colección expuesta no permita introducir una línea que la raíz no haya validado.
 
 ![Diagrama explicativo del punto 5.5, bloque 5](IMAGENES/5-5-agregado.svg)
 
-*Interpretación del gráfico:* La raíz controla líneas y capacidad total. Las operaciones externas no mutan hijos saltándose esa frontera. La figura se distribuye en SVG vectorial y PNG.
+La raíz controla líneas y capacidad total. Las operaciones externas no mutan hijos saltándose esa frontera. La figura se distribuye en SVG vectorial y PNG.
 
 ---
 
-### Bloque 6 — Lenguaje ubicuo de la acería
+### Lenguaje ubicuo de la acería
 
-El lenguaje ubicuo de la acería se construye con los términos del negocio siderúrgico. Los términos principales son orden de producción, línea de producción, colada, producto terminado, materia prima, proveedor, cliente, contacto, cantidad, peso y temperatura. El lenguaje es específico de cada contexto. El lenguaje se refleja en el código: los nombres de las clases y los métodos coinciden con los términos del negocio. El lenguaje evoluciona con el negocio.
+El lenguaje ubicuo debe conservar el significado de las palabras dentro de cada contexto. Una «colada» o un «producto terminado» tienen sentido en Producción; un «proveedor» o una «orden de compra» pertenecen a Aprovisionamiento. Cuando los contextos colaboran, es útil identificar qué término necesita traducirse para evitar que un mismo nombre oculte conceptos distintos. Esta labor no termina al definir un diccionario: los métodos, mensajes y tests del código deben utilizar ese vocabulario. En AceriaApp describiremos la creación, planificación y finalización de órdenes con palabras propias de fabricación, en vez de llamar genéricamente `Actualizar` a toda transición. Una conversación con expertos debería poder reconocer esas operaciones en el programa.
 
 ```text
 Lenguaje ubicuo de la acería:
@@ -1723,33 +1685,25 @@ Aprovisionamiento → orden de compra, proveedor, materia prima.
 Clientes          → cliente, contacto, dirección fiscal.
 ```
 
-- **Línea 1:** `Lenguaje ubicuo de la acería:` → identifica el tema de las líneas siguientes.
-
-- **Línea 3:** `Producción        → orden de producción, colada, producto terminado.` → términos del contexto de producción.
-
-- **Línea 4:** `Aprovisionamiento → orden de compra, proveedor, materia prima.` → términos del contexto de aprovisionamiento.
-
-- **Línea 5:** `Clientes          → cliente, contacto, dirección fiscal.` → términos del contexto de clientes.
+Las palabras del negocio permiten reconocer qué contexto está tomando una decisión. La traducción entre vocabularios debe ser explícita cuando un término tiene significados distintos para Producción y Aprovisionamiento.
 
 El lenguaje ubicuo se caracteriza por tres propiedades. La primera es que se construye de forma colaborativa con el negocio. La segunda es que se refleja en el código. La tercera es que evoluciona con el dominio. Las tres propiedades permiten que el código sea legible para el negocio y que la comunicación sea precisa.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Mantén un glosario que indique contexto, significado y ejemplo. Una misma palabra puede ser válida con significados distintos si la frontera es explícita.
 
-**La decisión arquitectónica.** Mantén un glosario que indique contexto, significado y ejemplo. Una misma palabra puede ser válida con significados distintos si la frontera es explícita.
+Orden de producción es la raíz; línea de orden es su componente. Planificada significa que se aceptó la planificación del ejemplo, no que un horno real ya haya iniciado una colada.
 
-**Ejemplo concreto en AceriaApp.** Orden de producción es la raíz; línea de orden es su componente. Planificada significa que se aceptó la planificación del ejemplo, no que un horno real ya haya iniciado una colada.
+Copiar vocabulario industrial sin validarlo puede dar una falsa apariencia de precisión. Colada y producto terminado permanecen en el mapa conceptual hasta que existan reglas específicas.
 
-**Riesgo, alternativa y límite.** Copiar vocabulario industrial sin validarlo puede dar una falsa apariencia de precisión. Colada y producto terminado permanecen en el mapa conceptual hasta que existan reglas específicas.
-
-**Comprobación técnica y aprendizaje.** Revisa que pruebas, mensajes y respuesta HTTP usen el mismo significado de estado. Si el negocio cambia una definición, actualiza el glosario y las pruebas que expresan la regla.
+Revisa que pruebas, mensajes y respuesta HTTP usen el mismo significado de estado. Si el negocio cambia una definición, actualiza el glosario y las pruebas que expresan la regla.
 
 ---
 
-### Bloque 7 — Casos de uso del dominio de la acería
+### Casos de uso del dominio de la acería
 
 **Alcance del modelo.** Este bloque describe el mapa conceptual de la acería. La implementación del módulo se concentra en Producción; los nombres de otros contextos y las capacidades no presentes en la práctica son variantes de diseño, no servicios ya implementados.
 
-Los casos de uso del dominio de la acería reflejan las operaciones del negocio. Los casos de uso de producción incluyen crear orden, asignar material, iniciar colada y finalizar producto. Los casos de uso de aprovisionamiento incluyen crear orden de compra, recibir material y registrar proveedor. Los casos de uso de clientes incluyen registrar cliente, actualizar contacto y consultar historial. Cada caso de uso coordina las entidades y los value objects del contexto.
+Los casos de uso representan acciones que los actores necesitan completar, y cada contexto debe ser dueño de las reglas que les dan significado. Producción puede crear o finalizar una orden; Aprovisionamiento puede recibir material de un proveedor; Clientes puede actualizar un contacto. Es tentador ubicar todos esos comportamientos en un servicio central de coordinación, pero eso diluye la responsabilidad y hace más difícil cambiar una política de manera localizada. Conviene definir contratos que permitan invocar capacidades sin exponer modelos internos ajenos. En AceriaApp implementaremos los casos de uso de Producción y estudiaremos los demás como posibilidades de integración. El alumnado debe distinguir entre un mapa del negocio, una firma de interfaz y una operación realmente ejecutada y probada.
 
 ```text
 Casos de uso del dominio:
@@ -1759,33 +1713,25 @@ Aprovisionamiento → crear orden de compra, recibir material, registrar proveed
 Clientes          → registrar cliente, actualizar contacto, consultar historial.
 ```
 
-- **Línea 1:** `Casos de uso del dominio:` → identifica el tema de las líneas siguientes.
-
-- **Línea 3:** `Producción        → crear orden, asignar material, iniciar colada, finalizar producto.` → casos de uso del contexto de producción.
-
-- **Línea 4:** `Aprovisionamiento → crear orden de compra, recibir material, registrar proveedor.` → casos de uso del contexto de aprovisionamiento.
-
-- **Línea 5:** `Clientes          → registrar cliente, actualizar contacto, consultar historial.` → casos de uso del contexto de clientes.
+Los casos de uso del mapa expresan intenciones propias de cada capacidad. En M05 la implementación comprobada se concentra en Producción; los otros recorridos orientan el diseño futuro y no constituyen endpoints reales.
 
 Los casos de uso se caracterizan por tres propiedades. La primera es que expresan operaciones del negocio. La segunda es que coordinan los elementos del dominio. La tercera es que devuelven un resultado explícito. Las tres propiedades permiten que los casos de uso sean la unidad de operación de cada contexto.
 
-#### Ampliación didáctica aplicada a AceriaApp
+El flujo ejecutable debe demostrar cómo colaboran las capas y qué pasa cuando una operación no está permitida.
 
-**La decisión arquitectónica.** El flujo ejecutable debe demostrar cómo colaboran las capas y qué pasa cuando una operación no está permitida.
+La práctica permite crear, obtener, planificar y finalizar una orden; en 5.5 añade líneas desde la API. La secuencia completa pasa por aplicación, dominio, repositorio y unidad de trabajo.
 
-**Ejemplo concreto en AceriaApp.** La práctica permite crear, obtener, planificar y finalizar una orden; en 5.5 añade líneas desde la API. La secuencia completa pasa por aplicación, dominio, repositorio y unidad de trabajo.
+Crear orden de compra, recibir materiales o registrar clientes son capacidades posibles del mapa, no endpoints implementados aquí. No se simula su éxito mediante catálogos.
 
-**Riesgo, alternativa y límite.** Crear orden de compra, recibir materiales o registrar clientes son capacidades posibles del mapa, no endpoints implementados aquí. No se simula su éxito mediante catálogos.
-
-**Comprobación técnica y aprendizaje.** Ejecuta crear → añadir línea → consultar → planificar → finalizar → consultar. Incluye entradas inválidas y una transición rechazada para demostrar que el flujo protege reglas y no solo el camino feliz.
+Ejecuta crear → añadir línea → consultar → planificar → finalizar → consultar. Incluye entradas inválidas y una transición rechazada para demostrar que el flujo protege reglas y no solo el camino feliz.
 
 ---
 
-### Bloque 8 — Commands y queries del dominio de la acería
+### Commands y queries del dominio de la acería
 
 **Alcance del modelo.** Este bloque describe el mapa conceptual de la acería. La implementación del módulo se concentra en Producción; los nombres de otros contextos y las capacidades no presentes en la práctica son variantes de diseño, no servicios ya implementados.
 
-Los commands del dominio de la acería reflejan las operaciones de escritura. Los commands de producción incluyen `CrearOrdenProduccionCommand`, `AsignarMaterialCommand`, `IniciarColadaCommand` y `FinalizarProductoCommand`. Las queries del dominio de la acería reflejan las operaciones de lectura. Las queries de producción incluyen `ObtenerOrdenProduccionQuery`, `ListarOrdenesProduccionQuery` y `BuscarColadasQuery`. Los commands y las queries se separan en el modelo.
+Los comandos expresan decisiones que modifican el estado del contexto; las consultas recuperan información para responder preguntas. En Producción, crear una orden es un comando y obtener su detalle es una query. Aprovisionamiento podría utilizar mensajes similares en forma, pero con semántica diferente porque sus reglas de negocio no son las mismas. Esta separación favorece DTOs de lectura específicos y modelos de escritura que conservan invariantes. No exige múltiples bases de datos ni procesos distribuidos. En AceriaApp los mensajes de Producción se conectan con handlers que utilizan SQL Server real; los del mapa de Aprovisionamiento son referencias conceptuales que deberán implementarse más adelante si existe una necesidad funcional.
 
 ```text
 Commands y queries del dominio:
@@ -1796,35 +1742,25 @@ Commands aprovisionamiento → CrearOrdenCompraCommand, RecibirMaterialCommand.
 Queries aprovisionamiento  → ObtenerOrdenCompraQuery, ListarProveedoresQuery.
 ```
 
-- **Línea 1:** `Commands y queries del dominio:` → identifica el tema de las líneas siguientes.
-
-- **Línea 3:** `Commands producción        → CrearOrdenProduccionCommand, AsignarMaterialCommand.` → commands del contexto de producción.
-
-- **Línea 4:** `Queries producción         → ObtenerOrdenProduccionQuery, ListarOrdenesProduccionQuery.` → queries del contexto de producción.
-
-- **Línea 5:** `Commands aprovisionamiento → CrearOrdenCompraCommand, RecibirMaterialCommand.` → commands del contexto de aprovisionamiento.
-
-- **Línea 6:** `Queries aprovisionamiento  → ObtenerOrdenCompraQuery, ListarProveedoresQuery.` → queries del contexto de aprovisionamiento.
+Los Commands y Queries se agrupan por el significado de la operación dentro de su contexto. Una consulta de orden de compra no se vuelve equivalente a una consulta de fabricación porque ambas devuelvan identificadores y fechas.
 
 Los commands y las queries se caracterizan por tres propiedades. La primera es que los commands modifican el estado. La segunda es que las queries no modifican el estado. La tercera es que ambos se separan en el modelo. Las tres propiedades permiten que el sistema sea claro y eficiente.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Nombra los mensajes por contexto e intención, y separa los datos de entrada de las respuestas que necesitan los lectores.
 
-**La decisión arquitectónica.** Nombra los mensajes por contexto e intención, y separa los datos de entrada de las respuestas que necesitan los lectores.
+La ampliación de 5.5 incorpora el command de añadir línea y la ruta `/{id}/lineas` bajo `/api/v1/produccion/ordenes`. Las queries consultan la orden y su estado sin confirmar cambios.
 
-**Ejemplo concreto en AceriaApp.** La ampliación de 5.5 incorpora el command de añadir línea y la ruta `/{id}/lineas` bajo `/api/v1/produccion/ordenes`. Las queries consultan la orden y su estado sin confirmar cambios.
+`IniciarColadaCommand`, `FinalizarProductoCommand` y `BuscarColadasQuery` siguen siendo ejemplos conceptuales. Su aparición en un listado no implica handlers, rutas o sensores existentes.
 
-**Riesgo, alternativa y límite.** `IniciarColadaCommand`, `FinalizarProductoCommand` y `BuscarColadasQuery` siguen siendo ejemplos conceptuales. Su aparición en un listado no implica handlers, rutas o sensores existentes.
-
-**Comprobación técnica y aprendizaje.** Comprueba el registro MediatR y el handler correspondiente para cada mensaje real. Verifica que la identidad de ruta selecciona la orden y que el cuerpo solo aporta los datos de la operación.
+Comprueba el registro MediatR y el handler correspondiente para cada mensaje real. Verifica que la identidad de ruta selecciona la orden y que el cuerpo solo aporta los datos de la operación.
 
 ---
 
-### Bloque 9 — Integración de DDD y CQRS en el dominio de la acería
+### Integración de DDD y CQRS en el dominio de la acería
 
 **Alcance del modelo.** Este bloque describe el mapa conceptual de la acería. La implementación del módulo se concentra en Producción; los nombres de otros contextos y las capacidades no presentes en la práctica son variantes de diseño, no servicios ya implementados.
 
-La integración de DDD y CQRS en el dominio de la acería produce un sistema con contextos delimitados y separación entre escritura y lectura. Cada contexto tiene su propio modelo de dominio y su propio modelo de lectura. Los casos de uso coordinan las entidades y los value objects. Los commands y las queries se separan en manejadores. La integración permite que el sistema sea mantenible y que evolucione con el negocio.
+La integración de DDD y CQRS muestra que un buen límite de contexto y una buena división entre lectura y escritura resuelven problemas distintos. DDD ayuda a decidir qué reglas pertenecen a Producción y qué entidades las protegen; CQRS permite tratar de forma diferente las operaciones que modifican ese modelo y las que construyen representaciones para los consumidores. En AceriaApp, `OrdenProduccion` mantiene las invariantes, los handlers de escritura confirman mediante puertos y Unit of Work y los de lectura devuelven DTOs. La misma base SQL puede soportar ambos recorridos mientras el diseño lo permita. Cuando aparezcan servicios separados, los contratos deberán respetar estas fronteras sin compartir directamente el almacenamiento privado del agregado.
 
 ```text
 Integración de DDD y CQRS:
@@ -1836,39 +1772,27 @@ Contexto de producción:
 - Queries: ObtenerOrdenProduccionQuery, ListarOrdenesProduccionQuery.
 ```
 
-- **Línea 1:** `Integración de DDD y CQRS:` → identifica el tema de las líneas siguientes.
-
-- **Línea 3:** `Contexto de producción:` → título del contexto.
-
-- **Línea 4:** `- Modelo de escritura: OrdenProduccion, LineaProduccion.` → modelo de escritura.
-
-- **Línea 5:** `- Modelo de lectura: OrdenProduccionDto, OrdenProduccionResumenDto.` → modelo de lectura.
-
-- **Línea 6:** `- Commands: CrearOrdenProduccionCommand, AsignarMaterialCommand.` → commands.
-
-- **Línea 7:** `- Queries: ObtenerOrdenProduccionQuery, ListarOrdenesProduccionQuery.` → queries.
+El diagrama combina el agregado de escritura de Producción con DTOs y queries de lectura. La base sigue siendo compartida dentro del contexto, mientras los contratos públicos mantienen su finalidad diferenciada.
 
 La integración tiene dos consecuencias prácticas. La primera es que cada contexto tiene su propio modelo. La segunda es que la escritura y la lectura se separan. La combinación de ambas permite que el sistema sea mantenible y eficiente.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Integra DDD, arquitectura hexagonal y CQRS sin confundir sus responsabilidades: modelo, dirección de dependencias y separación de lectura y escritura.
 
-**La decisión arquitectónica.** Integra DDD, arquitectura hexagonal y CQRS sin confundir sus responsabilidades: modelo, dirección de dependencias y separación de lectura y escritura.
+La API envía una intención; aplicación coordina; el agregado protege invariantes; infraestructura persiste; la lectura devuelve un DTO. El mismo recorrido convive con los módulos hexagonales y patrones anteriores.
 
-**Ejemplo concreto en AceriaApp.** La API envía una intención; aplicación coordina; el agregado protege invariantes; infraestructura persiste; la lectura devuelve un DTO. El mismo recorrido convive con los módulos hexagonales y patrones anteriores.
+Un DTO de resumen distinto no demuestra una segunda base de datos. Una carpeta Producción tampoco demuestra aislamiento si se referencian entidades de otros contextos.
 
-**Riesgo, alternativa y límite.** Un DTO de resumen distinto no demuestra una segunda base de datos. Una carpeta Producción tampoco demuestra aislamiento si se referencian entidades de otros contextos.
-
-**Comprobación técnica y aprendizaje.** Sigue un command y una query desde HTTP hasta su efecto persistido. Revisa que las referencias apunten hacia contratos internos y que el dominio compile sin infraestructura.
+Sigue un command y una query desde HTTP hasta su efecto persistido. Revisa que las referencias apunten hacia contratos internos y que el dominio compile sin infraestructura.
 
 ![Diagrama explicativo del punto 5.5, bloque 9](IMAGENES/5-5-flujo.svg)
 
-*Interpretación del gráfico:* La escritura preserva invariantes y confirma; una lectura posterior verifica el resultado mediante el modelo de lectura. La figura se distribuye en SVG vectorial y PNG.
+La escritura preserva invariantes y confirma; una lectura posterior verifica el resultado mediante el modelo de lectura. La figura se distribuye en SVG vectorial y PNG.
 
 ---
 
-### Bloque 10 — Cierre del módulo 5
+### Cierre del módulo 5
 
-El módulo 5 ha introducido Domain-Driven Design y CQRS. El módulo ha cubierto los conceptos básicos de DDD, las entidades y los value objects, los casos de uso, la separación entre commands y queries y la aplicación al dominio de la acería. El módulo combina catálogos de validación arquitectónica con un contexto de Producción ejecutable: agregado, value objects, casos de uso, persistencia y lectura CQRS. Un catálogo describe decisiones, pero no prueba por sí mismo que existan las clases ni que funcione una transacción. El módulo cierra con el resumen del estado del proyecto y prepara el terreno para el módulo 6, donde se estudiará la comunicación entre microservicios.
+El cierre de M05 debe entenderse como el establecimiento de una base funcional para la futura comunicación entre servicios. El módulo incorpora conceptos DDD, entidades y objetos de valor, casos de uso y la separación de comandos y consultas, culminando en el modelo de Producción. La corrección no se acredita porque un catálogo enumere estos patrones: debe comprobarse que el agregado rechaza transiciones inválidas, que un handler ejecuta una creación y que una consulta recupera desde SQL Server la información confirmada. Los modelos de Aprovisionamiento y Clientes permiten analizar límites, pero no deben anunciarse como implementaciones completas. Esta distinción ofrece al alumno una lectura honesta de lo que la aplicación puede hacer hoy y de las decisiones que preparan los siguientes módulos.
 
 ```text
 Cierre del módulo 5:
@@ -1880,33 +1804,21 @@ Commands y queries     → separación de modelos, CQRS.
 Aplicación al dominio  → contextos de producción, aprovisionamiento y clientes.
 ```
 
-- **Línea 1:** `Cierre del módulo 5:` → identifica el tema de las líneas siguientes.
-
-- **Línea 3:** `Conceptos DDD          → contextos, lenguaje ubicuo, subdominios.` → contextos, lenguaje ubicuo, subdominios.
-
-- **Línea 4:** `Entidades y VOs        → identidad, inmutabilidad, invariantes.` → identidad, inmutabilidad, invariantes.
-
-- **Línea 5:** `Casos de uso           → puertos de entrada, Result, unidad de trabajo.` → puertos de entrada, Result, unidad de trabajo.
-
-- **Línea 6:** `Commands y queries     → separación de modelos, CQRS.` → separación de modelos, CQRS.
-
-- **Línea 7:** `Aplicación al dominio  → contextos de producción, aprovisionamiento y clientes.` → contextos de producción, aprovisionamiento y clientes.
+La síntesis relaciona DDD, agregados, casos de uso y CQRS. Para acreditar la implementación hay que recorrer una orden real desde su comando hasta SQL Server y recuperarla mediante una query, no enumerar patrones en un documento.
 
 El cierre del módulo 5 tiene dos consecuencias prácticas. La primera es que el proyecto tiene una base sólida de DDD y CQRS. La segunda es que el proyecto está preparado para la comunicación entre servicios. La combinación de ambas permite que el sistema evolucione hacia la arquitectura de microservicios.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Cierra el módulo con evidencia reproducible del estado real. Diferencia pruebas de catálogos, pruebas de dominio, aplicación, persistencia y recorrido HTTP.
 
-**La decisión arquitectónica.** Cierra el módulo con evidencia reproducible del estado real. Diferencia pruebas de catálogos, pruebas de dominio, aplicación, persistencia y recorrido HTTP.
+El resultado es un contexto de Producción funcional en una API compartida: identidad y valores protegidos, agregado con líneas, casos de uso, CQRS y endpoints de órdenes.
 
-**Ejemplo concreto en AceriaApp.** El resultado es un contexto de Producción funcional en una API compartida: identidad y valores protegidos, agregado con líneas, casos de uso, CQRS y endpoints de órdenes.
+No se ha implementado comunicación entre servicios, Event Sourcing, outbox ni control industrial de planta. Son decisiones posteriores que deberán tener contratos y pruebas propios.
 
-**Riesgo, alternativa y límite.** No se ha implementado comunicación entre servicios, Event Sourcing, outbox ni control industrial de planta. Son decisiones posteriores que deberán tener contratos y pruebas propios.
-
-**Comprobación técnica y aprendizaje.** Usa el inventario, las prácticas y el informe de ejecución del módulo para comprobar proyectos y pruebas actuales. La transición a M6 parte de estas garantías locales, sin atribuirles atomicidad distribuida.
+Usa el inventario, las prácticas y el informe de ejecución del módulo para comprobar proyectos y pruebas actuales. La transición a M6 parte de estas garantías locales, sin atribuirles atomicidad distribuida.
 
 ---
 
-### Resumen rápido de la teoría
+### Lo implementado y lo que queda como modelo de contexto
 
 - El dominio de la acería se organiza en contextos delimitados que reflejan las áreas del negocio.
 - El contexto de producción es el subdominio núcleo de la acería.
