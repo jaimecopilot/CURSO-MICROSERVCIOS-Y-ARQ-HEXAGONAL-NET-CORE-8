@@ -13,7 +13,7 @@ Continúa exactamente la etapa **M04 4.5**, que contiene catorce proyectos y 118
 
 **Capas y frontera:** `AceriaApp.Api` compone los adaptadores de entrada. Los proyectos hexagonales de M03–M04 conservan sus contratos. `AceriaApp.Produccion.Dominio` expresa el modelo propio del contexto Producción; desde 5.3 se incorporan `AceriaApp.Produccion.Aplicacion` e `AceriaApp.Produccion.Infraestructura`. Los otros contextos de los catálogos son modelos de análisis, no servicios desplegados. Un nombre del catálogo no registra un manejador ni crea una entidad del dominio.
 
-**Convención de código:** cada bloque identifica archivo y operación. Crear exige un archivo nuevo; reemplazar exige un archivo existente; insertar exige una única coincidencia del texto indicado. Los fragmentos de los retos se aplican únicamente en una copia optativa. Las explicaciones numeran las líneas del bloque anterior e incluyen las líneas vacías.
+**Convención de código:** cada bloque identifica archivo y operación. Crear exige un archivo nuevo; reemplazar exige un archivo existente; insertar exige una única coincidencia del texto indicado. Los fragmentos de los retos se aplican únicamente en una copia optativa. Las explicaciones se centran en responsabilidades, decisiones y resultados observables sin glosar cada línea de manera mecánica.
 
 ## Preparar Docker Desktop en Windows para los tests SQL (opcional)
 
@@ -772,7 +772,7 @@ public class CatalogoContextosTests
 Aquí aparece una frontera de dominio auténtica: `OrdenProduccion` controla la creación, la cantidad y las transiciones Borrador, Planificada y Finalizada, y `ReglaProduccionException` identifica incumplimientos conocidos. Comprueba que el proyecto de dominio no referencia EF Core ni ASP.NET Core y que los tests ejercitan las reglas, no solo su nombre.
 
 1. Lee cada archivo de integración de este paso y localiza su responsabilidad en las capas del contexto Producción.
-2. Crea o modifica los archivos exactamente como se indica; sigue la lectura numerada para conectar contratos, reglas y pruebas.
+2. Crea o modifica los archivos exactamente como se indica; relaciona cada bloque con su explicación técnica y con las pruebas que demuestran el comportamiento.
 3. Añade los nuevos proyectos a la solución: `dotnet sln AceriaApp.sln add src/AceriaApp.Produccion.Dominio/AceriaApp.Produccion.Dominio.csproj`.
 4. Ejecuta `dotnet restore AceriaApp.sln` y `dotnet build AceriaApp.sln -c Release`; `dotnet sln AceriaApp.sln list` debe mostrar 16 proyectos.
 
@@ -1275,7 +1275,7 @@ public void Resumen_ConCatalogoPorDefecto_CuentaPorTipo()
 }
 ```
 
-**Paso 7:** Explicar línea por línea:
+**Paso 7:** Interpretar el test y explicar qué comportamiento acredita:
 
 Marca el método como test de xUnit. Declara el test. Invoca el método.
 Verifica el total. Verifica los núcleos. Verifica los soportes.
@@ -2038,7 +2038,7 @@ public class CatalogoModeloTests
 Las modificaciones de dominio deben pasar por operaciones que protejan las invariantes. Comprueba la identidad de una orden tras cambios permitidos, la igualdad por valor de los objetos apropiados y el rechazo de cantidades o estados incompatibles; una entidad sin setters públicos no basta si sus métodos dejan escapar estados inválidos.
 
 1. Lee cada archivo de integración de este paso y localiza su responsabilidad en las capas del contexto Producción.
-2. Crea o modifica los archivos exactamente como se indica; sigue la lectura numerada para conectar contratos, reglas y pruebas.
+2. Crea o modifica los archivos exactamente como se indica; relaciona cada bloque con su explicación técnica y con las pruebas que demuestran el comportamiento.
 3. Conserva todos los proyectos de la solución y comprueba las referencias indicadas en cada archivo de proyecto.
 4. Ejecuta `dotnet restore AceriaApp.sln` y `dotnet build AceriaApp.sln -c Release`; `dotnet sln AceriaApp.sln list` debe mostrar 17 proyectos.
 
@@ -2633,7 +2633,7 @@ public void Resumen_ConCatalogoPorDefecto_CalculaTotales()
 }
 ```
 
-**Paso 7:** Explicar línea por línea:
+**Paso 7:** Interpretar el test y explicar qué comportamiento acredita:
 
 Marca el método como test de xUnit. Declara el test. Invoca el método.
 Verifica el total. Verifica las entidades. Verifica los value objects.
@@ -3386,7 +3386,7 @@ public class CatalogoCasosDeUsoTests
 La aplicación coordina los puertos y el agregado: no debe exigir al dominio que conozca DbContext, y las pruebas de integración deben recuperar una orden desde un contexto SQL distinto al que la guardó. De ese modo se observa la persistencia efectiva del caso de uso.
 
 1. Lee cada archivo de integración de este paso y localiza su responsabilidad en las capas del contexto Producción.
-2. Crea o modifica los archivos exactamente como se indica; sigue la lectura numerada para conectar contratos, reglas y pruebas.
+2. Crea o modifica los archivos exactamente como se indica; relaciona cada bloque con su explicación técnica y con las pruebas que demuestran el comportamiento.
 3. Añade los nuevos proyectos a la solución: `dotnet sln AceriaApp.sln add src/AceriaApp.Produccion.Aplicacion/AceriaApp.Produccion.Aplicacion.csproj`. `dotnet sln AceriaApp.sln add src/AceriaApp.Produccion.Infraestructura/AceriaApp.Produccion.Infraestructura.csproj`.
 4. Ejecuta `dotnet restore AceriaApp.sln` y `dotnet build AceriaApp.sln -c Release`; `dotnet sln AceriaApp.sln list` debe mostrar 20 proyectos.
 
@@ -4451,7 +4451,7 @@ public void Resumen_ConCatalogoPorDefecto_CalculaTotales()
 }
 ```
 
-**Paso 7:** Explicar línea por línea:
+**Paso 7:** Interpretar el test y explicar qué comportamiento acredita:
 
 Marca el método como test de xUnit. Declara el test. Invoca el método.
 Verifica el total. Verifica las escrituras. Verifica las lecturas.
@@ -5219,7 +5219,7 @@ public class CatalogoCqrsTests
 La comprobación funcional debe seguir un comando que modifica la orden y una query que devuelve una proyección sin exponer el agregado. Verifica en SQL Server el cambio del comando y la ausencia de efectos de la lectura, sin asumir que CQRS exige bases físicas separadas.
 
 1. Lee cada archivo de integración de este paso y localiza su responsabilidad en las capas del contexto Producción.
-2. Crea o modifica los archivos exactamente como se indica; sigue la lectura numerada para conectar contratos, reglas y pruebas.
+2. Crea o modifica los archivos exactamente como se indica; relaciona cada bloque con su explicación técnica y con las pruebas que demuestran el comportamiento.
 3. Conserva todos los proyectos de la solución y comprueba las referencias indicadas en cada archivo de proyecto.
 4. Ejecuta `dotnet restore AceriaApp.sln` y `dotnet build AceriaApp.sln -c Release`; `dotnet sln AceriaApp.sln list` debe mostrar 21 proyectos.
 
@@ -5932,7 +5932,7 @@ public void Resumen_ConCatalogoPorDefecto_CalculaTotales()
 }
 ```
 
-**Paso 7:** Explicar línea por línea:
+**Paso 7:** Interpretar el test y explicar qué comportamiento acredita:
 
 Marca el método como test de xUnit. Declara el test. Invoca el método.
 Verifica el total. Verifica los commands. Verifica las queries.
@@ -6668,7 +6668,7 @@ public class CatalogoAceriaTests
 El cierre recorre la orden de Producción desde HTTP hasta SQL Server: alta, planificación, lectura y finalización, además de los errores esperados. Distingue el fallo de una regla conocida de un error técnico y evita confundir la proyección de una query con la entidad del dominio.
 
 1. Lee cada archivo de integración de este paso y localiza su responsabilidad en las capas del contexto Producción.
-2. Crea o modifica los archivos exactamente como se indica; sigue la lectura numerada para conectar contratos, reglas y pruebas.
+2. Crea o modifica los archivos exactamente como se indica; relaciona cada bloque con su explicación técnica y con las pruebas que demuestran el comportamiento.
 3. Conserva todos los proyectos de la solución y comprueba las referencias indicadas en cada archivo de proyecto.
 4. Ejecuta `dotnet restore AceriaApp.sln` y `dotnet build AceriaApp.sln -c Release`; `dotnet sln AceriaApp.sln list` debe mostrar 22 proyectos.
 
@@ -7398,7 +7398,7 @@ public void Resumen_ConCatalogoPorDefecto_CalculaTotales()
 }
 ```
 
-**Paso 7:** Explicar línea por línea:
+**Paso 7:** Interpretar el test y explicar qué comportamiento acredita:
 
 Marca el método como test de xUnit. Declara el test. Invoca el método.
 Verifica el total. Verifica los agregados. Verifica las entidades.
