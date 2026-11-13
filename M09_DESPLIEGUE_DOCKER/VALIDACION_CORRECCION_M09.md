@@ -5,7 +5,7 @@
 **Autor:** JAIME GALLO  
 **Rama:** `version-corregida`  
 **Fecha:** 13 de noviembre de 2026  
-**Estado:** CORRECCIÓN EDITORIAL Y VERIFICACIÓN ESTÁTICA CERRADAS; **PRUEBA E2E REAL EN DOCKER DESKTOP PARA WINDOWS PENDIENTE**. Aprobación editorial final a cargo del autor.
+**Estado:** CORRECCIÓN EDITORIAL, VALIDACIÓN ESTÁTICA Y E2E INTEGRAL EN CI LINUX COMPLETADOS; **PRUEBA EN DOCKER DESKTOP PARA WINDOWS PENDIENTE**. Aprobación editorial final a cargo del autor.
 
 ## Alcance aplicado
 
@@ -32,13 +32,22 @@ Los archivos de Docker y PowerShell del proyecto se mantienen como referentes; e
 | Acciones del script | 6/6 localizadas | preparar, levantar, verificar, detener, bajar, limpiar |
 | Código fuente reutilizado | Ruta M08/8.4 presente | `M08_API_GATEWAY/PROYECTO/8.4-balanceo-carga` |
 | Script de despliegue | Sin errores de sintaxis PowerShell | Parseo estático en runner Windows |
+| Despliegue real en CI Linux | **PASS: seis contenedores, SQL, RabbitMQ, YARP, orden, evento y persistencia** | GitHub Actions Linux, no certifica Docker Desktop Windows |
 
 - [PDF M09 generado y validado](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43509870226).
 - [Validación Windows de sintaxis y correspondencia con infraestructura](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43510540166).
 
+## E2E integral reproducido en contenedores Linux
+
+La ejecución [M09 Docker Compose integral E2E — Linux CI](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43520238826) ha finalizado con **SUCCESS**. Usa el código .NET real de M08 y el mismo `Dockerfile.Servicio`, `compose.fullstack.yml` y `EJECUTAR_DOCKER_WINDOWS.ps1`. El runner Linux invoca el script con `-PermitirLinuxEnCI`, que habilita esta comprobación técnica pero **no certifica Windows**.
+
+Se ha comprobado el arranque y la salud de SQL Server Express, RabbitMQ, Inventario 1, Inventario 2, Producción y YARP; GET de stock a través del gateway; distribución por `X-Instancia`; creación de orden SQL; segunda línea; planificación HTTP 202 y rechazo HTTP 409; proyección asíncrona de la orden recibida; y recuperación de la misma orden y evento tras reiniciar las APIs. La acción `levantar` y una repetición separada de `verificar` devolvieron ambas **PASS integral**. El workflow adjunta JSON de evidencias, estado y logs de los servicios sin publicar `.env`.
+
+**Límites:** esta ejecución automatizada no realiza todavía los ensayos manuales específicos de detener `inventario-2` ni de interrumpir el broker durante una operación pendiente (Pasos 9.13 y 9.14). Y la ejecución fue en Linux CI, no en un Windows físico con Docker Desktop/WSL 2. Ambas circunstancias se mantienen diferenciadas en el estado del curso.
+
 ## Alcance que **no** certifican estas evidencias
 
-El runner Windows empleado aquí **parsea** todos los bloques PowerShell y comprueba la correspondencia con Compose y el script, pero no ejecuta Docker Desktop. La validación del PDF comprueba texto, cabeceras, paginación y renderización básica, pero no equivale a una inspección humana de cada página ni a una ejecución completa de laboratorio desde un proyecto vacío.
+La auditoría PowerShell sobre Windows **parsea** todos los bloques y comprueba la correspondencia con Compose; el nuevo E2E ejecuta realmente Docker sobre **Linux CI**, pero todavía no ejecuta Docker Desktop sobre Windows. La validación del PDF comprueba texto, cabeceras, paginación y renderización básica, pero no equivale a una inspección humana de cada página ni a una ejecución completa de laboratorio desde un proyecto vacío.
 
 Para afirmar que el despliegue integral funciona sobre un equipo Windows real se debe ejecutar en Docker Desktop + WSL 2:
 
