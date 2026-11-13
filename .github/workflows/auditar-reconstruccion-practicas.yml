@@ -19,6 +19,7 @@ on:
       - 'M07_OBSERVABILIDAD_RESILIENCIA/PROYECTO/**'
       - 'M08_API_GATEWAY/PROYECTO/**'
       - 'tools/auditar_reconstruccion_practicas.py'
+      - 'tools/auditar_continuidad_modular.py'
       - '.github/workflows/auditar-reconstruccion-practicas.yml'
   workflow_dispatch:
 
@@ -73,9 +74,15 @@ jobs:
           python tools/auditar_reconstruccion_practicas.py --report AUDITORIA_RECONSTRUCCION_PRACTICAS.md
           echo '===== DETALLE DE BRECHAS POR ETAPA ====='
           cat AUDITORIA_RECONSTRUCCION_PRACTICAS.md
+      - name: Auditar continuidad de primeros puntos M03-M08 desde el módulo previo
+        run: |
+          python tools/auditar_continuidad_modular.py --report AUDITORIA_CONTINUIDAD_MODULAR.md
+          cat AUDITORIA_CONTINUIDAD_MODULAR.md
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: diagnostico-reconstruccion-m02-m08
-          path: AUDITORIA_RECONSTRUCCION_PRACTICAS.md
+          path: |
+            AUDITORIA_RECONSTRUCCION_PRACTICAS.md
+            AUDITORIA_CONTINUIDAD_MODULAR.md
           retention-days: 30
