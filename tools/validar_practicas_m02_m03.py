@@ -79,7 +79,7 @@ def count_trx(path):
             "test_projects":len(found)}
 
 
-def tests(num, stages, env):
+def tests(num, stages, env, reconstruir_incremental=False):
     root=ROOT/MODULES[num][0]/"PROYECTO"
     workroot=Path(os.getenv("RUNNER_TEMP",tempfile.gettempdir())) / (
         f"m0{num}_validacion_" + uuid.uuid4().hex[:8])
@@ -87,7 +87,11 @@ def tests(num, stages, env):
     counts=[]
     for index,slug in enumerate(stages,1):
         stage=workroot/slug
-        shutil.copytree(root/slug,stage)
+        if reconstruir_incremental and index >= 2:
+            from auditar_reconstruccion_practicas import materializar_etapa
+            materializar_etapa(num,index,stage)
+        else:
+            shutil.copytree(root/slug,stage)
         project=("tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj"
                  if num==2 else "AceriaApp.sln")
         run(["dotnet","restore",project,"--nologo"],stage,env)
@@ -177,16 +181,19 @@ def main():
     ap=argparse.ArgumentParser()
     ap.add_argument("--module",type=int,choices=[2,3],required=True)
     ap.add_argument("--audit-only",action="store_true")
+    ap.add_argument("--reconstruir-incremental",action="store_true")
     ap.add_argument("--report",type=str)
     args=ap.parse_args()
     stages,records=audit(args.module)
+    if args.reconstruir_incremental and args.module==2:
+        raise RuntimeError("M02 no tiene aún todas las operaciones de reconstrucción marcadas")
     lines=[f"# M0{args.module} — Evidencia de validación", "",
            "**Pasos:** 96/96.",f"**Marcadores con archivos existentes:** {len(records)}.", ""]
     if not args.audit_only:
         env=os.environ.copy()
         assert env.get("ACERIA_TEST_SQLSERVER"),"Falta ACERIA_TEST_SQLSERVER"
         env["DOTNET_CLI_TELEMETRY_OPTOUT"]="1"
-        report,final_stage=tests(args.module,stages,env)
+        report,final_stage=tests(args.module,stages,env,args.reconstruir_incremental)
         lines.extend(["| Punto | Correctas | Total | Fallidas |",
           "|---|---:|---:|---:|"]+
           [f"| {r['point']} | {r['passed']} | {r['total']} | {r['failed']} |"
@@ -194,7 +201,9 @@ def main():
         result=smoke(args.module,final_stage,env)
         lines.extend(["","**E2E SQL/HTTP:** "+json.dumps(result,ensure_ascii=False),
             "","Se han ejecutado los snapshots de referencia y no todas las "
-            "acciones gráficas de Visual Studio."])
+            "acciones gráficas de Visual Studio.",
+            "Reconstrucción incremental desde el manual en las etapas 2..N: "
+            + str(bool(args.reconstruir_incremental))])
     if args.report:
         destination=Path(args.report);destination.parent.mkdir(parents=True,exist_ok=True)
         destination.write_text("\n".join(lines)+"\n",encoding="utf-8")
