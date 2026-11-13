@@ -1,0 +1,85 @@
+name: M01 - Reconstruccion y E2E Windows SQL Express
+
+on:
+  push:
+    branches: [version-corregida]
+    paths:
+      - 'M01_INTRODUCCION_MICROSERVICIOS/PRACTICAS/M01_PRACTICAS.md'
+      - 'M01_INTRODUCCION_MICROSERVICIOS/PROYECTO/**'
+      - 'tools/validar_m01_windows.py'
+      - '.github/workflows/m01-windows-e2e.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-build:
+    name: Reconstruir cinco puntos y ejecutar xUnit
+    runs-on: windows-2022
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: version-corregida
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Reconstruir M01 desde los esqueletos y ejecutar xUnit
+        shell: pwsh
+        run: python tools/validar_m01_windows.py --report M01_WINDOWS_UNIDAD.md
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: m01-windows-unidad
+          path: M01_WINDOWS_UNIDAD.md
+          retention-days: 30
+
+  windows-sql-e2e:
+    name: Windows SQL Express - migraciones y HTTP E2E
+    runs-on: windows-2022
+    needs: windows-build
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: version-corregida
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Disponer de SQL Server Express
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $service = Get-Service -Name 'MSSQL$SQLEXPRESS' -ErrorAction SilentlyContinue
+          if ($null -eq $service) {
+            Write-Host 'Instalando SQL Server 2022 Express...'
+            choco install sql-server-express --version=2022.16.0.20260305 -y --no-progress
+            if ($LASTEXITCODE -notin @(0, 3010, 1641)) {
+              throw "Instalación SQL Express fallida ($LASTEXITCODE)"
+            }
+            $service = Get-Service -Name 'MSSQL$SQLEXPRESS' -ErrorAction Stop
+          }
+          if ($service.Status -ne 'Running') {
+            Start-Service -Name 'MSSQL$SQLEXPRESS'
+          }
+          $service = Get-Service -Name 'MSSQL$SQLEXPRESS'
+          if ($service.Status -ne 'Running') {
+            throw "SQL Express no está iniciado: $($service.Status)"
+          }
+          Write-Host 'SQL Server Express activo'
+      - name: Reconstruir los cinco puntos, migrar SQL y verificar API HTTP
+        shell: pwsh
+        run: python tools/validar_m01_windows.py --sql --report M01_WINDOWS_VALIDACION.md
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: m01-windows-e2e-sql
+          path: M01_WINDOWS_VALIDACION.md
+          retention-days: 30
