@@ -1,0 +1,37 @@
+name: M06-M08 - Auditoria paridad codigo practicas
+
+on:
+  push:
+    branches: [version-corregida]
+    paths:
+      - 'tools/auditar_paridad_m06_m08.py'
+      - '.github/workflows/auditar-paridad-m06-m08.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  parity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: version-corregida
+          sparse-checkout: |
+            M06_COMUNICACION_MICROSERVICIOS
+            M07_OBSERVABILIDAD_RESILIENCIA
+            M08_API_GATEWAY
+            tools
+          sparse-checkout-cone-mode: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Comparar los fragmentos docentes con los proyectos
+        run: python tools/auditar_paridad_m06_m08.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: auditoria-paridad-m06-m08
+          path: AUDITORIA_PARIDAD_M06_M08.md
+          retention-days: 30
