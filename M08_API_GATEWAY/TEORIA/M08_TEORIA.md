@@ -48,8 +48,6 @@ Cliente → Gateway → Servicio A.
                  → Servicio C.
 ```
 
-`Cliente → Gateway → Servicio A.` asocia Cliente con Gateway → Servicio A, según el alcance conceptual del ejemplo; `→ Servicio B.` el gateway enruta al servicio B; `→ Servicio C.` el gateway enruta al servicio C.
-
 Es el punto de entrada único; oculta la topología interna; y centraliza las preocupaciones transversales. Estas condiciones permiten que los servicios internos sean autónomos.
 
 Los clientes se simplifican: solo conocen un punto de entrada; además, se evita anunciar las direcciones internas como contrato público; impedir acceso directo requiere controles de red adicionales. Ambos factores permiten que el sistema sea más seguro y más mantenible.
@@ -80,8 +78,6 @@ Traducción          → convertir protocolos.
 Agregación          → combinar respuestas.
 Políticas transversales → autenticación, autorización, rate limiting.
 ```
-
-`Enrutamiento        → dirigir la petición al servicio.` asocia Enrutamiento con dirigir la petición al servicio, según el alcance conceptual del ejemplo; `Traducción          → convertir protocolos.` asocia Traducción con convertir protocolos, según el alcance conceptual del ejemplo; `Agregación          → combinar respuestas.` asocia Agregación con combinar respuestas, según el alcance conceptual del ejemplo; `Políticas transversales → autenticación, autorización, rate limiting.` asocia Políticas transversales con autenticación, autorización, rate limiting, según el alcance conceptual del ejemplo.
 
 Las responsabilidades se caracterizan por tres propiedades. Cada responsabilidad es independiente; combinan configuración declarativa y componentes específicos cuando la función lo necesita; y el alcance depende de las políticas y rutas configuradas. Estas condiciones permiten que el gateway sea configurable y mantenible.
 
@@ -140,8 +136,6 @@ Balanceador → distribuye entre instancias del mismo servicio.
 Gateway     → enruta entre servicios distintos.
 ```
 
-`Balanceador → distribuye entre instancias del mismo servicio.` asocia Balanceador con distribuye entre instancias del mismo servicio, según el alcance conceptual del ejemplo; `Gateway     → enruta entre servicios distintos.` asocia Gateway con enruta entre servicios distintos, según el alcance conceptual del ejemplo.
-
 El balanceador distribuye entre instancias y puede operar en capa de transporte o de aplicación; el gateway trabaja en capa de aplicación; y ambos se complementan. Estas condiciones permiten que el sistema sea escalable y seguro.
 
 Gateway y balanceador describen funciones distintas que pueden convivir en un producto. Existen balanceadores de capa 4 y de capa 7. YARP opera sobre HTTP y también puede seleccionar una instancia dentro de un cluster.
@@ -166,8 +160,6 @@ Gateway por cliente → un gateway por cliente.
 Gateway por dominio → un gateway por dominio.
 BFF                 → un gateway por interfaz.
 ```
-
-`Gateway único       → un gateway para todos.` asocia Gateway único con un gateway para todos, según el alcance conceptual del ejemplo; `Gateway por cliente → un gateway por cliente.` asocia Gateway por cliente con un gateway por cliente, según el alcance conceptual del ejemplo; `Gateway por dominio → un gateway por dominio.` asocia Gateway por dominio con un gateway por dominio, según el alcance conceptual del ejemplo; `BFF                 → un gateway por interfaz.` asocia BFF con un gateway por interfaz, según el alcance conceptual del ejemplo.
 
 Los patrones se caracterizan por tres propiedades. Cada patrón tiene un propósito específico; la elección depende del contexto; y los patrones se pueden combinar. Estas condiciones permiten que el gateway se adapte a las necesidades del sistema.
 
@@ -195,10 +187,6 @@ Registro            → registrar peticiones.
 Monitorización      → medir rendimiento.
 ```
 
-`Autenticación       → verificar identidad.` asocia Autenticación con verificar identidad, según el alcance conceptual del ejemplo; `Autorización        → verificar permisos.` asocia Autorización con verificar permisos, según el alcance conceptual del ejemplo; `Limitación de tasa  → evitar abuso.` asocia Limitación de tasa con evitar abuso, según el alcance conceptual del ejemplo; `Registro            → registrar peticiones.` asocia Registro con registrar peticiones, según el alcance conceptual del ejemplo.
-
-`Monitorización      → medir rendimiento.` asocia Monitorización con medir rendimiento, según el alcance conceptual del ejemplo.
-
 Las funciones se caracterizan por tres propiedades. Su alcance se define por las políticas y el pipeline; se configuran de forma declarativa; y se pueden desactivar por ruta. Estas condiciones permiten que el gateway sea configurable.
 
 Una preocupación transversal requiere registro, configuración y orden de ejecución. Tener una propiedad booleana llamada AplicaAutenticacion no ejecuta un autenticador; una cuota declarada necesita un limitador y una política aplicable a la ruta.
@@ -224,8 +212,6 @@ Validación entrada  → comprobar formato.
 Protección ataques  → limitar tasa ayuda a mitigar abuso.
 ```
 
-`Autenticación       → verificar identidad.` asocia Autenticación con verificar identidad, según el alcance conceptual del ejemplo; `Autorización        → verificar permisos.` asocia Autorización con verificar permisos, según el alcance conceptual del ejemplo; `Validación entrada  → comprobar formato.` asocia Validación entrada con comprobar formato, según el alcance conceptual del ejemplo; `Protección ataques  → limitar tasa ayuda a mitigar abuso.` la limitación de tasa ayuda a mitigar abuso, sin constituir protección completa contra todas las clases de ataque.
-
 Se aplica en el punto de entrada; centraliza las políticas; y protege a los servicios internos. Estas propiedades contribuyen a un diseño de seguridad que también necesita controles en servicios y red.
 
 El borde es un lugar adecuado para aplicar controles compartidos, pero cada servicio conserva la autorización de sus operaciones. La validación técnica en el proxy no reemplaza las invariantes del dominio ni la validación del caso de uso.
@@ -250,8 +236,6 @@ Latencia          → medir el tiempo de cada petición.
 Contadores        → contar peticiones por servicio, capacidad posible.
 Correlación       → propagar identificador.
 ```
-
-`Registro          → registrar todas las peticiones.` asocia Registro con registrar todas las peticiones, según el alcance conceptual del ejemplo; `Latencia          → medir el tiempo de cada petición.` asocia Latencia con medir el tiempo de cada petición, según el alcance conceptual del ejemplo; `Contadores        → contar peticiones por servicio, capacidad posible.` muestra una capacidad posible de observación; el laboratorio registra resúmenes HTTP sin desplegar un backend de métricas; `Correlación       → propagar identificador.` asocia Correlación con propagar identificador, según el alcance conceptual del ejemplo.
 
 Se concentra en el gateway; se integra con las herramientas existentes; y contribuye al diagnóstico entre procesos cuando se integra con las señales de los servicios. Estas condiciones permiten que el sistema sea observable.
 
@@ -318,10 +302,6 @@ Punto de entrada → único.
 Validación       → test de coherencia.
 ```
 
-`Gateway          → YARP.` asocia Gateway con YARP, según el alcance conceptual del ejemplo; `Rutas            → catálogo conceptual; Producción e Inventario ejecutables.` asocia Rutas con catálogo conceptual; Producción e Inventario ejecutables, según el alcance conceptual del ejemplo; `Políticas        → registro y correlación; cuotas conceptuales.` asocia Políticas con registro y correlación; cuotas conceptuales, según el alcance conceptual del ejemplo; `Punto de entrada → único.` asocia Punto de entrada con único, según el alcance conceptual del ejemplo.
-
-`Validación       → test de coherencia.` asocia Validación con test de coherencia, según el alcance conceptual del ejemplo.
-
 La aplicación del API Gateway prepara el proyecto para los puntos 8.2, 8.3 y 8.4. El punto 8.2 estudiará la configuración básica de YARP. El punto 8.3 estudiará el enrutamiento de peticiones. El punto 8.4 estudiará el balanceo de carga básico. El punto 8.1 establece la base que se aplicará en los tres puntos siguientes.
 
 El punto 8.1 prepara un modelo explícito para revisar rutas sin confundirlo con el proxy. RutaGateway describe datos; ValidadorApiGateway comprueba decisiones; CatalogoRutas proporciona un conjunto reproducible para estudiar esas comprobaciones.
@@ -373,8 +353,6 @@ YARP:
 
 Cliente → YARP → Servicio interno.
 ```
-
-`Cliente → YARP → Servicio interno.` YARP actúa como intermediario.
 
 Es una biblioteca de .NET; además, se integra con ASP.NET Core. La tercera es que la configuración es declarativa. Estas condiciones permiten que el gateway sea configurable y mantenible.
 
@@ -610,8 +588,6 @@ Desarrollo → direcciones locales.
 Producción → direcciones del clúster.
 ```
 
-`Desarrollo → direcciones locales.` configuración de desarrollo; `Producción → direcciones del clúster.` configuración de producción.
-
 Cada entorno tiene su propia configuración; la configuración se separa en archivos; y la configuración se versiona. Estas condiciones permiten que el gateway se adapte a cada contexto.
 
 Los proveedores de configuración permiten variar valores sin recompilar el gateway. Desarrollo y contenedores tienen topologías distintas: localhost significa la máquina del proceso que realiza la llamada, no el equipo del usuario.
@@ -673,10 +649,6 @@ Transformaciones  → canal y prefijo de alias; correlación en middleware.
 Validación        → test de coherencia.
 ```
 
-`Proyecto gateway  → AceriaApp.Gateway.` asocia Proyecto gateway con AceriaApp.Gateway, según el alcance conceptual del ejemplo; `Configuración     → appsettings.json.` asocia Configuración con appsettings.json, según el alcance conceptual del ejemplo; `Rutas             → catálogo conceptual; Producción e Inventario ejecutables.` asocia Rutas con catálogo conceptual; Producción e Inventario ejecutables, según el alcance conceptual del ejemplo; `Clusters          → direcciones de los servicios.` asocia Clusters con direcciones de los servicios, según el alcance conceptual del ejemplo.
-
-`Transformaciones  → canal y prefijo de alias; correlación en middleware.` asocia Transformaciones con canal y prefijo de alias; correlación en middleware, según el alcance conceptual del ejemplo; `Validación        → test de coherencia.` asocia Validación con test de coherencia, según el alcance conceptual del ejemplo.
-
 La aplicación de YARP prepara el proyecto para los puntos 8.3 y 8.4. El punto 8.3 estudiará el enrutamiento de peticiones con detalle. El punto 8.4 estudiará el balanceo de carga básico. El punto 8.2 establece la base que se aplicará en los dos puntos siguientes.
 
 La etapa 8.2 añade el proceso Gateway al acumulado, además de los modelos originales de análisis. El validador conceptual y las pruebas de proxy cumplen propósitos complementarios: intención de configuración y circulación efectiva de HTTP.
@@ -728,8 +700,6 @@ Proceso de coincidencia:
 
 Petición → condiciones de coincidencia y precedencia → seleccionar endpoint → aplicar ruta.
 ```
-
-`Petición → condiciones de coincidencia y precedencia → seleccionar endpoint → aplicar ruta.` asocia Petición con condiciones de coincidencia y precedencia → seleccionar endpoint → aplicar ruta, según el alcance conceptual del ejemplo.
 
 Las rutas se ordenan por prioridad; se selecciona un endpoint según los criterios aplicables; y la evaluación ocurre en cada petición. Estas condiciones permiten que el enrutamiento sea predecible.
 
@@ -784,8 +754,6 @@ Precedencia de rutas:
 Ruta específica  → mayor especificidad con el mismo Order.
 Ruta general     → menor especificidad con el mismo Order.
 ```
-
-`Ruta específica  → mayor especificidad con el mismo Order.` con el mismo Order, su patrón más específico contribuye a la prioridad; un Order distinto puede cambiar la elección; `Ruta general     → menor especificidad con el mismo Order.` con el mismo Order, su menor especificidad contribuye a una prioridad inferior; no depende de su posición textual.
 
 Se basa en la especificidad; se puede ajustar con `Order`; y garantiza el orden de evaluación. Estas condiciones permiten que el enrutamiento sea predecible.
 
@@ -994,10 +962,6 @@ Transformaciones consulta → canal=gateway como valor literal.
 Validación           → test de coherencia.
 ```
 
-`Orden de rutas       → Order y especificidad; evitar ambigüedad.` combina Order y especificidad, con condiciones suficientes para evitar una selección ambigua; `Transformaciones ruta → eliminar prefijo.` asocia Transformaciones ruta con eliminar prefijo, según el alcance conceptual del ejemplo; `Transformaciones cabecera → X-Canal=Gateway; correlación mediante middleware.` asocia Transformaciones cabecera con X-Canal=Gateway; correlación mediante middleware, según el alcance conceptual del ejemplo; `Transformaciones consulta → canal=gateway como valor literal.` asocia Transformaciones consulta con canal=gateway como valor literal, según el alcance conceptual del ejemplo.
-
-`Validación           → test de coherencia.` asocia Validación con test de coherencia, según el alcance conceptual del ejemplo.
-
 La aplicación del enrutamiento prepara el proyecto para el punto 8.4. El punto 8.4 estudiará el balanceo de carga básico. El punto 8.3 establece la base que se aplicará en el punto 8.4.
 
 La etapa 8.3 conserva ReglaEnrutamiento y sus validaciones y añade comportamiento real del alias. El objetivo es explicar cómo una regla declarada termina en una petición HTTP verificable, sin mezclar conceptos de catálogo y endpoint.
@@ -1056,11 +1020,9 @@ Petición → Balanceador → Instancia 1.
                       → Instancia 3.
 ```
 
-`Petición → Balanceador → Instancia 1.` asocia Petición con Balanceador → Instancia 1, según el alcance conceptual del ejemplo; `→ Instancia 2.` segunda instancia; `→ Instancia 3.` tercera instancia.
-
 Distribuye el tráfico entre varias instancias; permite el escalado horizontal; y se basa en un algoritmo de distribución. Estas condiciones permiten que el sistema sea escalable y tolerante a fallos.
 
-La aplicación del balanceo tiene dos consecuencias prácticas. La primera es que la carga se reparte entre las instancias. La segunda es que, tras detectar el fallo de una instancia, las nuevas solicitudes pueden continuar por otras si conservan capacidad y dependencias disponibles. La combinación de ambas permite que el sistema sea escalable y resiliente.
+El balanceo reparte solicitudes entre instancias equivalentes y permite seguir atendiendo nuevas peticiones cuando un destino se retira por fallo, siempre que los demás conserven capacidad y acceso a las dependencias. Esa mejora de disponibilidad depende de las condiciones reales del sistema y no puede deducirse únicamente del número de entradas configuradas.
 
 Balancear significa elegir un destino para cada solicitud entre candidatos elegibles. No implica replicar peticiones ni crear réplicas. La disponibilidad del conjunto y la compatibilidad funcional de sus miembros preceden a cualquier algoritmo.
 
@@ -1085,10 +1047,6 @@ LeastRequests       → instancia con menos peticiones.
 PowerOfTwoChoices   → mejor entre dos aleatorias.
 Peso                → distribución según peso.
 ```
-
-`RoundRobin          → distribución cíclica.` asocia RoundRobin con distribución cíclica, según el alcance conceptual del ejemplo; `Random              → distribución aleatoria.` asocia Random con distribución aleatoria, según el alcance conceptual del ejemplo; `LeastRequests       → instancia con menos peticiones.` asocia LeastRequests con instancia con menos peticiones, según el alcance conceptual del ejemplo; `PowerOfTwoChoices   → mejor entre dos aleatorias.` asocia PowerOfTwoChoices con mejor entre dos aleatorias, según el alcance conceptual del ejemplo.
-
-`Peso                → distribución según peso.` asocia Peso con distribución según peso, según el alcance conceptual del ejemplo.
 
 Los algoritmos se caracterizan por tres propiedades. Cada algoritmo tiene un propósito específico; la elección depende del contexto; y el algoritmo se configura por cluster. Estas condiciones permiten que el balanceo se adapte a cada situación.
 
@@ -1215,8 +1173,6 @@ Destino 2 → unhealthy → no recibe tráfico.
 Destino 3 → healthy → recibe tráfico.
 ```
 
-`Destino 1 → healthy → recibe tráfico.` primer destino disponible; `Destino 2 → unhealthy → no recibe tráfico.` segundo destino no disponible; `Destino 3 → healthy → recibe tráfico.` tercer destino disponible.
-
 Los health checks excluyen las instancias no disponibles; el balanceo se ajusta de forma automática; y el sistema se recupera de fallos de instancias. Estas condiciones permiten que el balanceo sea resiliente.
 
 Las sondas activas examinan readiness periódicamente y las políticas actualizan la salud por destino. Las pasivas usan resultados de tráfico. La detección tiene una demora y no puede impedir un fallo que ocurra después de haber seleccionado una instancia.
@@ -1245,8 +1201,6 @@ Docker Swarm → Service balancea entre tasks.
 Gateway → balancea entre instancias del servicio.
 ```
 
-`Kubernetes → Service balancea entre pods.` asocia Kubernetes con Service balancea entre pods, según el alcance conceptual del ejemplo; `Docker Swarm → Service balancea entre tasks.` asocia Docker Swarm con Service balancea entre tasks, según el alcance conceptual del ejemplo; `Gateway → balancea entre instancias del servicio.` asocia Gateway con balancea entre instancias del servicio, según el alcance conceptual del ejemplo.
-
 El orquestador balancea entre instancias; el gateway enruta entre servicios y puede balancear entre instancias de cada servicio; y ambos se complementan. Estas condiciones permiten que el sistema sea escalable.
 
 La plataforma puede ofrecer una dirección de servicio que reparta entre réplicas, o YARP puede conocer cada destino. La elección determina quién descubre instancias y quién observa su salud. Duplicar capas no garantiza una distribución mejor.
@@ -1270,8 +1224,6 @@ Horizontal → añade instancias.
 Vertical   → aumenta recursos.
 Automático → ajusta instancias según métricas.
 ```
-
-`Horizontal → añade instancias.` asocia Horizontal con añade instancias, según el alcance conceptual del ejemplo; `Vertical   → aumenta recursos.` asocia Vertical con aumenta recursos, según el alcance conceptual del ejemplo; `Automático → ajusta instancias según métricas.` asocia Automático con ajusta instancias según métricas, según el alcance conceptual del ejemplo.
 
 Las estrategias se caracterizan por tres propiedades. Cada estrategia tiene un propósito; la elección depende de la carga; y el balanceo distribuye entre las instancias. Estas condiciones permiten que el sistema sea escalable.
 
@@ -1333,10 +1285,6 @@ Validación        → test de coherencia.
 Cierre del módulo → resumen del estado del proyecto.
 Cierre del curso  → resumen final del proyecto completo.
 ```
-
-`Clusters          → Inventario: dos destinos; Producción: uno.` describe la topología ejecutable final: dos destinos de Inventario y uno de Producción; `Política          → configurada por cluster.` asocia Política con configurada por cluster, según el alcance conceptual del ejemplo; `Health checks     → excluyen instancias no disponibles.` asocia Health checks con excluyen instancias no disponibles, según el alcance conceptual del ejemplo; `Validación        → test de coherencia.` asocia Validación con test de coherencia, según el alcance conceptual del ejemplo.
-
-`Cierre del módulo → resumen del estado del proyecto.` asocia Cierre del módulo con resumen del estado del proyecto, según el alcance conceptual del ejemplo; `Cierre del curso  → resumen final del proyecto completo.` asocia Cierre del curso con resumen final del proyecto completo, según el alcance conceptual del ejemplo.
 
 El proyecto reúne los mecanismos docentes de arquitectura de microservicios estudiados, con sus límites operativos explícitos. También el alumno dispone de todos los artefactos acumulados. Ambos factores permiten que el alumno aplique lo aprendido a proyectos reales.
 
