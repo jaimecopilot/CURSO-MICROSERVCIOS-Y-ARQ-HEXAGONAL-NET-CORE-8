@@ -5,6 +5,7 @@ on:
     branches: [version-corregida]
     paths:
       - 'tools/auditar_reconstruccion_practicas.py'
+      - 'tools/auditar_continuidad_modular.py'
       - 'M02_APIS_REST_ASPNET_CORE/PRACTICAS/M02_PRACTICAS.md'
       - 'M03_ARQUITECTURA_HEXAGONAL/PRACTICAS/M03_PRACTICAS.md'
       - 'M02_APIS_REST_ASPNET_CORE/PROYECTO/**'
