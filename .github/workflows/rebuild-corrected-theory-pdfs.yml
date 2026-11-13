@@ -33,7 +33,7 @@ jobs:
       - name: Instalar renderizador
         run: |
           python -m pip install --upgrade pip
-          python -m pip install "Markdown>=3.7,<4" "weasyprint>=62,<69" "Pygments>=2.18,<3"
+          python -m pip install "Markdown>=3.7,<4" "weasyprint>=62,<69" "Pygments>=2.18,<3" "PyMuPDF>=1.24,<2"
 
       - name: Regenerar documentos PDF a partir de los Markdown aprobados
         shell: bash
@@ -88,6 +88,33 @@ jobs:
               HTML(string=html, base_url=md.parent.resolve().as_uri() + "/").write_pdf(str(output))
               assert output.is_file() and output.stat().st_size > 30000, str(output)
               print(f"{md} → {output}: {output.stat().st_size:,} bytes")
+          PY
+
+      - name: Validar paginacion y texto de los tres PDF
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import fitz
+
+          cases = {
+            "M06_COMUNICACION_MICROSERVICIOS/TEORIA/M06_TEORIA.pdf": ("Punto 6.1", "Punto 6.2", "Punto 6.3"),
+            "M07_OBSERVABILIDAD_RESILIENCIA/TEORIA/M07_TEORIA.pdf": ("Punto 7.1", "Punto 7.2", "Punto 7.3", "Punto 7.4"),
+            "M08_API_GATEWAY/TEORIA/M08_TEORIA.pdf": ("Punto 8.1", "Punto 8.2", "Punto 8.3", "Punto 8.4"),
+          }
+          for file, headings in cases.items():
+              doc = fitz.open(file)
+              assert not doc.needs_pass, file
+              assert 20 <= len(doc) <= 180, f"{file}: numero de paginas anomalo {len(doc)}"
+              full_text = " ".join(page.get_text("text") for page in doc)
+              for heading in headings:
+                  assert heading in full_text, f"{file}: falta {heading}"
+              for page_index in sorted({0, len(doc)//2, len(doc)-1}):
+                  page = doc[page_index]
+                  pix = page.get_pixmap(matrix=fitz.Matrix(.4, .4), alpha=False)
+                  assert len(page.get_text("text").strip()) > 40, f"{file}: pagina {page_index+1} vacia"
+                  assert len(pix.samples) > 1000, f"{file}: render de pagina fallido"
+              print(f"VALIDADO: {file} | {len(doc)} paginas | {len(full_text.split()):,} palabras extraibles")
           PY
 
       - name: Publicar los PDF en la misma rama
