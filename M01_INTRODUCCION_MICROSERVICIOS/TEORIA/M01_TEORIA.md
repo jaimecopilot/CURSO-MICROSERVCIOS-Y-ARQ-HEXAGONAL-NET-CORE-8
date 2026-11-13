@@ -1059,11 +1059,13 @@ Módulo 1: Introducción a los microservicios
 
 ---
 
-## Desarrollo teórico
+## Hacer visible la arquitectura en una solución de trabajo
 
-### Bloque 1 — Organización de soluciones y su impacto en la evolución
+Después de identificar los límites funcionales, necesitamos una organización que permita mantenerlos. Una estructura adecuada debe guiar a un alumno hasta el código, las pruebas y las decisiones de cada estado sin confundir la presentación de los materiales docentes con los límites de despliegue de un sistema real. Examinaremos repositorios, proyectos, nombres y documentación siguiendo esa distinción.
 
-La organización de una solución basada en microservicios determina la facilidad con la que el equipo puede añadir servicios, extraerlos o reemplazarlos. Una organización deficiente produce dependencias ocultas, duplicación de convenciones y dificultad para localizar el código. Una organización correcta produce límites visibles, convenciones uniformes y navegación predecible. La organización se materializa en tres decisiones: la estructura de repositorios, la estructura de carpetas dentro de cada repositorio y las convenciones de nombres. Las tres decisiones son independientes entre sí, pero se refuerzan mutuamente. Una decisión coherente en las tres produce una solución que cualquier desarrollador puede entender con rapidez.
+### Organización de soluciones y su impacto en la evolución
+
+La organización de una solución condiciona cuánto tarda un desarrollador en encontrar una regla, ejecutar sus pruebas y comprender el efecto de un cambio. Por eso el árbol de carpetas es más que una decisión estética: muestra qué código se mantiene junto, qué pruebas lo acompañan y dónde quedan registradas las razones de una decisión. Para AceriaApp necesitamos una organización que permita enseñar estados progresivos sin que una práctica destruya la anterior. Esa finalidad docente puede coexistir con buenas convenciones profesionales, aunque no debe confundirse con la estructura obligatoria de un sistema empresarial. Tendremos que elegir cómo agrupar los repositorios, cómo distribuir el código dentro de cada estado y qué nombres ayudan a distinguir responsabilidades. Un proyecto bien organizado no garantiza buenas reglas de negocio, pero reduce la fricción para identificarlas y modificarlas sin efectos inesperados.
 
 ```text
 Tres decisiones de organización:
@@ -1073,21 +1075,18 @@ Tres decisiones de organización:
 3. Convenciones de nombres     → proyectos, ensamblados, espacios de nombres.
 ```
 
-**Lectura guiada del ejemplo**
+La organización se examina en tres escalas. La elección de repositorios determina dónde se versionan los cambios; las carpetas muestran dónde buscar código, pruebas y decisiones; los nombres ayudan a reconocer la finalidad de cada proyecto. No hay que utilizar las tres como listas de reglas independientes: deben describir una misma división de responsabilidades comprensible para todo el equipo.
 
-- **Línea 1:** 1. Estructura de repositorios → primera decisión, define dónde vive el código.
-- **Línea 2:** 2. Estructura de carpetas → segunda decisión, define cómo se organiza dentro del repositorio.
-- **Línea 3:** 3. Convenciones de nombres → tercera decisión, define cómo se identifican los artefactos.
 
-La organización no es una cuestión estética: tiene consecuencias medibles sobre el tiempo de incorporación de nuevos desarrolladores, sobre la facilidad para extraer servicios y sobre la capacidad de automatizar tareas. Un proyecto mal organizado tarda semanas en incorporar a un nuevo desarrollador. Un proyecto bien organizado tarda días. La diferencia no está en la complejidad técnica del código, sino en la previsibilidad de su estructura. El curso aplica estas tres decisiones al proyecto AceriaApp de forma explícita y trazable. Para evaluar organización de soluciones y su impacto en la evolución conviene registrar el resultado observable y la restricción de negocio que motiva el cambio, antes de introducir infraestructura adicional.
+La organización no es una cuestión estética: tiene consecuencias medibles sobre el tiempo de incorporación de nuevos desarrolladores, sobre la facilidad para extraer servicios y sobre la capacidad de automatizar tareas. Un proyecto mal organizado tarda semanas en incorporar a un nuevo desarrollador. Un proyecto bien organizado tarda días. La diferencia no está en la complejidad técnica del código, sino en la previsibilidad de su estructura. El curso aplica estas tres decisiones al proyecto AceriaApp de forma explícita y trazable. 
 
 Un repositorio organizado debe permitir encontrar el código correcto sin conocer previamente a su autor. Esta propiedad se comprueba con tareas concretas: localizar un endpoint, identificar su test y encontrar el ADR que explica su existencia. La estructura solo aporta valor cuando se mantiene de forma constante; si cada equipo inventa un nombre distinto para las mismas responsabilidades, el coste de navegación aumenta con cada servicio. En AceriaApp la unidad pedagógica es el punto, y cada punto conserva una solución independiente con src, tests y docs. Esa organización no es idéntica a la estructura de un producto que mantiene una única solución evolutiva, pero permite repetir experimentos y comparar estados sin reemplazar entregas anteriores. Debe evitarse mezclar herramientas internas de verificación dentro de carpetas que el alumno interpreta como código o material lectivo.
 
 ---
 
-### Bloque 2 — Monorepo frente a polyrepo
+### Monorepo frente a polyrepo
 
-Un monorepo es un único repositorio que contiene todos los servicios, sus tests y su documentación. Un polyrepo es un conjunto de repositorios, uno por servicio, con su propio ciclo de vida. La elección entre ambos depende del tamaño del equipo, de la madurez de las herramientas de construcción y de la frecuencia con la que los servicios cambian juntos. El monorepo facilita la búsqueda global, la refactorización entre servicios y la coherencia de convenciones. El polyrepo facilita la autonomía total de cada equipo y la independencia de permisos. Ninguno de los dos es universalmente mejor: cada uno tiene ventajas e inconvenientes concretos.
+Un repositorio único facilita consultar conjuntamente las interfaces, sus implementaciones y las pruebas que las protegen. Esto resulta especialmente cómodo cuando una aplicación está comenzando o cuando varias capacidades comparten todavía el mismo ritmo de desarrollo. La alternativa de varios repositorios da a los equipos control independiente sobre permisos, políticas, versiones y pipelines, pero añade tareas de coordinación si un cambio afecta a contratos comunes. No hay una regla universal que haga mejor un monorepo o un polyrepo. Lo importante es que la ubicación del código no contradiga las fronteras arquitectónicas: un monorepo puede contener servicios desplegables por separado, y varios repositorios pueden esconder un despliegue inseparable. AceriaApp conserva un repositorio docente y etapas de referencia independientes; eso favorece comparar cambios sin presentar las carpetas como equivalentes a microservicios.
 
 ```text
 Monorepo:
@@ -1105,23 +1104,12 @@ AceriaApp.Inventario/  → repositorio independiente.
 AceriaApp.Clientes/    → repositorio independiente.
 ```
 
-**Lectura guiada del ejemplo**
+El esquema compara un repositorio que agrupa las etapas del curso con varios repositorios hipotéticos por capacidad. La primera alternativa favorece la consulta de toda la evolución; la segunda ofrece políticas de mantenimiento potencialmente independientes. Ninguna distribución demuestra por sí sola cuántos procesos se ejecutan. La estrategia de Git y la estrategia de despliegue son decisiones distintas que deben coordinarse.
 
-- **Línea 1:** Monorepo: → título del ejemplo de monorepo.
-- **Línea 2:** AceriaApp/ → raíz única del repositorio.
-- **Línea 3:** ├── modulo-1/ → carpeta por módulo.
-- **Línea 4:** │   ├── 1.1-monolito-vs-microservicios/ → punto 1.1 dentro del módulo.
-- **Línea 5:** │   ├── 1.2-ventajas-inconvenientes/ → punto 1.2 dentro del módulo.
-- **Línea 6:** Polyrepo: → título del ejemplo de polyrepo.
-- **Línea 7:** AceriaApp.Ordenes/ → repositorio independiente del servicio de órdenes.
-- **Línea 8:** AceriaApp.Inventario/ → repositorio independiente del servicio de inventario.
-- **Línea 9:** AceriaApp.Clientes/ → repositorio independiente del servicio de clientes.
 
-El monorepo es la elección del curso porque el equipo es pequeño y los servicios cambian juntos durante la fase de aprendizaje. Un equipo de dos personas que trabaja sobre tres servicios no se beneficia de la independencia de permisos del polyrepo, pero sí se beneficia de la búsqueda global y de la refactorización entre servicios del monorepo. La decisión se documenta en un ADR y se revisa cuando el equipo crece. Para evaluar monorepo frente a polyrepo conviene registrar el resultado observable y la restricción de negocio que motiva el cambio, antes de introducir infraestructura adicional.
+El monorepo es la elección del curso porque el equipo es pequeño y los servicios cambian juntos durante la fase de aprendizaje. Un equipo de dos personas que trabaja sobre tres servicios no se beneficia de la independencia de permisos del polyrepo, pero sí se beneficia de la búsqueda global y de la refactorización entre servicios del monorepo. La decisión se documenta en un ADR y se revisa cuando el equipo crece. 
 
 Un monorepo puede tener integración continua selectiva: modificar únicamente el servicio de Órdenes no obliga necesariamente a volver a publicar Inventario. La independencia se consigue mediante detección de cambios, límites de paquetes y contratos estables; el número de repositorios no la garantiza por sí solo. Un polyrepo introduce otro tipo de trabajo, como sincronizar dependencias comunes, revisar varias solicitudes de cambio y gestionar permisos de acceso separados. En un curso con un equipo pequeño y servicios que evolucionan conjuntamente, mantener las versiones por punto en un único repositorio es una decisión práctica. La elección debe revisarse si los equipos necesitan permisos diferenciados o cadencias de despliegue propias. Conviene documentar quién puede modificar los contratos compartidos y cómo se verifican, sea cual sea la topología de repositorios elegida.
-
-#### Profundización: monorepo y autonomía de publicación
 
 El número de repositorios no determina cuántos servicios existen ni cuántos pueden desplegarse por separado. Un monorepo puede albergar decenas de servicios autónomos si las compilaciones y publicaciones están correctamente acotadas por dependencias. Un polyrepo, por el contrario, puede contener servicios tan acoplados que necesiten actualizarse al mismo tiempo. La diferencia se encuentra en la gestión del código, los permisos y los flujos de cambio. El monorepo facilita editar varios componentes en una misma operación y validar un contrato común; el polyrepo simplifica algunas fronteras de permisos y puede reducir el volumen de trabajo visible para cada equipo.
 
@@ -1140,15 +1128,13 @@ La elección de repositorio debe reflejarse en los pipelines. En un monorepo no 
 
 ---
 
-### Bloque 3 — Estructura de carpetas dentro de un repositorio
-
-**Esquema visual del concepto**
+### Estructura de carpetas dentro de un repositorio
 
 ![Separación del código, las pruebas y la documentación](figuras/04-estructura-repositorio.png)
 
 *Figura. Separación del código, las pruebas y la documentación.*
 
-Dentro de un repositorio, la estructura de carpetas debe separar claramente el código de producción, los tests y la documentación. La separación se materializa en tres carpetas de primer nivel: src/, tests/ y docs/. La carpeta src/ contiene los proyectos ejecutables y las bibliotecas compartidas. La carpeta tests/ contiene los proyectos de pruebas. La carpeta docs/ contiene la documentación, los ADRs y los diagramas. Esta separación es una convención ampliamente adoptada en el ecosistema .NET y facilita la configuración de pipelines de compilación y de pruebas.
+Dentro de una etapa, separar `src/`, `tests/` y `docs/` ayuda a reconocer tres tipos de responsabilidad. El primero contiene aquello que se distribuye como aplicación o biblioteca; el segundo reúne comprobaciones que deben poder ejecutarse y fallar cuando una regla se rompe; el tercero guarda decisiones que requieren contexto humano, como alternativas descartadas o límites de un módulo. Esta estructura solo funciona si las relaciones son claras. Por ejemplo, un test de unidad puede explicar el comportamiento esperado de una orden, pero no sustituye un documento que justifica por qué Producción debería tener propiedad sobre esa regla. Tampoco conviene duplicar sin necesidad documentos extensos en cada proyecto. En el curso, las carpetas por punto mantienen una fotografía completa para que el alumnado pueda recuperar un estado anterior y contrastarlo con el siguiente.
 
 ```text
 Estructura de un punto del curso:
@@ -1168,27 +1154,12 @@ Estructura de un punto del curso:
     └── ADR-003-principios-diseno.md
 ```
 
-**Lectura guiada del ejemplo**
+La etapa contiene `AceriaApp.sln`, proyectos en `src/`, pruebas en `tests/` y documentos en `docs/`. Esa proximidad permite reconstruir qué se añadió en un momento del curso. Los nombres de las pruebas y documentos del dibujo son referencias para estudiar la organización; si un archivo no existe en el estado concreto que estás abriendo, debe seguirse el README de esa etapa y no crear archivos únicamente para imitar el dibujo.
 
-- **Línea 1:** 1.1-monolito-vs-microservicios/ → carpeta del punto.
-- **Línea 2:** ├── README.md → documento de descripción del punto.
-- **Línea 3:** ├── AceriaApp.sln → solución que agrupa los proyectos.
-- **Línea 4:** ├── src/ → carpeta de código de producción.
-- **Línea 5:** │   └── AceriaApp.Monolito.Api/ → proyecto de API dentro de src.
-- **Línea 6:** ├── tests/ → carpeta de proyectos de pruebas.
-- **Línea 7:** │   ├── AceriaApp.Monolito.Tests/ → proyecto de tests del monolito.
-- **Línea 8:** │   ├── AceriaApp.Metricas.Tests/ → proyecto de tests de métricas.
-- **Línea 9:** │   └── AceriaApp.Diseno.Tests/ → proyecto de tests de diseño.
-- **Línea 10:** └── docs/ → carpeta de documentación.
-- **Línea 11:** ├── ADR-001-monolito-vs-microservicios.md → primer ADR.
-- **Línea 12:** ├── ADR-002-metricas-acoplamiento.md → segundo ADR.
-- **Línea 13:** └── ADR-003-principios-diseno.md → tercer ADR.
 
-La separación en tres carpetas de primer nivel es una convención, no una obligación técnica. Su valor está en la previsibilidad: cualquier desarrollador que abra el repositorio sabe dónde buscar el código, dónde buscar los tests y dónde buscar la documentación. Esta previsibilidad reduce el tiempo de incorporación y facilita la automatización de tareas de compilación y despliegue. Para evaluar estructura de carpetas dentro de un repositorio conviene registrar el resultado observable y la restricción de negocio que motiva el cambio, antes de introducir infraestructura adicional.
+La separación en tres carpetas de primer nivel es una convención, no una obligación técnica. Su valor está en la previsibilidad: cualquier desarrollador que abra el repositorio sabe dónde buscar el código, dónde buscar los tests y dónde buscar la documentación. Esta previsibilidad reduce el tiempo de incorporación y facilita la automatización de tareas de compilación y despliegue. 
 
 La convención src/tests/docs distingue tipos de artefactos, pero no sustituye la separación lógica entre capacidades de negocio. Dentro de src se pueden agrupar los proyectos por servicio, y dentro de tests se colocan pruebas unitarias, de integración y de contrato según las necesidades. Los ADR explican decisiones y sus alternativas; no deben usarse como sustitutos de ejemplos que el alumno necesita ejecutar. En AceriaApp, cada punto representa un estado reproducible y la separación evita que pruebas de organización se confundan con archivos de infraestructura. Cuando el alumno abre la solución de 1.3 encuentra los módulos de los puntos anteriores ya activos y las clases nuevas comentadas. Esa diferencia entre código heredado y código por activar debe constar tanto en el README como en las instrucciones de prácticas. Sin esa correspondencia, la estructura parece correcta pero el itinerario falla.
-
-#### Profundización: reconocer qué pertenece a cada carpeta
 
 Una estructura consistente reduce el coste de encontrar información, pero también ayuda a detectar errores de dependencia. En `src` deben encontrarse los componentes de producción: proyectos ejecutables y bibliotecas que intervienen en la aplicación. En `tests` deben residir las pruebas automáticas que usan y verifican esos componentes. En `docs` conviene guardar decisiones, límites de contexto y procedimientos que explican por qué el sistema está construido de una manera determinada. Los archivos `.sln` y `.csproj` expresan relaciones técnicas; los ADR documentan razones. Ninguno de esos elementos sustituye al otro.
 
@@ -1201,9 +1172,9 @@ La estructura didáctica de cinco soluciones completas es, por tanto, un mecanis
 
 ---
 
-### Bloque 4 — Convenciones de nombres de proyectos
+### Convenciones de nombres de proyectos
 
-Las convenciones de nombres de proyectos en .NET siguen el patrón Empresa.Producto.Componente.Tipo. El prefijo de empresa o producto agrupa todos los proyectos relacionados. El componente identifica la capacidad de negocio o el módulo. El tipo identifica la naturaleza del proyecto: Api, Tests, Domain, Infrastructure, Application. Esta estructura jerárquica permite agrupar y filtrar proyectos por convención. En el proyecto AceriaApp, el prefijo es AceriaApp, el componente es el nombre del servicio o módulo, y el tipo identifica la función del proyecto. La decisión sobre convenciones de nombres de proyectos debe diferenciar lo que el ejemplo ilustra de lo que la aplicación implementa realmente en esta etapa.
+Los nombres de proyectos sirven para comunicar de qué capacidad forman parte y qué función cumplen, no para codificar toda la arquitectura en una cadena interminable. `AceriaApp.Ordenes.Api` sugiere un host de HTTP relacionado con Órdenes; `AceriaApp.Ordenes.Domain` indica clases del modelo; `AceriaApp.Ordenes.Tests` identifica las comprobaciones asociadas. El sufijo aporta una pista útil, pero no demuestra que el código esté en la capa correcta: una biblioteca llamada `Domain` puede seguir referenciando infraestructura indebidamente. El valor de la convención se comprueba al recorrer una solución nueva: otros miembros del equipo deben localizar una responsabilidad sin necesidad de memorizar la historia del proyecto. Los nombres deben ser estables, comprensibles en los contextos del negocio y suficientemente concretos para no confundirse entre servicios.
 
 ```text
 Convención de nombres:
@@ -1215,19 +1186,12 @@ AceriaApp.Inventario.Api     → API del servicio de inventario.
 AceriaApp.Monolito.Api       → API del monolito de referencia.
 ```
 
-**Lectura guiada del ejemplo**
+Los nombres distinguen capacidad y tipo de componente. `Ordenes.Api` e `Inventario.Api` indican hosts posibles; `Ordenes.Domain` y `Ordenes.Tests` señalan modelo y pruebas. La convención es informativa: el contenido y las referencias de cada proyecto deben comprobarse por separado, especialmente cuando una biblioteca hereda dependencias de etapas anteriores.
 
-- **Línea 1:** AceriaApp.Ordenes.Api → prefijo AceriaApp, componente Ordenes, tipo Api.
-- **Línea 2:** AceriaApp.Ordenes.Domain → tipo Domain para el dominio.
-- **Línea 3:** AceriaApp.Ordenes.Tests → tipo Tests para las pruebas.
-- **Línea 4:** AceriaApp.Inventario.Api → componente Inventario, tipo Api.
-- **Línea 5:** AceriaApp.Monolito.Api → componente Monolito, tipo Api.
 
-La convención facilita la búsqueda por nombre, la configuración de pipelines y la organización de la solución en el panel Solution Explorer. Un proyecto mal nombrado rompe la uniformidad y obliga a los desarrolladores a recordar excepciones. La convención se aplica también a los espacios de nombres: el espacio de nombres raíz de cada proyecto coincide con el nombre del proyecto. Esta coherencia entre nombre de proyecto y espacio de nombres facilita la resolución de tipos y la lectura del código. Para evaluar convenciones de nombres de proyectos conviene registrar el resultado observable y la restricción de negocio que motiva el cambio, antes de introducir infraestructura adicional.
+La convención facilita la búsqueda por nombre, la configuración de pipelines y la organización de la solución en el panel Solution Explorer. Un proyecto mal nombrado rompe la uniformidad y obliga a los desarrolladores a recordar excepciones. La convención se aplica también a los espacios de nombres: el espacio de nombres raíz de cada proyecto coincide con el nombre del proyecto. Esta coherencia entre nombre de proyecto y espacio de nombres facilita la resolución de tipos y la lectura del código. 
 
 El patrón de nombre AceriaApp.Componente.Tipo se puede evaluar de forma automática, aunque la validación de una cadena no demuestra que el contenido del proyecto corresponda a su etiqueta. Un proyecto llamado Ordenes.Domain podría contener acceso directo a SQL Server, lo que violaría su responsabilidad pese a cumplir la convención. Las reglas son útiles para evitar errores accidentales y favorecer herramientas de construcción, pero necesitan acompañarse de revisiones de dependencias. También hay decisiones legítimas que requieren nombres con más de tres segmentos, como adaptadores específicos; una regla rígida debe documentar sus excepciones. En el ejercicio, ValidadorConvencionNombres rechaza nombres que no tienen tres segmentos y tipos fuera de una lista cerrada. Sus tests comprueban ese contrato docente. La decisión de utilizar esa lista se registra en el ADR para que sea revisable si cambian los tipos admitidos.
-
-#### Profundización: validar nombres sin convertir la convención en dogma
 
 Una convención de nombres permite inferir una función a partir de un identificador, pero su valor depende de que el patrón refleje la estructura real. El formato `AceriaApp.Componente.Tipo` es sencillo de aplicar a `AceriaApp.Ordenes.Api`; también obliga a decidir cómo se representan componentes que contienen varias palabras y qué tipos se permiten. Un validador debe tratar esos casos de forma explícita. Si acepta una cadena con tres partes pero permite que `Componente` esté vacío, podría aceptar `AceriaApp..Api`, que no comunica ninguna responsabilidad. Del mismo modo, el hecho de empezar por `AceriaApp.` no garantiza que exista un nombre válido detrás del prefijo.
 
@@ -1246,9 +1210,9 @@ En el punto 1.4 se construye un `ValidadorConvencionNombres` con reglas delibera
 
 ---
 
-### Bloque 5 — Convenciones de nombres de espacios de nombres
+### Convenciones de nombres de espacios de nombres
 
-Los espacios de nombres en .NET siguen el patrón Empresa.Producto.Componente.Tipo.Capa. El prefijo coincide con el nombre del proyecto. Las capas dentro del proyecto se organizan en subespacios: Dominio, Infraestructura, Metricas, Diseno, Aplicacion. Esta estructura permite organizar el código por responsabilidad y facilita la navegación. En el proyecto monolítico de referencia, los espacios de nombres son AceriaApp.Monolito.Api.Dominio, AceriaApp.Monolito.Api.Infraestructura, AceriaApp.Monolito.Api.Metricas y AceriaApp.Monolito.Api.Diseno. La decisión sobre convenciones de nombres de espacios de nombres debe diferenciar lo que el ejemplo ilustra de lo que la aplicación implementa realmente en esta etapa. Para evaluar convenciones de nombres de espacios de nombres conviene registrar el resultado observable y la restricción de negocio que motiva el cambio, antes de introducir infraestructura adicional.
+Los espacios de nombres son una herramienta de organización del código C# y colaboran con la lectura, la navegación y la resolución de tipos. Cuando su jerarquía refleja el proyecto y sus áreas funcionales, resulta más fácil reconocer de dónde procede una clase y detectar dependencias que atraviesan límites no deseados. Sin embargo, un `namespace` no crea aislamiento de procesos ni impide por sí solo referencias incorrectas: esas restricciones deben expresarse mediante proyectos, visibilidad y pruebas de arquitectura. En AceriaApp se utilizan nombres que relacionan dominio, API e infraestructura de forma reconocible. El alumnado debe distinguir la convención de su mecanismo técnico: el compilador acepta namespaces que no coinciden con la carpeta, aunque una organización consistente reduzca confusiones. La consistencia que buscamos es semántica, no una obediencia ciega a la estructura de directorios.
 
 ```csharp
 namespace AceriaApp.Monolito.Api.Dominio;
@@ -1259,23 +1223,18 @@ public class Orden
 }
 ```
 
-**Lectura guiada del ejemplo**
+El ejemplo utiliza `AceriaApp.Monolito.Api.Dominio` para agrupar una clase `Orden`. El namespace permite referenciar el tipo desde otros archivos, pero no protege sus reglas ni fuerza una dependencia correcta. El objetivo es reconocer la diferencia entre clasificación del código y separación de responsabilidades, que necesitará proyectos y límites verificables.
 
-- **Línea 1:** namespace AceriaApp.Monolito.Api.Dominio; → espacio de nombres del dominio.
-- **Línea 2:** public class Orden → clase del dominio.
-- **Línea 3:** { → abre el cuerpo de la clase.
-- **Línea 4:** public Guid Id { get; set; } → propiedad del dominio.
-- **Línea 5:** } → cierra el cuerpo de la clase.
 
-La convención de espacios de nombres debe ser consistente con la estructura de carpetas del proyecto. Un archivo en la carpeta Dominio debe declarar el espacio de nombres ...Dominio. Un archivo en la carpeta Infraestructura debe declarar el espacio de nombres ...Infraestructura. Esta correspondencia facilita la navegación y evita conflictos de nombres. La convención se aplica también a los tests: cada proyecto de tests declara un espacio de nombres que termina en Tests. Para evaluar convenciones de nombres de espacios de nombres conviene registrar el resultado observable y la restricción de negocio que motiva el cambio, antes de introducir infraestructura adicional.
+La convención de espacios de nombres debe ser consistente con la estructura de carpetas del proyecto. Un archivo en la carpeta Dominio debe declarar el espacio de nombres ...Dominio. Un archivo en la carpeta Infraestructura debe declarar el espacio de nombres ...Infraestructura. Esta correspondencia facilita la navegación y evita conflictos de nombres. La convención se aplica también a los tests: cada proyecto de tests declara un espacio de nombres que termina en Tests. 
 
 La correspondencia entre carpeta y espacio de nombres facilita navegación y búsqueda, pero el compilador de C# no exige que coincidan. Esa diferencia es importante: una incoherencia puede compilar correctamente y seguir siendo difícil de mantener. La verificación debe inspeccionar el namespace real del archivo y compararlo con el prefijo del proyecto, no asumir que el nombre de carpeta lo determina. En AceriaApp, Orden pertenece a Dominio, AceriaDbContext a Infraestructura y las clases de métricas a Metricas, todas dentro del mismo proyecto monolítico. Esta estructura es apropiada como referencia inicial; más adelante pueden desplazarse algunas clases a bibliotecas separadas sin cambiar necesariamente sus contratos. Al renombrar una carpeta, conviene revisar las referencias y los usings para evitar confusiones. Los analizadores del IDE pueden ayudar a mantener una convención uniforme.
 
 ---
 
-### Bloque 6 — Separación entre código de producción y tests
+### Separación entre código de producción y tests
 
-La separación entre código de producción y tests se materializa en dos carpetas de primer nivel: src/ y tests/. Cada proyecto de producción tiene su proyecto de tests correspondiente. La correspondencia se establece por convención de nombres: AceriaApp.Monolito.Api tiene su proyecto AceriaApp.Monolito.Tests. Esta correspondencia permite ejecutar los tests de un proyecto concreto sin ejecutar los de los demás. La separación también facilita la configuración de pipelines que compilan y publican solo el código de producción. Los tests no se publican en producción. La decisión sobre separación entre código de producción y tests debe diferenciar lo que el ejemplo ilustra de lo que la aplicación implementa realmente en esta etapa.
+Una solución fácil de mantener permite ejecutar pruebas relacionadas con un comportamiento sin modificar las dependencias de producción. Situar los proyectos xUnit en `tests/` contribuye a esa separación y permite expresar con claridad qué se está comprobando: una regla de dominio, una integración con SQL Server o una ruta HTTP completa. Sus diferencias importan. Un test con un doble puede mostrar que el caso de uso reaccionó correctamente a una respuesta, mientras que una prueba con EF Core y SQL Server real demuestra el comportamiento de persistencia del proveedor. Ninguna de las dos sustituye a la otra. Los nombres de los proyectos ayudan a encontrarlos, pero la garantía nace de las aserciones y del entorno ejecutado. El alumnado no debería limitarse a obtener una compilación correcta: debe entender qué comportamiento protege cada batería de pruebas.
 
 ```text
 Correspondencia entre producción y tests:
@@ -1285,24 +1244,18 @@ AceriaApp.Metricas         → AceriaApp.Metricas.Tests
 AceriaApp.Diseno           → AceriaApp.Diseno.Tests
 ```
 
-**Lectura guiada del ejemplo**
+La correspondencia entre aplicación y tests facilita saber dónde buscar la prueba de una regla o de un servicio. La relación real se establece con referencias de proyecto y aserciones, no con una coincidencia textual perfecta de nombres. En particular, las pruebas que necesitan SQL Server deben preparar explícitamente el motor antes de afirmar que han demostrado persistencia.
 
-- **Línea 1:** AceriaApp.Monolito.Api → proyecto de producción.
-- **Línea 2:** AceriaApp.Metricas → módulo de producción.
-- **Línea 3:** AceriaApp.Diseno → módulo de producción.
-- **Línea 4:** AceriaApp.Monolito.Tests → proyecto de tests correspondiente.
-- **Línea 5:** AceriaApp.Metricas.Tests → proyecto de tests correspondiente.
-- **Línea 6:** AceriaApp.Diseno.Tests → proyecto de tests correspondiente.
 
-La correspondencia uno a uno entre producción y tests no es obligatoria pero sí recomendable. Un proyecto de producción sin proyecto de tests correspondiente es una señal de deuda técnica. Un proyecto de tests sin proyecto de producción correspondiente es una señal de código obsoleto. La convención facilita la detección de ambas señales. La separación entre src/ y tests/ también facilita la configuración de la solución para que los proyectos de tests no se incluyan en el artefacto publicado. Para evaluar separación entre código de producción y tests conviene registrar el resultado observable y la restricción de negocio que motiva el cambio, antes de introducir infraestructura adicional.
+La correspondencia uno a uno entre producción y tests no es obligatoria pero sí recomendable. Un proyecto de producción sin proyecto de tests correspondiente es una señal de deuda técnica. Un proyecto de tests sin proyecto de producción correspondiente es una señal de código obsoleto. La convención facilita la detección de ambas señales. La separación entre src/ y tests/ también facilita la configuración de la solución para que los proyectos de tests no se incluyan en el artefacto publicado. 
 
 La relación entre código de producción y tests debe responder a los límites funcionales y a la velocidad de las pruebas, no a una obligación aritmética de tener exactamente un proyecto de tests por biblioteca. Un servicio puede contar con pruebas unitarias, de integración y de contrato en proyectos diferentes. En el módulo 1 se crean proyectos especializados para métricas, límites, organización y buenas prácticas aunque sus clases de producción estén en la misma API monolítica. Esa elección hace visible el aprendizaje progresivo, pero no debe presentarse como una correspondencia perfecta uno a uno. Al ejecutar una solución acumulativa se esperan los tests anteriores más los nuevos, sin duplicar métodos de prueba. Es necesario distinguir los tests básicos de los retos opcionales: los recuentos 1, 9, 13, 18 y 23 son del itinerario básico. Las pruebas opcionales aumentan el número únicamente si el alumno las activa.
 
 ---
 
-### Bloque 7 — Documentación como parte del repositorio
+### Documentación como parte del repositorio
 
-La documentación es parte del repositorio, no un artefacto externo. Se organiza en la carpeta docs/ y contiene los ADRs, los diagramas y las guías. Los ADRs documentan las decisiones arquitectónicas con su contexto, alternativas y consecuencias. Los diagramas documentan la estructura del sistema. Las guías documentan los procedimientos operativos. La documentación se versiona junto con el código y se revisa en las mismas pull requests. Esta práctica garantiza que la documentación evoluciona con el código y no queda obsoleta. La decisión sobre documentación como parte del repositorio debe diferenciar lo que el ejemplo ilustra de lo que la aplicación implementa realmente en esta etapa. Para evaluar documentación como parte del repositorio conviene registrar el resultado observable y la restricción de negocio que motiva el cambio, antes de introducir infraestructura adicional.
+Las decisiones arquitectónicas necesitan memoria. Cuando un equipo decide mantener una API monolítica o separar un módulo, la explicación puede perderse si solo se conserva el resultado en carpetas. Un ADR registra el problema, las alternativas consideradas, la decisión tomada y las consecuencias conocidas. Con el tiempo, esa información permite reconocer si las condiciones han cambiado y si conviene revisar la elección. La documentación también tiene límites: una guía que describe una ruta inexistente o una base no utilizada deja de ayudar. Por eso debe mantenerse junto al código y comprobarse cuando cambian contratos o procedimientos. En AceriaApp los documentos de decisiones acompañan las etapas, pero no sustituyen el código ni su validación. Una buena documentación permite que el alumno comprenda por qué se incorporó una pieza y cómo contrastar su función.
 
 ```text
 Contenido de docs/:
@@ -1315,20 +1268,12 @@ docs/
 └── principios-diseno.md
 ```
 
-**Lectura guiada del ejemplo**
+Los ADR conservan decisiones y sus contextos; los documentos de análisis registran criterios de comparación. Al recorrer la carpeta, el alumno debería poder explicar qué problema resuelve cada archivo. La documentación no debe acumularse por cumplir una cuota: una nota útil que permita verificar una decisión vale más que varias páginas de formulaciones repetidas.
 
-- **Línea 1:** docs/ → carpeta de documentación.
-- **Línea 2:** ADR-001-monolito-vs-microservicios.md → primer ADR.
-- **Línea 3:** ADR-002-metricas-acoplamiento.md → segundo ADR.
-- **Línea 4:** ADR-003-principios-diseno.md → tercer ADR.
-- **Línea 5:** analisis-ventajas-inconvenientes.md → documento de análisis.
-- **Línea 6:** principios-diseno.md → documento de principios.
 
-La documentación se organiza por tipo: los ADRs con prefijo ADR-NNN-, los análisis con nombre descriptivo, las guías con prefijo guia-. Esta organización permite localizar rápidamente el documento relevante. La documentación no duplica el código: describe las decisiones y las razones, no la implementación. Un documento que describe línea por línea lo que hace el código es un documento que queda obsoleto en el primer cambio. Un documento que describe por qué se tomó una decisión es un documento que permanece válido aunque el código cambie. Para evaluar documentación como parte del repositorio conviene registrar el resultado observable y la restricción de negocio que motiva el cambio, antes de introducir infraestructura adicional.
+La documentación se organiza por tipo: los ADRs con prefijo ADR-NNN-, los análisis con nombre descriptivo, las guías con prefijo guia-. Esta organización permite localizar rápidamente el documento relevante. La documentación no duplica el código: describe las decisiones y las razones, no la implementación. Un documento que describe línea por línea lo que hace el código es un documento que queda obsoleto en el primer cambio. Un documento que describe por qué se tomó una decisión es un documento que permanece válido aunque el código cambie. 
 
 Un ADR es útil cuando explica por qué se eligió una decisión frente a alternativas reales y bajo qué condiciones debería revisarse. Una lista de clases o comandos pertenece al README o a la práctica, mientras que la historia de una decisión permanece en el ADR. La documentación viva debe evitar dos extremos: copiar cada línea de código, que se vuelve obsoleto enseguida, o redactar afirmaciones vagas que nadie puede contrastar. En AceriaApp, ADR-001 registra el inicio monolítico y las siguientes decisiones explican métricas, límites, organización y buenas prácticas. El alumnado debe comprobar que los ADR heredados no cambian al pasar de un punto al siguiente. La verificación mediante hashes o una comparación textual ofrece una evidencia más precisa que confiar únicamente en el nombre del archivo. Esa disciplina conserva el historial de decisiones mientras el código crece.
-
-#### Profundización: documentación viva y decisiones históricas
 
 No toda la documentación debe generarse desde el código. OpenAPI puede describir rutas, parámetros y tipos de respuesta porque esos elementos forman parte del contrato implementado. En cambio, el motivo por el que se eligió un monolito modular en lugar de microservicios no puede inferirse de los archivos `.cs`. Un ADR conserva esa justificación, los supuestos que se aceptaron y los riesgos conocidos. El valor del ADR no reside en repetir el contenido de los endpoints, sino en permitir que un desarrollador futuro comprenda qué decisión está revisando y por qué se tomó originalmente.
 
@@ -1341,9 +1286,9 @@ La documentación viva exige mantenimiento, pero no significa reescribir todo en
 
 ---
 
-### Bloque 8 — Convenciones de ramas y commits
+### Convenciones de ramas y commits
 
-Las convenciones de ramas y commits determinan la trazabilidad del trabajo. Las ramas se nombran con el prefijo del tipo de cambio: feature/, fix/, docs/, refactor/. Los commits se nombran con el prefijo del punto del curso: Punto N.M: descripción. Esta convención permite filtrar commits por punto y comparar el estado del proyecto entre puntos consecutivos. La trazabilidad entre commits, puntos y módulos facilita la auditoría del progreso del alumno. La decisión sobre convenciones de ramas y commits debe diferenciar lo que el ejemplo ilustra de lo que la aplicación implementa realmente en esta etapa. Para evaluar convenciones de ramas y commits conviene registrar el resultado observable y la restricción de negocio que motiva el cambio, antes de introducir infraestructura adicional.
+Una rama permite aislar cambios en desarrollo, y un commit proporciona un punto concreto que puede inspeccionarse y compararse. Las convenciones de nombres facilitan identificar si se está corrigiendo un error, incorporando una funcionalidad o documentando una decisión, pero no obligan a un estilo arquitectónico ni garantizan calidad. Lo importante es que los cambios tengan un alcance comprensible y que sus pruebas puedan relacionarse con ese alcance. Para un alumno, las etapas acumulativas de AceriaApp son estados de referencia: puede comparar su trabajo con la etapa anterior sin necesidad de fabricar commits vacíos o reconstruir el historial del profesor. En un equipo real, la granularidad y nomenclatura de commits se acuerdan según la estrategia de integración. La trazabilidad se consigue comparando contenidos efectivos y decisiones, no únicamente escribiendo un título formal.
 
 ```text
 Convenciones de ramas:
@@ -1361,26 +1306,18 @@ Punto 1.3: principios de diseño y validación de límites de servicio
 Punto 1.4: organización de la solución y convenciones de nombres
 ```
 
-**Lectura guiada del ejemplo**
+Las ramas de ejemplo expresan tipos de trabajo habituales; los commits enumeran hitos del aprendizaje. Para comparar cambios debe utilizarse un historial real, por ejemplo `git diff` entre dos commits existentes. Es incorrecto asumir que los textos del dibujo son etiquetas Git disponibles en cualquier clon del curso. Los directorios de etapas sí permiten comparar sus archivos aunque no haya commits didácticos creados por cada alumno.
 
-- **Línea 1:** feature/nueva-funcionalidad → rama para una nueva funcionalidad.
-- **Línea 2:** fix/correccion-error → rama para una corrección.
-- **Línea 3:** docs/actualizacion-adr → rama para documentación.
-- **Línea 4:** refactor/extraccion-servicio → rama para refactorización.
-- **Línea 5:** Punto 1.1: estructura inicial del proyecto AceriaApp → primer commit.
-- **Línea 6:** Punto 1.2: análisis de ventajas e inconvenientes y métricas de acoplamiento → segundo commit.
-- **Línea 7:** Punto 1.3: principios de diseño y validación de límites de servicio → tercer commit.
-- **Línea 8:** Punto 1.4: organización de la solución y convenciones de nombres → cuarto commit.
 
-La convención de commits permite comparar el estado del proyecto entre dos puntos consecutivos con git diff Punto1.1 Punto1.2. Esta capacidad es útil para el alumno que quiere ver exactamente qué se añadió en cada punto. La convención de ramas permite aislar el trabajo en curso sin afectar a la rama principal. Ambas convenciones son recomendaciones, no obligaciones: su valor está en la trazabilidad que proporcionan. Para evaluar convenciones de ramas y commits conviene registrar el resultado observable y la restricción de negocio que motiva el cambio, antes de introducir infraestructura adicional. La decisión sobre convenciones de ramas y commits debe diferenciar lo que el ejemplo ilustra de lo que la aplicación implementa realmente en esta etapa.
+La convención de commits permite comparar el estado del proyecto entre dos puntos consecutivos con git diff Punto1.1 Punto1.2. Esta capacidad es útil para el alumno que quiere ver exactamente qué se añadió en cada punto. La convención de ramas permite aislar el trabajo en curso sin afectar a la rama principal. Ambas convenciones son recomendaciones, no obligaciones: su valor está en la trazabilidad que proporcionan.  
 
 Los nombres de ramas y commits son convenciones de comunicación, no mecanismos que garanticen calidad del código. Un commit identificado con un punto permite localizar un conjunto de cambios, pero solo una comparación real del árbol muestra qué archivos se añadieron o modificaron. En un repositorio previamente publicado, clonar una versión final puede dejar el árbol limpio antes de iniciar las prácticas: ejecutar git commit sin cambios no creará un commit nuevo. El alumno debe interpretar ese resultado correctamente, sin modificar archivos innecesariamente para forzar una confirmación. Los puntos separados dentro de PROYECTO proporcionan fotografías acumulativas; los commits docentes de cada punto pueden crearse cuando la sesión se reconstruye desde un repositorio de inicio o una rama de trabajo. Los materiales no deben confundir los commits históricos de publicación del instructor con los que produce el alumno.
 
 ---
 
-### Bloque 9 — Estructura de una solución con varios servicios
+### Estructura de una solución con varios servicios
 
-Cuando el proyecto evolucione hacia microservicios, la estructura de la solución reflejará la separación entre servicios. Cada servicio tendrá su propio proyecto de API, su propio proyecto de dominio, su propio proyecto de infraestructura y su propio proyecto de tests. La solución agrupará todos los proyectos y permitirá compilarlos y ejecutarlos conjuntamente. La estructura de carpetas será la misma que en el monolito modular: src/ con los proyectos de producción y tests/ con los proyectos de tests. La decisión sobre estructura de una solución con varios servicios debe diferenciar lo que el ejemplo ilustra de lo que la aplicación implementa realmente en esta etapa.
+Cuando varias capacidades se despliegan por separado, es útil que cada una mantenga el código y las pruebas de sus reglas más próximas a su responsabilidad. Órdenes puede reunir un host HTTP, un dominio y una adaptación de persistencia; Inventario puede hacer lo mismo, sin obligar a que sus entidades compartan una biblioteca genérica. Así los cambios permanecen localizados y cada equipo conoce qué pruebas ejecutar antes de publicar. Se debe evitar, sin embargo, multiplicar proyectos solo por reproducir un diagrama. Un contrato compartido mínimo puede estar justificado; una enorme biblioteca común con reglas de todos los servicios suele reintroducir el acoplamiento que se intentaba eliminar. AceriaApp evolucionará hacia esta organización de forma gradual, y cada paso debería conservar una relación clara entre propiedad de reglas, dependencias y pruebas.
 
 ```text
 Estructura con varios servicios:
@@ -1398,24 +1335,12 @@ tests/
 └── AceriaApp.Inventario.Tests/
 ```
 
-**Lectura guiada del ejemplo**
+El árbol futuro separa dominios y adaptadores de Órdenes e Inventario. Sus pruebas aparecen por capacidad y deberían utilizar la infraestructura real solo cuando su nivel de comprobación lo necesite. El esquema no propone compartir una base de datos por el mero hecho de compartir repositorio, ni crear bibliotecas duplicadas que no aporten una frontera verificable.
 
-- **Línea 1:** src/ → carpeta de producción.
-- **Línea 2:** AceriaApp.Ordenes.Api/ → API del servicio de órdenes.
-- **Línea 3:** AceriaApp.Ordenes.Domain/ → dominio del servicio de órdenes.
-- **Línea 4:** AceriaApp.Ordenes.Infrastructure/ → infraestructura del servicio de órdenes.
-- **Línea 5:** AceriaApp.Inventario.Api/ → API del servicio de inventario.
-- **Línea 6:** AceriaApp.Inventario.Domain/ → dominio del servicio de inventario.
-- **Línea 7:** AceriaApp.Inventario.Infrastructure/ → infraestructura del servicio de inventario.
-- **Línea 8:** tests/ → carpeta de tests.
-- **Línea 9:** AceriaApp.Ordenes.Tests/ → tests del servicio de órdenes.
-- **Línea 10:** AceriaApp.Inventario.Tests/ → tests del servicio de inventario.
 
-La estructura con varios servicios mantiene la separación entre src/ y tests/ y añade la separación entre servicios. Cada servicio tiene su propio conjunto de proyectos y su propio conjunto de tests. Esta estructura permite compilar y desplegar un servicio de forma independiente aunque todos los servicios vivan en el mismo repositorio. La solución se convierte en el punto de entrada común para compilar y probar todos los servicios. Para evaluar estructura de una solución con varios servicios conviene registrar el resultado observable y la restricción de negocio que motiva el cambio, antes de introducir infraestructura adicional.
+La estructura con varios servicios mantiene la separación entre src/ y tests/ y añade la separación entre servicios. Cada servicio tiene su propio conjunto de proyectos y su propio conjunto de tests. Esta estructura permite compilar y desplegar un servicio de forma independiente aunque todos los servicios vivan en el mismo repositorio. La solución se convierte en el punto de entrada común para compilar y probar todos los servicios. 
 
 La separación por servicio aumenta el número de proyectos, y por ello conviene evitar referencias cruzadas indiscriminadas. Ordenes.Api puede depender de una capa Application que expresa casos de uso, pero no debe acceder al proyecto Infrastructure de Inventario para leer su base de datos. La solución común de Visual Studio es una agrupación de compilación y navegación; su existencia no obliga a ejecutar todos los proyectos en el mismo proceso. Para desplegar de manera autónoma, cada servicio debe poder publicarse con las dependencias necesarias y una configuración propia. En AceriaApp la estructura futura con Ordenes e Inventario es ilustrativa. El código del módulo 1 todavía ejecuta un único host monolítico, y el objetivo de la práctica de organización es validar convenciones sobre nombres, no crear efectivamente seis servicios distribuidos. Esa precisión evita que el alumno espere proyectos inexistentes.
-
-#### Profundización: separar servicios sin multiplicar dependencias compartidas
 
 Una solución con varios servicios puede organizarse en proyectos de API, dominio e infraestructura, pero debe evitar una biblioteca compartida que concentre todos los modelos de negocio. Si Órdenes e Inventario referencian el mismo ensamblado con entidades mutables, un cambio interno de uno puede imponer una actualización al otro. Esa dependencia no desaparece porque los proyectos estén en carpetas separadas. Es preferible compartir convenciones muy estables y bibliotecas transversales pequeñas, mientras cada servicio mantiene su modelo de dominio bajo su propia responsabilidad. El contrato de integración se comparte como especificación, no necesariamente como una entidad de persistencia común.
 
@@ -1428,9 +1353,9 @@ Los diagramas de dependencias ayudan a detectar ciclos antes de que se convierta
 
 ---
 
-### Bloque 10 — Aplicación de la organización al proyecto del curso
+### Aplicación de la organización al proyecto del curso
 
-El proyecto del curso aplica las tres decisiones de organización de forma explícita. La estructura de repositorios es un monorepo con una carpeta por módulo y una carpeta por punto. La estructura de carpetas dentro de cada punto es src/, tests/ y docs/. Las convenciones de nombres de proyectos siguen el patrón AceriaApp.Componente.Tipo. Las convenciones de espacios de nombres coinciden con la estructura de carpetas. Las convenciones de commits siguen el patrón Punto N.M: descripción. Todas estas decisiones se documentan en un ADR y se verifican con una clase de validación de convenciones.
+La organización utilizada por el curso responde a dos necesidades que conviene distinguir. Como material de formación, cada punto dispone de una solución de referencia independiente, para que el alumno pueda reconstruir el resultado y consultar estados anteriores. Como aplicación .NET, cada estado separa código de producción, pruebas y documentación, y utiliza nombres que permiten reconocer responsabilidades. Esta estructura ayuda a verificar el progreso, pero no implica que los equipos profesionales deban almacenar obligatoriamente una copia completa por ejercicio. Lo transferible al trabajo real es la disciplina: cambios localizables, convenciones comprensibles y tests que permitan comprobar el estado del sistema. La transición futura a varios servicios se hará cuando los límites de negocio y las dependencias lo justifiquen, no porque el árbol de carpetas pueda reproducirse fácilmente.
 
 ```text
 Aplicación al proyecto:
@@ -1442,13 +1367,8 @@ Namespace = carpeta       → convención de espacios de nombres.
 Punto N.M: descripción    → convención de commits.
 ```
 
-**Lectura guiada del ejemplo**
+La tabla de correspondencias resume decisiones para orientar la lectura de las soluciones. El patrón `AceriaApp.Componente.Tipo` y las carpetas `src/`, `tests/` y `docs/` son convenciones de legibilidad. Lo que acredita una separación efectiva es poder localizar, cambiar y probar una responsabilidad sin reescribir el resto del proyecto.
 
-- **Línea 1:** Monorepo → el proyecto usa un único repositorio.
-- **Línea 2:** src/, tests/, docs/ → separación de carpetas dentro de cada punto.
-- **Línea 3:** AceriaApp.Componente.Tipo → convención de nombres de proyectos.
-- **Línea 4:** Namespace = carpeta → convención de espacios de nombres.
-- **Línea 5:** Punto N.M: descripción → convención de mensajes de commit.
 
 La aplicación de estas convenciones prepara el proyecto para la extracción de microservicios en módulos posteriores. Cuando un módulo se extraiga como servicio, mantendrá la misma estructura de carpetas y las mismas convenciones de nombres. La coherencia entre el monolito modular y los microservicios facilita la transición y reduce el coste de la migración. El punto 1.4 cierra el bloque de fundamentos del módulo 1 y prepara el terreno para el punto 1.5, donde se estudiarán las buenas prácticas de desarrollo de microservicios.
 
@@ -1480,14 +1400,11 @@ El resultado de este caso de análisis es poder recorrer cualquier estado del m�
 
 ---
 
-## Resumen rápido de la teoría
 
-- La organización de una solución se materializa en tres decisiones: estructura de repositorios, estructura de carpetas y convenciones de nombres.
-- El monorepo facilita la búsqueda global y la coherencia de convenciones; el polyrepo facilita la autonomía total de cada equipo.
-- La separación en src/, tests/ y docs/ es una convención ampliamente adoptada en el ecosistema .NET.
-- Las convenciones de nombres de proyectos siguen el patrón Empresa.Producto.Componente.Tipo.
-- Los espacios de nombres coinciden con la estructura de carpetas del proyecto.
-- Las convenciones de commits siguen el patrón Punto N.M: descripción y permiten comparar el estado del proyecto entre puntos consecutivos.
+
+## Síntesis: organizar para poder cambiar
+
+La organización de AceriaApp debe ayudar a entender su evolución y a detectar cambios que atraviesan límites no deseados. Un monorepo con carpetas por etapa es útil para la enseñanza y puede alojar proyectos bien separados; un polyrepo ofrece otras posibilidades de gobierno sin garantizar autonomía funcional. Los nombres, los namespaces y los ADR hacen visible la intención del diseño, mientras que los tests muestran qué comportamientos están efectivamente protegidos. En los próximos módulos estas convenciones seguirán siendo una ayuda, pero ninguna sustituirá la revisión de dependencias y contratos reales.
 
 # Punto 1.5 — Buenas prácticas
 
