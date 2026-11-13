@@ -98,6 +98,51 @@ def update_chain(original: str, name: str, chain: str) -> str:
            original[candidates[0].end():]
 
 
+def stage1(root: Path):
+    """Construir el primer punto de M02 a partir de carpeta vacía."""
+    root.mkdir(parents=True,exist_ok=True)
+    put(root,API_CSPROJ,snippet("2.1.8"))
+    put(root,"src/AceriaApp.Api/Properties/launchSettings.json",
+        snippet("2.1.2"))
+    put(root,"src/AceriaApp.Api/Modelo/Orden.cs",snippet("2.1.4"))
+    put(root,"src/AceriaApp.Api/Modelo/OrdenDto.cs",snippet("2.1.7"))
+    put(root,"src/AceriaApp.Api/appsettings.json",snippet("2.1.11"))
+    put(root,"AceriaApp.http",snippet("2.1.20"))
+    db=snippet("2.1.9")
+    pos=db.rfind("}")
+    if pos<0:raise RuntimeError("Falta cierre de AceriaDbContext")
+    db=db[:pos] + snippet("2.1.10") + "\n" + db[pos:]
+    put(root,"src/AceriaApp.Api/Datos/AceriaDbContext.cs",db)
+    put(root,"tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj",
+        snippet("2.1.22",1))
+    put(root,"tests/AceriaApp.Api.Tests/ApiFactory.cs",
+        snippet("2.1.22",0))
+    put(root,"tests/Compartido/SqlServerPruebas.cs",
+        snippet("2.1.22",2))
+    put(root,"tests/AceriaApp.Api.Tests/GetTests.cs",
+        snippet("2.1.23"))
+    program=("using AceriaApp.Api.Datos;\n"
+             "using AceriaApp.Api.Modelo;\n"
+             "using Microsoft.EntityFrameworkCore;\n\n"
+             +snippet("2.1.1",1))
+    program=expect_replace(
+        program,"var app=builder.Build();",
+        snippet("2.1.12").rstrip()+"\nvar app=builder.Build();",
+        "Agregar DbContext al contenedor")
+    get=snippet("2.1.14")
+    get=expect_replace(
+        get,
+        "var ordenes = await db.Ordenes\n        .OrderBy(x => x.FechaCreacion).ToListAsync(ct);",
+        "var ordenes = await db.Ordenes.AsNoTracking()\n"
+        "        .OrderBy(x => x.FechaCreacion).ToListAsync(ct);",
+        "Cambiar a consultas sin seguimiento")
+    insert=(snippet("2.1.13").rstrip()+"\n\n"
+            +get.rstrip()+"\n\n"+snippet("2.1.17").rstrip())
+    program=add_before_run(program,insert)
+    program+="public partial class Program {}\n"
+    put(root,PROGRAM,program)
+
+
 def stage2(root: Path):
     # Se reutiliza el estado ya construido por el estudiante en 2.1.
     put(root, "src/AceriaApp.Api/Contratos/ContratosOrden.cs",
@@ -211,13 +256,21 @@ def inspect(stage: int, root: Path):
             "excluded_documentation":sorted(EXCLUSION&set(expected))}
 
 
-def materialize(out: Path, *, stage: int = 4):
+def materialize(out: Path, *, stage: int = 4, desde_cero: bool = False):
     if out.exists():raise FileExistsError(out)
-    first=DIR/"PROYECTO"/STAGES[0]
-    shutil.copytree(first,out,ignore=shutil.ignore_patterns(
-        "bin","obj","TestResults","_trx","_test_results",".qa"
-    ))
     steps=[]
+    if desde_cero:
+        stage1(out)
+        first_result=inspect(1,out)
+        steps.append(first_result)
+        print(f"M02 {first_result['stage']} {first_result}",flush=True)
+        if not first_result["pass"]:
+            return steps
+    else:
+        first=DIR/"PROYECTO"/STAGES[0]
+        shutil.copytree(first,out,ignore=shutil.ignore_patterns(
+            "bin","obj","TestResults","_trx","_test_results",".qa"
+        ))
     for current,apply in [(2,stage2),(3,stage3),(4,stage4)]:
         apply(out)
         result=inspect(current,out)
@@ -235,12 +288,14 @@ def main():
     p.add_argument("--report",type=Path,default=ROOT/"AUDITORIA_RECONSTRUCCION_M02.md")
     p.add_argument("--output",type=Path,help="Conservar el proyecto reconstruido en este directorio")
     p.add_argument("--stage",type=int,choices=(2,3,4),default=4)
+    p.add_argument("--desde-cero",action="store_true",
+        help="Reconstruir también 2.1 desde una carpeta vacía")
     args=p.parse_args()
     if args.output:
-        results=materialize(args.output,stage=args.stage)
+        results=materialize(args.output,stage=args.stage,desde_cero=args.desde_cero)
     else:
         with tempfile.TemporaryDirectory(prefix="m02_reconstruccion_") as temp:
-            results=materialize(Path(temp)/"AceriaApp",stage=args.stage)
+            results=materialize(Path(temp)/"AceriaApp",stage=args.stage,desde_cero=args.desde_cero)
     lines=["# Reconstrucción incremental de M02", "",
         "Origen: proyecto de referencia 2.1. Las etapas posteriores se construyen "
         "únicamente desde los bloques e instrucciones del Markdown corregido; "
@@ -260,10 +315,10 @@ def main():
                 lines.append(f"- {r['stage']} {key}: {value}")
     args.report.parent.mkdir(parents=True,exist_ok=True)
     args.report.write_text("\n".join(lines)+"\n",encoding="utf-8")
-    if len(results)!=(args.stage-1) or not all(x["pass"] for x in results):
+    if len(results)!=(args.stage - (0 if args.desde_cero else 1)) or not all(x["pass"] for x in results):
         print("M02: hay diferencias; no se declara reconstrucción completa",flush=True)
         sys.exit(1)
-    print("PASS: M02.2-M02.4 reconstruidos desde el manual, código verificado",flush=True)
+    print("PASS: M02.1-M02.4 reconstruidos desde una carpeta vacía" if args.desde_cero else "PASS: M02.2-M02.4 reconstruidos desde el manual",flush=True)
 
 
 if __name__=="__main__":
