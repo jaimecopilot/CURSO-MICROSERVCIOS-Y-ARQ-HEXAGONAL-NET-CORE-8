@@ -11,6 +11,8 @@ Esta edición contiene solo lo necesario para estudiar los **ocho módulos de ar
 3. Utiliza **PROYECTO/** para comparar tu resultado **después** de completar una etapa. Cada subcarpeta representa un estado final independiente de AceriaApp; no copies la solución terminada al iniciar el ejercicio.
 4. Ejecuta los tests de la etapa con `dotnet test AceriaApp.sln -c Release` desde la carpeta que contiene esa solución, una vez preparadas sus dependencias SQL/RabbitMQ.
 
+**Continuidad de los proyectos.** M01 es un laboratorio introductorio independiente. M02.1 comienza deliberadamente con un proyecto ASP.NET Core Empty creado desde cero; no se copia el código del monolito de M01. Desde M02.1 hasta M08.4 las prácticas evolucionan AceriaApp acumulativamente. La reconstrucción automatizada de esas **29 etapas consecutivas** está documentada en `ESTADO_CIERRE_VERSION_CORREGIDA.md`; esto acredita la paridad del código, pero no significa que se hayan automatizado todos los clics de Visual Studio. M09 despliega en Docker el código final de M08 sin reprogramar sus APIs.
+
 ## Módulos
 
 | Módulo | Contenido | Material |
