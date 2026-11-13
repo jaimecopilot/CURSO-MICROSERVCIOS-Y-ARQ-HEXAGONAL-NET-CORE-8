@@ -1127,11 +1127,15 @@ Comprueba referencias, resolución de dependencias y una ejecución de crear, ob
 
 ---
 
-## Desarrollo teórico
+## Cambiar y consultar una orden son responsabilidades diferentes
 
-### Bloque 1 — Definición de CQRS
 
-CQRS es el acrónimo de Command Query Responsibility Segregation. Es un patrón arquitectónico que separa las operaciones de escritura de las operaciones de lectura. La separación se aplica en el modelo, en los manejadores y, opcionalmente, en las bases de datos. El patrón fue formulado por Greg Young como una evolución del principio de separación entre comandos y consultas de Bertrand Meyer. CQRS no es una arquitectura completa: es una técnica que se aplica donde aporta valor. La separación permite que el modelo de escritura y el modelo de lectura evolucionen de forma independiente.
+
+Usaremos una orden de Producción para seguir primero una escritura confirmada y después su consulta desde otro contexto. Ese recorrido mostrará qué gana la aplicación con CQRS sin exigir todavía dos bases de datos.
+
+### Definición de CQRS
+
+CQRS propone distinguir las operaciones que modifican el estado de aquellas que lo consultan. En un sistema de órdenes, crear o cancelar una orden expresa una intención de cambio, mientras obtener su detalle o listar órdenes responde a una pregunta. Esa separación puede existir dentro de la misma aplicación, utilizar los mismos datos y desplegarse en un único proceso; no obliga a introducir dos bases ni a construir una plataforma de eventos desde el primer momento. La ventaja es que comandos y consultas pueden diseñarse y probarse de acuerdo con responsabilidades diferentes. En AceriaApp veremos cómo la escritura conserva invariantes del agregado de Producción y la lectura devuelve DTOs adecuados al consumidor, manteniendo SQL Server como almacenamiento compartido. De ese modo aprendemos el principio antes de añadir complejidad distribuida.
 
 ```text
 CQRS:
@@ -1140,35 +1144,29 @@ Escritura → Command → CommandHandler → Modelo de escritura.
 Lectura   → Query   → QueryHandler   → Modelo de lectura.
 ```
 
-- **Línea 1:** `CQRS:` → identifica el tema de las líneas siguientes.
-
-- **Línea 3:** `Escritura → Command → CommandHandler → Modelo de escritura.` → flujo de escritura.
-
-- **Línea 4:** `Lectura   → Query   → QueryHandler   → Modelo de lectura.` → relaciona el concepto con su responsabilidad dentro del ejemplo.
+El esquema muestra dos caminos con finalidades distintas: comandos que modifican un modelo de escritura y consultas que devuelven representaciones. No obliga a dos bases de datos; esa es una decisión adicional que debe justificarse.
 
 CQRS se caracteriza por tres propiedades. La primera es que separa las operaciones de escritura de las de lectura. La segunda es que permite que cada modelo evolucione de forma independiente. La tercera es que se aplica donde aporta valor: no es una obligación en todos los contextos. Las tres propiedades permiten que el sistema sea más simple en las operaciones y más eficiente en las lecturas.
 
 La aplicación de CQRS tiene dos consecuencias prácticas. La primera es que el modelo de escritura se centra en las reglas de negocio. La segunda es que el modelo de lectura se centra en las consultas. La combinación de ambas permite que cada modelo tenga la forma adecuada a su propósito. CQRS se aplica con más intensidad en sistemas con lecturas complejas o con alto volumen de lectura.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Separa responsabilidades donde cambia la forma de trabajar: escritura protege reglas y lectura entrega información. No confundas CQRS con la obligación de desplegar dos aplicaciones.
 
-**La decisión arquitectónica.** Separa responsabilidades donde cambia la forma de trabajar: escritura protege reglas y lectura entrega información. No confundas CQRS con la obligación de desplegar dos aplicaciones.
+Producción usa el agregado para modificar una orden y DTOs para consultarla. Ambos caminos pueden compartir base de datos y ejecutarse en la misma API.
 
-**Ejemplo concreto en AceriaApp.** Producción usa el agregado para modificar una orden y DTOs para consultarla. Ambos caminos pueden compartir base de datos y ejecutarse en la misma API.
+MediatR facilita despacho, pero se puede usar CQRS sin MediatR y MediatR sin CQRS. Event Sourcing decide qué se guarda como registro del estado y no forma parte obligatoria de esta separación.
 
-**Riesgo, alternativa y límite.** MediatR facilita despacho, pero se puede usar CQRS sin MediatR y MediatR sin CQRS. Event Sourcing decide qué se guarda como registro del estado y no forma parte obligatoria de esta separación.
-
-**Comprobación técnica y aprendizaje.** Sigue una escritura y una lectura hasta sus puertos. Comprueba que la lectura no necesita métodos de transición ni una unidad de trabajo para guardar.
+Sigue una escritura y una lectura hasta sus puertos. Comprueba que la lectura no necesita métodos de transición ni una unidad de trabajo para guardar.
 
 ![Diagrama explicativo del punto 5.4, bloque 1](IMAGENES/5-4-caminos.svg)
 
-*Interpretación del gráfico:* Commands y queries tienen contratos y modelos distintos. La separación puede usar la misma base de datos. La figura se distribuye en SVG vectorial y PNG.
+Commands y queries tienen contratos y modelos distintos. La separación puede usar la misma base de datos. La figura se distribuye en SVG vectorial y PNG.
 
 ---
 
-### Bloque 2 — Commands
+### Commands
 
-Un command es un mensaje que solicita una acción que modifica el estado del sistema. Los commands se nombran con un verbo que expresa una acción solicitada: `CrearOrden`, `CancelarOrden`, `ActualizarMaterial`. Un command contiene los datos necesarios para ejecutar la acción. Un command devuelve un resultado cuando la acción produce un valor. El contrato del command no garantiza procesamiento exactamente una vez ni idempotencia. Los reintentos y la repetición de una petición necesitan una política explícita. Los commands se envían al modelo de escritura.
+Un command describe algo que el usuario o un proceso desea cambiar: crear una orden, cancelar una orden existente o actualizar una cantidad permitida. El mensaje no decide por sí solo si el cambio se puede realizar; el handler consulta lo necesario, utiliza el agregado y confirma mediante el repositorio y la unidad de trabajo. Es importante escoger nombres que indiquen intención del negocio y no convertir cada setter de una entidad en un comando público. En AceriaApp `CrearOrdenCommand` se relaciona con una operación que protege reglas, mientras `CancelarOrdenCommand` deberá conocer el estado actual antes de actuar. Las pruebas comprueban tanto el resultado devuelto como el efecto persistido, porque una respuesta exitosa no debe anunciar una escritura que no se confirmó.
 
 ```csharp
 public record CrearOrdenCommand(string Cliente, string Material, int Cantidad) : IRequest<Result<Guid>>;
@@ -1176,29 +1174,23 @@ public record CancelarOrdenCommand(Guid Id, string Motivo) : IRequest<Result>;
 public record ActualizarCantidadCommand(Guid Id, int NuevaCantidad) : IRequest<Result>;
 ```
 
-- **Línea 1:** `public record CrearOrdenCommand(string Cliente, string Material, int Cantidad) : IRequest<Result<Guid>>;` → command de creación con retorno.
-
-- **Línea 2:** `public record CancelarOrdenCommand(Guid Id, string Motivo) : IRequest<Result>;` → command de cancelación.
-
-- **Línea 3:** `public record ActualizarCantidadCommand(Guid Id, int NuevaCantidad) : IRequest<Result>;` → command de actualización.
+Los comandos representan intenciones de crear, cancelar o actualizar una orden. El handler correspondiente ejecuta la operación a través de las reglas del dominio; el mensaje por sí solo no modifica ningún registro.
 
 Los commands se caracterizan por tres propiedades. La primera es que expresan una intención de cambio. La segunda es que un manejador procesa cada envío. La tercera es que la idempotencia debe diseñarse según la operación; MediatR no deduplica envíos. Las tres propiedades permiten que los commands sean la unidad de trabajo de las operaciones de escritura.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Un command representa una intención, no un hecho ya sucedido. Su nombre debe indicar qué se solicita y su resultado si fue aceptado.
 
-**La decisión arquitectónica.** Un command representa una intención, no un hecho ya sucedido. Su nombre debe indicar qué se solicita y su resultado si fue aceptado.
+Planificar una orden cambia Borrador a Planificada. Si ya está finalizada, el dominio rechaza la intención y el adaptador devuelve conflicto.
 
-**Ejemplo concreto en AceriaApp.** Planificar una orden cambia Borrador a Planificada. Si ya está finalizada, el dominio rechaza la intención y el adaptador devuelve conflicto.
+Que un command devuelva un identificador o un resultado no rompe CQRS. La separación no exige que toda escritura sea `void`. Los reintentos requieren decidir si repetir debe devolver el éxito anterior o un conflicto.
 
-**Riesgo, alternativa y límite.** Que un command devuelva un identificador o un resultado no rompe CQRS. La separación no exige que toda escritura sea `void`. Los reintentos requieren decidir si repetir debe devolver el éxito anterior o un conflicto.
-
-**Comprobación técnica y aprendizaje.** Envía dos veces una transición y observa el contrato real. No supongas deduplicación, orden de entrega o idempotencia porque el mensaje sea un record.
+Envía dos veces una transición y observa el contrato real. No supongas deduplicación, orden de entrega o idempotencia porque el mensaje sea un record.
 
 ---
 
-### Bloque 3 — Queries
+### Queries
 
-Una query es un mensaje que solicita información sin modificar el estado del sistema. Las queries se nombran con un sustantivo o con un verbo de consulta en infinitivo: `ObtenerOrden`, `ListarOrdenes`, `BuscarMaterial`. Una query contiene los criterios de búsqueda. Una query devuelve un resultado con los datos solicitados. Una query correcta no cambia el estado de negocio; repetirla no añade efectos de negocio, aunque la respuesta pueda variar si otros actores escriben. Las queries se envían al modelo de lectura.
+Una query describe información que se desea recuperar y no debería modificar el estado de negocio. `ObtenerOrdenQuery` puede devolver un DTO de detalle, mientras `ListarOrdenesQuery` incorpora criterios de paginación o selección. Esta distinción permite optimizar lecturas sin obligar a reconstruir agregados completos para cada pantalla. El consumidor necesita un contrato estable de consulta, no una entidad EF Core que pueda editar libremente. En AceriaApp el handler de lectura puede utilizar proyecciones con `AsNoTracking` y comprobar sus resultados sobre SQL Server real. Las reglas que protegen cambios permanecen en el modelo de escritura; no deben copiarse como lógica distinta en las consultas.
 
 ```csharp
 public record ObtenerOrdenQuery(Guid Id) : IRequest<Result<OrdenDto>>;
@@ -1206,33 +1198,27 @@ public record ListarOrdenesQuery(int Page, int PageSize) : IRequest<Result<List<
 public record BuscarMaterialQuery(string Nombre) : IRequest<Result<List<MaterialDto>>>;
 ```
 
-- **Línea 1:** `public record ObtenerOrdenQuery(Guid Id) : IRequest<Result<OrdenDto>>;` → query de detalle.
-
-- **Línea 2:** `public record ListarOrdenesQuery(int Page, int PageSize) : IRequest<Result<List<OrdenResumenDto>>>;` → query de lista paginada.
-
-- **Línea 3:** `public record BuscarMaterialQuery(string Nombre) : IRequest<Result<List<MaterialDto>>>;` → query de búsqueda.
+Las queries piden detalle, listado o búsqueda y pueden devolver DTOs de lectura. Su semántica debe permanecer libre de efectos de negocio y no depender del mismo contrato de escritura que conserva invariantes.
 
 Las queries se caracterizan por tres propiedades. La primera es que expresan una solicitud de información. La segunda es que repetidas no añaden efectos al negocio, sin prometer datos idénticos en momentos distintos. La tercera es que no modifican el estado del sistema. Las tres propiedades permiten que las queries sean la unidad de trabajo de las operaciones de lectura.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Una query entrega información sin cambiar el estado de negocio. Su contrato incluye qué ocurre si faltan datos y cómo se limita el resultado.
 
-**La decisión arquitectónica.** Una query entrega información sin cambiar el estado de negocio. Su contrato incluye qué ocurre si faltan datos y cómo se limita el resultado.
+El detalle de Producción devuelve un DTO y la lista devuelve proyecciones. `AsNoTracking` evita seguimiento de entidades cargadas para lectura, y no hay llamada a commit en ese camino.
 
-**Ejemplo concreto en AceriaApp.** El detalle de Producción devuelve un DTO y la lista devuelve proyecciones. `AsNoTracking` evita seguimiento de entidades cargadas para lectura, y no hay llamada a commit en ese camino.
+`AsNoTracking` no prohíbe técnicamente ejecutar SQL de escritura en otra línea; la ausencia de efectos se verifica por contrato y prueba. Repetir una consulta puede devolver un estado nuevo si otra petición modificó la orden.
 
-**Riesgo, alternativa y límite.** `AsNoTracking` no prohíbe técnicamente ejecutar SQL de escritura en otra línea; la ausencia de efectos se verifica por contrato y prueba. Repetir una consulta puede devolver un estado nuevo si otra petición modificó la orden.
-
-**Comprobación técnica y aprendizaje.** Consulta varias veces y comprueba que no aparecen nuevas filas ni cambian estados. Verifica detalle inexistente y colección vacía como resultados distintos.
+Consulta varias veces y comprueba que no aparecen nuevas filas ni cambian estados. Verifica detalle inexistente y colección vacía como resultados distintos.
 
 ![Diagrama explicativo del punto 5.4, bloque 3](IMAGENES/5-4-lectura.svg)
 
-*Interpretación del gráfico:* La query proyecta DTOs sin transición de dominio ni commit. La ausencia de seguimiento facilita una lectura liviana. La figura se distribuye en SVG vectorial y PNG.
+La query proyecta DTOs sin transición de dominio ni commit. La ausencia de seguimiento facilita una lectura liviana. La figura se distribuye en SVG vectorial y PNG.
 
 ---
 
-### Bloque 4 — Separación de modelos
+### Separación de modelos
 
-CQRS permite que el modelo de escritura y el modelo de lectura sean distintos. El modelo de escritura se centra en las reglas de negocio: contiene las entidades, los value objects y los invariantes. El modelo de lectura se centra en las consultas: contiene proyecciones, DTOs y vistas. Los dos modelos pueden usar tecnologías distintas. Los dos modelos pueden usar bases de datos distintas. La separación permite que cada modelo evolucione de forma independiente.
+El modelo empleado para ejecutar una escritura y el utilizado para responder a una lectura pueden ser distintos aunque compartan una base de datos. Para cambiar una orden necesitamos su identidad, invariantes y comportamiento; para presentar una lista quizá baste un resumen con estado, cliente y fecha. Separar los contratos evita exponer el agregado como si fuese un DTO de consulta y facilita adaptar una lectura sin modificar todas las operaciones de escritura. No obstante, la sincronización y el coste de duplicar modelos deben considerarse. En AceriaApp los DTOs de consulta se construyen desde información persistida por el mismo contexto de Producción. El enfoque introduce separación de responsabilidades, no una promesa prematura de consistencia eventual o escalado independiente.
 
 ```text
 Separación de modelos:
@@ -1241,29 +1227,23 @@ Modelo de escritura  → entidades, value objects, invariantes.
 Modelo de lectura    → proyecciones, DTOs, vistas.
 ```
 
-- **Línea 1:** `Separación de modelos:` → identifica el tema de las líneas siguientes.
-
-- **Línea 3:** `Modelo de escritura  → entidades, value objects, invariantes.` → relaciona el concepto con su responsabilidad dentro del ejemplo.
-
-- **Línea 4:** `Modelo de lectura    → proyecciones, DTOs, vistas.` → relaciona el concepto con su responsabilidad dentro del ejemplo.
+El modelo de escritura contiene entidades y valores que protegen reglas, mientras el de lectura puede utilizar proyecciones simples. En AceriaApp ambas representaciones pueden obtenerse de la misma base SQL.
 
 La separación de modelos tiene dos consecuencias prácticas. La primera es que cada modelo se optimiza para su propósito. La segunda es que reduce el acoplamiento, aunque contratos, campos compartidos y cambios de esquema pueden exigir adaptar ambos modelos. La combinación de ambas permite que el sistema sea más eficiente y más mantenible.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Diseña DTOs alrededor de preguntas concretas. Un DTO de lectura no necesita contener toda la estructura interna del agregado.
 
-**La decisión arquitectónica.** Diseña DTOs alrededor de preguntas concretas. Un DTO de lectura no necesita contener toda la estructura interna del agregado.
+Para un listado basta con identidad, cliente, material, cantidad total y estado según el contrato elegido. Para modificar líneas se recupera la raíz con sus hijos y se invocan sus métodos.
 
-**Ejemplo concreto en AceriaApp.** Para un listado basta con identidad, cliente, material, cantidad total y estado según el contrato elegido. Para modificar líneas se recupera la raíz con sus hijos y se invocan sus métodos.
+No devuelvas directamente la entidad desde el endpoint: expondrías estado interno y acoplarías el consumidor a cambios del modelo. Separar modelos tampoco elimina todo impacto de una migración compartida.
 
-**Riesgo, alternativa y límite.** No devuelvas directamente la entidad desde el endpoint: expondrías estado interno y acoplarías el consumidor a cambios del modelo. Separar modelos tampoco elimina todo impacto de una migración compartida.
-
-**Comprobación técnica y aprendizaje.** Revisa el SQL o la proyección y comprueba qué datos se cargan. El DTO debe ser construible sin disparar una transición de negocio.
+Revisa el SQL o la proyección y comprueba qué datos se cargan. El DTO debe ser construible sin disparar una transición de negocio.
 
 ---
 
-### Bloque 5 — Beneficios de CQRS
+### Beneficios de CQRS
 
-CQRS aporta cuatro beneficios principales. El primero es la separación de responsabilidades: las operaciones de escritura y las de lectura se gestionan por separado. El segundo es la optimización: cada modelo se optimiza para su propósito. El tercero es la escalabilidad: el modelo de lectura puede escalarse de forma independiente del modelo de escritura. El cuarto es la evolución: cada modelo evoluciona de forma independiente. Los cuatro beneficios se materializan cuando el sistema tiene lecturas complejas o alto volumen de lectura.
+CQRS puede clarificar el código cuando consultas y cambios necesitan modelos, reglas y rendimientos diferentes. El equipo identifica con facilidad qué handler conserva invariantes y cuál construye una proyección; las pruebas también pueden centrarse en esas obligaciones. Si la lectura se vuelve costosa, una proyección especializada puede reducir materialización innecesaria de agregados. Sin embargo, separar Commands y Queries no garantiza automáticamente mayor velocidad, menos recursos o equipos autónomos. El beneficio depende de las operaciones que realmente se ejecutan y de si los contratos responden mejor a sus consumidores. En AceriaApp la separación se introduce de forma deliberadamente modesta para comprenderla sin añadir duplicación de datos ni otro sistema de almacenamiento.
 
 ```text
 Beneficios de CQRS:
@@ -1274,33 +1254,23 @@ Escalabilidad independiente.
 Evolución independiente.
 ```
 
-- **Línea 1:** `Beneficios de CQRS:` → identifica el tema de las líneas siguientes.
-
-- **Línea 3:** `Separación de responsabilidades.` → primer beneficio.
-
-- **Línea 4:** `Optimización por modelo.` → segundo beneficio.
-
-- **Línea 5:** `Escalabilidad independiente.` → tercer beneficio.
-
-- **Línea 6:** `Evolución independiente.` → cuarto beneficio.
+Los beneficios del esquema dependen de las necesidades reales de consulta y cambio. Separar responsabilidades aporta claridad cuando evita cargar agregados completos para construir una vista; no garantiza automáticamente mayor rendimiento.
 
 Los beneficios tienen dos consecuencias prácticas. La primera es que el sistema se adapta mejor a las cargas desiguales. La segunda es que cada modelo puede evolucionar con independencia. La combinación de ambas permite que el sistema sea más eficiente y más mantenible.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Mide el beneficio que buscas: menor coste de consulta, contrato más claro o evolución independiente del consumidor. La separación es un medio.
 
-**La decisión arquitectónica.** Mide el beneficio que buscas: menor coste de consulta, contrato más claro o evolución independiente del consumidor. La separación es un medio.
+Una pantalla de órdenes no necesita cargar todas las reglas ni seguir cada entidad. El puerto de lectura puede seleccionar los campos exactos sobre las mismas tablas.
 
-**Ejemplo concreto en AceriaApp.** Una pantalla de órdenes no necesita cargar todas las reglas ni seguir cada entidad. El puerto de lectura puede seleccionar los campos exactos sobre las mismas tablas.
+Escalar lectores de forma independiente exige decisiones de infraestructura adicionales. Dos handlers en el mismo proceso y la misma base no proporcionan por sí solos capacidad ilimitada ni aislamiento de carga.
 
-**Riesgo, alternativa y límite.** Escalar lectores de forma independiente exige decisiones de infraestructura adicionales. Dos handlers en el mismo proceso y la misma base no proporcionan por sí solos capacidad ilimitada ni aislamiento de carga.
-
-**Comprobación técnica y aprendizaje.** Compara consultas y volumen materializado antes de añadir otra base. Conserva pruebas de contrato para que una optimización no cambie filtros, orden o interpretación del estado.
+Compara consultas y volumen materializado antes de añadir otra base. Conserva pruebas de contrato para que una optimización no cambie filtros, orden o interpretación del estado.
 
 ---
 
-### Bloque 6 — Costes de CQRS
+### Costes de CQRS
 
-CQRS también tiene costes. El primer coste es la complejidad adicional: la separación requiere dos modelos, dos conjuntos de manejadores y, opcionalmente, dos bases de datos. El segundo coste aparece con proyecciones actualizadas de forma asíncrona: la lectura puede ir por detrás de la escritura, por lo que se necesita tratar la consistencia eventual. El tercer coste es la duplicación: algunos conceptos se modelan en ambos modelos. El cuarto coste es la sincronización cuando se mantienen copias separadas: los cambios deben propagarse y su entrega y reconstrucción deben verificarse. Los costes se aceptan cuando el dominio lo justifica.
+CQRS también puede aumentar el número de mensajes, handlers y proyecciones que el equipo debe mantener. Si la aplicación es un CRUD sencillo, esa estructura puede dificultar la navegación más de lo que ayuda. Cuando se añaden bases de lectura separadas, aparecen problemas adicionales de sincronización, retraso de propagación y consistencia eventual. Un consumidor podría leer una vista que todavía no refleja un comando confirmado, y ese comportamiento debe explicarse en el contrato. En AceriaApp evitaremos atribuir esas dificultades al diseño básico con una única base: la separación de responsabilidades ya tiene sentido sin distribuir datos. Se estudiarán los costes de cada variante antes de elegirla por la promesa genérica de escalabilidad.
 
 ```text
 Costes de CQRS:
@@ -1311,33 +1281,23 @@ Duplicación de conceptos.
 Sincronización cuando se mantienen copias separadas.
 ```
 
-- **Línea 1:** `Costes de CQRS:` → identifica el tema de las líneas siguientes.
-
-- **Línea 3:** `Complejidad adicional.` → primer coste.
-
-- **Línea 4:** `Consistencia eventual si hay propagación asíncrona.` → segundo coste.
-
-- **Línea 5:** `Duplicación de conceptos.` → tercer coste.
-
-- **Línea 6:** `Sincronización cuando se mantienen copias separadas.` → cuarto coste.
+La lista advierte del coste de mensajes y modelos adicionales. Si aparece una segunda base, también hay que diseñar propagación y consistencia, algo que el CQRS básico no exige.
 
 Los costes tienen dos consecuencias prácticas. La primera es que CQRS no se aplica en todos los contextos. La segunda es que su aplicación se concentra donde aporta valor. La combinación de ambas permite que el esfuerzo se invierta donde produce beneficio.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Acepta solamente los costes necesarios para la variante elegida. Los modelos separados requieren mantener contratos; la replicación asíncrona añade otra categoría de problemas.
 
-**La decisión arquitectónica.** Acepta solamente los costes necesarios para la variante elegida. Los modelos separados requieren mantener contratos; la replicación asíncrona añade otra categoría de problemas.
+El curso usa la misma persistencia para escritura y lectura de Producción. No necesita un publicador de eventos ni un proceso de reconstrucción de proyecciones para consultar la orden guardada.
 
-**Ejemplo concreto en AceriaApp.** El curso usa la misma persistencia para escritura y lectura de Producción. No necesita un publicador de eventos ni un proceso de reconstrucción de proyecciones para consultar la orden guardada.
+Si se introduce una copia de lectura, habrá que tratar retrasos, duplicados, orden de eventos, recuperación y observabilidad. Una caché también necesita una política de invalidación.
 
-**Riesgo, alternativa y límite.** Si se introduce una copia de lectura, habrá que tratar retrasos, duplicados, orden de eventos, recuperación y observabilidad. Una caché también necesita una política de invalidación.
-
-**Comprobación técnica y aprendizaje.** Enumera componentes realmente desplegados y garantías probadas. No describas consistencia eventual, outbox o consumidores como capacidades del módulo si solo aparecen en una figura conceptual.
+Enumera componentes realmente desplegados y garantías probadas. No describas consistencia eventual, outbox o consumidores como capacidades del módulo si solo aparecen en una figura conceptual.
 
 ---
 
-### Bloque 7 — CQRS con un único modelo de datos
+### CQRS con un único modelo de datos
 
-CQRS se puede aplicar con un almacén de datos compartido y modelos lógicos diferentes. Los commands usan el agregado y los puertos de escritura; las queries devuelven DTOs mediante un puerto de lectura. Ambos pueden consultar las mismas tablas. Tener dos clases llamadas Handler no basta si ambas obligan a usar exactamente el mismo modelo. Esta variante ofrece separación real sin añadir una segunda base de datos ni propagación asíncrona.
+La forma más accesible de CQRS mantiene comandos y consultas separados dentro de un mismo servicio que utiliza SQL Server. Un handler de escritura invoca operaciones de dominio y confirma; otro de lectura solicita DTOs mediante un contrato específico. La separación se observa en las firmas, las dependencias y las pruebas, sin necesidad de construir colas ni proyecciones asíncronas. Esta variante permite a AceriaApp conservar la consistencia de lectura después de una confirmación exitosa cuando el proveedor y la transacción lo permiten. Debemos comprobarlo con distintos ámbitos de DbContext para evitar que un objeto ya seguido o una caché local oculte el estado real. El hecho de utilizar una sola base no invalida el enfoque.
 
 ```csharp
 public sealed class CrearOrdenHandler(IOrdenEscritura escritura)
@@ -1354,47 +1314,23 @@ public sealed class ObtenerOrdenHandler(IOrdenLectura lectura)
 }
 ```
 
-- **Línea 1:** `public sealed class CrearOrdenHandler(IOrdenEscritura escritura)` → declara la clase del ejemplo con responsabilidad explícita.
-
-- **Línea 2:** `: IRequestHandler<CrearOrdenCommand, Result<Guid>>` → asocia el tipo de solicitud con su tipo de respuesta.
-
-- **Línea 3:** `{` → abre el bloque actual.
-
-- **Línea 4:** `public Task<Result<Guid>> Handle(CrearOrdenCommand request, CancellationToken ct)` → acepta la cancelación de la operación.
-
-- **Línea 5:** `=> escritura.CrearAsync(request, ct);` → delega la operación en el colaborador o expresión indicada.
-
-- **Línea 6:** `}` → cierra el bloque actual.
-
-- **Línea 7:** `public sealed class ObtenerOrdenHandler(IOrdenLectura lectura)` → declara la clase del ejemplo con responsabilidad explícita.
-
-- **Línea 8:** `: IRequestHandler<ObtenerOrdenQuery, Result<OrdenDto>>` → asocia el tipo de solicitud con su tipo de respuesta.
-
-- **Línea 9:** `{` → abre el bloque actual.
-
-- **Línea 10:** `public Task<Result<OrdenDto>> Handle(ObtenerOrdenQuery request, CancellationToken ct)` → acepta la cancelación de la operación.
-
-- **Línea 11:** `=> lectura.ObtenerAsync(request.Id, ct);` → delega la operación en el colaborador o expresión indicada.
-
-- **Línea 12:** `}` → cierra el bloque actual.
+Los handlers de creación y consulta utilizan puertos diferentes sobre el mismo contexto lógico. La separación está en el código de aplicación, y puede comprobarse con tests que distingan modificación y lectura.
 
 La aplicación con un único modelo de datos tiene dos consecuencias prácticas. La primera es que la separación se realiza en los contratos y los caminos de lectura y escritura. La segunda es que puede conservarse el almacén existente, aunque índices y proyecciones todavía necesiten ajustes. La combinación de ambas permite que CQRS se aplique sin duplicar la infraestructura.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Comparte el almacén cuando sea suficiente, conservando puertos y formas de datos distintos. La lectura de cambios confirmados depende además del aislamiento y de si se usan réplicas.
 
-**La decisión arquitectónica.** Comparte el almacén cuando sea suficiente, conservando puertos y formas de datos distintos. La lectura de cambios confirmados depende además del aislamiento y de si se usan réplicas.
+Los handlers de commands delegan en los casos de uso; los de queries usan lectura proyectada y sin seguimiento sobre la misma base de Producción.
 
-**Ejemplo concreto en AceriaApp.** Los handlers de commands delegan en los casos de uso; los de queries usan lectura proyectada y sin seguimiento sobre la misma base de Producción.
+Las clases vacías que declaran `IRequestHandler` no compilan porque falta `Handle`. El ejemplo contiene implementaciones delegadas y presupone los puertos abreviados indicados en las convenciones.
 
-**Riesgo, alternativa y límite.** Las clases vacías que declaran `IRequestHandler` no compilan porque falta `Handle`. El ejemplo contiene implementaciones delegadas y presupone los puertos abreviados indicados en las convenciones.
-
-**Comprobación técnica y aprendizaje.** Verifica creación seguida de lectura y revisa que las consultas no llamen al repositorio de escritura ni al commit. Mantener una base no obliga a un modelo de objetos único.
+Verifica creación seguida de lectura y revisa que las consultas no llamen al repositorio de escritura ni al commit. Mantener una base no obliga a un modelo de objetos único.
 
 ---
 
-### Bloque 8 — CQRS con dos modelos de datos
+### CQRS con dos modelos de datos
 
-CQRS también admite almacenes separados. Por ejemplo, la escritura puede usar una base relacional y la lectura una base documental, otra base relacional o una caché. La propagación puede usar eventos, captura de cambios u otro mecanismo. Si es asíncrona, introduce una ventana de consistencia eventual y exige recuperación y observabilidad. Es una variante con más coste operativo, no una versión obligatoriamente más correcta de CQRS. Event Sourcing es otra decisión: guardar eventos como estado de referencia no es un requisito de CQRS.
+Cuando las lecturas requieren una forma de almacenamiento muy distinta de las escrituras, CQRS puede combinarse con dos modelos de datos. El agregado se confirma en la base de escritura y un mecanismo de propagación actualiza una proyección destinada a consultas. Esta arquitectura permite especializar índices y formatos, pero introduce una ventana de posible retraso: una lectura inmediatamente posterior puede observar una versión anterior. Por eso no debe describirse como una mejora gratuita. La entrega fiable de eventos, el tratamiento de duplicados y la reconstrucción de proyecciones pasan a formar parte del sistema. En AceriaApp esta variante se analiza conceptualmente, mientras la implementación de M05 utiliza la base compartida; la mensajería distribuida se tratará después.
 
 ```text
 CQRS con dos modelos:
@@ -1404,35 +1340,27 @@ Lectura   → base de datos documental o caché.
 Propagación → eventos.
 ```
 
-- **Línea 1:** `CQRS con dos modelos:` → identifica el tema de las líneas siguientes.
-
-- **Línea 3:** `Escritura → base de datos relacional.` → modelo de escritura.
-
-- **Línea 4:** `Lectura   → base de datos documental o caché.` → relaciona el concepto con su responsabilidad dentro del ejemplo.
-
-- **Línea 5:** `Propagación → eventos.` → mecanismo de sincronización.
+El modelo de dos almacenes necesita actualizar una proyección tras confirmar la escritura. La lectura puede ir retrasada; la arquitectura debe definir cómo informa o tolera esa diferencia al consumidor.
 
 La aplicación con dos modelos de datos tiene dos consecuencias prácticas. La primera es que cada modelo se optimiza para su propósito. La segunda es que la consistencia entre modelos es eventual. La combinación de ambas permite que el sistema sea más eficiente pero también más complejo.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Separa almacenes por una necesidad medida y diseña el recorrido completo de propagación. La elección de motor es independiente del nombre CQRS.
 
-**La decisión arquitectónica.** Separa almacenes por una necesidad medida y diseña el recorrido completo de propagación. La elección de motor es independiente del nombre CQRS.
+Como variante futura, una orden confirmada podría alimentar una vista de producción por turno. Esa vista sería una proyección, no otra entidad compartida que el command modifique por referencia.
 
-**Ejemplo concreto en AceriaApp.** Como variante futura, una orden confirmada podría alimentar una vista de producción por turno. Esa vista sería una proyección, no otra entidad compartida que el command modifique por referencia.
+Si se guarda la orden y después falla la publicación, se puede perder la actualización. Outbox e idempotencia ayudan a tratar ese fallo; una notificación local de MediatR no equivale a entrega durable.
 
-**Riesgo, alternativa y límite.** Si se guarda la orden y después falla la publicación, se puede perder la actualización. Outbox e idempotencia ayudan a tratar ese fallo; una notificación local de MediatR no equivale a entrega durable.
-
-**Comprobación técnica y aprendizaje.** Define retraso tolerable, indicador de versión y reconstrucción antes de prometer la vista. Esta variante no está implementada en el módulo y sus garantías no se infieren de las pruebas locales.
+Define retraso tolerable, indicador de versión y reconstrucción antes de prometer la vista. Esta variante no está implementada en el módulo y sus garantías no se infieren de las pruebas locales.
 
 ![Diagrama explicativo del punto 5.4, bloque 8](IMAGENES/5-4-dos-almacenes.svg)
 
-*Interpretación del gráfico:* La variante asíncrona necesita entrega durable y consumidores idempotentes. Es conceptual y no está implementada aquí. La figura se distribuye en SVG vectorial y PNG.
+La variante asíncrona necesita entrega durable y consumidores idempotentes. Es conceptual y no está implementada aquí. La figura se distribuye en SVG vectorial y PNG.
 
 ---
 
-### Bloque 9 — Cuándo aplicar CQRS
+### Cuándo aplicar CQRS
 
-CQRS puede aportar valor cuando lectura y escritura necesitan modelos distintos, las consultas son complejas o las cargas son desiguales. No mejora el rendimiento por nombrar mensajes: hay que medir consultas, índices y volumen. En CRUD simple puede añadir una separación innecesaria. La consistencia fuerte no impide CQRS: un almacén compartido puede leer cambios confirmados sin mantener otra proyección asíncrona. La experiencia del equipo y el coste operativo orientan una adopción gradual.
+La decisión de aplicar CQRS debe comenzar por entender qué problema produce el modelo actual. Si las consultas necesitan proyecciones muy distintas, si las operaciones de escritura tienen invariantes delicadas o si las cargas difieren de forma relevante, separar contratos puede mejorar la claridad. En otras situaciones, una única capa de servicios sencilla será más fácil de mantener. Incluso cuando CQRS resulta útil, conviene empezar separando Commands y Queries sin crear automáticamente dos almacenamientos. Para AceriaApp elegimos esa variante porque facilita estudiar el agregado de Producción y sus lecturas sobre SQL Server real. La evaluación debe basarse en comportamiento y necesidades, no en medir cuántos handlers contiene el proyecto.
 
 ```text
 Cuándo aplicar CQRS:
@@ -1445,37 +1373,23 @@ Consistencia fuerte        → posible con almacén compartido.
 Sin experiencia            → empezar por una separación pequeña.
 ```
 
-- **Línea 1:** `Cuándo aplicar CQRS:` → identifica el tema de las líneas siguientes.
-
-- **Línea 3:** `Lecturas complejas         → sí.` → relaciona el concepto con su responsabilidad dentro del ejemplo.
-
-- **Línea 4:** `Alto volumen de lectura    → medir antes de separar almacenes.` → relaciona el concepto con su responsabilidad dentro del ejemplo.
-
-- **Línea 5:** `Requisitos distintos       → sí.` → relaciona el concepto con su responsabilidad dentro del ejemplo.
-
-- **Línea 6:** `CRUD simple                → valorar si compensa.` → relaciona el concepto con su responsabilidad dentro del ejemplo.
-
-- **Línea 7:** `Consistencia fuerte        → posible con almacén compartido.` → relaciona el concepto con su responsabilidad dentro del ejemplo.
-
-- **Línea 8:** `Sin experiencia            → empezar por una separación pequeña.` → relaciona el concepto con su responsabilidad dentro del ejemplo.
+La elección depende del volumen y del significado de las operaciones, no del número de tablas. Una aplicación pequeña puede utilizar CQRS ligero si clarifica contratos y pruebas, sin separar almacenes.
 
 La decisión de aplicar CQRS tiene dos consecuencias prácticas. La primera es que el sistema se adapta a las cargas desiguales. La segunda es que el sistema añade complejidad. La combinación de ambas se valora según el contexto del proyecto. El curso aplica CQRS con un único modelo de datos.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Adopta el mínimo nivel de separación que resuelva el problema. La consistencia fuerte y CQRS no son incompatibles por definición.
 
-**La decisión arquitectónica.** Adopta el mínimo nivel de separación que resuelva el problema. La consistencia fuerte y CQRS no son incompatibles por definición.
+El módulo necesita comandos que protejan capacidad y estado, y consultas que presenten DTOs. Esa diferencia justifica una separación pequeña dentro de la misma aplicación.
 
-**Ejemplo concreto en AceriaApp.** El módulo necesita comandos que protejan capacidad y estado, y consultas que presenten DTOs. Esa diferencia justifica una separación pequeña dentro de la misma aplicación.
+Un CRUD de referencias puede permanecer sencillo. Dividir almacenes por anticipación puede aumentar el coste de mantenimiento sin mejorar la consulta que realmente limita al sistema.
 
-**Riesgo, alternativa y límite.** Un CRUD de referencias puede permanecer sencillo. Dividir almacenes por anticipación puede aumentar el coste de mantenimiento sin mejorar la consulta que realmente limita al sistema.
-
-**Comprobación técnica y aprendizaje.** Justifica CQRS con un caso de escritura y uno de lectura que necesiten modelos distintos. Documenta qué evidencia exigirías antes de añadir replicación o servicios separados.
+Justifica CQRS con un caso de escritura y uno de lectura que necesiten modelos distintos. Documenta qué evidencia exigirías antes de añadir replicación o servicios separados.
 
 ---
 
-### Bloque 10 — Aplicación al proyecto del curso
+### Aplicación al proyecto del curso
 
-El contexto de Producción separa commands y queries en mensajes y manejadores distintos. Los commands coordinan los casos de uso de escritura y el agregado; las queries usan un puerto de lectura que devuelve DTOs sin seguimiento. Ambos caminos acceden a la misma persistencia del contexto, sin un segundo almacén de lectura. Los ejemplos `CrearOrdenCommand` y `ObtenerOrdenQuery` ilustran contratos abreviados; la práctica usa los nombres específicos de Producción. Las pruebas verifican efectos de escritura y ausencia de escrituras en las queries, además del catálogo de mensajes.
+En el punto 5.4 AceriaApp utiliza comandos para crear y modificar órdenes de Producción y consultas que devuelven representaciones adecuadas al consumidor. Los handlers expresan contratos de escritura y lectura separados, pero comparten una misma base SQL. El recorrido de prueba crea una orden, confirma sus cambios y la recupera desde otro ámbito, demostrando que la query observa el estado que el command realmente almacenó. Ese resultado es más significativo que verificar que dos records llevan sufijos diferentes. Al terminar, el alumno debería explicar qué partes protege el agregado, qué parte realiza la proyección y en qué circunstancias sería necesario considerar un almacén de lectura separado. Esta comprensión prepara la comunicación posterior entre servicios sin inventar garantías de mensajería que M05 no implementa.
 
 ```text
 Commands       → intención de crear o cambiar una orden de Producción.
@@ -1486,33 +1400,21 @@ Lectura        → sin seguimiento y sin SaveChangesAsync.
 Validación     → pruebas de comportamiento y catálogo de mensajes.
 ```
 
-- **Línea 1:** `Commands       → intención de crear o cambiar una orden de Producción.` → CrearOrdenCommand, CancelarOrdenCommand.
-
-- **Línea 2:** `Queries        → detalle y lista mediante DTOs.` → ObtenerOrdenQuery, ListarOrdenesQuery.
-
-- **Línea 3:** `Manejadores    → contratos de lectura y escritura distintos.` → separados por tipo.
-
-- **Línea 4:** `Base de datos  → compartida dentro del contexto de Producción.` → única.
-
-- **Línea 5:** `Lectura        → sin seguimiento y sin SaveChangesAsync.` → solicita confirmar los cambios y espera el resultado de persistencia.
-
-- **Línea 6:** `Validación     → pruebas de comportamiento y catálogo de mensajes.` → test de coherencia.
+El mapa final relaciona Commands, Queries, sus handlers y DTOs con la persistencia de Producción. La prueba decisiva es leer desde un contexto independiente lo que el comando ha confirmado.
 
 La aplicación de CQRS prepara el proyecto para el punto 5.5, donde se aplicará DDD al dominio de la acería. El punto 5.5 cerrará el módulo 5 con el resumen del estado del proyecto. El punto 5.4 establece la base que se aplicará en el punto 5.5.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Comprueba la separación en dependencias y efectos, además de en nombres de clases. Los sufijos Command y Query son convenciones, no garantías.
 
-**La decisión arquitectónica.** Comprueba la separación en dependencias y efectos, además de en nombres de clases. Los sufijos Command y Query son convenciones, no garantías.
+El recorrido real conserva `ResultadoProduccion<T>` y mensajes propios de Producción. Sus lecturas usan DTOs y sus escrituras pasan por el agregado y la unidad de trabajo.
 
-**Ejemplo concreto en AceriaApp.** El recorrido real conserva `ResultadoProduccion<T>` y mensajes propios de Producción. Sus lecturas usan DTOs y sus escrituras pasan por el agregado y la unidad de trabajo.
+El `Result<T>` abreviado de los fragmentos no es una segunda implementación que deba copiarse encima de la práctica. La API concreta se toma de los archivos del snapshot correspondiente.
 
-**Riesgo, alternativa y límite.** El `Result<T>` abreviado de los fragmentos no es una segunda implementación que deba copiarse encima de la práctica. La API concreta se toma de los archivos del snapshot correspondiente.
-
-**Comprobación técnica y aprendizaje.** Revisa las pruebas de handlers, lectura sin seguimiento y endpoints. Un catálogo puede detectar clasificación errónea de un mensaje, pero no demuestra que una query sea libre de escrituras.
+Revisa las pruebas de handlers, lectura sin seguimiento y endpoints. Un catálogo puede detectar clasificación errónea de un mensaje, pero no demuestra que una query sea libre de escrituras.
 
 ---
 
-### Resumen rápido de la teoría
+### Qué exige realmente CQRS
 
 - CQRS es un patrón arquitectónico que separa las operaciones de escritura de las de lectura.
 - Un command es un mensaje que solicita una acción que modifica el estado del sistema.
@@ -1534,7 +1436,7 @@ En AceriaApp, un command expresa una intención de negocio y una query obtiene u
 
 ![Comando y consulta separados sobre una base SQL Server de Producción](IMAGENES/5-4-sqlserver-cqrs.svg)
 
-*Interpretación del gráfico:* La confirmación es la frontera entre modificar el agregado y poder observar el cambio persistido. La query recorre el camino de lectura y devuelve un DTO. En el test se utiliza un contexto nuevo para que la respuesta no proceda del objeto que acaba de escribir. La figura también se incluye en PNG.
+La confirmación es la frontera entre modificar el agregado y poder observar el cambio persistido. La query recorre el camino de lectura y devuelve un DTO. En el test se utiliza un contexto nuevo para que la respuesta no proceda del objeto que acaba de escribir. La figura también se incluye en PNG.
 
 La base de la aplicación del alumno se llama `AceriaProduccion`. En las pruebas, la factoría utiliza una base con nombre único y conserva `UseSqlServer`. El servidor puede venir de Testcontainers o de `ACERIA_TEST_SQLSERVER`, igual que en M02–M04. El nombre de la base de pruebas cambia para aislar datos; los contratos de comandos, consultas y repositorios no necesitan saberlo.
 
@@ -1565,15 +1467,17 @@ Assert.True(detalle.EsExito);
 Assert.Equal(40, detalle.Valor.CantidadTotal);
 ```
 
-- **Línea 1:** Construye un host de prueba con SQL Server aislado y los registros de aplicación e infraestructura.
-- **Línea 2:** Reserva el identificador que permitirá leer la orden desde otro ámbito.
+El test crea una orden con su command y verifica que el resultado expresa éxito; después abre un ámbito nuevo para ejecutar la query. Ese cambio de contexto evita depender de entidades seguidas en memoria.
+
 - **Líneas 3-4:** Abren el ámbito de escritura; sus dependencias scoped comparten el ciclo de vida de esa operación.
-- **Línea 5:** Resuelve el mediador que localizará el manejador del command.
-- **Línea 6:** Solicita crear la orden y espera a que termine el caso de uso, incluida la confirmación prevista.
+La lectura posterior utiliza el identificador de la orden confirmada. La aserción debe comparar datos persistidos, no únicamente que el handler devolviese un GUID.
+
 - **Líneas 7-8:** Exigen éxito antes de utilizar el identificador devuelto.
-- **Línea 9:** Termina el ámbito de escritura. El siguiente paso no reutiliza su contexto seguido por EF Core.
+El ejemplo muestra por qué la confirmación ocurre antes de preguntar al modelo de lectura. Una consulta que se ejecutara antes del commit no tendría necesariamente acceso al estado definitivo.
+
 - **Líneas 10-11:** Crean otro ámbito y resuelven el mediador para el camino de lectura.
-- **Línea 12:** Ejecuta la query con el identificador de la orden confirmada; su manejador usa el puerto de lectura.
+El análisis une los ámbitos y el comportamiento del proveedor. La garantía de lectura después de escritura no se debe extrapolar a futuras proyecciones asíncronas en otra base.
+
 - **Líneas 13-14:** Comprueban éxito y cantidad en la representación recuperada. La lectura constituye evidencia adicional al resultado del command.
 
 En el laboratorio también se comprueba directamente la base con `factory.NuevoContexto()`. Esa observación complementaria permite revisar la raíz y sus líneas, el estado confirmado y los valores normalizados. La comprobación de queries añade que el contexto no sigue entidades y que no se invoca `SaveChanges`. Son propiedades relacionadas, pero ninguna sustituye a las demás.
