@@ -361,11 +361,15 @@ Parte del snapshot final de M4, con 14 proyectos y 118 pruebas en su línea base
 
 ---
 
-## Desarrollo teórico
+## Identidad, valor e invariantes como decisiones de negocio
 
-### Bloque 1 — Definición de entidad
 
-Una entidad es un objeto del dominio que se distingue por su identidad, no por sus atributos. Dos entidades con los mismos atributos son entidades distintas si tienen identidades distintas. La identidad se asigna en el momento de la creación y permanece invariable durante toda la vida de la entidad. Los atributos de una entidad pueden cambiar a lo largo del tiempo: una orden puede cambiar de estado, de cantidad o de material, pero sigue siendo la misma orden. La identidad es lo que permite rastrear el ciclo de vida de la entidad. En este curso se modelan con clases de estado encapsulado e identificador propio. Una entidad puede tener una representación inmutable: la continuidad de identidad es el criterio decisivo.
+
+Seguiremos el ciclo de una orden de producción para distinguir qué necesita identidad, qué puede representarse por valor y qué reglas deben seguir siendo válidas después de persistir y recuperar el modelo.
+
+### Definición de entidad
+
+Una entidad del dominio representa algo cuya identidad importa a lo largo del tiempo, incluso cuando cambian sus atributos. Una orden de producción puede modificar su cantidad o pasar de borrador a planificada y seguir siendo la misma orden; no debemos confundir esa continuidad con el valor actual de sus propiedades. En DDD, la identidad permite localizar al objeto y mantener su historia, pero las modificaciones deben estar controladas por operaciones que protejan sus invariantes. Una entidad no debería convertirse en una bolsa de setters públicos que el resto del sistema modifica sin reglas. En AceriaApp la orden ofrecerá comportamientos comprensibles para la acería y pruebas que demuestren que no acepta estados imposibles. La persistencia de esa identidad en SQL Server es importante, pero constituye una preocupación distinta de la definición del modelo.
 
 ```csharp
 public sealed class Orden
@@ -392,67 +396,23 @@ public sealed class Orden
 }
 ```
 
-- **Línea 1:** `public sealed class Orden` → declara la clase del ejemplo con responsabilidad explícita.
-
-- **Línea 2:** `{` → abre el bloque actual.
-
-- **Línea 3:** `public Guid Id { get; }` → expone el estado con la mutabilidad indicada por sus accesores.
-
-- **Línea 4:** `public string Cliente { get; }` → expone el estado con la mutabilidad indicada por sus accesores.
-
-- **Línea 5:** `public int Cantidad { get; private set; }` → atributo de la cantidad.
-
-- **Línea 6:** `public Orden(Guid id, string cliente, int cantidad)` → recibe los datos necesarios para construir una entidad válida.
-
-- **Línea 7:** `{` → abre el bloque actual.
-
-- **Línea 8:** `if (id == Guid.Empty) throw new ArgumentException("Identidad obligatoria.");` → rechaza la entrada o transición inválida antes de confirmar cambios.
-
-- **Línea 9:** `ArgumentException.ThrowIfNullOrWhiteSpace(cliente);` → rechaza texto nulo, vacío o compuesto solo de espacios.
-
-- **Línea 10:** `Id = id;` → conserva la identidad recibida tras rechazar el identificador vacío.
-
-- **Línea 11:** `Cliente = cliente;` → conserva el cliente previamente validado.
-
-- **Línea 12:** `CambiarCantidad(cantidad);` → reutiliza la validación de cantidad al construir la entidad.
-
-- **Línea 13:** `}` → cierra el bloque actual.
-
-- **Línea 14:** `public void CambiarCantidad(int nuevaCantidad)` → método que modifica el atributo.
-
-- **Línea 15:** `{` → abre el bloque actual.
-
-- **Línea 16:** `if (nuevaCantidad <= 0)` → valida la nueva cantidad.
-
-- **Línea 17:** `{` → abre el bloque actual.
-
-- **Línea 18:** `throw new ArgumentOutOfRangeException(nameof(nuevaCantidad));` → rechaza la entrada o transición inválida antes de confirmar cambios.
-
-- **Línea 19:** `}` → cierra el bloque actual.
-
-- **Línea 20:** `Cantidad = nuevaCantidad;` → asigna la nueva cantidad.
-
-- **Línea 21:** `}` → cierra el bloque actual.
-
-- **Línea 22:** `}` → cierra el bloque actual.
+La entidad Orden conserva un identificador estable y controla la modificación de su cantidad mediante un método que verifica el valor permitido. Una prueba adecuada debe confirmar que el estado no cambia cuando se intenta aplicar una cantidad inválida.
 
 La entidad se caracteriza por tres propiedades. La primera es que tiene identidad propia: se distingue por su identificador, no por sus atributos. La segunda es que su identidad es inmutable: no cambia durante la vida de la entidad. La tercera es que sus atributos pueden cambiar: la entidad evoluciona a lo largo del tiempo. Las tres propiedades permiten que la entidad represente un concepto del negocio con ciclo de vida.
 
-#### Ampliación didáctica aplicada a AceriaApp
+La entidad protege identidad y evolución. El constructor público debe producir un objeto válido; un setter privado no arregla por sí solo una construcción incompleta.
 
-**La decisión arquitectónica.** La entidad protege identidad y evolución. El constructor público debe producir un objeto válido; un setter privado no arregla por sí solo una construcción incompleta.
+La raíz `OrdenProduccion` conserva su identificador cuando pasa a Planificada. En el ejemplo abreviado, `Orden` recibe identidad, cliente y cantidad y comprueba todo antes de quedar disponible.
 
-**Ejemplo concreto en AceriaApp.** La raíz `OrdenProduccion` conserva su identificador cuando pasa a Planificada. En el ejemplo abreviado, `Orden` recibe identidad, cliente y cantidad y comprueba todo antes de quedar disponible.
+Dos instancias cargadas en contextos EF distintos pueden representar la misma orden aunque no sean la misma referencia. La clase no obtiene igualdad por identidad automáticamente por llamarse entidad.
 
-**Riesgo, alternativa y límite.** Dos instancias cargadas en contextos EF distintos pueden representar la misma orden aunque no sean la misma referencia. La clase no obtiene igualdad por identidad automáticamente por llamarse entidad.
-
-**Comprobación técnica y aprendizaje.** Prueba identificador vacío, cliente vacío y cantidad no positiva. Tras un cambio rechazado, comprueba también que el estado previo siga intacto.
+Prueba identificador vacío, cliente vacío y cantidad no positiva. Tras un cambio rechazado, comprueba también que el estado previo siga intacto.
 
 ---
 
-### Bloque 2 — Identidad de una entidad
+### Identidad de una entidad
 
-La identidad de una entidad puede ser de tres tipos: natural, asignada o generada. La identidad natural proviene del dominio: el número de bastidor de un vehículo es único en el mundo real. La identidad asignada proviene del sistema: el número de factura asignado por el sistema de facturación. La identidad generada proviene de un algoritmo: un `Guid` generado con `Guid.NewGuid`. La elección del tipo de identidad depende del dominio y de los requisitos de unicidad.
+Elegir una identidad requiere pensar cómo se reconoce el mismo objeto desde distintos procesos y momentos. Algunos dominios disponen de identificadores naturales que siguen siendo estables; otros necesitan claves asignadas o generadas, como GUID o ULID. No conviene basar la identidad de una orden en datos que pueden corregirse, como el nombre del cliente o la cantidad de material. Tampoco debe confundirse el identificador persistido con la referencia a un objeto en memoria: dos instancias pueden representar la misma orden si comparten identidad y cumplen la semántica del modelo. En AceriaApp el identificador permite consultar y modificar una orden a través de peticiones diferentes. La regla de igualdad debe estar documentada y ser compatible con su ciclo de vida, sin exponer detalles de infraestructura.
 
 ```text
 Tipos de identidad:
@@ -462,31 +422,23 @@ Asignada  → número de factura, código de pedido.
 Generada  → Guid, ULID, Snowflake ID.
 ```
 
-- **Línea 1:** `Tipos de identidad:` → identifica el tema de las líneas siguientes.
-
-- **Línea 3:** `Natural   → número de bastidor, DNI, ISBN.` → identidad proveniente del dominio.
-
-- **Línea 4:** `Asignada  → número de factura, código de pedido.` → identidad asignada por el sistema.
-
-- **Línea 5:** `Generada  → Guid, ULID, Snowflake ID.` → identidad generada por un algoritmo.
+Los identificadores naturales, asignados o generados tienen compromisos diferentes. La elección depende de estabilidad, interoperabilidad y necesidades de trazabilidad, no de seleccionar automáticamente un tipo GUID para todas las entidades.
 
 La elección del tipo de identidad tiene dos consecuencias prácticas. La primera es que la identidad natural requiere unicidad en el dominio. La segunda es que una identidad generada reduce colisiones según el algoritmo y requiere una política de unicidad; un `Guid` aleatorio ofrece una probabilidad de colisión muy baja, no una prueba matemática de ausencia de colisiones. La combinación de ambas permite elegir el tipo de identidad que mejor se adapte al dominio. El curso usa `Guid` como identidad generada para las entidades principales.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Define el ámbito de unicidad y quién asigna la identidad. Un número visible al usuario puede coexistir con una clave técnica.
 
-**La decisión arquitectónica.** Define el ámbito de unicidad y quién asigna la identidad. Un número visible al usuario puede coexistir con una clave técnica.
+Producción utiliza `Guid` para raíz y entidades hijas que necesitan trazabilidad. Una eventual numeración de orden legible podría ser un atributo adicional con una restricción propia.
 
-**Ejemplo concreto en AceriaApp.** Producción utiliza `Guid` para raíz y entidades hijas que necesitan trazabilidad. Una eventual numeración de orden legible podría ser un atributo adicional con una restricción propia.
+Un ISBN identifica una edición, no cada ejemplar físico; un identificador fiscal puede cambiar o no ser adecuado como clave técnica. Los identificadores naturales requieren analizar el concepto exacto y su estabilidad.
 
-**Riesgo, alternativa y límite.** Un ISBN identifica una edición, no cada ejemplar físico; un identificador fiscal puede cambiar o no ser adecuado como clave técnica. Los identificadores naturales requieren analizar el concepto exacto y su estabilidad.
-
-**Comprobación técnica y aprendizaje.** Rechaza `Guid.Empty` al crear entidades y configura claves en persistencia. No confundas una probabilidad baja de colisión con autorización, secreto o comprobación de existencia.
+Rechaza `Guid.Empty` al crear entidades y configura claves en persistencia. No confundas una probabilidad baja de colisión con autorización, secreto o comprobación de existencia.
 
 ---
 
-### Bloque 3 — Definición de value object
+### Definición de value object
 
-Un value object es un objeto del dominio que se distingue por sus atributos, no por su identidad. Dos value objects con los mismos componentes de igualdad representan el mismo valor, aunque sean instancias distintas. Un value object no tiene identidad ni ciclo de vida independiente que el negocio necesite rastrear: se crea, se usa y se reemplaza. Un value object es inmutable: sus atributos no cambian después de la creación. Un value object no tiene identidad: dos instancias con los mismos valores son intercambiables. Los value objects pueden modelarse con clases, records o structs inmutables, con igualdad por valor e invariantes explícitos. La palabra `record` por sí sola no valida los datos ni vuelve inmutables los objetos contenidos.
+Un objeto de valor representa un concepto por lo que significa su contenido y no por una identidad independiente. Un importe monetario, una cantidad con unidad o un código de material pueden modelarse como valores que se comparan por sus atributos. Su ventaja aparece cuando concentramos validaciones y operaciones pertinentes en un tipo pequeño: dos importes no pueden sumarse sin comprobar la moneda, y un código de material inválido no debería circular libremente por los casos de uso. La inmutabilidad facilita razonar sobre estos objetos, porque modificar una condición equivale a construir un nuevo valor válido en lugar de alterar uno compartido. En AceriaApp estos tipos ayudarán a mantener reglas coherentes sin repetir comprobaciones de cadenas o decimales en cada handler.
 
 ```csharp
 public sealed record Dinero
@@ -512,69 +464,27 @@ public sealed record Dinero
 }
 ```
 
-- **Línea 1:** `public sealed record Dinero` → declara un valor con igualdad por componentes; las reglas deben proteger sus entradas.
-
-- **Línea 2:** `{` → abre el bloque actual.
-
-- **Línea 3:** `public decimal Cantidad { get; }` → expone el estado con la mutabilidad indicada por sus accesores.
-
-- **Línea 4:** `public string Moneda { get; }` → expone el estado con la mutabilidad indicada por sus accesores.
-
-- **Línea 5:** `public Dinero(decimal cantidad, string moneda)` → construye un valor monetario después de validar y normalizar el código de moneda.
-
-- **Línea 6:** `{` → abre el bloque actual.
-
-- **Línea 7:** `ArgumentException.ThrowIfNullOrWhiteSpace(moneda);` → rechaza texto nulo, vacío o compuesto solo de espacios.
-
-- **Línea 8:** `var codigo = moneda.Trim().ToUpperInvariant();` → normaliza el código eliminando espacios extremos y usando mayúsculas invariantes.
-
-- **Línea 9:** `if (codigo.Length != 3 || codigo.Any(c => c < 'A' || c > 'Z'))` → evalúa una precondición antes de continuar.
-
-- **Línea 10:** `throw new ArgumentException("Código de moneda de tres letras.");` → rechaza la entrada o transición inválida antes de confirmar cambios.
-
-- **Línea 11:** `Cantidad = cantidad;` → guarda el importe; esta variante admite importes negativos.
-
-- **Línea 12:** `Moneda = codigo;` → guarda el código ya normalizado.
-
-- **Línea 13:** `}` → cierra el bloque actual.
-
-- **Línea 14:** `public Dinero Sumar(Dinero otro)` → método que devuelve un nuevo value object.
-
-- **Línea 15:** `{` → abre el bloque actual.
-
-- **Línea 16:** `ArgumentNullException.ThrowIfNull(otro);` → rechaza una dependencia o valor nulo.
-
-- **Línea 17:** `if (Moneda != otro.Moneda)` → valida que las monedas coincidan.
-
-- **Línea 18:** `throw new InvalidOperationException("No se pueden sumar monedas distintas.");` → lanza la excepción.
-
-- **Línea 19:** `return new Dinero(Cantidad + otro.Cantidad, Moneda);` → devuelve un nuevo value object.
-
-- **Línea 20:** `}` → cierra el bloque actual.
-
-- **Línea 21:** `}` → cierra el bloque actual.
+El record Dinero concentra moneda y cantidad, normaliza el código de divisa y restringe operaciones entre monedas incompatibles. El ejemplo recuerda que un objeto de valor representa reglas sobre el contenido, no una identidad que deba persistir por separado.
 
 El value object se caracteriza por tres propiedades. La primera es que no tiene identidad: se distingue por sus atributos. La segunda es que es inmutable: sus atributos no cambian después de la creación. La tercera es que sus operaciones devuelven nuevos value objects: no modifican el original. Las tres propiedades permiten que el value object represente conceptos del dominio sin ciclo de vida.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Un value object necesita igualdad por valor, protección de invariantes y una representación que no permita eludir sus reglas al copiarlo.
 
-**La decisión arquitectónica.** Un value object necesita igualdad por valor, protección de invariantes y una representación que no permita eludir sus reglas al copiarlo.
+`NombreMaterial` y `CantidadProduccion` se modelan en la práctica como `sealed record class` con getters sin `init`. En el ejemplo `Dinero`, la moneda se normaliza y `Sumar` devuelve otro objeto.
 
-**Ejemplo concreto en AceriaApp.** `NombreMaterial` y `CantidadProduccion` se modelan en la práctica como `sealed record class` con getters sin `init`. En el ejemplo `Dinero`, la moneda se normaliza y `Sumar` devuelve otro objeto.
+Un record posicional permite copias `with` que pueden saltar validaciones mal ubicadas. Un `readonly record struct` tiene además un valor `default` que no pasa por el constructor; si cero es inválido, el consumidor debe defenderlo o elegir una clase.
 
-**Riesgo, alternativa y límite.** Un record posicional permite copias `with` que pueden saltar validaciones mal ubicadas. Un `readonly record struct` tiene además un valor `default` que no pasa por el constructor; si cero es inválido, el consumidor debe defenderlo o elegir una clase.
-
-**Comprobación técnica y aprendizaje.** Comprueba igualdad de valores equivalentes, desigualdad de valores distintos y ausencia de mutación tras sumar. El ejemplo monetario admite cantidades negativas y solo verifica la forma del código, no un catálogo ISO completo.
+Comprueba igualdad de valores equivalentes, desigualdad de valores distintos y ausencia de mutación tras sumar. El ejemplo monetario admite cantidades negativas y solo verifica la forma del código, no un catálogo ISO completo.
 
 ![Diagrama explicativo del punto 5.2, bloque 3](IMAGENES/5-2-identidad-valor.svg)
 
-*Interpretación del gráfico:* La entidad conserva identidad al cambiar; los value objects equivalentes se comparan por valor y se reemplazan. La figura se distribuye en SVG vectorial y PNG.
+La entidad conserva identidad al cambiar; los value objects equivalentes se comparan por valor y se reemplazan. La figura se distribuye en SVG vectorial y PNG.
 
 ---
 
-### Bloque 4 — Diferencia entre entidad y value object
+### Diferencia entre entidad y value object
 
-La diferencia entre entidad y value object se manifiesta en cuatro aspectos. El primero es la identidad: la entidad tiene identidad propia, el value object no. El segundo es el cambio: la entidad conserva su identidad cuando evoluciona; el value object se sustituye por otro valor. Una entidad inmutable es una elección de implementación válida. El tercero es el ciclo de vida: la entidad tiene ciclo de vida, el value object no. El cuarto es la igualdad: la entidad se compara por identidad, el value object se compara por atributos. Los cuatro aspectos determinan cuándo usar cada uno.
+La diferencia entre entidad y value object no depende de que una clase tenga propiedades con `set` ni de que se guarde en una tabla SQL. Una entidad conserva identidad y ciclo de vida; un valor se reconoce por su contenido y puede reemplazarse por otro equivalente. Por ejemplo, dos órdenes con el mismo material y cantidad siguen siendo órdenes distintas; dos códigos de material normalizados con los mismos caracteres representan el mismo valor. Esta distinción determina cómo se construyen, comparan y modifican los objetos. En AceriaApp conviene aplicar identidad donde el negocio necesita trazabilidad, y utilizar valores cuando lo importante es proteger una magnitud o clasificación. Convertir todos los conceptos en entidades complica las relaciones, mientras asignar objetos de valor a elementos con historia puede borrar información relevante.
 
 ```text
 Comparación entre entidad y value object:
@@ -587,37 +497,23 @@ Ciclo de vida   | Sí                 | No
 Igualdad        | Por identidad      | Por atributos
 ```
 
-- **Línea 1:** `Comparación entre entidad y value object:` → identifica el tema de las líneas siguientes.
-
-- **Línea 3:** `Aspecto         | Entidad            | Value object` → compara el mismo criterio entre entidad y value object.
-
-- **Línea 4:** `----------------|--------------------|------------------` → separa la cabecera de los datos de la comparación.
-
-- **Línea 5:** `Identidad       | Propia             | No tiene` → compara el mismo criterio entre entidad y value object.
-
-- **Línea 6:** `Cambio          | Conserva identidad | Se reemplaza el valor` → compara el mismo criterio entre entidad y value object.
-
-- **Línea 7:** `Ciclo de vida   | Sí                 | No` → compara el mismo criterio entre entidad y value object.
-
-- **Línea 8:** `Igualdad        | Por identidad      | Por atributos` → compara el mismo criterio entre entidad y value object.
+La comparación entre entidad y valor se centra en identidad y reemplazo. Una orden puede cambiar conservando su identidad; un código de material o una cantidad suele sustituirse por otro valor equivalente.
 
 La distinción entre entidad y value object tiene dos consecuencias prácticas. La primera es que la entidad requiere un identificador único. La segunda es que el value object requiere inmutabilidad. La combinación de ambas permite que cada elemento del modelo tenga la forma adecuada al concepto que representa.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Pregunta si una sustitución por otro objeto con iguales valores cambia el significado de negocio. Esa pregunta es más precisa que preguntar si hay una tabla.
 
-**La decisión arquitectónica.** Pregunta si una sustitución por otro objeto con iguales valores cambia el significado de negocio. Esa pregunta es más precisa que preguntar si hay una tabla.
+Dos cantidades de 20 unidades son intercambiables. Dos líneas de orden con 20 unidades pueden ser distintas porque tienen identidades y trazabilidad diferentes.
 
-**Ejemplo concreto en AceriaApp.** Dos cantidades de 20 unidades son intercambiables. Dos líneas de orden con 20 unidades pueden ser distintas porque tienen identidades y trazabilidad diferentes.
+Una entidad representada de forma inmutable sigue siendo entidad si conserva identidad. Un objeto con todos sus setters privados no es automáticamente value object si su igualdad sigue siendo por referencia.
 
-**Riesgo, alternativa y límite.** Una entidad representada de forma inmutable sigue siendo entidad si conserva identidad. Un objeto con todos sus setters privados no es automáticamente value object si su igualdad sigue siendo por referencia.
-
-**Comprobación técnica y aprendizaje.** Escribe dos pruebas separadas: identidad estable tras una transición e igualdad de dos value objects construidos independientemente. No uses la misma comprobación para ambas preguntas.
+Escribe dos pruebas separadas: identidad estable tras una transición e igualdad de dos value objects construidos independientemente. No uses la misma comprobación para ambas preguntas.
 
 ---
 
-### Bloque 5 — Invariantes del dominio
+### Invariantes del dominio
 
-Un invariante es una condición que debe cumplirse en todo momento en el modelo del dominio. Los invariantes se validan en el constructor de la entidad o en los métodos que modifican su estado. Los invariantes expresan reglas que deben cumplirse en los estados observables válidos del modelo; los estados y las transiciones permitidas se definen con el negocio. La violación de un invariante se traduce en una excepción o en un fallo controlado. Los invariantes son la garantía de que el modelo del dominio es consistente.
+Una invariante describe una condición que debe mantenerse verdadera durante la vida válida de un agregado. Si una orden no puede contener una cantidad negativa o pasar de finalizada a borrador, el dominio debe impedir esas situaciones con independencia del endpoint o de la tarea que solicite el cambio. Colocar la regla exclusivamente en FluentValidation protege una entrada HTTP concreta, pero no garantiza que otro canal o caso de uso no la omita. Una entidad bien diseñada ofrece operaciones que conservan su estado válido y rechazan transiciones incompatibles. En AceriaApp comprobaremos la regla creando objetos y solicitando cambios desde tests del dominio, sin necesitar SQL Server. Después las pruebas de persistencia confirmarán que el proveedor conserva los valores correctos.
 
 ```csharp
 public sealed class Orden
@@ -634,51 +530,27 @@ public sealed class Orden
 }
 ```
 
-- **Línea 1:** `public sealed class Orden` → declara la clase del ejemplo con responsabilidad explícita.
-
-- **Línea 2:** `{` → abre el bloque actual.
-
-- **Línea 3:** `public Guid Id { get; }` → expone el estado con la mutabilidad indicada por sus accesores.
-
-- **Línea 4:** `public string Cliente { get; }` → expone el estado con la mutabilidad indicada por sus accesores.
-
-- **Línea 5:** `public Orden(Guid id, string cliente)` → constructor con validación.
-
-- **Línea 6:** `{` → abre el bloque actual.
-
-- **Línea 7:** `if (id == Guid.Empty) throw new ArgumentException("Identidad obligatoria.");` → rechaza la entrada o transición inválida antes de confirmar cambios.
-
-- **Línea 8:** `ArgumentException.ThrowIfNullOrWhiteSpace(cliente);` → rechaza texto nulo, vacío o compuesto solo de espacios.
-
-- **Línea 9:** `Id = id;` → conserva la identidad recibida tras rechazar el identificador vacío.
-
-- **Línea 10:** `Cliente = cliente.Trim();` → guarda el nombre sin espacios exteriores.
-
-- **Línea 11:** `}` → cierra el bloque actual.
-
-- **Línea 12:** `}` → cierra el bloque actual.
+El constructor de Orden rechaza identificadores vacíos y clientes sin contenido, de modo que una instancia válida no depende de que HTTP haya ejecutado previamente esas validaciones. El dominio debe proteger su invariantes desde todos los canales.
 
 Los invariantes se caracterizan por tres propiedades. La primera es que se validan en el momento de la creación. La segunda es que se validan en cada modificación. La tercera es que su violación produce un fallo controlado. Las tres propiedades permiten que el modelo del dominio sea consistente en todo momento.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Cada operación pública del agregado debe terminar con sus invariantes satisfechos o fallar sin exponer un estado parcial.
 
-**La decisión arquitectónica.** Cada operación pública del agregado debe terminar con sus invariantes satisfechos o fallar sin exponer un estado parcial.
+La orden limita el total de sus líneas a 500 unidades. Al añadir una línea, debe validar el total resultante antes de alterar la colección; comprobar solo que la nueva cantidad sea positiva es insuficiente.
 
-**Ejemplo concreto en AceriaApp.** La orden limita el total de sus líneas a 500 unidades. Al añadir una línea, debe validar el total resultante antes de alterar la colección; comprobar solo que la nueva cantidad sea positiva es insuficiente.
+Validar el command mejora el mensaje de error, pero no sustituye la defensa del dominio: un test, una importación o un nuevo adaptador pueden invocar la entidad directamente.
 
-**Riesgo, alternativa y límite.** Validar el command mejora el mensaje de error, pero no sustituye la defensa del dominio: un test, una importación o un nuevo adaptador pueden invocar la entidad directamente.
-
-**Comprobación técnica y aprendizaje.** Prueba el límite exacto, el valor inmediatamente superior y el estado después del rechazo. Verifica también que no se pueda finalizar una orden en Borrador.
+Prueba el límite exacto, el valor inmediatamente superior y el estado después del rechazo. Verifica también que no se pueda finalizar una orden en Borrador.
 
 ![Diagrama explicativo del punto 5.2, bloque 5](IMAGENES/5-2-invariantes.svg)
 
-*Interpretación del gráfico:* La raíz verifica estado y total antes de permitir una modificación. Las líneas no deben eludir esa entrada. La figura se distribuye en SVG vectorial y PNG.
+La raíz verifica estado y total antes de permitir una modificación. Las líneas no deben eludir esa entrada. La figura se distribuye en SVG vectorial y PNG.
 
 ---
 
-### Bloque 6 — Composición de value objects
+### Composición de value objects
 
-Los value objects se componen para formar estructuras más complejas. Un value object puede contener otros value objects. La composición mantiene la inmutabilidad: cada modificación produce un nuevo value object. La composición permite que el modelo del dominio tenga estructuras expresivas. La composición no introduce identidad: el value object compuesto sigue siendo un value object.
+Los objetos de valor pueden componerse para expresar conceptos más ricos sin convertir cada pieza en una entidad. Una dirección combina calle, ciudad y código postal, pero eso no significa que cada parte tenga identidad o ciclo de vida propios. La composición permite repartir validaciones sencillas, como evitar una calle vacía o normalizar determinados formatos, y disponer de un objeto completo que represente la dirección como unidad. No obstante, esas reglas tienen un ámbito: los códigos postales y formatos reales varían según el país, por lo que no deben generalizarse a partir de un ejemplo corto. En AceriaApp aplicaremos la misma idea a materiales y cantidades, conservando la intención de cada tipo. La calidad del modelo se observa cuando el código puede expresar operaciones sin manipular cadenas opacas.
 
 ```csharp
 public sealed record Calle
@@ -720,97 +592,23 @@ public sealed class Cliente
 }
 ```
 
-- **Línea 1:** `public sealed record Calle` → declara un valor con igualdad por componentes; las reglas deben proteger sus entradas.
-
-- **Línea 2:** `{` → abre el bloque actual.
-
-- **Línea 3:** `public string Valor { get; }` → expone el estado con la mutabilidad indicada por sus accesores.
-
-- **Línea 4:** `public Calle(string valor)` → construye una calle a partir del texto validado.
-
-- **Línea 5:** `{` → abre el bloque actual.
-
-- **Línea 6:** `ArgumentException.ThrowIfNullOrWhiteSpace(valor);` → rechaza texto nulo, vacío o compuesto solo de espacios.
-
-- **Línea 7:** `Valor = valor.Trim();` → elimina espacios exteriores del texto validado.
-
-- **Línea 8:** `}` → cierra el bloque actual.
-
-- **Línea 9:** `}` → cierra el bloque actual.
-
-- **Línea 10:** `public sealed record Ciudad(string Valor);` → declara un valor con igualdad por componentes; las reglas deben proteger sus entradas.
-
-- **Línea 11:** `public sealed record CodigoPostal(string Valor);` → declara un valor con igualdad por componentes; las reglas deben proteger sus entradas.
-
-- **Línea 12:** `public sealed record Direccion` → declara un valor con igualdad por componentes; las reglas deben proteger sus entradas.
-
-- **Línea 13:** `{` → abre el bloque actual.
-
-- **Línea 14:** `public Calle Calle { get; }` → expone el estado con la mutabilidad indicada por sus accesores.
-
-- **Línea 15:** `public Ciudad Ciudad { get; }` → expone el estado con la mutabilidad indicada por sus accesores.
-
-- **Línea 16:** `public CodigoPostal CodigoPostal { get; }` → expone el estado con la mutabilidad indicada por sus accesores.
-
-- **Línea 17:** `public Direccion(Calle calle, Ciudad ciudad, CodigoPostal codigoPostal)` → recibe los componentes inmutables de la dirección.
-
-- **Línea 18:** `{` → abre el bloque actual.
-
-- **Línea 19:** `ArgumentNullException.ThrowIfNull(calle);` → rechaza una dependencia o valor nulo.
-
-- **Línea 20:** `ArgumentNullException.ThrowIfNull(ciudad);` → rechaza una dependencia o valor nulo.
-
-- **Línea 21:** `ArgumentNullException.ThrowIfNull(codigoPostal);` → rechaza una dependencia o valor nulo.
-
-- **Línea 22:** `ArgumentException.ThrowIfNullOrWhiteSpace(ciudad.Valor);` → rechaza texto nulo, vacío o compuesto solo de espacios.
-
-- **Línea 23:** `ArgumentException.ThrowIfNullOrWhiteSpace(codigoPostal.Valor);` → rechaza texto nulo, vacío o compuesto solo de espacios.
-
-- **Línea 24:** `Calle = calle;` → conserva el componente de calle validado.
-
-- **Línea 25:** `Ciudad = ciudad;` → conserva el componente de ciudad validado.
-
-- **Línea 26:** `CodigoPostal = codigoPostal;` → conserva el componente postal validado.
-
-- **Línea 27:** `}` → cierra el bloque actual.
-
-- **Línea 28:** `}` → cierra el bloque actual.
-
-- **Línea 29:** `public sealed class Cliente` → declara la clase del ejemplo con responsabilidad explícita.
-
-- **Línea 30:** `{` → abre el bloque actual.
-
-- **Línea 31:** `public Guid Id { get; } = Guid.NewGuid();` → expone el estado con la mutabilidad indicada por sus accesores.
-
-- **Línea 32:** `public Direccion DireccionFiscal { get; private set; }` → atributo con value object.
-
-- **Línea 33:** `public Cliente(Direccion direccion) => DireccionFiscal = direccion` → inicializa la dirección fiscal; la línea siguiente impide aceptar null.
-
-- **Línea 34:** `?? throw new ArgumentNullException(nameof(direccion));` → rechaza la entrada o transición inválida antes de confirmar cambios.
-
-- **Línea 35:** `public void CambiarDireccionFiscal(Direccion nueva) => DireccionFiscal = nueva` → método que modifica el value object.
-
-- **Línea 36:** `?? throw new ArgumentNullException(nameof(nueva));` → rechaza la entrada o transición inválida antes de confirmar cambios.
-
-- **Línea 37:** `}` → cierra el bloque actual.
+Direccion compone Calle, Ciudad y CodigoPostal para expresar un concepto completo. La composición permite validar partes por separado, pero las reglas concretas deben adaptarse al contexto geográfico y funcional real.
 
 La composición de value objects tiene dos consecuencias prácticas. La primera es que el modelo del dominio se expresa con tipos específicos. La segunda es que la validación de cada componente se realiza en su propio value object. La combinación de ambas permite que el modelo sea más expresivo y que la validación esté distribuida.
 
-#### Ampliación didáctica aplicada a AceriaApp
+La inmutabilidad debe abarcar los componentes. Un record que contiene una lista mutable sigue permitiendo cambios observables a través de esa lista.
 
-**La decisión arquitectónica.** La inmutabilidad debe abarcar los componentes. Un record que contiene una lista mutable sigue permitiendo cambios observables a través de esa lista.
+Una dirección se sustituye completa cuando cambia; una orden compone cantidades y materiales en sus líneas. El ejemplo de dirección muestra composición y rechazo de componentes vacíos antes de asignarlos a `Cliente`.
 
-**Ejemplo concreto en AceriaApp.** Una dirección se sustituye completa cuando cambia; una orden compone cantidades y materiales en sus líneas. El ejemplo de dirección muestra composición y rechazo de componentes vacíos antes de asignarlos a `Cliente`.
+`Ciudad` y `CodigoPostal` son envoltorios abreviados en este fragmento; la dirección comprueba que no estén vacíos. Un modelo completo trasladaría reglas geográficas específicas a sus tipos, sin asumir que todos los países usan el mismo formato postal.
 
-**Riesgo, alternativa y límite.** `Ciudad` y `CodigoPostal` son envoltorios abreviados en este fragmento; la dirección comprueba que no estén vacíos. Un modelo completo trasladaría reglas geográficas específicas a sus tipos, sin asumir que todos los países usan el mismo formato postal.
-
-**Comprobación técnica y aprendizaje.** Comprueba que reemplazar la dirección de un cliente no cambie otra instancia que compartía la dirección anterior. Protege las colecciones con una vista que no permita añadir o quitar elementos desde fuera.
+Comprueba que reemplazar la dirección de un cliente no cambie otra instancia que compartía la dirección anterior. Protege las colecciones con una vista que no permita añadir o quitar elementos desde fuera.
 
 ---
 
-### Bloque 7 — Persistencia de entidades y value objects
+### Persistencia de entidades y value objects
 
-La persistencia traduce el modelo sin definir su identidad de negocio. Una entidad suele mapearse con una clave, pero entidad no equivale a tabla: un agregado puede repartirse en varias tablas. Un value object se persiste como parte del propietario mediante un conversor, un tipo owned o un tipo complejo según su forma. EF Core 8 admite tipos complejos con limitaciones propias de esa versión. Una clave técnica de un tipo owned no convierte el concepto en una entidad del dominio.
+Persistir una entidad y persistir un objeto de valor son problemas relacionados pero no idénticos. La entidad necesita conservar su identidad y sus transiciones; un objeto de valor puede almacenarse como conjunto de columnas, tipo complejo o representación propia según las capacidades de EF Core. El mapeo debe respetar la igualdad, normalización e inmutabilidad que el dominio define, sin forzar a la entidad a exponer setters públicos únicamente para facilitar el ORM. En AceriaApp se utiliza SQL Server real para demostrar que los objetos se reconstruyen correctamente después de guardarse y recuperarse desde otro contexto. Un test que solo compara instancias en memoria no certifica el mapeo de un `CodigoMaterial` ni las restricciones relacionales del proveedor.
 
 ```csharp
 public sealed record CodigoMaterial
@@ -846,89 +644,27 @@ public sealed class OrdenConfiguracion : IEntityTypeConfiguration<OrdenPersistid
 }
 ```
 
-- **Línea 1:** `public sealed record CodigoMaterial` → declara un valor con igualdad por componentes; las reglas deben proteger sus entradas.
-
-- **Línea 2:** `{` → abre el bloque actual.
-
-- **Línea 3:** `public string Valor { get; }` → expone el estado con la mutabilidad indicada por sus accesores.
-
-- **Línea 4:** `public CodigoMaterial(string valor)` → construye el código normalizado que se convertirá a una columna.
-
-- **Línea 5:** `{` → abre el bloque actual.
-
-- **Línea 6:** `ArgumentException.ThrowIfNullOrWhiteSpace(valor);` → rechaza texto nulo, vacío o compuesto solo de espacios.
-
-- **Línea 7:** `Valor = valor.Trim().ToUpperInvariant();` → normaliza espacios y mayúsculas para comparar códigos equivalentes.
-
-- **Línea 8:** `}` → cierra el bloque actual.
-
-- **Línea 9:** `}` → cierra el bloque actual.
-
-- **Línea 10:** `public sealed class OrdenPersistida` → declara la clase del ejemplo con responsabilidad explícita.
-
-- **Línea 11:** `{` → abre el bloque actual.
-
-- **Línea 12:** `public Guid Id { get; private set; }` → expone el estado con la mutabilidad indicada por sus accesores.
-
-- **Línea 13:** `public CodigoMaterial Material { get; private set; } = null!;` → expone el estado con la mutabilidad indicada por sus accesores.
-
-- **Línea 14:** `private OrdenPersistida() { }` → ofrece a EF un constructor privado para materializar la entidad.
-
-- **Línea 15:** `public OrdenPersistida(Guid id, CodigoMaterial material)` → crea la entidad con identidad y value object obligatorios.
-
-- **Línea 16:** `{` → abre el bloque actual.
-
-- **Línea 17:** `if (id == Guid.Empty) throw new ArgumentException("Identidad obligatoria.");` → rechaza la entrada o transición inválida antes de confirmar cambios.
-
-- **Línea 18:** `Id = id;` → conserva la identidad recibida tras rechazar el identificador vacío.
-
-- **Línea 19:** `Material = material ?? throw new ArgumentNullException(nameof(material));` → rechaza la entrada o transición inválida antes de confirmar cambios.
-
-- **Línea 20:** `}` → cierra el bloque actual.
-
-- **Línea 21:** `}` → cierra el bloque actual.
-
-- **Línea 22:** `public sealed class OrdenConfiguracion : IEntityTypeConfiguration<OrdenPersistida>` → declara la configuración de persistencia fuera del dominio.
-
-- **Línea 23:** `{` → abre el bloque actual.
-
-- **Línea 24:** `public void Configure(EntityTypeBuilder<OrdenPersistida> builder)` → recibe el constructor del modelo de EF Core.
-
-- **Línea 25:** `{` → abre el bloque actual.
-
-- **Línea 26:** `builder.HasKey(o => o.Id);` → define la clave primaria.
-
-- **Línea 27:** `builder.Property(o => o.Material)` → selecciona la propiedad cuyo almacenamiento se configura.
-
-- **Línea 28:** `.HasConversion(v => v.Valor, v => new CodigoMaterial(v))` → traduce el value object a su representación almacenada y lo reconstruye.
-
-- **Línea 29:** `.HasMaxLength(50).IsRequired();` → configura restricciones del almacenamiento, adicionales a las del dominio.
-
-- **Línea 30:** `}` → cierra el bloque actual.
-
-- **Línea 31:** `}` → cierra el bloque actual.
+El mapeo de CodigoMaterial en EF Core debe conservar la normalización del valor al guardarlo y recuperarlo. Solo una prueba con SQL Server puede confirmar que la configuración del proveedor reconstruye correctamente los objetos persistidos.
 
 La persistencia de entidades y value objects tiene dos consecuencias prácticas. La primera es que el mapeo preserva la identidad de las entidades. La segunda es que los value objects se reconstruyen como valores válidos del propietario. La combinación de ambas permite que el modelo del dominio se refleje en el esquema de la base de datos.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Elige el mapeo por la forma del valor y las capacidades concretas de EF Core 8. El dominio no debe incorporar atributos de transporte para facilitar el ORM.
 
-**La decisión arquitectónica.** Elige el mapeo por la forma del valor y las capacidades concretas de EF Core 8. El dominio no debe incorporar atributos de transporte para facilitar el ORM.
+El ejemplo convierte `CodigoMaterial` a una columna y lo reconstruye al leer. La práctica mantiene la configuración de `OrdenProduccion` en Infraestructura y recupera las líneas necesarias para verificar el total.
 
-**Ejemplo concreto en AceriaApp.** El ejemplo convierte `CodigoMaterial` a una columna y lo reconstruye al leer. La práctica mantiene la configuración de `OrdenProduccion` en Infraestructura y recupera las líneas necesarias para verificar el total.
+`OwnsOne` tiene identidad técnica de seguimiento; `ComplexProperty` modela valores sin identidad de entidad; un conversor simple mapea un valor a una columna. No son intercambiables sin revisar consultas, nulabilidad y límites de la versión.
 
-**Riesgo, alternativa y límite.** `OwnsOne` tiene identidad técnica de seguimiento; `ComplexProperty` modela valores sin identidad de entidad; un conversor simple mapea un valor a una columna. No son intercambiables sin revisar consultas, nulabilidad y límites de la versión.
-
-**Comprobación técnica y aprendizaje.** Guarda y vuelve a cargar en un contexto nuevo. Comprueba identidad, material, cantidad y colección; una prueba que solo conserva el objeto en memoria no verifica el mapeo.
+Guarda y vuelve a cargar en un contexto nuevo. Comprueba identidad, material, cantidad y colección; una prueba que solo conserva el objeto en memoria no verifica el mapeo.
 
 ![Diagrama explicativo del punto 5.2, bloque 7](IMAGENES/5-2-persistencia.svg)
 
-*Interpretación del gráfico:* El mapeo convierte el modelo a almacenamiento; los identificadores técnicos de EF no deciden la semántica del dominio. La figura se distribuye en SVG vectorial y PNG.
+El mapeo convierte el modelo a almacenamiento; los identificadores técnicos de EF no deciden la semántica del dominio. La figura se distribuye en SVG vectorial y PNG.
 
 ---
 
-### Bloque 8 — Cuándo usar entidad y cuándo usar value object
+### Cuándo usar entidad y cuándo usar value object
 
-La decisión entre entidad y value object comienza por la identidad dentro del contexto. Si es necesario seguir el mismo objeto aunque cambien sus atributos, se modela como entidad. Si dos instancias con los mismos valores son intercambiables, se modela como value object. El ciclo de vida ayuda a descubrir identidad; la frecuencia de cambio no decide: una dirección puede cambiar muchas veces y seguir siendo un value object que se reemplaza.
+Para escoger entre entidad y valor conviene formular dos preguntas: si el concepto conserva una identidad reconocible y si el negocio necesita seguir su evolución a lo largo del tiempo. La frecuencia de cambios o el número de propiedades no deciden por sí solos. Una cantidad puede reemplazarse por otra sin que exista una «cantidad número 42» que deba rastrearse; una orden necesita identidad aunque sus datos permanezcan sin cambios durante meses. En AceriaApp los códigos y magnitudes pueden modelarse como objetos de valor, mientras las órdenes y elementos con historia permanecen como entidades. La decisión debe explicarse con ejemplos del dominio, no con una regla genérica de clases mutables frente a records inmutables.
 
 ```text
 Criterios de decisión:
@@ -940,35 +676,23 @@ Sin identidad    → value object.
 Sin ciclo vida   → value object.
 ```
 
-- **Línea 1:** `Criterios de decisión:` → identifica el tema de las líneas siguientes.
-
-- **Línea 3:** `Identidad        → entidad.` → relaciona el concepto con su responsabilidad dentro del ejemplo.
-
-- **Línea 4:** `Cambio frecuente → no decide por sí solo.` → relaciona el concepto con su responsabilidad dentro del ejemplo.
-
-- **Línea 5:** `Ciclo de vida    → entidad.` → relaciona el concepto con su responsabilidad dentro del ejemplo.
-
-- **Línea 6:** `Sin identidad    → value object.` → relaciona el concepto con su responsabilidad dentro del ejemplo.
-
-- **Línea 7:** `Sin ciclo vida   → value object.` → relaciona el concepto con su responsabilidad dentro del ejemplo.
+La clasificación recuerda que identidad y ciclo de vida son señales más fiables que la mutabilidad del tipo. Un record no se convierte automáticamente en value object correcto si su semántica todavía depende de una identidad oculta.
 
 La decisión tiene dos consecuencias prácticas. La primera es que el modelo del dominio se ajusta a la naturaleza del concepto. La segunda es que la persistencia se adapta al tipo de elemento. La combinación de ambas permite que el modelo sea consistente con el negocio.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Decide por el significado dentro del contexto. El mismo concepto puede modelarse de forma diferente cuando cambian las preguntas del negocio.
 
-**La decisión arquitectónica.** Decide por el significado dentro del contexto. El mismo concepto puede modelarse de forma diferente cuando cambian las preguntas del negocio.
+Producción puede necesitar solo el nombre del material como value object. Compras podría requerir una entidad Material con proveedor, homologaciones e historial independiente.
 
-**Ejemplo concreto en AceriaApp.** Producción puede necesitar solo el nombre del material como value object. Compras podría requerir una entidad Material con proveedor, homologaciones e historial independiente.
+No compartas el tipo de Compras por tener el mismo nombre. Tampoco conviertas automáticamente la dirección en entidad porque se cambie muchas veces.
 
-**Riesgo, alternativa y límite.** No compartas el tipo de Compras por tener el mismo nombre. Tampoco conviertas automáticamente la dirección en entidad porque se cambie muchas veces.
-
-**Comprobación técnica y aprendizaje.** Documenta si importan identidad, historial y reemplazo. Si dos valores equivalentes dejan de ser intercambiables por una regla nueva, revisa la clasificación y las migraciones necesarias.
+Documenta si importan identidad, historial y reemplazo. Si dos valores equivalentes dejan de ser intercambiables por una regla nueva, revisa la clasificación y las migraciones necesarias.
 
 ---
 
-### Bloque 9 — Errores comunes en entidades y value objects
+### Errores comunes en entidades y value objects
 
-Los errores más comunes en entidades y value objects son cinco. El primero es modelar como entidad un concepto que no tiene identidad. El segundo es modelar como value object un concepto que tiene identidad. El tercero es hacer mutable un value object. El cuarto es confundir igualdad por referencia con identidad de negocio. El quinto es no validar los invariantes en el constructor. Los cinco errores se corrigen aplicando los criterios de decisión y las reglas de validación.
+Un modelo pobre suele aparecer cuando se introduce identidad innecesaria en valores sencillos, cuando una entidad solo contiene setters públicos o cuando las reglas se aplican de forma diferente desde cada entrada. También es problemático confundir igualdad por referencia con igualdad del negocio: dos instancias cargadas desde SQL pueden representar la misma entidad sin ser el mismo objeto de memoria. Los value objects requieren una definición consistente de igualdad y de normalización; las entidades necesitan métodos que preserven sus invariantes. En AceriaApp evitaremos introducir patrones por apariencia y revisaremos qué error de negocio previene cada tipo. Los tests deben demostrar comparaciones, transiciones y persistencia, no solo que los nombres elegidos coinciden con el catálogo DDD.
 
 ```text
 Errores comunes:
@@ -980,35 +704,23 @@ Identidad confundida con referencia en memoria.
 Invariantes sin validar.
 ```
 
-- **Línea 1:** `Errores comunes:` → identifica el tema de las líneas siguientes.
-
-- **Línea 3:** `Entidad para concepto sin identidad.` → primer error.
-
-- **Línea 4:** `Value object para concepto con identidad.` → segundo error.
-
-- **Línea 5:** `Value object mutable.` → tercer error.
-
-- **Línea 6:** `Identidad confundida con referencia en memoria.` → dos instancias distintas pueden representar la misma entidad de negocio.
-
-- **Línea 7:** `Invariantes sin validar.` → quinto error.
+La lista destaca errores habituales: entidades sin comportamiento, objetos de valor con cambios inesperados y reglas que solo viven en endpoints. El criterio de revisión es qué invariante concreta protege cada tipo.
 
 Los errores tienen dos consecuencias prácticas. La primera es que el modelo del dominio no refleja el negocio. La segunda es que la persistencia produce inconsistencias. La combinación de ambas se corrige revisando el modelo con los criterios de decisión.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Evita vías laterales que permitan violar reglas: setters públicos, colecciones mutables, constructores vacíos públicos o valores por defecto inválidos.
 
-**La decisión arquitectónica.** Evita vías laterales que permitan violar reglas: setters públicos, colecciones mutables, constructores vacíos públicos o valores por defecto inválidos.
+La orden debe añadir líneas mediante su método de dominio y exponer una colección de lectura. La línea hija no debe ofrecer una mutación pública que aumente su cantidad saltándose la capacidad total.
 
-**Ejemplo concreto en AceriaApp.** La orden debe añadir líneas mediante su método de dominio y exponer una colección de lectura. La línea hija no debe ofrecer una mutación pública que aumente su cantidad saltándose la capacidad total.
+Una propiedad de tipo `IReadOnlyList<T>` puede ocultar una lista que sigue siendo modificable mediante conversión si se expone la instancia concreta. Usa una vista de solo lectura o copia y controla también los elementos.
 
-**Riesgo, alternativa y límite.** Una propiedad de tipo `IReadOnlyList<T>` puede ocultar una lista que sigue siendo modificable mediante conversión si se expone la instancia concreta. Usa una vista de solo lectura o copia y controla también los elementos.
-
-**Comprobación técnica y aprendizaje.** Intenta modificar desde el exterior la colección y sus elementos. Comprueba que solo la raíz permita cambios y que las entradas nulas o inválidas nunca creen una línea persistible.
+Intenta modificar desde el exterior la colección y sus elementos. Comprueba que solo la raíz permita cambios y que las entradas nulas o inválidas nunca creen una línea persistible.
 
 ---
 
-### Bloque 10 — Aplicación al proyecto del curso
+### Aplicación al proyecto del curso
 
-El módulo conserva ejemplos conceptuales de `Orden`, `Material` y `Cliente`, así como de `Dinero`, `Direccion` y `Cantidad`. No todos se implementan como componentes productivos. La práctica concentra el comportamiento ejecutable en el agregado `OrdenProduccion`, sus entidades hijas y sus value objects dentro de `AceriaApp.Produccion.Dominio`. Las pruebas del catálogo verifican clasificación; las pruebas de dominio ejercitan creación, igualdad, límites y transiciones reales. Los invariantes se protegen tanto al construir como al cambiar el agregado.
+El punto 5.2 lleva el lenguaje de Producción a objetos que protegen datos y estados. El agregado de orden conserva su identidad y ofrece operaciones controladas, mientras los objetos de valor expresan magnitudes o identificadores con reglas propias. El alumno podrá comparar esa estructura con las entidades más simples de los módulos anteriores y reconocer por qué ciertos cambios no deberían exponerse como setters. La implementación sobre EF Core requiere pruebas adicionales para comprobar que los datos y valores se reconstruyen correctamente en SQL Server. Los catálogos descriptivos de entidades y valores ayudan a discutir el diseño, pero la evidencia de un dominio sólido está en su comportamiento, sus invariantes y su persistencia observada.
 
 ```text
 Modelo conceptual → Orden, Material, Cliente; Dinero, Direccion, Cantidad.
@@ -1018,31 +730,21 @@ Inmutabilidad     → value objects con invariantes e igualdad por valor.
 Comprobación      → catálogo descriptivo y pruebas de comportamiento.
 ```
 
-- **Línea 1:** `Modelo conceptual → Orden, Material, Cliente; Dinero, Direccion, Cantidad.` → relaciona el concepto con su responsabilidad dentro del ejemplo.
-
-- **Línea 2:** `Implementación    → agregado OrdenProduccion y sus objetos de dominio.` → relaciona el concepto con su responsabilidad dentro del ejemplo.
-
-- **Línea 3:** `Identidad         → estable en raíz e hijos que requieren trazabilidad.` → Guid en las entidades.
-
-- **Línea 4:** `Inmutabilidad     → value objects con invariantes e igualdad por valor.` → record en los value objects.
-
-- **Línea 5:** `Comprobación      → catálogo descriptivo y pruebas de comportamiento.` → relaciona el concepto con su responsabilidad dentro del ejemplo.
+El mapa final relaciona el agregado OrdenProduccion con valores de cantidad y material. Su utilidad no es que todo concepto tenga una clase, sino que el alumno pueda demostrar qué estados son posibles y qué datos conserva SQL Server.
 
 La aplicación de entidades y value objects prepara el proyecto para los puntos 5.3, 5.4 y 5.5. El punto 5.3 estudiará los casos de uso. El punto 5.4 estudiará la separación entre commands y queries. El punto 5.5 aplicará DDD al dominio de la acería. El punto 5.2 establece la base que se aplicará en los tres puntos siguientes.
 
-#### Ampliación didáctica aplicada a AceriaApp
+El inventario real del punto debe distinguir tipos de la implementación y ejemplos usados para comparar alternativas.
 
-**La decisión arquitectónica.** El inventario real del punto debe distinguir tipos de la implementación y ejemplos usados para comparar alternativas.
+El modelo ejecutable se centra en `OrdenProduccion`, `LineaDeOrden`, `NombreMaterial` y `CantidadProduccion`. `Dinero` y `Direccion` explican igualdad y composición, pero no implican un módulo financiero o postal implementado.
 
-**Ejemplo concreto en AceriaApp.** El modelo ejecutable se centra en `OrdenProduccion`, `LineaDeOrden`, `NombreMaterial` y `CantidadProduccion`. `Dinero` y `Direccion` explican igualdad y composición, pero no implican un módulo financiero o postal implementado.
+Un test que clasifica la palabra Dinero como value object no comprueba que su suma, igualdad o serialización sean correctas. Esa evidencia requiere ejecutar el tipo concreto.
 
-**Riesgo, alternativa y límite.** Un test que clasifica la palabra Dinero como value object no comprueba que su suma, igualdad o serialización sean correctas. Esa evidencia requiere ejecutar el tipo concreto.
-
-**Comprobación técnica y aprendizaje.** Revisa el proyecto de dominio y sus pruebas de comportamiento. Identifica constructor válido, transición válida, rechazo y preservación del estado para cada regla implementada.
+Revisa el proyecto de dominio y sus pruebas de comportamiento. Identifica constructor válido, transición válida, rechazo y preservación del estado para cada regla implementada.
 
 ---
 
-### Resumen rápido de la teoría
+### Qué distingue una entidad de un valor
 
 - Una entidad es un objeto del dominio que se distingue por su identidad.
 - La identidad de una entidad puede ser natural, asignada o generada.
