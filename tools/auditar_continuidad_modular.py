@@ -57,7 +57,8 @@ def inspect(module: int):
     print(result,flush=True)
     return result
 
-def materializar_limite(module: int, target: Path) -> dict:
+def materializar_limite(module: int, target: Path,
+                       origen_reconstruido: Path | None = None) -> dict:
     """Reconstruye Mx.1 desde M(x-1) final usando solo operaciones del nuevo manual.
 
     Permite el caso M03.1 donde el módulo anterior no tenía AceriaApp.sln:
@@ -68,7 +69,8 @@ def materializar_limite(module: int, target: Path) -> dict:
         raise ValueError("Solo M03..M08")
     prev_folder, prev_stages = CONFIG[module-1]
     this_folder, this_stages = CONFIG[module]
-    prev_root = ROOT / prev_folder / "PROYECTO" / prev_stages[-1]
+    prev_root = (origen_reconstruido if origen_reconstruido is not None
+                 else ROOT / prev_folder / "PROYECTO" / prev_stages[-1])
     canonical_root = ROOT / this_folder / "PROYECTO" / this_stages[0]
     previous = files(prev_root)
     canonical = files(canonical_root)
