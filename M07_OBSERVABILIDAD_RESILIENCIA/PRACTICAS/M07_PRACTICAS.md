@@ -40,6 +40,12 @@ El alumno trabaja en **Windows con PowerShell, Visual Studio, .NET 8 y SQL Serve
 
 # Punto 7.1 — Logging
 
+## Observar las peticiones entre servicios con información útil
+
+El registro de eventos es necesario para comprender qué ocurrió cuando una solicitud atraviesa Producción, Inventario y RabbitMQ. No basta con imprimir mensajes libres en la consola: un log estructurado debe aportar nivel, instante, identificadores de correlación y contexto suficiente para investigar errores sin exponer datos sensibles. La misma correlación permite relacionar los eventos de procesos distintos.
+
+Partiremos del estado completo de M06, conservando sus comunicaciones HTTP y asíncronas. Las clases de catálogo del punto 7.1 ayudarán a discutir decisiones de logging, mientras Serilog y la configuración efectiva de las API ofrecerán el comportamiento que debemos comprobar. Una propiedad declarada como logging estructurado no demuestra por sí sola que se hayan emitido registros JSON; estos se verifican durante la ejecución.
+
 **Carpeta de trabajo:** `M07_OBSERVABILIDAD_RESILIENCIA/PROYECTO/7.1-logging`.
 
 **Objetivo:** completar los veinticuatro pasos, conservar la etapa anterior y comprobar el análisis y el comportamiento ejecutable. La etapa termina con 309 pruebas en 31 proyectos y 19 proyectos de tests.
@@ -48,16 +54,13 @@ El alumno trabaja en **Windows con PowerShell, Visual Studio, .NET 8 y SQL Serve
 
 ### PASO 7.1.1 — Crear la estructura del módulo 7 y del punto 7.1
 
-**Resultado de aprendizaje.** Crear la estructura del módulo 7 y del punto 7.1. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+El punto 7.1 comienza con una copia completa de M06 6.3 y conserva las comunicaciones previas. Comparar el estado heredado con la etapa nueva permite localizar regresiones y evita alterar la referencia histórica.
 
 1. Localiza la etapa completa `M06_COMUNICACION_MICROSERVICIOS/PROYECTO/6.3-cuando-usar-cada-enfoque`; comprueba que contiene `AceriaApp.sln`.
 2. Crea `M07_OBSERVABILIDAD_RESILIENCIA/PROYECTO/7.1-logging` y copia en ella el contenido de `6.3-cuando-usar-cada-enfoque`; en Windows usa `xcopy` con `/E /I /H /Y`.
 3. Excluye `bin`, `obj`, `TestResults` y `.vs`; trabaja solamente dentro de `7.1-logging`.
 4. Comprueba con `dir` que aparecen `AceriaApp.sln`, `README.md`, `src`, `tests`, `docs` y `global.json`.
 
-**Por qué funciona así.** La etapa autónoma continúa 29 proyectos y 283 pruebas antes de añadir los cambios del punto.
 
 **Verificación concreta.** La copia corresponde a `6.3-cuando-usar-cada-enfoque` y conserva todas sus carpetas de código y documentación.
 
@@ -68,16 +71,13 @@ El alumno trabaja en **Windows con PowerShell, Visual Studio, .NET 8 y SQL Serve
 
 ### PASO 7.1.2 — Abrir la solución copiada en Visual Studio con soporte .NET 8
 
-**Resultado de aprendizaje.** Abrir la solución copiada en Visual Studio con soporte .NET 8. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Compilar la copia detecta rutas y dependencias incompletas antes de añadir archivos.
 
 1. Abre el `AceriaApp.sln` de `7.1-logging` en Visual Studio.
 2. Ejecuta `dotnet sln AceriaApp.sln list` y comprueba los 29 proyectos heredados.
 3. Ejecuta `dotnet restore AceriaApp.sln` y `dotnet build AceriaApp.sln -c Release` desde la carpeta de esta etapa.
 4. Comprueba que la compilación termina sin errores; si hay DLL bloqueadas, detén los procesos que las utilizan.
 
-**Por qué funciona así.** Compilar la copia detecta rutas y dependencias incompletas antes de añadir archivos.
 
 **Verificación concreta.** La solución lista 29 proyectos y la compilación termina correctamente.
 
@@ -88,16 +88,13 @@ El alumno trabaja en **Windows con PowerShell, Visual Studio, .NET 8 y SQL Serve
 
 ### PASO 7.1.3 — Verificar que la carpeta `docs` contiene los documentos del punto 6.3
 
-**Resultado de aprendizaje.** Verificar que la carpeta `docs` contiene los documentos del punto 6.3. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+El punto conserva 34 documentos reales y añadirá dos; el primer ADR disponible es ADR-010.
 
 1. Expande `docs` y comprueba sus 34 archivos Markdown.
 2. Localiza los ADR-010 a ADR-026 y las fichas temáticas heredadas.
 3. Compara nombres y contenido con `docs` de `M06_COMUNICACION_MICROSERVICIOS/PROYECTO/6.3-cuando-usar-cada-enfoque`.
 4. Comprueba que aún no existen `docs/logging.md` ni `docs/ADR-027-logging.md`.
 
-**Por qué funciona así.** El punto conserva 34 documentos reales y añadirá dos; el primer ADR disponible es ADR-010.
 
 **Verificación concreta.** Hay 34 documentos heredados idénticos; todavía no existen los dos documentos del punto.
 
@@ -108,9 +105,7 @@ El alumno trabaja en **Windows con PowerShell, Visual Studio, .NET 8 y SQL Serve
 
 ### PASO 7.1.4 — Crear el documento de logging en `docs`
 
-**Resultado de aprendizaje.** Crear el documento de logging en `docs`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La ficha separa el análisis de los contratos y la evidencia ejecutable.
 
 1. Crea `docs/logging.md` dentro de la copia de `7.1-logging`.
 2. Introduce el contenido completo del bloque siguiente.
@@ -191,7 +186,6 @@ Los seis niveles Trace, Debug, Information, Warning, Error y Critical correspond
 El middleware valida `X-Correlation-ID`: entre 1 y 64 caracteres ASCII alfanuméricos, guion o subrayado. Sustituye valores inválidos, conserva un identificador por petición y lo devuelve y propaga al cliente HTTP. Un identificador de correlación no demuestra por sí solo un sistema de trazas distribuido.
 ```
 
-**Por qué funciona así.** La ficha separa el análisis de los contratos y la evidencia ejecutable.
 
 **Verificación concreta.** `docs/logging.md` incluye todos los apartados del bloque mostrado.
 
@@ -202,16 +196,13 @@ El middleware valida `X-Correlation-ID`: entre 1 y 64 caracteres ASCII alfanumé
 
 ### PASO 7.1.5 — Añadir Serilog.AspNetCore a la biblioteca de observabilidad
 
-**Resultado de aprendizaje.** Añadir Serilog.AspNetCore a la biblioteca de observabilidad. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La dependencia de Serilog debe incorporarse al proyecto que realmente emite los registros. Comprueba el paquete y el arranque efectivo: declarar una clase con el nombre Logging no activa el proveedor.
 
 1. Abre la carpeta `src` de la etapa actual y localiza los proyectos API de Producción e Inventario.
 2. Aplica el archivo completo `src/AceriaApp.Observabilidad/AceriaApp.Observabilidad.csproj` mostrado en este paso y comprueba la referencia a `Serilog.AspNetCore 8.0.3`.
 3. Comprueba `global.json` y ejecuta `dotnet --version` para confirmar el SDK .NET 8 compatible antes de restaurar paquetes.
 4. Añade la biblioteca a `AceriaApp.sln` si aún no aparece, ejecuta `dotnet restore src/AceriaApp.Observabilidad/AceriaApp.Observabilidad.csproj` y comprueba que la restauración termina sin errores.
 
-**Por qué funciona así.** La integración se comparte entre ambas API. El archivo completo fija las dependencias de la biblioteca; los componentes se añaden progresivamente y el catálogo no utiliza las APIs del paquete.
 
 **Verificación concreta.** La biblioteca compartida está incluida en la solución y su archivo de proyecto restaura los paquetes fijados.
 
@@ -219,8 +210,6 @@ El middleware valida `X-Correlation-ID`: entre 1 y 64 caracteres ASCII alfanumé
 
 - Añadir un sink de archivo sin definir permisos y retención amplía el despliegue: el ejercicio emite consola JSON.
 - Modificar el proyecto de una etapa anterior rompe su autonomía: comprueba el camino completo antes de editar.
-
-
 
 **Integración funcional — `src/AceriaApp.Api/AceriaApp.Api.csproj`.**
 
@@ -242,11 +231,7 @@ El archivo completo fija las referencias y versiones que utilizará la etapa; a�
 </Project>
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 1:** `<Project Sdk="Microsoft.NET.Sdk.Web"><PropertyGroup><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup><ItemGroup><PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.21" /><PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" /><PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" /></ItemGroup>  <ItemGroup>`. Fija la dependencia usada por esta etapa del ejercicio.
-- **Línea 2:** `<ProjectReference Include="../AceriaApp.Hexagonal.Aplicacion/AceriaApp.Hexagonal.Aplicacion.csproj" />`. Conecta este proyecto con otro proyecto real de la solución.
-
+Fija la dependencia usada por esta etapa del ejercicio. Conecta este proyecto con otro proyecto real de la solución.
 
 **Integración funcional — `src/AceriaApp.Inventario.Api/AceriaApp.Inventario.Api.csproj`.**
 
@@ -266,10 +251,6 @@ El archivo completo fija las referencias y versiones que utilizará la etapa; a�
 </Project>
 ```
 
-
-
-
-
 **Integración funcional — `src/AceriaApp.Observabilidad/AceriaApp.Observabilidad.csproj`.**
 
 El archivo completo fija las referencias y versiones que utilizará la etapa; añade el proyecto a la solución antes de compilar.
@@ -287,21 +268,15 @@ El archivo completo fija las referencias y versiones que utilizará la etapa; a�
 </Project>
 ```
 
-
-
-
 ### PASO 7.1.6 — Crear la carpeta `Logging` en el proyecto API
 
-**Resultado de aprendizaje.** Crear la carpeta `Logging` en el proyecto API. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+`Logging` agrupa datos y reglas del ejercicio de análisis; los adaptadores de comunicación tienen sus propias responsabilidades.
 
 1. Expande el proyecto `AceriaApp.Api` y localiza `src/AceriaApp.Api`.
 2. Crea la carpeta `Logging` directamente dentro del proyecto API.
 3. Comprueba que `src/AceriaApp.Api/Logging` no está anidada dentro de otra carpeta temática.
 4. Conserva las carpetas y archivos heredados de `6.3-cuando-usar-cada-enfoque`.
 
-**Por qué funciona así.** `Logging` agrupa datos y reglas del ejercicio de análisis; los adaptadores de comunicación tienen sus propias responsabilidades.
 
 **Verificación concreta.** Existe `src/AceriaApp.Api/Logging` sin alterar las carpetas previas.
 
@@ -312,9 +287,7 @@ El archivo completo fija las referencias y versiones que utilizará la etapa; a�
 
 ### PASO 7.1.7 — Crear la clase `ConfiguracionLogging`
 
-**Resultado de aprendizaje.** Crear la clase `ConfiguracionLogging`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+ConfiguracionLogging describe los niveles, destinos y opciones que se desean aplicar. Diferencia las opciones del catálogo de la configuración con la que Serilog escribe registros durante una petición real.
 
 1. Crea `src/AceriaApp.Api/Logging/ConfiguracionLogging.cs` dentro del proyecto correspondiente.
 2. Copia el bloque completo siguiente respetando namespace, miembros y valores.
@@ -337,26 +310,7 @@ public class ConfiguracionLogging
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 1:** `namespace AceriaApp.Api.Logging;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
-
-- **Línea 2:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
-
-- **Línea 3:** `public class ConfiguracionLogging` → Declara el tipo público del ejercicio de análisis.
-
-- **Línea 4:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
-
-- **Línea 5:** `public string NivelMinimo { get; init; } = string.Empty;` → Declara un dato del análisis que se fija al construir la entrada.
-
-
-
-
-
-- **Línea 10:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
-
-
-**Por qué funciona así.** El modelo describe entradas de análisis. Sus indicadores no instalan políticas ni establecen conexiones.
+Sitúa el tipo en el espacio de nombres que importan las pruebas del punto. Declara el tipo público del ejercicio de análisis. Declara un dato del análisis que se fija al construir la entrada.
 
 **Verificación concreta.** `ConfiguracionLogging` compila en el proyecto indicado; su contenido coincide con el bloque completo.
 
@@ -367,9 +321,7 @@ public class ConfiguracionLogging
 
 ### PASO 7.1.8 — Crear la clase `ValidadorLogging`
 
-**Resultado de aprendizaje.** Crear la clase `ValidadorLogging`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+El validador puede rechazar una descripción inconsistente de logging, pero no sabe si se emitió un registro. Para demostrar esa segunda propiedad hay que inspeccionar la salida de las API ejecutadas.
 
 1. Crea `src/AceriaApp.Api/Logging/ValidadorLogging.cs` dentro del proyecto correspondiente.
 2. Copia el bloque completo siguiente respetando namespace, miembros y valores.
@@ -431,68 +383,11 @@ public class ValidadorLogging
 public record ResultadoLogging(bool EsValida, IReadOnlyList<string> Errores);
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
+Limita los valores de texto reconocidos por la política didáctica. Expone la operación con el contrato que usan el catálogo o sus pruebas. Inicializa la colección de diagnósticos que se devolverá al finalizar.
 
+Materializa una sola vez la secuencia recibida para recorrerla y contarla. Evalúa una regla concreta antes de añadir el diagnóstico asociado. Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-
-
-
-- **Línea 5:** `private static readonly string[] NivelesPermitidos = { "Trace", "Debug", "Information", "Warning", "Error", "Critical" };` → Limita los valores de texto reconocidos por la política didáctica.
-
-
-- **Línea 7:** `public ResultadoLogging Validar(IEnumerable<ConfiguracionLogging> configuraciones)` → Expone la operación con el contrato que usan el catálogo o sus pruebas.
-
-
-- **Línea 9:** `var errores = new List<string>();` → Inicializa la colección de diagnósticos que se devolverá al finalizar.
-
-- **Línea 10:** `var lista = configuraciones.ToList();` → Materializa una sola vez la secuencia recibida para recorrerla y contarla.
-
-
-- **Línea 12:** `if (lista.Count == 0)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
-
-
-- **Línea 14:** `errores.Add("No hay configuraciones de logging declaradas.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
-
-
-
-- **Línea 17:** `foreach (var configuracion in lista)` → Revisa cada entrada; un catálogo puede acumular varios diagnósticos.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-- **Línea 45:** `return new ResultadoLogging(errores.Count == 0, errores);` → Devuelve validez y diagnósticos; no instala middleware ni ejecuta llamadas remotas.
-
-
-
-
-- **Línea 49:** `public record ResultadoLogging(bool EsValida, IReadOnlyList<string> Errores);` → Define el resultado inmutable que devuelve el validador o el resumen.
-
-
-**Por qué funciona así.** El validador devuelve todos los incumplimientos de la política explícita; no implementa una llamada, publicación o decisión automática de producción.
+Revisa cada entrada; un catálogo puede acumular varios diagnósticos. Devuelve validez y diagnósticos; no instala middleware ni ejecuta llamadas remotas. Define el resultado inmutable que devuelve el validador o el resumen.
 
 **Verificación concreta.** `ValidadorLogging` compila en el proyecto indicado; su contenido coincide con el bloque completo.
 
@@ -500,8 +395,6 @@ public record ResultadoLogging(bool EsValida, IReadOnlyList<string> Errores);
 
 - Un namespace diferente de `AceriaApp.Api.Logging` en las clases impide resolverlas desde las pruebas: usa el indicado.
 - Confundir un booleano con una política ejecutada lleva a conclusiones incorrectas: limita la verificación a los datos que recorre el validador.
-
-
 
 **Integración funcional — `src/AceriaApp.Observabilidad/CorrelacionMiddleware.cs`.**
 
@@ -545,14 +438,9 @@ public sealed class CorrelacionMiddleware(RequestDelegate next)
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
+Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre. Devuelve al cliente el identificador aceptado o generado. Repone la cabecera justo antes de enviarla, también cuando el manejador limpió la respuesta tras un fallo.
 
-- **Línea 17:** `public async Task InvokeAsync(HttpContext context)`. Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre.
-- **Línea 22:** `context.Response.Headers[ContextoCorrelacion.Cabecera] = id;`. Devuelve al cliente el identificador aceptado o generado.
-- **Línea 23:** `context.Response.OnStarting(() =>`. Repone la cabecera justo antes de enviarla, también cuando el manejador limpió la respuesta tras un fallo.
-- **Línea 28:** `using (LogContext.PushProperty("CorrelationId", id))`. Añade propiedades solo durante el ámbito de esta petición.
-- **Línea 29:** `using (LogContext.PushProperty("TraceId", Activity.Current?.TraceId.ToString() ?? context.TraceIdentifier))`. Relaciona el evento con la traza técnica de la petición.
-
+Añade propiedades solo durante el ámbito de esta petición. Relaciona el evento con la traza técnica de la petición.
 
 **Integración funcional — `src/AceriaApp.Observabilidad/PropagarCorrelacionHandler.cs`.**
 
@@ -576,10 +464,7 @@ public sealed class PropagarCorrelacionHandler(IHttpContextAccessor accessor) : 
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 7:** `request.Headers.Remove(ContextoCorrelacion.Cabecera);`. Elimina un valor anterior antes de propagar la correlación actual.
-
+Elimina un valor anterior antes de propagar la correlación actual.
 
 **Integración funcional — `src/AceriaApp.Observabilidad/RegistroLogging.cs`.**
 
@@ -625,15 +510,9 @@ public static class RegistroLogging
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
+Registra el logger JSON y los servicios que necesita la correlación. Lee el umbral de logging configurado para el entorno. Serializa eventos estructurados como JSON en consola.
 
-- **Línea 11:** `public static IServiceCollection AddLoggingAceria(this IServiceCollection services, string servicio, IConfiguration? config = null)`. Registra el logger JSON y los servicios que necesita la correlación.
-- **Línea 13:** `var nivel = config?.GetValue("Observabilidad:NivelMinimo", LogEventLevel.Information) ?? LogEventLevel.Information;`. Lee el umbral de logging configurado para el entorno.
-- **Línea 24:** `.ReadFrom.Services(provider).WriteTo.Console(new JsonFormatter()));`. Serializa eventos estructurados como JSON en consola.
-- **Línea 29:** `public void Enrich(LogEvent logEvent, ILogEventPropertyFactory factory) =>`. Define una comprobación síncrona del contrato indicado por el nombre.
-- **Línea 30:** `logEvent.RemovePropertyIfPresent("RequestPath");`. Elimina la ruta concreta que los scopes automáticos de ASP.NET incorporan al evento.
-- **Línea 32:** `public static IApplicationBuilder UseLoggingAceria(this IApplicationBuilder app) =>`. Abre la correlación y el resumen antes de ejecutar el resto del pipeline.
-
+Define una comprobación síncrona del contrato indicado por el nombre. Elimina la ruta concreta que los scopes automáticos de ASP.NET incorporan al evento. Abre la correlación y el resumen antes de ejecutar el resto del pipeline.
 
 **Integración funcional — `src/AceriaApp.Observabilidad/ResumenPeticionMiddleware.cs`.**
 
@@ -671,17 +550,11 @@ public sealed class ResumenPeticionMiddleware(RequestDelegate next, ILogger<Resu
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 10:** `var inicio = Stopwatch.GetTimestamp();`. Mide duración mediante un reloj monotónico.
-- **Línea 11:** `var ruta = (context.GetEndpoint() as RouteEndpoint)?.RoutePattern.RawText ?? "[sin-ruta]";`. Obtiene la plantilla del endpoint en lugar del valor concreto de la URL.
-- **Línea 19:** `var estado = context.RequestAborted.IsCancellationRequested ? 499 : fallo ? 500 : context.Response.StatusCode;`. Distingue una cancelación del cliente de un fallo de la dependencia.
+Mide duración mediante un reloj monotónico. Obtiene la plantilla del endpoint en lugar del valor concreto de la URL. Distingue una cancelación del cliente de un fallo de la dependencia.
 
 ### PASO 7.1.9 — Añadir los `using` necesarios en `ValidadorLogging`
 
-**Resultado de aprendizaje.** Añadir los `using` necesarios en `ValidadorLogging`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Las importaciones explícitas muestran dónde se declaran los tipos genéricos y las extensiones LINQ, aunque el proyecto tenga importaciones implícitas.
 
 1. Abre `src/AceriaApp.Api/Logging/ValidadorLogging.cs`.
 2. Reemplaza el contenido por el archivo completo siguiente, que incorpora los using antes del namespace.
@@ -746,63 +619,7 @@ public class ValidadorLogging
 public record ResultadoLogging(bool EsValida, IReadOnlyList<string> Errores);
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 1:** `using System.Collections.Generic;` → Importa los tipos o extensiones utilizados por el archivo.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-**Por qué funciona así.** Las importaciones explícitas muestran dónde se declaran los tipos genéricos y las extensiones LINQ, aunque el proyecto tenga importaciones implícitas.
+Importa los tipos o extensiones utilizados por el archivo.
 
 **Verificación concreta.** `ValidadorLogging.cs` conserva el contenido previo y añade solo las importaciones indicadas.
 
@@ -813,9 +630,7 @@ public record ResultadoLogging(bool EsValida, IReadOnlyList<string> Errores);
 
 ### PASO 7.1.10 — Crear la clase `CatalogoLogging`
 
-**Resultado de aprendizaje.** Crear la clase `CatalogoLogging`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+CatalogoLogging reúne casos de análisis sin configurar el host. Su valor didáctico consiste en permitir razonar sobre niveles y formatos antes de comprobar los logs reales de Producción e Inventario.
 
 1. Crea `src/AceriaApp.Api/Logging/CatalogoLogging.cs` dentro del proyecto correspondiente.
 2. Copia el bloque completo siguiente respetando namespace, miembros y valores.
@@ -863,48 +678,7 @@ public class CatalogoLogging
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-
-
-
-
-
-
-- **Línea 7:** `return new List<ConfiguracionLogging>` → Devuelve una lista nueva en cada llamada; modificarla no altera otros casos.
-
-
-- **Línea 9:** `new()` → Completa la declaración o la operación mostrada en el bloque.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-- **Línea 33:** `};` → Cierra la colección y termina su inicialización.
-
-
-
-
-**Por qué funciona así.** Cada invocación devuelve una lista nueva con los ejemplos de análisis; cambiar una lista no modifica futuros catálogos.
+Devuelve una lista nueva en cada llamada; modificarla no altera otros casos. Completa la declaración o la operación mostrada en el bloque. Cierra la colección y termina su inicialización.
 
 **Verificación concreta.** `CatalogoLogging` compila en el proyecto indicado; su contenido coincide con el bloque completo.
 
@@ -915,9 +689,7 @@ public class CatalogoLogging
 
 ### PASO 7.1.11 — Añadir el `using` necesario en `CatalogoLogging`
 
-**Resultado de aprendizaje.** Añadir el `using` necesario en `CatalogoLogging`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Las importaciones explícitas muestran dónde se declaran los tipos genéricos y las extensiones LINQ, aunque el proyecto tenga importaciones implícitas.
 
 1. Abre `src/AceriaApp.Api/Logging/CatalogoLogging.cs`.
 2. Reemplaza el contenido por el archivo completo siguiente, que incorpora los using antes del namespace.
@@ -967,48 +739,6 @@ public class CatalogoLogging
 }
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-**Por qué funciona así.** Las importaciones explícitas muestran dónde se declaran los tipos genéricos y las extensiones LINQ, aunque el proyecto tenga importaciones implícitas.
-
 **Verificación concreta.** `CatalogoLogging.cs` conserva el contenido previo y añade solo las importaciones indicadas.
 
 **Diagnóstico si falla.**
@@ -1018,9 +748,7 @@ public class CatalogoLogging
 
 ### PASO 7.1.12 — Crear el proyecto de tests del punto 7.1
 
-**Resultado de aprendizaje.** Crear el proyecto de tests del punto 7.1. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Definir el proyecto completo fija .NET 8 y las versiones del runner sin depender de la versión local de la plantilla.
 
 1. Crea la carpeta `tests/AceriaApp.Logging.Tests` y el `.csproj` completo del bloque siguiente.
 2. No generes `UnitTest1.cs`; los pasos 15 y 16 incluyen las clases de prueba completas.
@@ -1047,7 +775,6 @@ public class CatalogoLogging
 </Project>
 ```
 
-**Por qué funciona así.** Definir el proyecto completo fija .NET 8 y las versiones del runner sin depender de la versión local de la plantilla.
 
 **Verificación concreta.** Existe `tests/AceriaApp.Logging.Tests/AceriaApp.Logging.Tests.csproj` y la solución lo incluye una sola vez.
 
@@ -1058,9 +785,7 @@ public class CatalogoLogging
 
 ### PASO 7.1.13 — Añadir la referencia del proyecto de tests a la API
 
-**Resultado de aprendizaje.** Añadir la referencia del proyecto de tests a la API. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Las pruebas consumen los tipos de análisis de la API; la API no debe depender de su proyecto de pruebas.
 
 1. Abre `tests/AceriaApp.Logging.Tests/AceriaApp.Logging.Tests.csproj`.
 2. Reemplaza su contenido completo por el bloque siguiente, que incorpora la referencia a la API.
@@ -1088,7 +813,6 @@ public class CatalogoLogging
 </Project>
 ```
 
-**Por qué funciona así.** Las pruebas consumen los tipos de análisis de la API; la API no debe depender de su proyecto de pruebas.
 
 **Verificación concreta.** El proyecto resuelve la referencia a la API y compila sin dependencias circulares.
 
@@ -1096,8 +820,6 @@ public class CatalogoLogging
 
 - Invertir la referencia introduce una dependencia de producción hacia pruebas: añade la referencia en el `.csproj` de tests.
 - Una ruta relativa equivocada produce un proyecto no encontrado: resuelve la ruta desde la carpeta de este `.csproj`.
-
-
 
 **Integración funcional — `src/AceriaApp.Api/appsettings.Production.json`.**
 
@@ -1114,10 +836,7 @@ La configuración usa bases y prefijos propios de esta etapa. Las variables de e
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 3:** `"NivelMinimo": "Warning"`. Fija el umbral propio de logging y admite sobreescritura por variables de entorno.
-
+Fija el umbral propio de logging y admite sobreescritura por variables de entorno.
 
 **Integración funcional — `src/AceriaApp.Api/appsettings.json`.**
 
@@ -1146,12 +865,7 @@ La configuración usa bases y prefijos propios de esta etapa. Las variables de e
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 2:** `"ConnectionStrings": {`. Agrupa las conexiones de laboratorio específicas de la etapa.
-- **Línea 11:** `"WorkersActivos": false`. Activa o desactiva los procesos de mensajería y su dependencia en readiness.
-- **Línea 15:** `"DiagnosticoActivo": false`. Mantiene el endpoint de fallo desactivado por defecto.
-
+Agrupa las conexiones de laboratorio específicas de la etapa. Activa o desactiva los procesos de mensajería y su dependencia en readiness. Mantiene el endpoint de fallo desactivado por defecto.
 
 **Integración funcional — `src/AceriaApp.Inventario.Api/appsettings.Production.json`.**
 
@@ -1167,10 +881,6 @@ La configuración usa bases y prefijos propios de esta etapa. Las variables de e
   }
 }
 ```
-
-
-
-
 
 **Integración funcional — `src/AceriaApp.Inventario.Api/appsettings.json`.**
 
@@ -1197,14 +907,9 @@ La configuración usa bases y prefijos propios de esta etapa. Las variables de e
 }
 ```
 
-
-
-
 ### PASO 7.1.14 — Añadir el paquete `FluentAssertions` al proyecto de tests
 
-**Resultado de aprendizaje.** Añadir el paquete `FluentAssertions` al proyecto de tests. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La versión fijada mantiene reproducibles las aserciones `Should()` de los catálogos.
 
 1. Abre `tests/AceriaApp.Logging.Tests/AceriaApp.Logging.Tests.csproj` y conserva las versiones de los paquetes existentes.
 2. Reemplaza su contenido por el bloque completo que añade `FluentAssertions` 6.12.2.
@@ -1233,7 +938,6 @@ La configuración usa bases y prefijos propios de esta etapa. Las variables de e
 </Project>
 ```
 
-**Por qué funciona así.** La versión fijada mantiene reproducibles las aserciones `Should()` de los catálogos.
 
 **Verificación concreta.** El listado de paquetes muestra FluentAssertions 6.12.2 y el proyecto compila.
 
@@ -1244,9 +948,7 @@ La configuración usa bases y prefijos propios de esta etapa. Las variables de e
 
 ### PASO 7.1.15 — Crear el archivo `ValidadorLoggingTests.cs`
 
-**Resultado de aprendizaje.** Crear el archivo `ValidadorLoggingTests.cs`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Las pruebas ejercitan aceptación y rechazos concretos del validador. Afirmar el diagnóstico evita un falso positivo por otro error.
 
 1. Crea `tests/AceriaApp.Logging.Tests/ValidadorLoggingTests.cs` dentro del proyecto correspondiente.
 2. Copia el bloque completo siguiente respetando namespace, miembros y valores.
@@ -1357,118 +1059,13 @@ public class ValidadorLoggingTests
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
+Crea la instancia del validador que utiliza cada prueba. Registra un caso ejecutable independiente en xUnit. Nombra la condición de prueba y su resultado esperado.
 
+Ejecuta el validador sobre los datos preparados para este caso. Comprueba que la política acepta los datos de este caso. Comprueba que no se ha registrado ningún diagnóstico.
 
+Comprueba que la política rechaza los datos de este caso. Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla. Prepara las entradas que se van a validar o devolver.
 
-
-
-
-
-
-
-- **Línea 9:** `private readonly ValidadorLogging _validador = new();` → Crea la instancia del validador que utiliza cada prueba.
-
-
-- **Línea 11:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
-
-- **Línea 12:** `public void Validar_CatalogoPorDefecto_DevuelveValido()` → Nombra la condición de prueba y su resultado esperado.
-
-
-- **Línea 14:** `var resultado = _validador.Validar(CatalogoLogging.ConfiguracionesPorDefecto());` → Ejecuta el validador sobre los datos preparados para este caso.
-
-
-- **Línea 16:** `resultado.EsValida.Should().BeTrue();` → Comprueba que la política acepta los datos de este caso.
-
-- **Línea 17:** `resultado.Errores.Should().BeEmpty();` → Comprueba que no se ha registrado ningún diagnóstico.
-
-
-
-
-
-
-
-
-- **Línea 25:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
-
-- **Línea 26:** `resultado.Errores.Should().Contain(e => e.Contains("No hay configuraciones"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
-
-
-
-
-
-
-- **Línea 32:** `var configuraciones = new List<ConfiguracionLogging>` → Prepara las entradas que se van a validar o devolver.
-
-
-- **Línea 34:** `new() { NivelMinimo = "NivelInventado", UsaLoggingEstructurado = true, TieneCorrelacion = true, EvitaDatosSensibles = true, ConfiguradoPorEntorno = true }` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-**Por qué funciona así.** Las pruebas ejercitan aceptación y rechazos concretos del validador. Afirmar el diagnóstico evita un falso positivo por otro error.
+Construye una entrada del catálogo o del caso de prueba con valores explícitos.
 
 **Verificación concreta.** `ValidadorLoggingTests` compila en el proyecto indicado; su contenido coincide con el bloque completo.
 
@@ -1476,8 +1073,6 @@ public class ValidadorLoggingTests
 
 - Un test sin `[Fact]` compila pero no se descubre: revisa los atributos del bloque.
 - Añadir el archivo al proyecto anterior modifica su suite: crea el test en la ruta de este punto.
-
-
 
 **Integración funcional — `tests/AceriaApp.Logging.Tests/AceriaApp.Logging.Tests.csproj`.**
 
@@ -1499,10 +1094,6 @@ El archivo completo fija las referencias y versiones que utilizará la etapa; a�
   </ItemGroup>
 </Project>
 ```
-
-
-
-
 
 **Integración funcional — `tests/AceriaApp.Logging.Tests/LoggingFuncionalTests.cs`.**
 
@@ -1675,14 +1266,9 @@ public class LoggingFuncionalTests
 }
 ```
 
-
-
-
 ### PASO 7.1.16 — Crear el archivo `CatalogoLoggingTests.cs`
 
-**Resultado de aprendizaje.** Crear el archivo `CatalogoLoggingTests.cs`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Las pruebas del catálogo verifican cantidades y propiedades declaradas. No prueban que existan los servicios nombrados.
 
 1. Crea `tests/AceriaApp.Logging.Tests/CatalogoLoggingTests.cs` dentro del proyecto correspondiente.
 2. Copia el bloque completo siguiente respetando namespace, miembros y valores.
@@ -1743,61 +1329,7 @@ public class CatalogoLoggingTests
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-
-
-
-
-
-
-
-
-
-
-
-- **Línea 12:** `var configuraciones = CatalogoLogging.ConfiguracionesPorDefecto();` → Obtiene los datos que se utilizarán en las comprobaciones siguientes.
-
-
-- **Línea 14:** `configuraciones.Should().HaveCount(3);` → Comprueba el tamaño del catálogo sin inferir servicios o conexiones en ejecución.
-
-
-
-
-
-
-
-
-- **Línea 22:** `configuraciones.Should().OnlyContain(c => c.UsaLoggingEstructurado);` → Comprueba la condición en cada entrada declarada del catálogo.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-**Por qué funciona así.** Las pruebas del catálogo verifican cantidades y propiedades declaradas. No prueban que existan los servicios nombrados.
+Obtiene los datos que se utilizarán en las comprobaciones siguientes. Comprueba el tamaño del catálogo sin inferir servicios o conexiones en ejecución. Comprueba la condición en cada entrada declarada del catálogo.
 
 **Verificación concreta.** `CatalogoLoggingTests` compila en el proyecto indicado; su contenido coincide con el bloque completo.
 
@@ -1808,20 +1340,15 @@ public class CatalogoLoggingTests
 
 ### PASO 7.1.17 — Compilar la solución completa
 
-**Resultado de aprendizaje.** Compilar la solución completa. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La compilación debe incluir los proyectos de observabilidad y sus referencias. A continuación comprobaremos que ambas API generan logs estructurados con el identificador de correlación correcto.
 
 1. Aplica los bloques de registro final de este paso en el orden mostrado.
 2. Añade a `AceriaApp.sln` todos los nuevos proyectos `.csproj` indicados por esos bloques.
 3. Ejecuta `dotnet restore AceriaApp.sln` y `dotnet build AceriaApp.sln -c Release`.
 4. Comprueba que la solución incluye 31 proyectos y termina sin errores.
 
-
-
 **Registro de biblioteca compartida.** Ejecuta `dotnet sln AceriaApp.sln add src/AceriaApp.Observabilidad/AceriaApp.Observabilidad.csproj`; los proyectos de tests se incorporan en sus pasos de creación. Después de reemplazar todos los archivos de este paso, compila la solución.
 
-**Por qué funciona así.** Los componentes ejecutables registran eventos, observan salud, gestionan fallos y acotan llamadas según el punto; el catálogo analiza sus declaraciones.
 
 **Verificación concreta.** La solución de la etapa compila con 31 proyectos.
 
@@ -1829,8 +1356,6 @@ public class CatalogoLoggingTests
 
 - Omitir un proyecto de la solución impide verificarlo con `dotnet test AceriaApp.sln`: compara las rutas `.csproj` y el listado de la solución.
 - Interpretar un test de catálogo como prueba de tráfico omite fallos de transporte: ejecuta también la integración funcional.
-
-
 
 **Integración funcional — `src/AceriaApp.Api/Program.cs`.**
 
@@ -2026,10 +1551,7 @@ app.Run();
 public partial class Program {} // permite WebApplicationFactory en tests
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 38:** `}).AddHttpMessageHandler<PropagarCorrelacionHandler>();`. Propaga el identificador validado hacia Inventario.
-
+Propaga el identificador validado hacia Inventario.
 
 **Integración funcional — `src/AceriaApp.Inventario.Api/InventarioProgram.cs`.**
 
@@ -2088,10 +1610,6 @@ public sealed class InventarioProgram
     }
 }
 ```
-
-
-
-
 
 ## Recorrido funcional 7.1 — correlación y logs JSON de las dos API
 
@@ -2222,16 +1740,13 @@ La garantía de minimización corresponde a los **eventos nuevos de M7**. Los wo
 
 ### PASO 7.1.18 — Ejecutar todos los tests del punto 7.1
 
-**Resultado de aprendizaje.** Ejecutar todos los tests del punto 7.1. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La prueba del punto distingue reglas de análisis y comportamiento de sus adaptadores.
 
 1. Ejecuta `dotnet test tests/AceriaApp.Logging.Tests/AceriaApp.Logging.Tests.csproj -c Release --no-build --no-restore`.
 2. Comprueba que se ejecutan los 12 tests de catálogo y las pruebas funcionales incorporadas progresivamente al proyecto.
 3. Revisa que cada prueba figure como aprobada, sin errores ni omisiones.
 4. Conserva el resultado de ejecución para compararlo con la suite completa del paso siguiente.
 
-**Por qué funciona así.** La prueba del punto distingue reglas de análisis y comportamiento de sus adaptadores.
 
 **Verificación concreta.** Los 12 casos de catálogo se descubren y pasan junto con la integración del punto.
 
@@ -2242,16 +1757,13 @@ La garantía de minimización corresponde a los **eventos nuevos de M7**. Los wo
 
 ### PASO 7.1.19 — Ejecutar todos los tests de la solución
 
-**Resultado de aprendizaje.** Ejecutar todos los tests de la solución. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La suite completa detecta regresiones de dominio, persistencia y comunicación. Cada proyecto produce su propio resumen; una sola línea de salida no es el total de la solución.
 
 1. Configura `ACERIA_TEST_SQLSERVER` para SQL Server Express o LocalDB y comprueba la disponibilidad de los servicios de integración.
 2. Ejecuta `dotnet test AceriaApp.sln -c Release --no-build --no-restore --logger trx --results-directory TestResults`.
 3. Suma los resultados de los archivos TRX y verifica 309 pruebas aprobadas, cero fallos y cero omisiones.
 4. Revisa las pruebas heredadas de M03, M04, M05 y M06: deben seguir formando parte de la solución.
 
-**Por qué funciona así.** La suite completa detecta regresiones de dominio, persistencia y comunicación. Cada proyecto produce su propio resumen; una sola línea de salida no es el total de la solución.
 
 **Verificación concreta.** Los TRX suman 309 pruebas aprobadas sin omitir integración con SQL Server.
 
@@ -2262,9 +1774,7 @@ La garantía de minimización corresponde a los **eventos nuevos de M7**. Los wo
 
 ### PASO 7.1.20 — Actualizar el README del punto 7.1
 
-**Resultado de aprendizaje.** Actualizar el README del punto 7.1. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+El README de la copia debe describir el estado actual y la evidencia disponible, no acumular instrucciones obsoletas.
 
 1. Abre el `README.md` copiado dentro de `7.1-logging`.
 2. Reemplaza su contenido completo por el bloque siguiente.
@@ -2307,7 +1817,6 @@ El catálogo del punto, su proyecto de pruebas, `docs/logging.md` y el ADR-027. 
 - Los 34 documentos anteriores, incluidos los ADR-010 a ADR-026, permanecen disponibles en `docs`.
 ```
 
-**Por qué funciona así.** El README de la copia debe describir el estado actual y la evidencia disponible, no acumular instrucciones obsoletas.
 
 **Verificación concreta.** El README identifica 31 proyectos, 309 pruebas y 12 tests nuevos de catálogo.
 
@@ -2318,9 +1827,7 @@ El catálogo del punto, su proyecto de pruebas, `docs/logging.md` y el ADR-027. 
 
 ### PASO 7.1.21 — Crear el ADR-027 del punto 7.1
 
-**Resultado de aprendizaje.** Crear el ADR-027 del punto 7.1. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+El ADR registra la decisión, alternativas y consecuencias sin reescribir decisiones anteriores.
 
 1. Crea `docs/ADR-027-logging.md` dentro de la copia de `7.1-logging`.
 2. Introduce el contenido completo del bloque siguiente.
@@ -2358,7 +1865,6 @@ Integrar Serilog.AspNetCore 8.0.3 con consola JSON, propiedades estructuradas y 
 - Mitigación: conservar pruebas heredadas, validar errores y cancelación, y separar señales operativas de los datos sensibles.
 ```
 
-**Por qué funciona así.** El ADR registra la decisión, alternativas y consecuencias sin reescribir decisiones anteriores.
 
 **Verificación concreta.** `docs/ADR-027-logging.md` incluye todos los apartados del bloque mostrado.
 
@@ -2369,16 +1875,13 @@ Integrar Serilog.AspNetCore 8.0.3 con consola JSON, propiedades estructuradas y 
 
 ### PASO 7.1.22 — Verificar que no se ha modificado ningún archivo del punto 6.3
 
-**Resultado de aprendizaje.** Verificar que no se ha modificado ningún archivo del punto 6.3. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Los archivos nuevos se añaden en la copia actual; los documentos y tests heredados siguen siendo la base de regresión.
 
 1. Abre PowerShell en la raíz del curso y define las carpetas anterior `M06_COMUNICACION_MICROSERVICIOS/PROYECTO/6.3-cuando-usar-cada-enfoque` y actual `M07_OBSERVABILIDAD_RESILIENCIA/PROYECTO/7.1-logging`.
 2. Enumera los archivos heredados de `docs` y de `tests` terminados en `.cs` en la etapa anterior.
 3. Compara cada archivo con su copia actual mediante `Get-FileHash`; el mismo camino relativo debe tener el mismo SHA-256.
 4. Comprueba 34 documentos idénticos y restaura únicamente cualquier documento o prueba heredada que se haya alterado por error.
 
-**Por qué funciona así.** Los archivos nuevos se añaden en la copia actual; los documentos y tests heredados siguen siendo la base de regresión.
 
 **Verificación concreta.** Los 34 documentos y todas las pruebas heredadas tienen el mismo SHA-256; los archivos nuevos del punto no se comparan como heredados.
 
@@ -2389,16 +1892,13 @@ Integrar Serilog.AspNetCore 8.0.3 con consola JSON, propiedades estructuradas y 
 
 ### PASO 7.1.23 — Verificar la estructura del punto 7.1 y el `.gitignore`
 
-**Resultado de aprendizaje.** Verificar la estructura del punto 7.1 y el `.gitignore`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La estructura debe permitir reconstruir y ejecutar el punto desde sus archivos y referencias, con todos los proyectos dentro de la etapa. Las reglas de la raíz ya excluyen los binarios y resultados de todas las etapas.
 
 1. Ejecuta `tree /F` en Windows desde la carpeta de la etapa.
 2. Localiza las tres clases de `src/AceriaApp.Api/Logging` y las dos clases de tests en `tests/AceriaApp.Logging.Tests`.
 3. Comprueba los 36 documentos de `docs`, incluida la ficha del punto y el ADR-027.
 4. Ejecuta `dotnet sln AceriaApp.sln list`, `git status --short` y `git check-ignore` sobre un archivo de `bin`, `obj` y `TestResults`; contrasta las rutas y conserva las exclusiones heredadas.
 
-**Por qué funciona así.** La estructura debe permitir reconstruir y ejecutar el punto desde sus archivos y referencias, con todos los proyectos dentro de la etapa. Las reglas de la raíz ya excluyen los binarios y resultados de todas las etapas.
 
 **Verificación concreta.** Las rutas del catálogo, documentación e integración están presentes y la solución incluye 31 proyectos. Git no propone binarios ni resultados temporales.
 
@@ -2409,16 +1909,13 @@ Integrar Serilog.AspNetCore 8.0.3 con consola JSON, propiedades estructuradas y 
 
 ### PASO 7.1.24 — Hacer el commit del punto 7.1 y verificar el estado final
 
-**Resultado de aprendizaje.** Hacer el commit del punto 7.1 y verificar el estado final. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Un commit local identifica el estado comprobado del punto; su número depende de la historia real y no se deduce del temario.
 
 1. Ejecuta `git diff --check` y revisa `git status --short` desde la raíz del curso.
 2. Añade los archivos revisados de `M07_OBSERVABILIDAD_RESILIENCIA/PROYECTO/7.1-logging` con `git add` y comprueba el resumen de `git diff --cached --stat`.
 3. Cuando las pruebas hayan pasado, crea el commit local con el mensaje `Punto 7.1: logging`.
 4. Comprueba `git log -1 --oneline` y `git status --short`; no incluyas cambios ajenos al punto.
 
-**Por qué funciona así.** Un commit local identifica el estado comprobado del punto; su número depende de la historia real y no se deduce del temario.
 
 **Verificación concreta.** El commit local contiene solo los cambios revisados de 7.1 y los archivos esperados quedan registrados.
 
@@ -2495,63 +1992,6 @@ public record ResultadoLogging(bool EsValida, IReadOnlyList<string> Errores);
 public record ResumenLogging(int Total, int Estructurado, int ConCorrelacion, int PorEntorno);
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ### Reto 7.1.3 — Calcular los recuentos
 
 Reemplaza de nuevo `src/AceriaApp.Api/Logging/ValidadorLogging.cs` por el archivo completo siguiente. El método queda dentro del validador y materializa la secuencia una sola vez.
@@ -2625,73 +2065,7 @@ public record ResultadoLogging(bool EsValida, IReadOnlyList<string> Errores);
 public record ResumenLogging(int Total, int Estructurado, int ConCorrelacion, int PorEntorno);
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-
-
-
-
-
-
-
-
-
-
-- **Línea 11:** `var estructurado = lista.Count(c => c.UsaLoggingEstructurado);` → Cuenta las entradas que cumplen el criterio indicado.
-
-
-
-- **Línea 14:** `return new ResumenLogging(lista.Count, estructurado, conCorrelacion, porEntorno);` → Devuelve los recuentos del catálogo sin modificar sus entradas.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Cuenta las entradas que cumplen el criterio indicado. Devuelve los recuentos del catálogo sin modificar sus entradas.
 
 ### Reto 7.1.6 — Verificar el catálogo por defecto
 
@@ -2811,122 +2185,10 @@ public class ValidadorLoggingTests
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-- **Línea 101:** `var resumen = ValidadorLogging.Resumen(CatalogoLogging.ConfiguracionesPorDefecto());` → Calcula el resumen sobre el catálogo por defecto.
-
-
-- **Línea 103:** `resumen.Total.Should().Be(3);` → Compara el recuento obtenido con el valor esperado del catálogo.
-
-
-
-
-
-
+Calcula el resumen sobre el catálogo por defecto. Compara el recuento obtenido con el valor esperado del catálogo.
 
 **Comprobación del reto.** Guarda los archivos, compila la copia optativa y ejecuta primero `dotnet test tests/AceriaApp.Logging.Tests/AceriaApp.Logging.Tests.csproj -c Release`, después `dotnet test AceriaApp.sln -c Release`. El catálogo pasa de 12 a 13 tests; la solución debe ejecutar 309 + 1 pruebas, todas aprobadas y ninguna omitida. Confirma en el TRX que se ejecutó `Resumen_ConCatalogoPorDefecto_CalculaTotales` y compara los hashes de la etapa obligatoria: no debe haber cambiado. Revisa `git diff --check` y el índice antes de registrar el reto en un commit local separado.
 
-**Por qué funciona así.** El resumen calcula sobre la lista de análisis y no altera sus entradas ni configura infraestructura. Cada número describe el catálogo, no mediciones del sistema en ejecución.
 
 **Diagnóstico si falla.** Si aparece un tipo duplicado, reemplaza el contenido completo en vez de pegarlo al final. Si el total no coincide, revisa las entradas del catálogo antes de cambiar la expectativa. No acumules los retos al construir la siguiente etapa.
 
@@ -2940,6 +2202,12 @@ La etapa contiene las tres clases del análisis, sus 12 pruebas de catálogo, la
 
 # Punto 7.2 — Health Checks
 
+## Distinguir un proceso vivo de un servicio preparado para trabajar
+
+Un proceso puede seguir escuchando HTTP aunque haya perdido la conexión con SQL Server o con RabbitMQ. Por eso la comprobación de vida no responde a la misma pregunta que la preparación para atender tráfico real. En este punto configuraremos los health checks de ASP.NET Core, identificaremos sus dependencias y aprenderemos a interpretar una respuesta saludable, degradada o no disponible.
+
+La práctica conserva los logs y la correlación del punto 7.1. Los indicadores de catálogo son material explicativo; los endpoints de salud deben comprobarse desde un cliente HTTP y reflejar el estado de las dependencias definidas. Esta separación resulta esencial para entender cómo un orquestador o balanceador decide si envía nuevas peticiones a una instancia.
+
 **Carpeta de trabajo:** `M07_OBSERVABILIDAD_RESILIENCIA/PROYECTO/7.2-health-checks`.
 
 **Objetivo:** completar los veinticuatro pasos, conservar la etapa anterior y comprobar el análisis y el comportamiento ejecutable. La etapa termina con 331 pruebas en 32 proyectos y 20 proyectos de tests.
@@ -2948,16 +2216,13 @@ La etapa contiene las tres clases del análisis, sus 12 pruebas de catálogo, la
 
 ### PASO 7.2.1 — Crear la carpeta del punto 7.2 a partir del punto 7.1
 
-**Resultado de aprendizaje.** Crear la carpeta del punto 7.2 a partir del punto 7.1. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La etapa autónoma continúa 31 proyectos y 309 pruebas antes de añadir los cambios del punto.
 
 1. Localiza la etapa completa `M07_OBSERVABILIDAD_RESILIENCIA/PROYECTO/7.1-logging`; comprueba que contiene `AceriaApp.sln`.
 2. Crea `M07_OBSERVABILIDAD_RESILIENCIA/PROYECTO/7.2-health-checks` y copia en ella el contenido de `7.1-logging`; en Windows usa `xcopy` con `/E /I /H /Y`.
 3. Excluye `bin`, `obj`, `TestResults` y `.vs`; trabaja solamente dentro de `7.2-health-checks`.
 4. Comprueba con `dir` que aparecen `AceriaApp.sln`, `README.md`, `src`, `tests`, `docs` y `global.json`.
 
-**Por qué funciona así.** La etapa autónoma continúa 31 proyectos y 309 pruebas antes de añadir los cambios del punto.
 
 **Verificación concreta.** La copia corresponde a `7.1-logging` y conserva todas sus carpetas de código y documentación.
 
@@ -2968,16 +2233,13 @@ La etapa contiene las tres clases del análisis, sus 12 pruebas de catálogo, la
 
 ### PASO 7.2.2 — Abrir la solución copiada en Visual Studio con soporte .NET 8
 
-**Resultado de aprendizaje.** Abrir la solución copiada en Visual Studio con soporte .NET 8. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Compilar la copia detecta rutas y dependencias incompletas antes de añadir archivos.
 
 1. Abre el `AceriaApp.sln` de `7.2-health-checks` en Visual Studio.
 2. Ejecuta `dotnet sln AceriaApp.sln list` y comprueba los 31 proyectos heredados.
 3. Ejecuta `dotnet restore AceriaApp.sln` y `dotnet build AceriaApp.sln -c Release` desde la carpeta de esta etapa.
 4. Comprueba que la compilación termina sin errores; si hay DLL bloqueadas, detén los procesos que las utilizan.
 
-**Por qué funciona así.** Compilar la copia detecta rutas y dependencias incompletas antes de añadir archivos.
 
 **Verificación concreta.** La solución lista 31 proyectos y la compilación termina correctamente.
 
@@ -2988,16 +2250,13 @@ La etapa contiene las tres clases del análisis, sus 12 pruebas de catálogo, la
 
 ### PASO 7.2.3 — Verificar que la carpeta `docs` contiene los documentos del punto 7.1
 
-**Resultado de aprendizaje.** Verificar que la carpeta `docs` contiene los documentos del punto 7.1. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+El punto conserva 36 documentos reales y añadirá dos; el primer ADR disponible es ADR-010.
 
 1. Expande `docs` y comprueba sus 36 archivos Markdown.
 2. Localiza los ADR-010 a ADR-027 y las fichas temáticas heredadas.
 3. Compara nombres y contenido con `docs` de `M07_OBSERVABILIDAD_RESILIENCIA/PROYECTO/7.1-logging`.
 4. Comprueba que aún no existen `docs/health-checks.md` ni `docs/ADR-028-health-checks.md`.
 
-**Por qué funciona así.** El punto conserva 36 documentos reales y añadirá dos; el primer ADR disponible es ADR-010.
 
 **Verificación concreta.** Hay 36 documentos heredados idénticos; todavía no existen los dos documentos del punto.
 
@@ -3008,9 +2267,7 @@ La etapa contiene las tres clases del análisis, sus 12 pruebas de catálogo, la
 
 ### PASO 7.2.4 — Crear el documento de health checks en `docs`
 
-**Resultado de aprendizaje.** Crear el documento de health checks en `docs`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Una ficha de health checks debe explicar cuándo un proceso está vivo y cuándo sus dependencias están listas. La diferencia tiene consecuencias concretas para el tráfico recibido por cada instancia.
 
 1. Crea `docs/health-checks.md` dentro de la copia de `7.2-health-checks`.
 2. Introduce el contenido completo del bloque siguiente.
@@ -3095,7 +2352,6 @@ El fragmento muestra la selección por tags; el archivo completo de registro añ
 El catálogo declara recursos, tipo, timeout y protección de información. Su bandera `ConsultaDependenciaExterna` permite detectar un liveness acoplado a una dependencia. No conecta a ningún recurso; los checks funcionales ejecutan SQL y AMQP de verdad. Readiness acredita acceso, no el vaciado del outbox ni la finalización de los consumidores.
 ```
 
-**Por qué funciona así.** La ficha separa el análisis de los contratos y la evidencia ejecutable.
 
 **Verificación concreta.** `docs/health-checks.md` incluye todos los apartados del bloque mostrado.
 
@@ -3106,16 +2362,13 @@ El catálogo declara recursos, tipo, timeout y protección de información. Su b
 
 ### PASO 7.2.5 — Crear la carpeta `HealthChecks` en el proyecto API
 
-**Resultado de aprendizaje.** Crear la carpeta `HealthChecks` en el proyecto API. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+`HealthChecks` agrupa datos y reglas del ejercicio de análisis; los adaptadores de comunicación tienen sus propias responsabilidades.
 
 1. Expande el proyecto `AceriaApp.Api` y localiza `src/AceriaApp.Api`.
 2. Crea la carpeta `HealthChecks` directamente dentro del proyecto API.
 3. Comprueba que `src/AceriaApp.Api/HealthChecks` no está anidada dentro de otra carpeta temática.
 4. Conserva las carpetas y archivos heredados de `7.1-logging`.
 
-**Por qué funciona así.** `HealthChecks` agrupa datos y reglas del ejercicio de análisis; los adaptadores de comunicación tienen sus propias responsabilidades.
 
 **Verificación concreta.** Existe `src/AceriaApp.Api/HealthChecks` sin alterar las carpetas previas.
 
@@ -3123,8 +2376,6 @@ El catálogo declara recursos, tipo, timeout y protección de información. Su b
 
 - Crear la carpeta dentro de `tests` impide compilar los tipos con la API: comprueba la ruta física.
 - Renombrar una carpeta heredada rompe namespaces y enlaces: crea solo la carpeta nueva.
-
-
 
 **Integración funcional — `src/AceriaApp.Observabilidad/AceriaApp.Observabilidad.csproj`.**
 
@@ -3145,15 +2396,11 @@ El archivo completo fija las referencias y versiones que utilizará la etapa; a�
 </Project>
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 5:** `<PackageReference Include="Serilog.AspNetCore" Version="8.0.3" />`. Fija la dependencia usada por esta etapa del ejercicio.
+Fija la dependencia usada por esta etapa del ejercicio.
 
 ### PASO 7.2.6 — Crear la clase `HealthCheck`
 
-**Resultado de aprendizaje.** Crear la clase `HealthCheck`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+HealthCheck declara un escenario que analizará el catálogo; no prueba por sí mismo una conexión SQL o AMQP. Los endpoints reales deben interrogar las dependencias configuradas y responder según su resultado.
 
 1. Crea `src/AceriaApp.Api/HealthChecks/HealthCheck.cs` dentro del proyecto correspondiente.
 2. Copia el bloque completo siguiente respetando namespace, miembros y valores.
@@ -3177,27 +2424,7 @@ public class HealthCheck
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 1:** `namespace AceriaApp.Api.HealthChecks;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
-
-- **Línea 2:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
-
-- **Línea 3:** `public class HealthCheck` → Declara el tipo público del ejercicio de análisis.
-
-- **Línea 4:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
-
-- **Línea 5:** `public string Nombre { get; init; } = string.Empty;` → Declara un dato del análisis que se fija al construir la entrada.
-
-
-
-
-
-
-- **Línea 11:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
-
-
-**Por qué funciona así.** El modelo describe entradas de análisis. Sus indicadores no instalan políticas ni establecen conexiones.
+Sitúa el tipo en el espacio de nombres que importan las pruebas del punto. Declara el tipo público del ejercicio de análisis. Declara un dato del análisis que se fija al construir la entrada.
 
 **Verificación concreta.** `HealthCheck` compila en el proyecto indicado; su contenido coincide con el bloque completo.
 
@@ -3208,9 +2435,7 @@ public class HealthCheck
 
 ### PASO 7.2.7 — Crear la clase `ValidadorHealthChecks`
 
-**Resultado de aprendizaje.** Crear la clase `ValidadorHealthChecks`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+El validador comprueba la coherencia de una descripción de salud. Esa prueba no demuestra readiness: el estado real tiene que obtenerse desde el endpoint con la dependencia disponible y también cuando falla.
 
 1. Crea `src/AceriaApp.Api/HealthChecks/ValidadorHealthChecks.cs` dentro del proyecto correspondiente.
 2. Copia el bloque completo siguiente respetando namespace, miembros y valores.
@@ -3277,73 +2502,11 @@ public class ValidadorHealthChecks
 public record ResultadoHealthChecks(bool EsValida, IReadOnlyList<string> Errores);
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
+Limita los valores de texto reconocidos por la política didáctica. Expone la operación con el contrato que usan el catálogo o sus pruebas. Inicializa la colección de diagnósticos que se devolverá al finalizar.
 
+Materializa una sola vez la secuencia recibida para recorrerla y contarla. Evalúa una regla concreta antes de añadir el diagnóstico asociado. Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-
-
-
-- **Línea 5:** `private static readonly string[] TiposPermitidos = { "Liveness", "Readiness", "Startup" };` → Limita los valores de texto reconocidos por la política didáctica.
-
-
-- **Línea 7:** `public ResultadoHealthChecks Validar(IEnumerable<HealthCheck> healthChecks)` → Expone la operación con el contrato que usan el catálogo o sus pruebas.
-
-
-- **Línea 9:** `var errores = new List<string>();` → Inicializa la colección de diagnósticos que se devolverá al finalizar.
-
-- **Línea 10:** `var lista = healthChecks.ToList();` → Materializa una sola vez la secuencia recibida para recorrerla y contarla.
-
-
-- **Línea 12:** `if (lista.Count == 0)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
-
-
-- **Línea 14:** `errores.Add("No hay health checks declarados.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
-
-
-
-- **Línea 17:** `foreach (var healthCheck in lista)` → Revisa cada entrada; un catálogo puede acumular varios diagnósticos.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-- **Línea 50:** `return new ResultadoHealthChecks(errores.Count == 0, errores);` → Devuelve validez y diagnósticos; no instala middleware ni ejecuta llamadas remotas.
-
-
-
-
-- **Línea 54:** `public record ResultadoHealthChecks(bool EsValida, IReadOnlyList<string> Errores);` → Define el resultado inmutable que devuelve el validador o el resumen.
-
-
-**Por qué funciona así.** El validador devuelve todos los incumplimientos de la política explícita; no implementa una llamada, publicación o decisión automática de producción. Liveness no consulta dependencias externas; readiness sí puede comprobar recursos críticos.
+Revisa cada entrada; un catálogo puede acumular varios diagnósticos. Devuelve validez y diagnósticos; no instala middleware ni ejecuta llamadas remotas. Define el resultado inmutable que devuelve el validador o el resumen.
 
 **Verificación concreta.** `ValidadorHealthChecks` compila en el proyecto indicado; su contenido coincide con el bloque completo.
 
@@ -3354,9 +2517,7 @@ public record ResultadoHealthChecks(bool EsValida, IReadOnlyList<string> Errores
 
 ### PASO 7.2.8 — Añadir los `using` necesarios en `ValidadorHealthChecks`
 
-**Resultado de aprendizaje.** Añadir los `using` necesarios en `ValidadorHealthChecks`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Las importaciones explícitas muestran dónde se declaran los tipos genéricos y las extensiones LINQ, aunque el proyecto tenga importaciones implícitas.
 
 1. Abre `src/AceriaApp.Api/HealthChecks/ValidadorHealthChecks.cs`.
 2. Reemplaza el contenido por el archivo completo siguiente, que incorpora los using antes del namespace.
@@ -3426,68 +2587,7 @@ public class ValidadorHealthChecks
 public record ResultadoHealthChecks(bool EsValida, IReadOnlyList<string> Errores);
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 1:** `using System.Collections.Generic;` → Importa los tipos o extensiones utilizados por el archivo.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-**Por qué funciona así.** Las importaciones explícitas muestran dónde se declaran los tipos genéricos y las extensiones LINQ, aunque el proyecto tenga importaciones implícitas.
+Importa los tipos o extensiones utilizados por el archivo.
 
 **Verificación concreta.** `ValidadorHealthChecks.cs` conserva el contenido previo y añade solo las importaciones indicadas.
 
@@ -3495,8 +2595,6 @@ public record ResultadoHealthChecks(bool EsValida, IReadOnlyList<string> Errores
 
 - Pegar las importaciones dentro de una clase no es válido: insértalas antes del namespace.
 - Insertar dos veces el bloque produce importaciones duplicadas: comprueba el contenido antes de guardarlo.
-
-
 
 **Integración funcional — `src/AceriaApp.Observabilidad/RabbitServicioHealthCheck.cs`.**
 
@@ -3541,12 +2639,7 @@ public sealed class RabbitServicioHealthCheck(string uri) : IHealthCheck
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 9:** `using var plazo = CancellationTokenSource.CreateLinkedTokenSource(ct);`. Combina la cancelación del llamante con el límite propio de la sonda.
-- **Línea 16:** `conexion = await factory.CreateConnectionAsync(plazo.Token);`. Verifica el protocolo AMQP y la autenticación, no solo un puerto abierto.
-- **Línea 28:** `await conexion.AbortAsync(TimeSpan.FromMilliseconds(200));`. Acota el cierre de la conexión AMQP usada por la sonda.
-
+Combina la cancelación del llamante con el límite propio de la sonda. Verifica el protocolo AMQP y la autenticación, no solo un puerto abierto. Acota el cierre de la conexión AMQP usada por la sonda.
 
 **Integración funcional — `src/AceriaApp.Observabilidad/RegistroSalud.cs`.**
 
@@ -3598,14 +2691,9 @@ public static class RegistroSalud
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
+Registra las dependencias propias de este servicio para readiness. Publica liveness y readiness como rutas independientes. Selecciona qué checks ejecuta este endpoint.
 
-- **Línea 11:** `public static IServiceCollection AddSaludAceria(this IServiceCollection services, IConfiguration config, bool inventario)`. Registra las dependencias propias de este servicio para readiness.
-- **Línea 23:** `public static IEndpointRouteBuilder MapSaludAceria(this IEndpointRouteBuilder endpoints)`. Publica liveness y readiness como rutas independientes.
-- **Línea 31:** `Predicate = filtro,`. Selecciona qué checks ejecuta este endpoint.
-- **Línea 32:** `ResultStatusCodes = { [HealthStatus.Healthy] = 200, [HealthStatus.Degraded] = 503, [HealthStatus.Unhealthy] = 503 },`. Hace explícito el código HTTP de cada estado de salud.
-- **Línea 38:** `}, cancellationToken: context.RequestAborted)`. Distingue una cancelación del cliente de un fallo de la dependencia.
-
+Hace explícito el código HTTP de cada estado de salud. Distingue una cancelación del cliente de un fallo de la dependencia.
 
 **Integración funcional — `src/AceriaApp.Observabilidad/SqlServicioHealthCheck.cs`.**
 
@@ -3645,16 +2733,11 @@ public sealed class SqlServicioHealthCheck(string cadena) : IHealthCheck
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 16:** `await conexion.OpenAsync(plazo.Token);`. Abre realmente la conexión a la base de datos seleccionada.
-- **Línea 19:** `var valor = await consulta.ExecuteScalarAsync(plazo.Token);`. Comprueba la ejecución SQL dentro de la dependencia.
+Abre realmente la conexión a la base de datos seleccionada. Comprueba la ejecución SQL dentro de la dependencia.
 
 ### PASO 7.2.9 — Crear la clase `CatalogoHealthChecks`
 
-**Resultado de aprendizaje.** Crear la clase `CatalogoHealthChecks`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Cada invocación devuelve una lista nueva con los ejemplos de análisis; cambiar una lista no modifica futuros catálogos.
 
 1. Crea `src/AceriaApp.Api/HealthChecks/CatalogoHealthChecks.cs` dentro del proyecto correspondiente.
 2. Copia el bloque completo siguiente respetando namespace, miembros y valores.
@@ -3681,27 +2764,7 @@ public class CatalogoHealthChecks
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-
-
-
-
-
-
-- **Línea 7:** `return new List<HealthCheck>` → Devuelve una lista nueva en cada llamada; modificarla no altera otros casos.
-
-
-- **Línea 9:** `new() { Nombre = "Self", Tipo = "Liveness", Recurso = "Aplicación", TieneTimeout = true, ExponeInformacionSensible = false },` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
-
-
-
-- **Línea 12:** `};` → Cierra la colección y termina su inicialización.
-
-
-
-
-**Por qué funciona así.** Cada invocación devuelve una lista nueva con los ejemplos de análisis; cambiar una lista no modifica futuros catálogos.
+Devuelve una lista nueva en cada llamada; modificarla no altera otros casos. Construye una entrada del catálogo o del caso de prueba con valores explícitos. Cierra la colección y termina su inicialización.
 
 **Verificación concreta.** `CatalogoHealthChecks` compila en el proyecto indicado; su contenido coincide con el bloque completo.
 
@@ -3712,9 +2775,7 @@ public class CatalogoHealthChecks
 
 ### PASO 7.2.10 — Añadir el `using` necesario en `CatalogoHealthChecks`
 
-**Resultado de aprendizaje.** Añadir el `using` necesario en `CatalogoHealthChecks`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Las importaciones explícitas muestran dónde se declaran los tipos genéricos y las extensiones LINQ, aunque el proyecto tenga importaciones implícitas.
 
 1. Abre `src/AceriaApp.Api/HealthChecks/CatalogoHealthChecks.cs`.
 2. Reemplaza el contenido por el archivo completo siguiente, que incorpora los using antes del namespace.
@@ -3743,27 +2804,6 @@ public class CatalogoHealthChecks
 }
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-**Por qué funciona así.** Las importaciones explícitas muestran dónde se declaran los tipos genéricos y las extensiones LINQ, aunque el proyecto tenga importaciones implícitas.
-
 **Verificación concreta.** `CatalogoHealthChecks.cs` conserva el contenido previo y añade solo las importaciones indicadas.
 
 **Diagnóstico si falla.**
@@ -3773,9 +2813,7 @@ public class CatalogoHealthChecks
 
 ### PASO 7.2.11 — Crear el proyecto de tests del punto 7.2
 
-**Resultado de aprendizaje.** Crear el proyecto de tests del punto 7.2. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Definir el proyecto completo fija .NET 8 y las versiones del runner sin depender de la versión local de la plantilla.
 
 1. Crea la carpeta `tests/AceriaApp.HealthChecks.Tests` y el `.csproj` completo del bloque siguiente.
 2. No generes `UnitTest1.cs`; los pasos 14 y 15 incluyen las clases de prueba completas.
@@ -3802,7 +2840,6 @@ public class CatalogoHealthChecks
 </Project>
 ```
 
-**Por qué funciona así.** Definir el proyecto completo fija .NET 8 y las versiones del runner sin depender de la versión local de la plantilla.
 
 **Verificación concreta.** Existe `tests/AceriaApp.HealthChecks.Tests/AceriaApp.HealthChecks.Tests.csproj` y la solución lo incluye una sola vez.
 
@@ -3813,9 +2850,7 @@ public class CatalogoHealthChecks
 
 ### PASO 7.2.12 — Añadir la referencia del proyecto de tests a la API
 
-**Resultado de aprendizaje.** Añadir la referencia del proyecto de tests a la API. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Las pruebas consumen los tipos de análisis de la API; la API no debe depender de su proyecto de pruebas.
 
 1. Abre `tests/AceriaApp.HealthChecks.Tests/AceriaApp.HealthChecks.Tests.csproj`.
 2. Reemplaza su contenido completo por el bloque siguiente, que incorpora la referencia a la API.
@@ -3843,7 +2878,6 @@ public class CatalogoHealthChecks
 </Project>
 ```
 
-**Por qué funciona así.** Las pruebas consumen los tipos de análisis de la API; la API no debe depender de su proyecto de pruebas.
 
 **Verificación concreta.** El proyecto resuelve la referencia a la API y compila sin dependencias circulares.
 
@@ -3854,9 +2888,7 @@ public class CatalogoHealthChecks
 
 ### PASO 7.2.13 — Añadir el paquete `FluentAssertions` al proyecto de tests
 
-**Resultado de aprendizaje.** Añadir el paquete `FluentAssertions` al proyecto de tests. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La versión fijada mantiene reproducibles las aserciones `Should()` de los catálogos.
 
 1. Abre `tests/AceriaApp.HealthChecks.Tests/AceriaApp.HealthChecks.Tests.csproj` y conserva las versiones de los paquetes existentes.
 2. Reemplaza su contenido por el bloque completo que añade `FluentAssertions` 6.12.2.
@@ -3885,7 +2917,6 @@ public class CatalogoHealthChecks
 </Project>
 ```
 
-**Por qué funciona así.** La versión fijada mantiene reproducibles las aserciones `Should()` de los catálogos.
 
 **Verificación concreta.** El listado de paquetes muestra FluentAssertions 6.12.2 y el proyecto compila.
 
@@ -3893,8 +2924,6 @@ public class CatalogoHealthChecks
 
 - Instalar una versión sin fijarla puede cambiar la API y las condiciones de uso: conserva 6.12.2.
 - Añadir el paquete a la API no establece la referencia del test: modifica el proyecto de pruebas indicado.
-
-
 
 **Integración funcional — `src/AceriaApp.Api/appsettings.json`.**
 
@@ -3923,13 +2952,9 @@ La configuración usa bases y prefijos propios de esta etapa. Las variables de e
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
+Agrupa las conexiones de laboratorio específicas de la etapa. Activa o desactiva los procesos de mensajería y su dependencia en readiness. Fija el umbral propio de logging y admite sobreescritura por variables de entorno.
 
-- **Línea 2:** `"ConnectionStrings": {`. Agrupa las conexiones de laboratorio específicas de la etapa.
-- **Línea 11:** `"WorkersActivos": false`. Activa o desactiva los procesos de mensajería y su dependencia en readiness.
-- **Línea 14:** `"NivelMinimo": "Information",`. Fija el umbral propio de logging y admite sobreescritura por variables de entorno.
-- **Línea 15:** `"DiagnosticoActivo": false`. Mantiene el endpoint de fallo desactivado por defecto.
-
+Mantiene el endpoint de fallo desactivado por defecto.
 
 **Integración funcional — `src/AceriaApp.Inventario.Api/appsettings.json`.**
 
@@ -3956,14 +2981,9 @@ La configuración usa bases y prefijos propios de esta etapa. Las variables de e
 }
 ```
 
-
-
-
 ### PASO 7.2.14 — Crear el archivo `ValidadorHealthChecksTests.cs`
 
-**Resultado de aprendizaje.** Crear el archivo `ValidadorHealthChecksTests.cs`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Las pruebas ejercitan aceptación y rechazos concretos del validador. Afirmar el diagnóstico evita un falso positivo por otro error.
 
 1. Crea `tests/AceriaApp.HealthChecks.Tests/ValidadorHealthChecksTests.cs` dentro del proyecto correspondiente.
 2. Copia el bloque completo siguiente respetando namespace, miembros y valores.
@@ -4087,130 +3107,11 @@ public class ValidadorHealthChecksTests
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
+Crea la instancia del validador que utiliza cada prueba. Registra un caso ejecutable independiente en xUnit. Nombra la condición de prueba y su resultado esperado.
 
+Ejecuta el validador sobre los datos preparados para este caso. Comprueba que la política acepta los datos de este caso. Comprueba que no se ha registrado ningún diagnóstico.
 
-
-
-
-
-
-
-
-- **Línea 9:** `private readonly ValidadorHealthChecks _validador = new();` → Crea la instancia del validador que utiliza cada prueba.
-
-
-- **Línea 11:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
-
-- **Línea 12:** `public void Validar_CatalogoPorDefecto_DevuelveValido()` → Nombra la condición de prueba y su resultado esperado.
-
-
-- **Línea 14:** `var resultado = _validador.Validar(CatalogoHealthChecks.HealthChecksPorDefecto());` → Ejecuta el validador sobre los datos preparados para este caso.
-
-
-- **Línea 16:** `resultado.EsValida.Should().BeTrue();` → Comprueba que la política acepta los datos de este caso.
-
-- **Línea 17:** `resultado.Errores.Should().BeEmpty();` → Comprueba que no se ha registrado ningún diagnóstico.
-
-
-
-
-
-
-
-
-- **Línea 25:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
-
-- **Línea 26:** `resultado.Errores.Should().Contain(e => e.Contains("No hay health checks"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
-
-
-
-
-
-
-- **Línea 32:** `var healthChecks = new List<HealthCheck>` → Prepara las entradas que se van a validar o devolver.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-**Por qué funciona así.** Las pruebas ejercitan aceptación y rechazos concretos del validador. Afirmar el diagnóstico evita un falso positivo por otro error.
+Comprueba que la política rechaza los datos de este caso. Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla. Prepara las entradas que se van a validar o devolver.
 
 **Verificación concreta.** `ValidadorHealthChecksTests` compila en el proyecto indicado; su contenido coincide con el bloque completo.
 
@@ -4221,9 +3122,7 @@ public class ValidadorHealthChecksTests
 
 ### PASO 7.2.15 — Crear el archivo `CatalogoHealthChecksTests.cs`
 
-**Resultado de aprendizaje.** Crear el archivo `CatalogoHealthChecksTests.cs`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Las pruebas del catálogo verifican cantidades y propiedades declaradas. No prueban que existan los servicios nombrados.
 
 1. Crea `tests/AceriaApp.HealthChecks.Tests/CatalogoHealthChecksTests.cs` dentro del proyecto correspondiente.
 2. Copia el bloque completo siguiente respetando namespace, miembros y valores.
@@ -4284,62 +3183,9 @@ public class CatalogoHealthChecksTests
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
+Obtiene los datos que se utilizarán en las comprobaciones siguientes. Comprueba el tamaño del catálogo sin inferir servicios o conexiones en ejecución. Compara el recuento obtenido con el valor esperado del catálogo.
 
-
-
-
-
-
-
-
-
-
-
-
-- **Línea 12:** `var healthChecks = CatalogoHealthChecks.HealthChecksPorDefecto();` → Obtiene los datos que se utilizarán en las comprobaciones siguientes.
-
-
-- **Línea 14:** `healthChecks.Should().HaveCount(3);` → Comprueba el tamaño del catálogo sin inferir servicios o conexiones en ejecución.
-
-
-
-
-
-
-
-
-- **Línea 22:** `healthChecks.Count(h => h.Tipo == "Liveness").Should().Be(1);` → Compara el recuento obtenido con el valor esperado del catálogo.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-- **Línea 38:** `healthChecks.Should().OnlyContain(h => h.TieneTimeout);` → Comprueba la condición en cada entrada declarada del catálogo.
-
-
-
-
-
-
-
-
-
-
-
-
-**Por qué funciona así.** Las pruebas del catálogo verifican cantidades y propiedades declaradas. No prueban que existan los servicios nombrados.
+Comprueba la condición en cada entrada declarada del catálogo.
 
 **Verificación concreta.** `CatalogoHealthChecksTests` compila en el proyecto indicado; su contenido coincide con el bloque completo.
 
@@ -4347,8 +3193,6 @@ public class CatalogoHealthChecksTests
 
 - Un test sin `[Fact]` compila pero no se descubre: revisa los atributos del bloque.
 - Añadir el archivo al proyecto anterior modifica su suite: crea el test en la ruta de este punto.
-
-
 
 **Integración funcional — `tests/AceriaApp.HealthChecks.Tests/AceriaApp.HealthChecks.Tests.csproj`.**
 
@@ -4376,10 +3220,7 @@ El archivo completo fija las referencias y versiones que utilizará la etapa; a�
 </Project>
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 4:** `<ProjectReference Include="../../src/AceriaApp.Api/AceriaApp.Api.csproj" />`. Conecta este proyecto con otro proyecto real de la solución.
-
+Conecta este proyecto con otro proyecto real de la solución.
 
 **Integración funcional — `tests/AceriaApp.HealthChecks.Tests/SaludFuncionalTests.cs`.**
 
@@ -4497,26 +3338,19 @@ public class SaludFuncionalTests
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 23:** `public async Task Liveness_no_ejecuta_dependencias_y_readiness_si()`. Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre.
+Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre.
 
 ### PASO 7.2.16 — Compilar la solución completa
 
-**Resultado de aprendizaje.** Compilar la solución completa. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La compilación acredita el registro de los componentes. Las pruebas HTTP deben confirmar que la vida del proceso y la disponibilidad de SQL Server o RabbitMQ no se confunden al devolver el estado.
 
 1. Aplica los bloques de registro final de este paso en el orden mostrado.
 2. Añade a `AceriaApp.sln` todos los nuevos proyectos `.csproj` indicados por esos bloques.
 3. Ejecuta `dotnet restore AceriaApp.sln` y `dotnet build AceriaApp.sln -c Release`.
 4. Comprueba que la solución incluye 32 proyectos y termina sin errores.
 
-
-
 **Registro de biblioteca compartida.** Ejecuta `dotnet sln AceriaApp.sln add src/AceriaApp.Observabilidad/AceriaApp.Observabilidad.csproj`; los proyectos de tests se incorporan en sus pasos de creación. Después de reemplazar todos los archivos de este paso, compila la solución.
 
-**Por qué funciona así.** Los componentes ejecutables registran eventos, observan salud, gestionan fallos y acotan llamadas según el punto; el catálogo analiza sus declaraciones.
 
 **Verificación concreta.** La solución de la etapa compila con 32 proyectos.
 
@@ -4524,8 +3358,6 @@ public class SaludFuncionalTests
 
 - Omitir un proyecto de la solución impide verificarlo con `dotnet test AceriaApp.sln`: compara las rutas `.csproj` y el listado de la solución.
 - Interpretar un test de catálogo como prueba de tráfico omite fallos de transporte: ejecuta también la integración funcional.
-
-
 
 **Integración funcional — `src/AceriaApp.Api/Program.cs`.**
 
@@ -4723,12 +3555,7 @@ app.Run();
 public partial class Program {} // permite WebApplicationFactory en tests
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 21:** `builder.Services.AddLoggingAceria("Produccion", builder.Configuration);`. Registra el logger JSON y los servicios que necesita la correlación.
-- **Línea 38:** `}).AddHttpMessageHandler<PropagarCorrelacionHandler>();`. Propaga el identificador validado hacia Inventario.
-- **Línea 41:** `app.UseLoggingAceria();`. Abre la correlación y el resumen antes de ejecutar el resto del pipeline.
-
+Registra el logger JSON y los servicios que necesita la correlación. Propaga el identificador validado hacia Inventario. Abre la correlación y el resumen antes de ejecutar el resto del pipeline.
 
 **Integración funcional — `src/AceriaApp.Inventario.Api/InventarioProgram.cs`.**
 
@@ -4789,10 +3616,6 @@ public sealed class InventarioProgram
     }
 }
 ```
-
-
-
-
 
 ## Recorrido funcional 7.2 — proceso vivo y dependencias disponibles
 
@@ -4939,16 +3762,13 @@ Si utilizaste SQL Server Express, sustituye el servidor de `ACERIA_TEST_SQLSERVE
 
 ### PASO 7.2.17 — Ejecutar todos los tests del punto 7.2
 
-**Resultado de aprendizaje.** Ejecutar todos los tests del punto 7.2. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La prueba del punto distingue reglas de análisis y comportamiento de sus adaptadores.
 
 1. Ejecuta `dotnet test tests/AceriaApp.HealthChecks.Tests/AceriaApp.HealthChecks.Tests.csproj -c Release --no-build --no-restore`.
 2. Comprueba que se ejecutan los 13 tests de catálogo y las pruebas funcionales incorporadas progresivamente al proyecto.
 3. Revisa que cada prueba figure como aprobada, sin errores ni omisiones.
 4. Conserva el resultado de ejecución para compararlo con la suite completa del paso siguiente.
 
-**Por qué funciona así.** La prueba del punto distingue reglas de análisis y comportamiento de sus adaptadores.
 
 **Verificación concreta.** Los 13 casos de catálogo se descubren y pasan junto con la integración del punto.
 
@@ -4959,16 +3779,13 @@ Si utilizaste SQL Server Express, sustituye el servidor de `ACERIA_TEST_SQLSERVE
 
 ### PASO 7.2.18 — Ejecutar todos los tests de la solución
 
-**Resultado de aprendizaje.** Ejecutar todos los tests de la solución. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La suite completa detecta regresiones de dominio, persistencia y comunicación. Cada proyecto produce su propio resumen; una sola línea de salida no es el total de la solución.
 
 1. Configura `ACERIA_TEST_SQLSERVER` para SQL Server Express o LocalDB y comprueba la disponibilidad de los servicios de integración.
 2. Ejecuta `dotnet test AceriaApp.sln -c Release --no-build --no-restore --logger trx --results-directory TestResults`.
 3. Suma los resultados de los archivos TRX y verifica 331 pruebas aprobadas, cero fallos y cero omisiones.
 4. Revisa las pruebas heredadas de M03, M04, M05 y M06: deben seguir formando parte de la solución.
 
-**Por qué funciona así.** La suite completa detecta regresiones de dominio, persistencia y comunicación. Cada proyecto produce su propio resumen; una sola línea de salida no es el total de la solución.
 
 **Verificación concreta.** Los TRX suman 331 pruebas aprobadas sin omitir integración con SQL Server.
 
@@ -4979,9 +3796,7 @@ Si utilizaste SQL Server Express, sustituye el servidor de `ACERIA_TEST_SQLSERVE
 
 ### PASO 7.2.19 — Actualizar el README del punto 7.2
 
-**Resultado de aprendizaje.** Actualizar el README del punto 7.2. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+El README de la copia debe describir el estado actual y la evidencia disponible, no acumular instrucciones obsoletas.
 
 1. Abre el `README.md` copiado dentro de `7.2-health-checks`.
 2. Reemplaza su contenido completo por el bloque siguiente.
@@ -5024,7 +3839,6 @@ El catálogo del punto, su proyecto de pruebas, `docs/health-checks.md` y el ADR
 - Los 36 documentos anteriores, incluidos los ADR-010 a ADR-027, permanecen disponibles en `docs`.
 ```
 
-**Por qué funciona así.** El README de la copia debe describir el estado actual y la evidencia disponible, no acumular instrucciones obsoletas.
 
 **Verificación concreta.** El README identifica 32 proyectos, 331 pruebas y 13 tests nuevos de catálogo.
 
@@ -5035,9 +3849,7 @@ El catálogo del punto, su proyecto de pruebas, `docs/health-checks.md` y el ADR
 
 ### PASO 7.2.20 — Crear el ADR-028 del punto 7.2
 
-**Resultado de aprendizaje.** Crear el ADR-028 del punto 7.2. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+El ADR registra la decisión, alternativas y consecuencias sin reescribir decisiones anteriores.
 
 1. Crea `docs/ADR-028-health-checks.md` dentro de la copia de `7.2-health-checks`.
 2. Introduce el contenido completo del bloque siguiente.
@@ -5075,7 +3887,6 @@ Separar /health/live de /health/ready mediante selección explícita. Liveness n
 - Mitigación: conservar pruebas heredadas, validar errores y cancelación, y separar señales operativas de los datos sensibles.
 ```
 
-**Por qué funciona así.** El ADR registra la decisión, alternativas y consecuencias sin reescribir decisiones anteriores.
 
 **Verificación concreta.** `docs/ADR-028-health-checks.md` incluye todos los apartados del bloque mostrado.
 
@@ -5086,16 +3897,13 @@ Separar /health/live de /health/ready mediante selección explícita. Liveness n
 
 ### PASO 7.2.21 — Verificar que no se ha modificado ningún archivo del punto 7.1
 
-**Resultado de aprendizaje.** Verificar que no se ha modificado ningún archivo del punto 7.1. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Los archivos nuevos se añaden en la copia actual; los documentos y tests heredados siguen siendo la base de regresión.
 
 1. Abre PowerShell en la raíz del curso y define las carpetas anterior `M07_OBSERVABILIDAD_RESILIENCIA/PROYECTO/7.1-logging` y actual `M07_OBSERVABILIDAD_RESILIENCIA/PROYECTO/7.2-health-checks`.
 2. Enumera los archivos heredados de `docs` y de `tests` terminados en `.cs` en la etapa anterior.
 3. Compara cada archivo con su copia actual mediante `Get-FileHash`; el mismo camino relativo debe tener el mismo SHA-256.
 4. Comprueba 36 documentos idénticos y restaura únicamente cualquier documento o prueba heredada que se haya alterado por error.
 
-**Por qué funciona así.** Los archivos nuevos se añaden en la copia actual; los documentos y tests heredados siguen siendo la base de regresión.
 
 **Verificación concreta.** Los 36 documentos y todas las pruebas heredadas tienen el mismo SHA-256; los archivos nuevos del punto no se comparan como heredados.
 
@@ -5106,16 +3914,13 @@ Separar /health/live de /health/ready mediante selección explícita. Liveness n
 
 ### PASO 7.2.22 — Verificar la estructura del punto 7.2
 
-**Resultado de aprendizaje.** Verificar la estructura del punto 7.2. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La estructura debe permitir reconstruir y ejecutar el punto desde sus archivos y referencias, con todos los proyectos dentro de la etapa.
 
 1. Ejecuta `tree /F` en Windows desde la carpeta de la etapa.
 2. Localiza las tres clases de `src/AceriaApp.Api/HealthChecks` y las dos clases de tests en `tests/AceriaApp.HealthChecks.Tests`.
 3. Comprueba los 38 documentos de `docs`, incluida la ficha del punto y el ADR-028.
 4. Ejecuta `dotnet sln AceriaApp.sln list` y contrasta sus 32 proyectos con los `.csproj` presentes.
 
-**Por qué funciona así.** La estructura debe permitir reconstruir y ejecutar el punto desde sus archivos y referencias, con todos los proyectos dentro de la etapa.
 
 **Verificación concreta.** Las rutas del catálogo, documentación e integración están presentes y la solución incluye 32 proyectos.
 
@@ -5126,16 +3931,13 @@ Separar /health/live de /health/ready mediante selección explícita. Liveness n
 
 ### PASO 7.2.23 — Verificar el `.gitignore` del punto 7.2
 
-**Resultado de aprendizaje.** Verificar el `.gitignore` del punto 7.2. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Las exclusiones se aplican desde la raíz a las etapas; no es necesario inventar un `.gitignore` propio dentro de cada copia.
 
 1. Abre el `.gitignore` de la raíz del repositorio del curso.
 2. Comprueba las reglas `**/bin/`, `**/obj/` y `**/TestResults/` que ya excluyen los artefactos de todas las etapas.
 3. Ejecuta `git status --short` y revisa que no aparezcan binarios, cachés ni resultados temporales.
 4. Conserva las exclusiones existentes; si aparecen archivos locales de Visual Studio, excluye `.vs/`, `*.user` y `*.suo` mediante `.git/info/exclude`, sin ignorar código ni configuración entregable.
 
-**Por qué funciona así.** Las exclusiones se aplican desde la raíz a las etapas; no es necesario inventar un `.gitignore` propio dentro de cada copia.
 
 **Verificación concreta.** Los archivos compilados y resultados de tests están excluidos; los archivos del punto siguen visibles para Git.
 
@@ -5146,16 +3948,13 @@ Separar /health/live de /health/ready mediante selección explícita. Liveness n
 
 ### PASO 7.2.24 — Hacer el commit del punto 7.2 y verificar el estado final
 
-**Resultado de aprendizaje.** Hacer el commit del punto 7.2 y verificar el estado final. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Un commit local identifica el estado comprobado del punto; su número depende de la historia real y no se deduce del temario.
 
 1. Ejecuta `git diff --check` y revisa `git status --short` desde la raíz del curso.
 2. Añade los archivos revisados de `M07_OBSERVABILIDAD_RESILIENCIA/PROYECTO/7.2-health-checks` con `git add` y comprueba el resumen de `git diff --cached --stat`.
 3. Cuando las pruebas hayan pasado, crea el commit local con el mensaje `Punto 7.2: health checks`.
 4. Comprueba `git log -1 --oneline` y `git status --short`; no incluyas cambios ajenos al punto.
 
-**Por qué funciona así.** Un commit local identifica el estado comprobado del punto; su número depende de la historia real y no se deduce del temario.
 
 **Verificación concreta.** El commit local contiene solo los cambios revisados de 7.2 y los archivos esperados quedan registrados.
 
@@ -5237,68 +4036,6 @@ public record ResultadoHealthChecks(bool EsValida, IReadOnlyList<string> Errores
 public record ResumenHealthChecks(int Total, int Liveness, int Readiness, int Startup);
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ### Reto 7.2.3 — Calcular los recuentos
 
 Reemplaza de nuevo `src/AceriaApp.Api/HealthChecks/ValidadorHealthChecks.cs` por el archivo completo siguiente. El método queda dentro del validador y materializa la secuencia una sola vez.
@@ -5377,78 +4114,7 @@ public record ResultadoHealthChecks(bool EsValida, IReadOnlyList<string> Errores
 public record ResumenHealthChecks(int Total, int Liveness, int Readiness, int Startup);
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-
-
-
-
-
-
-
-
-
-
-- **Línea 11:** `var liveness = lista.Count(h => h.Tipo == "Liveness");` → Cuenta las entradas que cumplen el criterio indicado.
-
-
-
-- **Línea 14:** `return new ResumenHealthChecks(lista.Count, liveness, readiness, startup);` → Devuelve los recuentos del catálogo sin modificar sus entradas.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Cuenta las entradas que cumplen el criterio indicado. Devuelve los recuentos del catálogo sin modificar sus entradas.
 
 ### Reto 7.2.6 — Verificar el catálogo por defecto
 
@@ -5581,134 +4247,10 @@ public class ValidadorHealthChecksTests
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-- **Línea 114:** `var resumen = ValidadorHealthChecks.Resumen(CatalogoHealthChecks.HealthChecksPorDefecto());` → Calcula el resumen sobre el catálogo por defecto.
-
-
-
-
-
-
-
-
+Calcula el resumen sobre el catálogo por defecto.
 
 **Comprobación del reto.** Guarda los archivos, compila la copia optativa y ejecuta primero `dotnet test tests/AceriaApp.HealthChecks.Tests/AceriaApp.HealthChecks.Tests.csproj -c Release`, después `dotnet test AceriaApp.sln -c Release`. El catálogo pasa de 13 a 14 tests; la solución debe ejecutar 331 + 1 pruebas, todas aprobadas y ninguna omitida. Confirma en el TRX que se ejecutó `Resumen_ConCatalogoPorDefecto_CalculaTotales` y compara los hashes de la etapa obligatoria: no debe haber cambiado. Revisa `git diff --check` y el índice antes de registrar el reto en un commit local separado.
 
-**Por qué funciona así.** El resumen calcula sobre la lista de análisis y no altera sus entradas ni configura infraestructura. Cada número describe el catálogo, no mediciones del sistema en ejecución.
 
 **Diagnóstico si falla.** Si aparece un tipo duplicado, reemplaza el contenido completo en vez de pegarlo al final. Si el total no coincide, revisa las entradas del catálogo antes de cambiar la expectativa. No acumules los retos al construir la siguiente etapa.
 
@@ -5722,6 +4264,12 @@ La etapa contiene las tres clases del análisis, sus 13 pruebas de catálogo, la
 
 # Punto 7.3 — Gestión de excepciones
 
+## Transformar los errores en respuestas coherentes sin ocultar fallos
+
+Una API necesita diferenciar una entrada inválida, una orden inexistente, un conflicto de dominio y una excepción técnica inesperada. Responder siempre con 500 oculta el contrato funcional; devolver siempre 400 puede esconder fallos del sistema. En el tercer punto integraremos el tratamiento de excepciones con un contrato de error legible y registros que conserven la información diagnóstica adecuada.
+
+El recorrido aprovecha los health checks y logs anteriores y comprueba las respuestas HTTP de casos positivos y negativos. Los catálogos de excepciones no interceptan por sí solos ninguna solicitud; la política efectiva pertenece al middleware y a los manejadores de ASP.NET Core. También verificaremos que la respuesta pública no filtre trazas internas o información sensible.
+
 **Carpeta de trabajo:** `M07_OBSERVABILIDAD_RESILIENCIA/PROYECTO/7.3-gestion-excepciones`.
 
 **Objetivo:** completar los veinticuatro pasos, conservar la etapa anterior y comprobar el análisis y el comportamiento ejecutable. La etapa termina con 353 pruebas en 33 proyectos y 21 proyectos de tests.
@@ -5730,16 +4278,13 @@ La etapa contiene las tres clases del análisis, sus 13 pruebas de catálogo, la
 
 ### PASO 7.3.1 — Crear la carpeta del punto 7.3 a partir del punto 7.2
 
-**Resultado de aprendizaje.** Crear la carpeta del punto 7.3 a partir del punto 7.2. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La etapa autónoma continúa 32 proyectos y 331 pruebas antes de añadir los cambios del punto.
 
 1. Localiza la etapa completa `M07_OBSERVABILIDAD_RESILIENCIA/PROYECTO/7.2-health-checks`; comprueba que contiene `AceriaApp.sln`.
 2. Crea `M07_OBSERVABILIDAD_RESILIENCIA/PROYECTO/7.3-gestion-excepciones` y copia en ella el contenido de `7.2-health-checks`; en Windows usa `xcopy` con `/E /I /H /Y`.
 3. Excluye `bin`, `obj`, `TestResults` y `.vs`; trabaja solamente dentro de `7.3-gestion-excepciones`.
 4. Comprueba con `dir` que aparecen `AceriaApp.sln`, `README.md`, `src`, `tests`, `docs` y `global.json`.
 
-**Por qué funciona así.** La etapa autónoma continúa 32 proyectos y 331 pruebas antes de añadir los cambios del punto.
 
 **Verificación concreta.** La copia corresponde a `7.2-health-checks` y conserva todas sus carpetas de código y documentación.
 
@@ -5750,16 +4295,13 @@ La etapa contiene las tres clases del análisis, sus 13 pruebas de catálogo, la
 
 ### PASO 7.3.2 — Abrir la solución copiada en Visual Studio con soporte .NET 8
 
-**Resultado de aprendizaje.** Abrir la solución copiada en Visual Studio con soporte .NET 8. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Compilar la copia detecta rutas y dependencias incompletas antes de añadir archivos.
 
 1. Abre el `AceriaApp.sln` de `7.3-gestion-excepciones` en Visual Studio.
 2. Ejecuta `dotnet sln AceriaApp.sln list` y comprueba los 32 proyectos heredados.
 3. Ejecuta `dotnet restore AceriaApp.sln` y `dotnet build AceriaApp.sln -c Release` desde la carpeta de esta etapa.
 4. Comprueba que la compilación termina sin errores; si hay DLL bloqueadas, detén los procesos que las utilizan.
 
-**Por qué funciona así.** Compilar la copia detecta rutas y dependencias incompletas antes de añadir archivos.
 
 **Verificación concreta.** La solución lista 32 proyectos y la compilación termina correctamente.
 
@@ -5770,16 +4312,13 @@ La etapa contiene las tres clases del análisis, sus 13 pruebas de catálogo, la
 
 ### PASO 7.3.3 — Verificar que la carpeta `docs` contiene los documentos del punto 7.2
 
-**Resultado de aprendizaje.** Verificar que la carpeta `docs` contiene los documentos del punto 7.2. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+El punto conserva 38 documentos reales y añadirá dos; el primer ADR disponible es ADR-010.
 
 1. Expande `docs` y comprueba sus 38 archivos Markdown.
 2. Localiza los ADR-010 a ADR-028 y las fichas temáticas heredadas.
 3. Compara nombres y contenido con `docs` de `M07_OBSERVABILIDAD_RESILIENCIA/PROYECTO/7.2-health-checks`.
 4. Comprueba que aún no existen `docs/gestion-excepciones.md` ni `docs/ADR-029-gestion-excepciones.md`.
 
-**Por qué funciona así.** El punto conserva 38 documentos reales y añadirá dos; el primer ADR disponible es ADR-010.
 
 **Verificación concreta.** Hay 38 documentos heredados idénticos; todavía no existen los dos documentos del punto.
 
@@ -5790,9 +4329,7 @@ La etapa contiene las tres clases del análisis, sus 13 pruebas de catálogo, la
 
 ### PASO 7.3.4 — Crear el documento de gestión de excepciones en `docs`
 
-**Resultado de aprendizaje.** Crear el documento de gestión de excepciones en `docs`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La ficha separa el análisis de los contratos y la evidencia ejecutable.
 
 1. Crea `docs/gestion-excepciones.md` dentro de la copia de `7.3-gestion-excepciones`.
 2. Introduce el contenido completo del bloque siguiente.
@@ -5869,7 +4406,6 @@ Los nombres de excepción del catálogo son ejemplos de clasificación. No oblig
 El endpoint de diagnóstico requiere entorno Development y una opción explícita. No existe en Production. Las pruebas diferencian el formato del error, la correlación, la cancelación, las respuestas ya iniciadas y la preservación de los estados de negocio.
 ```
 
-**Por qué funciona así.** La ficha separa el análisis de los contratos y la evidencia ejecutable.
 
 **Verificación concreta.** `docs/gestion-excepciones.md` incluye todos los apartados del bloque mostrado.
 
@@ -5880,16 +4416,13 @@ El endpoint de diagnóstico requiere entorno Development y una opción explícit
 
 ### PASO 7.3.5 — Crear la carpeta `GestionExcepciones` en el proyecto API
 
-**Resultado de aprendizaje.** Crear la carpeta `GestionExcepciones` en el proyecto API. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+`GestionExcepciones` agrupa datos y reglas del ejercicio de análisis; los adaptadores de comunicación tienen sus propias responsabilidades.
 
 1. Expande el proyecto `AceriaApp.Api` y localiza `src/AceriaApp.Api`.
 2. Crea la carpeta `GestionExcepciones` directamente dentro del proyecto API.
 3. Comprueba que `src/AceriaApp.Api/GestionExcepciones` no está anidada dentro de otra carpeta temática.
 4. Conserva las carpetas y archivos heredados de `7.2-health-checks`.
 
-**Por qué funciona así.** `GestionExcepciones` agrupa datos y reglas del ejercicio de análisis; los adaptadores de comunicación tienen sus propias responsabilidades.
 
 **Verificación concreta.** Existe `src/AceriaApp.Api/GestionExcepciones` sin alterar las carpetas previas.
 
@@ -5900,9 +4433,7 @@ El endpoint de diagnóstico requiere entorno Development y una opción explícit
 
 ### PASO 7.3.6 — Crear la clase `ManejadorExcepcion`
 
-**Resultado de aprendizaje.** Crear la clase `ManejadorExcepcion`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+ManejadorExcepcion representa los criterios del ejercicio y su respuesta prevista. Para aplicarlos realmente necesitamos que el middleware capture el fallo y genere un ProblemDetails sin revelar detalles internos.
 
 1. Crea `src/AceriaApp.Api/GestionExcepciones/ManejadorExcepcion.cs` dentro del proyecto correspondiente.
 2. Copia el bloque completo siguiente respetando namespace, miembros y valores.
@@ -5925,26 +4456,7 @@ public class ManejadorExcepcion
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 1:** `namespace AceriaApp.Api.GestionExcepciones;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
-
-- **Línea 2:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
-
-- **Línea 3:** `public class ManejadorExcepcion` → Declara el tipo público del ejercicio de análisis.
-
-- **Línea 4:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
-
-- **Línea 5:** `public string TipoExcepcion { get; init; } = string.Empty;` → Declara un dato del análisis que se fija al construir la entrada.
-
-
-
-
-
-- **Línea 10:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
-
-
-**Por qué funciona así.** El modelo describe entradas de análisis. Sus indicadores no instalan políticas ni establecen conexiones.
+Sitúa el tipo en el espacio de nombres que importan las pruebas del punto. Declara el tipo público del ejercicio de análisis. Declara un dato del análisis que se fija al construir la entrada.
 
 **Verificación concreta.** `ManejadorExcepcion` compila en el proyecto indicado; su contenido coincide con el bloque completo.
 
@@ -5955,9 +4467,7 @@ public class ManejadorExcepcion
 
 ### PASO 7.3.7 — Crear la clase `ValidadorGestionExcepciones`
 
-**Resultado de aprendizaje.** Crear la clase `ValidadorGestionExcepciones`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+El validador del catálogo examina casos descritos, pero no intercepta una excepción lanzada por ASP.NET Core. La evidencia funcional procede de provocar errores controlados y consultar la respuesta HTTP.
 
 1. Crea `src/AceriaApp.Api/GestionExcepciones/ValidadorGestionExcepciones.cs` dentro del proyecto correspondiente.
 2. Copia el bloque completo siguiente respetando namespace, miembros y valores.
@@ -6019,68 +4529,11 @@ public class ValidadorGestionExcepciones
 public record ResultadoGestionExcepciones(bool EsValida, IReadOnlyList<string> Errores);
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
+Completa la declaración o la operación mostrada en el bloque. Expone la operación con el contrato que usan el catálogo o sus pruebas. Inicializa la colección de diagnósticos que se devolverá al finalizar.
 
+Materializa una sola vez la secuencia recibida para recorrerla y contarla. Evalúa una regla concreta antes de añadir el diagnóstico asociado. Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
-
-
-
-- **Línea 5:** `private static readonly int[] CodigosPermitidos = { 400, 401, 403, 404, 409, 422, 500, 503 };` → Completa la declaración o la operación mostrada en el bloque.
-
-
-- **Línea 7:** `public ResultadoGestionExcepciones Validar(IEnumerable<ManejadorExcepcion> manejadores)` → Expone la operación con el contrato que usan el catálogo o sus pruebas.
-
-
-- **Línea 9:** `var errores = new List<string>();` → Inicializa la colección de diagnósticos que se devolverá al finalizar.
-
-- **Línea 10:** `var lista = manejadores.ToList();` → Materializa una sola vez la secuencia recibida para recorrerla y contarla.
-
-
-- **Línea 12:** `if (lista.Count == 0)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
-
-
-- **Línea 14:** `errores.Add("No hay manejadores declarados.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
-
-
-
-- **Línea 17:** `foreach (var manejador in lista)` → Revisa cada entrada; un catálogo puede acumular varios diagnósticos.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-- **Línea 45:** `return new ResultadoGestionExcepciones(errores.Count == 0, errores);` → Devuelve validez y diagnósticos; no instala middleware ni ejecuta llamadas remotas.
-
-
-
-
-- **Línea 49:** `public record ResultadoGestionExcepciones(bool EsValida, IReadOnlyList<string> Errores);` → Define el resultado inmutable que devuelve el validador o el resumen.
-
-
-**Por qué funciona así.** El validador devuelve todos los incumplimientos de la política explícita; no implementa una llamada, publicación o decisión automática de producción. El catálogo admite 503 y exige registrar fallos 5xx; un 4xx esperado no exige nivel Error.
+Revisa cada entrada; un catálogo puede acumular varios diagnósticos. Devuelve validez y diagnósticos; no instala middleware ni ejecuta llamadas remotas. Define el resultado inmutable que devuelve el validador o el resumen.
 
 **Verificación concreta.** `ValidadorGestionExcepciones` compila en el proyecto indicado; su contenido coincide con el bloque completo.
 
@@ -6091,9 +4544,7 @@ public record ResultadoGestionExcepciones(bool EsValida, IReadOnlyList<string> E
 
 ### PASO 7.3.8 — Añadir los `using` necesarios en `ValidadorGestionExcepciones`
 
-**Resultado de aprendizaje.** Añadir los `using` necesarios en `ValidadorGestionExcepciones`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Las importaciones explícitas muestran dónde se declaran los tipos genéricos y las extensiones LINQ, aunque el proyecto tenga importaciones implícitas.
 
 1. Abre `src/AceriaApp.Api/GestionExcepciones/ValidadorGestionExcepciones.cs`.
 2. Reemplaza el contenido por el archivo completo siguiente, que incorpora los using antes del namespace.
@@ -6158,63 +4609,7 @@ public class ValidadorGestionExcepciones
 public record ResultadoGestionExcepciones(bool EsValida, IReadOnlyList<string> Errores);
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 1:** `using System.Collections.Generic;` → Importa los tipos o extensiones utilizados por el archivo.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-**Por qué funciona así.** Las importaciones explícitas muestran dónde se declaran los tipos genéricos y las extensiones LINQ, aunque el proyecto tenga importaciones implícitas.
+Importa los tipos o extensiones utilizados por el archivo.
 
 **Verificación concreta.** `ValidadorGestionExcepciones.cs` conserva el contenido previo y añade solo las importaciones indicadas.
 
@@ -6222,8 +4617,6 @@ public record ResultadoGestionExcepciones(bool EsValida, IReadOnlyList<string> E
 
 - Pegar las importaciones dentro de una clase no es válido: insértalas antes del namespace.
 - Insertar dos veces el bloque produce importaciones duplicadas: comprueba el contenido antes de guardarlo.
-
-
 
 **Integración funcional — `src/AceriaApp.Observabilidad/ManejadorExcepciones.cs`.**
 
@@ -6260,13 +4653,9 @@ public sealed class ManejadorExcepciones(IProblemDetailsService detalles, ILogge
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
+Evita reemplazar una respuesta cuyas cabeceras ya se enviaron. Distingue una cancelación del cliente de un fallo de la dependencia. Registra el fallo sin adjuntar el mensaje libre de la excepción.
 
-- **Línea 11:** `if (context.Response.HasStarted) return false;`. Evita reemplazar una respuesta cuyas cabeceras ya se enviaron.
-- **Línea 12:** `if (exception is OperationCanceledException && context.RequestAborted.IsCancellationRequested)`. Distingue una cancelación del cliente de un fallo de la dependencia.
-- **Línea 17:** `logger.LogError(new EventId(7301, "ExcepcionInesperada"), "Fallo inesperado de tipo {TipoExcepcion}", exception.GetType().Name);`. Registra el fallo sin adjuntar el mensaje libre de la excepción.
-- **Línea 21:** `if (!await detalles.TryWriteAsync(new ProblemDetailsContext { HttpContext = context, ProblemDetails = problem }))`. Intenta escribir ProblemDetails mediante el servicio de ASP.NET.
-
+Intenta escribir ProblemDetails mediante el servicio de ASP.NET.
 
 **Integración funcional — `src/AceriaApp.Observabilidad/RegistroErrores.cs`.**
 
@@ -6307,18 +4696,13 @@ public static class RegistroErrores
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
+Añade ProblemDetails y el manejador de excepciones al contenedor. Relaciona el evento con la traza técnica de la petición. Sitúa el manejador dentro de los ámbitos de correlación y logging.
 
-- **Línea 11:** `public static IServiceCollection AddErroresAceria(this IServiceCollection services)`. Añade ProblemDetails y el manejador de excepciones al contenedor.
-- **Línea 19:** `problem.Extensions["traceId"] = Activity.Current?.Id ?? context.TraceIdentifier;`. Relaciona el evento con la traza técnica de la petición.
-- **Línea 22:** `public static IApplicationBuilder UseErroresAceria(this IApplicationBuilder app) => app.UseExceptionHandler();`. Sitúa el manejador dentro de los ámbitos de correlación y logging.
-- **Línea 23:** `public static WebApplication MapDiagnosticoAceria(this WebApplication app)`. Aplica las dos condiciones de habilitación del diagnóstico.
+Aplica las dos condiciones de habilitación del diagnóstico.
 
 ### PASO 7.3.9 — Crear la clase `CatalogoExcepciones`
 
-**Resultado de aprendizaje.** Crear la clase `CatalogoExcepciones`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Cada invocación devuelve una lista nueva con los ejemplos de análisis; cambiar una lista no modifica futuros catálogos.
 
 1. Crea `src/AceriaApp.Api/GestionExcepciones/CatalogoExcepciones.cs` dentro del proyecto correspondiente.
 2. Copia el bloque completo siguiente respetando namespace, miembros y valores.
@@ -6347,29 +4731,7 @@ public class CatalogoExcepciones
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-
-
-
-
-
-
-- **Línea 7:** `return new List<ManejadorExcepcion>` → Devuelve una lista nueva en cada llamada; modificarla no altera otros casos.
-
-
-- **Línea 9:** `new() { TipoExcepcion = "OrdenNoEncontradaException", CodigoHttp = 404, Titulo = "Recurso no encontrado", UsaProblemDetails = true, RegistraError = true },` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
-
-
-
-
-
-- **Línea 14:** `};` → Cierra la colección y termina su inicialización.
-
-
-
-
-**Por qué funciona así.** Cada invocación devuelve una lista nueva con los ejemplos de análisis; cambiar una lista no modifica futuros catálogos.
+Devuelve una lista nueva en cada llamada; modificarla no altera otros casos. Construye una entrada del catálogo o del caso de prueba con valores explícitos. Cierra la colección y termina su inicialización.
 
 **Verificación concreta.** `CatalogoExcepciones` compila en el proyecto indicado; su contenido coincide con el bloque completo.
 
@@ -6380,9 +4742,7 @@ public class CatalogoExcepciones
 
 ### PASO 7.3.10 — Añadir el `using` necesario en `CatalogoExcepciones`
 
-**Resultado de aprendizaje.** Añadir el `using` necesario en `CatalogoExcepciones`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Las importaciones explícitas muestran dónde se declaran los tipos genéricos y las extensiones LINQ, aunque el proyecto tenga importaciones implícitas.
 
 1. Abre `src/AceriaApp.Api/GestionExcepciones/CatalogoExcepciones.cs`.
 2. Reemplaza el contenido por el archivo completo siguiente, que incorpora los using antes del namespace.
@@ -6413,29 +4773,6 @@ public class CatalogoExcepciones
 }
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-**Por qué funciona así.** Las importaciones explícitas muestran dónde se declaran los tipos genéricos y las extensiones LINQ, aunque el proyecto tenga importaciones implícitas.
-
 **Verificación concreta.** `CatalogoExcepciones.cs` conserva el contenido previo y añade solo las importaciones indicadas.
 
 **Diagnóstico si falla.**
@@ -6445,9 +4782,7 @@ public class CatalogoExcepciones
 
 ### PASO 7.3.11 — Crear el proyecto de tests del punto 7.3
 
-**Resultado de aprendizaje.** Crear el proyecto de tests del punto 7.3. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Definir el proyecto completo fija .NET 8 y las versiones del runner sin depender de la versión local de la plantilla.
 
 1. Crea la carpeta `tests/AceriaApp.GestionExcepciones.Tests` y el `.csproj` completo del bloque siguiente.
 2. No generes `UnitTest1.cs`; los pasos 14 y 15 incluyen las clases de prueba completas.
@@ -6474,7 +4809,6 @@ public class CatalogoExcepciones
 </Project>
 ```
 
-**Por qué funciona así.** Definir el proyecto completo fija .NET 8 y las versiones del runner sin depender de la versión local de la plantilla.
 
 **Verificación concreta.** Existe `tests/AceriaApp.GestionExcepciones.Tests/AceriaApp.GestionExcepciones.Tests.csproj` y la solución lo incluye una sola vez.
 
@@ -6485,9 +4819,7 @@ public class CatalogoExcepciones
 
 ### PASO 7.3.12 — Añadir la referencia del proyecto de tests a la API
 
-**Resultado de aprendizaje.** Añadir la referencia del proyecto de tests a la API. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Las pruebas consumen los tipos de análisis de la API; la API no debe depender de su proyecto de pruebas.
 
 1. Abre `tests/AceriaApp.GestionExcepciones.Tests/AceriaApp.GestionExcepciones.Tests.csproj`.
 2. Reemplaza su contenido completo por el bloque siguiente, que incorpora la referencia a la API.
@@ -6515,7 +4847,6 @@ public class CatalogoExcepciones
 </Project>
 ```
 
-**Por qué funciona así.** Las pruebas consumen los tipos de análisis de la API; la API no debe depender de su proyecto de pruebas.
 
 **Verificación concreta.** El proyecto resuelve la referencia a la API y compila sin dependencias circulares.
 
@@ -6526,9 +4857,7 @@ public class CatalogoExcepciones
 
 ### PASO 7.3.13 — Añadir el paquete `FluentAssertions` al proyecto de tests
 
-**Resultado de aprendizaje.** Añadir el paquete `FluentAssertions` al proyecto de tests. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La versión fijada mantiene reproducibles las aserciones `Should()` de los catálogos.
 
 1. Abre `tests/AceriaApp.GestionExcepciones.Tests/AceriaApp.GestionExcepciones.Tests.csproj` y conserva las versiones de los paquetes existentes.
 2. Reemplaza su contenido por el bloque completo que añade `FluentAssertions` 6.12.2.
@@ -6557,7 +4886,6 @@ public class CatalogoExcepciones
 </Project>
 ```
 
-**Por qué funciona así.** La versión fijada mantiene reproducibles las aserciones `Should()` de los catálogos.
 
 **Verificación concreta.** El listado de paquetes muestra FluentAssertions 6.12.2 y el proyecto compila.
 
@@ -6565,8 +4893,6 @@ public class CatalogoExcepciones
 
 - Instalar una versión sin fijarla puede cambiar la API y las condiciones de uso: conserva 6.12.2.
 - Añadir el paquete a la API no establece la referencia del test: modifica el proyecto de pruebas indicado.
-
-
 
 **Integración funcional — `src/AceriaApp.Api/appsettings.json`.**
 
@@ -6595,13 +4921,9 @@ La configuración usa bases y prefijos propios de esta etapa. Las variables de e
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
+Agrupa las conexiones de laboratorio específicas de la etapa. Activa o desactiva los procesos de mensajería y su dependencia en readiness. Fija el umbral propio de logging y admite sobreescritura por variables de entorno.
 
-- **Línea 2:** `"ConnectionStrings": {`. Agrupa las conexiones de laboratorio específicas de la etapa.
-- **Línea 11:** `"WorkersActivos": false`. Activa o desactiva los procesos de mensajería y su dependencia en readiness.
-- **Línea 14:** `"NivelMinimo": "Information",`. Fija el umbral propio de logging y admite sobreescritura por variables de entorno.
-- **Línea 15:** `"DiagnosticoActivo": false`. Mantiene el endpoint de fallo desactivado por defecto.
-
+Mantiene el endpoint de fallo desactivado por defecto.
 
 **Integración funcional — `src/AceriaApp.Inventario.Api/appsettings.json`.**
 
@@ -6628,14 +4950,9 @@ La configuración usa bases y prefijos propios de esta etapa. Las variables de e
 }
 ```
 
-
-
-
 ### PASO 7.3.14 — Crear el archivo `ValidadorGestionExcepcionesTests.cs`
 
-**Resultado de aprendizaje.** Crear el archivo `ValidadorGestionExcepcionesTests.cs`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Las pruebas ejercitan aceptación y rechazos concretos del validador. Afirmar el diagnóstico evita un falso positivo por otro error.
 
 1. Crea `tests/AceriaApp.GestionExcepciones.Tests/ValidadorGestionExcepcionesTests.cs` dentro del proyecto correspondiente.
 2. Copia el bloque completo siguiente respetando namespace, miembros y valores.
@@ -6759,130 +5076,11 @@ public class ValidadorGestionExcepcionesTests
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
+Crea la instancia del validador que utiliza cada prueba. Registra un caso ejecutable independiente en xUnit. Nombra la condición de prueba y su resultado esperado.
 
+Ejecuta el validador sobre los datos preparados para este caso. Comprueba que la política acepta los datos de este caso. Comprueba que no se ha registrado ningún diagnóstico.
 
-
-
-
-
-
-
-
-- **Línea 9:** `private readonly ValidadorGestionExcepciones _validador = new();` → Crea la instancia del validador que utiliza cada prueba.
-
-
-- **Línea 11:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
-
-- **Línea 12:** `public void Validar_CatalogoPorDefecto_DevuelveValido()` → Nombra la condición de prueba y su resultado esperado.
-
-
-- **Línea 14:** `var resultado = _validador.Validar(CatalogoExcepciones.ManejadoresPorDefecto());` → Ejecuta el validador sobre los datos preparados para este caso.
-
-
-- **Línea 16:** `resultado.EsValida.Should().BeTrue();` → Comprueba que la política acepta los datos de este caso.
-
-- **Línea 17:** `resultado.Errores.Should().BeEmpty();` → Comprueba que no se ha registrado ningún diagnóstico.
-
-
-
-
-
-
-
-
-- **Línea 25:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
-
-- **Línea 26:** `resultado.Errores.Should().Contain(e => e.Contains("No hay manejadores"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
-
-
-
-
-
-
-- **Línea 32:** `var manejadores = new List<ManejadorExcepcion>` → Prepara las entradas que se van a validar o devolver.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-**Por qué funciona así.** Las pruebas ejercitan aceptación y rechazos concretos del validador. Afirmar el diagnóstico evita un falso positivo por otro error.
+Comprueba que la política rechaza los datos de este caso. Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla. Prepara las entradas que se van a validar o devolver.
 
 **Verificación concreta.** `ValidadorGestionExcepcionesTests` compila en el proyecto indicado; su contenido coincide con el bloque completo.
 
@@ -6893,9 +5091,7 @@ public class ValidadorGestionExcepcionesTests
 
 ### PASO 7.3.15 — Crear el archivo `CatalogoExcepcionesTests.cs`
 
-**Resultado de aprendizaje.** Crear el archivo `CatalogoExcepcionesTests.cs`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Las pruebas del catálogo verifican cantidades y propiedades declaradas. No prueban que existan los servicios nombrados.
 
 1. Crea `tests/AceriaApp.GestionExcepciones.Tests/CatalogoExcepcionesTests.cs` dentro del proyecto correspondiente.
 2. Copia el bloque completo siguiente respetando namespace, miembros y valores.
@@ -6957,63 +5153,9 @@ public class CatalogoExcepcionesTests
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
+Obtiene los datos que se utilizarán en las comprobaciones siguientes. Comprueba el tamaño del catálogo sin inferir servicios o conexiones en ejecución. Comprueba la condición en cada entrada declarada del catálogo.
 
-
-
-
-
-
-
-
-
-
-
-
-- **Línea 12:** `var manejadores = CatalogoExcepciones.ManejadoresPorDefecto();` → Obtiene los datos que se utilizarán en las comprobaciones siguientes.
-
-
-- **Línea 14:** `manejadores.Should().HaveCount(5);` → Comprueba el tamaño del catálogo sin inferir servicios o conexiones en ejecución.
-
-
-
-
-
-
-
-
-- **Línea 22:** `manejadores.Should().OnlyContain(m => m.UsaProblemDetails);` → Comprueba la condición en cada entrada declarada del catálogo.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-- **Línea 38:** `manejadores.Count(m => m.CodigoHttp >= 400 && m.CodigoHttp < 500).Should().Be(4);` → Compara el recuento obtenido con el valor esperado del catálogo.
-
-
-
-
-
-
-
-
-
-
-
-
-
-**Por qué funciona así.** Las pruebas del catálogo verifican cantidades y propiedades declaradas. No prueban que existan los servicios nombrados.
+Compara el recuento obtenido con el valor esperado del catálogo.
 
 **Verificación concreta.** `CatalogoExcepcionesTests` compila en el proyecto indicado; su contenido coincide con el bloque completo.
 
@@ -7021,8 +5163,6 @@ public class CatalogoExcepcionesTests
 
 - Un test sin `[Fact]` compila pero no se descubre: revisa los atributos del bloque.
 - Añadir el archivo al proyecto anterior modifica su suite: crea el test en la ruta de este punto.
-
-
 
 **Integración funcional — `tests/AceriaApp.GestionExcepciones.Tests/AceriaApp.GestionExcepciones.Tests.csproj`.**
 
@@ -7046,11 +5186,7 @@ El archivo completo fija las referencias y versiones que utilizará la etapa; a�
 </Project>
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 4:** `<ProjectReference Include="../../src/AceriaApp.Api/AceriaApp.Api.csproj" />`. Conecta este proyecto con otro proyecto real de la solución.
-- **Línea 6:** `<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />`. Fija la dependencia usada por esta etapa del ejercicio.
-
+Conecta este proyecto con otro proyecto real de la solución. Fija la dependencia usada por esta etapa del ejercicio.
 
 **Integración funcional — `tests/AceriaApp.GestionExcepciones.Tests/ErroresFuncionalesTests.cs`.**
 
@@ -7180,29 +5316,21 @@ public class ErroresFuncionalesTests
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
+Define una comprobación síncrona del contrato indicado por el nombre. Registra el logger JSON y los servicios que necesita la correlación. Abre la correlación y el resumen antes de ejecutar el resto del pipeline.
 
-- **Línea 22:** `public void Emit(LogEvent e) => Eventos.Enqueue(e);`. Define una comprobación síncrona del contrato indicado por el nombre.
-- **Línea 30:** `builder.Services.AddLoggingAceria("Prueba"); builder.Services.AddErroresAceria();`. Registra el logger JSON y los servicios que necesita la correlación.
-- **Línea 31:** `var app = builder.Build(); app.UseLoggingAceria(); app.UseErroresAceria(); app.MapDiagnosticoAceria();`. Abre la correlación y el resumen antes de ejecutar el resto del pipeline.
-- **Línea 38:** `public async Task Fallo_inesperado_devuelve_ProblemDetails_y_correlacion_sin_detalle_privado()`. Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre.
+Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre.
 
 ### PASO 7.3.16 — Compilar la solución completa
 
-**Resultado de aprendizaje.** Compilar la solución completa. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La integración necesita conservar los errores de dominio y registrar los fallos inesperados. Comprueba que las respuestas no se convierten indiscriminadamente en 500 ni exponen excepciones internas.
 
 1. Aplica los bloques de registro final de este paso en el orden mostrado.
 2. Añade a `AceriaApp.sln` todos los nuevos proyectos `.csproj` indicados por esos bloques.
 3. Ejecuta `dotnet restore AceriaApp.sln` y `dotnet build AceriaApp.sln -c Release`.
 4. Comprueba que la solución incluye 33 proyectos y termina sin errores.
 
-
-
 **Registro de biblioteca compartida.** Ejecuta `dotnet sln AceriaApp.sln add src/AceriaApp.Observabilidad/AceriaApp.Observabilidad.csproj`; los proyectos de tests se incorporan en sus pasos de creación. Después de reemplazar todos los archivos de este paso, compila la solución.
 
-**Por qué funciona así.** Los componentes ejecutables registran eventos, observan salud, gestionan fallos y acotan llamadas según el punto; el catálogo analiza sus declaraciones.
 
 **Verificación concreta.** La solución de la etapa compila con 33 proyectos.
 
@@ -7210,8 +5338,6 @@ public class ErroresFuncionalesTests
 
 - Omitir un proyecto de la solución impide verificarlo con `dotnet test AceriaApp.sln`: compara las rutas `.csproj` y el listado de la solución.
 - Interpretar un test de catálogo como prueba de tráfico omite fallos de transporte: ejecuta también la integración funcional.
-
-
 
 **Integración funcional — `src/AceriaApp.Api/Program.cs`.**
 
@@ -7412,12 +5538,7 @@ app.Run();
 public partial class Program {} // permite WebApplicationFactory en tests
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 38:** `}).AddHttpMessageHandler<PropagarCorrelacionHandler>();`. Propaga el identificador validado hacia Inventario.
-- **Línea 39:** `builder.Services.AddSaludAceria(builder.Configuration, inventario: false);`. Registra las dependencias propias de este servicio para readiness.
-- **Línea 187:** `app.MapSaludAceria();`. Publica liveness y readiness como rutas independientes.
-
+Propaga el identificador validado hacia Inventario. Registra las dependencias propias de este servicio para readiness. Publica liveness y readiness como rutas independientes.
 
 **Integración funcional — `src/AceriaApp.Inventario.Api/InventarioProgram.cs`.**
 
@@ -7481,10 +5602,6 @@ public sealed class InventarioProgram
     }
 }
 ```
-
-
-
-
 
 ## Recorrido funcional 7.3 — ProblemDetails seguro y diagnóstico restringido
 
@@ -7600,16 +5717,13 @@ El nivel `Information` de esta sesión se fija expresamente para observar tambi�
 
 ### PASO 7.3.17 — Ejecutar todos los tests del punto 7.3
 
-**Resultado de aprendizaje.** Ejecutar todos los tests del punto 7.3. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La prueba del punto distingue reglas de análisis y comportamiento de sus adaptadores.
 
 1. Ejecuta `dotnet test tests/AceriaApp.GestionExcepciones.Tests/AceriaApp.GestionExcepciones.Tests.csproj -c Release --no-build --no-restore`.
 2. Comprueba que se ejecutan los 13 tests de catálogo y las pruebas funcionales incorporadas progresivamente al proyecto.
 3. Revisa que cada prueba figure como aprobada, sin errores ni omisiones.
 4. Conserva el resultado de ejecución para compararlo con la suite completa del paso siguiente.
 
-**Por qué funciona así.** La prueba del punto distingue reglas de análisis y comportamiento de sus adaptadores.
 
 **Verificación concreta.** Los 13 casos de catálogo se descubren y pasan junto con la integración del punto.
 
@@ -7620,16 +5734,13 @@ El nivel `Information` de esta sesión se fija expresamente para observar tambi�
 
 ### PASO 7.3.18 — Ejecutar todos los tests de la solución
 
-**Resultado de aprendizaje.** Ejecutar todos los tests de la solución. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La suite completa detecta regresiones de dominio, persistencia y comunicación. Cada proyecto produce su propio resumen; una sola línea de salida no es el total de la solución.
 
 1. Configura `ACERIA_TEST_SQLSERVER` para SQL Server Express o LocalDB y comprueba la disponibilidad de los servicios de integración.
 2. Ejecuta `dotnet test AceriaApp.sln -c Release --no-build --no-restore --logger trx --results-directory TestResults`.
 3. Suma los resultados de los archivos TRX y verifica 353 pruebas aprobadas, cero fallos y cero omisiones.
 4. Revisa las pruebas heredadas de M03, M04, M05 y M06: deben seguir formando parte de la solución.
 
-**Por qué funciona así.** La suite completa detecta regresiones de dominio, persistencia y comunicación. Cada proyecto produce su propio resumen; una sola línea de salida no es el total de la solución.
 
 **Verificación concreta.** Los TRX suman 353 pruebas aprobadas sin omitir integración con SQL Server.
 
@@ -7640,9 +5751,7 @@ El nivel `Information` de esta sesión se fija expresamente para observar tambi�
 
 ### PASO 7.3.19 — Actualizar el README del punto 7.3
 
-**Resultado de aprendizaje.** Actualizar el README del punto 7.3. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+El README de la copia debe describir el estado actual y la evidencia disponible, no acumular instrucciones obsoletas.
 
 1. Abre el `README.md` copiado dentro de `7.3-gestion-excepciones`.
 2. Reemplaza su contenido completo por el bloque siguiente.
@@ -7685,7 +5794,6 @@ El catálogo del punto, su proyecto de pruebas, `docs/gestion-excepciones.md` y 
 - Los 38 documentos anteriores, incluidos los ADR-010 a ADR-028, permanecen disponibles en `docs`.
 ```
 
-**Por qué funciona así.** El README de la copia debe describir el estado actual y la evidencia disponible, no acumular instrucciones obsoletas.
 
 **Verificación concreta.** El README identifica 33 proyectos, 353 pruebas y 13 tests nuevos de catálogo.
 
@@ -7696,9 +5804,7 @@ El catálogo del punto, su proyecto de pruebas, `docs/gestion-excepciones.md` y 
 
 ### PASO 7.3.20 — Crear el ADR-029 del punto 7.3
 
-**Resultado de aprendizaje.** Crear el ADR-029 del punto 7.3. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+El ADR registra la decisión, alternativas y consecuencias sin reescribir decisiones anteriores.
 
 1. Crea `docs/ADR-029-gestion-excepciones.md` dentro de la copia de `7.3-gestion-excepciones`.
 2. Introduce el contenido completo del bloque siguiente.
@@ -7736,7 +5842,6 @@ Centralizar fallos inesperados mediante IExceptionHandler, UseExceptionHandler y
 - Mitigación: conservar pruebas heredadas, validar errores y cancelación, y separar señales operativas de los datos sensibles.
 ```
 
-**Por qué funciona así.** El ADR registra la decisión, alternativas y consecuencias sin reescribir decisiones anteriores.
 
 **Verificación concreta.** `docs/ADR-029-gestion-excepciones.md` incluye todos los apartados del bloque mostrado.
 
@@ -7747,16 +5852,13 @@ Centralizar fallos inesperados mediante IExceptionHandler, UseExceptionHandler y
 
 ### PASO 7.3.21 — Verificar que no se ha modificado ningún archivo del punto 7.2
 
-**Resultado de aprendizaje.** Verificar que no se ha modificado ningún archivo del punto 7.2. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Los archivos nuevos se añaden en la copia actual; los documentos y tests heredados siguen siendo la base de regresión.
 
 1. Abre PowerShell en la raíz del curso y define las carpetas anterior `M07_OBSERVABILIDAD_RESILIENCIA/PROYECTO/7.2-health-checks` y actual `M07_OBSERVABILIDAD_RESILIENCIA/PROYECTO/7.3-gestion-excepciones`.
 2. Enumera los archivos heredados de `docs` y de `tests` terminados en `.cs` en la etapa anterior.
 3. Compara cada archivo con su copia actual mediante `Get-FileHash`; el mismo camino relativo debe tener el mismo SHA-256.
 4. Comprueba 38 documentos idénticos y restaura únicamente cualquier documento o prueba heredada que se haya alterado por error.
 
-**Por qué funciona así.** Los archivos nuevos se añaden en la copia actual; los documentos y tests heredados siguen siendo la base de regresión.
 
 **Verificación concreta.** Los 38 documentos y todas las pruebas heredadas tienen el mismo SHA-256; los archivos nuevos del punto no se comparan como heredados.
 
@@ -7767,16 +5869,13 @@ Centralizar fallos inesperados mediante IExceptionHandler, UseExceptionHandler y
 
 ### PASO 7.3.22 — Verificar la estructura del punto 7.3
 
-**Resultado de aprendizaje.** Verificar la estructura del punto 7.3. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La estructura debe permitir reconstruir y ejecutar el punto desde sus archivos y referencias, con todos los proyectos dentro de la etapa.
 
 1. Ejecuta `tree /F` en Windows desde la carpeta de la etapa.
 2. Localiza las tres clases de `src/AceriaApp.Api/GestionExcepciones` y las dos clases de tests en `tests/AceriaApp.GestionExcepciones.Tests`.
 3. Comprueba los 40 documentos de `docs`, incluida la ficha del punto y el ADR-029.
 4. Ejecuta `dotnet sln AceriaApp.sln list` y contrasta sus 33 proyectos con los `.csproj` presentes.
 
-**Por qué funciona así.** La estructura debe permitir reconstruir y ejecutar el punto desde sus archivos y referencias, con todos los proyectos dentro de la etapa.
 
 **Verificación concreta.** Las rutas del catálogo, documentación e integración están presentes y la solución incluye 33 proyectos.
 
@@ -7787,16 +5886,13 @@ Centralizar fallos inesperados mediante IExceptionHandler, UseExceptionHandler y
 
 ### PASO 7.3.23 — Verificar el `.gitignore` del punto 7.3
 
-**Resultado de aprendizaje.** Verificar el `.gitignore` del punto 7.3. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Las exclusiones se aplican desde la raíz a las etapas; no es necesario inventar un `.gitignore` propio dentro de cada copia.
 
 1. Abre el `.gitignore` de la raíz del repositorio del curso.
 2. Comprueba las reglas `**/bin/`, `**/obj/` y `**/TestResults/` que ya excluyen los artefactos de todas las etapas.
 3. Ejecuta `git status --short` y revisa que no aparezcan binarios, cachés ni resultados temporales.
 4. Conserva las exclusiones existentes; si aparecen archivos locales de Visual Studio, excluye `.vs/`, `*.user` y `*.suo` mediante `.git/info/exclude`, sin ignorar código ni configuración entregable.
 
-**Por qué funciona así.** Las exclusiones se aplican desde la raíz a las etapas; no es necesario inventar un `.gitignore` propio dentro de cada copia.
 
 **Verificación concreta.** Los archivos compilados y resultados de tests están excluidos; los archivos del punto siguen visibles para Git.
 
@@ -7807,16 +5903,13 @@ Centralizar fallos inesperados mediante IExceptionHandler, UseExceptionHandler y
 
 ### PASO 7.3.24 — Hacer el commit del punto 7.3 y verificar el estado final
 
-**Resultado de aprendizaje.** Hacer el commit del punto 7.3 y verificar el estado final. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Un commit local identifica el estado comprobado del punto; su número depende de la historia real y no se deduce del temario.
 
 1. Ejecuta `git diff --check` y revisa `git status --short` desde la raíz del curso.
 2. Añade los archivos revisados de `M07_OBSERVABILIDAD_RESILIENCIA/PROYECTO/7.3-gestion-excepciones` con `git add` y comprueba el resumen de `git diff --cached --stat`.
 3. Cuando las pruebas hayan pasado, crea el commit local con el mensaje `Punto 7.3: gestión de excepciones`.
 4. Comprueba `git log -1 --oneline` y `git status --short`; no incluyas cambios ajenos al punto.
 
-**Por qué funciona así.** Un commit local identifica el estado comprobado del punto; su número depende de la historia real y no se deduce del temario.
 
 **Verificación concreta.** El commit local contiene solo los cambios revisados de 7.3 y los archivos esperados quedan registrados.
 
@@ -7893,63 +5986,6 @@ public record ResultadoGestionExcepciones(bool EsValida, IReadOnlyList<string> E
 public record ResumenGestionExcepciones(int Total, int ErroresCliente, int ErroresServidor, int ConProblemDetails);
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ### Reto 7.3.3 — Calcular los recuentos
 
 Reemplaza de nuevo `src/AceriaApp.Api/GestionExcepciones/ValidadorGestionExcepciones.cs` por el archivo completo siguiente. El método queda dentro del validador y materializa la secuencia una sola vez.
@@ -8023,73 +6059,7 @@ public record ResultadoGestionExcepciones(bool EsValida, IReadOnlyList<string> E
 public record ResumenGestionExcepciones(int Total, int ErroresCliente, int ErroresServidor, int ConProblemDetails);
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-
-
-
-
-
-
-
-
-
-
-- **Línea 11:** `var erroresCliente = lista.Count(m => m.CodigoHttp >= 400 && m.CodigoHttp < 500);` → Cuenta las entradas que cumplen el criterio indicado.
-
-
-
-- **Línea 14:** `return new ResumenGestionExcepciones(lista.Count, erroresCliente, erroresServidor, conProblemDetails);` → Devuelve los recuentos del catálogo sin modificar sus entradas.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Cuenta las entradas que cumplen el criterio indicado. Devuelve los recuentos del catálogo sin modificar sus entradas.
 
 ### Reto 7.3.6 — Verificar el catálogo por defecto
 
@@ -8222,134 +6192,10 @@ public class ValidadorGestionExcepcionesTests
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-- **Línea 114:** `var resumen = ValidadorGestionExcepciones.Resumen(CatalogoExcepciones.ManejadoresPorDefecto());` → Calcula el resumen sobre el catálogo por defecto.
-
-
-
-
-
-
-
-
+Calcula el resumen sobre el catálogo por defecto.
 
 **Comprobación del reto.** Guarda los archivos, compila la copia optativa y ejecuta primero `dotnet test tests/AceriaApp.GestionExcepciones.Tests/AceriaApp.GestionExcepciones.Tests.csproj -c Release`, después `dotnet test AceriaApp.sln -c Release`. El catálogo pasa de 13 a 14 tests; la solución debe ejecutar 353 + 1 pruebas, todas aprobadas y ninguna omitida. Confirma en el TRX que se ejecutó `Resumen_ConCatalogoPorDefecto_CalculaTotales` y compara los hashes de la etapa obligatoria: no debe haber cambiado. Revisa `git diff --check` y el índice antes de registrar el reto en un commit local separado.
 
-**Por qué funciona así.** El resumen calcula sobre la lista de análisis y no altera sus entradas ni configura infraestructura. Cada número describe el catálogo, no mediciones del sistema en ejecución.
 
 **Diagnóstico si falla.** Si aparece un tipo duplicado, reemplaza el contenido completo en vez de pegarlo al final. Si el total no coincide, revisa las entradas del catálogo antes de cambiar la expectativa. No acumules los retos al construir la siguiente etapa.
 
@@ -8363,6 +6209,12 @@ La etapa contiene las tres clases del análisis, sus 13 pruebas de catálogo, la
 
 # Punto 7.4 — Retry y Circuit Breaker mediante Polly
 
+## Reintentar con límites y abrir el circuito cuando fallan las dependencias
+
+La resiliencia no consiste en repetir automáticamente cualquier solicitud. Un retry sin límites puede saturar el servicio que está fallando, y repetir operaciones no idempotentes puede duplicar sus efectos. Polly permite controlar tiempos, reintentos y circuit breaker, pero exige elegir condiciones precisas y observar los cambios entre funcionamiento normal, fallos consecutivos y recuperación.
+
+En la última etapa configuraremos las políticas sobre clientes HTTP reales y comprobaremos su reacción a fallos introducidos deliberadamente. Un catálogo que declara TieneRetry o TieneCircuitBreaker solo describe una intención. El objetivo será contrastar esa declaración con la configuración efectiva, los resultados HTTP y las pruebas de recuperación, sin alterar el comportamiento de Producción, Inventario y la mensajería heredada.
+
 **Carpeta de trabajo:** `M07_OBSERVABILIDAD_RESILIENCIA/PROYECTO/7.4-retry-circuit-breaker-polly`.
 
 **Objetivo:** completar los veinticuatro pasos, conservar la etapa anterior y comprobar el análisis y el comportamiento ejecutable. La etapa termina con 403 pruebas en 34 proyectos y 22 proyectos de tests.
@@ -8371,16 +6223,13 @@ La etapa contiene las tres clases del análisis, sus 13 pruebas de catálogo, la
 
 ### PASO 7.4.1 — Crear la carpeta del punto 7.4 a partir del punto 7.3
 
-**Resultado de aprendizaje.** Crear la carpeta del punto 7.4 a partir del punto 7.3. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La etapa autónoma continúa 33 proyectos y 353 pruebas antes de añadir los cambios del punto.
 
 1. Localiza la etapa completa `M07_OBSERVABILIDAD_RESILIENCIA/PROYECTO/7.3-gestion-excepciones`; comprueba que contiene `AceriaApp.sln`.
 2. Crea `M07_OBSERVABILIDAD_RESILIENCIA/PROYECTO/7.4-retry-circuit-breaker-polly` y copia en ella el contenido de `7.3-gestion-excepciones`; en Windows usa `xcopy` con `/E /I /H /Y`.
 3. Excluye `bin`, `obj`, `TestResults` y `.vs`; trabaja solamente dentro de `7.4-retry-circuit-breaker-polly`.
 4. Comprueba con `dir` que aparecen `AceriaApp.sln`, `README.md`, `src`, `tests`, `docs` y `global.json`.
 
-**Por qué funciona así.** La etapa autónoma continúa 33 proyectos y 353 pruebas antes de añadir los cambios del punto.
 
 **Verificación concreta.** La copia corresponde a `7.3-gestion-excepciones` y conserva todas sus carpetas de código y documentación.
 
@@ -8391,16 +6240,13 @@ La etapa contiene las tres clases del análisis, sus 13 pruebas de catálogo, la
 
 ### PASO 7.4.2 — Abrir la solución copiada en Visual Studio con soporte .NET 8
 
-**Resultado de aprendizaje.** Abrir la solución copiada en Visual Studio con soporte .NET 8. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Compilar la copia detecta rutas y dependencias incompletas antes de añadir archivos.
 
 1. Abre el `AceriaApp.sln` de `7.4-retry-circuit-breaker-polly` en Visual Studio.
 2. Ejecuta `dotnet sln AceriaApp.sln list` y comprueba los 33 proyectos heredados.
 3. Ejecuta `dotnet restore AceriaApp.sln` y `dotnet build AceriaApp.sln -c Release` desde la carpeta de esta etapa.
 4. Comprueba que la compilación termina sin errores; si hay DLL bloqueadas, detén los procesos que las utilizan.
 
-**Por qué funciona así.** Compilar la copia detecta rutas y dependencias incompletas antes de añadir archivos.
 
 **Verificación concreta.** La solución lista 33 proyectos y la compilación termina correctamente.
 
@@ -8411,16 +6257,13 @@ La etapa contiene las tres clases del análisis, sus 13 pruebas de catálogo, la
 
 ### PASO 7.4.3 — Verificar que la carpeta `docs` contiene los documentos del punto 7.3
 
-**Resultado de aprendizaje.** Verificar que la carpeta `docs` contiene los documentos del punto 7.3. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+El punto conserva 40 documentos reales y añadirá dos; el primer ADR disponible es ADR-010.
 
 1. Expande `docs` y comprueba sus 40 archivos Markdown.
 2. Localiza los ADR-010 a ADR-029 y las fichas temáticas heredadas.
 3. Compara nombres y contenido con `docs` de `M07_OBSERVABILIDAD_RESILIENCIA/PROYECTO/7.3-gestion-excepciones`.
 4. Comprueba que aún no existen `docs/retry-circuit-breaker-polly.md` ni `docs/ADR-030-retry-circuit-breaker-polly.md`.
 
-**Por qué funciona así.** El punto conserva 40 documentos reales y añadirá dos; el primer ADR disponible es ADR-010.
 
 **Verificación concreta.** Hay 40 documentos heredados idénticos; todavía no existen los dos documentos del punto.
 
@@ -8431,9 +6274,7 @@ La etapa contiene las tres clases del análisis, sus 13 pruebas de catálogo, la
 
 ### PASO 7.4.4 — Crear el documento de resiliencia en `docs`
 
-**Resultado de aprendizaje.** Crear el documento de resiliencia en `docs`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La ficha separa el análisis de los contratos y la evidencia ejecutable.
 
 1. Crea `docs/retry-circuit-breaker-polly.md` dentro de la copia de `7.4-retry-circuit-breaker-polly`.
 2. Introduce el contenido completo del bloque siguiente.
@@ -8534,7 +6375,6 @@ El presupuesto total es de 6 segundos y cada intento tiene 1 segundo. Hay como m
 `OperacionIdempotente` expresa una condición del contrato, no implementa idempotencia. El verificador rechaza un retry que no la declare y exige límites y registro. Las pruebas funcionales observan intentos, cancelación, apertura y recuperación del circuito real de Polly.
 ```
 
-**Por qué funciona así.** La ficha separa el análisis de los contratos y la evidencia ejecutable.
 
 **Verificación concreta.** `docs/retry-circuit-breaker-polly.md` incluye todos los apartados del bloque mostrado.
 
@@ -8545,16 +6385,13 @@ El presupuesto total es de 6 segundos y cada intento tiene 1 segundo. Hay como m
 
 ### PASO 7.4.5 — Añadir la integración de Polly v8 mediante Microsoft.Extensions.Http.Resilience a la biblioteca de observabilidad
 
-**Resultado de aprendizaje.** Añadir la integración de Polly v8 mediante Microsoft.Extensions.Http.Resilience a la biblioteca de observabilidad. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La biblioteca de resiliencia para HttpClient proporciona los manejadores necesarios de Polly v8. Antes de activar una política, verifica cómo se registra en DI y qué solicitudes pueden repetirse sin efectos secundarios.
 
 1. Abre la carpeta `src` de la etapa actual y localiza los proyectos API de Producción e Inventario.
 2. Aplica el archivo completo `src/AceriaApp.Observabilidad/AceriaApp.Observabilidad.csproj` mostrado en este paso y comprueba la referencia a `Microsoft.Extensions.Http.Resilience (versión fijada en el bloque funcional)`.
 3. Comprueba `global.json` y ejecuta `dotnet --version` para confirmar el SDK .NET 8 compatible antes de restaurar paquetes.
 4. Añade la biblioteca a `AceriaApp.sln` si aún no aparece, ejecuta `dotnet restore src/AceriaApp.Observabilidad/AceriaApp.Observabilidad.csproj` y comprueba que la restauración termina sin errores.
 
-**Por qué funciona así.** La integración se comparte entre ambas API. El archivo completo fija las dependencias de la biblioteca; los componentes se añaden progresivamente y el catálogo no utiliza las APIs del paquete.
 
 **Verificación concreta.** La biblioteca compartida está incluida en la solución y su archivo de proyecto restaura los paquetes fijados.
 
@@ -8562,8 +6399,6 @@ El presupuesto total es de 6 segundos y cada intento tiene 1 segundo. Hay como m
 
 - Instalar Polly v7 y copiar Policy.WrapAsync junto a un handler v8 mezcla dos API: usa la referencia y el código completos del módulo.
 - Modificar el proyecto de una etapa anterior rompe su autonomía: comprueba el camino completo antes de editar.
-
-
 
 **Integración funcional — `src/AceriaApp.Observabilidad/AceriaApp.Observabilidad.csproj`.**
 
@@ -8586,23 +6421,17 @@ El archivo completo fija las referencias y versiones que utilizará la etapa; a�
 </Project>
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 5:** `<PackageReference Include="Serilog.AspNetCore" Version="8.0.3" />`. Fija la dependencia usada por esta etapa del ejercicio.
-- **Línea 8:** `<ProjectReference Include="../AceriaApp.Comunicacion.Infraestructura/AceriaApp.Comunicacion.Infraestructura.csproj" />`. Conecta este proyecto con otro proyecto real de la solución.
+Fija la dependencia usada por esta etapa del ejercicio. Conecta este proyecto con otro proyecto real de la solución.
 
 ### PASO 7.4.6 — Crear la carpeta `Resiliencia` en el proyecto API
 
-**Resultado de aprendizaje.** Crear la carpeta `Resiliencia` en el proyecto API. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+`Resiliencia` agrupa datos y reglas del ejercicio de análisis; los adaptadores de comunicación tienen sus propias responsabilidades.
 
 1. Expande el proyecto `AceriaApp.Api` y localiza `src/AceriaApp.Api`.
 2. Crea la carpeta `Resiliencia` directamente dentro del proyecto API.
 3. Comprueba que `src/AceriaApp.Api/Resiliencia` no está anidada dentro de otra carpeta temática.
 4. Conserva las carpetas y archivos heredados de `7.3-gestion-excepciones`.
 
-**Por qué funciona así.** `Resiliencia` agrupa datos y reglas del ejercicio de análisis; los adaptadores de comunicación tienen sus propias responsabilidades.
 
 **Verificación concreta.** Existe `src/AceriaApp.Api/Resiliencia` sin alterar las carpetas previas.
 
@@ -8613,9 +6442,7 @@ El archivo completo fija las referencias y versiones que utilizará la etapa; a�
 
 ### PASO 7.4.7 — Crear la clase `PoliticaResiliencia`
 
-**Resultado de aprendizaje.** Crear la clase `PoliticaResiliencia`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+PoliticaResiliencia describe restricciones y parámetros de un escenario. Ninguna propiedad del objeto abre o cierra un circuito real; la implementación se configura sobre el cliente HTTP que utiliza la aplicación.
 
 1. Crea `src/AceriaApp.Api/Resiliencia/PoliticaResiliencia.cs` dentro del proyecto correspondiente.
 2. Copia el bloque completo siguiente respetando namespace, miembros y valores.
@@ -8643,31 +6470,7 @@ public class PoliticaResiliencia
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 1:** `namespace AceriaApp.Api.Resiliencia;` → Sitúa el tipo en el espacio de nombres que importan las pruebas del punto.
-
-- **Línea 2:** (línea vacía) → Separa visualmente las operaciones; también cuenta en la numeración.
-
-- **Línea 3:** `public class PoliticaResiliencia` → Declara el tipo público del ejercicio de análisis.
-
-- **Línea 4:** `{` → Abre el bloque de instrucciones o la declaración del tipo.
-
-- **Línea 5:** `public string Nombre { get; init; } = string.Empty;` → Declara un dato del análisis que se fija al construir la entrada.
-
-
-
-
-
-
-
-
-
-
-- **Línea 15:** `}` → Cierra el bloque de instrucciones o la declaración del tipo.
-
-
-**Por qué funciona así.** El modelo describe entradas de análisis. Sus indicadores no instalan políticas ni establecen conexiones.
+Sitúa el tipo en el espacio de nombres que importan las pruebas del punto. Declara el tipo público del ejercicio de análisis. Declara un dato del análisis que se fija al construir la entrada.
 
 **Verificación concreta.** `PoliticaResiliencia` compila en el proyecto indicado; su contenido coincide con el bloque completo.
 
@@ -8678,9 +6481,7 @@ public class PoliticaResiliencia
 
 ### PASO 7.4.8 — Crear la clase `ValidadorResiliencia`
 
-**Resultado de aprendizaje.** Crear la clase `ValidadorResiliencia`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+El validador comprueba que los valores declarados encajan en las reglas docentes. Es distinto de medir el número de intentos o el estado del circuito bajo fallos de red.
 
 1. Crea `src/AceriaApp.Api/Resiliencia/ValidadorResiliencia.cs` dentro del proyecto correspondiente.
 2. Copia el bloque completo siguiente respetando namespace, miembros y valores.
@@ -8768,95 +6569,13 @@ public class ValidadorResiliencia
 public record ResultadoResiliencia(bool EsValida, IReadOnlyList<string> Errores);
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
+Limita los valores de texto reconocidos por la política didáctica. Expone la operación con el contrato que usan el catálogo o sus pruebas. Inicializa la colección de diagnósticos que se devolverá al finalizar.
 
+Materializa una sola vez la secuencia recibida para recorrerla y contarla. Evalúa una regla concreta antes de añadir el diagnóstico asociado. Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
 
+Revisa cada entrada; un catálogo puede acumular varios diagnósticos. Completa la declaración o la operación mostrada en el bloque. Devuelve validez y diagnósticos; no instala middleware ni ejecuta llamadas remotas.
 
-
-
-- **Línea 5:** `private static readonly string[] TiposPermitidos = { "Retry", "CircuitBreaker", "Timeout" };` → Limita los valores de texto reconocidos por la política didáctica.
-
-
-- **Línea 7:** `public ResultadoResiliencia Validar(IEnumerable<PoliticaResiliencia> politicas)` → Expone la operación con el contrato que usan el catálogo o sus pruebas.
-
-
-- **Línea 9:** `var errores = new List<string>();` → Inicializa la colección de diagnósticos que se devolverá al finalizar.
-
-- **Línea 10:** `var lista = politicas.ToList();` → Materializa una sola vez la secuencia recibida para recorrerla y contarla.
-
-
-- **Línea 12:** `if (lista.Count == 0)` → Evalúa una regla concreta antes de añadir el diagnóstico asociado.
-
-
-- **Línea 14:** `errores.Add("No hay políticas declaradas.");` → Añade el diagnóstico de esta regla sin ocultar las demás incidencias.
-
-
-
-- **Línea 17:** `foreach (var politica in lista)` → Revisa cada entrada; un catálogo puede acumular varios diagnósticos.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-- **Línea 45:** `(!double.IsFinite(politica.ProporcionDeFallos) || politica.ProporcionDeFallos <= 0 || politica.ProporcionDeFallos > 1))` → Completa la declaración o la operación mostrada en el bloque.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-- **Línea 71:** `return new ResultadoResiliencia(errores.Count == 0, errores);` → Devuelve validez y diagnósticos; no instala middleware ni ejecuta llamadas remotas.
-
-
-
-
-- **Línea 75:** `public record ResultadoResiliencia(bool EsValida, IReadOnlyList<string> Errores);` → Define el resultado inmutable que devuelve el validador o el resumen.
-
-
-**Por qué funciona así.** El validador devuelve todos los incumplimientos de la política explícita; no implementa una llamada, publicación o decisión automática de producción. Un retry exige operación idempotente. El circuito v8 combina mínimo de muestras, proporción y ventana; no cuenta fallos consecutivos.
+Define el resultado inmutable que devuelve el validador o el resumen.
 
 **Verificación concreta.** `ValidadorResiliencia` compila en el proyecto indicado; su contenido coincide con el bloque completo.
 
@@ -8864,8 +6583,6 @@ public record ResultadoResiliencia(bool EsValida, IReadOnlyList<string> Errores)
 
 - Un namespace diferente de `AceriaApp.Api.Resiliencia` en las clases impide resolverlas desde las pruebas: usa el indicado.
 - Confundir un booleano con una política ejecutada lleva a conclusiones incorrectas: limita la verificación a los datos que recorre el validador.
-
-
 
 **Integración funcional — `src/AceriaApp.Observabilidad/ClienteInventarioResiliente.cs`.**
 
@@ -8898,10 +6615,7 @@ public sealed class ClienteInventarioResiliente(HttpClient http) : IClienteInven
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 8:** `public sealed class ClienteInventarioResiliente(HttpClient http) : IClienteInventario`. Sitúa esta responsabilidad dentro del proyecto de observabilidad.
-
+Sitúa esta responsabilidad dentro del proyecto de observabilidad.
 
 **Integración funcional — `src/AceriaApp.Observabilidad/ResilienciaInventario.cs`.**
 
@@ -9028,25 +6742,17 @@ public static class ResilienciaInventario
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
+Selecciona el adaptador resiliente después de los registros heredados. Permite aportar un reloj al contenedor sin imponer uno sobre el existente. Construye las estrategias del cliente HTTP mediante la integración oficial.
 
-- **Línea 14:** `public static IServiceCollection AddResilienciaInventario(this IServiceCollection services, IConfiguration config)`. Selecciona el adaptador resiliente después de los registros heredados.
-- **Línea 28:** `cliente.Services.TryAddSingleton(TimeProvider.System);`. Permite aportar un reloj al contenedor sin imponer uno sobre el existente.
-- **Línea 29:** `cliente.AddResilienceHandler("lectura-inventario", (pipeline, contexto) =>`. Construye las estrategias del cliente HTTP mediante la integración oficial.
-- **Línea 35:** `.AddTimeout(TimeSpan.FromSeconds(6))`. Añade un límite temporal en esta posición de la composición.
-- **Línea 36:** `.AddRetry(new HttpRetryStrategyOptions`. Configura reintentos de los fallos transitorios seleccionados.
-- **Línea 45:** `OnRetry = args =>`. Registra cada reintento mediante propiedades seguras.
-- **Línea 63:** `.AddCircuitBreaker(new HttpCircuitBreakerStrategyOptions`. Mantiene el estado del circuito y sus criterios de apertura.
-- **Línea 71:** `OnOpened = _ =>`. Emite el evento observable de apertura del circuito.
-- **Línea 76:** `OnClosed = _ =>`. Emite el evento observable de recuperación del circuito.
-- **Línea 83:** `}).SelectPipelineByAuthority();`. Separa el estado del circuito por esquema, host y puerto.
-- **Línea 98:** `await respuesta.Content.ReadAsByteArrayAsync(ct);`. Incluye la lectura del cuerpo dentro del presupuesto y propaga cancelación.
+Añade un límite temporal en esta posición de la composición. Configura reintentos de los fallos transitorios seleccionados. Registra cada reintento mediante propiedades seguras.
+
+Mantiene el estado del circuito y sus criterios de apertura. Emite el evento observable de apertura del circuito. Emite el evento observable de recuperación del circuito.
+
+Separa el estado del circuito por esquema, host y puerto. Incluye la lectura del cuerpo dentro del presupuesto y propaga cancelación.
 
 ### PASO 7.4.9 — Añadir los `using` necesarios en `ValidadorResiliencia`
 
-**Resultado de aprendizaje.** Añadir los `using` necesarios en `ValidadorResiliencia`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Las importaciones explícitas muestran dónde se declaran los tipos genéricos y las extensiones LINQ, aunque el proyecto tenga importaciones implícitas.
 
 1. Abre `src/AceriaApp.Api/Resiliencia/ValidadorResiliencia.cs`.
 2. Reemplaza el contenido por el archivo completo siguiente, que incorpora los using antes del namespace.
@@ -9137,89 +6843,7 @@ public class ValidadorResiliencia
 public record ResultadoResiliencia(bool EsValida, IReadOnlyList<string> Errores);
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 1:** `using System.Collections.Generic;` → Importa los tipos o extensiones utilizados por el archivo.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-**Por qué funciona así.** Las importaciones explícitas muestran dónde se declaran los tipos genéricos y las extensiones LINQ, aunque el proyecto tenga importaciones implícitas.
+Importa los tipos o extensiones utilizados por el archivo.
 
 **Verificación concreta.** `ValidadorResiliencia.cs` conserva el contenido previo y añade solo las importaciones indicadas.
 
@@ -9230,9 +6854,7 @@ public record ResultadoResiliencia(bool EsValida, IReadOnlyList<string> Errores)
 
 ### PASO 7.4.10 — Crear la clase `CatalogoPoliticas`
 
-**Resultado de aprendizaje.** Crear la clase `CatalogoPoliticas`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+CatalogoPoliticas compara ejemplos de retry y circuit breaker. Su clasificación debe interpretarse junto a la ejecución funcional, porque el catálogo no modifica las solicitudes del HttpClient.
 
 1. Crea `src/AceriaApp.Api/Resiliencia/CatalogoPoliticas.cs` dentro del proyecto correspondiente.
 2. Copia el bloque completo siguiente respetando namespace, miembros y valores.
@@ -9261,29 +6883,7 @@ public class CatalogoPoliticas
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-
-
-
-
-
-
-- **Línea 7:** `return new List<PoliticaResiliencia>` → Devuelve una lista nueva en cada llamada; modificarla no altera otros casos.
-
-
-- **Línea 9:** `new() { Nombre = "RetryHttp", Tipo = "Retry", OperacionIdempotente = true, NumeroDeReintentos = 3, MinimoDeMuestras = 0, TieneTimeout = true, RegistraEventos = true },` → Construye una entrada del catálogo o del caso de prueba con valores explícitos.
-
-
-
-
-
-- **Línea 14:** `};` → Cierra la colección y termina su inicialización.
-
-
-
-
-**Por qué funciona así.** Cada invocación devuelve una lista nueva con los ejemplos de análisis; cambiar una lista no modifica futuros catálogos.
+Devuelve una lista nueva en cada llamada; modificarla no altera otros casos. Construye una entrada del catálogo o del caso de prueba con valores explícitos. Cierra la colección y termina su inicialización.
 
 **Verificación concreta.** `CatalogoPoliticas` compila en el proyecto indicado; su contenido coincide con el bloque completo.
 
@@ -9294,9 +6894,7 @@ public class CatalogoPoliticas
 
 ### PASO 7.4.11 — Añadir el `using` necesario en `CatalogoPoliticas`
 
-**Resultado de aprendizaje.** Añadir el `using` necesario en `CatalogoPoliticas`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Las importaciones explícitas muestran dónde se declaran los tipos genéricos y las extensiones LINQ, aunque el proyecto tenga importaciones implícitas.
 
 1. Abre `src/AceriaApp.Api/Resiliencia/CatalogoPoliticas.cs`.
 2. Reemplaza el contenido por el archivo completo siguiente, que incorpora los using antes del namespace.
@@ -9327,29 +6925,6 @@ public class CatalogoPoliticas
 }
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-**Por qué funciona así.** Las importaciones explícitas muestran dónde se declaran los tipos genéricos y las extensiones LINQ, aunque el proyecto tenga importaciones implícitas.
-
 **Verificación concreta.** `CatalogoPoliticas.cs` conserva el contenido previo y añade solo las importaciones indicadas.
 
 **Diagnóstico si falla.**
@@ -9359,9 +6934,7 @@ public class CatalogoPoliticas
 
 ### PASO 7.4.12 — Crear el proyecto de tests del punto 7.4
 
-**Resultado de aprendizaje.** Crear el proyecto de tests del punto 7.4. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Definir el proyecto completo fija .NET 8 y las versiones del runner sin depender de la versión local de la plantilla.
 
 1. Crea la carpeta `tests/AceriaApp.Resiliencia.Tests` y el `.csproj` completo del bloque siguiente.
 2. No generes `UnitTest1.cs`; los pasos 15 y 16 incluyen las clases de prueba completas.
@@ -9388,7 +6961,6 @@ public class CatalogoPoliticas
 </Project>
 ```
 
-**Por qué funciona así.** Definir el proyecto completo fija .NET 8 y las versiones del runner sin depender de la versión local de la plantilla.
 
 **Verificación concreta.** Existe `tests/AceriaApp.Resiliencia.Tests/AceriaApp.Resiliencia.Tests.csproj` y la solución lo incluye una sola vez.
 
@@ -9399,9 +6971,7 @@ public class CatalogoPoliticas
 
 ### PASO 7.4.13 — Añadir la referencia del proyecto de tests a la API
 
-**Resultado de aprendizaje.** Añadir la referencia del proyecto de tests a la API. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Las pruebas consumen los tipos de análisis de la API; la API no debe depender de su proyecto de pruebas.
 
 1. Abre `tests/AceriaApp.Resiliencia.Tests/AceriaApp.Resiliencia.Tests.csproj`.
 2. Reemplaza su contenido completo por el bloque siguiente, que incorpora la referencia a la API.
@@ -9429,7 +6999,6 @@ public class CatalogoPoliticas
 </Project>
 ```
 
-**Por qué funciona así.** Las pruebas consumen los tipos de análisis de la API; la API no debe depender de su proyecto de pruebas.
 
 **Verificación concreta.** El proyecto resuelve la referencia a la API y compila sin dependencias circulares.
 
@@ -9437,8 +7006,6 @@ public class CatalogoPoliticas
 
 - Invertir la referencia introduce una dependencia de producción hacia pruebas: añade la referencia en el `.csproj` de tests.
 - Una ruta relativa equivocada produce un proyecto no encontrado: resuelve la ruta desde la carpeta de este `.csproj`.
-
-
 
 **Integración funcional — `src/AceriaApp.Api/appsettings.json`.**
 
@@ -9467,13 +7034,9 @@ La configuración usa bases y prefijos propios de esta etapa. Las variables de e
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
+Agrupa las conexiones de laboratorio específicas de la etapa. Activa o desactiva los procesos de mensajería y su dependencia en readiness. Fija el umbral propio de logging y admite sobreescritura por variables de entorno.
 
-- **Línea 2:** `"ConnectionStrings": {`. Agrupa las conexiones de laboratorio específicas de la etapa.
-- **Línea 11:** `"WorkersActivos": false`. Activa o desactiva los procesos de mensajería y su dependencia en readiness.
-- **Línea 14:** `"NivelMinimo": "Information",`. Fija el umbral propio de logging y admite sobreescritura por variables de entorno.
-- **Línea 15:** `"DiagnosticoActivo": false`. Mantiene el endpoint de fallo desactivado por defecto.
-
+Mantiene el endpoint de fallo desactivado por defecto.
 
 **Integración funcional — `src/AceriaApp.Inventario.Api/appsettings.json`.**
 
@@ -9500,14 +7063,9 @@ La configuración usa bases y prefijos propios de esta etapa. Las variables de e
 }
 ```
 
-
-
-
 ### PASO 7.4.14 — Añadir el paquete `FluentAssertions` al proyecto de tests
 
-**Resultado de aprendizaje.** Añadir el paquete `FluentAssertions` al proyecto de tests. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La versión fijada mantiene reproducibles las aserciones `Should()` de los catálogos.
 
 1. Abre `tests/AceriaApp.Resiliencia.Tests/AceriaApp.Resiliencia.Tests.csproj` y conserva las versiones de los paquetes existentes.
 2. Reemplaza su contenido por el bloque completo que añade `FluentAssertions` 6.12.2.
@@ -9536,7 +7094,6 @@ La configuración usa bases y prefijos propios de esta etapa. Las variables de e
 </Project>
 ```
 
-**Por qué funciona así.** La versión fijada mantiene reproducibles las aserciones `Should()` de los catálogos.
 
 **Verificación concreta.** El listado de paquetes muestra FluentAssertions 6.12.2 y el proyecto compila.
 
@@ -9547,9 +7104,7 @@ La configuración usa bases y prefijos propios de esta etapa. Las variables de e
 
 ### PASO 7.4.15 — Crear el archivo `ValidadorResilienciaTests.cs`
 
-**Resultado de aprendizaje.** Crear el archivo `ValidadorResilienciaTests.cs`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Las pruebas ejercitan aceptación y rechazos concretos del validador. Afirmar el diagnóstico evita un falso positivo por otro error.
 
 1. Crea `tests/AceriaApp.Resiliencia.Tests/ValidadorResilienciaTests.cs` dentro del proyecto correspondiente.
 2. Copia el bloque completo siguiente respetando namespace, miembros y valores.
@@ -9741,198 +7296,11 @@ public class ValidadorResilienciaTests
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
+Crea la instancia del validador que utiliza cada prueba. Registra un caso ejecutable independiente en xUnit. Nombra la condición de prueba y su resultado esperado.
 
+Ejecuta el validador sobre los datos preparados para este caso. Comprueba que la política acepta los datos de este caso. Comprueba que no se ha registrado ningún diagnóstico.
 
-
-
-
-
-
-
-
-- **Línea 9:** `private readonly ValidadorResiliencia _validador = new();` → Crea la instancia del validador que utiliza cada prueba.
-
-
-- **Línea 11:** `[Fact]` → Registra un caso ejecutable independiente en xUnit.
-
-- **Línea 12:** `public void Validar_CatalogoPorDefecto_DevuelveValida()` → Nombra la condición de prueba y su resultado esperado.
-
-
-- **Línea 14:** `var resultado = _validador.Validar(CatalogoPoliticas.PoliticasPorDefecto());` → Ejecuta el validador sobre los datos preparados para este caso.
-
-
-- **Línea 16:** `resultado.EsValida.Should().BeTrue();` → Comprueba que la política acepta los datos de este caso.
-
-- **Línea 17:** `resultado.Errores.Should().BeEmpty();` → Comprueba que no se ha registrado ningún diagnóstico.
-
-
-
-
-
-
-
-
-- **Línea 25:** `resultado.EsValida.Should().BeFalse();` → Comprueba que la política rechaza los datos de este caso.
-
-- **Línea 26:** `resultado.Errores.Should().Contain(e => e.Contains("No hay políticas"));` → Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla.
-
-
-
-
-
-
-- **Línea 32:** `var politicas = new List<PoliticaResiliencia>` → Prepara las entradas que se van a validar o devolver.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-**Por qué funciona así.** Las pruebas ejercitan aceptación y rechazos concretos del validador. Afirmar el diagnóstico evita un falso positivo por otro error.
+Comprueba que la política rechaza los datos de este caso. Comprueba el motivo concreto del rechazo; evita aceptar un fallo por otra regla. Prepara las entradas que se van a validar o devolver.
 
 **Verificación concreta.** `ValidadorResilienciaTests` compila en el proyecto indicado; su contenido coincide con el bloque completo.
 
@@ -9940,8 +7308,6 @@ public class ValidadorResilienciaTests
 
 - Un test sin `[Fact]` compila pero no se descubre: revisa los atributos del bloque.
 - Añadir el archivo al proyecto anterior modifica su suite: crea el test en la ruta de este punto.
-
-
 
 **Integración funcional — `tests/AceriaApp.Resiliencia.Tests/AceriaApp.Resiliencia.Tests.csproj`.**
 
@@ -9964,10 +7330,6 @@ El archivo completo fija las referencias y versiones que utilizará la etapa; a�
   </ItemGroup>
 </Project>
 ```
-
-
-
-
 
 **Integración funcional — `tests/AceriaApp.Resiliencia.Tests/ResilienciaFuncionalTests.cs`.**
 
@@ -10378,15 +7740,11 @@ public sealed class ResilienciaFuncionalTests
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-- **Línea 19:** `public async Task Un_503_se_reintenta_y_libera_su_respuesta_antes_del_200()`. Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre.
+Define un escenario asíncrono cuyo resultado verifica la conducta descrita por el nombre.
 
 ### PASO 7.4.16 — Crear el archivo `CatalogoPoliticasTests.cs`
 
-**Resultado de aprendizaje.** Crear el archivo `CatalogoPoliticasTests.cs`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Las pruebas del catálogo verifican cantidades y propiedades declaradas. No prueban que existan los servicios nombrados.
 
 1. Crea `tests/AceriaApp.Resiliencia.Tests/CatalogoPoliticasTests.cs` dentro del proyecto correspondiente.
 2. Copia el bloque completo siguiente respetando namespace, miembros y valores.
@@ -10448,63 +7806,9 @@ public class CatalogoPoliticasTests
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
+Obtiene los datos que se utilizarán en las comprobaciones siguientes. Comprueba el tamaño del catálogo sin inferir servicios o conexiones en ejecución. Compara el recuento obtenido con el valor esperado del catálogo.
 
-
-
-
-
-
-
-
-
-
-
-
-- **Línea 12:** `var politicas = CatalogoPoliticas.PoliticasPorDefecto();` → Obtiene los datos que se utilizarán en las comprobaciones siguientes.
-
-
-- **Línea 14:** `politicas.Should().HaveCount(5);` → Comprueba el tamaño del catálogo sin inferir servicios o conexiones en ejecución.
-
-
-
-
-
-
-
-
-- **Línea 22:** `politicas.Count(p => p.Tipo == "Retry").Should().Be(2);` → Compara el recuento obtenido con el valor esperado del catálogo.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-- **Línea 46:** `politicas.Should().OnlyContain(p => p.TieneTimeout);` → Comprueba la condición en cada entrada declarada del catálogo.
-
-
-
-
-
-**Por qué funciona así.** Las pruebas del catálogo verifican cantidades y propiedades declaradas. No prueban que existan los servicios nombrados.
+Comprueba la condición en cada entrada declarada del catálogo.
 
 **Verificación concreta.** `CatalogoPoliticasTests` compila en el proyecto indicado; su contenido coincide con el bloque completo.
 
@@ -10515,20 +7819,15 @@ public class CatalogoPoliticasTests
 
 ### PASO 7.4.17 — Compilar la solución completa
 
-**Resultado de aprendizaje.** Compilar la solución completa. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La última etapa debe compilar con Polly v8 y superar pruebas que introduzcan fallos controlados. Hay que observar tanto un retry limitado como la apertura y recuperación del circuito, manteniendo intactos los contratos HTTP anteriores.
 
 1. Aplica los bloques de registro final de este paso en el orden mostrado.
 2. Añade a `AceriaApp.sln` todos los nuevos proyectos `.csproj` indicados por esos bloques.
 3. Ejecuta `dotnet restore AceriaApp.sln` y `dotnet build AceriaApp.sln -c Release`.
 4. Comprueba que la solución incluye 34 proyectos y termina sin errores.
 
-
-
 **Registro de biblioteca compartida.** Ejecuta `dotnet sln AceriaApp.sln add src/AceriaApp.Observabilidad/AceriaApp.Observabilidad.csproj`; los proyectos de tests se incorporan en sus pasos de creación. Después de reemplazar todos los archivos de este paso, compila la solución.
 
-**Por qué funciona así.** Los componentes ejecutables registran eventos, observan salud, gestionan fallos y acotan llamadas según el punto; el catálogo analiza sus declaraciones.
 
 **Verificación concreta.** La solución de la etapa compila con 34 proyectos.
 
@@ -10536,8 +7835,6 @@ public class CatalogoPoliticasTests
 
 - Omitir un proyecto de la solución impide verificarlo con `dotnet test AceriaApp.sln`: compara las rutas `.csproj` y el listado de la solución.
 - Interpretar un test de catálogo como prueba de tráfico omite fallos de transporte: ejecuta también la integración funcional.
-
-
 
 **Integración funcional — `src/AceriaApp.Api/Program.cs`.**
 
@@ -10735,17 +8032,11 @@ app.Run();
 public partial class Program {} // permite WebApplicationFactory en tests
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
+Registra el logger JSON y los servicios que necesita la correlación. Propaga el identificador validado hacia Inventario. Registra las dependencias propias de este servicio para readiness.
 
-- **Línea 21:** `builder.Services.AddLoggingAceria("Produccion", builder.Configuration);`. Registra el logger JSON y los servicios que necesita la correlación.
-- **Línea 35:** `builder.Services.AddHttpClient("inventario-resiliente").AddHttpMessageHandler<PropagarCorrelacionHandler>();`. Propaga el identificador validado hacia Inventario.
-- **Línea 36:** `builder.Services.AddSaludAceria(builder.Configuration, inventario: false);`. Registra las dependencias propias de este servicio para readiness.
-- **Línea 37:** `builder.Services.AddErroresAceria();`. Añade ProblemDetails y el manejador de excepciones al contenedor.
-- **Línea 39:** `app.UseLoggingAceria();`. Abre la correlación y el resumen antes de ejecutar el resto del pipeline.
-- **Línea 40:** `app.UseErroresAceria();`. Sitúa el manejador dentro de los ámbitos de correlación y logging.
-- **Línea 41:** `app.MapDiagnosticoAceria();`. Aplica las dos condiciones de habilitación del diagnóstico.
-- **Línea 184:** `app.MapSaludAceria();`. Publica liveness y readiness como rutas independientes.
+Añade ProblemDetails y el manejador de excepciones al contenedor. Abre la correlación y el resumen antes de ejecutar el resto del pipeline. Sitúa el manejador dentro de los ámbitos de correlación y logging.
 
+Aplica las dos condiciones de habilitación del diagnóstico. Publica liveness y readiness como rutas independientes.
 
 ## Recorrido funcional 7.4 — retry, apertura y recuperación del circuito
 
@@ -10898,16 +8189,13 @@ Detén A y B con `Ctrl+C`. No se ha reservado ni modificado stock: todas las com
 
 ### PASO 7.4.18 — Ejecutar todos los tests del punto 7.4
 
-**Resultado de aprendizaje.** Ejecutar todos los tests del punto 7.4. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La prueba del punto distingue reglas de análisis y comportamiento de sus adaptadores.
 
 1. Ejecuta `dotnet test tests/AceriaApp.Resiliencia.Tests/AceriaApp.Resiliencia.Tests.csproj -c Release --no-build --no-restore`.
 2. Comprueba que se ejecutan los 18 tests de catálogo y las pruebas funcionales incorporadas progresivamente al proyecto.
 3. Revisa que cada prueba figure como aprobada, sin errores ni omisiones.
 4. Conserva el resultado de ejecución para compararlo con la suite completa del paso siguiente.
 
-**Por qué funciona así.** La prueba del punto distingue reglas de análisis y comportamiento de sus adaptadores.
 
 **Verificación concreta.** Los 18 casos de catálogo se descubren y pasan junto con la integración del punto.
 
@@ -10918,16 +8206,13 @@ Detén A y B con `Ctrl+C`. No se ha reservado ni modificado stock: todas las com
 
 ### PASO 7.4.19 — Ejecutar todos los tests de la solución
 
-**Resultado de aprendizaje.** Ejecutar todos los tests de la solución. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La suite completa detecta regresiones de dominio, persistencia y comunicación. Cada proyecto produce su propio resumen; una sola línea de salida no es el total de la solución.
 
 1. Configura `ACERIA_TEST_SQLSERVER` para SQL Server Express o LocalDB y comprueba la disponibilidad de los servicios de integración.
 2. Ejecuta `dotnet test AceriaApp.sln -c Release --no-build --no-restore --logger trx --results-directory TestResults`.
 3. Suma los resultados de los archivos TRX y verifica 403 pruebas aprobadas, cero fallos y cero omisiones.
 4. Revisa las pruebas heredadas de M03, M04, M05 y M06: deben seguir formando parte de la solución.
 
-**Por qué funciona así.** La suite completa detecta regresiones de dominio, persistencia y comunicación. Cada proyecto produce su propio resumen; una sola línea de salida no es el total de la solución.
 
 **Verificación concreta.** Los TRX suman 403 pruebas aprobadas sin omitir integración con SQL Server.
 
@@ -10938,9 +8223,7 @@ Detén A y B con `Ctrl+C`. No se ha reservado ni modificado stock: todas las com
 
 ### PASO 7.4.20 — Actualizar el README del punto 7.4
 
-**Resultado de aprendizaje.** Actualizar el README del punto 7.4. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+El README de la copia debe describir el estado actual y la evidencia disponible, no acumular instrucciones obsoletas.
 
 1. Abre el `README.md` copiado dentro de `7.4-retry-circuit-breaker-polly`.
 2. Reemplaza su contenido completo por el bloque siguiente.
@@ -10983,7 +8266,6 @@ El catálogo del punto, su proyecto de pruebas, `docs/retry-circuit-breaker-poll
 - Los 40 documentos anteriores, incluidos los ADR-010 a ADR-029, permanecen disponibles en `docs`.
 ```
 
-**Por qué funciona así.** El README de la copia debe describir el estado actual y la evidencia disponible, no acumular instrucciones obsoletas.
 
 **Verificación concreta.** El README identifica 34 proyectos, 403 pruebas y 18 tests nuevos de catálogo.
 
@@ -10994,9 +8276,7 @@ El catálogo del punto, su proyecto de pruebas, `docs/retry-circuit-breaker-poll
 
 ### PASO 7.4.21 — Crear el ADR-030 del punto 7.4
 
-**Resultado de aprendizaje.** Crear el ADR-030 del punto 7.4. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+El ADR registra la decisión, alternativas y consecuencias sin reescribir decisiones anteriores.
 
 1. Crea `docs/ADR-030-retry-circuit-breaker-polly.md` dentro de la copia de `7.4-retry-circuit-breaker-polly`.
 2. Introduce el contenido completo del bloque siguiente.
@@ -11034,7 +8314,6 @@ Usar Polly v8 mediante Microsoft.Extensions.Http.Resilience solo en las consulta
 - Mitigación: conservar pruebas heredadas, validar errores y cancelación, y separar señales operativas de los datos sensibles.
 ```
 
-**Por qué funciona así.** El ADR registra la decisión, alternativas y consecuencias sin reescribir decisiones anteriores.
 
 **Verificación concreta.** `docs/ADR-030-retry-circuit-breaker-polly.md` incluye todos los apartados del bloque mostrado.
 
@@ -11045,16 +8324,13 @@ Usar Polly v8 mediante Microsoft.Extensions.Http.Resilience solo en las consulta
 
 ### PASO 7.4.22 — Verificar que no se ha modificado ningún archivo del punto 7.3
 
-**Resultado de aprendizaje.** Verificar que no se ha modificado ningún archivo del punto 7.3. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Los archivos nuevos se añaden en la copia actual; los documentos y tests heredados siguen siendo la base de regresión.
 
 1. Abre PowerShell en la raíz del curso y define las carpetas anterior `M07_OBSERVABILIDAD_RESILIENCIA/PROYECTO/7.3-gestion-excepciones` y actual `M07_OBSERVABILIDAD_RESILIENCIA/PROYECTO/7.4-retry-circuit-breaker-polly`.
 2. Enumera los archivos heredados de `docs` y de `tests` terminados en `.cs` en la etapa anterior.
 3. Compara cada archivo con su copia actual mediante `Get-FileHash`; el mismo camino relativo debe tener el mismo SHA-256.
 4. Comprueba 40 documentos idénticos y restaura únicamente cualquier documento o prueba heredada que se haya alterado por error.
 
-**Por qué funciona así.** Los archivos nuevos se añaden en la copia actual; los documentos y tests heredados siguen siendo la base de regresión.
 
 **Verificación concreta.** Los 40 documentos y todas las pruebas heredadas tienen el mismo SHA-256; los archivos nuevos del punto no se comparan como heredados.
 
@@ -11065,16 +8341,13 @@ Usar Polly v8 mediante Microsoft.Extensions.Http.Resilience solo en las consulta
 
 ### PASO 7.4.23 — Verificar la estructura del punto 7.4 y el `.gitignore`
 
-**Resultado de aprendizaje.** Verificar la estructura del punto 7.4 y el `.gitignore`. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+La estructura debe permitir reconstruir y ejecutar el punto desde sus archivos y referencias, con todos los proyectos dentro de la etapa. Las reglas de la raíz ya excluyen los binarios y resultados de todas las etapas.
 
 1. Ejecuta `tree /F` en Windows desde la carpeta de la etapa.
 2. Localiza las tres clases de `src/AceriaApp.Api/Resiliencia` y las dos clases de tests en `tests/AceriaApp.Resiliencia.Tests`.
 3. Comprueba los 42 documentos de `docs`, incluida la ficha del punto y el ADR-030.
 4. Ejecuta `dotnet sln AceriaApp.sln list`, `git status --short` y `git check-ignore` sobre un archivo de `bin`, `obj` y `TestResults`; contrasta las rutas y conserva las exclusiones heredadas.
 
-**Por qué funciona así.** La estructura debe permitir reconstruir y ejecutar el punto desde sus archivos y referencias, con todos los proyectos dentro de la etapa. Las reglas de la raíz ya excluyen los binarios y resultados de todas las etapas.
 
 **Verificación concreta.** Las rutas del catálogo, documentación e integración están presentes y la solución incluye 34 proyectos. Git no propone binarios ni resultados temporales.
 
@@ -11085,16 +8358,13 @@ Usar Polly v8 mediante Microsoft.Extensions.Http.Resilience solo en las consulta
 
 ### PASO 7.4.24 — Hacer el commit del punto 7.4 y verificar el estado final del módulo 7
 
-**Resultado de aprendizaje.** Hacer el commit del punto 7.4 y verificar el estado final del módulo 7. Identifica su responsabilidad y la evidencia que produce.
-
-**Procedimiento guiado.**
+Un commit local identifica el estado comprobado del punto; su número depende de la historia real y no se deduce del temario.
 
 1. Ejecuta `git diff --check` y revisa `git status --short` desde la raíz del curso.
 2. Añade los archivos revisados de `M07_OBSERVABILIDAD_RESILIENCIA/PROYECTO/7.4-retry-circuit-breaker-polly` con `git add` y comprueba el resumen de `git diff --cached --stat`.
 3. Cuando las pruebas hayan pasado, crea el commit local con el mensaje `Punto 7.4: retry y circuit breaker mediante polly`.
 4. Comprueba `git log -1 --oneline` y `git status --short`; no incluyas cambios ajenos al punto.
 
-**Por qué funciona así.** Un commit local identifica el estado comprobado del punto; su número depende de la historia real y no se deduce del temario.
 
 **Verificación concreta.** El commit local contiene solo los cambios revisados de 7.4 y los archivos esperados quedan registrados.
 
@@ -11197,89 +8467,6 @@ public record ResultadoResiliencia(bool EsValida, IReadOnlyList<string> Errores)
 public record ResumenResiliencia(int Total, int Retry, int CircuitBreaker, int Timeout, int TotalReintentos);
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ### Reto 7.4.3 — Calcular los recuentos
 
 Reemplaza de nuevo `src/AceriaApp.Api/Resiliencia/ValidadorResiliencia.cs` por el archivo completo siguiente. El método queda dentro del validador y materializa la secuencia una sola vez.
@@ -11380,101 +8567,7 @@ public record ResultadoResiliencia(bool EsValida, IReadOnlyList<string> Errores)
 public record ResumenResiliencia(int Total, int Retry, int CircuitBreaker, int Timeout, int TotalReintentos);
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-
-
-
-
-
-
-
-
-
-
-- **Línea 11:** `var retry = lista.Count(p => p.Tipo == "Retry");` → Cuenta las entradas que cumplen el criterio indicado.
-
-
-
-- **Línea 14:** `var totalReintentos = lista.Sum(p => p.NumeroDeReintentos);` → Suma los reintentos declarados por las políticas del catálogo; no cuenta intentos reales de HTTP.
-
-- **Línea 15:** `return new ResumenResiliencia(lista.Count, retry, circuitBreaker, timeout, totalReintentos);` → Devuelve los recuentos del catálogo sin modificar sus entradas.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Cuenta las entradas que cumplen el criterio indicado. Suma los reintentos declarados por las políticas del catálogo; no cuenta intentos reales de HTTP. Devuelve los recuentos del catálogo sin modificar sus entradas.
 
 ### Reto 7.4.6 — Verificar el catálogo por defecto
 
@@ -11676,203 +8769,10 @@ public class ValidadorResilienciaTests
 }
 ```
 
-**Lectura selectiva: decisiones y comprobaciones relevantes.**
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-- **Línea 182:** `var resumen = ValidadorResiliencia.Resumen(CatalogoPoliticas.PoliticasPorDefecto());` → Calcula el resumen sobre el catálogo por defecto.
-
-
-
-
-
-
-
-
-
+Calcula el resumen sobre el catálogo por defecto.
 
 **Comprobación del reto.** Guarda los archivos, compila la copia optativa y ejecuta primero `dotnet test tests/AceriaApp.Resiliencia.Tests/AceriaApp.Resiliencia.Tests.csproj -c Release`, después `dotnet test AceriaApp.sln -c Release`. El catálogo pasa de 18 a 19 tests; la solución debe ejecutar 403 + 1 pruebas, todas aprobadas y ninguna omitida. Confirma en el TRX que se ejecutó `Resumen_ConCatalogoPorDefecto_CalculaTotales` y compara los hashes de la etapa obligatoria: no debe haber cambiado. Revisa `git diff --check` y el índice antes de registrar el reto en un commit local separado.
 
-**Por qué funciona así.** El resumen calcula sobre la lista de análisis y no altera sus entradas ni configura infraestructura. Cada número describe el catálogo, no mediciones del sistema en ejecución.
 
 **Diagnóstico si falla.** Si aparece un tipo duplicado, reemplaza el contenido completo en vez de pegarlo al final. Si el total no coincide, revisa las entradas del catálogo antes de cambiar la expectativa. No acumules los retos al construir la siguiente etapa.
 
