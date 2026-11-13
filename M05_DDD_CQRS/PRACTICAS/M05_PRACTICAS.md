@@ -45,6 +45,12 @@ Cada reto añade una prueba al proyecto de su punto y a la solución completa, �
 
 # Punto 5.1 — Conceptos básicos de Domain-Driven Design
 
+## Construir un lenguaje común y delimitar el contexto Producción
+
+En AceriaApp la palabra «orden» puede significar cosas diferentes para Producción, Inventario o Clientes. Domain-Driven Design comienza por reconocer esos límites y acordar el vocabulario con el que describiremos el negocio. Un contexto delimitado no se crea al ponerle nombre a una clase; sus reglas deben poder sostenerse dentro de una frontera coherente y sus contratos deben explicar qué información comparte con otras capacidades.
+
+El primer punto conserva el sistema acumulado desde M04 y añade tanto un catálogo docente de contextos como una implementación ejecutable del núcleo de Producción. La orden de producción tendrá identidad y transiciones de estado propias; no reutilizaremos la entidad simple del primer módulo como si todos los contextos necesitaran el mismo modelo. Los tests deben diferenciar la validez de una descripción del catálogo de las invariantes reales del dominio. Al finalizar podremos explicar qué se implementó, qué sigue siendo conceptual y cómo el comportamiento se refleja en el código.
+
 **Carpeta de trabajo:** `M05_DDD_CQRS/PROYECTO/5.1-conceptos-ddd`.
 
 **Objetivo:** completar los veinticuatro pasos, conservar los documentos heredados y comprobar el modelo con código y tests ejecutables. La etapa suma 134 pruebas en 16 proyectos.
@@ -53,17 +59,12 @@ Cada reto añade una prueba al proyecto de su punto y a la solución completa, �
 
 ### PASO 5.1.1 — Crear la estructura del módulo 5 y del punto 5.1
 
-**Resultado de aprendizaje.** Crear la estructura del módulo 5 y del punto 5.1. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+La copia del punto 4.5 conserva los patrones y los endpoints que ya estaban probados. En 5.1 comenzamos a modelar Producción como una frontera propia; trabajar sobre otra carpeta permite comparar el estado heredado con el nuevo sin sobrescribir el proyecto anterior.
 
 1. Abre la terminal integrada y localiza `M04_PATRONES_ARQUITECTURA/PROYECTO/4.5-inyeccion-dependencias`; esa es la etapa completa que vas a continuar.
 2. Crea `M05_DDD_CQRS/PROYECTO/5.1-conceptos-ddd` y copia en ella el contenido de `4.5-inyeccion-dependencias`; en Windows puedes usar `xcopy` con `/E /I /H /Y`.
 3. Excluye `bin`, `obj` y `TestResults`; abre únicamente la copia de `5.1-conceptos-ddd` para conservar intacto el punto anterior.
 4. Ejecuta `dir` dentro de `5.1-conceptos-ddd` y verifica `AceriaApp.sln`, `README.md`, `src`, `tests`, `docs` y `global.json`.
-
-
-**Por qué funciona así.** La copia conserva una etapa autónoma. 4.5-inyeccion-dependencias aporta 118 tests aprobados y 14 proyectos antes de incorporar este punto.
 
 **Verificación concreta.** La copia contiene la solución y los 14 proyectos anteriores; todavía no contiene los archivos de 5.1.
 
@@ -78,17 +79,12 @@ Cada reto añade una prueba al proyecto de su punto y a la solución completa, �
 
 ### PASO 5.1.2 — Abrir la solución copiada en Visual Studio con soporte de .NET 8
 
-**Resultado de aprendizaje.** Abrir la solución copiada en Visual Studio con soporte de .NET 8. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+Abrir la solución copiada permite trabajar en el punto 5.1 sobre la base del punto 4.5. La compilación verifica que la copia es correcta.
 
 1. Abre `AceriaApp.sln` dentro de `5.1-conceptos-ddd` con Visual Studio; en Windows puedes ejecutar `start AceriaApp.sln`.
 2. Ejecuta `dotnet sln AceriaApp.sln list` y comprueba los 14 proyectos heredados; todas sus rutas deben existir en esta etapa.
 3. Ejecuta `dotnet restore AceriaApp.sln` y `dotnet build AceriaApp.sln -c Release` para comprobar el punto de partida.
 4. Si hay DLL bloqueadas por una API en ejecución, detén esa aplicación y repite la compilación. Continúa cuando no haya errores.
-
-
-**Por qué funciona así.** abrir la solución copiada permite trabajar en el punto 5.1 sobre la base del punto 4.5. La compilación verifica que la copia es correcta.
 
 **Verificación concreta.** La solución muestra 14 proyectos y `dotnet build AceriaApp.sln -c Release` termina con `Build succeeded.`.
 
@@ -101,17 +97,12 @@ Cada reto añade una prueba al proyecto de su punto y a la solución completa, �
 
 ### PASO 5.1.3 — Verificar que la carpeta `docs` contiene los documentos del punto 4.5
 
-**Resultado de aprendizaje.** Verificar que la carpeta `docs` contiene los documentos del punto 4.5. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+La nueva etapa preserva 18 documentos y añade su ficha temática y su ADR. Los cambios de integración se aplican únicamente en la copia actual.
 
 1. Expande `docs` dentro de la copia de `5.1-conceptos-ddd`.
 2. Comprueba los 18 documentos heredados: ADR-010 a ADR-018 y fichas de los puntos anteriores.
 3. Compara sus nombres y contenido con `docs` de `4.5-inyeccion-dependencias`; no modifiques ni elimines documentos anteriores.
 4. Confirma que todavía no existen `docs/conceptos-ddd.md` ni `docs/ADR-019-conceptos-ddd.md`.
-
-
-**Por qué funciona así.** La nueva etapa preserva 18 documentos y añade su ficha temática y su ADR. Los cambios de integración se aplican únicamente en la copia actual.
 
 **Verificación concreta.** Existen 18 documentos heredados idénticos y no existen todavía los dos de este punto.
 
@@ -124,9 +115,7 @@ Cada reto añade una prueba al proyecto de su punto y a la solución completa, �
 
 ### PASO 5.1.4 — Crear el documento de conceptos básicos de DDD en `docs`
 
-**Resultado de aprendizaje.** Crear el documento de conceptos básicos de DDD en `docs`. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+El documento de conceptos básicos de DDD es el artefacto de `docs` específico del punto 5.1. No modifica los 18 documentos existentes del punto 4.5.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `docs`.
 2. Seleccionar `Add` → `New Item` → `Text File` y nombrar el archivo `conceptos-ddd.md`.
@@ -204,7 +193,6 @@ Inversión inicial, colaboración continua, complejidad adicional y dificultad e
 `ContextoDelimitado`, `CatalogoContextos` y `ValidadorContextos` representan datos del ejercicio. Sus indicadores no prueban la arquitectura por sí solos. El contexto implementado es Producción, con `OrdenProduccion` en un proyecto independiente y transiciones controladas. Las pruebas funcionales comprueban construcción, reglas y frontera de dependencias. La relación entre contextos no requiere compartir las entidades del modelo.
 ```
 
-**Por qué funciona así.** el documento de conceptos básicos de DDD es el artefacto de `docs` específico del punto 5.1. No modifica los 18 documentos existentes del punto 4.5.
 
 **Verificación concreta.** El archivo `docs/conceptos-ddd.md` existe; comprueba que sus títulos, contenido y enlaces coinciden con todos los apartados del bloque mostrado.
 
@@ -217,17 +205,12 @@ Inversión inicial, colaboración continua, complejidad adicional y dificultad e
 
 ### PASO 5.1.5 — Crear la carpeta `Ddd` en el proyecto API
 
-**Resultado de aprendizaje.** Crear la carpeta `Ddd` en el proyecto API. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+La carpeta `Ddd` albergará las clases de validación de contextos delimitados. Se crea como carpeta nueva sin tocar las carpetas existentes.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre el proyecto `AceriaApp.Api`.
 2. Seleccionar `Add` → `New Folder` y nombrar la carpeta `Ddd`.
 3. Verificar que la carpeta `Ddd` aparece dentro de `AceriaApp.Api` sin afectar a las carpetas existentes.
 4. Verificar que no se ha modificado ningún archivo existente del punto 4.5.
-
-
-**Por qué funciona así.** la carpeta `Ddd` albergará las clases de validación de contextos delimitados. Se crea como carpeta nueva sin tocar las carpetas existentes.
 
 **Verificación concreta.** la carpeta `Ddd` existe dentro de `AceriaApp.Api` y las carpetas existentes permanecen intactas.
 
@@ -240,9 +223,7 @@ Inversión inicial, colaboración continua, complejidad adicional y dificultad e
 
 ### PASO 5.1.6 — Crear la clase `ContextoDelimitado`
 
-**Resultado de aprendizaje.** Crear la clase `ContextoDelimitado`. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+`ContextoDelimitado` describe un límite y su lenguaje para discutir el mapa del negocio. La clase no crea una base de datos ni un microservicio: el dominio ejecutable de Producción se introduce por separado.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `Ddd`.
 2. Seleccionar `Add` → `Class` y nombrar la clase `ContextoDelimitado.cs`.
@@ -265,7 +246,6 @@ public class ContextoDelimitado
 }
 ```
 
-**Por qué funciona así.** la clase `ContextoDelimitado` modela un contexto delimitado con su nombre, tipo de subdominio, lenguaje ubicuo y dos indicadores de coherencia. Es la unidad de información del validador.
 
 **Verificación concreta.** la clase `ContextoDelimitado` compila sin errores y expone cinco propiedades.
 
@@ -278,9 +258,7 @@ public class ContextoDelimitado
 
 ### PASO 5.1.7 — Crear la clase `ValidadorContextos`
 
-**Resultado de aprendizaje.** Crear la clase `ValidadorContextos`. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+`ValidadorContextos` contrasta las reglas del catálogo con los datos declarados. Sus tests pueden señalar una descripción incoherente, pero no decidir automáticamente si un bounded context refleja el negocio real.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `Ddd`.
 2. Seleccionar `Add` → `Class` y nombrar la clase `ValidadorContextos.cs`.
@@ -344,7 +322,6 @@ public class ValidadorContextos
 public record ResultadoContextos(bool EsValido, IReadOnlyList<string> Errores);
 ```
 
-**Por qué funciona así.** la clase `ValidadorContextos` comprueba que cada contexto declara nombre, tipo permitido y lenguaje ubicuo, tiene modelo propio y no comparte modelo con otro contexto.
 
 **Verificación concreta.** la clase `ValidadorContextos` compila sin errores y expone un método y un `record`.
 
@@ -357,9 +334,7 @@ public record ResultadoContextos(bool EsValido, IReadOnlyList<string> Errores);
 
 ### PASO 5.1.8 — Añadir los `using` necesarios en `ValidadorContextos`
 
-**Resultado de aprendizaje.** Añadir los `using` necesarios en `ValidadorContextos`. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+Los tipos `List<string>` e `IReadOnlyList<string>` pertenecen a `System.Collections.Generic`. Los métodos `Contains` y `ToList` pertenecen a `System.Linq`. En proyectos con `ImplicitUsings` desactivado, hay que añadir los usings explícitos.
 
 1. En el panel Solution Explorer, hacer doble clic en `ValidadorContextos.cs`.
 2. Inserta las directivas indicadas antes del namespace del archivo; el texto de inserción debe aparecer exactamente una vez.
@@ -380,7 +355,6 @@ using System.Collections.Generic;
 using System.Linq;
 ```
 
-**Por qué funciona así.** los tipos `List<string>` e `IReadOnlyList<string>` pertenecen a `System.Collections.Generic`. Los métodos `Contains` y `ToList` pertenecen a `System.Linq`. En proyectos con `ImplicitUsings` desactivado, hay que añadir los usings explícitos.
 
 **Verificación concreta.** `ValidadorContextos.cs` compila sin errores y no muestra subrayados rojos.
 
@@ -393,9 +367,7 @@ using System.Linq;
 
 ### PASO 5.1.9 — Crear la clase `CatalogoContextos`
 
-**Resultado de aprendizaje.** Crear la clase `CatalogoContextos`. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+`CatalogoContextos` reúne descripciones para compararlas en el ejercicio. Es importante recordar que Inventario y Clientes en el mapa no significan que existan sus endpoints, modelos persistentes o servicios ejecutándose.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `Ddd`.
 2. Seleccionar `Add` → `Class` y nombrar la clase `CatalogoContextos.cs`.
@@ -451,7 +423,6 @@ public class CatalogoContextos
 }
 ```
 
-**Por qué funciona así.** la clase `CatalogoContextos` contiene los contextos delimitados por defecto del proyecto. Se usan en los tests y en la validación automática.
 
 **Verificación concreta.** la clase `CatalogoContextos` compila sin errores y expone un método estático.
 
@@ -464,9 +435,7 @@ public class CatalogoContextos
 
 ### PASO 5.1.10 — Añadir el `using` necesario en `CatalogoContextos`
 
-**Resultado de aprendizaje.** Añadir el `using` necesario en `CatalogoContextos`. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+El tipo `List<T>` pertenece a `System.Collections.Generic`. En proyectos con `ImplicitUsings` desactivado, hay que añadir el using explícito.
 
 1. En el panel Solution Explorer, hacer doble clic en `CatalogoContextos.cs`.
 2. Inserta las directivas indicadas antes del namespace del archivo; el texto de inserción debe aparecer exactamente una vez.
@@ -486,7 +455,6 @@ namespace AceriaApp.Api.Ddd;
 using System.Collections.Generic;
 ```
 
-**Por qué funciona así.** el tipo `List<T>` pertenece a `System.Collections.Generic`. En proyectos con `ImplicitUsings` desactivado, hay que añadir el using explícito.
 
 **Verificación concreta.** `CatalogoContextos.cs` compila sin errores y no muestra subrayados rojos.
 
@@ -499,9 +467,7 @@ using System.Collections.Generic;
 
 ### PASO 5.1.11 — Crear el proyecto de tests del punto 5.1
 
-**Resultado de aprendizaje.** Crear el proyecto de tests del punto 5.1. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+El punto 5.1 añade un proyecto de tests específico para las clases de DDD. Se crea como proyecto nuevo sin modificar los proyectos de tests existentes.
 
 1. Crea `tests/AceriaApp.Ddd.Tests` y su archivo `AceriaApp.Ddd.Tests.csproj` con el XML completo. Si utilizas la plantilla xUnit de Visual Studio, ajusta el archivo generado.
 2. Elimina `UnitTest1.cs` si lo creó la plantilla; las pruebas completas se añaden en los pasos 14 y 15.
@@ -528,7 +494,6 @@ using System.Collections.Generic;
 </Project>
 ```
 
-**Por qué funciona así.** el punto 5.1 añade un proyecto de tests específico para las clases de DDD. Se crea como proyecto nuevo sin modificar los proyectos de tests existentes.
 
 **Verificación concreta.** La solución muestra 15 proyectos, incluido `AceriaApp.Ddd.Tests`; el csproj fija .NET 8, SDK de tests 17.12.0, xUnit 2.9.2 y runner 2.8.2.
 
@@ -541,9 +506,7 @@ using System.Collections.Generic;
 
 ### PASO 5.1.12 — Añadir la referencia del proyecto de tests a la API
 
-**Resultado de aprendizaje.** Añadir la referencia del proyecto de tests a la API. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+La referencia permite que el proyecto de tests acceda a las clases de `Ddd` del proyecto API.
 
 1. Ejecuta `dotnet add tests/AceriaApp.Ddd.Tests/AceriaApp.Ddd.Tests.csproj reference src/AceriaApp.Api/AceriaApp.Api.csproj` o deja el archivo como el XML completo.
 2. Comprueba que la referencia va del proyecto de tests a la API; la API no debe depender de los tests.
@@ -571,7 +534,6 @@ using System.Collections.Generic;
 </Project>
 ```
 
-**Por qué funciona así.** la referencia permite que el proyecto de tests acceda a las clases de `Ddd` del proyecto API.
 
 **Verificación concreta.** el archivo `AceriaApp.Ddd.Tests.csproj` contiene un `ProjectReference` al proyecto API.
 
@@ -584,9 +546,7 @@ using System.Collections.Generic;
 
 ### PASO 5.1.13 — Añadir el paquete `FluentAssertions` al proyecto de tests
 
-**Resultado de aprendizaje.** Añadir el paquete `FluentAssertions` al proyecto de tests. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+`FluentAssertions` proporciona la sintaxis de aserción usada en el curso. Se añade al nuevo proyecto de tests sin modificar los proyectos de tests existentes.
 
 1. Ejecuta `dotnet add tests/AceriaApp.Ddd.Tests/AceriaApp.Ddd.Tests.csproj package FluentAssertions --version 6.12.2` o escribe el XML completo.
 2. Ejecuta `dotnet list tests/AceriaApp.Ddd.Tests/AceriaApp.Ddd.Tests.csproj package` y localiza `FluentAssertions 6.12.2`.
@@ -615,7 +575,6 @@ using System.Collections.Generic;
 </Project>
 ```
 
-**Por qué funciona así.** `FluentAssertions` proporciona la sintaxis de aserción usada en el curso. Se añade al nuevo proyecto de tests sin modificar los proyectos de tests existentes.
 
 **Verificación concreta.** El archivo y `dotnet list package` muestran FluentAssertions 6.12.2; la compilación termina correctamente.
 
@@ -628,9 +587,7 @@ using System.Collections.Generic;
 
 ### PASO 5.1.14 — Crear el archivo `ValidadorContextosTests.cs`
 
-**Resultado de aprendizaje.** Crear el archivo `ValidadorContextosTests.cs`. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+Los tests verifican que el validador acepta el catálogo por defecto y rechaza los contextos que violan las reglas de DDD.
 
 1. En el panel Solution Explorer, expandir `tests` → `AceriaApp.Ddd.Tests`.
 2. Crear el archivo `ValidadorContextosTests.cs`.
@@ -727,7 +684,6 @@ public class ValidadorContextosTests
 }
 ```
 
-**Por qué funciona así.** los tests verifican que el validador acepta el catálogo por defecto y rechaza los contextos que violan las reglas de DDD.
 
 **Verificación concreta.** el archivo `ValidadorContextosTests.cs` compila y contiene seis métodos de test.
 
@@ -740,9 +696,7 @@ public class ValidadorContextosTests
 
 ### PASO 5.1.15 — Crear el archivo `CatalogoContextosTests.cs`
 
-**Resultado de aprendizaje.** Crear el archivo `CatalogoContextosTests.cs`. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+Los tests verifican que el catálogo por defecto contiene los contextos esperados y la distribución correcta por tipo de subdominio.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre el proyecto `AceriaApp.Ddd.Tests`.
 2. Seleccionar `Add` → `Class` y nombrar la clase `CatalogoContextosTests.cs`.
@@ -803,7 +757,6 @@ public class CatalogoContextosTests
 }
 ```
 
-**Por qué funciona así.** los tests verifican que el catálogo por defecto contiene los contextos esperados y la distribución correcta por tipo de subdominio.
 
 **Verificación concreta.** el archivo `CatalogoContextosTests.cs` compila y contiene cinco métodos de test.
 
@@ -816,9 +769,7 @@ public class CatalogoContextosTests
 
 ### PASO 5.1.16 — Construir la frontera del contexto Producción y compilar
 
-**Resultado de aprendizaje.** Construir la frontera del contexto Producción y compilar. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+Aquí aparece una frontera de dominio auténtica: `OrdenProduccion` controla la creación, la cantidad y las transiciones Borrador, Planificada y Finalizada, y `ReglaProduccionException` identifica incumplimientos conocidos. Comprueba que el proyecto de dominio no referencia EF Core ni ASP.NET Core y que los tests ejercitan las reglas, no solo su nombre.
 
 1. Lee cada archivo de integración de este paso y localiza su responsabilidad en las capas del contexto Producción.
 2. Crea o modifica los archivos exactamente como se indica; sigue la lectura numerada para conectar contratos, reglas y pruebas.
@@ -835,9 +786,7 @@ public class CatalogoContextosTests
 <Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup></Project>
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
-
-- **Línea 1:** `<TargetFramework>net8.0</TargetFramework>` → Compila el modelo para .NET 8. No incluye referencias de proyecto ni paquetes externos: la frontera del dominio se comprueba también con tests.
+Compila el modelo para .NET 8. No incluye referencias de proyecto ni paquetes externos: la frontera del dominio se comprueba también con tests.
 
 
 **Integración funcional.** Modela la raíz de Producción con identidad estable, transiciones explícitas y reglas de capacidad; desde 5.2 controla todas las mutaciones de sus líneas.
@@ -893,15 +842,9 @@ public sealed class OrdenProduccion : IEquatable<OrdenProduccion>
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+Fija la capacidad didáctica por orden, no una cuota global entre órdenes. Valida el cliente normalizado antes de crear un agregado o llegar a la persistencia. Impide finalizar directamente desde Borrador o volver a finalizar una orden.
 
-- **Línea 6:** `public const int CapacidadMaxima = 500;` → Fija la capacidad didáctica por orden, no una cuota global entre órdenes.
-
-- **Línea 15:** `if (string.IsNullOrWhiteSpace(cliente) || cliente.Trim().Length > 100)` → Valida el cliente normalizado antes de crear un agregado o llegar a la persistencia.
-
-- **Línea 37:** `if (Estado != EstadoOrdenProduccion.Planificada)` → Impide finalizar directamente desde Borrador o volver a finalizar una orden.
-
-- **Línea 42:** `public bool Equals(OrdenProduccion? otra) => otra is not null && Id == otra.Id;` → Compara entidades por identidad estable; los datos iguales no convierten dos órdenes distintas en una sola.
+Compara entidades por identidad estable; los datos iguales no convierten dos órdenes distintas en una sola.
 
 
 **Integración funcional.** Define el error de negocio y los estados Borrador, Planificada y Finalizada sin dependencias técnicas.
@@ -918,13 +861,7 @@ public sealed class ReglaProduccionException(string codigo, string mensaje) : Ex
 public enum EstadoOrdenProduccion { Borrador, Planificada, Finalizada }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
-
-- **Línea 2:** `public sealed class ReglaProduccionException` → Distingue una regla del modelo incumplida de un fallo técnico. La aplicación puede traducir este tipo concreto sin ocultar otras excepciones.
-
-- **Línea 4:** `public string Codigo { get; } = codigo;` → Conserva un código estable que permite identificar la regla sin depender del texto del mensaje.
-
-- **Línea 6:** `public enum EstadoOrdenProduccion` → Expresa los estados del ciclo de vida; los métodos de la raíz deciden qué transiciones están permitidas.
+Distingue una regla del modelo incumplida de un fallo técnico. La aplicación puede traducir este tipo concreto sin ocultar otras excepciones. Conserva un código estable que permite identificar la regla sin depender del texto del mensaje. Expresa los estados del ciclo de vida; los métodos de la raíz deciden qué transiciones están permitidas.
 
 
 **Integración funcional.** Configura las referencias y versiones de este proyecto manteniendo los proyectos y catálogos heredados.
@@ -947,19 +884,9 @@ public enum EstadoOrdenProduccion { Borrador, Planificada, Finalizada }
 </Project>
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+Fija la versión del paquete usado por esta capa o por sus pruebas para hacer reproducible la compilación. Fija la versión del paquete usado por esta capa o por sus pruebas para hacer reproducible la compilación. Fija la versión del paquete usado por esta capa o por sus pruebas para hacer reproducible la compilación.
 
-- **Línea 4:** `<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />` → Fija la versión del paquete usado por esta capa o por sus pruebas para hacer reproducible la compilación.
-
-- **Línea 5:** `<PackageReference Include="FluentAssertions" Version="6.12.2" />` → Fija la versión del paquete usado por esta capa o por sus pruebas para hacer reproducible la compilación.
-
-- **Línea 6:** `<PackageReference Include="xunit" Version="2.9.2" />` → Fija la versión del paquete usado por esta capa o por sus pruebas para hacer reproducible la compilación.
-
-- **Línea 7:** `<PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />` → Fija la versión del paquete usado por esta capa o por sus pruebas para hacer reproducible la compilación.
-
-- **Línea 8:** `<ProjectReference Include="../../src/AceriaApp.Api/AceriaApp.Api.csproj" />` → Declara una dependencia de proyecto que el compilador necesita; no registra servicios en el contenedor.
-
-- **Línea 9:** `<ProjectReference Include="../../src/AceriaApp.Produccion.Dominio/AceriaApp.Produccion.Dominio.csproj" />` → Declara una dependencia de proyecto que el compilador necesita; no registra servicios en el contenedor.
+Fija la versión del paquete usado por esta capa o por sus pruebas para hacer reproducible la compilación. Declara una dependencia de proyecto que el compilador necesita; no registra servicios en el contenedor. Declara una dependencia de proyecto que el compilador necesita; no registra servicios en el contenedor.
 
 
 **Integración funcional.** Añade 5 pruebas funcionales del punto 5.1, además del catálogo original; verifica comportamiento real y regresiones heredadas.
@@ -1026,20 +953,9 @@ public sealed class DddFuncionalesTests
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+Comprueba el comportamiento observable: crear una orden asigna identidad y normaliza el lenguaje del negocio. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos. Comprueba el comportamiento observable: no se crean ordenes sin cliente o material. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos. Comprueba el comportamiento observable: cantidad respeta los limites de la capacidad didactica. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
 
-- **Línea 7:** `public void Crear_una_orden_asigna_identidad_y_normaliza_el_lenguaje_del_negocio()` → Comprueba el comportamiento observable: crear una orden asigna identidad y normaliza el lenguaje del negocio. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
-
-- **Línea 18:** `public void No_se_crean_ordenes_sin_cliente_o_material()` → Comprueba el comportamiento observable: no se crean ordenes sin cliente o material. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
-
-- **Línea 29:** `public void Cantidad_respeta_los_limites_de_la_capacidad_didactica()` → Comprueba el comportamiento observable: cantidad respeta los limites de la capacidad didactica. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
-
-- **Línea 36:** `public void Planificar_y_finalizar_conserva_la_identidad()` → Comprueba el comportamiento observable: planificar y finalizar conserva la identidad. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
-
-- **Línea 49:** `public void Finalizar_sin_planificar_rechaza_la_transicion_sin_mutar()` → Comprueba el comportamiento observable: finalizar sin planificar rechaza la transicion sin mutar. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
-
-
-**Por qué funciona así.** Los indicadores del catálogo permiten discutir el diseño. El código de este paso convierte las decisiones en contratos y comportamientos comprobables, respetando la frontera del contexto Producción y la dirección de dependencias.
+Comprueba el comportamiento observable: planificar y finalizar conserva la identidad. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos. Comprueba el comportamiento observable: finalizar sin planificar rechaza la transicion sin mutar. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
 
 **Verificación concreta.** La solución contiene 16 proyectos, los archivos de integración coinciden con los bloques y la compilación completa termina con cero errores.
 
@@ -1052,17 +968,12 @@ public sealed class DddFuncionalesTests
 
 ### PASO 5.1.17 — Ejecutar todos los tests del punto 5.1
 
-**Resultado de aprendizaje.** Ejecutar todos los tests del punto 5.1. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+Las pruebas de catálogo verifican los datos declarados; las pruebas funcionales ejecutan las reglas y los adaptadores reales del contexto. Ambas evidencias son necesarias.
 
 1. Ejecuta `dotnet test tests/AceriaApp.Ddd.Tests/AceriaApp.Ddd.Tests.csproj -c Release` desde la raíz de la etapa.
 2. Comprueba 16 pruebas aprobadas: 11 de catálogo y 5 funcionales.
 3. Exige cero fallos y cero omisiones; revisa los nombres de las pruebas para identificar el contrato comprobado.
 4. Si falla una prueba, lee su aserción y corrige el archivo del paso correspondiente antes de continuar.
-
-
-**Por qué funciona así.** Las pruebas de catálogo verifican los datos declarados; las pruebas funcionales ejecutan las reglas y los adaptadores reales del contexto. Ambas evidencias son necesarias.
 
 **Verificación concreta.** El proyecto ejecuta 16 tests: `Failed: 0, Passed: 16, Skipped: 0, Total: 16`.
 
@@ -1075,17 +986,12 @@ public sealed class DddFuncionalesTests
 
 ### PASO 5.1.18 — Ejecutar todos los tests de la solución
 
-**Resultado de aprendizaje.** Ejecutar todos los tests de la solución. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+Ejecutar todos los tests de la solución verifica que los tests de los puntos anteriores y del punto 5.1 pasan conjuntamente.
 
 1. Ejecuta `dotnet test AceriaApp.sln -c Release --no-build` después de la compilación Release.
 2. Comprueba que se ejecutan los 11 proyectos de tests, incluidos los heredados de M04.
 3. Suma los resultados por proyecto: deben ser 134 pruebas aprobadas, cero fallos y cero omisiones.
 4. Conserva la salida como evidencia; si cambias código vuelve a compilar antes de utilizar `--no-build`.
-
-
-**Por qué funciona así.** ejecutar todos los tests de la solución verifica que los tests de los puntos anteriores y del punto 5.1 pasan conjuntamente.
 
 **Verificación concreta.** Los 11 proyectos ejecutan conjuntamente 134 tests aprobados, cero fallos y cero omisiones.
 
@@ -1098,9 +1004,7 @@ public sealed class DddFuncionalesTests
 
 ### PASO 5.1.19 — Actualizar el README de la copia 5.1
 
-**Resultado de aprendizaje.** Actualizar el README de la copia 5.1. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+El README del punto 5.1 explica el objetivo, el estado, la ejecución y los añadidos. No modifica el README del punto 4.5.
 
 1. Abre el archivo `README.md` copiado de `4.5-inyeccion-dependencias` dentro de `5.1-conceptos-ddd`.
 2. Reemplaza su contenido completo por el bloque de este paso; el README de la carpeta anterior permanece intacto.
@@ -1150,7 +1054,6 @@ Construir la frontera y las transiciones del contexto Producción.
 El catálogo describe ejemplos de diseño y sus indicadores; no inspecciona automáticamente las clases reales. Los archivos funcionales del paso 16 y sus tests comprueban el comportamiento ejecutable. Ejecuta `dotnet test AceriaApp.sln -c Release` y exige cero fallos y cero omisiones.
 ```
 
-**Por qué funciona así.** el README del punto 5.1 explica el objetivo, el estado, la ejecución y los añadidos. No modifica el README del punto 4.5.
 
 **Verificación concreta.** El archivo `README.md` existe; comprueba que sus títulos, contenido y enlaces coinciden con todos los apartados del bloque mostrado.
 
@@ -1163,9 +1066,7 @@ El catálogo describe ejemplos de diseño y sus indicadores; no inspecciona auto
 
 ### PASO 5.1.20 — Crear el ADR-019 del punto 5.1
 
-**Resultado de aprendizaje.** Crear el ADR-019 del punto 5.1. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+El ADR-019 documenta la decisión de adoptar DDD. Es un artefacto nuevo del punto 5.1 que no modifica los ADR existentes.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `docs`.
 2. Seleccionar `Add` → `New Item` → `Text File` y nombrar el archivo `ADR-019-conceptos-ddd.md`.
@@ -1202,7 +1103,6 @@ Se adopta DDD con fronteras explícitas de modelo. El catálogo de análisis des
 `ContextoDelimitado`, `CatalogoContextos` y `ValidadorContextos` representan datos del ejercicio. Sus indicadores no prueban la arquitectura por sí solos. El contexto implementado es Producción, con `OrdenProduccion` en un proyecto independiente y transiciones controladas. Las pruebas funcionales comprueban construcción, reglas y frontera de dependencias. La relación entre contextos no requiere compartir las entidades del modelo.
 ```
 
-**Por qué funciona así.** el ADR-019 documenta la decisión de adoptar DDD. Es un artefacto nuevo del punto 5.1 que no modifica los ADR existentes.
 
 **Verificación concreta.** El archivo `docs/ADR-019-conceptos-ddd.md` existe; comprueba que sus títulos, contenido y enlaces coinciden con todos los apartados del bloque mostrado.
 
@@ -1215,17 +1115,12 @@ Se adopta DDD con fronteras explícitas de modelo. El catálogo de análisis des
 
 ### PASO 5.1.21 — Comparar los documentos heredados con 4.5-inyeccion-dependencias
 
-**Resultado de aprendizaje.** Comparar los documentos heredados con 4.5-inyeccion-dependencias. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+La comparación comprueba los documentos heredados byte a byte. Las nuevas clases y los cambios explícitos de integración pertenecen a la copia actual; la carpeta del punto anterior permanece intacta.
 
 1. En la terminal, escribir `cd C:\cursos\AceriaApp` y pulsar Enter.
 2. Escribir `for %f in (M04_PATRONES_ARQUITECTURA\PROYECTO\4.5-inyeccion-dependencias\docs\*.md) do fc /L "%f" "M05_DDD_CQRS\PROYECTO\5.1-conceptos-ddd\docs\%~nxf"` y pulsar Enter.
 3. Verificar que la salida muestra `FC: no differences encountered` para cada archivo.
 4. Verificar que el número de comparaciones coincide con el número de documentos del punto 4.5. Si algún archivo muestra diferencias, restaurarlo desde el punto 4.5.
-
-
-**Por qué funciona así.** La comparación comprueba los documentos heredados byte a byte. Las nuevas clases y los cambios explícitos de integración pertenecen a la copia actual; la carpeta del punto anterior permanece intacta.
 
 **Verificación concreta.** Los 18 documentos heredados coinciden con la etapa anterior, sin omisiones ni modificaciones.
 
@@ -1238,17 +1133,12 @@ Se adopta DDD con fronteras explícitas de modelo. El catálogo de análisis des
 
 ### PASO 5.1.22 — Verificar la estructura del punto 5.1
 
-**Resultado de aprendizaje.** Verificar la estructura del punto 5.1. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+La verificación estructural confirma que el punto 5.1 añade archivos nuevos conservando los documentos heredados.
 
 1. Escribir `tree /F M05_DDD_CQRS\PROYECTO\5.1-conceptos-ddd` y pulsar Enter.
 2. Verificar que la salida muestra `AceriaApp.sln`, `README.md`, `src\AceriaApp.Api\Ddd` con las tres clases nuevas, `tests\AceriaApp.Ddd.Tests` con los dos archivos de tests de catálogo y las pruebas funcionales y `docs` con el documento de conceptos y el ADR-019. Comprueba también los proyectos y archivos del contexto Producción indicados en el paso 16.
 3. Verificar que las carpetas existentes del punto 4.5 permanecen intactas.
 4. Verificar que no existe ninguna carpeta `labs` ni ningún archivo `metaprompt.md` ni `verificacion.md`.
-
-
-**Por qué funciona así.** la verificación estructural confirma que el punto 5.1 añade archivos nuevos conservando los documentos heredados.
 
 **Verificación concreta.** la estructura contiene los archivos nuevos y conserva los del punto 4.5.
 
@@ -1261,17 +1151,12 @@ Se adopta DDD con fronteras explícitas de modelo. El catálogo de análisis des
 
 ### PASO 5.1.23 — Verificar el `.gitignore` del punto 5.1
 
-**Resultado de aprendizaje.** Verificar el `.gitignore` del punto 5.1. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+El `.gitignore` se hereda del punto 4.5 sin modificaciones. La verificación confirma que no se ha tocado.
 
 1. Verificar que el archivo `.gitignore` existe en la carpeta del punto 5.1 (copiado del punto 4.5).
 2. Abrir el archivo `.gitignore` con Visual Studio con soporte de .NET 8.
 3. Verificar que contiene las líneas `**/bin/`, `**/obj/`, `.vs/`, `*.user`, `TestResults/` y `*.trx`.
 4. Verificar que no se ha modificado respecto al punto 4.5. Pulsar `Ctrl+S` si no hay cambios y cerrar el archivo.
-
-
-**Por qué funciona así.** el `.gitignore` se hereda del punto 4.5 sin modificaciones. La verificación confirma que no se ha tocado.
 
 **Verificación concreta.** el `.gitignore` existe y contiene las seis líneas sin modificaciones.
 
@@ -1284,17 +1169,12 @@ Se adopta DDD con fronteras explícitas de modelo. El catálogo de análisis des
 
 ### PASO 5.1.24 — Hacer el commit del punto 5.1 y verificar el estado final
 
-**Resultado de aprendizaje.** Hacer el commit del punto 5.1 y verificar el estado final. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+El commit registra la etapa completa. Si existe uno por punto desde 1.1, el recorrido suma 19 commits de puntos; otros commits legítimos pueden aumentar el historial.
 
 1. Ejecuta `git diff --stat` y revisa los archivos y entregables de esta etapa.
 2. Ejecuta `git add .` después de comprobar que no se incluyen binarios, resultados temporales ni credenciales.
 3. Ejecuta `git commit -m "Punto 5.1: Conceptos básicos de Domain-Driven Design"` con `user.name` y `user.email` configurados.
 4. Comprueba `git log --oneline` y `git status`; deben registrar este punto y no dejar cambios pendientes de esta actividad.
-
-
-**Por qué funciona así.** El commit registra la etapa completa. Si existe uno por punto desde 1.1, el recorrido suma 19 commits de puntos; otros commits legítimos pueden aumentar el historial.
 
 **Verificación concreta.** El historial incluye el commit de 5.1 y `git status` no muestra cambios pendientes de esta actividad; no se impone una longitud rígida al historial.
 
@@ -1448,6 +1328,12 @@ El punto 5.1 ha establecido los fundamentos de Domain-Driven Design: el dominio 
 
 # Punto 5.2 — Entidades y value objects
 
+## Proteger identidad, valor e invariantes dentro del agregado
+
+Una entidad sigue siendo la misma aunque cambien algunos atributos; un value object se compara por los valores que lo definen. Esa diferencia tiene consecuencias prácticas cuando una orden cambia de estado, agrega líneas o se recupera de una base de datos. En la etapa 5.2 estudiaremos qué operaciones tienen sentido para el agregado de Producción y qué estados deben rechazarse antes de persistir.
+
+La práctica añade elementos del catálogo didáctico, pero su núcleo es el modelo ejecutable: la raíz controla las modificaciones y evita que una operación externa salte sus invariantes mediante setters indiscriminados. La igualdad de entidades y la igualdad de valores necesitan pruebas distintas. Utilizaremos el mismo principio para distinguir una representación válida de un modelo que realmente impide cantidades o transiciones incorrectas. Las pruebas de dominio son importantes, aunque no reemplazan un recorrido SQL real.
+
 **Carpeta de trabajo:** `M05_DDD_CQRS/PROYECTO/5.2-entidades-value-objects`.
 
 **Objetivo:** completar los veinticuatro pasos, conservar los documentos heredados y comprobar el modelo con código y tests ejecutables. La etapa suma 153 pruebas en 17 proyectos.
@@ -1456,17 +1342,12 @@ El punto 5.1 ha establecido los fundamentos de Domain-Driven Design: el dominio 
 
 ### PASO 5.2.1 — Crear la carpeta del punto 5.2 a partir del punto 5.1
 
-**Resultado de aprendizaje.** Crear la carpeta del punto 5.2 a partir del punto 5.1. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+La copia conserva una etapa autónoma. 5.1-conceptos-ddd aporta 134 tests aprobados y 16 proyectos antes de incorporar este punto.
 
 1. Abre la terminal integrada y localiza `M05_DDD_CQRS/PROYECTO/5.1-conceptos-ddd`; esa es la etapa completa que vas a continuar.
 2. Crea `M05_DDD_CQRS/PROYECTO/5.2-entidades-value-objects` y copia en ella el contenido de `5.1-conceptos-ddd`; en Windows puedes usar `xcopy` con `/E /I /H /Y`.
 3. Excluye `bin`, `obj` y `TestResults`; abre únicamente la copia de `5.2-entidades-value-objects` para conservar intacto el punto anterior.
 4. Ejecuta `dir` dentro de `5.2-entidades-value-objects` y verifica `AceriaApp.sln`, `README.md`, `src`, `tests`, `docs` y `global.json`.
-
-
-**Por qué funciona así.** La copia conserva una etapa autónoma. 5.1-conceptos-ddd aporta 134 tests aprobados y 16 proyectos antes de incorporar este punto.
 
 **Verificación concreta.** La copia contiene la solución y los 16 proyectos anteriores; todavía no contiene los archivos de 5.2.
 
@@ -1480,17 +1361,12 @@ El punto 5.1 ha establecido los fundamentos de Domain-Driven Design: el dominio 
 
 ### PASO 5.2.2 — Abrir la solución copiada en Visual Studio con soporte de .NET 8
 
-**Resultado de aprendizaje.** Abrir la solución copiada en Visual Studio con soporte de .NET 8. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+Abrir la solución copiada permite trabajar en el punto 5.2 sobre la base del punto 5.1. La compilación verifica que la copia es correcta.
 
 1. Abre `AceriaApp.sln` dentro de `5.2-entidades-value-objects` con Visual Studio; en Windows puedes ejecutar `start AceriaApp.sln`.
 2. Ejecuta `dotnet sln AceriaApp.sln list` y comprueba los 16 proyectos heredados; todas sus rutas deben existir en esta etapa.
 3. Ejecuta `dotnet restore AceriaApp.sln` y `dotnet build AceriaApp.sln -c Release` para comprobar el punto de partida.
 4. Si hay DLL bloqueadas por una API en ejecución, detén esa aplicación y repite la compilación. Continúa cuando no haya errores.
-
-
-**Por qué funciona así.** abrir la solución copiada permite trabajar en el punto 5.2 sobre la base del punto 5.1. La compilación verifica que la copia es correcta.
 
 **Verificación concreta.** La solución muestra 16 proyectos y `dotnet build AceriaApp.sln -c Release` termina con `Build succeeded.`.
 
@@ -1503,17 +1379,12 @@ El punto 5.1 ha establecido los fundamentos de Domain-Driven Design: el dominio 
 
 ### PASO 5.2.3 — Verificar que la carpeta `docs` contiene los documentos del punto 5.1
 
-**Resultado de aprendizaje.** Verificar que la carpeta `docs` contiene los documentos del punto 5.1. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+La nueva etapa preserva 20 documentos y añade su ficha temática y su ADR. Los cambios de integración se aplican únicamente en la copia actual.
 
 1. Expande `docs` dentro de la copia de `5.2-entidades-value-objects`.
 2. Comprueba los 20 documentos heredados: ADR-010 a ADR-019 y fichas de los puntos anteriores.
 3. Compara sus nombres y contenido con `docs` de `5.1-conceptos-ddd`; no modifiques ni elimines documentos anteriores.
 4. Confirma que todavía no existen `docs/entidades-value-objects.md` ni `docs/ADR-020-entidades-value-objects.md`.
-
-
-**Por qué funciona así.** La nueva etapa preserva 20 documentos y añade su ficha temática y su ADR. Los cambios de integración se aplican únicamente en la copia actual.
 
 **Verificación concreta.** Existen 20 documentos heredados idénticos y no existen todavía los dos de este punto.
 
@@ -1526,9 +1397,7 @@ El punto 5.1 ha establecido los fundamentos de Domain-Driven Design: el dominio 
 
 ### PASO 5.2.4 — Crear el documento de entidades y value objects en `docs`
 
-**Resultado de aprendizaje.** Crear el documento de entidades y value objects en `docs`. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+El documento de entidades y value objects es el artefacto de `docs` específico del punto 5.2. No modifica los 20 documentos existentes del punto 5.1.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `docs`.
 2. Seleccionar `Add` → `New Item` → `Text File` y nombrar el archivo `entidades-value-objects.md`.
@@ -1609,7 +1478,6 @@ Los value objects se componen para formar estructuras más complejas.
 El catálogo conserva los ejemplos Orden, Material, Cliente, Dinero, Direccion y Cantidad para practicar la clasificación. No implica que esos seis tipos estén implementados como entidades o valores de Producción. `ValidadorModeloDominio` exige identidad para las entidades e inmutabilidad para los value objects; no rechaza una entidad por ser inmutable. El código ejecutable usa `OrdenProduccion`, `LineaDeOrden`, `NombreMaterial` y `CantidadProduccion`, cuya identidad, igualdad y capacidad se verifican con pruebas funcionales. La capacidad de 500 pertenece a este ejercicio y no representa una regla universal del sector.
 ```
 
-**Por qué funciona así.** el documento de entidades y value objects es el artefacto de `docs` específico del punto 5.2. No modifica los 20 documentos existentes del punto 5.1.
 
 **Verificación concreta.** El archivo `docs/entidades-value-objects.md` existe; comprueba que sus títulos, contenido y enlaces coinciden con todos los apartados del bloque mostrado.
 
@@ -1622,17 +1490,12 @@ El catálogo conserva los ejemplos Orden, Material, Cliente, Dinero, Direccion y
 
 ### PASO 5.2.5 — Crear la carpeta `ModeloDominio` en el proyecto API
 
-**Resultado de aprendizaje.** Crear la carpeta `ModeloDominio` en el proyecto API. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+La carpeta `ModeloDominio` albergará las clases de validación de entidades y value objects. Se crea como carpeta nueva sin tocar las carpetas existentes.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre el proyecto `AceriaApp.Api`.
 2. Seleccionar `Add` → `New Folder` y nombrar la carpeta `ModeloDominio`.
 3. Verificar que la carpeta `ModeloDominio` aparece dentro de `AceriaApp.Api` sin afectar a las carpetas existentes.
 4. Verificar que no se ha modificado ningún archivo existente del punto 5.1.
-
-
-**Por qué funciona así.** la carpeta `ModeloDominio` albergará las clases de validación de entidades y value objects. Se crea como carpeta nueva sin tocar las carpetas existentes.
 
 **Verificación concreta.** la carpeta `ModeloDominio` existe dentro de `AceriaApp.Api` y las carpetas existentes permanecen intactas.
 
@@ -1645,9 +1508,7 @@ El catálogo conserva los ejemplos Orden, Material, Cliente, Dinero, Direccion y
 
 ### PASO 5.2.6 — Crear la clase `ElementoModelo`
 
-**Resultado de aprendizaje.** Crear la clase `ElementoModelo`. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+`ElementoModelo` permite clasificar propuestas como entidad o value object. Su nombre y sus propiedades se utilizan en el catálogo; la igualdad y los invariantes del agregado se prueban con las clases propias de Producción.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `ModeloDominio`.
 2. Seleccionar `Add` → `Class` y nombrar la clase `ElementoModelo.cs`.
@@ -1670,7 +1531,6 @@ public class ElementoModelo
 }
 ```
 
-**Por qué funciona así.** la clase `ElementoModelo` modela un elemento del modelo del dominio con su nombre, tipo y tres indicadores. Es la unidad de información del validador.
 
 **Verificación concreta.** la clase `ElementoModelo` compila sin errores y expone cinco propiedades.
 
@@ -1683,9 +1543,7 @@ public class ElementoModelo
 
 ### PASO 5.2.7 — Crear la clase `ValidadorModeloDominio`
 
-**Resultado de aprendizaje.** Crear la clase `ValidadorModeloDominio`. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+`ValidadorModeloDominio` comprueba categorías y propiedades declaradas, pero un objeto aceptado no garantiza que la raíz de Producción impida una transición inválida. Mantén separadas ambas clases de pruebas.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `ModeloDominio`.
 2. Seleccionar `Add` → `Class` y nombrar la clase `ValidadorModeloDominio.cs`.
@@ -1754,7 +1612,6 @@ public class ValidadorModeloDominio
 public record ResultadoModelo(bool EsValido, IReadOnlyList<string> Errores);
 ```
 
-**Por qué funciona así.** la clase `ValidadorModeloDominio` comprueba que cada elemento declara nombre y tipo permitido, que las entidades tienen identidad, que los value objects no tienen identidad y son inmutables, y que todos validan invariantes.
 
 **Verificación concreta.** la clase `ValidadorModeloDominio` compila sin errores y expone un método y un `record`.
 
@@ -1767,9 +1624,7 @@ public record ResultadoModelo(bool EsValido, IReadOnlyList<string> Errores);
 
 ### PASO 5.2.8 — Añadir los `using` necesarios en `ValidadorModeloDominio`
 
-**Resultado de aprendizaje.** Añadir los `using` necesarios en `ValidadorModeloDominio`. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+Los tipos `List<string>` e `IReadOnlyList<string>` pertenecen a `System.Collections.Generic`. Los métodos `Contains` y `ToList` pertenecen a `System.Linq`. En proyectos con `ImplicitUsings` desactivado, hay que añadir los usings explícitos.
 
 1. En el panel Solution Explorer, hacer doble clic en `ValidadorModeloDominio.cs`.
 2. Inserta las directivas indicadas antes del namespace del archivo; el texto de inserción debe aparecer exactamente una vez.
@@ -1790,7 +1645,6 @@ using System.Collections.Generic;
 using System.Linq;
 ```
 
-**Por qué funciona así.** los tipos `List<string>` e `IReadOnlyList<string>` pertenecen a `System.Collections.Generic`. Los métodos `Contains` y `ToList` pertenecen a `System.Linq`. En proyectos con `ImplicitUsings` desactivado, hay que añadir los usings explícitos.
 
 **Verificación concreta.** `ValidadorModeloDominio.cs` compila sin errores y no muestra subrayados rojos.
 
@@ -1803,9 +1657,7 @@ using System.Linq;
 
 ### PASO 5.2.9 — Crear la clase `CatalogoModelo`
 
-**Resultado de aprendizaje.** Crear la clase `CatalogoModelo`. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+`CatalogoModelo` facilita comparar elementos descritos en el ejercicio. Cuando examines una línea de producción real, la prueba decisiva será que no permite cantidades negativas y que el agregado mantiene consistencia al persistirse.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `ModeloDominio`.
 2. Seleccionar `Add` → `Class` y nombrar la clase `CatalogoModelo.cs`.
@@ -1835,7 +1687,6 @@ public class CatalogoModelo
 }
 ```
 
-**Por qué funciona así.** la clase `CatalogoModelo` contiene los elementos por defecto del modelo. Se usan en los tests y en la validación automática.
 
 **Verificación concreta.** la clase `CatalogoModelo` compila sin errores y expone un método estático.
 
@@ -1848,9 +1699,7 @@ public class CatalogoModelo
 
 ### PASO 5.2.10 — Añadir el `using` necesario en `CatalogoModelo`
 
-**Resultado de aprendizaje.** Añadir el `using` necesario en `CatalogoModelo`. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+El tipo `List<T>` pertenece a `System.Collections.Generic`. En proyectos con `ImplicitUsings` desactivado, hay que añadir el using explícito.
 
 1. En el panel Solution Explorer, hacer doble clic en `CatalogoModelo.cs`.
 2. Inserta las directivas indicadas antes del namespace del archivo; el texto de inserción debe aparecer exactamente una vez.
@@ -1870,7 +1719,6 @@ namespace AceriaApp.Api.ModeloDominio;
 using System.Collections.Generic;
 ```
 
-**Por qué funciona así.** el tipo `List<T>` pertenece a `System.Collections.Generic`. En proyectos con `ImplicitUsings` desactivado, hay que añadir el using explícito.
 
 **Verificación concreta.** `CatalogoModelo.cs` compila sin errores y no muestra subrayados rojos.
 
@@ -1883,9 +1731,7 @@ using System.Collections.Generic;
 
 ### PASO 5.2.11 — Crear el proyecto de tests del punto 5.2
 
-**Resultado de aprendizaje.** Crear el proyecto de tests del punto 5.2. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+El punto 5.2 añade un proyecto de tests específico para las clases del modelo del dominio. Se crea como proyecto nuevo sin modificar los proyectos de tests existentes.
 
 1. Crea `tests/AceriaApp.ModeloDominio.Tests` y su archivo `AceriaApp.ModeloDominio.Tests.csproj` con el XML completo. Si utilizas la plantilla xUnit de Visual Studio, ajusta el archivo generado.
 2. Elimina `UnitTest1.cs` si lo creó la plantilla; las pruebas completas se añaden en los pasos 14 y 15.
@@ -1912,7 +1758,6 @@ using System.Collections.Generic;
 </Project>
 ```
 
-**Por qué funciona así.** el punto 5.2 añade un proyecto de tests específico para las clases del modelo del dominio. Se crea como proyecto nuevo sin modificar los proyectos de tests existentes.
 
 **Verificación concreta.** La solución muestra 17 proyectos, incluido `AceriaApp.ModeloDominio.Tests`; el csproj fija .NET 8, SDK de tests 17.12.0, xUnit 2.9.2 y runner 2.8.2.
 
@@ -1925,9 +1770,7 @@ using System.Collections.Generic;
 
 ### PASO 5.2.12 — Añadir la referencia del proyecto de tests a la API
 
-**Resultado de aprendizaje.** Añadir la referencia del proyecto de tests a la API. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+La referencia permite que el proyecto de tests acceda a las clases de `ModeloDominio` del proyecto API.
 
 1. Ejecuta `dotnet add tests/AceriaApp.ModeloDominio.Tests/AceriaApp.ModeloDominio.Tests.csproj reference src/AceriaApp.Api/AceriaApp.Api.csproj` o deja el archivo como el XML completo.
 2. Comprueba que la referencia va del proyecto de tests a la API; la API no debe depender de los tests.
@@ -1955,7 +1798,6 @@ using System.Collections.Generic;
 </Project>
 ```
 
-**Por qué funciona así.** la referencia permite que el proyecto de tests acceda a las clases de `ModeloDominio` del proyecto API.
 
 **Verificación concreta.** el archivo `AceriaApp.ModeloDominio.Tests.csproj` contiene un `ProjectReference` al proyecto API.
 
@@ -1968,9 +1810,7 @@ using System.Collections.Generic;
 
 ### PASO 5.2.13 — Añadir el paquete `FluentAssertions` al proyecto de tests
 
-**Resultado de aprendizaje.** Añadir el paquete `FluentAssertions` al proyecto de tests. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+`FluentAssertions` proporciona la sintaxis de aserción usada en el curso. Se añade al nuevo proyecto de tests sin modificar los proyectos de tests existentes.
 
 1. Ejecuta `dotnet add tests/AceriaApp.ModeloDominio.Tests/AceriaApp.ModeloDominio.Tests.csproj package FluentAssertions --version 6.12.2` o escribe el XML completo.
 2. Ejecuta `dotnet list tests/AceriaApp.ModeloDominio.Tests/AceriaApp.ModeloDominio.Tests.csproj package` y localiza `FluentAssertions 6.12.2`.
@@ -1999,7 +1839,6 @@ using System.Collections.Generic;
 </Project>
 ```
 
-**Por qué funciona así.** `FluentAssertions` proporciona la sintaxis de aserción usada en el curso. Se añade al nuevo proyecto de tests sin modificar los proyectos de tests existentes.
 
 **Verificación concreta.** El archivo y `dotnet list package` muestran FluentAssertions 6.12.2; la compilación termina correctamente.
 
@@ -2012,9 +1851,7 @@ using System.Collections.Generic;
 
 ### PASO 5.2.14 — Crear el archivo `ValidadorModeloDominioTests.cs`
 
-**Resultado de aprendizaje.** Crear el archivo `ValidadorModeloDominioTests.cs`. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+Los tests verifican que el validador acepta el catálogo por defecto y rechaza los elementos que violan las reglas del modelo del dominio.
 
 1. En el panel Solution Explorer, expandir `tests` → `AceriaApp.ModeloDominio.Tests`.
 2. Crear el archivo `ValidadorModeloDominioTests.cs`.
@@ -2125,7 +1962,6 @@ public class ValidadorModeloDominioTests
 }
 ```
 
-**Por qué funciona así.** los tests verifican que el validador acepta el catálogo por defecto y rechaza los elementos que violan las reglas del modelo del dominio.
 
 **Verificación concreta.** el archivo `ValidadorModeloDominioTests.cs` compila y contiene siete métodos de test.
 
@@ -2138,9 +1974,7 @@ public class ValidadorModeloDominioTests
 
 ### PASO 5.2.15 — Crear el archivo `CatalogoModeloTests.cs`
 
-**Resultado de aprendizaje.** Crear el archivo `CatalogoModeloTests.cs`. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+Los tests verifican que el catálogo por defecto contiene los elementos esperados y la distribución correcta por tipo.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre el proyecto `AceriaApp.ModeloDominio.Tests`.
 2. Seleccionar `Add` → `Class` y nombrar la clase `CatalogoModeloTests.cs`.
@@ -2201,7 +2035,6 @@ public class CatalogoModeloTests
 }
 ```
 
-**Por qué funciona así.** los tests verifican que el catálogo por defecto contiene los elementos esperados y la distribución correcta por tipo.
 
 **Verificación concreta.** el archivo `CatalogoModeloTests.cs` compila y contiene cinco métodos de test.
 
@@ -2214,9 +2047,7 @@ public class CatalogoModeloTests
 
 ### PASO 5.2.16 — Implementar identidad, igualdad por valor e invariantes
 
-**Resultado de aprendizaje.** Implementar identidad, igualdad por valor e invariantes. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+Las modificaciones de dominio deben pasar por operaciones que protejan las invariantes. Comprueba la identidad de una orden tras cambios permitidos, la igualdad por valor de los objetos apropiados y el rechazo de cantidades o estados incompatibles; una entidad sin setters públicos no basta si sus métodos dejan escapar estados inválidos.
 
 1. Lee cada archivo de integración de este paso y localiza su responsabilidad en las capas del contexto Producción.
 2. Crea o modifica los archivos exactamente como se indica; sigue la lectura numerada para conectar contratos, reglas y pruebas.
@@ -2252,13 +2083,7 @@ public sealed class LineaDeOrden : IEquatable<LineaDeOrden>
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
-
-- **Línea 10:** `internal LineaDeOrden(NombreMaterial material, CantidadProduccion cantidad)` → Impide crear entidades hijas desde la capa de aplicación: la raíz controla su incorporación.
-
-- **Línea 16:** `internal void CambiarCantidad(CantidadProduccion cantidad) => Cantidad = cantidad;` → La raíz llama a esta operación solo después de validar el total y el estado.
-
-- **Línea 17:** `public bool Equals(LineaDeOrden? otra) => otra is not null && Id == otra.Id;` → Dos líneas con el mismo material y cantidad siguen siendo entidades distintas.
+Impide crear entidades hijas desde la capa de aplicación: la raíz controla su incorporación. La raíz llama a esta operación solo después de validar el total y el estado. Dos líneas con el mismo material y cantidad siguen siendo entidades distintas.
 
 
 **Integración funcional.** Modela la raíz de Producción con identidad estable, transiciones explícitas y reglas de capacidad; desde 5.2 controla todas las mutaciones de sus líneas.
@@ -2339,23 +2164,11 @@ public sealed class OrdenProduccion : IEquatable<OrdenProduccion>
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+Fija la capacidad didáctica por orden, no una cuota global entre órdenes. Devuelve una vista no modificable: ningún consumidor puede insertar o borrar líneas fuera de la raíz. Deriva el total de todas las líneas para evitar un contador independiente que pueda quedar desactualizado.
 
-- **Línea 5:** `public const int CapacidadMaxima = 500;` → Fija la capacidad didáctica por orden, no una cuota global entre órdenes.
+Valida el cliente normalizado antes de crear un agregado o llegar a la persistencia. Valida la suma antes de añadir la línea; un rechazo no cambia la colección. Comprueba el nuevo total antes de sustituir la cantidad de una línea existente.
 
-- **Línea 10:** `public IReadOnlyList<LineaDeOrden> Lineas => _lineas.AsReadOnly();` → Devuelve una vista no modificable: ningún consumidor puede insertar o borrar líneas fuera de la raíz.
-
-- **Línea 11:** `public int CantidadTotal => _lineas.Sum(x => x.Cantidad.Valor);` → Deriva el total de todas las líneas para evitar un contador independiente que pueda quedar desactualizado.
-
-- **Línea 19:** `if (string.IsNullOrWhiteSpace(cliente) || cliente.Trim().Length > 100)` → Valida el cliente normalizado antes de crear un agregado o llegar a la persistencia.
-
-- **Línea 32:** `ExigirCapacidad(CantidadTotal + valor.Valor);` → Valida la suma antes de añadir la línea; un rechazo no cambia la colección.
-
-- **Línea 42:** `ExigirCapacidad(CantidadTotal - linea.Cantidad.Valor + nueva.Valor);` → Comprueba el nuevo total antes de sustituir la cantidad de una línea existente.
-
-- **Línea 53:** `if (Estado != EstadoOrdenProduccion.Planificada)` → Impide finalizar directamente desde Borrador o volver a finalizar una orden.
-
-- **Línea 67:** `public bool Equals(OrdenProduccion? otra) => otra is not null && Id == otra.Id;` → Compara entidades por identidad estable; los datos iguales no convierten dos órdenes distintas en una sola.
+Impide finalizar directamente desde Borrador o volver a finalizar una orden. Compara entidades por identidad estable; los datos iguales no convierten dos órdenes distintas en una sola.
 
 
 **Integración funcional.** Implementa value objects inmutables, con normalización, validación e igualdad por valor; las clases selladas evitan default(struct) inválidos.
@@ -2390,17 +2203,9 @@ public sealed record CantidadProduccion
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+El tipo sellado obtiene igualdad por valor sin abrir una jerarquía que cambie esa semántica. El getter carece de setter e init público: tampoco un with puede introducir un valor inválido. Rechaza valores vacíos o demasiado largos antes de normalizar.
 
-- **Línea 4:** `public sealed record NombreMaterial` → El tipo sellado obtiene igualdad por valor sin abrir una jerarquía que cambie esa semántica.
-
-- **Línea 6:** `public string Valor { get; }` → El getter carece de setter e init público: tampoco un with puede introducir un valor inválido.
-
-- **Línea 9:** `if (string.IsNullOrWhiteSpace(valor) || valor.Trim().Length > 100)` → Rechaza valores vacíos o demasiado largos antes de normalizar.
-
-- **Línea 15:** `public sealed record CantidadProduccion` → Usa una clase en lugar de struct para evitar una instancia default con cero sin pasar por validación.
-
-- **Línea 20:** `if (valor is < 1 or > OrdenProduccion.CapacidadMaxima)` → Valida la cantidad individual; la raíz valida además la suma del agregado.
+Usa una clase en lugar de struct para evitar una instancia default con cero sin pasar por validación. Valida la cantidad individual; la raíz valida además la suma del agregado.
 
 
 **Integración funcional.** Configura las referencias y versiones de este proyecto manteniendo los proyectos y catálogos heredados.
@@ -2423,19 +2228,9 @@ public sealed record CantidadProduccion
 </Project>
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+Fija la versión del paquete usado por esta capa o por sus pruebas para hacer reproducible la compilación. Fija la versión del paquete usado por esta capa o por sus pruebas para hacer reproducible la compilación. Fija la versión del paquete usado por esta capa o por sus pruebas para hacer reproducible la compilación.
 
-- **Línea 4:** `<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />` → Fija la versión del paquete usado por esta capa o por sus pruebas para hacer reproducible la compilación.
-
-- **Línea 5:** `<PackageReference Include="FluentAssertions" Version="6.12.2" />` → Fija la versión del paquete usado por esta capa o por sus pruebas para hacer reproducible la compilación.
-
-- **Línea 6:** `<PackageReference Include="xunit" Version="2.9.2" />` → Fija la versión del paquete usado por esta capa o por sus pruebas para hacer reproducible la compilación.
-
-- **Línea 7:** `<PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />` → Fija la versión del paquete usado por esta capa o por sus pruebas para hacer reproducible la compilación.
-
-- **Línea 8:** `<ProjectReference Include="../../src/AceriaApp.Api/AceriaApp.Api.csproj" />` → Declara una dependencia de proyecto que el compilador necesita; no registra servicios en el contenedor.
-
-- **Línea 9:** `<ProjectReference Include="../../src/AceriaApp.Produccion.Dominio/AceriaApp.Produccion.Dominio.csproj" />` → Declara una dependencia de proyecto que el compilador necesita; no registra servicios en el contenedor.
+Fija la versión del paquete usado por esta capa o por sus pruebas para hacer reproducible la compilación. Declara una dependencia de proyecto que el compilador necesita; no registra servicios en el contenedor. Declara una dependencia de proyecto que el compilador necesita; no registra servicios en el contenedor.
 
 
 **Integración funcional.** Añade 7 pruebas funcionales del punto 5.2, además del catálogo original; verifica comportamiento real y regresiones heredadas.
@@ -2526,24 +2321,11 @@ public sealed class ModeloDominioFuncionalesTests
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+Comprueba el comportamiento observable: value objects tienen igualdad por valor normalizado. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos. Comprueba el comportamiento observable: value objects no permiten valores invalidos. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos. Comprueba el comportamiento observable: lineas con igual material y cantidad conservan identidades distintas. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
 
-- **Línea 7:** `public void Value_objects_tienen_igualdad_por_valor_normalizado()` → Comprueba el comportamiento observable: value objects tienen igualdad por valor normalizado. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
+Comprueba el comportamiento observable: capacidad se evalua sobre todo el agregado sin cambios parciales. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos. Comprueba el comportamiento observable: coleccion publica no permite saltar las reglas de la raiz. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos. Comprueba el comportamiento observable: cambiar cantidad preserva identidad y rechaza total excesivo. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
 
-- **Línea 18:** `public void Value_objects_no_permiten_valores_invalidos()` → Comprueba el comportamiento observable: value objects no permiten valores invalidos. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
-
-- **Línea 27:** `public void Lineas_con_igual_material_y_cantidad_conservan_identidades_distintas()` → Comprueba el comportamiento observable: lineas con igual material y cantidad conservan identidades distintas. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
-
-- **Línea 37:** `public void Capacidad_se_evalua_sobre_todo_el_agregado_sin_cambios_parciales()` → Comprueba el comportamiento observable: capacidad se evalua sobre todo el agregado sin cambios parciales. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
-
-- **Línea 47:** `public void Coleccion_publica_no_permite_saltar_las_reglas_de_la_raiz()` → Comprueba el comportamiento observable: coleccion publica no permite saltar las reglas de la raiz. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
-
-- **Línea 56:** `public void Cambiar_cantidad_preserva_identidad_y_rechaza_total_excesivo()` → Comprueba el comportamiento observable: cambiar cantidad preserva identidad y rechaza total excesivo. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
-
-- **Línea 70:** `public void Una_orden_planificada_cierra_la_edicion_de_sus_lineas()` → Comprueba el comportamiento observable: una orden planificada cierra la edicion de sus lineas. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
-
-
-**Por qué funciona así.** Los indicadores del catálogo permiten discutir el diseño. El código de este paso convierte las decisiones en contratos y comportamientos comprobables, respetando la frontera del contexto Producción y la dirección de dependencias.
+Comprueba el comportamiento observable: una orden planificada cierra la edicion de sus lineas. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
 
 **Verificación concreta.** La solución contiene 17 proyectos, los archivos de integración coinciden con los bloques y la compilación completa termina con cero errores.
 
@@ -2556,17 +2338,12 @@ public sealed class ModeloDominioFuncionalesTests
 
 ### PASO 5.2.17 — Ejecutar todos los tests del punto 5.2
 
-**Resultado de aprendizaje.** Ejecutar todos los tests del punto 5.2. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+Las pruebas de catálogo verifican los datos declarados; las pruebas funcionales ejecutan las reglas y los adaptadores reales del contexto. Ambas evidencias son necesarias.
 
 1. Ejecuta `dotnet test tests/AceriaApp.ModeloDominio.Tests/AceriaApp.ModeloDominio.Tests.csproj -c Release` desde la raíz de la etapa.
 2. Comprueba 19 pruebas aprobadas: 12 de catálogo y 7 funcionales.
 3. Exige cero fallos y cero omisiones; revisa los nombres de las pruebas para identificar el contrato comprobado.
 4. Si falla una prueba, lee su aserción y corrige el archivo del paso correspondiente antes de continuar.
-
-
-**Por qué funciona así.** Las pruebas de catálogo verifican los datos declarados; las pruebas funcionales ejecutan las reglas y los adaptadores reales del contexto. Ambas evidencias son necesarias.
 
 **Verificación concreta.** El proyecto ejecuta 19 tests: `Failed: 0, Passed: 19, Skipped: 0, Total: 19`.
 
@@ -2579,17 +2356,12 @@ public sealed class ModeloDominioFuncionalesTests
 
 ### PASO 5.2.18 — Ejecutar todos los tests de la solución
 
-**Resultado de aprendizaje.** Ejecutar todos los tests de la solución. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+Ejecutar todos los tests de la solución verifica que los tests de los puntos anteriores y del punto 5.2 pasan conjuntamente.
 
 1. Ejecuta `dotnet test AceriaApp.sln -c Release --no-build` después de la compilación Release.
 2. Comprueba que se ejecutan los 12 proyectos de tests, incluidos los heredados de M04.
 3. Suma los resultados por proyecto: deben ser 153 pruebas aprobadas, cero fallos y cero omisiones.
 4. Conserva la salida como evidencia; si cambias código vuelve a compilar antes de utilizar `--no-build`.
-
-
-**Por qué funciona así.** ejecutar todos los tests de la solución verifica que los tests de los puntos anteriores y del punto 5.2 pasan conjuntamente.
 
 **Verificación concreta.** Los 12 proyectos ejecutan conjuntamente 153 tests aprobados, cero fallos y cero omisiones.
 
@@ -2602,9 +2374,7 @@ public sealed class ModeloDominioFuncionalesTests
 
 ### PASO 5.2.19 — Actualizar el README de la copia 5.2
 
-**Resultado de aprendizaje.** Actualizar el README de la copia 5.2. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+El README del punto 5.2 explica el objetivo, el estado, la ejecución y los añadidos. No modifica el README del punto 5.1.
 
 1. Abre el archivo `README.md` copiado de `5.1-conceptos-ddd` dentro de `5.2-entidades-value-objects`.
 2. Reemplaza su contenido completo por el bloque de este paso; el README de la carpeta anterior permanece intacto.
@@ -2654,7 +2424,6 @@ Añadir valores inmutables, identidad y líneas encapsuladas al agregado de Prod
 El catálogo describe ejemplos de diseño y sus indicadores; no inspecciona automáticamente las clases reales. Los archivos funcionales del paso 16 y sus tests comprueban el comportamiento ejecutable. Ejecuta `dotnet test AceriaApp.sln -c Release` y exige cero fallos y cero omisiones.
 ```
 
-**Por qué funciona así.** el README del punto 5.2 explica el objetivo, el estado, la ejecución y los añadidos. No modifica el README del punto 5.1.
 
 **Verificación concreta.** El archivo `README.md` existe; comprueba que sus títulos, contenido y enlaces coinciden con todos los apartados del bloque mostrado.
 
@@ -2667,9 +2436,7 @@ El catálogo describe ejemplos de diseño y sus indicadores; no inspecciona auto
 
 ### PASO 5.2.20 — Crear el ADR-020 del punto 5.2
 
-**Resultado de aprendizaje.** Crear el ADR-020 del punto 5.2. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+El ADR-020 documenta la decisión de adoptar la distinción entre entidades y value objects. Es un artefacto nuevo del punto 5.2 que no modifica los ADR existentes.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `docs`.
 2. Seleccionar `Add` → `New Item` → `Text File` y nombrar el archivo `ADR-020-entidades-value-objects.md`.
@@ -2706,7 +2473,6 @@ Se distingue identidad de igualdad por valor. `OrdenProduccion` y `LineaDeOrden`
 El catálogo conserva los ejemplos Orden, Material, Cliente, Dinero, Direccion y Cantidad para practicar la clasificación. No implica que esos seis tipos estén implementados como entidades o valores de Producción. `ValidadorModeloDominio` exige identidad para las entidades e inmutabilidad para los value objects; no rechaza una entidad por ser inmutable. El código ejecutable usa `OrdenProduccion`, `LineaDeOrden`, `NombreMaterial` y `CantidadProduccion`, cuya identidad, igualdad y capacidad se verifican con pruebas funcionales. La capacidad de 500 pertenece a este ejercicio y no representa una regla universal del sector.
 ```
 
-**Por qué funciona así.** el ADR-020 documenta la decisión de adoptar la distinción entre entidades y value objects. Es un artefacto nuevo del punto 5.2 que no modifica los ADR existentes.
 
 **Verificación concreta.** El archivo `docs/ADR-020-entidades-value-objects.md` existe; comprueba que sus títulos, contenido y enlaces coinciden con todos los apartados del bloque mostrado.
 
@@ -2719,17 +2485,12 @@ El catálogo conserva los ejemplos Orden, Material, Cliente, Dinero, Direccion y
 
 ### PASO 5.2.21 — Comparar los documentos heredados con 5.1-conceptos-ddd
 
-**Resultado de aprendizaje.** Comparar los documentos heredados con 5.1-conceptos-ddd. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+La comparación comprueba los documentos heredados byte a byte. Las nuevas clases y los cambios explícitos de integración pertenecen a la copia actual; la carpeta del punto anterior permanece intacta.
 
 1. En la terminal, escribir `cd C:\cursos\AceriaApp` y pulsar Enter.
 2. Escribir `for %f in (M05_DDD_CQRS\PROYECTO\5.1-conceptos-ddd\docs\*.md) do fc /L "%f" "M05_DDD_CQRS\PROYECTO\5.2-entidades-value-objects\docs\%~nxf"` y pulsar Enter.
 3. Verificar que la salida muestra `FC: no differences encountered` para cada archivo.
 4. Verificar que el número de comparaciones coincide con el número de documentos del punto 5.1. Si algún archivo muestra diferencias, restaurarlo desde el punto 5.1.
-
-
-**Por qué funciona así.** La comparación comprueba los documentos heredados byte a byte. Las nuevas clases y los cambios explícitos de integración pertenecen a la copia actual; la carpeta del punto anterior permanece intacta.
 
 **Verificación concreta.** Los 20 documentos heredados coinciden con la etapa anterior, sin omisiones ni modificaciones.
 
@@ -2742,17 +2503,12 @@ El catálogo conserva los ejemplos Orden, Material, Cliente, Dinero, Direccion y
 
 ### PASO 5.2.22 — Verificar la estructura del punto 5.2
 
-**Resultado de aprendizaje.** Verificar la estructura del punto 5.2. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+La verificación estructural confirma que el punto 5.2 añade archivos nuevos conservando los documentos heredados.
 
 1. Escribir `tree /F M05_DDD_CQRS\PROYECTO\5.2-entidades-value-objects` y pulsar Enter.
 2. Verificar que la salida muestra `AceriaApp.sln`, `README.md`, `src\AceriaApp.Api\ModeloDominio` con las tres clases nuevas, `tests\AceriaApp.ModeloDominio.Tests` con los dos archivos de tests de catálogo y las pruebas funcionales y `docs` con el documento de entidades y el ADR-020. Comprueba también los proyectos y archivos del contexto Producción indicados en el paso 16.
 3. Verificar que las carpetas existentes del punto 5.1 permanecen intactas.
 4. Verificar que no existe ninguna carpeta `labs` ni ningún archivo `metaprompt.md` ni `verificacion.md`.
-
-
-**Por qué funciona así.** la verificación estructural confirma que el punto 5.2 añade archivos nuevos conservando los documentos heredados.
 
 **Verificación concreta.** la estructura contiene los archivos nuevos y conserva los del punto 5.1.
 
@@ -2765,17 +2521,12 @@ El catálogo conserva los ejemplos Orden, Material, Cliente, Dinero, Direccion y
 
 ### PASO 5.2.23 — Verificar el `.gitignore` del punto 5.2
 
-**Resultado de aprendizaje.** Verificar el `.gitignore` del punto 5.2. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+El `.gitignore` se hereda del punto 5.1 sin modificaciones. La verificación confirma que no se ha tocado.
 
 1. Verificar que el archivo `.gitignore` existe en la carpeta del punto 5.2 (copiado del punto 5.1).
 2. Abrir el archivo `.gitignore` con Visual Studio con soporte de .NET 8.
 3. Verificar que contiene las líneas `**/bin/`, `**/obj/`, `.vs/`, `*.user`, `TestResults/` y `*.trx`.
 4. Verificar que no se ha modificado respecto al punto 5.1. Pulsar `Ctrl+S` si no hay cambios y cerrar el archivo.
-
-
-**Por qué funciona así.** el `.gitignore` se hereda del punto 5.1 sin modificaciones. La verificación confirma que no se ha tocado.
 
 **Verificación concreta.** el `.gitignore` existe y contiene las seis líneas sin modificaciones.
 
@@ -2788,17 +2539,12 @@ El catálogo conserva los ejemplos Orden, Material, Cliente, Dinero, Direccion y
 
 ### PASO 5.2.24 — Hacer el commit del punto 5.2 y verificar el estado final
 
-**Resultado de aprendizaje.** Hacer el commit del punto 5.2 y verificar el estado final. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+El commit registra la etapa completa. Si existe uno por punto desde 1.1, el recorrido suma 20 commits de puntos; otros commits legítimos pueden aumentar el historial.
 
 1. Ejecuta `git diff --stat` y revisa los archivos y entregables de esta etapa.
 2. Ejecuta `git add .` después de comprobar que no se incluyen binarios, resultados temporales ni credenciales.
 3. Ejecuta `git commit -m "Punto 5.2: Entidades y value objects"` con `user.name` y `user.email` configurados.
 4. Comprueba `git log --oneline` y `git status`; deben registrar este punto y no dejar cambios pendientes de esta actividad.
-
-
-**Por qué funciona así.** El commit registra la etapa completa. Si existe uno por punto desde 1.1, el recorrido suma 20 commits de puntos; otros commits legítimos pueden aumentar el historial.
 
 **Verificación concreta.** El historial incluye el commit de 5.2 y `git status` no muestra cambios pendientes de esta actividad; no se impone una longitud rígida al historial.
 
@@ -2952,6 +2698,12 @@ El punto 5.2 ha definido las entidades y los value objects como elementos tácti
 
 # Punto 5.3 — Casos de uso
 
+## Separar la intención del caso de uso de las decisiones técnicas
+
+El dominio define las reglas que una orden debe obedecer; la aplicación coordina cuándo ejecutarlas. Un caso de uso no debería abrir directamente una conexión a SQL Server ni decidir cómo se serializa una respuesta HTTP. Por eso la etapa 5.3 incorporará puertos y adaptadores que permitan recuperar y guardar el agregado de Producción manteniendo la dependencia hacia las abstracciones interiores.
+
+Comenzaremos desde la solución del punto 5.2, conservando sus tests de identidad e invariantes. Añadiremos los casos de uso y comprobaremos tanto resultados satisfactorios como rechazos conocidos. En paralelo, el catálogo docente permite describir acciones del negocio, pero no equivale a invocar una implementación concreta. La evidencia funcional deberá mostrar la interacción entre aplicación, dominio y repositorio SQL Server.
+
 **Carpeta de trabajo:** `M05_DDD_CQRS/PROYECTO/5.3-casos-de-uso`.
 
 **Objetivo:** completar los veinticuatro pasos, conservar los documentos heredados y comprobar el modelo con código y tests ejecutables. La etapa suma 172 pruebas en 20 proyectos.
@@ -2960,17 +2712,12 @@ El punto 5.2 ha definido las entidades y los value objects como elementos tácti
 
 ### PASO 5.3.1 — Crear la carpeta del punto 5.3 a partir del punto 5.2
 
-**Resultado de aprendizaje.** Crear la carpeta del punto 5.3 a partir del punto 5.2. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+La copia conserva una etapa autónoma. 5.2-entidades-value-objects aporta 153 tests aprobados y 17 proyectos antes de incorporar este punto.
 
 1. Abre la terminal integrada y localiza `M05_DDD_CQRS/PROYECTO/5.2-entidades-value-objects`; esa es la etapa completa que vas a continuar.
 2. Crea `M05_DDD_CQRS/PROYECTO/5.3-casos-de-uso` y copia en ella el contenido de `5.2-entidades-value-objects`; en Windows puedes usar `xcopy` con `/E /I /H /Y`.
 3. Excluye `bin`, `obj` y `TestResults`; abre únicamente la copia de `5.3-casos-de-uso` para conservar intacto el punto anterior.
 4. Ejecuta `dir` dentro de `5.3-casos-de-uso` y verifica `AceriaApp.sln`, `README.md`, `src`, `tests`, `docs` y `global.json`.
-
-
-**Por qué funciona así.** La copia conserva una etapa autónoma. 5.2-entidades-value-objects aporta 153 tests aprobados y 17 proyectos antes de incorporar este punto.
 
 **Verificación concreta.** La copia contiene la solución y los 17 proyectos anteriores; todavía no contiene los archivos de 5.3.
 
@@ -2984,17 +2731,12 @@ El punto 5.2 ha definido las entidades y los value objects como elementos tácti
 
 ### PASO 5.3.2 — Abrir la solución copiada en Visual Studio con soporte de .NET 8
 
-**Resultado de aprendizaje.** Abrir la solución copiada en Visual Studio con soporte de .NET 8. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+Abrir la solución copiada permite trabajar en el punto 5.3 sobre la base del punto 5.2. La compilación verifica que la copia es correcta.
 
 1. Abre `AceriaApp.sln` dentro de `5.3-casos-de-uso` con Visual Studio; en Windows puedes ejecutar `start AceriaApp.sln`.
 2. Ejecuta `dotnet sln AceriaApp.sln list` y comprueba los 17 proyectos heredados; todas sus rutas deben existir en esta etapa.
 3. Ejecuta `dotnet restore AceriaApp.sln` y `dotnet build AceriaApp.sln -c Release` para comprobar el punto de partida.
 4. Si hay DLL bloqueadas por una API en ejecución, detén esa aplicación y repite la compilación. Continúa cuando no haya errores.
-
-
-**Por qué funciona así.** abrir la solución copiada permite trabajar en el punto 5.3 sobre la base del punto 5.2. La compilación verifica que la copia es correcta.
 
 **Verificación concreta.** La solución muestra 17 proyectos y `dotnet build AceriaApp.sln -c Release` termina con `Build succeeded.`.
 
@@ -3007,17 +2749,12 @@ El punto 5.2 ha definido las entidades y los value objects como elementos tácti
 
 ### PASO 5.3.3 — Verificar que la carpeta `docs` contiene los documentos del punto 5.2
 
-**Resultado de aprendizaje.** Verificar que la carpeta `docs` contiene los documentos del punto 5.2. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+La nueva etapa preserva 22 documentos y añade su ficha temática y su ADR. Los cambios de integración se aplican únicamente en la copia actual.
 
 1. Expande `docs` dentro de la copia de `5.3-casos-de-uso`.
 2. Comprueba los 22 documentos heredados: ADR-010 a ADR-020 y fichas de los puntos anteriores.
 3. Compara sus nombres y contenido con `docs` de `5.2-entidades-value-objects`; no modifiques ni elimines documentos anteriores.
 4. Confirma que todavía no existen `docs/casos-uso.md` ni `docs/ADR-021-casos-uso.md`.
-
-
-**Por qué funciona así.** La nueva etapa preserva 22 documentos y añade su ficha temática y su ADR. Los cambios de integración se aplican únicamente en la copia actual.
 
 **Verificación concreta.** Existen 22 documentos heredados idénticos y no existen todavía los dos de este punto.
 
@@ -3030,9 +2767,7 @@ El punto 5.2 ha definido las entidades y los value objects como elementos tácti
 
 ### PASO 5.3.4 — Crear el documento de casos de uso en `docs`
 
-**Resultado de aprendizaje.** Crear el documento de casos de uso en `docs`. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+El documento de casos de uso es el artefacto de `docs` específico del punto 5.3. No modifica los 22 documentos existentes del punto 5.2.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `docs`.
 2. Seleccionar `Add` → `New Item` → `Text File` y nombrar el archivo `casos-uso.md`.
@@ -3103,7 +2838,6 @@ El caso de uso decide cuándo confirmar los cambios del contexto de persistencia
 `CatalogoCasosDeUso` contiene ejemplos CrearOrden, CancelarOrden, ObtenerOrden y ListarOrdenes. Sus indicadores son datos pedagógicos; no constituyen un inventario de métodos implementados en Producción. En este punto se ejecutan crear, obtener, planificar y finalizar una orden. El nuevo contexto tiene su propia persistencia y no comparte entidades con el flujo hexagonal heredado. Los tests funcionales comprueban el orden de las operaciones y la persistencia desde otro contexto de prueba.
 ```
 
-**Por qué funciona así.** el documento de casos de uso es el artefacto de `docs` específico del punto 5.3. No modifica los 22 documentos existentes del punto 5.2.
 
 **Verificación concreta.** El archivo `docs/casos-uso.md` existe; comprueba que sus títulos, contenido y enlaces coinciden con todos los apartados del bloque mostrado.
 
@@ -3116,17 +2850,12 @@ El caso de uso decide cuándo confirmar los cambios del contexto de persistencia
 
 ### PASO 5.3.5 — Crear la carpeta `CasosDeUso` en el proyecto API
 
-**Resultado de aprendizaje.** Crear la carpeta `CasosDeUso` en el proyecto API. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+La carpeta `CasosDeUso` albergará las clases de validación de casos de uso. Se crea como carpeta nueva sin tocar las carpetas existentes.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre el proyecto `AceriaApp.Api`.
 2. Seleccionar `Add` → `New Folder` y nombrar la carpeta `CasosDeUso`.
 3. Verificar que la carpeta `CasosDeUso` aparece dentro de `AceriaApp.Api` sin afectar a las carpetas existentes.
 4. Verificar que no se ha modificado ningún archivo existente del punto 5.2.
-
-
-**Por qué funciona así.** la carpeta `CasosDeUso` albergará las clases de validación de casos de uso. Se crea como carpeta nueva sin tocar las carpetas existentes.
 
 **Verificación concreta.** la carpeta `CasosDeUso` existe dentro de `AceriaApp.Api` y las carpetas existentes permanecen intactas.
 
@@ -3139,9 +2868,7 @@ El caso de uso decide cuándo confirmar los cambios del contexto de persistencia
 
 ### PASO 5.3.6 — Crear la clase `CasoDeUso`
 
-**Resultado de aprendizaje.** Crear la clase `CasoDeUso`. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+`CasoDeUso` es una descripción del catálogo; no es la clase que registra y ejecuta las órdenes del negocio. Analiza qué entrada, salida y dependencia debería tener una operación como PlanificarOrden y dónde comienza el tratamiento técnico.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `CasosDeUso`.
 2. Seleccionar `Add` → `Class` y nombrar la clase `CasoDeUso.cs`.
@@ -3165,7 +2892,6 @@ public class CasoDeUso
 }
 ```
 
-**Por qué funciona así.** la clase `CasoDeUso` modela un caso de uso con su nombre, tipo, si tiene manejador, si devuelve Result, si coordina la unidad de trabajo y si contiene reglas de negocio. Es la unidad de información del validador.
 
 **Verificación concreta.** la clase `CasoDeUso` compila sin errores y expone seis propiedades.
 
@@ -3178,9 +2904,7 @@ public class CasoDeUso
 
 ### PASO 5.3.7 — Crear la clase `ValidadorCasosDeUso`
 
-**Resultado de aprendizaje.** Crear la clase `ValidadorCasosDeUso`. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+El validador del catálogo estudia descripciones de casos de uso. Las condiciones reales de creación o planificación deben permanecer dentro del dominio y comprobarse mediante la ejecución de la clase de aplicación correspondiente.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `CasosDeUso`.
 2. Seleccionar `Add` → `Class` y nombrar la clase `ValidadorCasosDeUso.cs`.
@@ -3249,7 +2973,6 @@ public class ValidadorCasosDeUso
 public record ResultadoCasosDeUso(bool EsValido, IReadOnlyList<string> Errores);
 ```
 
-**Por qué funciona así.** la clase `ValidadorCasosDeUso` comprueba que cada caso de uso declara nombre y tipo permitido, tiene manejador, devuelve Result, coordina la unidad de trabajo cuando es de escritura y no contiene reglas de negocio.
 
 **Verificación concreta.** la clase `ValidadorCasosDeUso` compila sin errores y expone un método y un `record`.
 
@@ -3262,9 +2985,7 @@ public record ResultadoCasosDeUso(bool EsValido, IReadOnlyList<string> Errores);
 
 ### PASO 5.3.8 — Añadir los `using` necesarios en `ValidadorCasosDeUso`
 
-**Resultado de aprendizaje.** Añadir los `using` necesarios en `ValidadorCasosDeUso`. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+Los tipos `List<string>` e `IReadOnlyList<string>` pertenecen a `System.Collections.Generic`. Los métodos `Contains` y `ToList` pertenecen a `System.Linq`. En proyectos con `ImplicitUsings` desactivado, hay que añadir los usings explícitos.
 
 1. En el panel Solution Explorer, hacer doble clic en `ValidadorCasosDeUso.cs`.
 2. Inserta las directivas indicadas antes del namespace del archivo; el texto de inserción debe aparecer exactamente una vez.
@@ -3285,7 +3006,6 @@ using System.Collections.Generic;
 using System.Linq;
 ```
 
-**Por qué funciona así.** los tipos `List<string>` e `IReadOnlyList<string>` pertenecen a `System.Collections.Generic`. Los métodos `Contains` y `ToList` pertenecen a `System.Linq`. En proyectos con `ImplicitUsings` desactivado, hay que añadir los usings explícitos.
 
 **Verificación concreta.** `ValidadorCasosDeUso.cs` compila sin errores y no muestra subrayados rojos.
 
@@ -3298,9 +3018,7 @@ using System.Linq;
 
 ### PASO 5.3.9 — Crear la clase `CatalogoCasosDeUso`
 
-**Resultado de aprendizaje.** Crear la clase `CatalogoCasosDeUso`. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+`CatalogoCasosDeUso` reúne contratos conceptuales, mientras el puerto real expresa las operaciones necesarias para recuperar o guardar órdenes. Su separación evita confundir inventario documental con composición de servicios.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `CasosDeUso`.
 2. Seleccionar `Add` → `Class` y nombrar la clase `CatalogoCasosDeUso.cs`.
@@ -3328,7 +3046,6 @@ public class CatalogoCasosDeUso
 }
 ```
 
-**Por qué funciona así.** la clase `CatalogoCasosDeUso` contiene los casos de uso por defecto del proyecto. Se usan en los tests y en la validación automática.
 
 **Verificación concreta.** la clase `CatalogoCasosDeUso` compila sin errores y expone un método estático.
 
@@ -3341,9 +3058,7 @@ public class CatalogoCasosDeUso
 
 ### PASO 5.3.10 — Añadir el `using` necesario en `CatalogoCasosDeUso`
 
-**Resultado de aprendizaje.** Añadir el `using` necesario en `CatalogoCasosDeUso`. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+El tipo `List<T>` pertenece a `System.Collections.Generic`. En proyectos con `ImplicitUsings` desactivado, hay que añadir el using explícito.
 
 1. En el panel Solution Explorer, hacer doble clic en `CatalogoCasosDeUso.cs`.
 2. Inserta las directivas indicadas antes del namespace del archivo; el texto de inserción debe aparecer exactamente una vez.
@@ -3363,7 +3078,6 @@ namespace AceriaApp.Api.CasosDeUso;
 using System.Collections.Generic;
 ```
 
-**Por qué funciona así.** el tipo `List<T>` pertenece a `System.Collections.Generic`. En proyectos con `ImplicitUsings` desactivado, hay que añadir el using explícito.
 
 **Verificación concreta.** `CatalogoCasosDeUso.cs` compila sin errores y no muestra subrayados rojos.
 
@@ -3376,9 +3090,7 @@ using System.Collections.Generic;
 
 ### PASO 5.3.11 — Crear el proyecto de tests del punto 5.3
 
-**Resultado de aprendizaje.** Crear el proyecto de tests del punto 5.3. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+El punto 5.3 añade un proyecto de tests específico para las clases de casos de uso. Se crea como proyecto nuevo sin modificar los proyectos de tests existentes.
 
 1. Crea `tests/AceriaApp.CasosDeUso.Tests` y su archivo `AceriaApp.CasosDeUso.Tests.csproj` con el XML completo. Si utilizas la plantilla xUnit de Visual Studio, ajusta el archivo generado.
 2. Elimina `UnitTest1.cs` si lo creó la plantilla; las pruebas completas se añaden en los pasos 14 y 15.
@@ -3405,7 +3117,6 @@ using System.Collections.Generic;
 </Project>
 ```
 
-**Por qué funciona así.** el punto 5.3 añade un proyecto de tests específico para las clases de casos de uso. Se crea como proyecto nuevo sin modificar los proyectos de tests existentes.
 
 **Verificación concreta.** La solución muestra 18 proyectos, incluido `AceriaApp.CasosDeUso.Tests`; el csproj fija .NET 8, SDK de tests 17.12.0, xUnit 2.9.2 y runner 2.8.2.
 
@@ -3418,9 +3129,7 @@ using System.Collections.Generic;
 
 ### PASO 5.3.12 — Añadir la referencia del proyecto de tests a la API
 
-**Resultado de aprendizaje.** Añadir la referencia del proyecto de tests a la API. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+La referencia permite que el proyecto de tests acceda a las clases de `CasosDeUso` del proyecto API.
 
 1. Ejecuta `dotnet add tests/AceriaApp.CasosDeUso.Tests/AceriaApp.CasosDeUso.Tests.csproj reference src/AceriaApp.Api/AceriaApp.Api.csproj` o deja el archivo como el XML completo.
 2. Comprueba que la referencia va del proyecto de tests a la API; la API no debe depender de los tests.
@@ -3448,7 +3157,6 @@ using System.Collections.Generic;
 </Project>
 ```
 
-**Por qué funciona así.** la referencia permite que el proyecto de tests acceda a las clases de `CasosDeUso` del proyecto API.
 
 **Verificación concreta.** el archivo `AceriaApp.CasosDeUso.Tests.csproj` contiene un `ProjectReference` al proyecto API.
 
@@ -3461,9 +3169,7 @@ using System.Collections.Generic;
 
 ### PASO 5.3.13 — Añadir el paquete `FluentAssertions` al proyecto de tests
 
-**Resultado de aprendizaje.** Añadir el paquete `FluentAssertions` al proyecto de tests. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+`FluentAssertions` proporciona la sintaxis de aserción usada en el curso. Se añade al nuevo proyecto de tests sin modificar los proyectos de tests existentes.
 
 1. Ejecuta `dotnet add tests/AceriaApp.CasosDeUso.Tests/AceriaApp.CasosDeUso.Tests.csproj package FluentAssertions --version 6.12.2` o escribe el XML completo.
 2. Ejecuta `dotnet list tests/AceriaApp.CasosDeUso.Tests/AceriaApp.CasosDeUso.Tests.csproj package` y localiza `FluentAssertions 6.12.2`.
@@ -3492,7 +3198,6 @@ using System.Collections.Generic;
 </Project>
 ```
 
-**Por qué funciona así.** `FluentAssertions` proporciona la sintaxis de aserción usada en el curso. Se añade al nuevo proyecto de tests sin modificar los proyectos de tests existentes.
 
 **Verificación concreta.** El archivo y `dotnet list package` muestran FluentAssertions 6.12.2; la compilación termina correctamente.
 
@@ -3505,9 +3210,7 @@ using System.Collections.Generic;
 
 ### PASO 5.3.14 — Crear el archivo `ValidadorCasosDeUsoTests.cs`
 
-**Resultado de aprendizaje.** Crear el archivo `ValidadorCasosDeUsoTests.cs`. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+Los tests verifican que el validador acepta el catálogo por defecto y rechaza los casos de uso que violan las reglas del patrón.
 
 1. En el panel Solution Explorer, expandir `tests` → `AceriaApp.CasosDeUso.Tests`.
 2. Crear el archivo `ValidadorCasosDeUsoTests.cs`.
@@ -3618,7 +3321,6 @@ public class ValidadorCasosDeUsoTests
 }
 ```
 
-**Por qué funciona así.** los tests verifican que el validador acepta el catálogo por defecto y rechaza los casos de uso que violan las reglas del patrón.
 
 **Verificación concreta.** el archivo `ValidadorCasosDeUsoTests.cs` compila y contiene siete métodos de test.
 
@@ -3631,9 +3333,7 @@ public class ValidadorCasosDeUsoTests
 
 ### PASO 5.3.15 — Crear el archivo `CatalogoCasosDeUsoTests.cs`
 
-**Resultado de aprendizaje.** Crear el archivo `CatalogoCasosDeUsoTests.cs`. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+Los tests verifican que el catálogo por defecto contiene los casos esperados y la distribución correcta por tipo.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre el proyecto `AceriaApp.CasosDeUso.Tests`.
 2. Seleccionar `Add` → `Class` y nombrar la clase `CatalogoCasosDeUsoTests.cs`.
@@ -3695,7 +3395,6 @@ public class CatalogoCasosDeUsoTests
 }
 ```
 
-**Por qué funciona así.** los tests verifican que el catálogo por defecto contiene los casos esperados y la distribución correcta por tipo.
 
 **Verificación concreta.** el archivo `CatalogoCasosDeUsoTests.cs` compila y contiene cinco métodos de test.
 
@@ -3708,9 +3407,7 @@ public class CatalogoCasosDeUsoTests
 
 ### PASO 5.3.16 — Construir casos de uso con puertos y persistencia
 
-**Resultado de aprendizaje.** Construir casos de uso con puertos y persistencia. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+La aplicación coordina los puertos y el agregado: no debe exigir al dominio que conozca DbContext, y las pruebas de integración deben recuperar una orden desde un contexto SQL distinto al que la guardó. De ese modo se observa la persistencia efectiva del caso de uso.
 
 1. Lee cada archivo de integración de este paso y localiza su responsabilidad en las capas del contexto Producción.
 2. Crea o modifica los archivos exactamente como se indica; sigue la lectura numerada para conectar contratos, reglas y pruebas.
@@ -3734,15 +3431,9 @@ public class CatalogoCasosDeUsoTests
 </Project>
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+Fija la versión del paquete usado por esta capa o por sus pruebas para hacer reproducible la compilación. Declara una dependencia de proyecto que el compilador necesita; no registra servicios en el contenedor. Declara una dependencia de proyecto que el compilador necesita; no registra servicios en el contenedor.
 
-- **Línea 1:** `<Project Sdk="Microsoft.NET.Sdk.Web"><PropertyGroup><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup><ItemGroup><PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.21" /><PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" /><PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" /></ItemGroup>  <ItemGroup>` → Fija la versión del paquete usado por esta capa o por sus pruebas para hacer reproducible la compilación.
-
-- **Línea 2:** `<ProjectReference Include="../AceriaApp.Hexagonal.Aplicacion/AceriaApp.Hexagonal.Aplicacion.csproj" />` → Declara una dependencia de proyecto que el compilador necesita; no registra servicios en el contenedor.
-
-- **Línea 3:** `<ProjectReference Include="../AceriaApp.Hexagonal.Infraestructura/AceriaApp.Hexagonal.Infraestructura.csproj" />` → Declara una dependencia de proyecto que el compilador necesita; no registra servicios en el contenedor.
-
-- **Línea 6:** `<ProjectReference Include="../AceriaApp.Produccion.Infraestructura/AceriaApp.Produccion.Infraestructura.csproj" />` → Declara una dependencia de proyecto que el compilador necesita; no registra servicios en el contenedor.
+Declara una dependencia de proyecto que el compilador necesita; no registra servicios en el contenedor.
 
 
 **Integración funcional.** Expone el contrato HTTP de Producción con 201 y Location al crear, y errores 400, 404 o 409 según su significado.
@@ -3788,13 +3479,7 @@ public static class ProduccionEndpoints
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
-
-- **Línea 8:** `var grupo = app.MapGroup("/api/v1/produccion/ordenes").WithTags("Produccion");` → Mantiene una ruta explícita del contexto nuevo, sin colisionar con las APIs de los módulos anteriores.
-
-- **Línea 13:** `? Results.Created($"/api/v1/produccion/ordenes/{resultado.Valor}", new { id = resultado.Valor })` → Devuelve 201 y la URI que permite consultar el recurso recién creado.
-
-- **Línea 32:** `TipoErrorProduccion.Conflicto => 409,` → Traduce una transición incompatible con el estado actual a conflicto HTTP.
+Mantiene una ruta explícita del contexto nuevo, sin colisionar con las APIs de los módulos anteriores. Devuelve 201 y la URI que permite consultar el recurso recién creado. Traduce una transición incompatible con el estado actual a conflicto HTTP.
 
 
 **Integración funcional.** Integra el contexto nuevo en la API conservando los endpoints heredados y limita EnsureCreated al entorno Development.
@@ -3976,13 +3661,7 @@ app.Run();
 public partial class Program {} // permite WebApplicationFactory en tests
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
-
-- **Línea 27:** `builder.Services.AddProduccion(builder.Configuration);` → Registra el contexto de Producción antes de construir el contenedor.
-
-- **Línea 167:** `await scope.ServiceProvider.GetRequiredService<ProduccionDbContext>().Database.EnsureCreatedAsync();` → Inicializa la base didáctica propia solo dentro de la condición Development y sin sustituir migraciones productivas.
-
-- **Línea 169:** `app.MapProduccion();` → Añade las rutas del nuevo contexto a las rutas ya existentes.
+Registra el contexto de Producción antes de construir el contenedor. Inicializa la base didáctica propia solo dentro de la condición Development y sin sustituir migraciones productivas. Añade las rutas del nuevo contexto a las rutas ya existentes.
 
 
 **Integración funcional.** Añade la base LocalDB AceriaProduccion sin modificar las conexiones heredadas; la separación es una decisión de esta práctica.
@@ -4000,9 +3679,7 @@ public partial class Program {} // permite WebApplicationFactory en tests
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
-
-- **Línea 5:** `"AceriaProduccion"` → Configura la conexión SQL Server propia de Producción. Las conexiones de los flujos heredados se conservan; ajusta servidor y autenticación a tu entorno sin incluir secretos en Git.
+Configura la conexión SQL Server propia de Producción. Las conexiones de los flujos heredados se conservan; ajusta servidor y autenticación a tu entorno sin incluir secretos en Git.
 
 
 **Integración funcional.** Configura las referencias y versiones de este proyecto manteniendo los proyectos y catálogos heredados.
@@ -4017,9 +3694,7 @@ public partial class Program {} // permite WebApplicationFactory en tests
 </Project>
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
-
-- **Línea 3:** `<ItemGroup><ProjectReference Include="../AceriaApp.Produccion.Dominio/AceriaApp.Produccion.Dominio.csproj" /></ItemGroup>` → Declara una dependencia de proyecto que el compilador necesita; no registra servicios en el contenedor.
+Declara una dependencia de proyecto que el compilador necesita; no registra servicios en el contenedor.
 
 
 **Integración funcional.** Proyecta la raíz y sus líneas a un contrato de salida sin exponer entidades del dominio.
@@ -4040,15 +3715,9 @@ public sealed record OrdenProduccionDto(Guid Id, string Cliente, string Estado,
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+Copia identidad y valores escalares de la línea; el cliente no recibe la entidad hija del agregado. Describe la respuesta de la orden con el total y sus líneas; no ofrece operaciones que modifiquen el dominio. Concentra la traducción de una entidad ya cargada a su contrato de salida; no realiza consultas ni confirmaciones.
 
-- **Línea 3:** `public sealed record LineaProduccionDto` → Copia identidad y valores escalares de la línea; el cliente no recibe la entidad hija del agregado.
-
-- **Línea 5:** `int CantidadTotal, IReadOnlyList<LineaProduccionDto> Lineas)` → Describe la respuesta de la orden con el total y sus líneas; no ofrece operaciones que modifiquen el dominio.
-
-- **Línea 7:** `public static OrdenProduccionDto Desde` → Concentra la traducción de una entidad ya cargada a su contrato de salida; no realiza consultas ni confirmaciones.
-
-- **Línea 9:** `orden.Lineas.Select` → Construye DTO nuevos para cada línea y materializa una colección de solo lectura, separada de la colección interna del agregado.
+Construye DTO nuevos para cada línea y materializa una colección de solo lectura, separada de la colección interna del agregado.
 
 
 **Integración funcional.** Coordina recuperación, operación del agregado y commit; convierte solo reglas de negocio esperadas en resultados tipados.
@@ -4104,19 +3773,9 @@ public sealed class OrdenesProduccionCasosUso(
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+Delega las invariantes de creación en el dominio. Registra el agregado sin confirmar aún la escritura. Confirma los cambios de la unidad de trabajo del contexto Producción.
 
-- **Línea 12:** `var orden = new OrdenProduccion(cliente, material, cantidad);` → Delega las invariantes de creación en el dominio.
-
-- **Línea 13:** `await repositorio.AgregarAsync(orden, ct);` → Registra el agregado sin confirmar aún la escritura.
-
-- **Línea 14:** `await unidad.CommitAsync(ct);` → Confirma los cambios de la unidad de trabajo del contexto Producción.
-
-- **Línea 25:** `ModificarAsync(id, o => o.Planificar(), ct);` → Invoca el comportamiento del agregado, sin asignar su estado desde fuera.
-
-- **Línea 32:** `if (orden is null) return Ausente();` → Distingue una orden que no existe de una petición con datos inválidos.
-
-- **Línea 39:** `catch (ReglaProduccionException ex) { return ResultadoProduccion<OrdenProduccionDto>.Fallo(Traducir(ex)); }` → Convierte únicamente errores esperados de negocio; los fallos técnicos y la cancelación se propagan.
+Invoca el comportamiento del agregado, sin asignar su estado desde fuera. Distingue una orden que no existe de una petición con datos inválidos. Convierte únicamente errores esperados de negocio; los fallos técnicos y la cancelación se propagan.
 
 
 **Integración funcional.** Separa la recuperación del agregado del commit explícito; el contrato no depende de EF Core.
@@ -4138,15 +3797,9 @@ public interface IProduccionUnitOfWork
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+`public interface IOrdenProduccionRepositorio` declara lo que necesita la aplicación para recuperar y preparar un agregado; el contrato no contiene DbContext ni SQL. Recupera una orden completa o null si no existe; el token se transmite al adaptador para respetar cancelación. Prepara el alta del agregado sin confirmarla. Mantener esta separación permite decidir la frontera de la operación en el caso de uso.
 
-- **Línea 3:** `public interface IOrdenProduccionRepositorio` → Declara lo que necesita la aplicación para recuperar y preparar un agregado; el contrato no contiene DbContext ni SQL.
-
-- **Línea 5:** `Task<OrdenProduccion?> ObtenerAsync` → Recupera una orden completa o null si no existe; el token se transmite al adaptador para respetar cancelación.
-
-- **Línea 6:** `Task AgregarAsync` → Prepara el alta del agregado sin confirmarla. Mantener esta separación permite decidir la frontera de la operación en el caso de uso.
-
-- **Línea 10:** `Task CommitAsync` → Confirma los cambios preparados en la unidad de trabajo actual. La implementación debe compartir el contexto del repositorio.
+Confirma los cambios preparados en la unidad de trabajo actual. La implementación debe compartir el contexto del repositorio.
 
 
 **Integración funcional.** Representa éxito o error tipado y prohíbe leer la rama incorrecta del resultado.
@@ -4174,13 +3827,7 @@ public sealed class ResultadoProduccion<T>
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
-
-- **Línea 2:** `public enum TipoErrorProduccion { Validacion, NoEncontrado, Conflicto }` → Expresa categorías de aplicación que el adaptador HTTP traducirá a 400, 404 y 409.
-
-- **Línea 11:** `public T Valor => EsExito ? valor! : throw new InvalidOperationException("Un fallo no contiene valor.");` → Impide usar un valor inexistente cuando el resultado representa un fallo.
-
-- **Línea 12:** `public ErrorProduccion Error => !EsExito ? error! : throw new InvalidOperationException("Un éxito no contiene error.");` → Protege también la rama de error para que el contrato no permita estados ambiguos.
+Expresa categorías de aplicación que el adaptador HTTP traducirá a 400, 404 y 409. Impide usar un valor inexistente cuando el resultado representa un fallo. Protege también la rama de error para que el contrato no permita estados ambiguos.
 
 
 **Integración funcional.** Configura las referencias y versiones de este proyecto manteniendo los proyectos y catálogos heredados.
@@ -4197,11 +3844,7 @@ public sealed class ResultadoProduccion<T>
 </Project>
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
-
-- **Línea 3:** `<ItemGroup><ProjectReference Include="../AceriaApp.Produccion.Aplicacion/AceriaApp.Produccion.Aplicacion.csproj" />` → Declara una dependencia de proyecto que el compilador necesita; no registra servicios en el contenedor.
-
-- **Línea 4:** `<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.21" />` → Fija la versión del paquete usado por esta capa o por sus pruebas para hacer reproducible la compilación.
+Declara una dependencia de proyecto que el compilador necesita; no registra servicios en el contenedor. Fija la versión del paquete usado por esta capa o por sus pruebas para hacer reproducible la compilación.
 
 
 **Integración funcional.** El repositorio recupera la raíz con sus líneas y registra altas; únicamente la unidad de trabajo confirma cambios.
@@ -4227,13 +3870,7 @@ public sealed class ProduccionUnitOfWork(ProduccionDbContext db) : IProduccionUn
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
-
-- **Línea 8:** `db.Ordenes.Include(o => o.Lineas).SingleOrDefaultAsync(o => o.Id == id, ct);` → Recupera el agregado completo para que las reglas dispongan de todas sus líneas.
-
-- **Línea 10:** `await db.Ordenes.AddAsync(orden, ct);` → Agrega el grafo al seguimiento de EF sin ejecutar SaveChanges.
-
-- **Línea 14:** `public async Task CommitAsync(CancellationToken ct = default) => await db.SaveChangesAsync(ct);` → Centraliza la confirmación explícita; un SaveChanges guarda el agregado en una transacción relacional.
+Recupera el agregado completo para que las reglas dispongan de todas sus líneas. Agrega el grafo al seguimiento de EF sin ejecutar SaveChanges. Centraliza la confirmación explícita; un SaveChanges guarda el agregado en una transacción relacional.
 
 
 **Integración funcional.** Mapea identidad, colección privada y value objects con EF Core en un modelo relacional propio del contexto Producción.
@@ -4271,15 +3908,9 @@ public sealed class ProduccionDbContext(DbContextOptions<ProduccionDbContext> op
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+Conserva la identidad creada por el dominio en lugar de pedir otra a la base. El total se calcula desde las líneas y no se persiste como dato duplicado. Permite a EF materializar la colección privada sin exponer un setter público.
 
-- **Línea 12:** `orden.Property(o => o.Id).ValueGeneratedNever();` → Conserva la identidad creada por el dominio en lugar de pedir otra a la base.
-
-- **Línea 15:** `orden.Ignore(o => o.CantidadTotal);` → El total se calcula desde las líneas y no se persiste como dato duplicado.
-
-- **Línea 19:** `orden.Navigation(o => o.Lineas).HasField("_lineas").UsePropertyAccessMode(PropertyAccessMode.Field);` → Permite a EF materializar la colección privada sin exponer un setter público.
-
-- **Línea 24:** `linea.Property(l => l.Material).HasConversion(v => v.Valor, v => new NombreMaterial(v)).HasMaxLength(100).IsRequired();` → Almacena el valor escalar y reconstruye el value object validado durante la lectura.
+Almacena el valor escalar y reconstruye el value object validado durante la lectura.
 
 
 **Integración funcional.** Compone los adaptadores scoped de Producción sobre SQL Server; desde 5.4 registra el ensamblado propio de MediatR y el puerto de lecturas.
@@ -4306,11 +3937,7 @@ public static class RegistroProduccion
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
-
-- **Línea 10:** `services.AddDbContext<ProduccionDbContext>(o => o.UseSqlServer(configuration.GetConnectionString("AceriaProduccion")));` → Configura SQL Server; las pruebas usan el mismo proveedor con una conexión a una base aislada.
-
-- **Línea 11:** `services.AddScoped<IOrdenProduccionRepositorio, OrdenProduccionRepositorio>();` → Usa una instancia por petición que comparte el DbContext con la unidad de trabajo.
+Configura SQL Server; las pruebas usan el mismo proveedor con una conexión a una base aislada. Usa una instancia por petición que comparte el DbContext con la unidad de trabajo.
 
 
 **Integración funcional.** Configura las referencias y versiones de este proyecto manteniendo los proyectos y catálogos heredados.
@@ -4336,15 +3963,9 @@ public static class RegistroProduccion
 </Project>
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+Compila para .NET 8, igual que los proyectos heredados. Fija el cliente de contenedores para SQL Server; el proveedor EF Core SQL Server llega mediante la referencia a la API. Permite ejecutar peticiones HTTP contra el host real de la API.
 
-- **Línea 2:** `<PropertyGroup><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><IsPackable>false</IsPackable><IsTestProject>true</IsTestProject></PropertyGroup>` → Compila para .NET 8, igual que los proyectos heredados.
-
-- **Línea 10:** `<PackageReference Include="Testcontainers.MsSql" Version="3.10.0" />` → Fija el cliente de contenedores para SQL Server; el proveedor EF Core SQL Server llega mediante la referencia a la API.
-
-- **Línea 11:** `<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.21" />` → Permite ejecutar peticiones HTTP contra el host real de la API.
-
-- **Línea 13:** `<Compile Include="../Compartido/SqlServerPruebas.cs" Link="SqlServerPruebas.cs" />` → Compila el helper heredado que crea y elimina únicamente la base aislada de cada prueba, sin añadir otro proyecto a la solución.
+Compila el helper heredado que crea y elimina únicamente la base aislada de cada prueba, sin añadir otro proyecto a la solución.
 
 
 **Integración funcional.** Añade 7 pruebas funcionales del punto 5.3, además del catálogo original; verifica comportamiento real y regresiones heredadas.
@@ -4472,21 +4093,11 @@ public sealed class CasosDeUsoFuncionalesTests
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+Comprueba el comportamiento observable: repositorio no guarda hasta el commit y rehidrata el agregado. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos. Comprueba el comportamiento observable: casos de uso confirman cada transicion en otra unidad de trabajo. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos. Comprueba el comportamiento observable: errores esperados son resultados tipados sin escrituras parciales. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
 
-- **Línea 16:** `public async Task Repositorio_no_guarda_hasta_el_commit_y_rehidrata_el_agregado()` → Comprueba el comportamiento observable: repositorio no guarda hasta el commit y rehidrata el agregado. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
+Comprueba el comportamiento observable: resultado impide observar la rama incorrecta. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos. Comprueba el comportamiento observable: http crea 201 y location apunta al recurso persistido. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos. Comprueba el comportamiento observable: http rechaza datos invalidos con 400 antes de persistir. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
 
-- **Línea 34:** `public async Task Casos_de_uso_confirman_cada_transicion_en_otra_unidad_de_trabajo()` → Comprueba el comportamiento observable: casos de uso confirman cada transicion en otra unidad de trabajo. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
-
-- **Línea 51:** `public async Task Errores_esperados_son_resultados_tipados_sin_escrituras_parciales()` → Comprueba el comportamiento observable: errores esperados son resultados tipados sin escrituras parciales. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
-
-- **Línea 66:** `public void Resultado_impide_observar_la_rama_incorrecta()` → Comprueba el comportamiento observable: resultado impide observar la rama incorrecta. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
-
-- **Línea 77:** `public async Task Http_crea_201_y_location_apunta_al_recurso_persistido()` → Comprueba el comportamiento observable: http crea 201 y location apunta al recurso persistido. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
-
-- **Línea 90:** `public async Task Http_rechaza_datos_invalidos_con_400_antes_de_persistir()` → Comprueba el comportamiento observable: http rechaza datos invalidos con 400 antes de persistir. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
-
-- **Línea 104:** `public async Task Http_distingue_404_y_409_sin_alterar_el_estado()` → Comprueba el comportamiento observable: http distingue 404 y 409 sin alterar el estado. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
+Comprueba el comportamiento observable: http distingue 404 y 409 sin alterar el estado. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
 
 
 **Integración funcional.** Configura ProduccionDbContext sobre una base SQL Server aislada y permite verificar los datos desde contextos con conexiones independientes.
@@ -4536,24 +4147,11 @@ public sealed class ProduccionApiFactory : WebApplicationFactory<Program>
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+Crea una base SQL Server aislada para el host y las lecturas de esta prueba. Rechaza una configuración que no use el proveedor exigido. Crea las tablas de Producción antes de arrancar el host.
 
-- **Línea 14:** `private readonly BaseSqlServer store = BaseSqlServer.Crear();` → Crea una base SQL Server aislada para el host y las lecturas de esta prueba.
+Cada contexto independiente abre su conexión a la misma base de la prueba. Evita inicializar las bases configuradas para la ejecución habitual de la API. El host usa SQL Server con la conexión aislada de esta factory.
 
-- **Línea 20:** `if (!db.Database.IsSqlServer()) throw new InvalidOperationException("La prueba exige SQL Server.");` → Rechaza una configuración que no use el proveedor exigido.
-
-- **Línea 21:** `db.Database.EnsureCreated();` → Crea las tablas de Producción antes de arrancar el host.
-
-- **Línea 26:** `new DbContextOptionsBuilder<ProduccionDbContext>().UseSqlServer(store.ConnectionString).Options);` → Cada contexto independiente abre su conexión a la misma base de la prueba.
-
-- **Línea 30:** `builder.UseSetting("SkipDatabaseInitialization", "true");` → Evita inicializar las bases configuradas para la ejecución habitual de la API.
-
-- **Línea 34:** `services.AddDbContext<ProduccionDbContext>(o => o.UseSqlServer(store.ConnectionString));` → El host usa SQL Server con la conexión aislada de esta factory.
-
-- **Línea 38:** `{ base.Dispose(disposing); if (disposing) store.Dispose(); }` → Cierra el host antes de eliminar únicamente la base de esta prueba.
-
-
-**Por qué funciona así.** Los indicadores del catálogo permiten discutir el diseño. El código de este paso convierte las decisiones en contratos y comportamientos comprobables, respetando la frontera del contexto Producción y la dirección de dependencias.
+Cierra el host antes de eliminar únicamente la base de esta prueba.
 
 **Verificación concreta.** La solución contiene 20 proyectos, los archivos de integración coinciden con los bloques y la compilación completa termina con cero errores.
 
@@ -4566,17 +4164,12 @@ public sealed class ProduccionApiFactory : WebApplicationFactory<Program>
 
 ### PASO 5.3.17 — Ejecutar todos los tests del punto 5.3
 
-**Resultado de aprendizaje.** Ejecutar todos los tests del punto 5.3. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+Las pruebas de catálogo verifican los datos declarados; las pruebas funcionales ejecutan las reglas y los adaptadores reales del contexto. Ambas evidencias son necesarias.
 
 1. Ejecuta `dotnet test tests/AceriaApp.CasosDeUso.Tests/AceriaApp.CasosDeUso.Tests.csproj -c Release` desde la raíz de la etapa.
 2. Comprueba 19 pruebas aprobadas: 12 de catálogo y 7 funcionales.
 3. Exige cero fallos y cero omisiones; revisa los nombres de las pruebas para identificar el contrato comprobado.
 4. Si falla una prueba, lee su aserción y corrige el archivo del paso correspondiente antes de continuar.
-
-
-**Por qué funciona así.** Las pruebas de catálogo verifican los datos declarados; las pruebas funcionales ejecutan las reglas y los adaptadores reales del contexto. Ambas evidencias son necesarias.
 
 **Verificación concreta.** El proyecto ejecuta 19 tests: `Failed: 0, Passed: 19, Skipped: 0, Total: 19`.
 
@@ -4589,17 +4182,12 @@ public sealed class ProduccionApiFactory : WebApplicationFactory<Program>
 
 ### PASO 5.3.18 — Ejecutar todos los tests de la solución
 
-**Resultado de aprendizaje.** Ejecutar todos los tests de la solución. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+Ejecutar todos los tests de la solución verifica que los tests de los puntos anteriores y del punto 5.3 pasan conjuntamente.
 
 1. Ejecuta `dotnet test AceriaApp.sln -c Release --no-build` después de la compilación Release.
 2. Comprueba que se ejecutan los 13 proyectos de tests, incluidos los heredados de M04.
 3. Suma los resultados por proyecto: deben ser 172 pruebas aprobadas, cero fallos y cero omisiones.
 4. Conserva la salida como evidencia; si cambias código vuelve a compilar antes de utilizar `--no-build`.
-
-
-**Por qué funciona así.** ejecutar todos los tests de la solución verifica que los tests de los puntos anteriores y del punto 5.3 pasan conjuntamente.
 
 **Verificación concreta.** Los 13 proyectos ejecutan conjuntamente 172 tests aprobados, cero fallos y cero omisiones.
 
@@ -4612,9 +4200,7 @@ public sealed class ProduccionApiFactory : WebApplicationFactory<Program>
 
 ### PASO 5.3.19 — Actualizar el README de la copia 5.3
 
-**Resultado de aprendizaje.** Actualizar el README de la copia 5.3. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+El README del punto 5.3 explica el objetivo, el estado, la ejecución y los añadidos. No modifica el README del punto 5.2.
 
 1. Abre el archivo `README.md` copiado de `5.2-entidades-value-objects` dentro de `5.3-casos-de-uso`.
 2. Reemplaza su contenido completo por el bloque de este paso; el README de la carpeta anterior permanece intacto.
@@ -4668,7 +4254,6 @@ Para probar el nuevo flujo, envía `POST /api/v1/produccion/ordenes` con `{"clie
 El catálogo describe ejemplos de diseño y sus indicadores; no inspecciona automáticamente las clases reales. Los archivos funcionales del paso 16 y sus tests comprueban el comportamiento ejecutable. Ejecuta `dotnet test AceriaApp.sln -c Release` y exige cero fallos y cero omisiones.
 ```
 
-**Por qué funciona así.** el README del punto 5.3 explica el objetivo, el estado, la ejecución y los añadidos. No modifica el README del punto 5.2.
 
 **Verificación concreta.** El archivo `README.md` existe; comprueba que sus títulos, contenido y enlaces coinciden con todos los apartados del bloque mostrado.
 
@@ -4681,9 +4266,7 @@ El catálogo describe ejemplos de diseño y sus indicadores; no inspecciona auto
 
 ### PASO 5.3.20 — Crear el ADR-021 del punto 5.3
 
-**Resultado de aprendizaje.** Crear el ADR-021 del punto 5.3. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+El ADR-021 documenta la decisión de adoptar el caso de uso como unidad de operación. Es un artefacto nuevo del punto 5.3 que no modifica los ADR existentes.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `docs`.
 2. Seleccionar `Add` → `New Item` → `Text File` y nombrar el archivo `ADR-021-casos-uso.md`.
@@ -4720,7 +4303,6 @@ Se implementan casos de uso de Producción para crear, obtener, planificar y fin
 `CatalogoCasosDeUso` contiene ejemplos CrearOrden, CancelarOrden, ObtenerOrden y ListarOrdenes. Sus indicadores son datos pedagógicos; no constituyen un inventario de métodos implementados en Producción. En este punto se ejecutan crear, obtener, planificar y finalizar una orden. El nuevo contexto tiene su propia persistencia y no comparte entidades con el flujo hexagonal heredado. Los tests funcionales comprueban el orden de las operaciones y la persistencia desde otro contexto de prueba.
 ```
 
-**Por qué funciona así.** el ADR-021 documenta la decisión de adoptar el caso de uso como unidad de operación. Es un artefacto nuevo del punto 5.3 que no modifica los ADR existentes.
 
 **Verificación concreta.** El archivo `docs/ADR-021-casos-uso.md` existe; comprueba que sus títulos, contenido y enlaces coinciden con todos los apartados del bloque mostrado.
 
@@ -4733,17 +4315,12 @@ Se implementan casos de uso de Producción para crear, obtener, planificar y fin
 
 ### PASO 5.3.21 — Comparar los documentos heredados con 5.2-entidades-value-objects
 
-**Resultado de aprendizaje.** Comparar los documentos heredados con 5.2-entidades-value-objects. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+La comparación comprueba los documentos heredados byte a byte. Las nuevas clases y los cambios explícitos de integración pertenecen a la copia actual; la carpeta del punto anterior permanece intacta.
 
 1. En la terminal, escribir `cd C:\cursos\AceriaApp` y pulsar Enter.
 2. Escribir `for %f in (M05_DDD_CQRS\PROYECTO\5.2-entidades-value-objects\docs\*.md) do fc /L "%f" "M05_DDD_CQRS\PROYECTO\5.3-casos-de-uso\docs\%~nxf"` y pulsar Enter.
 3. Verificar que la salida muestra `FC: no differences encountered` para cada archivo.
 4. Verificar que el número de comparaciones coincide con el número de documentos del punto 5.2. Si algún archivo muestra diferencias, restaurarlo desde el punto 5.2.
-
-
-**Por qué funciona así.** La comparación comprueba los documentos heredados byte a byte. Las nuevas clases y los cambios explícitos de integración pertenecen a la copia actual; la carpeta del punto anterior permanece intacta.
 
 **Verificación concreta.** Los 22 documentos heredados coinciden con la etapa anterior, sin omisiones ni modificaciones.
 
@@ -4756,17 +4333,12 @@ Se implementan casos de uso de Producción para crear, obtener, planificar y fin
 
 ### PASO 5.3.22 — Verificar la estructura del punto 5.3
 
-**Resultado de aprendizaje.** Verificar la estructura del punto 5.3. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+La verificación estructural confirma que el punto 5.3 añade archivos nuevos conservando los documentos heredados.
 
 1. Escribir `tree /F M05_DDD_CQRS\PROYECTO\5.3-casos-de-uso` y pulsar Enter.
 2. Verificar que la salida muestra `AceriaApp.sln`, `README.md`, `src\AceriaApp.Api\CasosDeUso` con las tres clases nuevas, `tests\AceriaApp.CasosDeUso.Tests` con los dos archivos de tests de catálogo y las pruebas funcionales y `docs` con el documento de casos de uso y el ADR-021. Comprueba también los proyectos y archivos del contexto Producción indicados en el paso 16.
 3. Verificar que las carpetas existentes del punto 5.2 permanecen intactas.
 4. Verificar que no existe ninguna carpeta `labs` ni ningún archivo `metaprompt.md` ni `verificacion.md`.
-
-
-**Por qué funciona así.** la verificación estructural confirma que el punto 5.3 añade archivos nuevos conservando los documentos heredados.
 
 **Verificación concreta.** la estructura contiene los archivos nuevos y conserva los del punto 5.2.
 
@@ -4779,17 +4351,12 @@ Se implementan casos de uso de Producción para crear, obtener, planificar y fin
 
 ### PASO 5.3.23 — Verificar el `.gitignore` del punto 5.3
 
-**Resultado de aprendizaje.** Verificar el `.gitignore` del punto 5.3. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+El `.gitignore` se hereda del punto 5.2 sin modificaciones. La verificación confirma que no se ha tocado.
 
 1. Verificar que el archivo `.gitignore` existe en la carpeta del punto 5.3 (copiado del punto 5.2).
 2. Abrir el archivo `.gitignore` con Visual Studio con soporte de .NET 8.
 3. Verificar que contiene las líneas `**/bin/`, `**/obj/`, `.vs/`, `*.user`, `TestResults/` y `*.trx`.
 4. Verificar que no se ha modificado respecto al punto 5.2. Pulsar `Ctrl+S` si no hay cambios y cerrar el archivo.
-
-
-**Por qué funciona así.** el `.gitignore` se hereda del punto 5.2 sin modificaciones. La verificación confirma que no se ha tocado.
 
 **Verificación concreta.** el `.gitignore` existe y contiene las seis líneas sin modificaciones.
 
@@ -4802,17 +4369,12 @@ Se implementan casos de uso de Producción para crear, obtener, planificar y fin
 
 ### PASO 5.3.24 — Hacer el commit del punto 5.3 y verificar el estado final
 
-**Resultado de aprendizaje.** Hacer el commit del punto 5.3 y verificar el estado final. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+El commit registra la etapa completa. Si existe uno por punto desde 1.1, el recorrido suma 21 commits de puntos; otros commits legítimos pueden aumentar el historial.
 
 1. Ejecuta `git diff --stat` y revisa los archivos y entregables de esta etapa.
 2. Ejecuta `git add .` después de comprobar que no se incluyen binarios, resultados temporales ni credenciales.
 3. Ejecuta `git commit -m "Punto 5.3: Casos de uso"` con `user.name` y `user.email` configurados.
 4. Comprueba `git log --oneline` y `git status`; deben registrar este punto y no dejar cambios pendientes de esta actividad.
-
-
-**Por qué funciona así.** El commit registra la etapa completa. Si existe uno por punto desde 1.1, el recorrido suma 21 commits de puntos; otros commits legítimos pueden aumentar el historial.
 
 **Verificación concreta.** El historial incluye el commit de 5.3 y `git status` no muestra cambios pendientes de esta actividad; no se impone una longitud rígida al historial.
 
@@ -4966,6 +4528,12 @@ El punto 5.3 ha definido los casos de uso como expresión de las operaciones del
 
 # Punto 5.4 — Separación entre commands y queries
 
+## Distinguir comandos y consultas sin duplicar el dominio
+
+CQRS consiste en separar la intención de modificar estado de la necesidad de obtener información. No exige automáticamente dos bases de datos ni un bus de eventos: en una primera aplicación puede materializarse mediante handlers y contratos distintos sobre una persistencia compartida. La etapa 5.4 comprobará esa diferencia en Producción, manteniendo las invariantes del agregado y evitando que una query modifique datos.
+
+La práctica introduce descripciones de mensajes y validaciones para analizar la separación, pero las pruebas deben seguir también un comando real desde HTTP hasta la escritura y una consulta real desde el almacenamiento hasta el DTO. Una proyección de lectura no es una entidad de dominio disfrazada; su forma responde a lo que necesita el consumidor. Distinguiremos esas garantías de las que podrían exigir más adelante mensajería, consistencia eventual o un modelo de lectura distribuido.
+
 **Carpeta de trabajo:** `M05_DDD_CQRS/PROYECTO/5.4-commands-queries`.
 
 **Objetivo:** completar los veinticuatro pasos, conservar los documentos heredados y comprobar el modelo con código y tests ejecutables. La etapa suma 190 pruebas en 21 proyectos.
@@ -4974,17 +4542,12 @@ El punto 5.3 ha definido los casos de uso como expresión de las operaciones del
 
 ### PASO 5.4.1 — Crear la carpeta del punto 5.4 a partir del punto 5.3
 
-**Resultado de aprendizaje.** Crear la carpeta del punto 5.4 a partir del punto 5.3. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+La copia conserva una etapa autónoma. 5.3-casos-de-uso aporta 172 tests aprobados y 20 proyectos antes de incorporar este punto.
 
 1. Abre la terminal integrada y localiza `M05_DDD_CQRS/PROYECTO/5.3-casos-de-uso`; esa es la etapa completa que vas a continuar.
 2. Crea `M05_DDD_CQRS/PROYECTO/5.4-commands-queries` y copia en ella el contenido de `5.3-casos-de-uso`; en Windows puedes usar `xcopy` con `/E /I /H /Y`.
 3. Excluye `bin`, `obj` y `TestResults`; abre únicamente la copia de `5.4-commands-queries` para conservar intacto el punto anterior.
 4. Ejecuta `dir` dentro de `5.4-commands-queries` y verifica `AceriaApp.sln`, `README.md`, `src`, `tests`, `docs` y `global.json`.
-
-
-**Por qué funciona así.** La copia conserva una etapa autónoma. 5.3-casos-de-uso aporta 172 tests aprobados y 20 proyectos antes de incorporar este punto.
 
 **Verificación concreta.** La copia contiene la solución y los 20 proyectos anteriores; todavía no contiene los archivos de 5.4.
 
@@ -4998,17 +4561,12 @@ El punto 5.3 ha definido los casos de uso como expresión de las operaciones del
 
 ### PASO 5.4.2 — Abrir la solución copiada en Visual Studio con soporte de .NET 8
 
-**Resultado de aprendizaje.** Abrir la solución copiada en Visual Studio con soporte de .NET 8. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+Abrir la solución copiada permite trabajar en el punto 5.4 sobre la base del punto 5.3. La compilación verifica que la copia es correcta.
 
 1. Abre `AceriaApp.sln` dentro de `5.4-commands-queries` con Visual Studio; en Windows puedes ejecutar `start AceriaApp.sln`.
 2. Ejecuta `dotnet sln AceriaApp.sln list` y comprueba los 20 proyectos heredados; todas sus rutas deben existir en esta etapa.
 3. Ejecuta `dotnet restore AceriaApp.sln` y `dotnet build AceriaApp.sln -c Release` para comprobar el punto de partida.
 4. Si hay DLL bloqueadas por una API en ejecución, detén esa aplicación y repite la compilación. Continúa cuando no haya errores.
-
-
-**Por qué funciona así.** abrir la solución copiada permite trabajar en el punto 5.4 sobre la base del punto 5.3. La compilación verifica que la copia es correcta.
 
 **Verificación concreta.** La solución muestra 20 proyectos y `dotnet build AceriaApp.sln -c Release` termina con `Build succeeded.`.
 
@@ -5021,17 +4579,12 @@ El punto 5.3 ha definido los casos de uso como expresión de las operaciones del
 
 ### PASO 5.4.3 — Verificar que la carpeta `docs` contiene los documentos del punto 5.3
 
-**Resultado de aprendizaje.** Verificar que la carpeta `docs` contiene los documentos del punto 5.3. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+La nueva etapa preserva 24 documentos y añade su ficha temática y su ADR. Los cambios de integración se aplican únicamente en la copia actual.
 
 1. Expande `docs` dentro de la copia de `5.4-commands-queries`.
 2. Comprueba los 24 documentos heredados: ADR-010 a ADR-021 y fichas de los puntos anteriores.
 3. Compara sus nombres y contenido con `docs` de `5.3-casos-de-uso`; no modifiques ni elimines documentos anteriores.
 4. Confirma que todavía no existen `docs/commands-queries.md` ni `docs/ADR-022-commands-queries.md`.
-
-
-**Por qué funciona así.** La nueva etapa preserva 24 documentos y añade su ficha temática y su ADR. Los cambios de integración se aplican únicamente en la copia actual.
 
 **Verificación concreta.** Existen 24 documentos heredados idénticos y no existen todavía los dos de este punto.
 
@@ -5044,9 +4597,7 @@ El punto 5.3 ha definido los casos de uso como expresión de las operaciones del
 
 ### PASO 5.4.4 — Crear el documento de separación entre comandos y consultas en `docs`
 
-**Resultado de aprendizaje.** Crear el documento de separación entre comandos y consultas en `docs`. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+El documento de separación entre comandos y consultas es el artefacto de `docs` específico del punto 5.4. No modifica los 24 documentos existentes del punto 5.3.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `docs`.
 2. Seleccionar `Add` → `New Item` → `Text File` y nombrar el archivo `commands-queries.md`.
@@ -5125,7 +4676,6 @@ El modelo de escritura y el de lectura usan bases de datos distintas. La propaga
 Los nombres de `CatalogoCqrs` son ejemplos de análisis y no registran manejadores. `DevuelveResult` es una convención del laboratorio, no un requisito universal de CQRS: una consulta puede devolver directamente un DTO y un comando puede expresar el resultado con otro contrato. El flujo de Producción dispone de sus propios mensajes de crear, planificar, finalizar, obtener y listar. Los comandos trabajan sobre el agregado mediante los casos de uso; las consultas construyen una proyección DTO sin seguimiento de EF Core. La unidad de trabajo no se usa para confirmar una consulta. Los registros MediatR del contexto conservan el flujo heredado de M04.
 ```
 
-**Por qué funciona así.** el documento de separación entre comandos y consultas es el artefacto de `docs` específico del punto 5.4. No modifica los 24 documentos existentes del punto 5.3.
 
 **Verificación concreta.** El archivo `docs/commands-queries.md` existe; comprueba que sus títulos, contenido y enlaces coinciden con todos los apartados del bloque mostrado.
 
@@ -5138,17 +4688,12 @@ Los nombres de `CatalogoCqrs` son ejemplos de análisis y no registran manejador
 
 ### PASO 5.4.5 — Crear la carpeta `Cqrs` en el proyecto API
 
-**Resultado de aprendizaje.** Crear la carpeta `Cqrs` en el proyecto API. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+La carpeta `Cqrs` albergará las clases de validación de la separación. Se crea como carpeta nueva sin tocar las carpetas existentes.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre el proyecto `AceriaApp.Api`.
 2. Seleccionar `Add` → `New Folder` y nombrar la carpeta `Cqrs`.
 3. Verificar que la carpeta `Cqrs` aparece dentro de `AceriaApp.Api` sin afectar a las carpetas existentes.
 4. Verificar que no se ha modificado ningún archivo existente del punto 5.3.
-
-
-**Por qué funciona así.** la carpeta `Cqrs` albergará las clases de validación de la separación. Se crea como carpeta nueva sin tocar las carpetas existentes.
 
 **Verificación concreta.** la carpeta `Cqrs` existe dentro de `AceriaApp.Api` y las carpetas existentes permanecen intactas.
 
@@ -5161,9 +4706,7 @@ Los nombres de `CatalogoCqrs` son ejemplos de análisis y no registran manejador
 
 ### PASO 5.4.6 — Crear la clase `MensajeCqrs`
 
-**Resultado de aprendizaje.** Crear la clase `MensajeCqrs`. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+`MensajeCqrs` identifica si una operación pretende consultar o cambiar estado. Es una descripción docente; los handlers y DTO de lectura reales deberán respetar esa separación cuando se ejecuten desde la API.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `Cqrs`.
 2. Seleccionar `Add` → `Class` y nombrar la clase `MensajeCqrs.cs`.
@@ -5187,7 +4730,6 @@ public class MensajeCqrs
 }
 ```
 
-**Por qué funciona así.** la clase `MensajeCqrs` modela un mensaje CQRS con su nombre, tipo y cuatro indicadores. Es la unidad de información del validador.
 
 **Verificación concreta.** la clase `MensajeCqrs` compila sin errores y expone seis propiedades.
 
@@ -5200,9 +4742,7 @@ public class MensajeCqrs
 
 ### PASO 5.4.7 — Crear la clase `ValidadorCqrs`
 
-**Resultado de aprendizaje.** Crear la clase `ValidadorCqrs`. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+`ValidadorCqrs` comprueba criterios declarados de mensajes. No puede acreditar que una query no escriba: esa afirmación requiere ejecutar la consulta y observar la base antes y después.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `Cqrs`.
 2. Seleccionar `Add` → `Class` y nombrar la clase `ValidadorCqrs.cs`.
@@ -5278,7 +4818,6 @@ public class ValidadorCqrs
 public record ResultadoCqrs(bool EsValido, IReadOnlyList<string> Errores);
 ```
 
-**Por qué funciona así.** la clase `ValidadorCqrs` comprueba que cada mensaje declara nombre y tipo permitido, tiene manejador, devuelve Result, los commands usan escritura y las queries son de solo lectura.
 
 **Verificación concreta.** la clase `ValidadorCqrs` compila sin errores y expone un método y un `record`.
 
@@ -5291,9 +4830,7 @@ public record ResultadoCqrs(bool EsValido, IReadOnlyList<string> Errores);
 
 ### PASO 5.4.8 — Añadir los `using` necesarios en `ValidadorCqrs`
 
-**Resultado de aprendizaje.** Añadir los `using` necesarios en `ValidadorCqrs`. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+Los tipos `List<string>` e `IReadOnlyList<string>` pertenecen a `System.Collections.Generic`. Los métodos `Contains` y `ToList` pertenecen a `System.Linq`. En proyectos con `ImplicitUsings` desactivado, hay que añadir los usings explícitos.
 
 1. En el panel Solution Explorer, hacer doble clic en `ValidadorCqrs.cs`.
 2. Inserta las directivas indicadas antes del namespace del archivo; el texto de inserción debe aparecer exactamente una vez.
@@ -5314,7 +4851,6 @@ using System.Collections.Generic;
 using System.Linq;
 ```
 
-**Por qué funciona así.** los tipos `List<string>` e `IReadOnlyList<string>` pertenecen a `System.Collections.Generic`. Los métodos `Contains` y `ToList` pertenecen a `System.Linq`. En proyectos con `ImplicitUsings` desactivado, hay que añadir los usings explícitos.
 
 **Verificación concreta.** `ValidadorCqrs.cs` compila sin errores y no muestra subrayados rojos.
 
@@ -5327,9 +4863,7 @@ using System.Linq;
 
 ### PASO 5.4.9 — Crear la clase `CatalogoCqrs`
 
-**Resultado de aprendizaje.** Crear la clase `CatalogoCqrs`. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+`CatalogoCqrs` organiza comandos y consultas como lenguaje de análisis. El código de aplicación continúa necesitando contratos y handlers verificables que protejan el estado de Producción.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `Cqrs`.
 2. Seleccionar `Add` → `Class` y nombrar la clase `CatalogoCqrs.cs`.
@@ -5357,7 +4891,6 @@ public class CatalogoCqrs
 }
 ```
 
-**Por qué funciona así.** la clase `CatalogoCqrs` contiene los mensajes por defecto del proyecto. Se usan en los tests y en la validación automática.
 
 **Verificación concreta.** la clase `CatalogoCqrs` compila sin errores y expone un método estático.
 
@@ -5370,9 +4903,7 @@ public class CatalogoCqrs
 
 ### PASO 5.4.10 — Añadir el `using` necesario en `CatalogoCqrs`
 
-**Resultado de aprendizaje.** Añadir el `using` necesario en `CatalogoCqrs`. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+El tipo `List<T>` pertenece a `System.Collections.Generic`. En proyectos con `ImplicitUsings` desactivado, hay que añadir el using explícito.
 
 1. En el panel Solution Explorer, hacer doble clic en `CatalogoCqrs.cs`.
 2. Inserta las directivas indicadas antes del namespace del archivo; el texto de inserción debe aparecer exactamente una vez.
@@ -5392,7 +4923,6 @@ namespace AceriaApp.Api.Cqrs;
 using System.Collections.Generic;
 ```
 
-**Por qué funciona así.** el tipo `List<T>` pertenece a `System.Collections.Generic`. En proyectos con `ImplicitUsings` desactivado, hay que añadir el using explícito.
 
 **Verificación concreta.** `CatalogoCqrs.cs` compila sin errores y no muestra subrayados rojos.
 
@@ -5405,9 +4935,7 @@ using System.Collections.Generic;
 
 ### PASO 5.4.11 — Crear el proyecto de tests del punto 5.4
 
-**Resultado de aprendizaje.** Crear el proyecto de tests del punto 5.4. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+El punto 5.4 añade un proyecto de tests específico para las clases de CQRS. Se crea como proyecto nuevo sin modificar los proyectos de tests existentes.
 
 1. Crea `tests/AceriaApp.Cqrs.Tests` y su archivo `AceriaApp.Cqrs.Tests.csproj` con el XML completo. Si utilizas la plantilla xUnit de Visual Studio, ajusta el archivo generado.
 2. Elimina `UnitTest1.cs` si lo creó la plantilla; las pruebas completas se añaden en los pasos 14 y 15.
@@ -5434,7 +4962,6 @@ using System.Collections.Generic;
 </Project>
 ```
 
-**Por qué funciona así.** el punto 5.4 añade un proyecto de tests específico para las clases de CQRS. Se crea como proyecto nuevo sin modificar los proyectos de tests existentes.
 
 **Verificación concreta.** La solución muestra 21 proyectos, incluido `AceriaApp.Cqrs.Tests`; el csproj fija .NET 8, SDK de tests 17.12.0, xUnit 2.9.2 y runner 2.8.2.
 
@@ -5447,9 +4974,7 @@ using System.Collections.Generic;
 
 ### PASO 5.4.12 — Añadir la referencia del proyecto de tests a la API
 
-**Resultado de aprendizaje.** Añadir la referencia del proyecto de tests a la API. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+La referencia permite que el proyecto de tests acceda a las clases de `Cqrs` del proyecto API.
 
 1. Ejecuta `dotnet add tests/AceriaApp.Cqrs.Tests/AceriaApp.Cqrs.Tests.csproj reference src/AceriaApp.Api/AceriaApp.Api.csproj` o deja el archivo como el XML completo.
 2. Comprueba que la referencia va del proyecto de tests a la API; la API no debe depender de los tests.
@@ -5477,7 +5002,6 @@ using System.Collections.Generic;
 </Project>
 ```
 
-**Por qué funciona así.** la referencia permite que el proyecto de tests acceda a las clases de `Cqrs` del proyecto API.
 
 **Verificación concreta.** el archivo `AceriaApp.Cqrs.Tests.csproj` contiene un `ProjectReference` al proyecto API.
 
@@ -5490,9 +5014,7 @@ using System.Collections.Generic;
 
 ### PASO 5.4.13 — Añadir el paquete `FluentAssertions` al proyecto de tests
 
-**Resultado de aprendizaje.** Añadir el paquete `FluentAssertions` al proyecto de tests. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+`FluentAssertions` proporciona la sintaxis de aserción usada en el curso. Se añade al nuevo proyecto de tests sin modificar los proyectos de tests existentes.
 
 1. Ejecuta `dotnet add tests/AceriaApp.Cqrs.Tests/AceriaApp.Cqrs.Tests.csproj package FluentAssertions --version 6.12.2` o escribe el XML completo.
 2. Ejecuta `dotnet list tests/AceriaApp.Cqrs.Tests/AceriaApp.Cqrs.Tests.csproj package` y localiza `FluentAssertions 6.12.2`.
@@ -5521,7 +5043,6 @@ using System.Collections.Generic;
 </Project>
 ```
 
-**Por qué funciona así.** `FluentAssertions` proporciona la sintaxis de aserción usada en el curso. Se añade al nuevo proyecto de tests sin modificar los proyectos de tests existentes.
 
 **Verificación concreta.** El archivo y `dotnet list package` muestran FluentAssertions 6.12.2; la compilación termina correctamente.
 
@@ -5534,9 +5055,7 @@ using System.Collections.Generic;
 
 ### PASO 5.4.14 — Crear el archivo `ValidadorCqrsTests.cs`
 
-**Resultado de aprendizaje.** Crear el archivo `ValidadorCqrsTests.cs`. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+Los tests verifican que el validador acepta el catálogo por defecto y rechaza los mensajes que violan las reglas de CQRS.
 
 1. En el panel Solution Explorer, expandir `tests` → `AceriaApp.Cqrs.Tests`.
 2. Crear el archivo `ValidadorCqrsTests.cs`.
@@ -5647,7 +5166,6 @@ public class ValidadorCqrsTests
 }
 ```
 
-**Por qué funciona así.** los tests verifican que el validador acepta el catálogo por defecto y rechaza los mensajes que violan las reglas de CQRS.
 
 **Verificación concreta.** el archivo `ValidadorCqrsTests.cs` compila y contiene siete métodos de test.
 
@@ -5660,9 +5178,7 @@ public class ValidadorCqrsTests
 
 ### PASO 5.4.15 — Crear el archivo `CatalogoCqrsTests.cs`
 
-**Resultado de aprendizaje.** Crear el archivo `CatalogoCqrsTests.cs`. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+Los tests verifican que el catálogo por defecto contiene los mensajes esperados y la separación correcta entre commands y queries.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre el proyecto `AceriaApp.Cqrs.Tests`.
 2. Seleccionar `Add` → `Class` y nombrar la clase `CatalogoCqrsTests.cs`.
@@ -5724,7 +5240,6 @@ public class CatalogoCqrsTests
 }
 ```
 
-**Por qué funciona así.** los tests verifican que el catálogo por defecto contiene los mensajes esperados y la separación correcta entre commands y queries.
 
 **Verificación concreta.** el archivo `CatalogoCqrsTests.cs` compila y contiene cinco métodos de test.
 
@@ -5737,9 +5252,7 @@ public class CatalogoCqrsTests
 
 ### PASO 5.4.16 — Separar comandos y consultas con proyecciones de lectura
 
-**Resultado de aprendizaje.** Separar comandos y consultas con proyecciones de lectura. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+La comprobación funcional debe seguir un comando que modifica la orden y una query que devuelve una proyección sin exponer el agregado. Verifica en SQL Server el cambio del comando y la ausencia de efectos de la lectura, sin asumir que CQRS exige bases físicas separadas.
 
 1. Lee cada archivo de integración de este paso y localiza su responsabilidad en las capas del contexto Producción.
 2. Crea o modifica los archivos exactamente como se indica; sigue la lectura numerada para conectar contratos, reglas y pruebas.
@@ -5793,13 +5306,7 @@ public static class ProduccionEndpoints
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
-
-- **Línea 9:** `var grupo = app.MapGroup("/api/v1/produccion/ordenes").WithTags("Produccion");` → Mantiene una ruta explícita del contexto nuevo, sin colisionar con las APIs de los módulos anteriores.
-
-- **Línea 14:** `? Results.Created($"/api/v1/produccion/ordenes/{resultado.Valor}", new { id = resultado.Valor })` → Devuelve 201 y la URI que permite consultar el recurso recién creado.
-
-- **Línea 35:** `TipoErrorProduccion.Conflicto => 409,` → Traduce una transición incompatible con el estado actual a conflicto HTTP.
+Mantiene una ruta explícita del contexto nuevo, sin colisionar con las APIs de los módulos anteriores. Devuelve 201 y la URI que permite consultar el recurso recién creado. Traduce una transición incompatible con el estado actual a conflicto HTTP.
 
 
 **Integración funcional.** Configura las referencias y versiones de este proyecto manteniendo los proyectos y catálogos heredados.
@@ -5814,9 +5321,7 @@ public static class ProduccionEndpoints
 </Project>
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
-
-- **Línea 3:** `<ItemGroup><ProjectReference Include="../AceriaApp.Produccion.Dominio/AceriaApp.Produccion.Dominio.csproj" /><PackageReference Include="MediatR" Version="12.4.1" /></ItemGroup>` → Declara una dependencia de proyecto que el compilador necesita; no registra servicios en el contenedor.
+Declara una dependencia de proyecto que el compilador necesita; no registra servicios en el contenedor.
 
 
 **Integración funcional.** Define un puerto de consulta que devuelve DTOs y no expone operaciones de escritura ni unidad de trabajo.
@@ -5834,13 +5339,7 @@ public interface IOrdenProduccionLecturas
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
-
-- **Línea 3:** `public interface IOrdenProduccionLecturas` → Crea un puerto exclusivo de lectura; sus consumidores no pueden agregar entidades ni confirmar escrituras mediante él.
-
-- **Línea 5:** `Task<OrdenProduccionDto?> ObtenerAsync` → Devuelve una proyección DTO o ausencia para el identificador solicitado. El contrato de lectura no expone la raíz del agregado.
-
-- **Línea 6:** `Task<IReadOnlyList<OrdenProduccionDto>> ListarAsync` → Devuelve una colección de respuestas ya proyectadas y propaga cancelación, sin necesitar una unidad de trabajo de escritura.
+Crea un puerto exclusivo de lectura; sus consumidores no pueden agregar entidades ni confirmar escrituras mediante él. Devuelve una proyección DTO o ausencia para el identificador solicitado. El contrato de lectura no expone la raíz del agregado. Devuelve una colección de respuestas ya proyectadas y propaga cancelación, sin necesitar una unidad de trabajo de escritura.
 
 
 **Integración funcional.** Conecta cada command con los casos de uso y cada query con el puerto de lectura; el dominio conserva las invariantes.
@@ -5888,21 +5387,11 @@ public sealed class ListarOrdenesProduccionHandler(IOrdenProduccionLecturas lect
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+Delega la escritura en el caso de uso y transmite el mismo token de cancelación; el handler no duplica las invariantes del dominio. Pide al caso de uso cargar la raíz, ejecutar la transición y confirmar; no asigna el estado desde el manejador. Conserva la separación de intenciones y deja que el dominio rechace una transición inválida.
 
-- **Línea 7:** `casos.CrearAsync(request.Cliente, request.Material, request.Cantidad, ct);` → Delega la escritura en el caso de uso y transmite el mismo token de cancelación; el handler no duplica las invariantes del dominio.
+El manejador de consulta recibe exclusivamente el puerto de lectura, sin repositorio de escritura ni unidad de trabajo. `var dto = await lecturas.ObtenerAsync(request.Id, ct);` obtiene la proyección sin cargar una entidad con seguimiento para modificarla; la ausencia se resuelve a continuación. Representa la ausencia con el código estable orden.ausente y la categoría NoEncontrado para que la API la traduzca a 404.
 
-- **Línea 13:** `casos.PlanificarAsync(request.Id, ct);` → Pide al caso de uso cargar la raíz, ejecutar la transición y confirmar; no asigna el estado desde el manejador.
-
-- **Línea 19:** `casos.FinalizarAsync(request.Id, ct);` → Conserva la separación de intenciones y deja que el dominio rechace una transición inválida.
-
-- **Línea 21:** `public sealed class ObtenerOrdenProduccionHandler(IOrdenProduccionLecturas lecturas)` → El manejador de consulta recibe exclusivamente el puerto de lectura, sin repositorio de escritura ni unidad de trabajo.
-
-- **Línea 26:** `var dto = await lecturas.ObtenerAsync(request.Id, ct);` → Obtiene la proyección sin cargar una entidad con seguimiento para modificarla; la ausencia se resuelve a continuación.
-
-- **Línea 28:** `? ResultadoProduccion<OrdenProduccionDto>.Fallo` → Representa la ausencia con el código estable orden.ausente y la categoría NoEncontrado para que la API la traduzca a 404.
-
-- **Línea 36:** `lecturas.ListarAsync(ct);` → La consulta de colección devuelve los DTO del puerto sin ejecutar CommitAsync; una colección vacía es una respuesta normal.
+La consulta de colección devuelve los DTO del puerto sin ejecutar CommitAsync; una colección vacía es una respuesta normal.
 
 
 **Integración funcional.** Declara los commands de escritura y las queries de lectura como contratos MediatR con respuestas explícitas.
@@ -5924,17 +5413,9 @@ public sealed record ObtenerOrdenProduccionQuery(Guid Id)
 public sealed record ListarOrdenesProduccionQuery : IRequest<IReadOnlyList<OrdenProduccionDto>>;
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+Transporta la intención de crear una orden y sus datos; la solicitud no ejecuta reglas por sí misma. Expresa una transición mediante identidad, sin permitir asignar directamente el estado de la entidad. Separa la finalización de la planificación para que cada intención tenga un contrato reconocible.
 
-- **Línea 3:** `public sealed record CrearOrdenProduccionCommand` → Transporta la intención de crear una orden y sus datos; la solicitud no ejecuta reglas por sí misma.
-
-- **Línea 5:** `public sealed record PlanificarOrdenProduccionCommand` → Expresa una transición mediante identidad, sin permitir asignar directamente el estado de la entidad.
-
-- **Línea 7:** `public sealed record FinalizarOrdenProduccionCommand` → Separa la finalización de la planificación para que cada intención tenga un contrato reconocible.
-
-- **Línea 9:** `public sealed record ObtenerOrdenProduccionQuery` → Solicita información sin campos de modificación. Su manejador consulta un puerto de lectura y traduce la ausencia.
-
-- **Línea 11:** `public sealed record ListarOrdenesProduccionQuery` → Solicita la colección y devuelve directamente `IReadOnlyList<OrdenProduccionDto>`. Esta variante demuestra que CQRS no exige envolver toda respuesta en Result.
+Solicita información sin campos de modificación. Su manejador consulta un puerto de lectura y traduce la ausencia. Solicita la colección y devuelve directamente `IReadOnlyList<OrdenProduccionDto>`. Esta variante demuestra que CQRS no exige envolver toda respuesta en Result.
 
 
 **Integración funcional.** Proyecta columnas y líneas con AsNoTracking sobre la misma base relacional; no materializa agregados con seguimiento ni confirma cambios.
@@ -5973,15 +5454,9 @@ public sealed class OrdenProduccionLecturas(ProduccionDbContext db) : IOrdenProd
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+Filtra el detalle por identidad en SQL antes de construir la respuesta. Proyecta los datos necesarios sin incorporar entidades al ChangeTracker. Incluye los valores escalares convertidos de las líneas sin pasar la raíz del agregado a la API.
 
-- **Línea 10:** `(await ProyectarAsync(db.Ordenes.Where(o => o.Id == id), ct)).SingleOrDefault();` → Filtra el detalle por identidad en SQL antes de construir la respuesta.
-
-- **Línea 18:** `var filas = await consulta.AsNoTracking().Select(o => new` → Proyecta los datos necesarios sin incorporar entidades al ChangeTracker.
-
-- **Línea 21:** `Lineas = o.Lineas.Select(l => new { l.Id, l.Material, l.Cantidad }).ToList()` → Incluye los valores escalares convertidos de las líneas sin pasar la raíz del agregado a la API.
-
-- **Línea 24:** `o.Lineas.Sum(l => l.Cantidad.Valor),` → Calcula el total del DTO con los valores consultados; la query no cambia el dominio ni ejecuta un commit.
+Calcula el total del DTO con los valores consultados; la query no cambia el dominio ni ejecuta un commit.
 
 
 **Integración funcional.** Compone los adaptadores scoped de Producción sobre SQL Server; desde 5.4 registra el ensamblado propio de MediatR y el puerto de lecturas.
@@ -6010,13 +5485,7 @@ public static class RegistroProduccion
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
-
-- **Línea 10:** `services.AddDbContext<ProduccionDbContext>(o => o.UseSqlServer(configuration.GetConnectionString("AceriaProduccion")));` → Configura SQL Server; las pruebas usan el mismo proveedor con una conexión a una base aislada.
-
-- **Línea 11:** `services.AddScoped<IOrdenProduccionRepositorio, OrdenProduccionRepositorio>();` → Usa una instancia por petición que comparte el DbContext con la unidad de trabajo.
-
-- **Línea 15:** `services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(CrearOrdenProduccionCommand).Assembly));` → Descubre los handlers del ensamblado propio de Producción sin incorporarlos al escaneo de M4.
+Configura SQL Server; las pruebas usan el mismo proveedor con una conexión a una base aislada. Usa una instancia por petición que comparte el DbContext con la unidad de trabajo. Descubre los handlers del ensamblado propio de Producción sin incorporarlos al escaneo de M4.
 
 
 **Integración funcional.** Configura las referencias y versiones de este proyecto manteniendo los proyectos y catálogos heredados.
@@ -6042,15 +5511,9 @@ public static class RegistroProduccion
 </Project>
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+Compila para .NET 8, igual que los proyectos heredados. Fija el cliente de contenedores para SQL Server; el proveedor EF Core SQL Server llega mediante la referencia a la API. Permite ejecutar peticiones HTTP contra el host real de la API.
 
-- **Línea 2:** `<PropertyGroup><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><IsPackable>false</IsPackable><IsTestProject>true</IsTestProject></PropertyGroup>` → Compila para .NET 8, igual que los proyectos heredados.
-
-- **Línea 10:** `<PackageReference Include="Testcontainers.MsSql" Version="3.10.0" />` → Fija el cliente de contenedores para SQL Server; el proveedor EF Core SQL Server llega mediante la referencia a la API.
-
-- **Línea 11:** `<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.21" />` → Permite ejecutar peticiones HTTP contra el host real de la API.
-
-- **Línea 13:** `<Compile Include="../Compartido/SqlServerPruebas.cs" Link="SqlServerPruebas.cs" />` → Compila el helper heredado que crea y elimina únicamente la base aislada de cada prueba, sin añadir otro proyecto a la solución.
+Compila el helper heredado que crea y elimina únicamente la base aislada de cada prueba, sin añadir otro proyecto a la solución.
 
 
 **Integración funcional.** Añade 6 pruebas funcionales del punto 5.4, además del catálogo original; verifica comportamiento real y regresiones heredadas.
@@ -6177,26 +5640,11 @@ public sealed class CqrsFuncionalesTests
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+El command confirma una orden real; un contexto independiente recupera el agregado. Aísla los datos de las queries en una base SQL Server exclusiva. Las queries fallan si intentan llamar a SaveChanges.
 
-- **Línea 17:** `public async Task Mediador_resuelve_el_command_y_confirma_una_orden_real()` → El command confirma una orden real; un contexto independiente recupera el agregado.
+Comprueba que la proyección se ejecuta con SQL Server. Exige lecturas sin seguimiento y verifica que alterar un DTO no muta el agregado. La ausencia se expresa mediante resultado tipado y la lista vacía es válida.
 
-- **Línea 33:** `await using var store = BaseSqlServer.Crear();` → Aísla los datos de las queries en una base SQL Server exclusiva.
-
-- **Línea 46:** `.AddInterceptors(new ProhibirGuardado()).Options;` → Las queries fallan si intentan llamar a SaveChanges.
-
-- **Línea 48:** `Assert.Equal("Microsoft.EntityFrameworkCore.SqlServer", db.Database.ProviderName);` → Comprueba que la proyección se ejecuta con SQL Server.
-
-- **Línea 55:** `Assert.Empty(db.ChangeTracker.Entries());` → Exige lecturas sin seguimiento y verifica que alterar un DTO no muta el agregado.
-
-- **Línea 62:** `public async Task Query_inexistente_devuelve_error_tipado_y_la_lista_vacia_es_valida()` → La ausencia se expresa mediante resultado tipado y la lista vacía es válida.
-
-- **Línea 84:** `public async Task Commands_de_estado_usados_por_el_mediador_respetan_la_secuencia()` → Comprueba planificación, finalización y rechazo de transiciones inválidas.
-
-- **Línea 98:** `public async Task Http_lista_proyecciones_de_las_ordenes_creadas()` → La API devuelve la proyección con las líneas persistidas.
-
-
-**Por qué funciona así.** Los indicadores del catálogo permiten discutir el diseño. El código de este paso convierte las decisiones en contratos y comportamientos comprobables, respetando la frontera del contexto Producción y la dirección de dependencias.
+Comprueba planificación, finalización y rechazo de transiciones inválidas. La API devuelve la proyección con las líneas persistidas.
 
 **Verificación concreta.** La solución contiene 21 proyectos, los archivos de integración coinciden con los bloques y la compilación completa termina con cero errores.
 
@@ -6209,17 +5657,12 @@ public sealed class CqrsFuncionalesTests
 
 ### PASO 5.4.17 — Ejecutar todos los tests del punto 5.4
 
-**Resultado de aprendizaje.** Ejecutar todos los tests del punto 5.4. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+Las pruebas de catálogo verifican los datos declarados; las pruebas funcionales ejecutan las reglas y los adaptadores reales del contexto. Ambas evidencias son necesarias.
 
 1. Ejecuta `dotnet test tests/AceriaApp.Cqrs.Tests/AceriaApp.Cqrs.Tests.csproj -c Release` desde la raíz de la etapa.
 2. Comprueba 18 pruebas aprobadas: 12 de catálogo y 6 funcionales.
 3. Exige cero fallos y cero omisiones; revisa los nombres de las pruebas para identificar el contrato comprobado.
 4. Si falla una prueba, lee su aserción y corrige el archivo del paso correspondiente antes de continuar.
-
-
-**Por qué funciona así.** Las pruebas de catálogo verifican los datos declarados; las pruebas funcionales ejecutan las reglas y los adaptadores reales del contexto. Ambas evidencias son necesarias.
 
 **Verificación concreta.** El proyecto ejecuta 18 tests: `Failed: 0, Passed: 18, Skipped: 0, Total: 18`.
 
@@ -6232,17 +5675,12 @@ public sealed class CqrsFuncionalesTests
 
 ### PASO 5.4.18 — Ejecutar todos los tests de la solución
 
-**Resultado de aprendizaje.** Ejecutar todos los tests de la solución. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+Ejecutar todos los tests de la solución verifica que los tests de los puntos anteriores y del punto 5.4 pasan conjuntamente.
 
 1. Ejecuta `dotnet test AceriaApp.sln -c Release --no-build` después de la compilación Release.
 2. Comprueba que se ejecutan los 14 proyectos de tests, incluidos los heredados de M04.
 3. Suma los resultados por proyecto: deben ser 190 pruebas aprobadas, cero fallos y cero omisiones.
 4. Conserva la salida como evidencia; si cambias código vuelve a compilar antes de utilizar `--no-build`.
-
-
-**Por qué funciona así.** ejecutar todos los tests de la solución verifica que los tests de los puntos anteriores y del punto 5.4 pasan conjuntamente.
 
 **Verificación concreta.** Los 14 proyectos ejecutan conjuntamente 190 tests aprobados, cero fallos y cero omisiones.
 
@@ -6255,9 +5693,7 @@ public sealed class CqrsFuncionalesTests
 
 ### PASO 5.4.19 — Actualizar el README de la copia 5.4
 
-**Resultado de aprendizaje.** Actualizar el README de la copia 5.4. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+El README del punto 5.4 explica el objetivo, el estado, la ejecución y los añadidos. No modifica el README del punto 5.3.
 
 1. Abre el archivo `README.md` copiado de `5.3-casos-de-uso` dentro de `5.4-commands-queries`.
 2. Reemplaza su contenido completo por el bloque de este paso; el README de la carpeta anterior permanece intacto.
@@ -6311,7 +5747,6 @@ Para probar el nuevo flujo, envía `POST /api/v1/produccion/ordenes` con `{"clie
 El catálogo describe ejemplos de diseño y sus indicadores; no inspecciona automáticamente las clases reales. Los archivos funcionales del paso 16 y sus tests comprueban el comportamiento ejecutable. Ejecuta `dotnet test AceriaApp.sln -c Release` y exige cero fallos y cero omisiones.
 ```
 
-**Por qué funciona así.** el README del punto 5.4 explica el objetivo, el estado, la ejecución y los añadidos. No modifica el README del punto 5.3.
 
 **Verificación concreta.** El archivo `README.md` existe; comprueba que sus títulos, contenido y enlaces coinciden con todos los apartados del bloque mostrado.
 
@@ -6324,9 +5759,7 @@ El catálogo describe ejemplos de diseño y sus indicadores; no inspecciona auto
 
 ### PASO 5.4.20 — Crear el ADR-022 del punto 5.4
 
-**Resultado de aprendizaje.** Crear el ADR-022 del punto 5.4. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+El ADR-022 documenta la decisión de adoptar la separación entre commands y queries. Es un artefacto nuevo del punto 5.4 que no modifica los ADR existentes.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `docs`.
 2. Seleccionar `Add` → `New Item` → `Text File` y nombrar el archivo `ADR-022-commands-queries.md`.
@@ -6363,7 +5796,6 @@ Se incorporan mensajes y manejadores MediatR 12.4.1 en `AceriaApp.Produccion.Apl
 Los nombres de `CatalogoCqrs` son ejemplos de análisis y no registran manejadores. `DevuelveResult` es una convención del laboratorio, no un requisito universal de CQRS: una consulta puede devolver directamente un DTO y un comando puede expresar el resultado con otro contrato. El flujo de Producción dispone de sus propios mensajes de crear, planificar, finalizar, obtener y listar. Los comandos trabajan sobre el agregado mediante los casos de uso; las consultas construyen una proyección DTO sin seguimiento de EF Core. La unidad de trabajo no se usa para confirmar una consulta. Los registros MediatR del contexto conservan el flujo heredado de M04.
 ```
 
-**Por qué funciona así.** el ADR-022 documenta la decisión de adoptar la separación entre commands y queries. Es un artefacto nuevo del punto 5.4 que no modifica los ADR existentes.
 
 **Verificación concreta.** El archivo `docs/ADR-022-commands-queries.md` existe; comprueba que sus títulos, contenido y enlaces coinciden con todos los apartados del bloque mostrado.
 
@@ -6376,17 +5808,12 @@ Los nombres de `CatalogoCqrs` son ejemplos de análisis y no registran manejador
 
 ### PASO 5.4.21 — Comparar los documentos heredados con 5.3-casos-de-uso
 
-**Resultado de aprendizaje.** Comparar los documentos heredados con 5.3-casos-de-uso. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+La comparación comprueba los documentos heredados byte a byte. Las nuevas clases y los cambios explícitos de integración pertenecen a la copia actual; la carpeta del punto anterior permanece intacta.
 
 1. En la terminal, escribir `cd C:\cursos\AceriaApp` y pulsar Enter.
 2. Escribir `for %f in (M05_DDD_CQRS\PROYECTO\5.3-casos-de-uso\docs\*.md) do fc /L "%f" "M05_DDD_CQRS\PROYECTO\5.4-commands-queries\docs\%~nxf"` y pulsar Enter.
 3. Verificar que la salida muestra `FC: no differences encountered` para cada archivo.
 4. Verificar que el número de comparaciones coincide con el número de documentos del punto 5.3. Si algún archivo muestra diferencias, restaurarlo desde el punto 5.3.
-
-
-**Por qué funciona así.** La comparación comprueba los documentos heredados byte a byte. Las nuevas clases y los cambios explícitos de integración pertenecen a la copia actual; la carpeta del punto anterior permanece intacta.
 
 **Verificación concreta.** Los 24 documentos heredados coinciden con la etapa anterior, sin omisiones ni modificaciones.
 
@@ -6399,17 +5826,12 @@ Los nombres de `CatalogoCqrs` son ejemplos de análisis y no registran manejador
 
 ### PASO 5.4.22 — Verificar la estructura del punto 5.4
 
-**Resultado de aprendizaje.** Verificar la estructura del punto 5.4. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+La verificación estructural confirma que el punto 5.4 añade archivos nuevos conservando los documentos heredados.
 
 1. Escribir `tree /F M05_DDD_CQRS\PROYECTO\5.4-commands-queries` y pulsar Enter.
 2. Verificar que la salida muestra `AceriaApp.sln`, `README.md`, `src\AceriaApp.Api\Cqrs` con las tres clases nuevas, `tests\AceriaApp.Cqrs.Tests` con los dos archivos de tests de catálogo y las pruebas funcionales y `docs` con el documento de commands y queries y el ADR-022. Comprueba también los proyectos y archivos del contexto Producción indicados en el paso 16.
 3. Verificar que las carpetas existentes del punto 5.3 permanecen intactas.
 4. Verificar que no existe ninguna carpeta `labs` ni ningún archivo `metaprompt.md` ni `verificacion.md`.
-
-
-**Por qué funciona así.** la verificación estructural confirma que el punto 5.4 añade archivos nuevos conservando los documentos heredados.
 
 **Verificación concreta.** la estructura contiene los archivos nuevos y conserva los del punto 5.3.
 
@@ -6422,17 +5844,12 @@ Los nombres de `CatalogoCqrs` son ejemplos de análisis y no registran manejador
 
 ### PASO 5.4.23 — Verificar el `.gitignore` del punto 5.4
 
-**Resultado de aprendizaje.** Verificar el `.gitignore` del punto 5.4. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+El `.gitignore` se hereda del punto 5.3 sin modificaciones. La verificación confirma que no se ha tocado.
 
 1. Verificar que el archivo `.gitignore` existe en la carpeta del punto 5.4 (copiado del punto 5.3).
 2. Abrir el archivo `.gitignore` con Visual Studio con soporte de .NET 8.
 3. Verificar que contiene las líneas `**/bin/`, `**/obj/`, `.vs/`, `*.user`, `TestResults/` y `*.trx`.
 4. Verificar que no se ha modificado respecto al punto 5.3. Pulsar `Ctrl+S` si no hay cambios y cerrar el archivo.
-
-
-**Por qué funciona así.** el `.gitignore` se hereda del punto 5.3 sin modificaciones. La verificación confirma que no se ha tocado.
 
 **Verificación concreta.** el `.gitignore` existe y contiene las seis líneas sin modificaciones.
 
@@ -6445,17 +5862,12 @@ Los nombres de `CatalogoCqrs` son ejemplos de análisis y no registran manejador
 
 ### PASO 5.4.24 — Hacer el commit del punto 5.4 y verificar el estado final
 
-**Resultado de aprendizaje.** Hacer el commit del punto 5.4 y verificar el estado final. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+El commit registra la etapa completa. Si existe uno por punto desde 1.1, el recorrido suma 22 commits de puntos; otros commits legítimos pueden aumentar el historial.
 
 1. Ejecuta `git diff --stat` y revisa los archivos y entregables de esta etapa.
 2. Ejecuta `git add .` después de comprobar que no se incluyen binarios, resultados temporales ni credenciales.
 3. Ejecuta `git commit -m "Punto 5.4: Separación entre commands y queries"` con `user.name` y `user.email` configurados.
 4. Comprueba `git log --oneline` y `git status`; deben registrar este punto y no dejar cambios pendientes de esta actividad.
-
-
-**Por qué funciona así.** El commit registra la etapa completa. Si existe uno por punto desde 1.1, el recorrido suma 22 commits de puntos; otros commits legítimos pueden aumentar el historial.
 
 **Verificación concreta.** El historial incluye el commit de 5.4 y `git status` no muestra cambios pendientes de esta actividad; no se impone una longitud rígida al historial.
 
@@ -6609,6 +6021,12 @@ El punto 5.4 ha definido la separación entre comandos y consultas como base de 
 
 # Punto 5.5 — Aplicación al dominio de la acería
 
+## Completar el recorrido de Producción y comprobar sus límites
+
+El último punto integra las piezas anteriores alrededor del ciclo completo de una orden: crearla, agregar sus datos válidos, planificarla, consultarla y finalizarla. Las decisiones del dominio permanecen dentro del agregado; los casos de uso coordinan las operaciones y el adaptador SQL conserva el estado, mientras ASP.NET Core representa resultados y fallos con códigos HTTP adecuados.
+
+En 5.5 el alumno debe ser capaz de reconstruir el recorrido desde una petición hasta el estado persistido y su lectura posterior. El catálogo de elementos de la acería se mantiene como instrumento de análisis, no como sustituto del modelo ejecutable. Las pruebas de cada capa y las de integración deben respaldarse entre sí y dejar claro qué ocurre si una orden no existe, si se supera la capacidad o si se intenta una transición prohibida. Así cerramos DDD y CQRS sin atribuir al curso capacidades distribuidas que todavía no se han implementado.
+
 **Carpeta de trabajo:** `M05_DDD_CQRS/PROYECTO/5.5-dominio-aceria`.
 
 **Objetivo:** completar los veinticuatro pasos, conservar los documentos heredados y comprobar el modelo con código y tests ejecutables. La etapa suma 208 pruebas en 22 proyectos.
@@ -6617,17 +6035,12 @@ El punto 5.4 ha definido la separación entre comandos y consultas como base de 
 
 ### PASO 5.5.1 — Crear la carpeta del punto 5.5 a partir del punto 5.4
 
-**Resultado de aprendizaje.** Crear la carpeta del punto 5.5 a partir del punto 5.4. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+La copia conserva una etapa autónoma. 5.4-commands-queries aporta 190 tests aprobados y 21 proyectos antes de incorporar este punto.
 
 1. Abre la terminal integrada y localiza `M05_DDD_CQRS/PROYECTO/5.4-commands-queries`; esa es la etapa completa que vas a continuar.
 2. Crea `M05_DDD_CQRS/PROYECTO/5.5-dominio-aceria` y copia en ella el contenido de `5.4-commands-queries`; en Windows puedes usar `xcopy` con `/E /I /H /Y`.
 3. Excluye `bin`, `obj` y `TestResults`; abre únicamente la copia de `5.5-dominio-aceria` para conservar intacto el punto anterior.
 4. Ejecuta `dir` dentro de `5.5-dominio-aceria` y verifica `AceriaApp.sln`, `README.md`, `src`, `tests`, `docs` y `global.json`.
-
-
-**Por qué funciona así.** La copia conserva una etapa autónoma. 5.4-commands-queries aporta 190 tests aprobados y 21 proyectos antes de incorporar este punto.
 
 **Verificación concreta.** La copia contiene la solución y los 21 proyectos anteriores; todavía no contiene los archivos de 5.5.
 
@@ -6641,17 +6054,12 @@ El punto 5.4 ha definido la separación entre comandos y consultas como base de 
 
 ### PASO 5.5.2 — Abrir la solución copiada en Visual Studio con soporte de .NET 8
 
-**Resultado de aprendizaje.** Abrir la solución copiada en Visual Studio con soporte de .NET 8. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+Abrir la solución copiada permite trabajar en el punto 5.5 sobre la base del punto 5.4. La compilación verifica que la copia es correcta.
 
 1. Abre `AceriaApp.sln` dentro de `5.5-dominio-aceria` con Visual Studio; en Windows puedes ejecutar `start AceriaApp.sln`.
 2. Ejecuta `dotnet sln AceriaApp.sln list` y comprueba los 21 proyectos heredados; todas sus rutas deben existir en esta etapa.
 3. Ejecuta `dotnet restore AceriaApp.sln` y `dotnet build AceriaApp.sln -c Release` para comprobar el punto de partida.
 4. Si hay DLL bloqueadas por una API en ejecución, detén esa aplicación y repite la compilación. Continúa cuando no haya errores.
-
-
-**Por qué funciona así.** abrir la solución copiada permite trabajar en el punto 5.5 sobre la base del punto 5.4. La compilación verifica que la copia es correcta.
 
 **Verificación concreta.** La solución muestra 21 proyectos y `dotnet build AceriaApp.sln -c Release` termina con `Build succeeded.`.
 
@@ -6664,17 +6072,12 @@ El punto 5.4 ha definido la separación entre comandos y consultas como base de 
 
 ### PASO 5.5.3 — Verificar que la carpeta `docs` contiene los documentos del punto 5.4
 
-**Resultado de aprendizaje.** Verificar que la carpeta `docs` contiene los documentos del punto 5.4. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+La nueva etapa preserva 26 documentos y añade su ficha temática y su ADR. Los cambios de integración se aplican únicamente en la copia actual.
 
 1. Expande `docs` dentro de la copia de `5.5-dominio-aceria`.
 2. Comprueba los 26 documentos heredados: ADR-010 a ADR-022 y fichas de los puntos anteriores.
 3. Compara sus nombres y contenido con `docs` de `5.4-commands-queries`; no modifiques ni elimines documentos anteriores.
 4. Confirma que todavía no existen `docs/aplicacion-dominio-aceria.md` ni `docs/ADR-023-aplicacion-dominio-aceria.md`.
-
-
-**Por qué funciona así.** La nueva etapa preserva 26 documentos y añade su ficha temática y su ADR. Los cambios de integración se aplican únicamente en la copia actual.
 
 **Verificación concreta.** Existen 26 documentos heredados idénticos y no existen todavía los dos de este punto.
 
@@ -6687,9 +6090,7 @@ El punto 5.4 ha definido la separación entre comandos y consultas como base de 
 
 ### PASO 5.5.4 — Crear el documento de aplicación al dominio de la acería en `docs`
 
-**Resultado de aprendizaje.** Crear el documento de aplicación al dominio de la acería en `docs`. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+El documento de aplicación al dominio de la acería es el artefacto de `docs` específico del punto 5.5. Incluye el cierre del módulo 5 con el resumen del estado del proyecto. No modifica los 26 documentos existentes del punto 5.4.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `docs`.
 2. Seleccionar `Add` → `New Item` → `Text File` y nombrar el archivo `aplicacion-dominio-aceria.md`.
@@ -6776,7 +6177,6 @@ El proyecto AceriaApp dispone de:
 Las listas de entidades, agregados y mensajes de los apartados de análisis describen alternativas de modelado. El código del paso 16 implementa el contexto Producción y no proporciona un caso de uso de recibir material ni de registrar clientes. El catálogo usa el nombre LineaProduccion; la entidad hija ejecutable es `LineaDeOrden`. El agregado permite añadir líneas conforme a su estado y capacidad. La API expone el flujo bajo `/api/v1/produccion/ordenes`; las pruebas siguen las respuestas HTTP y comprueban la lectura del estado persistido.
 ```
 
-**Por qué funciona así.** el documento de aplicación al dominio de la acería es el artefacto de `docs` específico del punto 5.5. Incluye el cierre del módulo 5 con el resumen del estado del proyecto. No modifica los 26 documentos existentes del punto 5.4.
 
 **Verificación concreta.** El archivo `docs/aplicacion-dominio-aceria.md` existe; comprueba que sus títulos, contenido y enlaces coinciden con todos los apartados del bloque mostrado.
 
@@ -6789,17 +6189,12 @@ Las listas de entidades, agregados y mensajes de los apartados de análisis desc
 
 ### PASO 5.5.5 — Crear la carpeta `DominioAceria` en el proyecto API
 
-**Resultado de aprendizaje.** Crear la carpeta `DominioAceria` en el proyecto API. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+La carpeta `DominioAceria` albergará las clases de validación del modelo del dominio de la acería. Se crea como carpeta nueva sin tocar las carpetas existentes.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre el proyecto `AceriaApp.Api`.
 2. Seleccionar `Add` → `New Folder` y nombrar la carpeta `DominioAceria`.
 3. Verificar que la carpeta `DominioAceria` aparece dentro de `AceriaApp.Api` sin afectar a las carpetas existentes.
 4. Verificar que no se ha modificado ningún archivo existente del punto 5.4.
-
-
-**Por qué funciona así.** la carpeta `DominioAceria` albergará las clases de validación del modelo del dominio de la acería. Se crea como carpeta nueva sin tocar las carpetas existentes.
 
 **Verificación concreta.** la carpeta `DominioAceria` existe dentro de `AceriaApp.Api` y las carpetas existentes permanecen intactas.
 
@@ -6812,9 +6207,7 @@ Las listas de entidades, agregados y mensajes de los apartados de análisis desc
 
 ### PASO 5.5.6 — Crear la clase `ElementoAceria`
 
-**Resultado de aprendizaje.** Crear la clase `ElementoAceria`. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+`ElementoAceria` representa una descripción del catálogo, no una orden persistida. Reconoce qué datos pertenecen al contexto Producción y qué nombres de otros contextos siguen siendo parte del mapa conceptual.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `DominioAceria`.
 2. Seleccionar `Add` → `Class` y nombrar la clase `ElementoAceria.cs`.
@@ -6837,7 +6230,6 @@ public class ElementoAceria
 }
 ```
 
-**Por qué funciona así.** la clase `ElementoAceria` modela un elemento del dominio de la acería con su nombre, contexto, tipo y dos indicadores. Es la unidad de información del validador.
 
 **Verificación concreta.** la clase `ElementoAceria` compila sin errores y expone cinco propiedades.
 
@@ -6850,9 +6242,7 @@ public class ElementoAceria
 
 ### PASO 5.5.7 — Crear la clase `ValidadorDominioAceria`
 
-**Resultado de aprendizaje.** Crear la clase `ValidadorDominioAceria`. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+`ValidadorDominioAceria` verifica las reglas explícitas de clasificación. El resultado del validador no sustituye los invariantes del agregado ni la prueba del comportamiento HTTP ante una transición prohibida.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `DominioAceria`.
 2. Seleccionar `Add` → `Class` y nombrar la clase `ValidadorDominioAceria.cs`.
@@ -6912,7 +6302,6 @@ public class ValidadorDominioAceria
 public record ResultadoDominioAceria(bool EsValido, IReadOnlyList<string> Errores);
 ```
 
-**Por qué funciona así.** la clase `ValidadorDominioAceria` comprueba que cada elemento declara nombre, contexto permitido, tipo permitido y tiene invariantes.
 
 **Verificación concreta.** la clase `ValidadorDominioAceria` compila sin errores y expone un método y un `record`.
 
@@ -6925,9 +6314,7 @@ public record ResultadoDominioAceria(bool EsValido, IReadOnlyList<string> Errore
 
 ### PASO 5.5.8 — Añadir los `using` necesarios en `ValidadorDominioAceria`
 
-**Resultado de aprendizaje.** Añadir los `using` necesarios en `ValidadorDominioAceria`. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+Los tipos `List<string>` e `IReadOnlyList<string>` pertenecen a `System.Collections.Generic`. Los métodos `Contains` y `ToList` pertenecen a `System.Linq`. En proyectos con `ImplicitUsings` desactivado, hay que añadir los usings explícitos.
 
 1. En el panel Solution Explorer, hacer doble clic en `ValidadorDominioAceria.cs`.
 2. Inserta las directivas indicadas antes del namespace del archivo; el texto de inserción debe aparecer exactamente una vez.
@@ -6948,7 +6335,6 @@ using System.Collections.Generic;
 using System.Linq;
 ```
 
-**Por qué funciona así.** los tipos `List<string>` e `IReadOnlyList<string>` pertenecen a `System.Collections.Generic`. Los métodos `Contains` y `ToList` pertenecen a `System.Linq`. En proyectos con `ImplicitUsings` desactivado, hay que añadir los usings explícitos.
 
 **Verificación concreta.** `ValidadorDominioAceria.cs` compila sin errores y no muestra subrayados rojos.
 
@@ -6961,9 +6347,7 @@ using System.Linq;
 
 ### PASO 5.5.9 — Crear la clase `CatalogoAceria`
 
-**Resultado de aprendizaje.** Crear la clase `CatalogoAceria`. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+`CatalogoAceria` reúne ejemplos de elementos del dominio para orientar el razonamiento. Las garantías efectivas se obtienen al ejecutar los casos de uso y comprobar sus efectos persistidos.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `DominioAceria`.
 2. Seleccionar `Add` → `Class` y nombrar la clase `CatalogoAceria.cs`.
@@ -6997,7 +6381,6 @@ public class CatalogoAceria
 }
 ```
 
-**Por qué funciona así.** la clase `CatalogoAceria` contiene los elementos por defecto del dominio de la acería. Se usan en los tests y en la validación automática.
 
 **Verificación concreta.** la clase `CatalogoAceria` compila sin errores y expone un método estático.
 
@@ -7010,9 +6393,7 @@ public class CatalogoAceria
 
 ### PASO 5.5.10 — Añadir el `using` necesario en `CatalogoAceria`
 
-**Resultado de aprendizaje.** Añadir el `using` necesario en `CatalogoAceria`. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+El tipo `List<T>` pertenece a `System.Collections.Generic`. En proyectos con `ImplicitUsings` desactivado, hay que añadir el using explícito.
 
 1. En el panel Solution Explorer, hacer doble clic en `CatalogoAceria.cs`.
 2. Inserta las directivas indicadas antes del namespace del archivo; el texto de inserción debe aparecer exactamente una vez.
@@ -7032,7 +6413,6 @@ namespace AceriaApp.Api.DominioAceria;
 using System.Collections.Generic;
 ```
 
-**Por qué funciona así.** el tipo `List<T>` pertenece a `System.Collections.Generic`. En proyectos con `ImplicitUsings` desactivado, hay que añadir el using explícito.
 
 **Verificación concreta.** `CatalogoAceria.cs` compila sin errores y no muestra subrayados rojos.
 
@@ -7045,9 +6425,7 @@ using System.Collections.Generic;
 
 ### PASO 5.5.11 — Crear el proyecto de tests del punto 5.5
 
-**Resultado de aprendizaje.** Crear el proyecto de tests del punto 5.5. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+El punto 5.5 añade un proyecto de tests específico para las clases del dominio de la acería. Se crea como proyecto nuevo sin modificar los proyectos de tests existentes.
 
 1. Crea `tests/AceriaApp.DominioAceria.Tests` y su archivo `AceriaApp.DominioAceria.Tests.csproj` con el XML completo. Si utilizas la plantilla xUnit de Visual Studio, ajusta el archivo generado.
 2. Elimina `UnitTest1.cs` si lo creó la plantilla; las pruebas completas se añaden en los pasos 14 y 15.
@@ -7074,7 +6452,6 @@ using System.Collections.Generic;
 </Project>
 ```
 
-**Por qué funciona así.** el punto 5.5 añade un proyecto de tests específico para las clases del dominio de la acería. Se crea como proyecto nuevo sin modificar los proyectos de tests existentes.
 
 **Verificación concreta.** La solución muestra 22 proyectos, incluido `AceriaApp.DominioAceria.Tests`; el csproj fija .NET 8, SDK de tests 17.12.0, xUnit 2.9.2 y runner 2.8.2.
 
@@ -7087,9 +6464,7 @@ using System.Collections.Generic;
 
 ### PASO 5.5.12 — Añadir la referencia del proyecto de tests a la API
 
-**Resultado de aprendizaje.** Añadir la referencia del proyecto de tests a la API. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+La referencia permite que el proyecto de tests acceda a las clases de `DominioAceria` del proyecto API.
 
 1. Ejecuta `dotnet add tests/AceriaApp.DominioAceria.Tests/AceriaApp.DominioAceria.Tests.csproj reference src/AceriaApp.Api/AceriaApp.Api.csproj` o deja el archivo como el XML completo.
 2. Comprueba que la referencia va del proyecto de tests a la API; la API no debe depender de los tests.
@@ -7117,7 +6492,6 @@ using System.Collections.Generic;
 </Project>
 ```
 
-**Por qué funciona así.** la referencia permite que el proyecto de tests acceda a las clases de `DominioAceria` del proyecto API.
 
 **Verificación concreta.** el archivo `AceriaApp.DominioAceria.Tests.csproj` contiene un `ProjectReference` al proyecto API.
 
@@ -7130,9 +6504,7 @@ using System.Collections.Generic;
 
 ### PASO 5.5.13 — Añadir el paquete `FluentAssertions` al proyecto de tests
 
-**Resultado de aprendizaje.** Añadir el paquete `FluentAssertions` al proyecto de tests. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+`FluentAssertions` proporciona la sintaxis de aserción usada en el curso. Se añade al nuevo proyecto de tests sin modificar los proyectos de tests existentes.
 
 1. Ejecuta `dotnet add tests/AceriaApp.DominioAceria.Tests/AceriaApp.DominioAceria.Tests.csproj package FluentAssertions --version 6.12.2` o escribe el XML completo.
 2. Ejecuta `dotnet list tests/AceriaApp.DominioAceria.Tests/AceriaApp.DominioAceria.Tests.csproj package` y localiza `FluentAssertions 6.12.2`.
@@ -7161,7 +6533,6 @@ using System.Collections.Generic;
 </Project>
 ```
 
-**Por qué funciona así.** `FluentAssertions` proporciona la sintaxis de aserción usada en el curso. Se añade al nuevo proyecto de tests sin modificar los proyectos de tests existentes.
 
 **Verificación concreta.** El archivo y `dotnet list package` muestran FluentAssertions 6.12.2; la compilación termina correctamente.
 
@@ -7174,9 +6545,7 @@ using System.Collections.Generic;
 
 ### PASO 5.5.14 — Crear el archivo `ValidadorDominioAceriaTests.cs`
 
-**Resultado de aprendizaje.** Crear el archivo `ValidadorDominioAceriaTests.cs`. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+Los tests verifican que el validador acepta el catálogo por defecto y rechaza los elementos que violan las reglas del dominio de la acería.
 
 1. En el panel Solution Explorer, expandir `tests` → `AceriaApp.DominioAceria.Tests`.
 2. Crear el archivo `ValidadorDominioAceriaTests.cs`.
@@ -7259,7 +6628,6 @@ public class ValidadorDominioAceriaTests
 }
 ```
 
-**Por qué funciona así.** los tests verifican que el validador acepta el catálogo por defecto y rechaza los elementos que violan las reglas del dominio de la acería.
 
 **Verificación concreta.** el archivo `ValidadorDominioAceriaTests.cs` compila y contiene cinco métodos de test.
 
@@ -7272,9 +6640,7 @@ public class ValidadorDominioAceriaTests
 
 ### PASO 5.5.15 — Crear el archivo `CatalogoAceriaTests.cs`
 
-**Resultado de aprendizaje.** Crear el archivo `CatalogoAceriaTests.cs`. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+Los tests verifican que el catálogo por defecto contiene los elementos esperados y la distribución correcta por contexto y tipo.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre el proyecto `AceriaApp.DominioAceria.Tests`.
 2. Seleccionar `Add` → `Class` y nombrar la clase `CatalogoAceriaTests.cs`.
@@ -7335,7 +6701,6 @@ public class CatalogoAceriaTests
 }
 ```
 
-**Por qué funciona así.** los tests verifican que el catálogo por defecto contiene los elementos esperados y la distribución correcta por contexto y tipo.
 
 **Verificación concreta.** el archivo `CatalogoAceriaTests.cs` compila y contiene cinco métodos de test.
 
@@ -7348,9 +6713,7 @@ public class CatalogoAceriaTests
 
 ### PASO 5.5.16 — Completar el flujo de producción y comprobar sus reglas
 
-**Resultado de aprendizaje.** Completar el flujo de producción y comprobar sus reglas. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+El cierre recorre la orden de Producción desde HTTP hasta SQL Server: alta, planificación, lectura y finalización, además de los errores esperados. Distingue el fallo de una regla conocida de un error técnico y evita confundir la proyección de una query con la entidad del dominio.
 
 1. Lee cada archivo de integración de este paso y localiza su responsabilidad en las capas del contexto Producción.
 2. Crea o modifica los archivos exactamente como se indica; sigue la lectura numerada para conectar contratos, reglas y pruebas.
@@ -7407,15 +6770,9 @@ public static class ProduccionEndpoints
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+Mantiene una ruta explícita del contexto nuevo, sin colisionar con las APIs de los módulos anteriores. Devuelve 201 y la URI que permite consultar el recurso recién creado. Envía la escritura por el handler que termina invocando al agregado.
 
-- **Línea 10:** `var grupo = app.MapGroup("/api/v1/produccion/ordenes").WithTags("Produccion");` → Mantiene una ruta explícita del contexto nuevo, sin colisionar con las APIs de los módulos anteriores.
-
-- **Línea 15:** `? Results.Created($"/api/v1/produccion/ordenes/{resultado.Valor}", new { id = resultado.Valor })` → Devuelve 201 y la URI que permite consultar el recurso recién creado.
-
-- **Línea 27:** `Responder(await sender.Send(new AgregarLineaProduccionCommand(id, request.Material, request.Cantidad), ct)));` → Envía la escritura por el handler que termina invocando al agregado.
-
-- **Línea 38:** `TipoErrorProduccion.Conflicto => 409,` → Traduce una transición incompatible con el estado actual a conflicto HTTP.
+Traduce una transición incompatible con el estado actual a conflicto HTTP.
 
 
 **Integración funcional.** Conecta cada command con los casos de uso y cada query con el puerto de lectura; el dominio conserva las invariantes.
@@ -7470,23 +6827,11 @@ public sealed class AgregarLineaProduccionHandler(OrdenesProduccionCasosUso caso
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+Delega la escritura en el caso de uso y transmite el mismo token de cancelación; el handler no duplica las invariantes del dominio. Pide al caso de uso cargar la raíz, ejecutar la transición y confirmar; no asigna el estado desde el manejador. Conserva la separación de intenciones y deja que el dominio rechace una transición inválida.
 
-- **Línea 7:** `casos.CrearAsync(request.Cliente, request.Material, request.Cantidad, ct);` → Delega la escritura en el caso de uso y transmite el mismo token de cancelación; el handler no duplica las invariantes del dominio.
+El manejador de consulta recibe exclusivamente el puerto de lectura, sin repositorio de escritura ni unidad de trabajo. `var dto = await lecturas.ObtenerAsync(request.Id, ct);` obtiene la proyección sin cargar una entidad con seguimiento para modificarla; la ausencia se resuelve a continuación. Representa la ausencia con el código estable orden.ausente y la categoría NoEncontrado para que la API la traduzca a 404.
 
-- **Línea 13:** `casos.PlanificarAsync(request.Id, ct);` → Pide al caso de uso cargar la raíz, ejecutar la transición y confirmar; no asigna el estado desde el manejador.
-
-- **Línea 19:** `casos.FinalizarAsync(request.Id, ct);` → Conserva la separación de intenciones y deja que el dominio rechace una transición inválida.
-
-- **Línea 21:** `public sealed class ObtenerOrdenProduccionHandler(IOrdenProduccionLecturas lecturas)` → El manejador de consulta recibe exclusivamente el puerto de lectura, sin repositorio de escritura ni unidad de trabajo.
-
-- **Línea 26:** `var dto = await lecturas.ObtenerAsync(request.Id, ct);` → Obtiene la proyección sin cargar una entidad con seguimiento para modificarla; la ausencia se resuelve a continuación.
-
-- **Línea 28:** `? ResultadoProduccion<OrdenProduccionDto>.Fallo` → Representa la ausencia con el código estable orden.ausente y la categoría NoEncontrado para que la API la traduzca a 404.
-
-- **Línea 36:** `lecturas.ListarAsync(ct);` → La consulta de colección devuelve los DTO del puerto sin ejecutar CommitAsync; una colección vacía es una respuesta normal.
-
-- **Línea 43:** `casos.AgregarLineaAsync(request.Id, request.Material, request.Cantidad, ct);` → Incorpora una nueva escritura reutilizando la coordinación del caso de uso. Las reglas de estado y capacidad siguen perteneciendo a la raíz.
+La consulta de colección devuelve los DTO del puerto sin ejecutar CommitAsync; una colección vacía es una respuesta normal. Incorpora una nueva escritura reutilizando la coordinación del caso de uso. Las reglas de estado y capacidad siguen perteneciendo a la raíz.
 
 
 **Integración funcional.** Declara los commands de escritura y las queries de lectura como contratos MediatR con respuestas explícitas.
@@ -7511,19 +6856,9 @@ public sealed record AgregarLineaProduccionCommand(Guid Id, string Material, int
     : IRequest<ResultadoProduccion<OrdenProduccionDto>>;
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+Transporta la intención de crear una orden y sus datos; la solicitud no ejecuta reglas por sí misma. Expresa una transición mediante identidad, sin permitir asignar directamente el estado de la entidad. Separa la finalización de la planificación para que cada intención tenga un contrato reconocible.
 
-- **Línea 3:** `public sealed record CrearOrdenProduccionCommand` → Transporta la intención de crear una orden y sus datos; la solicitud no ejecuta reglas por sí misma.
-
-- **Línea 5:** `public sealed record PlanificarOrdenProduccionCommand` → Expresa una transición mediante identidad, sin permitir asignar directamente el estado de la entidad.
-
-- **Línea 7:** `public sealed record FinalizarOrdenProduccionCommand` → Separa la finalización de la planificación para que cada intención tenga un contrato reconocible.
-
-- **Línea 9:** `public sealed record ObtenerOrdenProduccionQuery` → Solicita información sin campos de modificación. Su manejador consulta un puerto de lectura y traduce la ausencia.
-
-- **Línea 11:** `public sealed record ListarOrdenesProduccionQuery` → Solicita la colección y devuelve directamente `IReadOnlyList<OrdenProduccionDto>`. Esta variante demuestra que CQRS no exige envolver toda respuesta en Result.
-
-- **Línea 13:** `public sealed record AgregarLineaProduccionCommand` → Transporta el identificador de la raíz y los valores de la nueva línea. El agregado comprobará estado y capacidad antes de incorporarla.
+Solicita información sin campos de modificación. Su manejador consulta un puerto de lectura y traduce la ausencia. Solicita la colección y devuelve directamente `IReadOnlyList<OrdenProduccionDto>`. Esta variante demuestra que CQRS no exige envolver toda respuesta en Result. Transporta el identificador de la raíz y los valores de la nueva línea. El agregado comprobará estado y capacidad antes de incorporarla.
 
 
 **Integración funcional.** Coordina recuperación, operación del agregado y commit; convierte solo reglas de negocio esperadas en resultados tipados.
@@ -7582,21 +6917,11 @@ public sealed class OrdenesProduccionCasosUso(
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+Delega las invariantes de creación en el dominio. Registra el agregado sin confirmar aún la escritura. Confirma los cambios de la unidad de trabajo del contexto Producción.
 
-- **Línea 12:** `var orden = new OrdenProduccion(cliente, material, cantidad);` → Delega las invariantes de creación en el dominio.
+Invoca el comportamiento del agregado, sin asignar su estado desde fuera. La nueva escritura reutiliza la coordinación y deja la capacidad en la raíz. Distingue una orden que no existe de una petición con datos inválidos.
 
-- **Línea 13:** `await repositorio.AgregarAsync(orden, ct);` → Registra el agregado sin confirmar aún la escritura.
-
-- **Línea 14:** `await unidad.CommitAsync(ct);` → Confirma los cambios de la unidad de trabajo del contexto Producción.
-
-- **Línea 25:** `ModificarAsync(id, o => o.Planificar(), ct);` → Invoca el comportamiento del agregado, sin asignar su estado desde fuera.
-
-- **Línea 30:** `ModificarAsync(id, o => o.AgregarLinea(material, cantidad), ct);` → La nueva escritura reutiliza la coordinación y deja la capacidad en la raíz.
-
-- **Línea 35:** `if (orden is null) return Ausente();` → Distingue una orden que no existe de una petición con datos inválidos.
-
-- **Línea 42:** `catch (ReglaProduccionException ex) { return ResultadoProduccion<OrdenProduccionDto>.Fallo(Traducir(ex)); }` → Convierte únicamente errores esperados de negocio; los fallos técnicos y la cancelación se propagan.
+Convierte únicamente errores esperados de negocio; los fallos técnicos y la cancelación se propagan.
 
 
 **Integración funcional.** Configura las referencias y versiones de este proyecto manteniendo los proyectos y catálogos heredados.
@@ -7622,15 +6947,9 @@ public sealed class OrdenesProduccionCasosUso(
 </Project>
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+Compila para .NET 8, igual que los proyectos heredados. Fija el cliente de contenedores para SQL Server; el proveedor EF Core SQL Server llega mediante la referencia a la API. Permite ejecutar peticiones HTTP contra el host real de la API.
 
-- **Línea 2:** `<PropertyGroup><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><IsPackable>false</IsPackable><IsTestProject>true</IsTestProject></PropertyGroup>` → Compila para .NET 8, igual que los proyectos heredados.
-
-- **Línea 10:** `<PackageReference Include="Testcontainers.MsSql" Version="3.10.0" />` → Fija el cliente de contenedores para SQL Server; el proveedor EF Core SQL Server llega mediante la referencia a la API.
-
-- **Línea 11:** `<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.21" />` → Permite ejecutar peticiones HTTP contra el host real de la API.
-
-- **Línea 13:** `<Compile Include="../Compartido/SqlServerPruebas.cs" Link="SqlServerPruebas.cs" />` → Compila el helper heredado que crea y elimina únicamente la base aislada de cada prueba, sin añadir otro proyecto a la solución.
+Compila el helper heredado que crea y elimina únicamente la base aislada de cada prueba, sin añadir otro proyecto a la solución.
 
 
 **Integración funcional.** Añade 8 pruebas funcionales del punto 5.5, además del catálogo original; verifica comportamiento real y regresiones heredadas.
@@ -7792,26 +7111,11 @@ public sealed class DominioAceriaFuncionalesTests
 }
 ```
 
-**Lectura del código.** Los números cuentan las líneas del bloque anterior, incluidas las vacías.
+Comprueba el comportamiento observable: flujo de aceria crea lineas planifica finaliza y consulta el agregado. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos. Comprueba el comportamiento observable: total excesivo devuelve 400 y un intento valido posterior sigue funcionando. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos. Comprueba el comportamiento observable: lineas invalidas no llegan a la base de datos. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
 
-- **Línea 20:** `public async Task Flujo_de_aceria_crea_lineas_planifica_finaliza_y_consulta_el_agregado()` → Comprueba el comportamiento observable: flujo de aceria crea lineas planifica finaliza y consulta el agregado. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
+Comprueba el comportamiento observable: planificar cierra la edicion y finalizar no vuelve a abrirla. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos. Comprueba el comportamiento observable: agregar linea a orden ausente devuelve 404 sin crear otra orden. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos. Comprueba el comportamiento observable: cada orden es un limite de capacidad independiente. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
 
-- **Línea 42:** `public async Task Total_excesivo_devuelve_400_y_un_intento_valido_posterior_sigue_funcionando()` → Comprueba el comportamiento observable: total excesivo devuelve 400 y un intento valido posterior sigue funcionando. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
-
-- **Línea 59:** `public async Task Lineas_invalidas_no_llegan_a_la_base_de_datos()` → Comprueba el comportamiento observable: lineas invalidas no llegan a la base de datos. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
-
-- **Línea 75:** `public async Task Planificar_cierra_la_edicion_y_finalizar_no_vuelve_a_abrirla()` → Comprueba el comportamiento observable: planificar cierra la edicion y finalizar no vuelve a abrirla. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
-
-- **Línea 93:** `public async Task Agregar_linea_a_orden_ausente_devuelve_404_sin_crear_otra_orden()` → Comprueba el comportamiento observable: agregar linea a orden ausente devuelve 404 sin crear otra orden. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
-
-- **Línea 103:** `public async Task Cada_orden_es_un_limite_de_capacidad_independiente()` → Comprueba el comportamiento observable: cada orden es un limite de capacidad independiente. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
-
-- **Línea 117:** `public async Task Bordes_validos_se_normalizan_y_conservan_en_el_contrato_http()` → Comprueba el comportamiento observable: bordes validos se normalizan y conservan en el contrato http. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
-
-- **Línea 132:** `public async Task Cancelacion_de_la_escritura_se_propaga_sin_tratarla_como_regla_de_negocio()` → Comprueba el comportamiento observable: cancelacion de la escritura se propaga sin tratarla como regla de negocio. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
-
-
-**Por qué funciona así.** Los indicadores del catálogo permiten discutir el diseño. El código de este paso convierte las decisiones en contratos y comportamientos comprobables, respetando la frontera del contexto Producción y la dirección de dependencias.
+Comprueba el comportamiento observable: bordes validos se normalizan y conservan en el contrato http. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos. Comprueba el comportamiento observable: cancelacion de la escritura se propaga sin tratarla como regla de negocio. Los fallos se detectan mediante aserciones sobre el modelo, las respuestas o los datos persistidos.
 
 **Verificación concreta.** La solución contiene 22 proyectos, los archivos de integración coinciden con los bloques y la compilación completa termina con cero errores.
 
@@ -7824,17 +7128,12 @@ public sealed class DominioAceriaFuncionalesTests
 
 ### PASO 5.5.17 — Ejecutar todos los tests del punto 5.5
 
-**Resultado de aprendizaje.** Ejecutar todos los tests del punto 5.5. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+Las pruebas de catálogo verifican los datos declarados; las pruebas funcionales ejecutan las reglas y los adaptadores reales del contexto. Ambas evidencias son necesarias.
 
 1. Ejecuta `dotnet test tests/AceriaApp.DominioAceria.Tests/AceriaApp.DominioAceria.Tests.csproj -c Release` desde la raíz de la etapa.
 2. Comprueba 18 pruebas aprobadas: 10 de catálogo y 8 funcionales.
 3. Exige cero fallos y cero omisiones; revisa los nombres de las pruebas para identificar el contrato comprobado.
 4. Si falla una prueba, lee su aserción y corrige el archivo del paso correspondiente antes de continuar.
-
-
-**Por qué funciona así.** Las pruebas de catálogo verifican los datos declarados; las pruebas funcionales ejecutan las reglas y los adaptadores reales del contexto. Ambas evidencias son necesarias.
 
 **Verificación concreta.** El proyecto ejecuta 18 tests: `Failed: 0, Passed: 18, Skipped: 0, Total: 18`.
 
@@ -7847,17 +7146,12 @@ public sealed class DominioAceriaFuncionalesTests
 
 ### PASO 5.5.18 — Ejecutar todos los tests de la solución
 
-**Resultado de aprendizaje.** Ejecutar todos los tests de la solución. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+Ejecutar todos los tests de la solución verifica que los tests de los puntos anteriores y del punto 5.5 pasan conjuntamente.
 
 1. Ejecuta `dotnet test AceriaApp.sln -c Release --no-build` después de la compilación Release.
 2. Comprueba que se ejecutan los 15 proyectos de tests, incluidos los heredados de M04.
 3. Suma los resultados por proyecto: deben ser 208 pruebas aprobadas, cero fallos y cero omisiones.
 4. Conserva la salida como evidencia; si cambias código vuelve a compilar antes de utilizar `--no-build`.
-
-
-**Por qué funciona así.** ejecutar todos los tests de la solución verifica que los tests de los puntos anteriores y del punto 5.5 pasan conjuntamente.
 
 **Verificación concreta.** Los 15 proyectos ejecutan conjuntamente 208 tests aprobados, cero fallos y cero omisiones.
 
@@ -7870,9 +7164,7 @@ public sealed class DominioAceriaFuncionalesTests
 
 ### PASO 5.5.19 — Actualizar el README de la copia 5.5
 
-**Resultado de aprendizaje.** Actualizar el README de la copia 5.5. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+El README del punto 5.5 explica el objetivo, el estado, la ejecución y los añadidos. No modifica el README del punto 5.4.
 
 1. Abre el archivo `README.md` copiado de `5.4-commands-queries` dentro de `5.5-dominio-aceria`.
 2. Reemplaza su contenido completo por el bloque de este paso; el README de la carpeta anterior permanece intacto.
@@ -7929,7 +7221,6 @@ Mientras la orden siga en Borrador, `POST /api/v1/produccion/ordenes/{id}/lineas
 El catálogo describe ejemplos de diseño y sus indicadores; no inspecciona automáticamente las clases reales. Los archivos funcionales del paso 16 y sus tests comprueban el comportamiento ejecutable. Ejecuta `dotnet test AceriaApp.sln -c Release` y exige cero fallos y cero omisiones.
 ```
 
-**Por qué funciona así.** el README del punto 5.5 explica el objetivo, el estado, la ejecución y los añadidos. No modifica el README del punto 5.4.
 
 **Verificación concreta.** El archivo `README.md` existe; comprueba que sus títulos, contenido y enlaces coinciden con todos los apartados del bloque mostrado.
 
@@ -7942,9 +7233,7 @@ El catálogo describe ejemplos de diseño y sus indicadores; no inspecciona auto
 
 ### PASO 5.5.20 — Crear el ADR-023 del punto 5.5
 
-**Resultado de aprendizaje.** Crear el ADR-023 del punto 5.5. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+El ADR-023 documenta la decisión de aplicar DDD y CQRS al dominio de la acería y de cerrar el módulo 5. Es un artefacto nuevo del punto 5.5 que no modifica los ADR existentes.
 
 1. En el panel Solution Explorer, hacer clic derecho sobre la carpeta `docs`.
 2. Seleccionar `Add` → `New Item` → `Text File` y nombrar el archivo `ADR-023-aplicacion-dominio-aceria.md`.
@@ -7981,7 +7270,6 @@ Se cierra el módulo con un flujo ejecutable del contexto Producción. `OrdenPro
 Las listas de entidades, agregados y mensajes de los apartados de análisis describen alternativas de modelado. El código del paso 16 implementa el contexto Producción y no proporciona un caso de uso de recibir material ni de registrar clientes. El catálogo usa el nombre LineaProduccion; la entidad hija ejecutable es `LineaDeOrden`. El agregado permite añadir líneas conforme a su estado y capacidad. La API expone el flujo bajo `/api/v1/produccion/ordenes`; las pruebas siguen las respuestas HTTP y comprueban la lectura del estado persistido.
 ```
 
-**Por qué funciona así.** el ADR-023 documenta la decisión de aplicar DDD y CQRS al dominio de la acería y de cerrar el módulo 5. Es un artefacto nuevo del punto 5.5 que no modifica los ADR existentes.
 
 **Verificación concreta.** El archivo `docs/ADR-023-aplicacion-dominio-aceria.md` existe; comprueba que sus títulos, contenido y enlaces coinciden con todos los apartados del bloque mostrado.
 
@@ -7994,17 +7282,12 @@ Las listas de entidades, agregados y mensajes de los apartados de análisis desc
 
 ### PASO 5.5.21 — Comparar los documentos heredados con 5.4-commands-queries
 
-**Resultado de aprendizaje.** Comparar los documentos heredados con 5.4-commands-queries. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+La comparación comprueba los documentos heredados byte a byte. Las nuevas clases y los cambios explícitos de integración pertenecen a la copia actual; la carpeta del punto anterior permanece intacta.
 
 1. En la terminal, escribir `cd C:\cursos\AceriaApp` y pulsar Enter.
 2. Escribir `for %f in (M05_DDD_CQRS\PROYECTO\5.4-commands-queries\docs\*.md) do fc /L "%f" "M05_DDD_CQRS\PROYECTO\5.5-dominio-aceria\docs\%~nxf"` y pulsar Enter.
 3. Verificar que la salida muestra `FC: no differences encountered` para cada archivo.
 4. Verificar que el número de comparaciones coincide con el número de documentos del punto 5.4. Si algún archivo muestra diferencias, restaurarlo desde el punto 5.4.
-
-
-**Por qué funciona así.** La comparación comprueba los documentos heredados byte a byte. Las nuevas clases y los cambios explícitos de integración pertenecen a la copia actual; la carpeta del punto anterior permanece intacta.
 
 **Verificación concreta.** Los 26 documentos heredados coinciden con la etapa anterior, sin omisiones ni modificaciones.
 
@@ -8017,17 +7300,12 @@ Las listas de entidades, agregados y mensajes de los apartados de análisis desc
 
 ### PASO 5.5.22 — Verificar la estructura del punto 5.5
 
-**Resultado de aprendizaje.** Verificar la estructura del punto 5.5. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+La verificación estructural confirma que el punto 5.5 añade archivos nuevos conservando los documentos heredados.
 
 1. Escribir `tree /F M05_DDD_CQRS\PROYECTO\5.5-dominio-aceria` y pulsar Enter.
 2. Verificar que la salida muestra `AceriaApp.sln`, `README.md`, `src\AceriaApp.Api\DominioAceria` con las tres clases nuevas, `tests\AceriaApp.DominioAceria.Tests` con los dos archivos de tests de catálogo y las pruebas funcionales y `docs` con el documento de aplicación y el ADR-023. Comprueba también los proyectos y archivos del contexto Producción indicados en el paso 16.
 3. Verificar que las carpetas existentes del punto 5.4 permanecen intactas.
 4. Verificar que no existe ninguna carpeta `labs` ni ningún archivo `metaprompt.md` ni `verificacion.md`.
-
-
-**Por qué funciona así.** la verificación estructural confirma que el punto 5.5 añade archivos nuevos conservando los documentos heredados.
 
 **Verificación concreta.** la estructura contiene los archivos nuevos y conserva los del punto 5.4.
 
@@ -8040,17 +7318,12 @@ Las listas de entidades, agregados y mensajes de los apartados de análisis desc
 
 ### PASO 5.5.23 — Verificar el `.gitignore` del punto 5.5
 
-**Resultado de aprendizaje.** Verificar el `.gitignore` del punto 5.5. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+El `.gitignore` se hereda del punto 5.4 sin modificaciones. La verificación confirma que no se ha tocado.
 
 1. Verificar que el archivo `.gitignore` existe en la carpeta del punto 5.5 (copiado del punto 5.4).
 2. Abrir el archivo `.gitignore` con Visual Studio con soporte de .NET 8.
 3. Verificar que contiene las líneas `**/bin/`, `**/obj/`, `.vs/`, `*.user`, `TestResults/` y `*.trx`.
 4. Verificar que no se ha modificado respecto al punto 5.4. Pulsar `Ctrl+S` si no hay cambios y cerrar el archivo.
-
-
-**Por qué funciona así.** el `.gitignore` se hereda del punto 5.4 sin modificaciones. La verificación confirma que no se ha tocado.
 
 **Verificación concreta.** el `.gitignore` existe y contiene las seis líneas sin modificaciones.
 
@@ -8063,17 +7336,12 @@ Las listas de entidades, agregados y mensajes de los apartados de análisis desc
 
 ### PASO 5.5.24 — Hacer el commit del punto 5.5 y verificar el estado final del módulo 5
 
-**Resultado de aprendizaje.** Hacer el commit del punto 5.5 y verificar el estado final del módulo 5. Identifica su responsabilidad y la evidencia que debe producir.
-
-**Procedimiento guiado.**
+El commit registra la etapa completa. Si existe uno por punto desde 1.1, el recorrido suma 23 commits de puntos; otros commits legítimos pueden aumentar el historial.
 
 1. Ejecuta `git diff --stat` y revisa los archivos y entregables de esta etapa.
 2. Ejecuta `git add .` después de comprobar que no se incluyen binarios, resultados temporales ni credenciales.
 3. Ejecuta `git commit -m "Punto 5.5: Aplicación al dominio de la acería"` con `user.name` y `user.email` configurados.
 4. Comprueba `git log --oneline` y `git status`; deben registrar este punto y no dejar cambios pendientes de esta actividad.
-
-
-**Por qué funciona así.** El commit registra la etapa completa. Si existe uno por punto desde 1.1, el recorrido suma 23 commits de puntos; otros commits legítimos pueden aumentar el historial.
 
 **Verificación concreta.** El historial incluye el commit de 5.5 y `git status` no muestra cambios pendientes de esta actividad; no se impone una longitud rígida al historial.
 
