@@ -1,0 +1,58 @@
+name: Diagnostico de reconstruccion M02-M08 desde practicas
+
+on:
+  push:
+    branches: [version-corregida]
+    paths:
+      - 'M02_APIS_REST_ASPNET_CORE/PRACTICAS/M02_PRACTICAS.md'
+      - 'M03_ARQUITECTURA_HEXAGONAL/PRACTICAS/M03_PRACTICAS.md'
+      - 'M04_PATRONES_ARQUITECTURA/PRACTICAS/M04_PRACTICAS.md'
+      - 'M05_DDD_CQRS/PRACTICAS/M05_PRACTICAS.md'
+      - 'M06_COMUNICACION_MICROSERVICIOS/PRACTICAS/M06_PRACTICAS.md'
+      - 'M07_OBSERVABILIDAD_RESILIENCIA/PRACTICAS/M07_PRACTICAS.md'
+      - 'M08_API_GATEWAY/PRACTICAS/M08_PRACTICAS.md'
+      - 'M02_APIS_REST_ASPNET_CORE/PROYECTO/**'
+      - 'M03_ARQUITECTURA_HEXAGONAL/PROYECTO/**'
+      - 'M04_PATRONES_ARQUITECTURA/PROYECTO/**'
+      - 'M05_DDD_CQRS/PROYECTO/**'
+      - 'M06_COMUNICACION_MICROSERVICIOS/PROYECTO/**'
+      - 'M07_OBSERVABILIDAD_RESILIENCIA/PROYECTO/**'
+      - 'M08_API_GATEWAY/PROYECTO/**'
+      - 'tools/auditar_reconstruccion_practicas.py'
+      - '.github/workflows/auditar-reconstruccion-practicas.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  auditar:
+    name: Diagnosticar brechas entre texto y proyecto (sin falsear un PASS E2E)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: version-corregida
+          sparse-checkout: |
+            M02_APIS_REST_ASPNET_CORE
+            M03_ARQUITECTURA_HEXAGONAL
+            M04_PATRONES_ARQUITECTURA
+            M05_DDD_CQRS
+            M06_COMUNICACION_MICROSERVICIOS
+            M07_OBSERVABILIDAD_RESILIENCIA
+            M08_API_GATEWAY
+            tools
+          sparse-checkout-cone-mode: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Reconstruccion incremental diagnostica
+        run: |
+          python tools/auditar_reconstruccion_practicas.py --report AUDITORIA_RECONSTRUCCION_PRACTICAS.md
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: diagnostico-reconstruccion-m02-m08
+          path: AUDITORIA_RECONSTRUCCION_PRACTICAS.md
+          retention-days: 30
