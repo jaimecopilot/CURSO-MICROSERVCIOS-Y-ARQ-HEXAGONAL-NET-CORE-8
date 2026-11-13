@@ -4,6 +4,7 @@ on:
   push:
     branches: [version-corregida]
     paths:
+      - 'tools/auditar_reconstruccion_practicas.py'
       - 'M02_APIS_REST_ASPNET_CORE/PRACTICAS/M02_PRACTICAS.md'
       - 'M03_ARQUITECTURA_HEXAGONAL/PRACTICAS/M03_PRACTICAS.md'
       - 'M02_APIS_REST_ASPNET_CORE/PROYECTO/**'
@@ -108,7 +109,7 @@ jobs:
         shell: pwsh
         run: |
           $env:ACERIA_SQL_EVIDENCE_DIR = Join-Path $env:RUNNER_TEMP 'evidencia-sql-m03'
-          python tools/validar_practicas_m02_m03.py --module 3 --report M03_WINDOWS_VALIDACION.md
+          python tools/validar_practicas_m02_m03.py --module 3 --reconstruir-incremental --report M03_WINDOWS_VALIDACION.md
       - uses: actions/upload-artifact@v4
         if: always()
         with:
