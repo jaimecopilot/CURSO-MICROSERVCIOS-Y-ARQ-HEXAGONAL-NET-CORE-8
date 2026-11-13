@@ -1,51 +1,30 @@
 # Punto 1.1 — Arquitectura monolítica vs. microservicios
 
-## Qué problema resolvemos y qué aprenderás
+## Construir una referencia ejecutable antes de comparar arquitecturas
 
-**Situación profesional.** Una acería necesita registrar órdenes de producción y consultarlas. Antes de distribuir capacidades entre servicios, hay que disponer de una referencia sencilla que muestre cómo se concentran API, dominio, persistencia y pruebas en una misma unidad desplegable.
+Una acería necesita registrar órdenes de producción y recuperarlas después. Antes de separar el sistema en microservicios, construiremos una aplicación de referencia que reúne entrada HTTP, modelo de órdenes y persistencia en una sola unidad desplegable. Esto permitirá observar qué responsabilidades conviven dentro del monolito y qué decisiones habría que revisar para separar los procesos.
 
-**Objetivo del ejercicio.** Obtener una API mínima ejecutable que registre órdenes en SQL Server Express, las consulte mediante HTTP y permita identificar las ventajas y límites de un monolito modular.
+Utilizaremos ASP.NET Core 8, EF Core 8 y SQL Server Express con la solución de `M01_INTRODUCCION_MICROSERVICIOS/PROYECTO/1.1-monolito-vs-microservicios/`. El archivo `AceriaApp.sln`, los proyectos y la documentación ya están preparados. No los recrearemos: la actividad consiste en comprender y completar las clases y endpoints, verificar las dependencias y ejecutar las peticiones y pruebas. En los archivos con bloques comentados se puede escribir el código siguiendo el ejemplo o descomentar el fragmento identificado, pero nunca duplicar ambas versiones.
 
-**Justificación técnica.** La decisión arquitectónica no puede justificarse únicamente con diagramas: una transacción, una conexión y una petición HTTP permiten observar qué se ejecuta conjuntamente y cómo se comprueba.
-
-**Recorrido de aprendizaje**
-
-- **Pasos 1–9:** Reconocer la solución, su composición y sus dependencias.
-- **Pasos 10–15:** Comprender entidad, contexto EF Core y migración hasta crear el esquema real.
-- **Pasos 16–18:** Ejecutar peticiones y un test que verifique el comportamiento de la entidad.
-- **Pasos 19–24:** Documentar la decisión, comprobar el estado del proyecto y registrar su evolución.
-
-**Evidencia observable al terminar.** La tabla `Ordenes` existe, el GET responde y el POST persiste; el test de `Orden` pasa y el ADR explica por qué este módulo comienza como monolito.
-
-**Qué demuestra y qué no demuestra.** Un test que consulta `FirstOrDefaultAsync` y obtiene `null` comprueba persistencia, pero no equivale a probar un HTTP 404. El contrato HTTP se comprueba aparte enviando una petición real al endpoint.
+Al finalizar, la tabla `Ordenes` estará disponible en SQL Server; GET leerá la colección y POST registrará una orden y devolverá su ubicación. El test unitario de `Orden` comprobará el modelo, sin pretender demostrar un comportamiento HTTP que no ejecuta. La decisión de comenzar con un monolito quedará documentada en un ADR y se analizará por sus consecuencias técnicas, no por una preferencia automática a favor o en contra de los microservicios.
 
 
-**Preparación del entorno:** los archivos, proyectos, referencias y documentos ya se entregan preparados en `PROYECTO/1.1-monolito-vs-microservicios/`. El alumnado trabaja sobre una solución independiente por punto, con código anterior activo y las incorporaciones actuales comentadas por pasos. **No debe volver a crear archivos o proyectos de igual nombre.** Al activar código, se seleccionan únicamente líneas entre `INICIO PASO` y `FIN PASO`, se pulsa `Ctrl+K, Ctrl+U` en Visual Studio y se guarda. Los bloques `RETO` permanecen comentados hasta el ejercicio de ampliación.
+## Desarrollo práctico
 
-## Ejercicio práctico
+Esta primera práctica completa la solución preparada para la etapa 1.1. Comprobaremos su estructura antes de implementar las clases y endpoints, y después ejecutaremos las comprobaciones previstas.
 
-**Ejercicio:** Crear la estructura raíz del repositorio AceriaApp y la estructura inicial del punto 1.1 en la carpeta modulo-1-introduccion-microservicios/1.1-monolito-vs-microservicios/, con una solución, un proyecto de API monolítico de referencia, un proyecto de tests, la documentación de la decisión arquitectónica y el README del punto.
-
-**Ubicación de trabajo:** C:\cursos\
+**Ubicación de trabajo:** utiliza la carpeta real de tu copia del repositorio en Windows; `C:\cursos\` es únicamente una ruta de ejemplo.
 
 
 ---
 
 ### Paso 1 — Localizar el proyecto independiente del punto 1.1
 
-**Acción 1:** En tu copia del repositorio, abre `M01_INTRODUCCION_MICROSERVICIOS/PROYECTO/1.1-monolito-vs-microservicios/`. No crees otra carpeta con el mismo nombre: ese directorio es la base preparada del ejercicio.
+En tu copia del repositorio, abre `M01_INTRODUCCION_MICROSERVICIOS/PROYECTO/1.1-monolito-vs-microservicios/`. No crees otra carpeta con el mismo nombre: ese directorio es la base preparada del ejercicio. En el Explorador de archivos comprueba que contiene `AceriaApp.sln`, las carpetas `src`, `tests`, `docs` y el `README.md` de la etapa. Si falta alguno, revisa que hayas descargado el proyecto completo.
 
-**Acción 2:** En el Explorador de archivos comprueba que contiene `AceriaApp.sln`, las carpetas `src`, `tests`, `docs` y el `README.md` de la etapa. Si falta alguno, revisa que hayas descargado el proyecto completo.
+Desde esa misma carpeta, abre **Ver > Terminal** en Visual Studio o una consola de Windows y ejecuta `dotnet --list-sdks`; debe aparecer un SDK `8.0.x`. Si no existe, instala el SDK .NET 8 antes de continuar. Ejecuta `dir` y registra la ruta de trabajo efectiva. Todos los comandos relativos posteriores se ejecutan desde la carpeta que contiene `AceriaApp.sln`, salvo que indiquemos expresamente otra ubicación.
 
-**Acción 3:** Desde esa misma carpeta, abre **Ver > Terminal** en Visual Studio o una consola de Windows y ejecuta `dotnet --list-sdks`; debe aparecer un SDK `8.0.x`. Si no existe, instala el SDK .NET 8 antes de continuar.
-
-**Acción 4:** Ejecuta `dir` y registra la ruta de trabajo efectiva. Todos los comandos relativos posteriores se ejecutan desde la carpeta que contiene `AceriaApp.sln`, salvo que indiquemos expresamente otra ubicación.
-
-
-
-
-
-**Por qué se hace:** cada punto constituye una solución autónoma. Se evita copiar la solución anterior sobre archivos nuevos ya preparados y se garantiza que los bloques de código comentados correspondan exactamente a este punto.
+cada punto constituye una solución autónoma. Se evita copiar la solución anterior sobre archivos nuevos ya preparados y se garantiza que los bloques de código comentados correspondan exactamente a este punto.
 
 **Errores comunes:** abrir la solución del punto anterior; copiar archivos que sobrescriban los bloques preparados; confundir la carpeta del repositorio con la carpeta del proyecto.
 
@@ -55,19 +34,11 @@
 
 ### Paso 2 — Abrir la solución y comprobar los proyectos heredados
 
-**Acción 1:** En Visual Studio selecciona **Archivo > Abrir > Proyecto o solución** y elige el archivo `AceriaApp.sln` de la etapa 1.1, no el de otra etapa.
+En Visual Studio selecciona **Archivo > Abrir > Proyecto o solución** y elige el archivo `AceriaApp.sln` de la etapa 1.1, no el de otra etapa. Abre la terminal integrada en el mismo directorio y ejecuta `dotnet sln AceriaApp.sln list`; identifica los proyectos `AceriaApp.Monolito.Api` y `AceriaApp.Monolito.Tests`.
 
-**Acción 2:** Abre la terminal integrada en el mismo directorio y ejecuta `dotnet sln AceriaApp.sln list`; identifica los proyectos `AceriaApp.Monolito.Api` y `AceriaApp.Monolito.Tests`.
+En el Explorador de soluciones expande ambos proyectos. Antes de los pasos de activación, los archivos nuevos contienen bloques comentados: que los veas en pantalla no significa que la funcionalidad ya esté activa. Ejecuta `dotnet build AceriaApp.sln -c Release`; comprueba que el código base compila sin activar las incorporaciones. Si aparece un fallo, resuélvelo antes de editar los bloques del alumno.
 
-**Acción 3:** En el Explorador de soluciones expande ambos proyectos. Antes de los pasos de activación, los archivos nuevos contienen bloques comentados: que los veas en pantalla no significa que la funcionalidad ya esté activa.
-
-**Acción 4:** Ejecuta `dotnet build AceriaApp.sln -c Release`; comprueba que el código base compila sin activar las incorporaciones. Si aparece un fallo, resuélvelo antes de editar los bloques del alumno.
-
-
-
-
-
-**Por qué se hace:** se identifica el estado heredado ejecutable y se evita confundir una clase comentada con un proyecto todavía no creado.
+se identifica el estado heredado ejecutable y se evita confundir una clase comentada con un proyecto todavía no creado.
 
 **Errores comunes:** abrir la carpeta de otro punto; contar únicamente los proyectos con pruebas activas; descomentar todos los bloques a la vez.
 
@@ -77,20 +48,11 @@
 
 ### Paso 3 — Reconocer la estructura preparada del módulo y del punto
 
-**Acción 1:** En el **Explorador de soluciones** localiza `src/AceriaApp.Monolito.Api` y `tests/AceriaApp.Monolito.Tests`. Ambos ya se entregan creados, por lo que no debes duplicarlos.
+En el **Explorador de soluciones** localiza `src/AceriaApp.Monolito.Api` y `tests/AceriaApp.Monolito.Tests`. Ambos ya se entregan creados, por lo que no debes duplicarlos. Desde la terminal situada junto a `AceriaApp.sln` ejecuta `dir src` y `dir tests`. Observa que la estructura separa implementación y pruebas aunque los proyectos compartan la misma solución.
 
-**Acción 2:** Desde la terminal situada junto a `AceriaApp.sln` ejecuta `dir src` y `dir tests`. Observa que la estructura separa implementación y pruebas aunque los proyectos compartan la misma solución.
+Abre también la carpeta `docs` y localiza el ADR preparado del primer punto; los documentos de diseño no se compilan ni sustituyen al código de la API. Dibuja un árbol con la raíz de la etapa, solución, proyectos, documentación y configuración. Contrasta ese árbol con las rutas reales del repositorio; la ruta `C:\cursos\...` es solo un ejemplo si tú has elegido esa instalación.
 
-**Acción 3:** Abre también la carpeta `docs` y localiza el ADR preparado del primer punto; los documentos de diseño no se compilan ni sustituyen al código de la API.
-
-**Acción 4:** Dibuja un árbol con la raíz de la etapa, solución, proyectos, documentación y configuración. Contrasta ese árbol con las rutas reales del repositorio; la ruta `C:\cursos\...` es solo un ejemplo si tú has elegido esa instalación.
-
-
-
-
-
-
-**Por qué se hace:** se trabaja sobre el material proporcionado y se evita duplicar archivos o alterar el punto anterior.  cada módulo tiene su propia carpeta en la raíz del repositorio y cada punto tiene su propia carpeta dentro del módulo. Esta separación permite que cada punto sea autocontenido y ejecutable sin depender de otros.
+cada módulo tiene su propia carpeta en la raíz del repositorio y cada punto tiene su propia carpeta dentro del módulo. Esta separación permite que cada punto sea autocontenido y ejecutable sin depender de otros.
 
 **Errores comunes:**
 
@@ -104,18 +66,11 @@
 
 ### Paso 4 — Revisar la solución AceriaApp.sln dentro del punto
 
-**Acción 1:** Localiza `AceriaApp.sln` en la raíz de la etapa y ábrelo en Visual Studio. Este archivo **ya existe**: no uses «Crear solución vacía» encima del material distribuido.
+Localiza `AceriaApp.sln` en la raíz de la etapa y ábrelo en Visual Studio. Este archivo **ya existe**: no uses «Crear solución vacía» encima del material distribuido. Ejecuta `dotnet sln AceriaApp.sln list` desde esa carpeta e identifica las rutas relativas hacia `src` y `tests`.
 
-**Acción 2:** Ejecuta `dotnet sln AceriaApp.sln list` desde esa carpeta e identifica las rutas relativas hacia `src` y `tests`.
+Distingue la **solución** (`.sln`), que organiza proyectos, de un **proyecto** (`.csproj`), que declara la compilación y sus dependencias. Guarda el estado inicial sin cambiar el `.sln`. Si la solución no enumera los proyectos que aparecen físicamente, revisa que hayas abierto el fichero de la etapa correcta antes de continuar.
 
-**Acción 3:** Distingue la **solución** (`.sln`), que organiza proyectos, de un **proyecto** (`.csproj`), que declara la compilación y sus dependencias.
-
-**Acción 4:** Guarda el estado inicial sin cambiar el `.sln`. Si la solución no enumera los proyectos que aparecen físicamente, revisa que hayas abierto el fichero de la etapa correcta antes de continuar.
-
-
-
-
-**Por qué se hace:** se trabaja sobre el material proporcionado y se evita duplicar archivos o alterar el punto anterior.  la solución es el contenedor que agrupa todos los proyectos del punto. El nombre AceriaApp se mantiene constante en todos los puntos para que el alumno reconozca la solución al abrir cualquier carpeta.
+la solución es el contenedor que agrupa todos los proyectos del punto. El nombre AceriaApp se mantiene constante en todos los puntos para que el alumno reconozca la solución al abrir cualquier carpeta.
 
 **Errores comunes:**
 
@@ -129,20 +84,11 @@
 
 ### Paso 5 — Revisar el proyecto de API monolítico de referencia
 
-**Acción 1:** Desde el Explorador de soluciones expande `src/AceriaApp.Monolito.Api` y abre el archivo ya preparado `AceriaApp.Monolito.Api.csproj`. No invoques una plantilla nueva.
+Desde el Explorador de soluciones expande `src/AceriaApp.Monolito.Api` y abre el archivo ya preparado `AceriaApp.Monolito.Api.csproj`. No invoques una plantilla nueva. Comprueba que el SDK declarado es `Microsoft.NET.Sdk.Web` y el destino es `net8.0`, lo que permite compilar la aplicación ASP.NET Core 8.
 
-**Acción 2:** Comprueba que el SDK declarado es `Microsoft.NET.Sdk.Web` y el destino es `net8.0`, lo que permite compilar la aplicación ASP.NET Core 8.
+Busca los `PackageReference` a EF Core SQL Server, EF Core Design y Swashbuckle; relaciona cada paquete con persistencia, herramientas de migración y documentación de API. Abre `Program.cs` y `appsettings.json` sin activar código aún. Ejecuta `dotnet build src/AceriaApp.Monolito.Api/AceriaApp.Monolito.Api.csproj` y verifica que el esqueleto del proyecto es válido.
 
-**Acción 3:** Busca los `PackageReference` a EF Core SQL Server, EF Core Design y Swashbuckle; relaciona cada paquete con persistencia, herramientas de migración y documentación de API.
-
-**Acción 4:** Abre `Program.cs` y `appsettings.json` sin activar código aún. Ejecuta `dotnet build src/AceriaApp.Monolito.Api/AceriaApp.Monolito.Api.csproj` y verifica que el esqueleto del proyecto es válido.
-
-
-
-
-
-
-**Por qué se hace:** se trabaja sobre el material proporcionado y se evita duplicar archivos o alterar el punto anterior.  el proyecto monolítico de referencia sirve como punto de partida del curso y como término de comparación con los microservicios que se construirán en módulos posteriores. El nombre AceriaApp.Monolito.Api deja claro que se trata del monolito.
+el proyecto monolítico de referencia sirve como punto de partida del curso y como término de comparación con los microservicios que se construirán en módulos posteriores. El nombre AceriaApp.Monolito.Api deja claro que se trata del monolito.
 
 **Errores comunes:**
 
@@ -154,20 +100,13 @@
 
 ---
 
-### Paso 6 — Añadir el proyecto monolítico a la solución
+### Paso 6 — Comprobar la inclusión del monolito en la solución
 
-**Acción 1:** En la carpeta raíz de 1.1 abre `AceriaApp.sln` y confirma que `AceriaApp.Monolito.Api` ya aparece en el Explorador de soluciones.
+En la carpeta raíz de 1.1 abre `AceriaApp.sln` y confirma que `AceriaApp.Monolito.Api` ya aparece en el Explorador de soluciones. Ejecuta `dotnet sln AceriaApp.sln list` para ver la ruta de `src/AceriaApp.Monolito.Api/AceriaApp.Monolito.Api.csproj` dentro de la solución.
 
-**Acción 2:** Ejecuta `dotnet sln AceriaApp.sln list` para ver la ruta de `src/AceriaApp.Monolito.Api/AceriaApp.Monolito.Api.csproj` dentro de la solución.
+Inspecciona las propiedades del proyecto desde Visual Studio y comprueba que la ruta coincide con el proyecto físico entregado. No ejecutes `dotnet sln add` si ya está incluido. Si recibes un error de proyecto no cargado, restaura con `dotnet restore AceriaApp.sln` y vuelve a abrirlo; documenta el mensaje antes de intentar recrear archivos.
 
-**Acción 3:** Inspecciona las propiedades del proyecto desde Visual Studio y comprueba que la ruta coincide con el proyecto físico entregado. No ejecutes `dotnet sln add` si ya está incluido.
-
-**Acción 4:** Si recibes un error de proyecto no cargado, restaura con `dotnet restore AceriaApp.sln` y vuelve a abrirlo; documenta el mensaje antes de intentar recrear archivos.
-
-
-
-
-**Por qué se hace:** se trabaja sobre el material proporcionado y se evita duplicar archivos o alterar el punto anterior.  añadir el proyecto a la solución permite compilarlo y ejecutarlo desde Visual Studio 2026 y desde la línea de comandos con dotnet build AceriaApp.sln.
+añadir el proyecto a la solución permite compilarlo y ejecutarlo desde Visual Studio 2026 y desde la línea de comandos con dotnet build AceriaApp.sln.
 
 **Errores comunes:**
 
@@ -181,20 +120,11 @@
 
 ### Paso 7 — Revisar el proyecto de tests
 
-**Acción 1:** Localiza la carpeta `tests/AceriaApp.Monolito.Tests` y abre `AceriaApp.Monolito.Tests.csproj`. El proyecto xUnit **se entrega preparado**, no tienes que generarlo con `dotnet new xunit`.
+Localiza la carpeta `tests/AceriaApp.Monolito.Tests` y abre `AceriaApp.Monolito.Tests.csproj`. El proyecto xUnit **se entrega preparado**, no tienes que generarlo con `dotnet new xunit`. Revisa `TargetFramework` `net8.0`, las referencias a `Microsoft.NET.Test.Sdk`, xUnit, `xunit.runner.visualstudio` y FluentAssertions ya declaradas.
 
-**Acción 2:** Revisa `TargetFramework` `net8.0`, las referencias a `Microsoft.NET.Test.Sdk`, xUnit, `xunit.runner.visualstudio` y FluentAssertions ya declaradas.
+En la misma carpeta encuentra `OrdenTests.cs`, que contiene código didáctico comentado que se activará en el paso 17. No busques `UnitTest1.cs`: no forma parte de este proyecto de referencia. Abre **Prueba > Explorador de pruebas** y confirma que el proyecto es visible. Si no aparecen casos aún, es normal: el test estará disponible después de activar su bloque.
 
-**Acción 3:** En la misma carpeta encuentra `OrdenTests.cs`, que contiene código didáctico comentado que se activará en el paso 17. No busques `UnitTest1.cs`: no forma parte de este proyecto de referencia.
-
-**Acción 4:** Abre **Prueba > Explorador de pruebas** y confirma que el proyecto es visible. Si no aparecen casos aún, es normal: el test estará disponible después de activar su bloque.
-
-
-
-
-
-
-**Por qué se hace:** se trabaja sobre el material proporcionado y se evita duplicar archivos o alterar el punto anterior.  el proyecto de tests albergará las pruebas unitarias y de integración del monolito. Se crea desde el primer punto para que la práctica de TDD forme parte del flujo de trabajo desde el inicio.
+el proyecto de tests albergará las pruebas unitarias y de integración del monolito. Se crea desde el primer punto para que la práctica de TDD forme parte del flujo de trabajo desde el inicio.
 
 **Errores comunes:**
 
@@ -206,21 +136,13 @@
 
 ---
 
-### Paso 8 — Añadir el proyecto de tests a la solución y referenciar el monolito
+### Paso 8 — Comprobar la referencia entre el proyecto de pruebas y la API
 
-**Acción 1:** En Visual Studio, expande las **Dependencias** del proyecto de tests y observa la referencia al proyecto de API monolítica.
+En Visual Studio, expande las **Dependencias** del proyecto de tests y observa la referencia al proyecto de API monolítica. Abre `tests/AceriaApp.Monolito.Tests/AceriaApp.Monolito.Tests.csproj` y localiza el elemento `ProjectReference` que apunta a `../../src/AceriaApp.Monolito.Api/AceriaApp.Monolito.Api.csproj`.
 
-**Acción 2:** Abre `tests/AceriaApp.Monolito.Tests/AceriaApp.Monolito.Tests.csproj` y localiza el elemento `ProjectReference` que apunta a `../../src/AceriaApp.Monolito.Api/AceriaApp.Monolito.Api.csproj`.
+Ejecuta `dotnet sln AceriaApp.sln list` y comprueba que ambos proyectos se incluyen en la misma solución. La referencia del test **hacia** la API ya está creada. No agregues otra referencia idéntica. Si el editor señala un problema, comprueba primero la ruta relativa y realiza `dotnet restore AceriaApp.sln`.
 
-**Acción 3:** Ejecuta `dotnet sln AceriaApp.sln list` y comprueba que ambos proyectos se incluyen en la misma solución. La referencia del test **hacia** la API ya está creada.
-
-**Acción 4:** No agregues otra referencia idéntica. Si el editor señala un problema, comprueba primero la ruta relativa y realiza `dotnet restore AceriaApp.sln`.
-
-
-
-
-
-**Por qué se hace:** se trabaja sobre el material proporcionado y se evita duplicar archivos o alterar el punto anterior.  la referencia permite que el proyecto de tests acceda a las clases públicas del proyecto monolítico. Sin esta referencia, los tests no pueden instanciar los tipos que deben verificar.
+la referencia permite que el proyecto de tests acceda a las clases públicas del proyecto monolítico. Sin esta referencia, los tests no pueden instanciar los tipos que deben verificar.
 
 **Errores comunes:**
 
@@ -232,22 +154,13 @@
 
 ---
 
-### Paso 9 — Añadir los paquetes NuGet de EF Core al proyecto monolítico
+### Paso 9 — Comprobar las dependencias NuGet ya declaradas
 
-**Acción 1:** Desde el proyecto de API abre **Administrar paquetes NuGet** y comprueba en la pestaña **Instalado** `Microsoft.EntityFrameworkCore.SqlServer` versión 8.0.0, `Microsoft.EntityFrameworkCore.Design` 8.0.0 y `Swashbuckle.AspNetCore` 6.6.2.
+Desde el proyecto de API abre **Administrar paquetes NuGet** y comprueba en la pestaña **Instalado** `Microsoft.EntityFrameworkCore.SqlServer` versión 8.0.0, `Microsoft.EntityFrameworkCore.Design` 8.0.0 y `Swashbuckle.AspNetCore` 6.6.2. Abre `src/AceriaApp.Monolito.Api/AceriaApp.Monolito.Api.csproj` y localiza sus tres referencias existentes. No instales copias duplicadas ni cambies versiones sin una razón documentada.
 
-**Acción 2:** Abre `src/AceriaApp.Monolito.Api/AceriaApp.Monolito.Api.csproj` y localiza sus tres referencias existentes. No instales copias duplicadas ni cambies versiones sin una razón documentada.
+Desde la raíz de la etapa ejecuta `dotnet list src/AceriaApp.Monolito.Api/AceriaApp.Monolito.Api.csproj package` y contrasta los nombres y versiones con el `.csproj`. Ejecuta `dotnet restore AceriaApp.sln`; si falla por paquetes no disponibles, revisa el origen NuGet y la conexión antes de modificar los archivos de proyecto.
 
-**Acción 3:** Desde la raíz de la etapa ejecuta `dotnet list src/AceriaApp.Monolito.Api/AceriaApp.Monolito.Api.csproj package` y contrasta los nombres y versiones con el `.csproj`.
-
-**Acción 4:** Ejecuta `dotnet restore AceriaApp.sln`; si falla por paquetes no disponibles, revisa el origen NuGet y la conexión antes de modificar los archivos de proyecto.
-
-
-
-
-
-
-**Por qué se hace:** se trabaja sobre el material proporcionado y se evita duplicar archivos o alterar el punto anterior.  EF Core es el ORM del curso y SQL Server Express es la base de datos. Design es necesario para las herramientas de migraciones. Swashbuckle genera la documentación OpenAPI.
+EF Core es el ORM del curso y SQL Server Express es la base de datos. Design es necesario para las herramientas de migraciones. Swashbuckle genera la documentación OpenAPI.
 
 **Errores comunes:**
 
@@ -261,16 +174,9 @@
 
 ### Paso 10 — Configurar la cadena de conexión en appsettings.json
 
-**Acción 1:** Abre `src/AceriaApp.Monolito.Api/appsettings.json` y localiza la sección `ConnectionStrings`. El fichero se entrega preparado y no debe sustituirse por otro de ejemplo.
+Abre `src/AceriaApp.Monolito.Api/appsettings.json` y localiza la sección `ConnectionStrings`. El fichero se entrega preparado y no debe sustituirse por otro de ejemplo. Comprueba que la clave del JSON se llama exactamente `AceriaDb`, porque el `GetConnectionString("AceriaDb")` que activaremos en `Program.cs` depende de esa coincidencia.
 
-**Acción 2:** Comprueba que la clave del JSON se llama exactamente `AceriaDb`, porque el `GetConnectionString("AceriaDb")` que activaremos en `Program.cs` depende de esa coincidencia.
-
-**Acción 3:** Lee el servidor y el nombre de base de datos configurados. En el ejercicio de M01 se utiliza **SQL Server Express**, no se debe cambiar silenciosamente el proveedor por InMemory ni LocalDB.
-
-**Acción 4:** Valida las comillas, comas y barras invertidas de JSON; si usas un servidor SQL Express distinto, configura la conexión de tu copia local sin subir credenciales reales al repositorio.
-
-
-
+Lee el servidor y el nombre de base de datos configurados. En el ejercicio de M01 se utiliza **SQL Server Express**, no se debe cambiar silenciosamente el proveedor por InMemory ni LocalDB. Valida las comillas, comas y barras invertidas de JSON; si usas un servidor SQL Express distinto, configura la conexión de tu copia local sin subir credenciales reales al repositorio.
 
 {
   "ConnectionStrings": {
@@ -285,10 +191,7 @@
   "AllowedHosts": "*"
 }
 
-
-
-
-**Por qué se hace:** se trabaja sobre el material proporcionado y se evita duplicar archivos o alterar el punto anterior.  la cadena de conexión define el servidor, la base de datos y el modo de autenticación. Trusted_Connection=True usa la identidad de Windows, y TrustServerCertificate=True evita errores de certificado en entornos locales.
+la cadena de conexión define el servidor, la base de datos y el modo de autenticación. Trusted_Connection=True usa la identidad de Windows, y TrustServerCertificate=True evita errores de certificado en entornos locales.
 
 **Errores comunes:**
 
@@ -300,22 +203,14 @@
 
 ---
 
-### Paso 11 — Activar el código de Orden.cs por pasos
+### Paso 11 — Implementar y comprender Orden.cs
 
-**Archivo preparado en este punto:** `src/AceriaApp.Monolito.Api/Dominio/Orden.cs`. El bloque de código original figura a continuación como referencia de aprendizaje; la acción efectiva consiste en activar el bloque comentado correspondiente.
-
-
-**Acción 1:** En `src/AceriaApp.Monolito.Api/Dominio/Orden.cs`, localiza el marcador de apertura `INICIO PASO 1.1.11` y el de cierre `FIN PASO 1.1.11`.
-
-**Acción 2:** Selecciona **solo las líneas C# comentadas entre esos marcadores**, sin seleccionar las dos líneas de marcador ni el código de un reto de otra etapa. Usa `Ctrl+K, Ctrl+U` para eliminar un nivel de comentario.
-
-**Acción 3:** Contrasta el resultado con el bloque de referencia que aparece en esta práctica: comprueba el namespace, `Id`, `Cliente`, `Material`, `Cantidad` y `FechaCreacion`, así como sus tipos.
-
-**Acción 4:** Pulsa `Ctrl+S` y ejecuta `dotnet build src/AceriaApp.Monolito.Api/AceriaApp.Monolito.Api.csproj`. Si quedan líneas con `//` al principio de las declaraciones, revisa qué rango seleccionaste.
+El archivo preparado es `src/AceriaApp.Monolito.Api/Dominio/Orden.cs`. El ejemplo muestra el código final de este paso. Escríbelo en el esqueleto o descomenta únicamente el bloque marcado; no dupliques declaraciones ni actives todavía el reto.
 
 
+En `src/AceriaApp.Monolito.Api/Dominio/Orden.cs`, localiza el marcador de apertura `INICIO PASO 1.1.11` y el de cierre `FIN PASO 1.1.11`. Selecciona **solo las líneas C# comentadas entre esos marcadores**, sin seleccionar las dos líneas de marcador ni el código de un reto de otra etapa. Usa `Ctrl+K, Ctrl+U` para eliminar un nivel de comentario.
 
-
+Contrasta el resultado con el bloque de referencia que aparece en esta práctica: comprueba el namespace, `Id`, `Cliente`, `Material`, `Cantidad` y `FechaCreacion`, así como sus tipos. Pulsa `Ctrl+S` y ejecuta `dotnet build src/AceriaApp.Monolito.Api/AceriaApp.Monolito.Api.csproj`. Si quedan líneas con `//` al principio de las declaraciones, revisa qué rango seleccionaste.
 
 ```csharp
 namespace AceriaApp.Monolito.Api.Dominio;
@@ -330,21 +225,9 @@ public class Orden
 }
 ```
 
-**Explicación del código, línea por línea**
+La entidad `Orden` reúne los datos de la operación: `Id` identifica el registro, `Cliente` y `Material` describen la solicitud y `Cantidad` expresa las unidades. Las cadenas se inicializan para evitar referencias nulas. `FechaCreacion` recibirá una marca UTC cuando POST cree la orden. Este modelo inicial todavía no implementa invariantes de negocio: esa diferencia se abordará al introducir un dominio más rico.
 
-- **Línea 1 —** `namespace AceriaApp.Monolito.Api.Dominio;`: Declara el espacio de nombres `AceriaApp.Monolito.Api.Dominio` coherente con la carpeta y el proyecto.
-- **Línea 2 —** `public class Orden`: Representa la orden de producción que crea y consulta la API monolítica.
-- **Línea 3 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
-- **Línea 4 —** `public Guid Id { get; set; }`: Identificador único GUID que distingue cada orden durante persistencia y consulta.
-- **Línea 5 —** `public string Cliente { get; set; } = string.Empty;`: Cliente que solicita la orden de producción; es dato de negocio y se comprueba en el test.
-- **Línea 6 —** `public string Material { get; set; } = string.Empty;`: Código o denominación del material requerido por la orden de producción.
-- **Línea 7 —** `public int Cantidad { get; set; }`: Número de unidades solicitado; forma parte del dato persistido de la orden.
-- **Línea 8 —** `public DateTime FechaCreacion { get; set; }`: Instante en UTC en que se crea la orden; evita depender del huso horario del servidor.
-- **Línea 9 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
-
-
-
-**Por qué se hace:** la entidad Orden representa la orden de producción. Es la unidad de negocio sobre la que operará el monolito de referencia.
+la entidad Orden representa la orden de producción. Es la unidad de negocio sobre la que operará el monolito de referencia.
 
 **Errores comunes:**
 
@@ -356,22 +239,14 @@ public class Orden
 
 ---
 
-### Paso 12 — Activar el código de AceriaDbContext.cs por pasos
+### Paso 12 — Implementar y comprender AceriaDbContext.cs
 
-**Archivo preparado en este punto:** `src/AceriaApp.Monolito.Api/Infraestructura/AceriaDbContext.cs`. El bloque de código original figura a continuación como referencia de aprendizaje; la acción efectiva consiste en activar el bloque comentado correspondiente.
-
-
-**Acción 1:** Abre `src/AceriaApp.Monolito.Api/Infraestructura/AceriaDbContext.cs` y localiza el bloque delimitado por `INICIO PASO 1.1.12` y `FIN PASO 1.1.12`.
-
-**Acción 2:** Selecciona únicamente el código comentado interior y pulsa `Ctrl+K, Ctrl+U` una vez. No descomentes los delimitadores ni crees otra clase de contexto.
-
-**Acción 3:** Comprueba que se importan `Dominio` y `Microsoft.EntityFrameworkCore`, que el constructor recibe `DbContextOptions<AceriaDbContext>` y que existe `DbSet<Orden> Ordenes`.
-
-**Acción 4:** Guarda y compila el proyecto de API. Verifica `HasKey(Id)` y `HasMaxLength(100)` de Cliente y Material; estas reglas configurarán después la migración.
+El archivo preparado es `src/AceriaApp.Monolito.Api/Infraestructura/AceriaDbContext.cs`. El ejemplo muestra el código final de este paso. Escríbelo en el esqueleto o descomenta únicamente el bloque marcado; no dupliques declaraciones ni actives todavía el reto.
 
 
+Abre `src/AceriaApp.Monolito.Api/Infraestructura/AceriaDbContext.cs` y localiza el bloque delimitado por `INICIO PASO 1.1.12` y `FIN PASO 1.1.12`. Selecciona únicamente el código comentado interior y pulsa `Ctrl+K, Ctrl+U` una vez. No descomentes los delimitadores ni crees otra clase de contexto.
 
-
+Comprueba que se importan `Dominio` y `Microsoft.EntityFrameworkCore`, que el constructor recibe `DbContextOptions<AceriaDbContext>` y que existe `DbSet<Orden> Ordenes`. Guarda y compila el proyecto de API. Verifica `HasKey(Id)` y `HasMaxLength(100)` de Cliente y Material; estas reglas configurarán después la migración.
 
 ```csharp
 using AceriaApp.Monolito.Api.Dominio;
@@ -397,29 +272,9 @@ public class AceriaDbContext : DbContext
 }
 ```
 
-**Explicación del código, línea por línea**
+El `AceriaDbContext` recibe las opciones desde la configuración del host y expone `Ordenes` como conjunto consultable por EF Core. Su `OnModelCreating` establece la clave y exige `Cliente` y `Material`, limitados a 100 caracteres. La configuración describe el esquema, pero la tabla física no existe hasta aplicar la migración; tampoco sustituye la validación de las entradas HTTP.
 
-- **Línea 1 —** `using AceriaApp.Monolito.Api.Dominio;`: Importa AceriaApp.Monolito.Api.Dominio para resolver los tipos usados en este archivo.
-- **Línea 2 —** `using Microsoft.EntityFrameworkCore;`: Importa Microsoft.EntityFrameworkCore para resolver los tipos usados en este archivo.
-- **Línea 3 —** `namespace AceriaApp.Monolito.Api.Infraestructura;`: Declara el espacio de nombres `AceriaApp.Monolito.Api.Infraestructura` coherente con la carpeta y el proyecto.
-- **Línea 4 —** `public class AceriaDbContext : DbContext`: Integra el modelo de órdenes con EF Core y SQL Server.
-- **Línea 5 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
-- **Línea 6 —** `public AceriaDbContext(DbContextOptions<AceriaDbContext> options)`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
-- **Línea 7 —** `: base(options)`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
-- **Línea 8 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
-- **Línea 9 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
-- **Línea 10 —** `public DbSet<Orden> Ordenes => Set<Orden>();`: Asigna o calcula el valor de la expresión de la derecha para la operación actual.
-- **Línea 11 —** `protected override void OnModelCreating(ModelBuilder modelBuilder)`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
-- **Línea 12 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
-- **Línea 13 —** `modelBuilder.Entity<Orden>().HasKey(o => o.Id);`: Configura el esquema de EF Core antes de materializar las tablas.
-- **Línea 14 —** `modelBuilder.Entity<Orden>().Property(o => o.Cliente).HasMaxLength(100).IsRequired();`: Configura el esquema de EF Core antes de materializar las tablas.
-- **Línea 15 —** `modelBuilder.Entity<Orden>().Property(o => o.Material).HasMaxLength(100).IsRequired();`: Configura el esquema de EF Core antes de materializar las tablas.
-- **Línea 16 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
-- **Línea 17 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
-
-
-
-**Por qué se hace:** el DbContext es el punto de acceso a la base de datos. Define las tablas y sus restricciones, y expone los DbSet que usan los repositorios y los endpoints.
+el DbContext es el punto de acceso a la base de datos. Define las tablas y sus restricciones, y expone los DbSet que usan los repositorios y los endpoints.
 
 **Errores comunes:**
 
@@ -434,20 +289,14 @@ public class AceriaDbContext : DbContext
 
 ---
 
-### Paso 13 — Activar el código de Program.cs por pasos
+### Paso 13 — Implementar y comprender Program.cs
 
-**Archivo preparado en este punto:** `src/AceriaApp.Monolito.Api/Program.cs`. El bloque de código original figura a continuación como referencia de aprendizaje; la acción efectiva consiste en activar el bloque comentado correspondiente.
-
-
-**Acción 1:** Abre `Program.cs` del proyecto API y localiza **todos** los bloques que llevan `INICIO PASO 1.1.13`; aparecen en distintas zonas del archivo para respetar el orden de construcción de ASP.NET Core.
-
-**Acción 2:** Descomenta el código interior de cada bloque **por separado** con `Ctrl+K, Ctrl+U`, sin seleccionar los marcadores ni el bloque `RETO 1.1`. Conserva una sola llamada a `WebApplication.CreateBuilder`, `builder.Build` y `app.Run`.
-
-**Acción 3:** Comprueba el registro de `AceriaDbContext` con `UseSqlServer`, los servicios `AddEndpointsApiExplorer`/`AddSwaggerGen` y los endpoints GET/POST de `/api/v1/ordenes`.
-
-**Acción 4:** Guarda, compila y corrige cualquier subrayado. Si Swagger no se muestra más adelante, revisa el entorno Development; si el compilador no encuentra `Orden`, comprueba primero el paso 11.
+El archivo preparado es `src/AceriaApp.Monolito.Api/Program.cs`. El ejemplo muestra el código final de este paso. Escríbelo en el esqueleto o descomenta únicamente el bloque marcado; no dupliques declaraciones ni actives todavía el reto.
 
 
+Abre `Program.cs` del proyecto API y localiza **todos** los bloques que llevan `INICIO PASO 1.1.13`; aparecen en distintas zonas del archivo para respetar el orden de construcción de ASP.NET Core. Descomenta el código interior de cada bloque **por separado** con `Ctrl+K, Ctrl+U`, sin seleccionar los marcadores ni el bloque `RETO 1.1`. Conserva una sola llamada a `WebApplication.CreateBuilder`, `builder.Build` y `app.Run`.
+
+Comprueba el registro de `AceriaDbContext` con `UseSqlServer`, los servicios `AddEndpointsApiExplorer`/`AddSwaggerGen` y los endpoints GET/POST de `/api/v1/ordenes`. Guarda, compila y corrige cualquier subrayado. Si Swagger no se muestra más adelante, revisa el entorno Development; si el compilador no encuentra `Orden`, comprueba primero el paso 11.
 
 ```csharp
 using AceriaApp.Monolito.Api.Dominio;
@@ -483,38 +332,9 @@ app.MapPost("/api/v1/ordenes", async (AceriaDbContext db, Orden orden) =>
 app.Run();
 ```
 
-**Explicación del código, línea por línea**
+En `Program.cs`, primero se registran EF Core y los servicios OpenAPI, después se construye la aplicación y se habilita Swagger únicamente en Development. GET usa `AsNoTracking` porque solo lee las órdenes. POST genera un GUID y una marca UTC, agrega la entidad, ejecuta `SaveChangesAsync` y devuelve `201 Created` con la ubicación del recurso. La consulta individual por ID queda como ampliación posterior; `app.Run()` inicia la escucha HTTP.
 
-- **Línea 1 —** `using AceriaApp.Monolito.Api.Dominio;`: Importa AceriaApp.Monolito.Api.Dominio para resolver los tipos usados en este archivo.
-- **Línea 2 —** `using AceriaApp.Monolito.Api.Infraestructura;`: Importa AceriaApp.Monolito.Api.Infraestructura para resolver los tipos usados en este archivo.
-- **Línea 3 —** `using Microsoft.EntityFrameworkCore;`: Importa Microsoft.EntityFrameworkCore para resolver los tipos usados en este archivo.
-- **Línea 4 —** `var builder = WebApplication.CreateBuilder(args);`: Calcula `builder` a partir de `WebApplication.CreateBuilder(args)`; ese valor se utiliza en la verificación posterior.
-- **Línea 5 —** `builder.Services.AddDbContext<AceriaDbContext>(options =>`: Inicia una expresión lambda, cuya lógica continúa en las líneas siguientes.
-- **Línea 6 —** `options.UseSqlServer(builder.Configuration.GetConnectionString("AceriaDb")));`: Obtiene la cadena de conexión de la configuración del host.
-- **Línea 7 —** `builder.Services.AddEndpointsApiExplorer();`: Registra dependencias y capacidades en el contenedor de ASP.NET Core.
-- **Línea 8 —** `builder.Services.AddSwaggerGen();`: Registra dependencias y capacidades en el contenedor de ASP.NET Core.
-- **Línea 9 —** `var app = builder.Build();`: Calcula `app` a partir de `builder.Build()`; ese valor se utiliza en la verificación posterior.
-- **Línea 10 —** `if (app.Environment.IsDevelopment())`: Comprueba la condición `app.Environment.IsDevelopment()` antes de proseguir; protege un caso límite o una regla del negocio.
-- **Línea 11 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
-- **Línea 12 —** `app.UseSwagger();`: Completa la instrucción descrita en este bloque.
-- **Línea 13 —** `app.UseSwaggerUI();`: Completa la instrucción descrita en este bloque.
-- **Línea 14 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
-- **Línea 15 —** `app.MapGet("/api/v1/ordenes", async (AceriaDbContext db) =>`: Registra el endpoint HTTP GET como parte de la API.
-- **Línea 16 —** `await db.Ordenes.AsNoTracking().ToListAsync());`: Completa la instrucción descrita en este bloque.
-- **Línea 17 —** `app.MapPost("/api/v1/ordenes", async (AceriaDbContext db, Orden orden) =>`: Registra el endpoint HTTP POST como parte de la API.
-- **Línea 18 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
-- **Línea 19 —** `orden.Id = Guid.NewGuid();`: Genera un identificador GUID nuevo para distinguir este registro o petición.
-- **Línea 20 —** `orden.FechaCreacion = DateTime.UtcNow;`: Guarda la fecha UTC, independiente de la zona horaria del servidor.
-- **Línea 21 —** `db.Ordenes.Add(orden);`: Prepara o persiste una operación sobre el contexto de datos.
-- **Línea 22 —** `await db.SaveChangesAsync();`: Completa la instrucción descrita en este bloque.
-- **Línea 23 —** `return Results.Created($"/api/v1/ordenes/{orden.Id}", orden);`: Devuelve el resultado `Results.Created($"/api/v1/ordenes/{orden.Id}", orden)` al llamador.
-- **Línea 24 —** `});`: Cierra la expresión lambda o la llamada de configuración.
-- **Línea 25 —** `app.Run();`: Completa la instrucción descrita en este bloque.
-
-
-
-
-**Por qué se hace:** registrar el DbContext en el contenedor de dependencias permite que los endpoints lo reciban por inyección. AddEndpointsApiExplorer y AddSwaggerGen habilitan OpenAPI. Los endpoints GET y POST permiten consultar y crear órdenes.
+registrar el DbContext en el contenedor de dependencias permite que los endpoints lo reciban por inyección. AddEndpointsApiExplorer y AddSwaggerGen habilitan OpenAPI. Los endpoints GET y POST permiten consultar y crear órdenes.
 
 **Errores comunes:**
 
@@ -531,19 +351,11 @@ app.Run();
 
 ### Paso 14 — Examinar la migración inicial incluida
 
-**Acción 1:** En `src/AceriaApp.Monolito.Api/Infraestructura/Migraciones`, abre `202610140001_Inicial.cs.txt` y el snapshot `AceriaDbContextModelSnapshot.cs.txt`. Están preparados como texto para evitar que la migración se active anticipadamente.
+En `src/AceriaApp.Monolito.Api/Infraestructura/Migraciones`, abre `202610140001_Inicial.cs.txt` y el snapshot `AceriaDbContextModelSnapshot.cs.txt`. Están preparados como texto para evitar que la migración se active anticipadamente. Cambia **ambas extensiones** de `.cs.txt` a `.cs` dentro de la carpeta de trabajo, sin crear una migración nueva ni alterar el contenido generado.
 
-**Acción 2:** Cambia **ambas extensiones** de `.cs.txt` a `.cs` dentro de la carpeta de trabajo, sin crear una migración nueva ni alterar el contenido generado.
+Abre la clase `Inicial`, revisa `Up` y `Down` y comprueba que `Up` crea `Ordenes` con Id, Cliente, Material, Cantidad y FechaCreacion. Compila y ejecuta, desde la carpeta donde está `AceriaApp.sln`, `dotnet ef migrations list --project src/AceriaApp.Monolito.Api --startup-project src/AceriaApp.Monolito.Api`. Si no está instalado `dotnet-ef`, instala la herramienta versión 8.
 
-**Acción 3:** Abre la clase `Inicial`, revisa `Up` y `Down` y comprueba que `Up` crea `Ordenes` con Id, Cliente, Material, Cantidad y FechaCreacion.
-
-**Acción 4:** Compila y ejecuta, desde la carpeta donde está `AceriaApp.sln`, `dotnet ef migrations list --project src/AceriaApp.Monolito.Api --startup-project src/AceriaApp.Monolito.Api`. Si no está instalado `dotnet-ef`, instala la herramienta versión 8.
-
-
-
-
-
-**Por qué se hace:** la migración se entrega versionada para que todos los alumnos apliquen el mismo esquema; generar otra con idéntico nombre duplicaría la operación.
+la migración se entrega versionada para que todos los alumnos apliquen el mismo esquema; generar otra con idéntico nombre duplicaría la operación.
 
 **Errores comunes:** ejecutar `migrations add Inicial` otra vez; cambiar la migración heredada; buscar una marca temporal arbitraria.
 
@@ -556,20 +368,11 @@ app.Run();
 
 ### Paso 15 — Aplicar la migración a SQL Server Express
 
-**Acción 1:** Comprueba que el servicio SQL Server Express `SQLEXPRESS` está instalado y en ejecución. Revisa la cadena de conexión de `appsettings.json` y no la confundas con la usada en M02.
+Comprueba que el servicio SQL Server Express `SQLEXPRESS` está instalado y en ejecución. Revisa la cadena de conexión de `appsettings.json` y no la confundas con la usada en M02. En la terminal de la raíz del punto ejecuta `dotnet ef database update --project src/AceriaApp.Monolito.Api --startup-project src/AceriaApp.Monolito.Api`. No lo lances desde una carpeta arbitraria sin indicar el proyecto.
 
-**Acción 2:** En la terminal de la raíz del punto ejecuta `dotnet ef database update --project src/AceriaApp.Monolito.Api --startup-project src/AceriaApp.Monolito.Api`. No lo lances desde una carpeta arbitraria sin indicar el proyecto.
+Lee el resultado: debe aplicar `202610140001_Inicial` o informar de que ya está aplicada. Si aparece un error de autenticación o conexión, corrige la instancia antes de seguir. En SQL Server Management Studio o el Explorador de objetos de SQL Server, conecta a `.\SQLEXPRESS` y abre **Databases > AceriaDb > Tables > dbo.Ordenes**. Inspecciona las cinco columnas creadas.
 
-**Acción 3:** Lee el resultado: debe aplicar `202610140001_Inicial` o informar de que ya está aplicada. Si aparece un error de autenticación o conexión, corrige la instancia antes de seguir.
-
-**Acción 4:** En SQL Server Management Studio o el Explorador de objetos de SQL Server, conecta a `.\SQLEXPRESS` y abre **Databases > AceriaDb > Tables > dbo.Ordenes**. Inspecciona las cinco columnas creadas.
-
-
-
-
-
-
-**Por qué se hace:** dotnet ef database update aplica la migración y crea la base de datos AceriaDb con la tabla Ordenes.
+dotnet ef database update aplica la migración y crea la base de datos AceriaDb con la tabla Ordenes.
 
 **Errores comunes:**
 
@@ -583,20 +386,11 @@ app.Run();
 
 ### Paso 16 — Ejecutar la API y verificar los endpoints
 
-**Acción 1:** Con la migración aplicada y SQL Express arrancado, abre la terminal en la raíz de 1.1 y ejecuta `dotnet run --project src/AceriaApp.Monolito.Api`.
+Con la migración aplicada y SQL Express arrancado, abre la terminal en la raíz de 1.1 y ejecuta `dotnet run --project src/AceriaApp.Monolito.Api`. Copia la URL **real** que el servidor muestra como `Now listening on:`; puede ser HTTP o HTTPS según el perfil y la configuración. No presupongas que se muestran ambas.
 
-**Acción 2:** Copia la URL **real** que el servidor muestra como `Now listening on:`; puede ser HTTP o HTTPS según el perfil y la configuración. No presupongas que se muestran ambas.
+Navega a `<URL_REAL>/swagger` en Development y abre GET `/api/v1/ordenes` mediante **Try it out > Execute**. En una base vacía, comprueba 200 y el array `[]`. Ejecuta también el POST con una orden válida y después repite GET para ver la persistencia. Detén el proceso con `Ctrl+C` o con el botón de Visual Studio antes de continuar.
 
-**Acción 3:** Navega a `<URL_REAL>/swagger` en Development y abre GET `/api/v1/ordenes` mediante **Try it out > Execute**. En una base vacía, comprueba 200 y el array `[]`.
-
-**Acción 4:** Ejecuta también el POST con una orden válida y después repite GET para ver la persistencia. Detén el proceso con `Ctrl+C` o con el botón de Visual Studio antes de continuar.
-
-
-
-
-
-
-**Por qué se hace:** ejecutar la API verifica que el proyecto compila, que la configuración es correcta y que los endpoints están expuestos.
+ejecutar la API verifica que el proyecto compila, que la configuración es correcta y que los endpoints están expuestos.
 
 **Errores comunes:**
 
@@ -611,21 +405,14 @@ app.Run();
 
 ---
 
-### Paso 17 — Activar el código de OrdenTests.cs por pasos
+### Paso 17 — Implementar y comprender OrdenTests.cs
 
-**Archivo preparado en este punto:** `tests/AceriaApp.Monolito.Tests/OrdenTests.cs`. El bloque de código original figura a continuación como referencia de aprendizaje; la acción efectiva consiste en activar el bloque comentado correspondiente.
-
-
-**Acción 1:** En `tests/AceriaApp.Monolito.Tests/OrdenTests.cs` localiza `INICIO PASO 1.1.17` y `FIN PASO 1.1.17`.
-
-**Acción 2:** Selecciona las líneas interiores que contienen imports, clase de test y método `Orden_ConDatosValidos_SeCreaCorrectamente`; pulsa `Ctrl+K, Ctrl+U`, conservando los delimitadores comentados.
-
-**Acción 3:** Guarda y revisa las aserciones: el test instancia `Orden` y verifica Cliente y Cantidad; **no** constituye todavía una prueba HTTP de la ruta GET.
-
-**Acción 4:** Comprueba en `AceriaApp.Monolito.Tests.csproj` que `FluentAssertions` 6.12.2 ya está instalado. No ejecutes otro `dotnet add package` para duplicarlo; compila y abre el Explorador de pruebas.
+El archivo preparado es `tests/AceriaApp.Monolito.Tests/OrdenTests.cs`. El ejemplo muestra el código final de este paso. Escríbelo en el esqueleto o descomenta únicamente el bloque marcado; no dupliques declaraciones ni actives todavía el reto.
 
 
+En `tests/AceriaApp.Monolito.Tests/OrdenTests.cs` localiza `INICIO PASO 1.1.17` y `FIN PASO 1.1.17`. Selecciona las líneas interiores que contienen imports, clase de test y método `Orden_ConDatosValidos_SeCreaCorrectamente`; pulsa `Ctrl+K, Ctrl+U`, conservando los delimitadores comentados.
 
+Guarda y revisa las aserciones: el test instancia `Orden` y verifica Cliente y Cantidad; **no** constituye todavía una prueba HTTP de la ruta GET. Comprueba en `AceriaApp.Monolito.Tests.csproj` que `FluentAssertions` 6.12.2 ya está instalado. No ejecutes otro `dotnet add package` para duplicarlo; compila y abre el Explorador de pruebas.
 
 ```csharp
 using AceriaApp.Monolito.Api.Dominio;
@@ -654,34 +441,9 @@ public class OrdenTests
 }
 ```
 
-**Explicación del código, línea por línea**
+`OrdenTests` crea una orden con datos conocidos y comprueba sus propiedades mediante xUnit y FluentAssertions. Es una prueba unitaria del modelo, no un ensayo del endpoint HTTP ni de la persistencia en SQL Server. Esta distinción evita concluir que GET devuelve `404` o que POST guarda los datos únicamente porque una clase puede construirse correctamente.
 
-- **Línea 1 —** `using AceriaApp.Monolito.Api.Dominio;`: Importa AceriaApp.Monolito.Api.Dominio para resolver los tipos usados en este archivo.
-- **Línea 2 —** `using FluentAssertions;`: Importa FluentAssertions para resolver los tipos usados en este archivo.
-- **Línea 3 —** `using Xunit;`: Importa Xunit para resolver los tipos usados en este archivo.
-- **Línea 4 —** `namespace AceriaApp.Monolito.Tests;`: Declara el espacio de nombres `AceriaApp.Monolito.Tests` coherente con la carpeta y el proyecto.
-- **Línea 5 —** `public class OrdenTests`: Representa la orden de producción que crea y consulta la API monolítica.
-- **Línea 6 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
-- **Línea 7 —** `[Fact]`: Indica a xUnit que el método siguiente es un caso de prueba.
-- **Línea 8 —** `public void Orden_ConDatosValidos_SeCreaCorrectamente()`: Define el método `Orden_ConDatosValidos_SeCreaCorrectamente`, cuya entrada y salida se verifican en esta práctica.
-- **Línea 9 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
-- **Línea 10 —** `var orden = new Orden`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
-- **Línea 11 —** `{`: Abre el bloque de la declaración o de la condición inmediatamente anterior.
-- **Línea 12 —** `Id = Guid.NewGuid(),`: Genera un identificador GUID nuevo para distinguir este registro o petición.
-- **Línea 13 —** `Cliente = "ACX-001",`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
-- **Línea 14 —** `Material = "CHAPA-3MM",`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
-- **Línea 15 —** `Cantidad = 10,`: Continúa la definición de parámetros, propiedades o comportamiento iniciado en las líneas anteriores.
-- **Línea 16 —** `FechaCreacion = DateTime.UtcNow`: Guarda la fecha UTC, independiente de la zona horaria del servidor.
-- **Línea 17 —** `};`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
-- **Línea 18 —** `orden.Cliente.Should().Be("ACX-001");`: Comprueba mediante FluentAssertions que `orden.Cliente` cumpla `Be("ACX-001")`.
-- **Línea 19 —** `orden.Cantidad.Should().Be(10);`: Comprueba mediante FluentAssertions que `orden.Cantidad` cumpla `Be(10)`.
-- **Línea 20 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
-- **Línea 21 —** `}`: Cierra el bloque anterior; `};` también termina una inicialización o declaración.
-
-
-
-
-**Por qué se hace:** la prueba unitaria verifica que la entidad Orden se instancia correctamente con datos válidos. FluentAssertions proporciona una sintaxis de aserción más legible que Assert.
+la prueba unitaria verifica que la entidad Orden se instancia correctamente con datos válidos. FluentAssertions proporciona una sintaxis de aserción más legible que Assert.
 
 **Errores comunes:**
 
@@ -698,18 +460,11 @@ public class OrdenTests
 
 ### Paso 18 — Ejecutar los tests
 
-**Acción 1:** Desde la carpeta que contiene `AceriaApp.sln`, ejecuta `dotnet test AceriaApp.sln` con los bloques de 1.1.11–1.1.17 ya activados.
+Desde la carpeta que contiene `AceriaApp.sln`, ejecuta `dotnet test AceriaApp.sln` con los bloques de 1.1.11–1.1.17 ya activados. Comprueba que la salida informa de **1 prueba superada, 0 fallidas** en la configuración básica, y localiza su nombre `Orden_ConDatosValidos_SeCreaCorrectamente`.
 
-**Acción 2:** Comprueba que la salida informa de **1 prueba superada, 0 fallidas** en la configuración básica, y localiza su nombre `Orden_ConDatosValidos_SeCreaCorrectamente`.
+Si no se descubre el test, revisa que `[Fact]` y la clase estén descomentados, que el proyecto de pruebas esté incluido en la solución y que xUnit se restauró. Guarda la salida de test como evidencia y no ejecutes el reto opcional de GET individual hasta que hayas terminado el ejercicio base.
 
-**Acción 3:** Si no se descubre el test, revisa que `[Fact]` y la clase estén descomentados, que el proyecto de pruebas esté incluido en la solución y que xUnit se restauró.
-
-**Acción 4:** Guarda la salida de test como evidencia y no ejecutes el reto opcional de GET individual hasta que hayas terminado el ejercicio base.
-
-
-
-
-**Por qué se hace:** ejecutar los tests verifica que el proyecto de pruebas está correctamente configurado y que la entidad Orden funciona como se espera.
+ejecutar los tests verifica que el proyecto de pruebas está correctamente configurado y que la entidad Orden funciona como se espera.
 
 **Errores comunes:**
 
@@ -723,17 +478,9 @@ public class OrdenTests
 
 ### Paso 19 — Revisar el ADR de la decisión arquitectónica
 
-**Acción 1:** Abre `docs/ADR-001-monolito-vs-microservicios.md` ya incluido en 1.1, usando el explorador de archivos o **Mostrar todos los archivos** en Visual Studio.
+Abre `docs/ADR-001-monolito-vs-microservicios.md` ya incluido en 1.1, usando el explorador de archivos o **Mostrar todos los archivos** en Visual Studio. Lee en orden Estado, Contexto, Decisión, Alternativas consideradas y Consecuencias. Relaciona la decisión de comenzar con un monolito con la transacción EF Core y los endpoints que has probado.
 
-**Acción 2:** Lee en orden Estado, Contexto, Decisión, Alternativas consideradas y Consecuencias. Relaciona la decisión de comenzar con un monolito con la transacción EF Core y los endpoints que has probado.
-
-**Acción 3:** Anota en una frase qué evidencia técnica apoya la decisión (una API, una conexión y una unidad desplegable) y qué limitaciones tendría extraer microservicios antes de justificar sus fronteras.
-
-**Acción 4:** No sobrescribas el ADR original ni crees una copia nueva. Comprueba que el fichero en `docs` coincide con el texto de referencia del manual y permanece versionado.
-
-
-
-
+Anota en una frase qué evidencia técnica apoya la decisión (una API, una conexión y una unidad desplegable) y qué limitaciones tendría extraer microservicios antes de justificar sus fronteras. No sobrescribas el ADR original ni crees una copia nueva. Comprueba que el fichero en `docs` coincide con el texto de referencia del manual y permanece versionado.
 
 ```markdown
 # ADR-001: Elección entre monolito y microservicios
@@ -758,7 +505,7 @@ Se adopta un monolito modular como punto de partida, organizado por capas (prese
 ```
 
 
-**Por qué se hace:** se trabaja sobre el material proporcionado y se evita duplicar archivos o alterar el punto anterior.  el ADR documenta la decisión arquitectónica, las alternativas consideradas y las consecuencias. Es un artefacto obligatorio en cada punto del curso.
+el ADR documenta la decisión arquitectónica, las alternativas consideradas y las consecuencias. Es un artefacto obligatorio en cada punto del curso.
 
 **Errores comunes:**
 
@@ -772,16 +519,9 @@ Se adopta un monolito modular como punto de partida, organizado por capas (prese
 
 ### Paso 20 — Revisar el README del punto
 
-**Acción 1:** Abre el `README.md` de la **carpeta 1.1**, no el README de la raíz de todo el curso.
+Abre el `README.md` de la **carpeta 1.1**, no el README de la raíz de todo el curso. Comprueba que explica el objetivo de 1.1, el estado de los proyectos, cómo ejecutarlos y qué documentación acompaña a la solución.
 
-**Acción 2:** Comprueba que explica el objetivo de 1.1, el estado de los proyectos, cómo ejecutarlos y qué documentación acompaña a la solución.
-
-**Acción 3:** Sigue literalmente las rutas de ejecución allí descritas y comprueba que se refieren a la misma `AceriaApp.sln` y cadena de conexión que acabas de utilizar.
-
-**Acción 4:** Escribe en tus notas si hay alguna diferencia entre la ejecución que acabas de realizar y el README; no edites el documento distribuido salvo que el ejercicio te pida expresamente corregirlo.
-
-
-
+Sigue literalmente las rutas de ejecución allí descritas y comprueba que se refieren a la misma `AceriaApp.sln` y cadena de conexión que acabas de utilizar. Escribe en tus notas si hay alguna diferencia entre la ejecución que acabas de realizar y el README; no edites el documento distribuido salvo que el ejercicio te pida expresamente corregirlo.
 
 ```markdown
 # Punto 1.1 — Arquitectura monolítica vs. microservicios
@@ -811,7 +551,7 @@ Este es el primer punto del curso. No hay punto anterior.
 ```
 
 
-**Por qué se hace:** se trabaja sobre el material proporcionado y se evita duplicar archivos o alterar el punto anterior.  el README explica el objetivo, el estado, la ejecución y los añadidos del punto. Es obligatorio en cada punto del curso.
+el README explica el objetivo, el estado, la ejecución y los añadidos del punto. Es obligatorio en cada punto del curso.
 
 **Errores comunes:**
 
@@ -825,18 +565,11 @@ Este es el primer punto del curso. No hay punto anterior.
 
 ### Paso 21 — Compilar la solución completa
 
-**Acción 1:** Abre una terminal en la carpeta de 1.1 (donde está `AceriaApp.sln`) y ejecuta `dotnet build AceriaApp.sln -c Release`.
+Abre una terminal en la carpeta de 1.1 (donde está `AceriaApp.sln`) y ejecuta `dotnet build AceriaApp.sln -c Release`. Comprueba que el compilador utiliza los proyectos de API y tests del mismo punto y que finaliza con `Build succeeded` y **0 errores**.
 
-**Acción 2:** Comprueba que el compilador utiliza los proyectos de API y tests del mismo punto y que finaliza con `Build succeeded` y **0 errores**.
+Si hay errores, lee el primer mensaje de compilación y localiza archivo y número de línea; vuelve a comprobar los marcadores del paso correspondiente antes de editar algo más. Guarda una copia del resumen de compilación y verifica que no has introducido dependencias o proyectos que pertenezcan a los puntos 1.2–1.5.
 
-**Acción 3:** Si hay errores, lee el primer mensaje de compilación y localiza archivo y número de línea; vuelve a comprobar los marcadores del paso correspondiente antes de editar algo más.
-
-**Acción 4:** Guarda una copia del resumen de compilación y verifica que no has introducido dependencias o proyectos que pertenezcan a los puntos 1.2–1.5.
-
-
-
-
-**Por qué se hace:** compilar la solución completa verifica que todos los proyectos se resuelven correctamente y que no hay errores de dependencias.
+compilar la solución completa verifica que todos los proyectos se resuelven correctamente y que no hay errores de dependencias.
 
 **Errores comunes:**
 
@@ -850,18 +583,11 @@ Este es el primer punto del curso. No hay punto anterior.
 
 ### Paso 22 — Ejecutar todos los tests de la solución
 
-**Acción 1:** Con la solución recién compilada, ejecuta `dotnet test AceriaApp.sln -c Release --no-build` desde la carpeta de 1.1.
+Con la solución recién compilada, ejecuta `dotnet test AceriaApp.sln -c Release --no-build` desde la carpeta de 1.1. Comprueba que el test de `Orden` aparece y que el total de la etapa básica es **1 superado y 0 fallidos**.
 
-**Acción 2:** Comprueba que el test de `Orden` aparece y que el total de la etapa básica es **1 superado y 0 fallidos**.
+Si recibes el error de no encontrar ensamblados, ejecuta primero el `dotnet build -c Release` del paso anterior y no mezcles configuraciones Debug/Release. Relaciona la prueba unitaria con el comportamiento observado en Swagger: una aserción sobre la clase Orden no sustituye la comprobación de HTTP y SQL Server.
 
-**Acción 3:** Si recibes el error de no encontrar ensamblados, ejecuta primero el `dotnet build -c Release` del paso anterior y no mezcles configuraciones Debug/Release.
-
-**Acción 4:** Relaciona la prueba unitaria con el comportamiento observado en Swagger: una aserción sobre la clase Orden no sustituye la comprobación de HTTP y SQL Server.
-
-
-
-
-**Por qué se hace:** ejecutar todos los tests verifica que la solución compila y que las pruebas pasan. --no-build reutiliza la compilación anterior para ahorrar tiempo.
+ejecutar todos los tests verifica que la solución compila y que las pruebas pasan. --no-build reutiliza la compilación anterior para ahorrar tiempo.
 
 **Errores comunes:**
 
@@ -875,16 +601,9 @@ Este es el primer punto del curso. No hay punto anterior.
 
 ### Paso 23 — Revisar el .gitignore de la solución
 
-**Acción 1:** En la raíz de 1.1 abre el archivo ya preparado `.gitignore` mediante el Explorador de archivos o un editor que muestre archivos ocultos.
+En la raíz de 1.1 abre el archivo ya preparado `.gitignore` mediante el Explorador de archivos o un editor que muestre archivos ocultos. Revisa que excluye carpetas temporales `bin/`, `obj/`, `.vs/`, los ajustes de usuario y resultados generados, en vez de ignorar el código o la documentación del proyecto.
 
-**Acción 2:** Revisa que excluye carpetas temporales `bin/`, `obj/`, `.vs/`, los ajustes de usuario y resultados generados, en vez de ignorar el código o la documentación del proyecto.
-
-**Acción 3:** Desde la carpeta en que tengas el repositorio Git de trabajo ejecuta `git status --short` después de compilar; comprueba que no ofrece binarios ni archivos intermedios para commit.
-
-**Acción 4:** No sobreescribas el `.gitignore` si ya contiene esas exclusiones. Explica por qué el código fuente y los tests sí deben versionarse, pero los resultados compilados no.
-
-
-
+Desde la carpeta en que tengas el repositorio Git de trabajo ejecuta `git status --short` después de compilar; comprueba que no ofrece binarios ni archivos intermedios para commit. No sobreescribas el `.gitignore` si ya contiene esas exclusiones. Explica por qué el código fuente y los tests sí deben versionarse, pero los resultados compilados no.
 
 bin/
 obj/
@@ -893,10 +612,7 @@ obj/
 .vs/
 TestResults/
 
-
-
-
-**Por qué se hace:** se trabaja sobre el material proporcionado y se evita duplicar archivos o alterar el punto anterior.  el .gitignore evita que los artefactos de compilación y los archivos de usuario de Visual Studio se incluyan en el control de versiones.
+el .gitignore evita que los artefactos de compilación y los archivos de usuario de Visual Studio se incluyan en el control de versiones.
 
 **Errores comunes:**
 
@@ -910,20 +626,11 @@ TestResults/
 
 ### Paso 24 — Inicializar Git, hacer el commit inicial y verificar el estado final
 
-**Acción 1:** Utiliza una **copia personal de trabajo**, no el repositorio del profesor ni la rama oficial. Desde el directorio raíz de esa copia ejecuta `git status` para comprobar si Git ya está inicializado.
+Utiliza una **copia personal de trabajo**, no el repositorio del profesor ni la rama oficial. Desde el directorio raíz de esa copia ejecuta `git status` para comprobar si Git ya está inicializado. Solo si trabajas en una carpeta sin repositorio Git, inicializa con `git init`; si la carpeta ya proviene de `git clone`, **no** crees un repositorio anidado dentro de la etapa 1.1.
 
-**Acción 2:** Solo si trabajas en una carpeta sin repositorio Git, inicializa con `git init`; si la carpeta ya proviene de `git clone`, **no** crees un repositorio anidado dentro de la etapa 1.1.
+Ejecuta `git add` sobre los archivos que has trabajado y revisa `git diff --cached --stat` para evitar incluir compilados o secretos de conexión. Crea el commit con `git commit -m "Punto 1.1: estructura inicial del proyecto AceriaApp"`. Comprueba con `git log -1 --oneline` que existe ese commit y con `git status` que no quedan cambios imprevistos. Si el repositorio de trabajo contiene más módulos, confirma que no has incluido archivos de puntos futuros.
 
-**Acción 3:** Ejecuta `git add` sobre los archivos que has trabajado y revisa `git diff --cached --stat` para evitar incluir compilados o secretos de conexión. Crea el commit con `git commit -m "Punto 1.1: estructura inicial del proyecto AceriaApp"`.
-
-**Acción 4:** Comprueba con `git log -1 --oneline` que existe ese commit y con `git status` que no quedan cambios imprevistos. Si el repositorio de trabajo contiene más módulos, confirma que no has incluido archivos de puntos futuros.
-
-
-
-
-
-
-**Por qué se hace:** el commit inicial registra el estado del punto 1.1 en el historial de Git. Cada punto del curso tendrá su propio commit para facilitar la comparación.
+el commit inicial registra el estado del punto 1.1 en el historial de Git. Cada punto del curso tendrá su propio commit para facilitar la comparación.
 
 **Errores comunes:**
 
