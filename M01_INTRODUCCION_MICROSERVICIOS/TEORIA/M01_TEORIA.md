@@ -1421,11 +1421,13 @@ Módulo 1: Introducción a los microservicios
 
 ---
 
-## Desarrollo teórico
+## Elegir mecanismos que protegen un comportamiento real
 
-### Bloque 1 — Buenas prácticas como marco de calidad
+Ya sabemos distinguir responsabilidades y organizar sus componentes. Ahora necesitamos evitar que esa estructura se degrade cuando el sistema acepta peticiones, recibe repeticiones, responde a errores o evoluciona. Para cada mecanismo estudiaremos el riesgo al que responde, su expresión en código y la comprobación que faltaría para considerarlo realmente implantado.
 
-Las buenas prácticas son reglas de actuación que se aplican de forma sistemática en el desarrollo de un sistema. No son principios de diseño, que definen la estructura, ni patrones, que resuelven problemas recurrentes. Son hábitos de trabajo que reducen el coste de mantenimiento y aumentan la previsibilidad del resultado. En microservicios, las buenas prácticas se organizan en cuatro categorías: prácticas de contrato, prácticas de operación, prácticas de comunicación y prácticas de evolución. Cada categoría responde a un riesgo concreto del desarrollo distribuido. La aplicación sistemática de las cuatro categorías reduce los fallos más comunes en producción. Una buena práctica debe tener una condición de aplicación verificable. El validador de este punto comprueba que las categorías son admitidas y que los indicadores declarados son verdaderos, no inspecciona endpoints ni tráfico real.
+### Buenas prácticas como marco de calidad
+
+Una buena práctica no es una fórmula que pueda agregarse al final de cualquier clase: responde a un riesgo concreto que queremos controlar. En una aplicación que recibe órdenes, persiste datos y llega a hablar con otros servicios, esos riesgos aparecen en la superficie pública del contrato, en la ejecución de las operaciones, en la comunicación remota y en la evolución de las versiones. Cada ámbito requiere decisiones distintas. Publicar únicamente los campos necesarios evita filtrar el modelo interno; definir respuestas de error facilita que los consumidores actúen correctamente; gestionar peticiones repetidas protege los efectos de negocio; y mantener contratos compatibles reduce cambios simultáneos. A lo largo de este punto veremos ejemplos concretos y distinguiremos cuáles son conceptos que todavía no están programados en el monolito inicial. Una práctica se considera aplicada cuando su comportamiento puede observarse, no porque exista una clase con un nombre prometedor.
 
 ```text
 Categorías de buenas prácticas:
@@ -1436,12 +1438,8 @@ Categorías de buenas prácticas:
 4. Evolución    → cómo se cambia sin romper.
 ```
 
-**Lectura guiada del ejemplo**
+Las cuatro categorías son útiles para identificar la clase de riesgo de cada decisión. «Contrato» define lo que otros pueden conocer; «operación» protege la integridad y la respuesta del servicio; «comunicación» contempla fallos de dependencia; y «evolución» intenta conservar compatibilidad durante los cambios. No son cajones aislados: una petición repetida, por ejemplo, afecta a la vez al contrato y a la consistencia de la operación.
 
-- **Línea 1:** 1. Contrato → primera categoría, define el contrato público del servicio.
-- **Línea 2:** 2. Operación → segunda categoría, define cómo se ejecuta y se recupera.
-- **Línea 3:** 3. Comunicación → tercera categoría, define cómo se habla con otros.
-- **Línea 4:** 4. Evolución → cuarta categoría, define cómo se cambia sin romper.
 
 La primera categoría, contrato, agrupa las prácticas relacionadas con lo que el servicio expone. La segunda, operación, agrupa las prácticas relacionadas con la ejecución. La tercera, comunicación, agrupa las prácticas relacionadas con las llamadas a otros servicios. La cuarta, evolución, agrupa las prácticas relacionadas con el cambio. Las cuatro categorías se aplican de forma conjunta: un servicio con buen contrato pero mala operación falla en producción. Un servicio con buena operación pero mal contrato rompe a los consumidores. La aplicación conjunta es lo que produce un servicio de calidad. Por ejemplo, “usar idempotencia” solo se considera implantada cuando una misma clave enviada dos veces no crea dos órdenes y el resultado se conserva según un contrato definido. Esta distinción es esencial para interpretar los tests: una prueba del catálogo demuestra que filtra registros, pero no garantiza la presencia de timeouts o versionado.
 
@@ -1449,9 +1447,9 @@ La ausencia de buenas prácticas produce cuatro síntomas reconocibles. El prime
 
 ---
 
-### Bloque 2 — Buena práctica de contrato: exposición de DTOs
+### Buena práctica de contrato: exposición de DTOs
 
-La primera buena práctica de contrato es exponer DTOs específicos en lugar de entidades de dominio. Una entidad de dominio contiene la lógica y la estructura interna del servicio. Exponerla equivale a publicar la implementación interna como contrato público. Cualquier cambio en la entidad rompe a los consumidores. Un DTO, en cambio, es una proyección estable diseñada específicamente para el consumo externo. No contiene lógica ni referencias internas. Su única función es transportar datos. La separación entre entidad y DTO es la garantía de que el contrato público se mantiene estable aunque la implementación evolucione.
+Una entidad de dominio y la representación de una API cumplen funciones diferentes. La entidad debe proteger reglas y mantener estado válido según las decisiones del negocio; el DTO expresa los datos que un consumidor está autorizado a enviar o recibir. Si devolvemos directamente una entidad EF Core, un cambio en el modelo de persistencia puede modificar accidentalmente el contrato HTTP, y una propiedad interna podría quedar expuesta o resultar editable sin intención. En AceriaApp, `OrdenDto` sirve para separar lo que la API publica de lo que `Orden` utiliza internamente. Esta separación también abre la posibilidad de utilizar DTOs distintos para crear una orden y para consultarla: no todos los campos de salida deberían aceptarse en la entrada. La transformación entre ambos modelos debe ser explícita y verificable, especialmente cuando se incorporen nuevas reglas y propiedades.
 
 ```csharp
 // Entidad de dominio: no se expone.
@@ -1474,31 +1472,12 @@ public record OrdenDto(
     DateTime FechaCreacion);
 ```
 
-**Lectura guiada del ejemplo**
+El ejemplo presenta una entidad `Orden` con propiedades del modelo interno y un `OrdenDto` que deja fuera `Estado`. Esa diferencia permite decidir qué información debe publicarse y cuál se utiliza para controlar transiciones. La decisión real debería pasar por DTOs de entrada y salida adecuados: devolver `Estado` puede ser correcto en una consulta, aunque no debería significar que un cliente pueda asignarlo libremente al crear una orden.
 
-- **Línea 1:** // Entidad de dominio: no se expone. → comentario que indica que la entidad no se expone.
-- **Línea 2:** public class Orden → entidad de dominio.
-- **Línea 3:** { → abre el cuerpo de la clase.
-- **Línea 4:** public Guid Id { get; set; } → identificador de la orden.
-- **Línea 5:** public string Cliente { get; set; } = string.Empty; → nombre del cliente.
-- **Línea 6:** public string Material { get; set; } = string.Empty; → material solicitado.
-- **Línea 7:** public int Cantidad { get; set; } → cantidad solicitada.
-- **Línea 8:** public DateTime FechaCreacion { get; set; } → fecha de creación.
-- **Línea 9:** public EstadoOrden Estado { get; set; } → estado de la orden.
-- **Línea 10:** } → cierra el cuerpo de la clase.
-- **Línea 11:** // DTO público: se expone. → comentario que indica que el DTO se expone.
-- **Línea 12:** public record OrdenDto( → declara el contrato público inmutable.
-- **Línea 13:** Guid Id, → identificador de la orden.
-- **Línea 14:** string Cliente, → nombre del cliente.
-- **Línea 15:** string Material, → material solicitado.
-- **Línea 16:** int Cantidad, → cantidad solicitada.
-- **Línea 17:** DateTime FechaCreacion); → fecha de creación.
 
 La diferencia entre la entidad y el DTO no es solo de forma: la entidad puede cambiar sin romper el contrato, mientras que el DTO es el contrato. Si mañana la entidad Orden añade un campo Prioridad, el DTO sigue igual y los consumidores no se ven afectados. Si el DTO necesita el campo Prioridad, se crea un DTO nuevo o se versiona el contrato. La separación entre entidad y DTO es una inversión inicial que se recupera en el primer cambio de la entidad.
 
 Separar DTOs de entidades obliga a decidir cómo se realiza el mapeo entre representación pública y modelo interno. Esa transformación debe definir qué campos son de lectura, qué datos puede enviar el cliente y cuáles genera siempre el servidor. En Orden, el identificador y la fecha de creación no deberían quedar sujetos a valores arbitrarios del POST si representan decisiones del sistema. En una API pública, exponer directamente la entidad también puede generar problemas de sobrepublicación de propiedades futuras, referencias circulares o acoplamiento a atributos del ORM. Un DTO debe validarse como contrato estable y versionarse cuando cambie su significado. El fragmento de este bloque es conceptual: en el código fuente del punto 1.5 todavía no se crea OrdenDto ni se cambia el endpoint para usarlo. Esa implementación corresponde a una etapa posterior y no debe afirmarse como resultado de esta práctica.
-
-#### Profundización: diseñar DTOs de entrada y salida
 
 Separar la entidad de dominio del DTO resulta útil incluso cuando ambos contienen inicialmente campos idénticos. La entidad representa el estado y las reglas que la aplicación controla; el DTO representa información que el consumidor está autorizado a enviar o recibir. En una operación de creación de órdenes no debería ser el cliente quien determine el identificador final o la fecha de creación, porque esas propiedades pertenecen al servidor. Un `CrearOrdenRequest` podría contener cliente, material y cantidad, mientras `OrdenResponse` incluiría también el identificador y el estado asignados tras persistir. Esta distinción reduce sobreescrituras involuntarias y permite evolucionar la entidad sin cambiar inmediatamente el contrato.
 
@@ -1517,9 +1496,9 @@ El primer estado de AceriaApp recibe una entidad `Orden` directamente en el endp
 
 ---
 
-### Bloque 3 — Buena práctica de contrato: versionado en la URL
+### Buena práctica de contrato: versionado en la URL
 
-La segunda buena práctica de contrato es versionar el contrato público en la URL. El versionado permite que varias versiones del mismo contrato convivan durante un periodo de transición. Los consumidores migran a la nueva versión cuando pueden. El productor retira la versión antigua cuando ningún consumidor la usa. El versionado en la URL es más explícito y visible que el versionado por cabecera. La versión forma parte de la ruta y se identifica a simple vista. En el proyecto AceriaApp, los endpoints se versionan con el prefijo /api/v1/ para la primera versión estable.
+La versión de un contrato comunica una promesa a los consumidores: ciertas rutas, datos y reglas se mantendrán durante un periodo determinado. Situar `v1` en la URL es una estrategia sencilla de hacer visible esa promesa, aunque no es la única forma de versionar HTTP. Cuando aparezca un cambio incompatible, podrá ofrecerse una ruta `v2` mientras los clientes migran; eso implica mantener y probar ambas variantes el tiempo acordado. La dificultad no está en escribir un número en la ruta, sino en saber qué diferencia de comportamiento justifica una nueva versión y cómo detectaremos consumidores antiguos. Añadir un campo opcional suele ser menos costoso que cambiar el significado de un identificador, pero incluso los cambios aparentemente aditivos necesitan pruebas. En AceriaApp empezaremos por `/api/v1`, y el módulo de APIs REST desarrollará con más detalle su semántica.
 
 ```text
 Endpoints versionados:
@@ -1530,28 +1509,22 @@ POST /api/v1/ordenes
 GET  /api/v2/ordenes   ← versión futura, convive con v1
 ```
 
-**Lectura guiada del ejemplo**
+Las rutas muestran tres operaciones de la versión 1 y una futura versión 2 del recurso. `v1` y `v2` pueden convivir durante una migración, pero publicar una nueva ruta no sustituye un plan de compatibilidad ni pruebas que aseguren que los clientes antiguos siguen funcionando. El esquema no declara una implementación de `v2` en M01.
 
-- **Línea 1:** GET /api/v1/ordenes → primera versión del endpoint de lista.
-- **Línea 2:** GET /api/v1/ordenes/{id} → primera versión del endpoint de detalle.
-- **Línea 3:** POST /api/v1/ordenes → primera versión del endpoint de creación.
-- **Línea 4:** GET /api/v2/ordenes → versión futura que convive con la v1.
 
-El versionado en la URL tiene dos consecuencias prácticas. La primera es que el enrutamiento se resuelve con un prefijo explícito, sin lógica condicional. La segunda es que el consumidor declara explícitamente qué versión usa. La combinación de las dos consecuencias facilita la detección de consumidores obsoletos: el productor puede contar cuántas peticiones recibe cada versión y decidir cuándo retirar la antigua. El versionado en la URL es la práctica más adoptada en el ecosistema .NET y la que el curso aplica. Para evaluar buena práctica de contrato: versionado en la URL conviene registrar el resultado observable y la restricción de negocio que motiva el cambio, antes de introducir infraestructura adicional.
+El versionado en la URL tiene dos consecuencias prácticas. La primera es que el enrutamiento se resuelve con un prefijo explícito, sin lógica condicional. La segunda es que el consumidor declara explícitamente qué versión usa. La combinación de las dos consecuencias facilita la detección de consumidores obsoletos: el productor puede contar cuántas peticiones recibe cada versión y decidir cuándo retirar la antigua. El versionado en la URL es la práctica más adoptada en el ecosistema .NET y la que el curso aplica. 
 
 El prefijo /api/v1 ofrece una convención visible, pero no permite automáticamente mantener dos versiones. Para que /api/v2 conviva con la anterior deben existir rutas, transformaciones de datos y pruebas que comprueben el contrato de cada versión. También es necesario definir qué cambios admiten evolución compatible sin incrementar la versión mayor; añadir propiedades opcionales puede bastar si los consumidores toleran los campos desconocidos. Cuando un campo modifica su significado, mantener el nombre puede ser más peligroso que introducir una versión explícita. En AceriaApp el endpoint inicial ya incorpora /api/v1, pero todavía no existe una segunda versión. El material debe distinguir la práctica ya visible en el proyecto del diseño recomendado para el futuro. Las estadísticas de uso por versión permiten planificar la retirada de contratos antiguos con evidencias en lugar de suposiciones.
 
 ---
 
-### Bloque 4 — Buena práctica de operación: idempotencia
-
-**Esquema visual del concepto**
+### Buena práctica de operación: idempotencia
 
 ![Flujo de dos solicitudes con la misma clave de idempotencia](figuras/05-idempotencia.png)
 
 *Figura. Flujo de dos solicitudes con la misma clave de idempotencia.*
 
-La primera buena práctica de operación es la idempotencia. Una operación es idempotente cuando ejecutarla varias veces produce el mismo resultado que ejecutarla una vez. La idempotencia es esencial en sistemas distribuidos porque las llamadas de red pueden duplicarse por reintentos. Sin idempotencia, un reintento puede crear dos órdenes en lugar de una. La idempotencia se implementa con un identificador de operación único que el servicio comprueba antes de ejecutar. Si el identificador ya existe, el servicio devuelve el resultado anterior sin ejecutar la operación de nuevo.
+Los reintentos son inevitables en sistemas donde una respuesta puede perderse aunque la operación se haya ejecutado. Si un cliente envía una orden y agota su espera, quizá intente crearla otra vez; un servidor que no reconoce la repetición puede terminar almacenando dos órdenes. La **idempotencia** describe que repetir una operación no multiplica su efecto sobre el estado observable. HTTP ya define métodos con distintas propiedades de idempotencia, pero crear recursos mediante POST requiere normalmente un mecanismo adicional: por ejemplo, una clave de operación generada por el cliente y almacenada junto al resultado. El reto es que la protección funcione incluso cuando lleguen dos peticiones simultáneas o existan varias réplicas de la API. El ejemplo del apartado permite reconocer la idea, pero no representa todavía una implementación completa ni forma parte del código ejecutable de la primera etapa de AceriaApp.
 
 ```csharp
 app.MapPost("/api/v1/ordenes", async (
@@ -1578,35 +1551,12 @@ app.MapPost("/api/v1/ordenes", async (
 });
 ```
 
-**Lectura guiada del ejemplo**
+El endpoint consulta una clave de idempotencia antes de insertar una orden. Esa comprobación explica la intención de devolver el recurso ya creado cuando la clave se repite. No obstante, una consulta seguida de inserción **no es segura ante concurrencia**: necesita un índice único, tratamiento transaccional del conflicto y una política sobre reutilización de claves con cuerpos diferentes. Además, la entidad `Orden` usada en las primeras prácticas no incorpora `IdempotencyKey`, por lo que este código no se debe pegar sin completar el modelo.
 
-- **Línea 1:** app.MapPost("/api/v1/ordenes", async ( → declara el endpoint POST.
-- **Línea 2:** AceriaDbContext db, → inyecta el contexto de base de datos.
-- **Línea 3:** Orden orden, → recibe la orden del cuerpo.
-- **Línea 4:** [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey) => → lee la cabecera de idempotencia.
-- **Línea 5:** { → abre el cuerpo del lambda.
-- **Línea 6:** if (!string.IsNullOrWhiteSpace(idempotencyKey)) → comprueba si hay clave.
-- **Línea 7:** { → abre el bloque de comprobación.
-- **Línea 8:** var existente = await db.Ordenes → consulta la orden existente.
-- **Línea 9:** .FirstOrDefaultAsync(o => o.IdempotencyKey == idempotencyKey); → filtra por clave.
-- **Línea 10:** if (existente is not null) → si ya existe.
-- **Línea 11:** { → abre el bloque de retorno.
-- **Línea 12:** return Results.Ok(existente); → devuelve la orden existente con 200.
-- **Línea 13:** } → cierra el bloque de retorno.
-- **Línea 14:** } → cierra el bloque de comprobación.
-- **Línea 15:** orden.Id = Guid.NewGuid(); → asigna un identificador nuevo.
-- **Línea 16:** orden.IdempotencyKey = idempotencyKey; → guarda la clave de idempotencia.
-- **Línea 17:** orden.FechaCreacion = DateTime.UtcNow; → asigna la fecha de creación.
-- **Línea 18:** db.Ordenes.Add(orden); → añade la orden al contexto.
-- **Línea 19:** await db.SaveChangesAsync(); → persiste los cambios.
-- **Línea 20:** return Results.Created($"/api/v1/ordenes/{orden.Id}", orden); → devuelve 201 con la ubicación.
-- **Línea 21:** }); → cierra el lambda.
 
-La idempotencia no se aplica a todas las operaciones: solo a las que crean o modifican estado. Las operaciones de lectura son idempotentes por definición. Las operaciones de borrado pueden ser idempotentes si el resultado es el mismo cuando el recurso ya no existe. La idempotencia de las operaciones de creación es la más crítica porque un duplicado produce un recurso duplicado. La clave de idempotencia se genera en el cliente y se envía en la cabecera. El servidor la comprueba y decide si ejecuta o devuelve el resultado anterior.
+La idempotencia es una propiedad de la operación, no un mecanismo reservado al POST. Según la semántica HTTP, GET y PUT son idempotentes, y DELETE lo es respecto al estado que deja la eliminación; las respuestas a sucesivas llamadas no tienen por qué ser idénticas. Un POST de creación requiere una protección adicional cuando deben evitarse efectos duplicados. La idempotencia de las operaciones de creación es la más crítica porque un duplicado produce un recurso duplicado. La clave de idempotencia se genera en el cliente y se envía en la cabecera. El servidor la comprueba y decide si ejecuta o devuelve el resultado anterior.
 
 La idempotencia de un POST exige protección frente a concurrencia. Si dos solicitudes con la misma clave llegan al mismo tiempo, consultar primero y luego insertar puede permitir dos filas cuando ambas consultas observan que todavía no existe el registro. El almacenamiento necesita una restricción única sobre la clave dentro de su ámbito de validez y una gestión transaccional del conflicto. También debe definirse qué ocurre cuando una misma clave acompaña cargas de contenido distintas: devolver un error de conflicto suele ser más seguro que reutilizar silenciosamente una respuesta no relacionada. La repetición debe preservar la semántica acordada del resultado, incluida la identidad del recurso creado. En el módulo 1 el ejemplo presenta el algoritmo básico; la entidad Orden del proyecto no tiene IdempotencyKey ni se añade este endpoint idempotente. Por ello sería incorrecto afirmarlo como capacidad implementada al cerrar 1.5.
-
-#### Profundización: idempotencia segura ante peticiones concurrentes
 
 Consultar primero si existe una orden con una clave de idempotencia es un buen punto de partida conceptual, pero no garantiza por sí solo ausencia de duplicados. Dos peticiones concurrentes pueden ejecutar la consulta cuando la clave todavía no está registrada y ambas intentar insertar. Si la base de datos no aplica una restricción de unicidad, las dos operaciones pueden confirmarse. Por ello una implementación robusta necesita combinar un identificador estable de operación con una garantía de persistencia: índice único sobre la clave dentro de su ámbito, transacción adecuada y tratamiento del conflicto de inserción. Además debe definirse durante cuánto tiempo se conserva el resultado de una operación y qué ocurre si se reutiliza la clave con un cuerpo de petición distinto.
 
@@ -1625,9 +1575,9 @@ El bloque de código original ilustra una búsqueda por clave, pero la entidad `
 
 ---
 
-### Bloque 5 — Buena práctica de operación: gestión explícita de errores
+### Buena práctica de operación: gestión explícita de errores
 
-La segunda buena práctica de operación es la gestión explícita de errores mediante códigos de respuesta HTTP y problem details. La gestión implícita devuelve siempre 200 o 500 sin información útil. La gestión explícita devuelve el código adecuado a cada situación: 400 para errores de validación, 404 para recursos no encontrados, 409 para conflictos, 422 para entidades no procesables, 500 para errores internos. El cuerpo del error sigue el formato problem details definido en la RFC 7807. Este formato incluye el tipo del error, el título, el código de estado y el detalle. La adopción del formato facilita el consumo uniforme por parte de los clientes.
+Una respuesta HTTP tiene significado para quien consume la API. Un `201 Created` informa de que se creó un recurso y puede indicar su ubicación; un `400 Bad Request` identifica una solicitud inválida; un `409 Conflict` puede expresar una transición incompatible con el estado actual. Si se devuelve siempre un 200 con un texto libre o un 500 ante cualquier situación, el cliente no puede reaccionar con seguridad. `ProblemDetails` ofrece una estructura conocida para describir fallos, pero su utilidad depende de elegir códigos coherentes y mensajes que no revelen datos privados. Una validación de cliente vacío corresponde a un error de entrada, no a un fallo inesperado de infraestructura. En AceriaApp se utilizará esta distinción para que el alumno pueda interpretar las pruebas HTTP y no limitarse a comprobar que el servidor respondió de alguna forma.
 
 ```csharp
 app.MapPost("/api/v1/ordenes", async (AceriaDbContext db, Orden orden) =>
@@ -1648,29 +1598,12 @@ app.MapPost("/api/v1/ordenes", async (AceriaDbContext db, Orden orden) =>
 });
 ```
 
-**Lectura guiada del ejemplo**
+El fragmento valida que `Cliente` no esté vacío y devuelve un `ProblemDetails` con el estado 400 cuando falla. Si la entrada es válida, guarda la orden y responde 201 con una ubicación. Este contraste muestra cómo una condición de negocio puede traducirse al contrato HTTP; para utilizarlo en una API real deben añadirse las demás validaciones y el tratamiento de excepciones no previstas.
 
-- **Línea 1:** app.MapPost("/api/v1/ordenes", async (AceriaDbContext db, Orden orden) => → declara el endpoint POST.
-- **Línea 2:** { → abre el cuerpo del lambda.
-- **Línea 3:** if (string.IsNullOrWhiteSpace(orden.Cliente)) → valida el campo Cliente.
-- **Línea 4:** { → abre el bloque de error.
-- **Línea 5:** return Results.Problem( → devuelve un problem details.
-- **Línea 6:** title: "Cliente requerido", → título del error.
-- **Línea 7:** detail: "El campo Cliente no puede estar vacío.", → detalle del error.
-- **Línea 8:** statusCode: StatusCodes.Status400BadRequest); → código 400.
-- **Línea 9:** } → cierra el bloque de error.
-- **Línea 10:** orden.Id = Guid.NewGuid(); → asigna el identificador.
-- **Línea 11:** orden.FechaCreacion = DateTime.UtcNow; → asigna la fecha.
-- **Línea 12:** db.Ordenes.Add(orden); → añade al contexto.
-- **Línea 13:** await db.SaveChangesAsync(); → persiste.
-- **Línea 14:** return Results.Created($"/api/v1/ordenes/{orden.Id}", orden); → devuelve 201.
-- **Línea 15:** }); → cierra el lambda.
 
-La gestión explícita de errores tiene dos consecuencias prácticas. La primera es que el cliente sabe exactamente qué ha fallado. La segunda es que el soporte puede reproducir el error con el código y el detalle. La adopción del formato problem details evita la duplicación de estructuras de error y facilita la integración con herramientas de monitorización. El curso aplica este formato en todos los endpoints que devuelven errores. Para evaluar buena práctica de operación: gestión explícita de errores conviene registrar el resultado observable y la restricción de negocio que motiva el cambio, antes de introducir infraestructura adicional.
+La gestión explícita de errores tiene dos consecuencias prácticas. La primera es que el cliente sabe exactamente qué ha fallado. La segunda es que el soporte puede reproducir el error con el código y el detalle. La adopción del formato problem details evita la duplicación de estructuras de error y facilita la integración con herramientas de monitorización. El curso aplica este formato en todos los endpoints que devuelven errores. 
 
 Los códigos HTTP deben distinguir situaciones diferentes del negocio. Un 400 indica que la solicitud no puede aceptarse por sus datos o formato; un 404 que el recurso solicitado no existe; un 409 que la operación entra en conflicto con el estado actual; un 500 que se produjo un fallo interno no esperado. El cuerpo Problem Details debe ofrecer información útil sin filtrar detalles internos, rutas sensibles ni credenciales. La especificación vigente RFC 9457 actualiza RFC 7807; ambos nombres pueden encontrarse en materiales anteriores. El ejemplo de Results.Problem ilustra una respuesta estructurada, pero no prueba que todos los endpoints manejen errores de esa manera. Una prueba de integración adecuada envía una petición inválida y comprueba el status code, el tipo de contenido y los campos devueltos. El validador declarativo de buenas prácticas no sustituye esta prueba.
-
-#### Profundización: errores HTTP como contrato funcional
 
 El formato *Problem Details* permite que clientes distintos interpreten los errores de forma uniforme. No basta con devolver un JSON que contenga un mensaje libre: el código HTTP, el título y el detalle deben representar una situación real y estable. Un recurso inexistente se asocia normalmente con 404, una entrada inválida con 400 y un conflicto de estado con 409. Un fallo inesperado del servidor no debe exponerse al cliente mediante detalles sensibles de la excepción interna. El mensaje público describe el problema que el consumidor puede entender; el log interno registra la excepción, la correlación y los datos necesarios para diagnóstico seguro.
 
@@ -1688,9 +1621,9 @@ Una prueba HTTP comprueba algo distinto de un test unitario que devuelve `null` 
 
 ---
 
-### Bloque 6 — Buena práctica de comunicación: timeouts y reintentos
+### Buena práctica de comunicación: timeouts y reintentos
 
-La primera buena práctica de comunicación es configurar timeouts y reintentos controlados en todas las llamadas a otros servicios. Un timeout evita que una llamada bloquee el servicio indefinidamente. Un reintento recupera errores transitorios. La combinación de ambos reduce la tasa de fallo observada sin añadir complejidad al código. Los timeouts se configuran con valores inferiores al tiempo máximo que el cliente está dispuesto a esperar. Los reintentos se configuran con retroceso exponencial para no saturar al servicio destino. La política se aplica de forma uniforme a todas las llamadas externas.
+Cuando Producción consulte Inventario, la duración de esa llamada debe estar acotada. Un timeout limita cuánto puede esperar un intento; un presupuesto de tiempo del caso de uso debe contemplar también reintentos y el trabajo anterior y posterior a la consulta. Repetir indiscriminadamente una operación solo porque una excepción parece transitoria puede amplificar la carga del servicio remoto y empeorar una caída. Para consultas idempotentes es posible establecer un número pequeño de intentos con una espera creciente; para escrituras hay que comprobar antes que no se duplicarán efectos. El ejemplo de Polly ilustra la mecánica de una política, pero no incorpora todas las decisiones necesarias en producción. Más adelante el curso empleará clientes HTTP configurados y políticas de resiliencia que puedan probarse contra fallos simulados y dependencias reales.
 
 ```csharp
 var policy = Policy
@@ -1708,26 +1641,12 @@ var response = await policy.ExecuteAsync(() =>
     httpClient.GetAsync("http://acería-inventario/api/v1/materiales"));
 ```
 
-**Lectura guiada del ejemplo**
+La política introduce hasta tres reintentos con intervalos exponenciales calculados a partir del número de intento. `HttpClient.Timeout` establece un límite para cada llamada, pero no garantiza por sí solo que el presupuesto total de varios intentos sea aceptable. Tampoco contempla todas las respuestas HTTP de error. En ASP.NET Core real conviene configurar clientes mediante `IHttpClientFactory` y definir explícitamente qué operaciones permiten reintentos.
 
-- **Línea 1:** var policy = Policy → comienza la definición de la política.
-- **Línea 2:** .Handle<HttpRequestException>() → se activa ante errores HTTP.
-- **Línea 3:** .WaitAndRetryAsync( → configura reintentos con espera.
-- **Línea 4:** retryCount: 3, → hasta tres reintentos.
-- **Línea 5:** sleepDurationProvider: attempt => TimeSpan.FromMilliseconds(200 * Math.Pow(2, attempt)), → retroceso exponencial.
-- **Línea 6:** onRetry: (exception, delay, attempt, _) => → acción en cada reintento.
-- **Línea 7:** { → abre el bloque de la acción.
-- **Línea 8:** Console.WriteLine($"Reintento {attempt} tras {delay.TotalMilliseconds} ms"); → registra el reintento.
-- **Línea 9:** }); → cierra la política.
-- **Línea 10:** var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(5) }; → crea el cliente con timeout.
-- **Línea 11:** var response = await policy.ExecuteAsync(() => → ejecuta bajo la política.
-- **Línea 12:** httpClient.GetAsync("http://acería-inventario/api/v1/materiales")); → llamada al servicio de inventario.
 
-La configuración de timeouts y reintentos no es opcional en sistemas distribuidos. La latencia de red es variable y los errores transitorios son frecuentes. Un servicio sin timeouts puede bloquearse indefinidamente. Un servicio sin reintentos propaga errores transitorios como fallos definitivos. La combinación de ambos reduce la tasa de fallo observada sin añadir complejidad al código. La política se aplica en un solo lugar y se reutiliza en todas las llamadas externas del servicio. Para evaluar buena práctica de comunicación: timeouts y reintentos conviene registrar el resultado observable y la restricción de negocio que motiva el cambio, antes de introducir infraestructura adicional.
+La configuración de timeouts y reintentos no es opcional en sistemas distribuidos. La latencia de red es variable y los errores transitorios son frecuentes. Un servicio sin timeouts puede bloquearse indefinidamente. Un servicio sin reintentos propaga errores transitorios como fallos definitivos. La combinación de ambos reduce la tasa de fallo observada sin añadir complejidad al código. La política se aplica en un solo lugar y se reutiliza en todas las llamadas externas del servicio. 
 
 Una estrategia de reintentos debe controlar el presupuesto global de latencia. Tres intentos con timeout de cinco segundos pueden mantener al cliente esperando mucho más de cinco segundos si el límite se aplica a cada intento por separado. El intervalo exponencial presentado crece según las potencias de dos, pero debe completarse con una pequeña variación aleatoria cuando muchos clientes puedan reintentar simultáneamente. Es importante decidir qué estados HTTP ameritan reintento; una validación fallida no es transitoria, mientras un 503 puede reflejar sobrecarga recuperable. El cliente HTTP también debe crearse y reutilizarse mediante IHttpClientFactory cuando corresponda, en lugar de instanciar uno por petición. Los fragmentos Polly de este bloque son ejemplos de diseño. El proyecto del módulo 1 no registra un HttpClient externo ni prueba políticas de comunicación entre microservicios.
-
-#### Profundización: presupuestos temporales y seguridad de los reintentos
 
 Timeout y reintento resuelven problemas diferentes. El timeout establece cuánto puede esperar una operación antes de abandonar la llamada; el reintento determina si vale la pena iniciar una petición nueva tras un fallo elegible. Si se configura un timeout de cinco segundos y se permiten tres reintentos completos, la duración máxima observable puede exceder ampliamente esos cinco segundos porque el límite se aplica a cada intento y además existen esperas entre ellos. Una política responsable define un presupuesto global de la operación y comprueba que los reintentos caben dentro de él. Ese presupuesto debe ser coherente con el límite de espera del consumidor final.
 
@@ -1740,9 +1659,9 @@ En la teoría de AceriaApp, los fragmentos con Polly muestran la sintaxis de las
 
 ---
 
-### Bloque 7 — Buena práctica de comunicación: circuit breaker
+### Buena práctica de comunicación: circuit breaker
 
-La segunda buena práctica de comunicación es el circuit breaker. Un circuit breaker es un mecanismo que abre el circuito cuando el servicio destino falla de forma repetida y lo cierra cuando se recupera. Mientras el circuito está abierto, las llamadas fallan inmediatamente sin intentar contactar con el destino. Esta falla rápida evita que el servicio origen se sature esperando respuestas que no van a llegar. El circuit breaker se configura con dos parámetros: el número de fallos que abren el circuito y el tiempo que permanece abierto. La combinación de ambos parámetros determina la sensibilidad del mecanismo.
+Un circuit breaker protege al consumidor cuando una dependencia empieza a fallar repetidamente. Mientras el circuito está abierto, nuevas llamadas no intentan acceder al destino, sino que reciben inmediatamente una señal de indisponibilidad; después se permite comprobar si se ha recuperado. Esto evita que cada nueva petición consuma conexiones y tiempo esperando a un servicio del que ya existen suficientes señales de fallo. No se trata de reparar mágicamente Inventario ni de fabricar una respuesta válida. En una operación de consulta podría existir un comportamiento alternativo claramente identificado; para una planificación que necesita confirmar una regla de negocio, quizá debamos rechazar la solicitud. El umbral de apertura, la duración y el ámbito compartido del circuito afectan al comportamiento real. El fragmento muestra una configuración conceptual que tendrá que contrastarse con pruebas cuando el sistema incorpore comunicación entre procesos.
 
 ```csharp
 var circuitBreaker = Policy
@@ -1760,21 +1679,8 @@ var circuitBreaker = Policy
         });
 ```
 
-**Lectura guiada del ejemplo**
+El breaker se abre después de alcanzar el umbral de excepciones configuradas y mantiene temporalmente interrumpidas las llamadas protegidas. `onBreak` y `onReset` muestran transiciones del estado del circuito, no el restablecimiento de la dependencia remota. Las pruebas posteriores deberán comprobar tanto la protección del consumidor como la recuperación cuando Inventario vuelva a responder.
 
-- **Línea 1:** var circuitBreaker = Policy → comienza la definición de la política.
-- **Línea 2:** .Handle<HttpRequestException>() → se activa ante errores HTTP.
-- **Línea 3:** .CircuitBreakerAsync( → configura el circuit breaker.
-- **Línea 4:** exceptionsAllowedBeforeBreaking: 3, → tres errores antes de abrir.
-- **Línea 5:** durationOfBreak: TimeSpan.FromSeconds(30), → permanece abierto .
-- **Línea 6:** onBreak: (exception, timespan) => → acción al abrir el circuito.
-- **Línea 7:** { → abre el bloque de la acción.
-- **Línea 8:** Console.WriteLine($"Circuito abierto durante {timespan.TotalSeconds} s"); → registra la apertura.
-- **Línea 9:** }, → cierra el bloque.
-- **Línea 10:** onReset: () => → acción al cerrar el circuito.
-- **Línea 11:** { → abre el bloque de la acción.
-- **Línea 12:** Console.WriteLine("Circuito cerrado de nuevo"); → registra el cierre.
-- **Línea 13:** }); → cierra la política.
 
 El circuit breaker se combina con el reintento y con el timeout para formar una política completa de resiliencia. El reintento recupera errores transitorios. El timeout evita bloqueos indefinidos. El circuit breaker evita la saturación cuando el destino falla de forma sostenida. Las tres políticas se aplican en capas: primero el timeout, después el reintento, después el circuit breaker. El orden de aplicación determina el comportamiento observado. El curso introduce el circuit breaker en el módulo 7 con detalle; en el módulo 1 se presenta como buena práctica.
 
@@ -1782,9 +1688,9 @@ Un circuit breaker puede tener estados cerrado, abierto y de prueba de recuperac
 
 ---
 
-### Bloque 8 — Buena práctica de evolución: contratos compatibles
+### Buena práctica de evolución: contratos compatibles
 
-La primera buena práctica de evolución es mantener la compatibilidad de los contratos públicos. Un contrato es compatible hacia atrás cuando los consumidores antiguos siguen funcionando con la nueva versión del productor. La compatibilidad se mantiene añadiendo campos opcionales en lugar de obligatorios, evitando eliminar campos existentes y evitando cambiar el tipo de los campos. Un cambio incompatible requiere una nueva versión del contrato. La compatibilidad hacia atrás es la garantía de que el productor puede evolucionar sin romper a los consumidores. La decisión sobre buena práctica de evolución: contratos compatibles debe diferenciar lo que el ejemplo ilustra de lo que la aplicación implementa realmente en esta etapa. Para evaluar buena práctica de evolución: contratos compatibles conviene registrar el resultado observable y la restricción de negocio que motiva el cambio, antes de introducir infraestructura adicional.
+Un productor de API debe pensar en sus consumidores cuando modifica un contrato. Añadir un campo opcional suele permitir que clientes antiguos continúen funcionando, pero no siempre: un cliente que deserializa de forma estricta o un valor nuevo de un enum no previsto pueden provocar errores. Eliminar un campo obligatorio, cambiar un tipo o reinterpretar su significado suele requerir una nueva versión o una migración coordinada. La compatibilidad también puede romperse sin cambiar el JSON, por ejemplo al endurecer una validación o alterar el orden de operaciones de un flujo. Para AceriaApp resulta útil escribir pruebas de contrato que simulen a un consumidor anterior y comprueben que sigue comprendiendo las respuestas. La evolución independiente empieza por diseñar cambios que no obliguen a publicar todos los componentes a la vez.
 
 ```text
 Cambios compatibles:
@@ -1801,21 +1707,12 @@ Cambios incompatibles:
 - Eliminar un endpoint.
 ```
 
-**Lectura guiada del ejemplo**
+La clasificación muestra cambios habitualmente compatibles y otros que suelen romper consumidores. Hay una excepción importante: añadir un valor a un enum puede ser incompatible con clientes que tratan exhaustivamente todos los valores; de forma semejante, un campo aparentemente opcional puede alterar validaciones o decisiones del cliente. Por eso la lista es una guía para preparar pruebas, no una garantía de compatibilidad.
 
-- **Línea 1:** + Añadir campo opcional al DTO. → cambio compatible.
-- **Línea 2:** + Añadir nuevo endpoint. → cambio compatible.
-- **Línea 3:** + Añadir nuevo valor a un enum existente. → puede romper consumidores con enumeraciones cerradas.
-- **Línea 4:** - Eliminar campo del DTO. → cambio incompatible.
-- **Línea 5:** - Cambiar tipo de campo del DTO. → cambio incompatible.
-- **Línea 6:** - Cambiar el significado de un campo existente. → cambio incompatible.
-- **Línea 7:** - Eliminar un endpoint. → cambio incompatible.
 
-La compatibilidad de contratos se verifica con tests que consumen la versión antigua y comprueban que siguen funcionando. Estos tests se ejecutan en el pipeline antes de publicar una nueva versión. Si un test falla, el cambio es incompatible y requiere una nueva versión del contrato. La verificación automática evita que un cambio incompatible llegue a producción. El curso introduce los tests de compatibilidad en el módulo 2 con detalle; en el módulo 1 se presenta como buena práctica. Para evaluar buena práctica de evolución: contratos compatibles conviene registrar el resultado observable y la restricción de negocio que motiva el cambio, antes de introducir infraestructura adicional.
+La compatibilidad de contratos se verifica con tests que consumen la versión antigua y comprueban que siguen funcionando. Estos tests se ejecutan en el pipeline antes de publicar una nueva versión. Si un test falla, el cambio es incompatible y requiere una nueva versión del contrato. La verificación automática evita que un cambio incompatible llegue a producción. El curso introduce los tests de compatibilidad en el módulo 2 con detalle; en el módulo 1 se presenta como buena práctica. 
 
 La compatibilidad hacia atrás depende de cómo interpreten los clientes los cambios. Añadir un valor a un enum puede ser incompatible para consumidores que utilicen una selección exhaustiva de casos o que rechacen valores desconocidos, de modo que no debe clasificarse universalmente como seguro. Añadir un campo opcional suele ser menos arriesgado, siempre que no modifique el significado de los campos existentes. Un test de contrato debería construir peticiones con un cliente antiguo contra una versión nueva del productor y comparar los resultados relevantes. Los cambios de esquema de datos también requieren compatibilidad durante el despliegue gradual de varias instancias. En AceriaApp el módulo 1 explica estas reglas, pero no aporta aún una suite de pruebas de compatibilidad HTTP. La declaración de buenas prácticas no debe confundirse con evidencia de compatibilidad real; esa verificación se abordará al desarrollar las APIs.
-
-#### Profundización: cambios aditivos y compatibilidad de clientes
 
 Añadir un campo opcional a una respuesta suele ser más seguro que eliminar uno, pero la compatibilidad depende del consumidor. Algunos clientes ignoran campos desconocidos; otros usan validadores estrictos o generan clases que rechazan diferencias. Añadir un valor a un enumerado también puede afectar a un cliente que asume conocer todas las alternativas y falla al recibir un valor nuevo. Por tanto, la compatibilidad hacia atrás debe definirse respecto a consumidores concretos y comprobarse con pruebas reales. Una tabla orientativa de cambios ayuda a razonar, pero no reemplaza la verificación de comportamientos en cada integración.
 
@@ -1828,9 +1725,9 @@ La prueba de compatibilidad debe ejercitar un cliente que conozca el contrato an
 
 ---
 
-### Bloque 9 — Buena práctica de evolución: documentación viva
+### Buena práctica de evolución: documentación viva
 
-La segunda buena práctica de evolución es mantener la documentación viva. La documentación viva se genera a partir del código y se actualiza automáticamente. OpenAPI es el estándar para documentar APIs REST. La documentación se publica junto con el servicio y se mantiene sincronizada con el código. Los consumidores consultan la documentación para conocer los contratos y los endpoints disponibles. La documentación viva evita la documentación obsoleta que describe APIs que ya no existen.
+La documentación es útil cuando coincide con la aplicación que se está ejecutando. OpenAPI permite describir rutas, parámetros, esquemas y respuestas de una API ASP.NET Core; Swagger UI facilita explorarlos y realizar peticiones durante el desarrollo. Pero publicar una especificación no demuestra por sí solo que el comportamiento se cumpla: una ruta puede figurar en el documento y devolver errores inesperados o no persistir los datos. La documentación viva requiere mantener sincronizados contrato y ejecución mediante generación, pruebas y revisión. En AceriaApp seguiremos el recorrido desde una definición de endpoint hasta una petición real y su resultado; el alumno tendrá que reconocer qué parte del contrato queda documentada automáticamente y cuáles decisiones semánticas necesitan explicarse por escrito.
 
 ```csharp
 builder.Services.AddEndpointsApiExplorer();
@@ -1851,29 +1748,12 @@ app.UseSwaggerUI(options =>
 });
 ```
 
-**Lectura guiada del ejemplo**
+El registro de `AddEndpointsApiExplorer` y `AddSwaggerGen` permite construir un documento OpenAPI de la API; `UseSwagger` y `UseSwaggerUI` lo exponen para consulta durante el desarrollo. Esa configuración debe ajustarse al entorno y a la tecnología de documentación elegida. El documento describe la superficie HTTP, mientras que las pruebas siguen siendo necesarias para comprobar el comportamiento real de las operaciones.
 
-- **Línea 1:** builder.Services.AddEndpointsApiExplorer(); → habilita la exploración de endpoints.
-- **Línea 2:** builder.Services.AddSwaggerGen(options => → registra el generador de Swagger.
-- **Línea 3:** { → abre el bloque de configuración.
-- **Línea 4:** options.SwaggerDoc("v1", new OpenApiInfo → declara el documento de la versión 1.
-- **Línea 5:** { → abre el bloque de información.
-- **Línea 6:** Title = "AceriaApp.Ordenes.Api", → título de la API.
-- **Línea 7:** Version = "v1", → versión del contrato.
-- **Línea 8:** Description = "API de gestión de órdenes de producción." → descripción.
-- **Línea 9:** }); → cierra el bloque.
-- **Línea 10:** }); → cierra la configuración.
-- **Línea 11:** app.UseSwagger(); → habilita el endpoint de Swagger.
-- **Línea 12:** app.UseSwaggerUI(options => → habilita la interfaz gráfica.
-- **Línea 13:** { → abre el bloque de configuración.
-- **Línea 14:** options.SwaggerEndpoint("/swagger/v1/swagger.json", "AceriaApp.Ordenes.Api v1"); → declara el endpoint del JSON.
-- **Línea 15:** }); → cierra el bloque.
 
-La documentación viva tiene dos consecuencias prácticas. La primera es que el contrato público está siempre actualizado porque se genera a partir del código. La segunda es que los consumidores pueden probar los endpoints directamente desde la interfaz gráfica. La combinación de ambas reduce el tiempo de integración entre servicios. La documentación se versiona con el código y se publica con el servicio. El curso usa OpenAPI con Swagger en todos los servicios. Para evaluar buena práctica de evolución: documentación viva conviene registrar el resultado observable y la restricción de negocio que motiva el cambio, antes de introducir infraestructura adicional.
+La documentación viva tiene dos consecuencias prácticas. La primera es que el contrato público está siempre actualizado porque se genera a partir del código. La segunda es que los consumidores pueden probar los endpoints directamente desde la interfaz gráfica. La combinación de ambas reduce el tiempo de integración entre servicios. La documentación se versiona con el código y se publica con el servicio. El curso usa OpenAPI con Swagger en todos los servicios. 
 
 OpenAPI se genera a partir de la configuración y los metadatos del servicio, por lo que su calidad depende de que estén declaradas rutas, tipos de respuesta y posibles errores. Swagger UI facilita la exploración, pero no garantiza por sí sola que los ejemplos se correspondan con las validaciones reales del endpoint. El documento debe publicarse de forma coherente con la configuración de seguridad y con el entorno de despliegue. En producción puede decidirse restringir la interfaz de pruebas mientras se mantiene una especificación consumible por herramientas autorizadas. El bloque utiliza OpenApiInfo, que requiere el espacio de nombres y paquete adecuados cuando se compila como ejemplo. En el proyecto 1.1 se registra Swagger para GET y POST básicos; en el 1.5 no se amplía con el catálogo de contratos futuros. La documentación del código publicado debe reflejar esa diferencia.
-
-#### Profundización: documentación OpenAPI y comportamiento ejecutado
 
 La documentación OpenAPI no se mantiene actualizada por el mero hecho de registrar `AddSwaggerGen`. El resultado depende de los endpoints, sus tipos de respuesta declarados y los metadatos que permitan al generador describir el contrato. Un endpoint que devuelve indistintamente varios tipos sin documentar los códigos posibles puede producir una especificación incompleta. En Minimal APIs conviene declarar de forma explícita los resultados relevantes, la validación y los ejemplos necesarios para que el consumidor comprenda la operación. El objetivo no es decorar Swagger UI, sino publicar una descripción verificable de las entradas y salidas que soporta el servicio.
 
@@ -1892,9 +1772,9 @@ El proyecto inicial ya ofrece una API mínima documentada y un escenario de pers
 
 ---
 
-### Bloque 10 — Aplicación de las buenas prácticas al proyecto del curso
+### Aplicación de las buenas prácticas al proyecto del curso
 
-El proyecto del curso aplica las buenas prácticas de forma explícita en cada punto. La exposición de DTOs se aplica creando contratos separados de las entidades. El versionado en la URL se aplica con el prefijo /api/v1/. La idempotencia se aplica con la cabecera Idempotency-Key. La gestión explícita de errores se aplica con problem details. Los timeouts y reintentos se aplican con Polly. El circuit breaker se aplica con Polly. La compatibilidad de contratos se verifica con tests. La documentación viva se aplica con OpenAPI. La decisión sobre aplicación de las buenas prácticas al proyecto del curso debe diferenciar lo que el ejemplo ilustra de lo que la aplicación implementa realmente en esta etapa.
+El módulo se cierra conectando los principios con la evolución real del proyecto. Los DTO separarán los contratos públicos de las entidades; las rutas versionadas permitirán introducir cambios controlados; los errores HTTP expresarán estados de negocio y fallos técnicos; y las políticas de resiliencia protegerán la comunicación cuando aparezcan servicios separados. No todo ese comportamiento existe todavía en la API monolítica de referencia. La práctica inicial introduce validadores y ejemplos que ayudan a reconocer riesgos; la capacidad funcional solo quedará demostrada cuando existan endpoints, persistencia, mensajes y pruebas específicas que la ejerzan. Este criterio evita convertir una lista de buenas prácticas en una falsa certificación de producción. La pregunta de cierre para cada mecanismo será qué error previene, qué comportamiento obliga a implementar y cómo comprobaremos que realmente lo hace.
 
 ```text
 Aplicación al proyecto del curso:
@@ -1909,18 +1789,10 @@ Contratos compatibles   → tests de compatibilidad.
 Documentación viva      → OpenAPI.
 ```
 
-**Lectura guiada del ejemplo**
+El cuadro reúne prácticas que aparecerán en distintos módulos. En M01 varias son propuestas conceptuales; su implementación evoluciona al incorporar Minimal APIs, DDD, mensajería, Polly y YARP. La distinción evita atribuir a un validador de catálogo la capacidad de impedir duplicados, recuperar una caída remota o proteger contratos que todavía no se consumen.
 
-- **Línea 1:** DTOs separados → contratos separados de las entidades.
-- **Línea 2:** Versionado en URL → prefijo /api/v1/.
-- **Línea 3:** Idempotencia → cabecera Idempotency-Key.
-- **Línea 4:** Errores explícitos → problem details.
-- **Línea 5:** Timeouts y reintentos → Polly.
-- **Línea 6:** Circuit breaker → Polly.
-- **Línea 7:** Contratos compatibles → tests de compatibilidad.
-- **Línea 8:** Documentación viva → OpenAPI.
 
-La aplicación de las buenas prácticas prepara el proyecto para la evolución hacia microservicios. Cuando un módulo se extraiga como servicio, mantendrá las mismas buenas prácticas. La coherencia entre el monolito modular y los microservicios facilita la transición. El punto 1.5 cierra el módulo 1 y prepara el terreno para el módulo 2, donde se estudiará el desarrollo de APIs REST con ASP.NET Core. Para evaluar aplicación de las buenas prácticas al proyecto del curso conviene registrar el resultado observable y la restricción de negocio que motiva el cambio, antes de introducir infraestructura adicional. La decisión sobre aplicación de las buenas prácticas al proyecto del curso debe diferenciar lo que el ejemplo ilustra de lo que la aplicación implementa realmente en esta etapa.
+La aplicación de las buenas prácticas prepara el proyecto para la evolución hacia microservicios. Cuando un módulo se extraiga como servicio, mantendrá las mismas buenas prácticas. La coherencia entre el monolito modular y los microservicios facilita la transición. El punto 1.5 cierra el módulo 1 y prepara el terreno para el módulo 2, donde se estudiará el desarrollo de APIs REST con ASP.NET Core.  
 
 El cierre del módulo debe distinguir resultados construidos de prácticas únicamente estudiadas. El proyecto ejecutable contiene un monolito Minimal API, EF Core y una migración inicial, además de clases educativas para métricas, límites, convenciones y catálogo de buenas prácticas. Los tests básicos verifican esas clases y suman veintitrés en la última solución cuando se activan los bloques de los puntos sucesivos. No se incluyen todavía un servicio de Inventario separado, contratos DTO públicos, garantías de idempotencia POST, Saga, Outbox o Polly integrado en llamadas reales. El balance es útil precisamente porque registra ese límite. El siguiente módulo puede construir APIs y pruebas de respuesta HTTP que hagan efectivas varias recomendaciones teóricas. La trazabilidad del aprendizaje exige que cada capacidad anunciada como realizada tenga una ruta de código y una prueba observables.
 
@@ -1949,15 +1821,9 @@ El cierre razonado del módulo distingue tres niveles de madurez. Primero, el al
 
 ---
 
-## Resumen rápido de la teoría
-
-- Las buenas prácticas se organizan en cuatro categorías: contrato, operación, comunicación y evolución.
-- La exposición de DTOs separa el contrato público de la entidad de dominio.
-- El versionado en la URL permite que varias versiones del contrato convivan durante la transición.
-- La idempotencia evita duplicados cuando las llamadas se reintentan.
-- La gestión explícita de errores usa códigos HTTP y problem details.
-- Los timeouts, reintentos y circuit breaker protegen al servicio de fallos en las dependencias.
-- La compatibilidad de contratos y la documentación viva permiten la evolución sin romper a los consumidores.
 
 
----
+## Síntesis: de la recomendación al comportamiento verificado
+
+El criterio que conecta todas las buenas prácticas es que cada una debe proteger un contrato o una regla de negocio identificable. Separar DTOs, versionar rutas, describir errores y gestionar idempotencia disminuye las sorpresas de los consumidores; acotar esperas y abrir circuitos puede proteger la aplicación ante fallos remotos; documentar y probar compatibilidad facilita la evolución. No basta con disponer de ejemplos de C#: antes de afirmar que una capacidad está implantada debemos observar su efecto en peticiones, datos y escenarios de fallo. Esa exigencia acompañará la evolución de AceriaApp a lo largo de los módulos siguientes.
+
