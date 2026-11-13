@@ -1169,11 +1169,15 @@ Comprueba que se conservan los casos anteriores y que una solicitud llega al man
 
 ---
 
-## Desarrollo teórico
+## Expresar el rechazo del negocio sin confundirlo con una excepción
 
-### Bloque 1 — Definición del patrón Result
 
-El patrón Result es un patrón de diseño que representa el resultado de una operación como un valor explícito en lugar de como una excepción. Su propósito es hacer visible en la firma del método que la operación puede fallar y qué tipo de fallo puede producir. El resultado encapsula dos estados posibles: éxito o fallo. En el estado de éxito, el resultado contiene el valor producido por la operación. En el estado de fallo, el resultado contiene la información del error. El patrón se aplica en operaciones donde el fallo es un resultado esperado y no una condición excepcional.
+
+Seguiremos las situaciones que puede producir un caso de uso de órdenes y cómo se traducen a HTTP. El resultado explícito permitirá comparar fallos esperados, excepciones técnicas y efectos de persistencia.
+
+### Definición del patrón Result
+
+No todos los resultados negativos de una operación son fallos excepcionales de infraestructura. Si un cliente intenta cancelar una orden ya finalizada, la aplicación ha recibido una petición comprensible y puede rechazarla por una regla de negocio. Result Pattern permite expresar ese rechazo como un valor devuelto, junto con el valor de éxito cuando la operación se completa. La firma del caso de uso hace visible que existen ambas posibilidades y obliga a quien lo invoca a tratarlas. Esto no significa esconder excepciones técnicas ni convertir todo código en estructuras genéricas: errores inesperados de SQL, programación o red requieren una estrategia distinta. En AceriaApp utilizaremos un resultado explícito para condiciones que forman parte del comportamiento previsto de órdenes.
 
 ```text
 Patrón Result:
@@ -1182,60 +1186,52 @@ Result<T> → Éxito con valor T.
 Result<T> → Fallo con error.
 ```
 
-- **Línea 1:** `Result<T> → Éxito con valor T.` → estado de éxito.
-- **Línea 2:** `Result<T> → Fallo con error.` → estado de fallo.
+
+El esquema diferencia un resultado satisfactorio con valor de una respuesta fallida con información de error. Ambas posibilidades forman parte de la firma, lo que evita que el consumidor interprete un GUID vacío o un null ambiguo como si fuera un resultado válido.
+
 
 El patrón Result se caracteriza por tres propiedades. La primera es que hace explícito el fallo: la firma del método indica que la operación puede fallar. La segunda es que evita el uso de excepciones para errores esperados: los errores esperados se representan como valores. La tercera es que permite componer operaciones: el resultado de una operación se encadena con el de la siguiente. Las tres propiedades permiten que el flujo de errores sea explícito y controlado.
 
 La aplicación del patrón Result tiene dos consecuencias prácticas. La primera es que el código refleja con precisión qué operaciones pueden fallar y por qué. La segunda es que se evita lanzar excepciones en rutas de fallo frecuentes; cualquier mejora de rendimiento debe medirse en el escenario real. La combinación favorece un flujo explícito y predecible. El patrón se usa en operaciones de negocio donde el fallo es parte del flujo normal.
 
----
 
+Result vuelve visibles dos salidas de negocio: éxito y fallo esperado. La firma informa del contenedor, pero los códigos concretos de error también deben documentarse.
 
+Una orden con cantidad fuera de capacidad puede devolver un fallo conocido. Un timeout del proveedor no debe presentarse automáticamente como cliente no válido.
 
-#### Ampliación didáctica aplicada a AceriaApp
+El patrón no impide excepciones internas ni sustituye cancelación. Tampoco obliga a envolver toda función, incluso aquellas que siempre devuelven un valor válido.
 
-**La decisión arquitectónica.** Result vuelve visibles dos salidas de negocio: éxito y fallo esperado. La firma informa del contenedor, pero los códigos concretos de error también deben documentarse.
+Escribe un test de éxito y otro de fallo esperado. En el fallo comprueba que no se escribió una orden y que no se devolvió un identificador de éxito por defecto.
 
-**Ejemplo concreto en AceriaApp.** Una orden con cantidad fuera de capacidad puede devolver un fallo conocido. Un timeout del proveedor no debe presentarse automáticamente como cliente no válido.
+### Errores esperados frente a errores excepcionales
 
-**Riesgo, alternativa y límite.** El patrón no impide excepciones internas ni sustituye cancelación. Tampoco obliga a envolver toda función, incluso aquellas que siempre devuelven un valor válido.
-
-**Comprobación técnica y aprendizaje.** Escribe un test de éxito y otro de fallo esperado. En el fallo comprueba que no se escribió una orden y que no se devolvió un identificador de éxito por defecto.
-
-### Bloque 2 — Errores esperados frente a errores excepcionales
-
-Los errores se clasifican en dos categorías: esperados y excepcionales. Los errores esperados son parte del flujo normal del negocio: un cliente que no existe, una cantidad fuera de rango, un material bloqueado. Los errores excepcionales son condiciones anómalas que no deberían ocurrir: un fallo de red, un fallo de disco, una violación de contrato. Los errores esperados se representan con el patrón Result. Los errores excepcionales se representan con excepciones. La distinción es la base del uso correcto del patrón.
+Un error esperado describe una condición con la que el negocio sabe qué hacer: la orden no existe, su estado impide el cambio o los datos incumplen una regla. Una excepción técnica, en cambio, informa de que no se pudo ejecutar normalmente el mecanismo de la operación, por ejemplo porque SQL Server no responde. Mezclar ambos casos conduce a APIs que devuelven 500 para cualquier rechazo o que presentan una caída real como un simple dato inválido. Result Pattern facilita mantener diferenciados esos caminos, siempre que el error tenga código y significado estables. La aplicación comunica qué ocurrió; el adaptador HTTP decide cómo expresarlo con códigos como 400, 404 o 409. El criterio no es evitar siempre las excepciones, sino utilizarlas donde representan una situación excepcional.
 
 ```text
 Errores esperados          → Result.
 Errores excepcionales      → excepción.
 ```
 
-- **Línea 1:** `Errores esperados → Result.` → se representan como valores.
-- **Línea 2:** `Errores excepcionales → excepción.` → se representan como excepciones.
+
+Los rechazos previstos de negocio se representan como resultados, mientras las excepciones siguen teniendo sentido para fallos inesperados. La frontera requiere juicio: una base caída no debe comunicarse como si el cliente hubiese escrito mal la cantidad.
+
 
 La distinción entre errores esperados y excepcionales tiene dos consecuencias prácticas. La primera es que el código refleja con precisión la naturaleza del error. La segunda es que los errores esperados no se mezclan con los excepcionales en el flujo de control. La combinación de ambas permite que el sistema sea más predecible y que las excepciones se reserven para condiciones realmente anómalas.
 
 La aplicación incorrecta del patrón produce dos síntomas reconocibles. El primero es el uso de excepciones para errores esperados, lo que produce un flujo de control costoso y difícil de seguir. El segundo es el uso del patrón Result para errores excepcionales, lo que oculta condiciones anómalas que deberían propagarse. Los dos síntomas se corrigen clasificando correctamente cada error antes de decidir cómo representarlo.
 
----
 
+La clasificación depende del contrato del caso de uso. Un recurso ausente puede ser normal en una búsqueda y una violación de integridad puede revelar un defecto.
 
+OrdenesConResultado representa validación, ausencia y conflicto como tipos de error. El adaptador decide después si corresponde 400, 404 o 409.
 
-#### Ampliación didáctica aplicada a AceriaApp
+No captures Exception para convertir cualquier problema en Failure con el texto del proveedor. Eso ocultaría defectos y podría publicar datos internos del sistema.
 
-**La decisión arquitectónica.** La clasificación depende del contrato del caso de uso. Un recurso ausente puede ser normal en una búsqueda y una violación de integridad puede revelar un defecto.
+Simula un fallo esperado y una excepción inesperada por separado. El primero debe seguir el contrato público; la segunda debe llegar al mecanismo de observabilidad y error configurado.
 
-**Ejemplo concreto en AceriaApp.** OrdenesConResultado representa validación, ausencia y conflicto como tipos de error. El adaptador decide después si corresponde 400, 404 o 409.
+### Estructura de un resultado
 
-**Riesgo, alternativa y límite.** No captures Exception para convertir cualquier problema en Failure con el texto del proveedor. Eso ocultaría defectos y podría publicar datos internos del sistema.
-
-**Comprobación técnica y aprendizaje.** Simula un fallo esperado y una excepción inesperada por separado. El primero debe seguir el contrato público; la segunda debe llegar al mecanismo de observabilidad y error configurado.
-
-### Bloque 3 — Estructura de un resultado
-
-Un resultado se estructura con dos propiedades principales: si la operación ha tenido éxito y el valor o el error asociado. La propiedad de éxito es un booleano. La propiedad de valor contiene el resultado de la operación cuando el éxito es verdadero. La propiedad de error contiene la información del error cuando el éxito es falso. La estructura se implementa con una clase o con un `record`. La estructura se acompaña de métodos estáticos para crear resultados de éxito y de fallo.
+Un `Result<T>` necesita representar al menos dos estados mutuamente excluyentes: éxito con un valor y fallo con información suficiente para comprender el rechazo. Si el consumidor puede acceder a `Value` cuando el resultado es fallido, el contrato se vuelve ambiguo; por eso el ejemplo protege esa lectura y obliga a consultar antes `IsSuccess`. Una fábrica de éxito y otra de fallo facilitan construir resultados consistentes. Sin embargo, un mensaje `string` puede quedarse corto cuando los consumidores deben distinguir distintas causas de error sin analizar texto libre. En AceriaApp se estudia la estructura conceptual y luego se utiliza una implementación que expresa éxito, valor y tipo de error con nombres acordes al proyecto.
 
 ```csharp
 public sealed class Result<T>
@@ -1260,50 +1256,28 @@ public sealed class Result<T>
 }
 ```
 
-- **Línea 1:** `public sealed class Result<T>` → declara un contenedor genérico que no permite herencia accidental.
-- **Línea 2:** `{` → abre el cuerpo.
-- **Línea 3:** `private readonly T? _value;` → almacena el valor incluso cuando T es un tipo por valor.
-- **Línea 4:** `public bool IsSuccess { get; }` → expone el discriminante de éxito o fallo.
-- **Línea 5:** `public string? Error { get; }` → expone el mensaje de fallo.
-- **Línea 6:** `public T Value => IsSuccess ? _value! :` → permite leer Value únicamente si la operación tuvo éxito.
-- **Línea 7:** `throw new InvalidOperationException("Un fallo no tiene valor de éxito.");` → detecta el uso incorrecto del resultado por parte del programador.
-- **Línea 8:** `private Result(bool success, T? value, string? error)` → restringe la construcción a las factorías.
-- **Línea 9:** `{` → abre el constructor.
-- **Línea 10:** `IsSuccess = success;` → asigna el estado.
-- **Línea 11:** `_value = value;` → asigna el almacenamiento del valor.
-- **Línea 12:** `Error = error;` → asigna el error.
-- **Línea 13:** `}` → cierra el constructor.
-- **Línea 14:** `public static Result<T> Success(T value) => new(true, value, null);` → construye éxito; la nulabilidad de T forma parte del contrato.
-- **Línea 15:** `public static Result<T> Failure(string error)` → declara la factoría de fallo.
-- **Línea 16:** `{` → abre la factoría.
-- **Línea 17:** `ArgumentException.ThrowIfNullOrWhiteSpace(error);` → rechaza un mensaje vacío que haría ambiguo el fallo.
-- **Línea 18:** `return new(false, default, error);` → construye fallo sin valor accesible.
-- **Línea 19:** `}` → cierra la factoría.
-- **Línea 20:** `}` → cierra la clase.
+
+La clase protege la lectura de Value cuando el resultado no tiene éxito y utiliza fábricas para construir estados coherentes. El ejemplo es deliberadamente pequeño; en un contrato público real conviene tipar los errores cuando el consumidor necesita tomar decisiones distintas.
+
 
 La estructura del resultado se caracteriza por tres propiedades. La primera es que el constructor es privado: los resultados se crean con los métodos estáticos. La segunda es que sus propiedades son de solo lectura: el contenedor es inmutable, aunque T podría ser un objeto mutable. La tercera es que el estado controla el acceso: un fallo tiene error no vacío y no permite leer Value. El valor default almacenado para un fallo no representa un éxito. Las tres propiedades garantizan que el resultado sea consistente y seguro.
 
----
 
+Un resultado debe impedir estados contradictorios. Un constructor privado y factorías válidas son más claros que permitir modificar IsSuccess, Value y Error independientemente.
 
+El tipo simple mostrado prohíbe leer Value en fallo y exige un error no vacío. El tipo funcional del proyecto usa EsExito, Valor, Exito/Fallo, Error y TipoError para la traducción HTTP.
 
-#### Ampliación didáctica aplicada a AceriaApp
+T? no convierte siempre un tipo de valor genérico en `Nullable<T>`. Un Guid.Empty almacenado en un fallo no es una identidad válida que pueda devolverse al consumidor.
 
-**La decisión arquitectónica.** Un resultado debe impedir estados contradictorios. Un constructor privado y factorías válidas son más claros que permitir modificar IsSuccess, Value y Error independientemente.
-
-**Ejemplo concreto en AceriaApp.** El tipo simple mostrado prohíbe leer Value en fallo y exige un error no vacío. El tipo funcional del proyecto usa EsExito, Valor, Exito/Fallo, Error y TipoError para la traducción HTTP.
-
-**Riesgo, alternativa y límite.** T? no convierte siempre un tipo de valor genérico en `Nullable<T>`. Un Guid.Empty almacenado en un fallo no es una identidad válida que pueda devolverse al consumidor.
-
-**Comprobación técnica y aprendizaje.** Comprueba las invariantes del contenedor y sus dos factorías. Si permites éxito con null, documéntalo mediante T nullable y no lo confundas con la ausencia de éxito.
+Comprueba las invariantes del contenedor y sus dos factorías. Si permites éxito con null, documéntalo mediante T nullable y no lo confundas con la ausencia de éxito.
 
 ![Diagrama explicativo del punto 4.4, bloque 3](IMAGENES/4-4-estados.svg)
 
-*Interpretación del gráfico:* Un resultado representa éxito o fallo. La lectura del valor depende del estado y los errores esperados tienen un tipo estable. La figura se distribuye en SVG vectorial y PNG.
+Un resultado representa éxito o fallo. La lectura del valor depende del estado y los errores esperados tienen un tipo estable. La figura se distribuye en SVG vectorial y PNG.
 
-### Bloque 4 — Variantes del patrón Result
+### Variantes del patrón Result
 
-El patrón Result admite varias variantes según las necesidades del proyecto. La primera variante es `Result<T>` con un valor de éxito y un mensaje de error. La segunda variante es `Result<T, TError>` con un valor de éxito y un tipo de error específico. La tercera variante es `Result` sin valor de éxito para operaciones que no devuelven nada. La cuarta variante es `Result<T>` con una lista de errores para operaciones que pueden fallar por varios motivos. La elección de la variante depende del tipo de errores que maneja el proyecto.
+Existen variantes de Result adecuadas a necesidades diferentes: operaciones que devuelven un valor, operaciones sin valor, errores tipados o una colección de errores de validación. No necesitamos elegir la variante con más parámetros por adelantado. Si el caso de uso solo comunica que una acción no está permitida, un resultado sencillo puede ser suficiente; si el adaptador HTTP debe distinguir «no existe» de «conflicto», un tipo de error estable aporta claridad. Lo importante es que la firma permita conocer todos los resultados esperados y evite confundir un valor por defecto con un éxito auténtico. Al diseñar AceriaApp compararemos la expresividad de los contratos sin multiplicar envoltorios que no añaden información.
 
 ```text
 Variantes del patrón Result:
@@ -1314,30 +1288,24 @@ Result                  → sin valor de éxito.
 Result<T> con errores   → lista de errores.
 ```
 
-- **Línea 1:** `Result<T>` → valor de éxito y mensaje de error.
-- **Línea 2:** `Result<T, TError>` → valor de éxito y tipo de error específico.
-- **Línea 3:** `Result` → sin valor de éxito.
-- **Línea 4:** `Result<T> con errores` → lista de errores.
+
+Las variantes permiten devolver un valor, un error tipado o varios errores de entrada. La elección debe responder a las necesidades del caso de uso: crear más tipos no aporta claridad si todos se convierten finalmente en el mismo texto genérico.
+
 
 La elección de la variante tiene dos consecuencias prácticas. La primera es que la variante simple es más legible pero menos expresiva. La segunda es que la variante con tipo de error específico es más expresiva pero más compleja. La combinación de ambas se valora según el contexto del proyecto. El curso usa la variante simple con un mensaje de error como base y menciona las variantes avanzadas como opciones.
 
----
 
+El mensaje explica un error a una persona; un código o categoría estable permite que otro componente decida sin analizar texto traducido.
 
+El proyecto usa TipoError.Validacion, TipoError.NoEncontrado y TipoError.Conflicto. Un Error conserva información del fallo sin incorporar el concepto de IResult al núcleo.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Añadir muchas variantes sin necesidad complica consumo y pruebas. Elige una forma coherente para el módulo y reserva ejemplos alternativos para comparar sus ventajas.
 
-**La decisión arquitectónica.** El mensaje explica un error a una persona; un código o categoría estable permite que otro componente decida sin analizar texto traducido.
+Construye una tabla de categorías y códigos HTTP en el adaptador. Cambiar el texto de un mensaje no debería modificar accidentalmente la respuesta de 404 a 400.
 
-**Ejemplo concreto en AceriaApp.** El proyecto usa TipoError.Validacion, TipoError.NoEncontrado y TipoError.Conflicto. Un Error conserva información del fallo sin incorporar el concepto de IResult al núcleo.
+### Result Pattern en los casos de uso
 
-**Riesgo, alternativa y límite.** Añadir muchas variantes sin necesidad complica consumo y pruebas. Elige una forma coherente para el módulo y reserva ejemplos alternativos para comparar sus ventajas.
-
-**Comprobación técnica y aprendizaje.** Construye una tabla de categorías y códigos HTTP en el adaptador. Cambiar el texto de un mensaje no debería modificar accidentalmente la respuesta de 404 a 400.
-
-### Bloque 5 — Result Pattern en los casos de uso
-
-El patrón Result se aplica en los casos de uso de la capa de aplicación. Los casos de uso que necesitan expresar fallos esperados pueden devolver `Result<T>`; las excepciones inesperadas y la cancelación siguen teniendo su canal propio. El resultado encapsula el éxito o el fallo de la operación. El manejador construye el resultado según el flujo del caso de uso. Los errores esperados se representan con `Result.Failure`. El éxito se representa con `Result.Success`. La firma del caso de uso hace visible que la operación puede fallar.
+Un handler de creación puede devolver `Result<Guid>` para comunicar la identidad de la orden o un fallo esperado. De ese modo el flujo de aplicación puede validar la intención, proteger las invariantes y decidir si realiza la persistencia, mientras el endpoint queda encargado de traducir el resultado a HTTP. Esa separación evita que el handler conozca `Results.BadRequest` o `ProblemDetails`, pero exige que el rechazo no sea accidentalmente ignorado. En AceriaApp, cuando una cantidad supera el límite de negocio, no deberían confirmarse cambios SQL ni devolverse un identificador como si se hubiese creado la orden. La prueba necesita observar el resultado y también la ausencia de efectos no permitidos.
 
 ```csharp
 public record CrearOrdenConResultadoCommand(string Cliente, string Material, int Cantidad)
@@ -1362,46 +1330,24 @@ public sealed class CrearOrdenConResultadoHandler(
 }
 ```
 
-- **Línea 1:** `public record CrearOrdenConResultadoCommand(string Cliente, string Material, int Cantidad)` → define una variante distinta del comando del punto 4.3.
-- **Línea 2:** `: IRequest<Result<Guid>>;` → hace coincidir la respuesta del comando con la del manejador.
-- **Línea 3:** `public sealed class CrearOrdenConResultadoHandler(` → declara el caso de uso con resultado.
-- **Línea 4:** `IOrdenTrabajoRepositorio repositorio, IUnitOfWork unidad)` → recibe los puertos de persistencia del mismo ámbito.
-- **Línea 5:** `: IRequestHandler<CrearOrdenConResultadoCommand, Result<Guid>>` → implementa exactamente IRequestHandler para ese mensaje y respuesta.
-- **Línea 6:** `{` → abre la clase.
-- **Línea 7:** `public async Task<Result<Guid>> Handle(CrearOrdenConResultadoCommand request, CancellationToken ct)` → recibe solicitud y cancelación.
-- **Línea 8:** `{` → abre el método.
-- **Línea 9:** `if (string.IsNullOrWhiteSpace(request.Cliente))` → identifica el primer fallo esperado.
-- **Línea 10:** `return Result<Guid>.Failure("El cliente es obligatorio.");` → devuelve fallo sin modificar persistencia.
-- **Línea 11:** `if (string.IsNullOrWhiteSpace(request.Material))` → comprueba la entrada de material.
-- **Línea 12:** `return Result<Guid>.Failure("El material es obligatorio.");` → devuelve un segundo fallo esperado.
-- **Línea 13:** `if (request.Cantidad is <= 0 or > 500)` → comprueba invariantes de entrada y política de capacidad.
-- **Línea 14:** `return Result<Guid>.Failure("La cantidad debe estar entre 1 y 500.");` → devuelve el motivo conocido al llamador.
-- **Línea 15:** `var orden = new OrdenHexagonal(request.Cliente, request.Material, request.Cantidad);` → crea una entidad válida; no captura errores inesperados.
-- **Línea 16:** `await repositorio.AgregarAsync(orden, ct);` → registra la entidad para la unidad de trabajo.
-- **Línea 17:** `await unidad.CommitAsync(ct);` → confirma antes de anunciar éxito.
-- **Línea 18:** `return Result<Guid>.Success(orden.Id);` → devuelve el identificador confirmado.
-- **Línea 19:** `}` → cierra el método.
-- **Línea 20:** `}` → cierra la clase.
+
+El handler devuelve un resultado explícito y solo confirma la orden cuando las condiciones necesarias se cumplen. Un test de fallo debería demostrar que no se escribió en SQL, además de comprobar el mensaje o código de rechazo.
+
 
 La aplicación del patrón en los casos de uso tiene dos consecuencias prácticas. La primera es que el flujo de errores es explícito: cada caso de uso documenta los errores que puede producir. La segunda es que el adaptador de entrada puede traducir el fallo en una respuesta HTTP específica. La combinación de ambas permite que el sistema sea más predecible y que los errores se gestionen de forma uniforme.
 
----
 
+El caso de uso debe devolver éxito después de confirmar los cambios requeridos. Preparar una entidad en memoria todavía no demuestra que la operación haya terminado.
 
+El ejemplo incluye un comando con respuesta `IRequest<Result<Guid>>`, manejador compatible, comprobaciones de entrada, alta pendiente y commit. OrdenesConResultado aplica el mismo criterio en el proyecto.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Result no justifica duplicar reglas inconsistentes. Una validación de entrada puede evitar fallos previsibles mientras la entidad conserva sus invariantes para cualquier llamador.
 
-**La decisión arquitectónica.** El caso de uso debe devolver éxito después de confirmar los cambios requeridos. Preparar una entidad en memoria todavía no demuestra que la operación haya terminado.
+Prueba que el fallo esperado no llama a AgregarAsync ni a CommitAsync. Prueba también que una excepción de guardado no se convierte en éxito con el GUID generado.
 
-**Ejemplo concreto en AceriaApp.** El ejemplo incluye un comando con respuesta `IRequest<Result<Guid>>`, manejador compatible, comprobaciones de entrada, alta pendiente y commit. OrdenesConResultado aplica el mismo criterio en el proyecto.
+### Result Pattern en los adaptadores de entrada
 
-**Riesgo, alternativa y límite.** Result no justifica duplicar reglas inconsistentes. Una validación de entrada puede evitar fallos previsibles mientras la entidad conserva sus invariantes para cualquier llamador.
-
-**Comprobación técnica y aprendizaje.** Prueba que el fallo esperado no llama a AgregarAsync ni a CommitAsync. Prueba también que una excepción de guardado no se convierte en éxito con el GUID generado.
-
-### Bloque 6 — Result Pattern en los adaptadores de entrada
-
-El patrón Result se traduce en los adaptadores de entrada en respuestas HTTP. El adaptador comprueba el resultado del caso de uso. Si el resultado es exitoso, devuelve una respuesta con el valor. Si el resultado es fallido, devuelve una respuesta con el código y el mensaje adecuados. La traducción se realiza en un método específico del adaptador. La traducción mantiene la independencia entre la lógica de negocio y el protocolo HTTP.
+El adaptador de entrada transforma un resultado de aplicación en un contrato HTTP. Si la creación devuelve éxito, puede responder `201 Created`; si comunica un fallo de validación o conflicto, seleccionará el estado apropiado y explicará la causa de forma segura. No conviene convertir indiscriminadamente todos los fallos en 400: una orden inexistente necesita una semántica distinta de otra que no puede modificarse por su estado. El tipo de error del resultado permite centralizar ese mapeo. En AceriaApp estudiaremos un endpoint que utiliza `Result` sin introducir dependencias HTTP en la aplicación. La corrección se comprobará mediante peticiones que provoquen cada caso, no mediante inspección del operador ternario utilizado para construir la respuesta.
 
 ```csharp
 app.MapPost("/api/v1/ordenes-con-resultado", async (
@@ -1415,39 +1361,28 @@ app.MapPost("/api/v1/ordenes-con-resultado", async (
 });
 ```
 
-- **Línea 1:** `app.MapPost("/api/v1/ordenes-con-resultado", async (` → mapea la ruta didáctica de la variante de creación.
-- **Línea 2:** `CrearOrdenConResultadoCommand command, ISender mediator, CancellationToken ct) =>` → recibe el mensaje tipado, el emisor y la cancelación.
-- **Línea 3:** `{` → abre el adaptador HTTP.
-- **Línea 4:** `var result = await mediator.Send(command, ct);` → ejecuta el caso de uso y espera el resultado.
-- **Línea 5:** `IResult respuesta = result.IsSuccess` → elige una respuesta con tipo común IResult.
-- **Línea 6:** `? Results.Created($"/api/v1/ordenes-con-resultado/{result.Value}", new { id = result.Value })` → representa éxito como 201 con una ubicación que la API debe exponer.
-- **Línea 7:** `: Results.Problem(title: "Solicitud no válida", detail: result.Error, statusCode: 400);` → representa aquí los fallos de entrada como ProblemDetails 400.
-- **Línea 8:** `return respuesta;` → devuelve la traducción sin filtrar detalles de infraestructura.
-- **Línea 9:** `});` → cierra el endpoint.
+
+El endpoint traduce el estado del resultado a una respuesta HTTP. Una implementación completa debe distinguir error de validación, ausencia y conflicto; devolver siempre 400 pierde información importante del contrato.
+
 
 La traducción del resultado tiene dos consecuencias prácticas. La primera es que el adaptador de entrada se mantiene simple: solo traduce el resultado a una respuesta. La segunda es que la lógica de negocio no conoce el protocolo HTTP: solo conoce el resultado. La combinación de ambas permite que el mismo caso de uso se exponga en distintos protocolos con traducciones específicas.
 
----
 
+La traducción a HTTP pertenece a API. El núcleo no devuelve Results.BadRequest, ProblemDetails ni números de estado como sustituto de conceptos de negocio.
 
+El ejemplo simple traduce fallos de entrada a 400. La implementación con Error tipado distingue además ausencia con 404 y conflicto con 409.
 
-#### Ampliación didáctica aplicada a AceriaApp
+No conviertas todo Failure en BadRequest si el contrato distingue categorías. Tampoco devuelvas directamente mensajes de excepciones técnicas al cliente.
 
-**La decisión arquitectónica.** La traducción a HTTP pertenece a API. El núcleo no devuelve Results.BadRequest, ProblemDetails ni números de estado como sustituto de conceptos de negocio.
-
-**Ejemplo concreto en AceriaApp.** El ejemplo simple traduce fallos de entrada a 400. La implementación con Error tipado distingue además ausencia con 404 y conflicto con 409.
-
-**Riesgo, alternativa y límite.** No conviertas todo Failure en BadRequest si el contrato distingue categorías. Tampoco devuelvas directamente mensajes de excepciones técnicas al cliente.
-
-**Comprobación técnica y aprendizaje.** Comprueba el código, el cuerpo y el tipo de contenido en la prueba HTTP. Para 201 verifica que Location permite recuperar la entidad y no solo que contiene un GUID.
+Comprueba el código, el cuerpo y el tipo de contenido en la prueba HTTP. Para 201 verifica que Location permite recuperar la entidad y no solo que contiene un GUID.
 
 ![Diagrama explicativo del punto 4.4, bloque 6](IMAGENES/4-4-http.svg)
 
-*Interpretación del gráfico:* El adaptador convierte categorías de aplicación en respuestas HTTP; el dominio no conoce los códigos. La figura se distribuye en SVG vectorial y PNG.
+El adaptador convierte categorías de aplicación en respuestas HTTP; el dominio no conoce los códigos. La figura se distribuye en SVG vectorial y PNG.
 
-### Bloque 7 — Composición de resultados
+### Composición de resultados
 
-La composición de resultados permite encadenar varias operaciones donde cada una puede fallar. La composición se realiza con métodos como `Map`, `Bind` y `Match`. El método `Map` transforma el valor de éxito en otro valor. El método `Bind` encadena una operación que devuelve otro resultado. El método `Match` ejecuta una función según el estado del resultado. La composición evita el anidamiento de condicionales y mantiene el flujo de errores explícito.
+Las operaciones `Map`, `Bind` y `Match` permiten combinar resultados sin escribir una rama de error completa después de cada paso. `Map` transforma el valor cuando existe éxito; `Bind` encadena una operación que puede fallar; y `Match` convierte ambos estados en una salida final adecuada al consumidor. Esta composición es útil cuando varios cálculos o decisiones deben ejecutarse secuencialmente y un fallo debe detener la cadena. No sustituye la claridad de una operación de negocio bien nombrada, ni debería ocultar que cierta etapa accede a SQL o publica un evento. En AceriaApp la utilizaríamos cuando reduce la repetición del tratamiento de fallos, sin obligar a programar todas las reglas como una cadena funcional difícil de depurar.
 
 ```csharp
 public static class ResultExtensions
@@ -1464,38 +1399,24 @@ public static class ResultExtensions
 }
 ```
 
-- **Línea 1:** `public static class ResultExtensions` → declara extensiones para el tipo completo del bloque 3.
-- **Línea 2:** `{` → abre la clase estática.
-- **Línea 3:** `public static Result<U> Map<T, U>(this Result<T> source, Func<T, U> map) =>` → Map transforma un valor sin introducir otro contenedor.
-- **Línea 4:** `source.IsSuccess ? Result<U>.Success(map(source.Value)) : Result<U>.Failure(source.Error!);` → solo ejecuta la transformación en éxito y conserva el fallo.
-- **Línea 5:** `public static Result<U> Bind<T, U>(this Result<T> source, Func<T, Result<U>> bind) =>` → Bind recibe una operación que ya produce `Result<U>`.
-- **Línea 6:** `source.IsSuccess ? bind(source.Value) : Result<U>.Failure(source.Error!);` → evita anidar `Result<Result<U>>` y mantiene el cortocircuito.
-- **Línea 7:** `public static U Match<T, U>(this Result<T> source, Func<T, U> success, Func<string, U> failure) =>` → Match convierte los dos estados en un mismo tipo de salida.
-- **Línea 8:** `source.IsSuccess ? success(source.Value) : failure(source.Error!);` → obliga al llamador a describir ambas ramas.
-- **Línea 9:** `public static async Task<Result<U>> BindAsync<T, U>(this Result<T> source,` → BindAsync declara explícitamente la asincronía.
-- **Línea 10:** `Func<T, Task<Result<U>>> bind) => source.IsSuccess` → recibe una operación asíncrona cuyo resultado conserva el tipo U.
-- **Línea 11:** `? await bind(source.Value) : Result<U>.Failure(source.Error!);` → espera el éxito siguiente o propaga el error existente.
-- **Línea 12:** `}` → cierra la clase.
+
+Map transforma un éxito; Bind añade otra operación que puede fallar; Match obliga a tratar ambos caminos. El ejemplo de cantidad permite seguir cómo un fallo interrumpe la composición sin perder la información de rechazo.
+
 
 La composición de resultados tiene dos consecuencias prácticas. La primera es que el flujo de errores es lineal: cada paso encadena con el siguiente. La segunda es que el código evita el anidamiento de condicionales. La combinación de ambas permite que el código sea más legible y que el flujo de errores sea explícito.
 
----
 
+Map transforma un valor; Bind encadena otra operación con posibilidad de fallo; Match obliga a tratar ambos estados. No son métodos mágicos incorporados a cualquier Result.
 
+Las extensiones completas acompañan al tipo del bloque 3. BindAsync devuelve `Task<Result<U>>` y acepta una función compatible, evitando mezclar lambdas async con una firma síncrona.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Un método de repositorio que devuelve Task sin valor no puede producir por sí solo `Result<Guid>`. La composición debe devolver explícitamente el identificador tras confirmar.
 
-**La decisión arquitectónica.** Map transforma un valor; Bind encadena otra operación con posibilidad de fallo; Match obliga a tratar ambos estados. No son métodos mágicos incorporados a cualquier Result.
-
-**Ejemplo concreto en AceriaApp.** Las extensiones completas acompañan al tipo del bloque 3. BindAsync devuelve `Task<Result<U>>` y acepta una función compatible, evitando mezclar lambdas async con una firma síncrona.
-
-**Riesgo, alternativa y límite.** Un método de repositorio que devuelve Task sin valor no puede producir por sí solo `Result<Guid>`. La composición debe devolver explícitamente el identificador tras confirmar.
-
-**Comprobación técnica y aprendizaje.** Verifica el cortocircuito: si falla el primer resultado, el delegado siguiente no debe ejecutarse. Prueba también una excepción inesperada del delegado sin absorberla como error de negocio.
+Verifica el cortocircuito: si falla el primer resultado, el delegado siguiente no debe ejecutarse. Prueba también una excepción inesperada del delegado sin absorberla como error de negocio.
 
 ![Diagrama explicativo del punto 4.4, bloque 7](IMAGENES/4-4-composicion.svg)
 
-*Interpretación del gráfico:* Map transforma, Bind encadena y Match decide una salida; un fallo evita ejecutar los pasos siguientes. La figura se distribuye en SVG vectorial y PNG.
+Map transforma, Bind encadena y Match decide una salida; un fallo evita ejecutar los pasos siguientes. La figura se distribuye en SVG vectorial y PNG.
 
 **Ejemplo de composición sin efectos.** Con las extensiones del bloque, el valor se transforma y el siguiente resultado se aplana. La salida es el texto `Cantidad válida: 20`.
 
@@ -1508,16 +1429,13 @@ var salida = Result<int>.Success(10)
     .Match(valor => $"Cantidad válida: {valor}", error => $"Error: {error}");
 ```
 
-- **Línea 1:** `var salida = Result<int>.Success(10)` → inicia la composición con éxito.
-- **Línea 2:** `.Map(cantidad => cantidad * 2)` → transforma 10 en 20.
-- **Línea 3:** `.Bind(cantidad => cantidad <= 500` → decide el resultado de la siguiente operación.
-- **Línea 4:** `? Result<int>.Success(cantidad)` → conserva el valor admitido.
-- **Línea 5:** `: Result<int>.Failure("Capacidad superada."))` → representa el fallo esperado cuando se supera la capacidad.
-- **Línea 6:** `.Match(valor => $"Cantidad válida: {valor}", error => $"Error: {error}");` → convierte ambos estados en texto.
 
-### Bloque 8 — Result Pattern y validación
+La validación del pipeline puede producir Result.Failure y evitar que se ejecute el handler. Esa comprobación debe observar el comportamiento real y no limitarse a que exista una clase IPipelineBehavior registrada.
 
-El patrón Result se integra con la validación de FluentValidation. El comportamiento de pipeline ejecuta los validadores antes del manejador. Si la validación falla, el comportamiento devuelve un `Result.Failure` con los errores de validación. Si la validación pasa, el comportamiento continúa con el manejador. La integración permite que la validación se realice de forma automática y que el resultado del caso de uso incluya los errores de validación.
+
+### Result Pattern y validación
+
+La validación puede integrarse en el pipeline de MediatR y devolver un resultado de fallo antes de que el handler ejecute la operación. Eso permite reutilizar reglas sobre el mensaje de entrada sin repetirlas en cada endpoint. Es importante que el comportamiento del pipeline conozca el tipo de respuesta esperado y conserve una semántica de error coherente con la aplicación. Una violación de invariantes del dominio no debería depender exclusivamente de ese pipeline, porque existen otros caminos para invocar el caso de uso. La prueba de AceriaApp debe comprobar que una entrada rechazada no ha confirmado ninguna orden, además de verificar el código de error. La arquitectura mejora cuando esas garantías se expresan claramente en distintos niveles.
 
 ```csharp
 public sealed class CrearOrdenResultValidationBehavior(
@@ -1540,44 +1458,24 @@ public sealed class CrearOrdenResultValidationBehavior(
 }
 ```
 
-- **Línea 1:** `public sealed class CrearOrdenResultValidationBehavior(` → define un comportamiento cerrado y fácil de comprobar.
-- **Línea 2:** `IEnumerable<IValidator<CrearOrdenConResultadoCommand>> validators)` → recibe validadores para el comando correcto.
-- **Línea 3:** `: IPipelineBehavior<CrearOrdenConResultadoCommand, Result<Guid>>` → fija `Result<Guid>` como respuesta del pipeline.
-- **Línea 4:** `{` → abre el cuerpo.
-- **Línea 5:** `public async Task<Result<Guid>> Handle(CrearOrdenConResultadoCommand request,` → implementa la solicitud con su tipo de resultado.
-- **Línea 6:** `RequestHandlerDelegate<Result<Guid>> next, CancellationToken ct)` → recibe la continuación con el mismo `Result<Guid>`.
-- **Línea 7:** `{` → abre el método.
-- **Línea 8:** `var mensajes = new List<string>();` → prepara los mensajes de validación.
-- **Línea 9:** `foreach (var validator in validators)` → recorre los validadores secuencialmente.
-- **Línea 10:** `{` → abre la iteración.
-- **Línea 11:** `var validacion = await validator.ValidateAsync(request, ct);` → valida con cancelación sin ejecutar el manejador todavía.
-- **Línea 12:** `mensajes.AddRange(validacion.Errors.Select(e => e.ErrorMessage));` → conserva los mensajes de cada fallo.
-- **Línea 13:** `}` → cierra la iteración.
-- **Línea 14:** `if (mensajes.Count > 0)` → comprueba si la solicitud debe detenerse.
-- **Línea 15:** `return Result<Guid>.Failure(string.Join("; ", mensajes));` → construye un fallo del tipo exacto, sin object ni casts genéricos.
-- **Línea 16:** `return await next();` → continúa únicamente si toda la validación fue correcta.
-- **Línea 17:** `}` → cierra el método.
-- **Línea 18:** `}` → cierra el comportamiento.
+
+El cuadro muestra casos donde un resultado explícito aporta valor y otros donde una excepción representa mejor un fallo técnico. No se trata de eliminar excepciones del lenguaje, sino de distinguir condiciones previstas del negocio.
+
 
 La integración con la validación tiene dos consecuencias prácticas. La primera es que la validación se realiza antes del manejador. La segunda es que el resultado del caso de uso incluye los errores de validación cuando la validación falla. La combinación de ambas permite que el flujo de errores sea uniforme en todos los casos de uso.
 
----
 
+El comportamiento tiene que construir exactamente el tipo que promete la solicitud. `Result<object>` y `Result<Guid>` son tipos distintos y un cast a object no los vuelve compatibles.
 
+El ejemplo usa un pipeline cerrado para CrearOrdenConResultadoCommand y `Result<Guid>`. Conserva mensajes de validación y omite el manejador cuando hay fallos.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Para generalizar a cualquier T puede diseñarse una factoría tipada o una abstracción apropiada; el ejemplo cerrado evita añadir reflexión y conversiones inseguras al aprendizaje inicial.
 
-**La decisión arquitectónica.** El comportamiento tiene que construir exactamente el tipo que promete la solicitud. `Result<object>` y `Result<Guid>` son tipos distintos y un cast a object no los vuelve compatibles.
+Regístralo como `IPipelineBehavior<CrearOrdenConResultadoCommand, Result<Guid>>` y prueba con un validador que falle. Comprueba que next no se ejecutó y que el retorno conserva su tipo.
 
-**Ejemplo concreto en AceriaApp.** El ejemplo usa un pipeline cerrado para CrearOrdenConResultadoCommand y `Result<Guid>`. Conserva mensajes de validación y omite el manejador cuando hay fallos.
+### Cuándo usar el patrón Result
 
-**Riesgo, alternativa y límite.** Para generalizar a cualquier T puede diseñarse una factoría tipada o una abstracción apropiada; el ejemplo cerrado evita añadir reflexión y conversiones inseguras al aprendizaje inicial.
-
-**Comprobación técnica y aprendizaje.** Regístralo como `IPipelineBehavior<CrearOrdenConResultadoCommand, Result<Guid>>` y prueba con un validador que falle. Comprueba que next no se ejecutó y que el retorno conserva su tipo.
-
-### Bloque 9 — Cuándo usar el patrón Result
-
-El patrón Result se usa cuando los errores son parte del flujo normal del negocio. El patrón se usa cuando se quiere evitar el coste de las excepciones en operaciones frecuentes. El patrón se usa cuando se quiere hacer explícito en la firma del método que la operación puede fallar. El patrón no se usa cuando los errores son excepcionales. El patrón no se usa cuando la operación no puede fallar.
+Result Pattern resulta especialmente apropiado cuando los fallos son resultados normales y previsibles del caso de uso, y el consumidor necesita diferenciarlos sin usar excepciones para controlar el flujo. En operaciones que no poseen fallos esperados más allá de errores técnicos, una envoltura puede aportar poco valor. También hay que evitar resultados que contengan simultáneamente un valor y un error contradictorios o textos imposibles de clasificar. El coste de introducir el patrón se justifica cuando la firma de un método hace más fácil comprender su contrato y comprobar su comportamiento. En AceriaApp la distinción es útil para validar cantidades, estados y recursos inexistentes antes de traducirlos a HTTP.
 
 ```text
 Cuándo usar Result:
@@ -1589,31 +1487,24 @@ Errores excepcionales        → no.
 Operación sin fallo esperado → no.
 ```
 
-- **Línea 1:** `Errores esperados → sí.` → el patrón aporta claridad.
-- **Línea 2:** `Operaciones frecuentes → medir, no asumir.` → la claridad del contrato es el criterio principal.
-- **Línea 3:** `Firma explícita → sí.` → el patrón documenta los errores.
-- **Línea 4:** `Errores excepcionales → no.` → las excepciones son más adecuadas.
-- **Línea 5:** `Operación sin fallo esperado → no.` → el patrón añade indirección innecesaria.
+
+La implementación de AceriaApp combina resultados explícitos con casos de uso y su traducción HTTP. Los nombres españoles del tipo real no deben mezclarse indiscriminadamente con los ejemplos conceptuales escritos con IsSuccess y Failure.
+
 
 La decisión de usar el patrón tiene dos consecuencias prácticas. La primera es que el código gana claridad sobre los errores esperados. La segunda es que el código añade una estructura adicional. La combinación de ambas se valora según el contexto del proyecto. El curso aplica el patrón porque el dominio tiene varios errores esperados en sus operaciones.
 
----
 
+Result tiene sentido cuando el fallo es parte habitual del contrato y el consumidor debe decidir qué hacer. La legibilidad y la coherencia son los criterios principales.
 
+Finalizar una orden ya finalizada puede devolver Conflicto. Obtener una identidad desconocida puede devolver NoEncontrado en un caso de uso que exige una entidad existente.
 
-#### Ampliación didáctica aplicada a AceriaApp
+No hace falta envolver una función aritmética pura que no tiene un fallo esperado en su contrato. Tampoco se gana seguridad ocultando defectos dentro de un Result genérico.
 
-**La decisión arquitectónica.** Result tiene sentido cuando el fallo es parte habitual del contrato y el consumidor debe decidir qué hacer. La legibilidad y la coherencia son los criterios principales.
+Enumera los fallos de cada operación y comprueba que el consumidor trata todos. Si hay un caso imposible de distinguir sin leer el texto, mejora el modelo de error.
 
-**Ejemplo concreto en AceriaApp.** Finalizar una orden ya finalizada puede devolver Conflicto. Obtener una identidad desconocida puede devolver NoEncontrado en un caso de uso que exige una entidad existente.
+### Aplicación al proyecto del curso
 
-**Riesgo, alternativa y límite.** No hace falta envolver una función aritmética pura que no tiene un fallo esperado en su contrato. Tampoco se gana seguridad ocultando defectos dentro de un Result genérico.
-
-**Comprobación técnica y aprendizaje.** Enumera los fallos de cada operación y comprueba que el consumidor trata todos. Si hay un caso imposible de distinguir sin leer el texto, mejora el modelo de error.
-
-### Bloque 10 — Aplicación al proyecto del curso
-
-El proyecto del curso incorpora `Result<T>` en `OrdenesConResultado` y en las respuestas de los mensajes MediatR. La implementación concreta representa éxito con `Exito` y fallos esperados con `Fallo`, acompañado de `Error` y `TipoError`. Sus consumidores usan `EsExito`, `Valor` y `Error`. Los adaptadores de entrada traducen validación, ausencia y conflicto a HTTP 400, 404 y 409. El pipeline conectado continúa siendo `LoggingBehavior`; la validación de entrada y negocio se ejecuta en el caso de uso y en la entidad. El comportamiento FluentValidation con retorno Result del bloque 8 es una alternativa didáctica completa, no un registro activo de este snapshot. Las pruebas verifican invariantes del contenedor, errores esperados, persistencia y traducción HTTP.
+En la evolución del curso, Result se incorpora a los casos de uso de órdenes para comunicar resultados esperados sin trasladar códigos HTTP al núcleo. El patrón se combina con MediatR y con las reglas del dominio, mientras el adaptador construye respuestas 201, 400, 404 o 409 según el tipo de situación. La implementación concreta utiliza `EsExito`, `Valor`, `Exito` y `Fallo`; los ejemplos más pequeños que usan nombres ingleses sirven para estudiar el concepto, no son varias APIs para pegar en la misma clase. La evidencia pedagógica debe incluir una creación exitosa y rechazos que no produzcan escrituras, con pruebas que distingan errores esperados de fallos de infraestructura. Esa claridad prepara la separación de comandos y consultas que desarrollará M05.
 
 ```text
 Aplicación al proyecto del curso:
@@ -1626,30 +1517,22 @@ Validación           → reglas del caso de uso y entidad.
 Pipeline             → LoggingBehavior.
 ```
 
-- **Línea 1:** `Caso de uso` → coordina los puertos y representa el resultado tipado.
-- **Línea 2:** `Errores esperados` → mantienen categoría, código y descripción.
-- **Línea 3:** `Éxito` → permite consumir el valor confirmado.
-- **Línea 4:** `Adaptadores entrada` → traducen las categorías del contrato a HTTP.
-- **Línea 5:** `Validación` → se ejecuta en los componentes que contienen las reglas.
-- **Línea 6:** `Pipeline` → registra la ejecución sin transformar genéricamente Result.
+
+La segunda composición demuestra cómo los métodos encadenados devuelven un valor válido o un mensaje de error sin ejecutar pasos posteriores al fallo. Debe interpretarse como ejercicio conceptual y no como sustituto de transacciones o comprobaciones del dominio.
+
 
 La aplicación del patrón Result prepara el proyecto para el punto 4.5. El punto 4.5 estudiará la inyección de dependencias. El punto 4.4 establece la base que se aplicará en el punto 4.5. La combinación de Mediator, Result y validación explícita del caso de uso mantiene visibles la intención, el resultado y las reglas de cada operación.
 
----
 
+El resultado debe conservar su significado desde aplicación hasta el adaptador. El catálogo ayuda a revisar esa coherencia, y las pruebas funcionales demuestran sus consecuencias.
 
+OrdenesConResultado compone los puertos de trabajo y devuelve Result con Error tipado. La API aplica la correspondencia acordada de validación, ausencia y conflicto.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Los ejemplos de pipeline muestran alternativas para integrar validación; su presencia en teoría no significa que todo comportamiento esté registrado en el proyecto ejecutable.
 
-**La decisión arquitectónica.** El resultado debe conservar su significado desde aplicación hasta el adaptador. El catálogo ayuda a revisar esa coherencia, y las pruebas funcionales demuestran sus consecuencias.
+Ejecuta una creación correcta y peticiones que provoquen cada error esperado. Verifica estado de base de datos y respuesta pública para impedir éxitos aparentes o persistencia parcial.
 
-**Ejemplo concreto en AceriaApp.** OrdenesConResultado compone los puertos de trabajo y devuelve Result con Error tipado. La API aplica la correspondencia acordada de validación, ausencia y conflicto.
-
-**Riesgo, alternativa y límite.** Los ejemplos de pipeline muestran alternativas para integrar validación; su presencia en teoría no significa que todo comportamiento esté registrado en el proyecto ejecutable.
-
-**Comprobación técnica y aprendizaje.** Ejecuta una creación correcta y peticiones que provoquen cada error esperado. Verifica estado de base de datos y respuesta pública para impedir éxitos aparentes o persistencia parcial.
-
-### Resumen rápido de la teoría
+### Qué representa y qué no representa Result
 
 - El patrón Result representa el resultado de una operación como un valor explícito en lugar de como una excepción.
 - Los errores se clasifican en esperados y excepcionales. Los esperados se representan con Result, los excepcionales con excepciones.
