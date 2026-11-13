@@ -22,8 +22,9 @@ Un PASS de PDF, una compilación de referencia o la existencia de un marcador no
 - Reparados los disparadores de los workflows M04/M05 y la activación de M06/M08 cuando cambia código o manual.
 - Corregida la auditoría de paridad M06/M08 para que **falle** si detecta discrepancias.
 - Creado `tools/auditar_reconstruccion_practicas.py`: compara cambios entre etapas; aplica sólo operaciones que constan en el manual a una copia de la etapa anterior; registra proyectos nuevos con `dotnet sln add`; compara texto con el proyecto final y compara semánticamente las soluciones .sln. **No copia el destino para fabricar un PASS**.
-- Materializadas y comprobadas **19/19 transiciones** de M03–M08: **310 archivos de texto** iguales con normalización inocua y **19 soluciones .sln** equivalentes por membresía, sobre **329 cambios**.
-- Conectados los validadores Windows de M03–M08 al modo `--reconstruir-incremental`. En M02 se conserva el E2E previo, pero no se habilita una falsa reconstrucción: faltan metadatos de operación.
+- Materializadas y comprobadas **19/19 transiciones internas** de M03–M08: **310 archivos de texto** iguales con normalización inocua y **19 soluciones .sln** equivalentes por membresía, sobre **329 cambios**.
+- También materializadas las **6/6 transiciones entre módulos** (M02→M03 hasta M07→M08), sin divergencias. Se ha preparado una reconstrucción acumulativa de **25 etapas consecutivas M03.1–M08.4** que utiliza el resultado construido en cada punto como origen del siguiente; debe consultarse su ejecución antes de certificarla.
+- Conectados los validadores Windows de M03–M08 al modo `--reconstruir-incremental`, incluyendo el primer punto construido desde el último proyecto del módulo precedente. En M02 se conserva el E2E previo, pero no se habilita una falsa reconstrucción: faltan metadatos de operación.
 - Creada auditoría PDF reproducible y muestras visuales en `tools/validar_publicacion_pdf.py`: **17 PDF, 1.219 páginas, 1.219 cabeceras**, sin páginas sin cuerpo ni bloques detectados fuera de página. La inspección visual completa sigue pendiente.
 - Corregidos los números de páginas desactualizados en los informes M01 y M03.
 
@@ -41,7 +42,7 @@ Un PASS de PDF, una compilación de referencia o la existencia de un marcador no
 | M08 | Corregido, aprobación pendiente | 3 transiciones: 38 archivos + 3 soluciones | E2E reconstruido Windows/SQL/RabbitMQ: consultar la última ejecución |
 | M09 | Prácticas corregidas, aprobación pendiente | Comandos PowerShell y seis servicios Compose validados en estructura/sintaxis | **Docker Desktop físico Windows pendiente** |
 
-**Límite de M03–M08:** la prueba parte del proyecto del primer punto de cada módulo. Aún debe demostrarse su construcción inicial desde el punto final del módulo anterior o desde el esqueleto especificado, y no se replican interacciones gráficas de Visual Studio.
+**Límite de M03–M08:** las seis transiciones iniciales sí se han construido desde el final del módulo precedente. Las 19 transiciones internas y las seis transiciones modulares pasaron una prueba de materialización; la ejecución acumulativa de los 25 puntos en una misma cadena se debe confirmar por su workflow. No se replican los clics de Visual Studio.
 
 ## 4. Brecha precisa de M02
 
@@ -56,7 +57,9 @@ No se debe añadir un apéndice artificial de código final ni declarar la traza
 
 ## 5. Evidencias
 
-- [Reconstrucción 19/19 de M03–M08](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43515823932).
+- [Reconstrucción 19/19 interna de M03–M08](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43515823932).
+- [Reconstrucción 6/6 de los límites M02→M03 hasta M07→M08](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43517914444).
+- [Reconstrucción acumulativa de 25 etapas, consultar resultado](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43518461160).
 - [M03 reconstrucción + Windows SQL/HTTP](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43516047019).
 - [M04–M05 reconstrucción + Windows SQL/HTTP](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43516053548).
 - [M06–M08 reconstrucción + Windows SQL/RabbitMQ](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43516060673).
@@ -66,8 +69,8 @@ No se debe añadir un apéndice artificial de código final ni declarar la traza
 ## 6. Pendientes para publicación definitiva
 
 1. Materialización íntegra de M02, especialmente Program.cs y cambios incrementales.
-2. Certificación del primer punto de cada módulo y continuidad entre módulos, sin utilizar el proyecto terminado como punto de partida.
-3. Confirmación final de E2E reconstruidos M06–M08 y reparación de cualquier fallo.
+2. Certificación de la cadena completa de 25 pasos M03–M08 sobre resultados reconstruidos sucesivamente, empezando en M02 2.4; su workflow existe y la ejecución debe comprobarse.
+3. E2E Windows/SQL/RabbitMQ de M03–M08 con la nueva reconstrucción del primer punto desde el módulo anterior; los E2E previos de las 19 transiciones internas resultaron satisfactorios.
 4. Ensayo M09 con Docker Desktop sobre Windows real.
 5. Revisión humana de la presentación de los PDF, especialmente las muestras y el cuerpo de cada módulo; verificación editorial final.
 6. Decisión del autor sobre publicación y fusión a `main`.
