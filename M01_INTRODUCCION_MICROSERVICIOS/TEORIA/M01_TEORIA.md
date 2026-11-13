@@ -733,11 +733,13 @@ Módulo 1: Introducción a los microservicios
 
 ---
 
-## Desarrollo teórico
+## Dibujar fronteras a partir del negocio
 
-### Bloque 1 — Principios de diseño como criterios de descomposición
+El código de una aplicación no se convierte en una arquitectura por el mero hecho de distribuir sus clases en varios proyectos. En este punto examinaremos qué principios justifican una frontera, cómo se pueden aplicar mientras AceriaApp todavía es una solución monolítica y qué evidencia pediríamos antes de convertir uno de esos límites en un servicio independiente.
 
-Los principios de diseño son reglas generales que guían la toma de decisiones arquitectónicas. En el contexto de los microservicios, su función es determinar dónde trazar la frontera entre un servicio y otro. Sin principios explícitos, la descomposición se convierte en una decisión arbitraria que produce servicios mal delimitados, con dependencias cruzadas y responsabilidades solapadas. Un principio de diseño no es una regla absoluta: es un criterio que se aplica con juicio y que se documenta para que la decisión sea trazable. Los principios se organizan en tres categorías: principios de responsabilidad, principios de ocultación y principios de acoplamiento. Cada categoría responde a una pregunta distinta sobre el límite del servicio. Una frontera arquitectónica se comprueba observando qué cambios obliga a realizar. Antes de crear servicios autónomos, el equipo debe identificar operaciones, invariantes y propietarios de datos.
+### Principios de diseño como criterios de descomposición
+
+Descomponer una aplicación no consiste en repartir clases entre carpetas del mismo tamaño. La frontera de un módulo o de un servicio tiene consecuencias sobre sus reglas, los datos que controla y las modificaciones que necesitarán coordinarse con otros componentes. Para encontrar una frontera útil conviene examinar tres cuestiones complementarias: qué capacidad del negocio representa, qué detalles debe mantener privados y de qué otros módulos depende para completar sus operaciones. Son principios que sirven tanto dentro de un monolito como en una aplicación distribuida. Si no conseguimos expresar esas responsabilidades con claridad en una única solución de Visual Studio, separarlas entre procesos probablemente añadirá dificultades sin resolver el problema original. En AceriaApp comenzamos por el significado de una orden de producción y por las operaciones que deberían conservar sus invariantes; después evaluaremos si esa capacidad requiere autonomía operativa.
 
 ```text
 Categorías de principios de diseño:
@@ -747,11 +749,8 @@ Categorías de principios de diseño:
 3. Acoplamiento     → ¿cómo se relaciona con otros?
 ```
 
-**Lectura guiada del ejemplo**
+Las tres preguntas del esquema se responden sobre el mismo caso de uso. «Responsabilidad» localiza las decisiones que pertenecen a una capacidad; «ocultación» determina qué detalles no deberían filtrarse a otros módulos; y «acoplamiento» examina cómo atraviesa una petición las fronteras. Se complementan: un servicio puede estar bien nombrado y seguir publicando datos internos o depender directamente del almacenamiento de otro.
 
-- **Línea 1:** 1. Responsabilidad → primera categoría, define el alcance funcional del servicio.
-- **Línea 2:** 2. Ocultación → segunda categoría, define qué detalles internos no se exponen.
-- **Línea 3:** 3. Acoplamiento → tercera categoría, define las dependencias entre servicios.
 
 La primera categoría, la responsabilidad, responde a la pregunta de qué hace el servicio. La segunda, la ocultación, responde a la pregunta de qué esconde. La tercera, el acoplamiento, responde a la pregunta de cómo se relaciona con otros servicios. Las tres categorías se aplican de forma conjunta: un servicio bien diseñado tiene una responsabilidad clara, oculta sus detalles internos y mantiene un acoplamiento débil con el resto. La aplicación conjunta de las tres categorías es lo que distingue un límite de servicio correcto de uno incorrecto. Si una nueva regla de Órdenes exige modificar clases de Facturación y de Inventario, la separación actual puede estar ocultando dependencias relevantes. El resultado puede registrarse en una decisión arquitectónica con evidencias observables: número de módulos afectados por cada cambio, contratos expuestos y necesidad de coordinación de despliegue.
 
@@ -759,9 +758,9 @@ La ausencia de principios explícitos produce tres síntomas reconocibles. El pr
 
 ---
 
-### Bloque 2 — Principio de responsabilidad única aplicado a servicios
+### Principio de responsabilidad única aplicado a servicios
 
-El principio de responsabilidad única establece que un servicio debe tener una única razón para cambiar. En el contexto de los microservicios, la "razón para cambiar" se identifica con una capacidad de negocio concreta. Un servicio de órdenes cambia cuando cambian las reglas de las órdenes. Un servicio de inventario cambia cuando cambian las reglas del inventario. Si un servicio cambia por dos motivos distintos, tiene dos responsabilidades y debería dividirse. La identificación de la razón para cambiar se realiza con el lenguaje del negocio, no con el lenguaje técnico. Un servicio no se define por la tecnología que usa, sino por la capacidad de negocio que encapsula.
+Una capacidad del negocio puede necesitar numerosos métodos sin dejar de tener una responsabilidad coherente. El principio de responsabilidad única no prescribe una clase por verbo ni un servicio por tabla: pide que un componente cambie principalmente por un conjunto de razones relacionadas. Crear, cancelar y consultar órdenes pueden formar parte de la misma capacidad si comparten reglas, vocabulario y propietario funcional. Facturar una venta, en cambio, puede depender de leyes fiscales, calendarios y responsables diferentes; agruparlo con las reglas de fabricación podría obligar a modificar el mismo componente por motivos desconectados. Esta observación permite detectar fronteras débiles antes de introducir un servidor por servicio. La prueba no consiste en contar métodos, sino en imaginar cambios de negocio y analizar dónde se producirían y con quién habría que negociar sus efectos.
 
 ```csharp
 // Correcto: una responsabilidad por servicio
@@ -779,26 +778,12 @@ public class OrdenYFacturacionServicio
 }
 ```
 
-**Lectura guiada del ejemplo**
+Las dos clases hacen visible una posible frontera de negocio. `OrdenServicio` reúne acciones que afectan al ciclo de una orden; `OrdenYFacturacionServicio` mezcla esas acciones con la emisión de facturas. El ejemplo no es una regla que prohíba toda coordinación entre órdenes y facturación: es una advertencia contra ubicar reglas de dominios distintos en el mismo componente sin una razón explícita.
 
-- **Línea 1:** // Correcto: una responsabilidad por servicio → comentario que indica el caso correcto.
-- **Línea 2:** public class OrdenServicio → clase que encapsula solo la capacidad de órdenes.
-- **Línea 3:** { → abre el cuerpo de la clase.
-- **Línea 4:** public void CrearOrden(...) → método de creación de órdenes.
-- **Línea 5:** public void CancelarOrden(...) → método de cancelación de órdenes.
-- **Línea 6:** } → cierra el cuerpo de la clase.
-- **Línea 7:** // Incorrecto: dos responsabilidades en el mismo servicio → comentario que indica el caso incorrecto.
-- **Línea 8:** public class OrdenYFacturacionServicio → clase que mezcla dos capacidades.
-- **Línea 9:** { → abre el cuerpo de la clase.
-- **Línea 10:** public void CrearOrden(...) → método de órdenes.
-- **Línea 11:** public void EmitirFactura(...) → método de facturación.
-- **Línea 12:** } → cierra el cuerpo de la clase.
 
-La aplicación del principio tiene una consecuencia práctica: los servicios tienden a ser más pequeños de lo que la intuición sugiere. Un servicio con cinco métodos relacionados con la misma capacidad de negocio es correcto. Un servicio con dos métodos de capacidades distintas es incorrecto aunque tenga pocas líneas de código. El tamaño no es el criterio; la razón para cambiar es el criterio. Para evaluar principio de responsabilidad única aplicado a servicios conviene registrar el resultado observable y la restricción de negocio que motiva el cambio, antes de introducir infraestructura adicional.
+La aplicación del principio tiene una consecuencia práctica: los servicios tienden a ser más pequeños de lo que la intuición sugiere. Un servicio con cinco métodos relacionados con la misma capacidad de negocio es correcto. Un servicio con dos métodos de capacidades distintas es incorrecto aunque tenga pocas líneas de código. El tamaño no es el criterio; la razón para cambiar es el criterio. 
 
 La responsabilidad única no equivale a limitar una clase o un servicio a un solo método. Un servicio de Órdenes puede crear, cancelar, consultar y validar órdenes si esas operaciones cambian por las mismas razones de negocio y comparten sus invariantes. La extracción de Facturación debe justificarse cuando existan reglas, ritmos de cambio o responsables suficientemente diferentes, no porque dos métodos aparezcan juntos. También debe evitarse que un servicio de dominio dependa del conocimiento técnico de otros servicios para ejecutar una operación cotidiana. En el modelo de acería, conviene anotar qué reglas pertenecen a planificación de producción y cuáles a emisión de facturas, junto con las entidades afectadas. Los nombres elegidos por el negocio son más fiables que separar módulos por controladores, repositorios o tablas. La calidad de la frontera se observa cuando un cambio habitual permanece localizado.
-
-#### Profundización: la «razón para cambiar» pertenece al negocio
 
 Un servicio no adquiere responsabilidad única por tener una clase o un verbo principal. Una capacidad de negocio contiene numerosas operaciones que evolucionan juntas. El servicio de Órdenes puede crear, cancelar, consultar y reprogramar órdenes; todas son responsabilidades coherentes cuando responden a las mismas reglas de producción y al mismo propietario funcional. En cambio, calcular el precio de una factura según condiciones fiscales y reservar stock disponible responden a reglas diferentes, aunque ambas operaciones se invoquen durante la aceptación de una orden. La frontera se descubre examinando quién decide cada política y qué cambios se producen conjuntamente, no contando métodos o líneas de C#.
 
@@ -809,9 +794,9 @@ En un taller de análisis, resulta útil formular varios cambios hipotéticos: u
 
 ---
 
-### Bloque 3 — Principio de ocultación de información aplicado a servicios
+### Principio de ocultación de información aplicado a servicios
 
-El principio de ocultación de información establece que un módulo debe exponer solo lo que otros módulos necesitan y ocultar todo lo demás. En microservicios, la ocultación se aplica en tres niveles: el modelo de datos, la lógica interna y la topología de despliegue. El modelo de datos se oculta prohibiendo que un servicio acceda directamente a la base de datos de otro. La lógica interna se oculta exponiendo solo contratos públicos estables. La topología se oculta detrás de un API Gateway que centraliza el enrutamiento. La ocultación no es un fin en sí mismo: su objetivo es permitir que cada servicio evolucione sin romper a los demás.
+Un módulo ofrece ocultación de información cuando sus consumidores pueden utilizarlo sin conocer su almacenamiento, algoritmos o representación interna. En una aplicación de órdenes, otros componentes podrían necesitar la disponibilidad de un material, pero no tendrían por qué conocer tablas, índices ni reglas privadas de Inventario. Es mejor exponer un contrato estable que permitir modificaciones directas sobre objetos internos. Esta decisión tiene consecuencias concretas: permite cambiar EF Core, ajustar un cálculo o dividir el almacenamiento sin modificar a todos los consumidores, siempre que el contrato preserve su significado. Ocultar no equivale a dejar el comportamiento sin documentar; por el contrario, el consumidor debe conocer qué acepta una operación, qué devuelve y cómo informa de los errores. El diseño se empobrece tanto al exponer todo como al convertir cada interacción en una caja negra imposible de razonar.
 
 ```text
 Ocultación en tres niveles:
@@ -821,17 +806,12 @@ Ocultación en tres niveles:
 3. Topología         → API Gateway centraliza el enrutamiento.
 ```
 
-**Lectura guiada del ejemplo**
+El esquema recorre tres ámbitos de ocultación. La propiedad del modelo de datos evita escrituras ajenas; el contrato público permite utilizar una función sin conocer su implementación; y el enrutamiento puede ocultar a los clientes la ubicación de cada proceso. Disponer de un gateway es una opción frecuente, no la condición que convierte una API en un microservicio autónomo.
 
-- **Línea 1:** 1. Modelo de datos → primer nivel, oculta el esquema de persistencia.
-- **Línea 2:** 2. Lógica interna → segundo nivel, oculta la implementación.
-- **Línea 3:** 3. Topología → tercer nivel, oculta la ubicación de los servicios.
 
 La violación más común del principio es el acceso directo a la base de datos de otro servicio. Cuando dos servicios comparten una base de datos, cualquier cambio en el esquema afecta a ambos y la independencia de despliegue desaparece. La segunda violación es la exposición del modelo interno a través de la API. Cuando un servicio devuelve su entidad de base de datos tal cual, cualquier cambio en la entidad rompe a los consumidores. La tercera violación es la exposición de la topología interna. Cuando los clientes conocen la ubicación de cada servicio, cualquier cambio de infraestructura afecta a los clientes.
 
 Un DTO público no debe incluir propiedades de navegación del ORM ni detalles como estados de seguimiento de EF Core. Si una entidad incorpora un nuevo atributo interno, el contrato de respuesta puede seguir siendo el mismo mientras los consumidores no necesiten ese dato. Es importante diferenciar ocultación de secreto: un DTO no protege información confidencial por sí solo; el servicio debe autorizar las operaciones y filtrar los campos según el cliente. La base de datos es otro límite de responsabilidad. Compartir el mismo servidor SQL por motivos administrativos puede ser compatible con autonomía si cada servicio posee sus tablas, permisos y migraciones, pero permitir consultas directas entre esquemas destruye esa independencia. En AceriaApp, los ejemplos de DTO y de Gateway anticipan decisiones que se desarrollarán después. En este punto solo se analizan y validan límites hipotéticos, no se implementa todavía esa infraestructura distribuida.
-
-#### Profundización: ocultar persistencia sin ocultar el contrato
 
 La ocultación de información debe evitar que el consumidor dependa de decisiones privadas del productor. Una entidad de EF Core puede contener propiedades de navegación, configuraciones de seguimiento, campos internos o reglas de actualización que no deberían convertirse en requisitos de una API pública. Cuando un endpoint devuelve directamente una entidad, un refactor del modelo puede modificar accidentalmente el JSON. Un DTO dedicado separa ambas representaciones: la entidad puede cambiar su forma interna mientras la API conserva el contrato que conocen los consumidores. Esa separación requiere mapear explícitamente valores y decidir qué campos se admiten en entrada y salida.
 
@@ -842,9 +822,9 @@ La prueba decisiva para evaluar la ocultación es un cambio controlado. Se puede
 
 ---
 
-### Bloque 4 — Principio de acoplamiento débil y cohesión fuerte
+### Principio de acoplamiento débil y cohesión fuerte
 
-El principio de acoplamiento débil y cohesión fuerte establece que los elementos de un módulo deben estar fuertemente relacionados entre sí y débilmente relacionados con otros módulos. En microservicios, la cohesión se mide por el número de conceptos distintos que maneja un servicio: a menos conceptos, mayor cohesión. El acoplamiento se mide por el número de servicios con los que un servicio necesita comunicarse para completar una operación: a menos servicios, menor acoplamiento. El equilibrio entre cohesión y acoplamiento determina la calidad del límite del servicio.
+La cohesión expresa si las operaciones de un componente contribuyen a una misma responsabilidad; el acoplamiento refleja cuánto necesita conocer de otros componentes para funcionar. Ambos principios se relacionan, pero no son simples cifras de métodos o referencias. Un servicio puede tener pocas dependencias y estar mal diseñado si agrupa reglas comerciales que cambian por motivos distintos. También puede tener varias dependencias legítimas si su caso de uso orquesta contratos bien definidos sin conocer implementaciones privadas. Lo que interesa es evaluar la **dirección y el significado** de esas dependencias: ¿la aplicación conoce una abstracción estable o accede directamente a una tabla ajena? En AceriaApp, una operación de planificación puede solicitar información a Inventario, pero no debería apropiarse de su política de cálculo de existencias. Una frontera adecuada hace localizables las reglas y limita los cambios en cascada.
 
 ```text
 Cohesión alta:  un servicio maneja un solo concepto.
@@ -854,18 +834,12 @@ Acoplamiento bajo:  un servicio depende de pocos servicios.
 Acoplamiento alto:  un servicio depende de muchos servicios.
 ```
 
-**Lectura guiada del ejemplo**
+Los términos alta y baja califican relaciones, no tamaños absolutos. Un servicio que implementa varias operaciones de la misma capacidad puede ser cohesivo; un servicio pequeño con reglas de dominios inconexos puede no serlo. De igual modo, importa más una dependencia estable y explícita que un recuento ciego del número de servicios invocados. Para evaluar el diseño hay que estudiar ejemplos de cambios y seguir sus consecuencias.
 
-- **Línea 1:** Cohesión alta: un servicio maneja un solo concepto. → describe el caso deseable.
-- **Línea 2:** Cohesión baja: un servicio maneja varios conceptos. → describe el caso no deseable.
-- **Línea 3:** Acoplamiento bajo: un servicio depende de pocos servicios. → describe el caso deseable.
-- **Línea 4:** Acoplamiento alto: un servicio depende de muchos servicios. → describe el caso no deseable.
 
-La aplicación del principio tiene una consecuencia práctica: los servicios deben agrupar operaciones que cambian juntas y separar operaciones que cambian por motivos distintos. Un servicio que agrupa operaciones que cambian juntas tiene cohesión alta. Un servicio que depende de muchos otros para completar una operación tiene acoplamiento alto. El objetivo es maximizar la cohesión y minimizar el acoplamiento, sin caer en el extremo de crear servicios tan pequeños que cada operación requiera coordinar diez servicios. Para evaluar principio de acoplamiento débil y cohesión fuerte conviene registrar el resultado observable y la restricción de negocio que motiva el cambio, antes de introducir infraestructura adicional.
+La aplicación del principio tiene una consecuencia práctica: los servicios deben agrupar operaciones que cambian juntas y separar operaciones que cambian por motivos distintos. Un servicio que agrupa operaciones que cambian juntas tiene cohesión alta. Un servicio que depende de muchos otros para completar una operación tiene acoplamiento alto. El objetivo es maximizar la cohesión y minimizar el acoplamiento, sin caer en el extremo de crear servicios tan pequeños que cada operación requiera coordinar diez servicios. 
 
 La cohesión no puede reducirse objetivamente al número de entidades o conceptos: tres conceptos fuertemente relacionados pueden formar un conjunto coherente, mientras dos conceptos sin relación pueden indicar una frontera incorrecta. Del mismo modo, contar dependencias salientes no expresa su criticidad. Una dependencia a un servicio disponible de manera asíncrona no tiene el mismo coste que una llamada síncrona imprescindible para confirmar cada operación. El validador del ejercicio utiliza umbrales de tres conceptos y tres dependencias porque necesita reglas comprobables, pero deben presentarse como heurísticas docentes. En un análisis real se documenta para cada dependencia su frecuencia, dirección, latencia, semántica de fallo y necesidad de consistencia. En AceriaApp, separar Órdenes e Inventario puede aumentar cohesión funcional y, al mismo tiempo, crear un flujo distribuido de reserva de materiales. Ambas consecuencias deben valorarse en la misma decisión.
-
-#### Profundización: cohesión y acoplamiento no son simples contadores
 
 Un número pequeño de dependencias salientes suele facilitar la evolución, pero no todas las dependencias tienen el mismo coste. Consumir un contrato estable para consultar un dato de referencia no equivale a necesitar que tres servicios confirmen simultáneamente cada operación de negocio. La primera dependencia puede introducir latencia y disponibilidad remota; la segunda, además, puede obligar a coordinar estados, compensaciones y versiones. De modo similar, medir cohesión por número de conceptos es una aproximación pedagógica: dos conceptos pueden ser inseparables dentro de una misma capacidad y cuatro conceptos pueden pertenecer a una regla de negocio perfectamente coherente.
 
@@ -883,15 +857,13 @@ El método `Validar` del punto 1.3 marca como no válidos los límites que super
 
 ---
 
-### Bloque 5 — Principio de límite del contexto
-
-**Esquema visual del concepto**
+### Principio de límite del contexto
 
 ![Separación de contextos delimitados en una acería](figuras/03-limites-contexto.png)
 
 *Figura. Separación de contextos delimitados en una acería.*
 
-El principio de límite del contexto establece que cada servicio debe corresponder a un contexto delimitado del dominio. Un contexto delimitado es una frontera dentro de la cual un término del negocio tiene un significado preciso y consistente. Fuera de esa frontera, el mismo término puede tener otro significado. En el dominio de la acería, el término "orden" puede significar una orden de producción en el contexto de planta y una orden de compra en el contexto de aprovisionamiento. Los dos significados son válidos, pero no deben convivir en el mismo servicio. El límite del contexto define dónde empieza y dónde termina el servicio.
+El lenguaje del negocio ayuda a descubrir límites que una taxonomía técnica no revelaría. En una acería, la palabra «orden» puede significar una orden de fabricación o una orden de compra; comparten una palabra, pero no necesariamente estados, responsables ni reglas. DDD denomina **contexto delimitado** al ámbito en el que un modelo y sus términos poseen significado consistente. Esa frontera orienta la separación funcional y puede sugerir la propiedad de un servicio, sin obligar a desplegar uno por cada sustantivo del negocio. Lo importante es localizar qué hechos necesita conocer otro contexto y definir cómo los expresa. Cuando Producción necesita que Inventario confirme existencias, ambas capacidades deberían acordar un mensaje o consulta y evitar intercambiar el modelo interno completo de cualquiera de ellas. Este análisis precede a la creación de controllers, repositorios o contenedores.
 
 ```text
 Contextos delimitados en la acería:
@@ -901,17 +873,12 @@ Contexto de aprovisionamiento → "orden" = orden de compra.
 Contexto de clientes    → "cliente" = empresa compradora.
 ```
 
-**Lectura guiada del ejemplo**
+Los tres ejemplos de «orden» muestran por qué un nombre aislado no identifica un modelo. La orden de producción pertenece a reglas de fabricación, mientras que la orden de compra se relaciona con aprovisionamiento; ambas pueden necesitar intercambiar información, pero sus estados y responsables no son necesariamente los mismos. El vocabulario compartido debe fijarse dentro de cada contexto y traducirse explícitamente en sus límites.
 
-- **Línea 1:** Contexto de producción → primer contexto delimitado, con su propio significado de "orden".
-- **Línea 2:** Contexto de aprovisionamiento → segundo contexto, con otro significado de "orden".
-- **Línea 3:** Contexto de clientes → tercer contexto, con su propio significado de "cliente".
 
-La aplicación del principio tiene una consecuencia práctica: los servicios deben corresponder a contextos delimitados, no a entidades de la base de datos ni a capas técnicas. Un servicio que corresponde a una tabla de la base de datos no es un servicio, es un envoltorio de tabla. Un servicio que corresponde a un contexto delimitado encapsula un significado de negocio completo. El límite del contexto es el criterio más importante para decidir dónde trazar la frontera entre servicios. Para evaluar principio de límite del contexto conviene registrar el resultado observable y la restricción de negocio que motiva el cambio, antes de introducir infraestructura adicional.
+La aplicación del principio tiene una consecuencia práctica: los servicios deben corresponder a contextos delimitados, no a entidades de la base de datos ni a capas técnicas. Un servicio que corresponde a una tabla de la base de datos no es un servicio, es un envoltorio de tabla. Un servicio que corresponde a un contexto delimitado encapsula un significado de negocio completo. El límite del contexto es el criterio más importante para decidir dónde trazar la frontera entre servicios. 
 
 Un contexto delimitado se define por el significado y las reglas que comparten sus participantes, no solo por el nombre de un objeto. En Producción, una orden puede representar trabajo planificado, rutas de proceso y fecha de fabricación; en Aprovisionamiento puede significar el pedido enviado a un proveedor. Aunque ambas utilicen el texto “orden”, sus estados, propietarios y ciclos de vida no tienen por qué coincidir. Intentar imponer una única entidad universal genera acoplamiento semántico. La traducción entre contextos debe realizarse mediante contratos explícitos y transformaciones conscientes, no compartiendo directamente clases del dominio. Durante el diseño conviene enumerar los eventos que cruzan la frontera: orden aprobada, material reservado o recepción confirmada. El catálogo de límites de AceriaApp incorpora el campo ContextoDelimitado para practicar esta identificación, pero no demuestra automáticamente que los significados sean consistentes.
-
-#### Profundización: construir un mapa de contextos de la acería
 
 El concepto *orden* tiene una forma distinta según el contexto. En Producción, una orden determina qué producto fabricar, en qué cantidad y bajo qué restricciones; en Compras, una orden se dirige a un proveedor y representa compromisos de aprovisionamiento. El hecho de compartir la palabra no significa que ambas operaciones deban emplear la misma clase o tabla. Si se crea un único tipo `Orden` con todas las propiedades posibles, cada capacidad termina dependiendo de campos que no tienen sentido para su negocio. Un contexto delimitado permite que cada modelo use sus propios términos y valide sus propias invariantes.
 
@@ -924,9 +891,9 @@ En la práctica del punto 1.3 se describen límites con atributos `CapacidadDeNe
 
 ---
 
-### Bloque 6 — Principio de autonomía del servicio
+### Principio de autonomía del servicio
 
-El principio de autonomía establece que un servicio debe poder operar de forma independiente respecto a los demás. La autonomía se manifiesta en tres dimensiones: autonomía de despliegue, autonomía de datos y autonomía de fallo. La autonomía de despliegue permite que un servicio se actualice sin coordinar con los demás. La autonomía de datos permite que un servicio gestione su propia persistencia sin depender de otros. La autonomía de fallo permite que un servicio siga operando cuando otro falla, aunque con funcionalidad degradada. La autonomía no es absoluta: ningún servicio es completamente autónomo en un sistema distribuido.
+La autonomía de un servicio suele explicarse en términos de despliegue, datos y tolerancia a fallos, aunque cada dimensión necesita una comprobación distinta. Un proceso puede publicarse solo y, sin embargo, depender de la base de datos de otro para casi todas sus operaciones. Del mismo modo, poseer un `DbContext` independiente no prueba que exista propiedad de datos si varios servicios escriben las mismas tablas. La autonomía se consigue al delimitar qué invariantes mantiene cada capacidad y qué intercambios están permitidos entre ellas. Algunos flujos necesitarán coordinación y consistencia eventual; otros pueden responder con información parcial cuando una dependencia falle. En el módulo inicial solo se prepara una estructura en la que estas decisiones puedan identificarse; la operación distribuida real se incorpora mucho después, cuando el dominio y los contratos sean suficientemente claros.
 
 ```csharp
 // Autonomía de datos: cada servicio tiene su propio DbContext
@@ -941,27 +908,18 @@ public class InventarioDbContext : DbContext
 }
 ```
 
-**Lectura guiada del ejemplo**
+Los dos contextos EF Core sirven para distinguir modelos persistidos por capacidades diferentes. Que existan `OrdenesDbContext` e `InventarioDbContext` no garantiza, por sí mismo, autonomía de datos: habría que revisar qué tablas modifican, qué credenciales utilizan y si un componente puede alterar registros pertenecientes al otro.
 
-- **Línea 1:** // Autonomía de datos: cada servicio tiene su propio DbContext → comentario que indica el principio.
-- **Línea 2:** public class OrdenesDbContext : DbContext → contexto propio del servicio de órdenes.
-- **Línea 3:** { → abre el cuerpo de la clase.
-- **Línea 4:** public DbSet<Orden> Ordenes => Set<Orden>(); → solo expone las órdenes.
-- **Línea 5:** } → cierra el cuerpo de la clase.
-- **Línea 6:** public class InventarioDbContext : DbContext → contexto propio del servicio de inventario.
-- **Línea 7:** { → abre el cuerpo de la clase.
-- **Línea 8:** public DbSet<Material> Materiales => Set<Material>(); → solo expone los materiales.
-- **Línea 9:** } → cierra el cuerpo de la clase.
 
-La aplicación del principio tiene una consecuencia práctica: los servicios no comparten contexto de persistencia. Cada servicio tiene su propio DbContext y su propia base de datos. La comunicación entre servicios se realiza a través de la red, no a través de la base de datos. Esta separación garantiza que un cambio en el esquema de un servicio no afecte a los demás. Para evaluar principio de autonomía del servicio conviene registrar el resultado observable y la restricción de negocio que motiva el cambio, antes de introducir infraestructura adicional.
+La aplicación del principio tiene una consecuencia práctica: los servicios no comparten contexto de persistencia. Cada servicio tiene su propio DbContext y su propia base de datos. La comunicación entre servicios se realiza a través de la red, no a través de la base de datos. Esta separación garantiza que un cambio en el esquema de un servicio no afecte a los demás. 
 
 La autonomía de datos exige que un servicio sea responsable de sus migraciones, respaldos y políticas de acceso. Dos DbContext diferentes conectados al mismo esquema y escribiendo las mismas tablas no cumplen el principio solo por tener nombres distintos. La autonomía de fallo también necesita diseñarse por caso de uso: una consulta histórica de órdenes puede continuar si Inventario no responde, mientras una operación que reserva material quizá deba suspenderse. En la autonomía de despliegue importa la compatibilidad del contrato; actualizar Órdenes de forma aislada carece de valor si Inventario debe desplegarse al mismo tiempo por una modificación compartida. Estas tres formas se miden de forma distinta y ninguna garantiza automáticamente las demás. En AceriaApp, el monolito de partida usa un DbContext común; la separación física se estudiará posteriormente cuando existan procesos verdaderamente independientes.
 
 ---
 
-### Bloque 7 — Principio de contrato explícito
+### Principio de contrato explícito
 
-El principio de contrato explícito establece que la comunicación entre servicios debe realizarse a través de contratos públicos, versionados y documentados. Un contrato explícito define qué datos se intercambian, en qué formato y con qué garantías. El contrato no expone la implementación interna del servicio, solo su interfaz pública. Los contratos se versionan para permitir la evolución independiente de los servicios. La versión del contrato se negocia entre el servicio productor y el servicio consumidor. La violación del principio produce acoplamiento por implementación, donde un cambio interno rompe a los consumidores. La decisión sobre principio de contrato explícito debe diferenciar lo que el ejemplo ilustra de lo que la aplicación implementa realmente en esta etapa.
+Un contrato explícito es la parte del comportamiento que el consumidor puede utilizar con seguridad. En HTTP incluye rutas, verbos, estructura de las peticiones y respuestas, códigos de estado y reglas de compatibilidad. En eventos comprende además el significado del hecho publicado, su versión y la posibilidad de recibirlo más de una vez. Al separar estas superficies del modelo interno, un servicio puede modificar sus clases sin obligar a los clientes a recompilarse. Para AceriaApp, un DTO de orden representa datos compartidos con consumidores, mientras la entidad de dominio debería conservar invariantes que no se exponen como propiedades editables. La claridad de ese límite es más importante que elegir prematuramente un formato sofisticado. El contrato sirve a sus consumidores: debe explicar qué pueden esperar de él, especialmente cuando la operación no puede completarse.
 
 ```csharp
 public record OrdenDto(
@@ -972,20 +930,12 @@ public record OrdenDto(
     DateTime FechaCreacion);
 ```
 
-**Lectura guiada del ejemplo**
+El `record OrdenDto` expresa una representación que puede circular por un contrato HTTP; agrupa identidad, cliente, material, cantidad y fecha. Es distinto de la entidad que protege reglas internas y decide transiciones. Su utilidad está en publicar solo los datos acordados, y su evolución debe evaluarse desde los consumidores que lo utilizan.
 
-- **Línea 1:** public record OrdenDto( → declara un contrato inmutable con la palabra clave record.
-- **Línea 2:** Guid Id, → identificador de la orden.
-- **Línea 3:** string Cliente, → nombre del cliente.
-- **Línea 4:** string Material, → material solicitado.
-- **Línea 5:** int Cantidad, → cantidad solicitada.
-- **Línea 6:** DateTime FechaCreacion); → fecha de creación de la orden.
 
-La aplicación del principio tiene una consecuencia práctica: los servicios no exponen sus entidades de dominio a través de la API. Exponen DTOs específicos que representan el contrato público. La entidad Orden puede cambiar sin romper el contrato OrdenDto. La separación entre entidad y DTO es la garantía de que el contrato público se mantiene estable aunque la implementación evolucione. Para evaluar principio de contrato explícito conviene registrar el resultado observable y la restricción de negocio que motiva el cambio, antes de introducir infraestructura adicional. La decisión sobre principio de contrato explícito debe diferenciar lo que el ejemplo ilustra de lo que la aplicación implementa realmente en esta etapa.
+La aplicación del principio tiene una consecuencia práctica: los servicios no exponen sus entidades de dominio a través de la API. Exponen DTOs específicos que representan el contrato público. La entidad Orden puede cambiar sin romper el contrato OrdenDto. La separación entre entidad y DTO es la garantía de que el contrato público se mantiene estable aunque la implementación evolucione.  
 
 El contrato no es solo una estructura de datos. También define códigos de respuesta, restricciones, errores, paginación y significado de los campos. Un OrdenDto con propiedades idénticas a una entidad sigue siendo útil si establece una frontera estable entre la API y el modelo de persistencia. Las fechas deben expresar con claridad la zona horaria y los identificadores deben conservar su significado entre versiones. Cambiar el nombre o el tipo de un campo puede romper consumidores generados automáticamente; añadir campos tampoco es siempre inocuo cuando el cliente realiza validación estricta. En AceriaApp, el DTO presentado es un ejemplo teórico para el módulo de APIs REST, no una clase añadida al proyecto en el punto 1.3. El validador de límites comprueba el indicador ExponeEntidadesDeDominio declarado por el autor, pero no inspecciona endpoints ni serialización de respuestas.
-
-#### Profundización: contratos estables y modelos internos cambiantes
 
 Un contrato público debe describir una promesa que los consumidores puedan comprender y verificar. Un DTO es una pieza de esa promesa, pero no la agota. El contrato incluye la ruta, el método HTTP, los campos obligatorios, las restricciones de validación, los posibles códigos de error y el significado de la respuesta. Cambiar un nombre en el JSON, por ejemplo `Cliente` por `Comprador`, puede romper aplicaciones externas incluso cuando el tipo C# se recompila correctamente. Por el contrario, modificar una entidad interna sin variar el DTO ni el comportamiento HTTP no tiene por qué afectar a ningún consumidor.
 
@@ -998,9 +948,9 @@ La teoría prepara así la práctica de buenas prácticas del punto 1.5, donde e
 
 ---
 
-### Bloque 8 — Principio de tolerancia al fallo
+### Principio de tolerancia al fallo
 
-El principio de tolerancia al fallo establece que un servicio debe seguir operando cuando una dependencia falla, aunque sea con funcionalidad degradada. La tolerancia se implementa con timeouts, reintentos, circuit breakers y respuestas de reserva. El timeout evita que una llamada bloquee el servicio indefinidamente. El reintento recupera errores transitorios. El circuit breaker evita que un servicio saturado reciba más carga. La respuesta de reserva devuelve un valor por defecto cuando la dependencia no está disponible. La tolerancia no elimina el fallo: lo contiene y evita que se propague. La decisión sobre principio de tolerancia al fallo debe diferenciar lo que el ejemplo ilustra de lo que la aplicación implementa realmente en esta etapa.
+Un servicio tolerante a fallos no promete responder correctamente siempre, sino conservar un comportamiento **definido** cuando una dependencia deja de estar disponible. Una consulta informativa de existencias podría devolver un error temporal o una respuesta degradada claramente identificada; una orden que exige confirmación de stock no debería inventar disponibilidad. La elección depende de las reglas del negocio y del riesgo de utilizar información incompleta. Timeouts, reintentos y circuit breakers protegen recursos, pero cada uno resuelve un problema diferente y también puede introducir efectos secundarios si se configura sin límites. En AceriaApp se estudiarán esas políticas con escenarios de caída reales y controlados. Aquí la idea esencial es que un fallo remoto forma parte del contrato operativo y debe ser probado del mismo modo que el camino satisfactorio.
 
 ```csharp
 var policy = Policy
@@ -1010,23 +960,18 @@ var policy = Policy
         durationOfBreak: TimeSpan.FromSeconds(30));
 ```
 
-**Lectura guiada del ejemplo**
+El ejemplo muestra una política de corte ante excepciones HTTP repetidas y un intervalo antes de intentar recuperar la dependencia. No basta con declararla para demostrar resiliencia: hay que provocar fallos, contar intentos y verificar la recuperación. Es una formulación conceptual de Polly; las APIs concretas de resiliencia usadas más adelante en el curso pueden diferir.
 
-- **Línea 1:** var policy = Policy → comienza la definición de la política.
-- **Línea 2:** .Handle<HttpRequestException>() → se activa ante errores HTTP.
-- **Línea 3:** .CircuitBreakerAsync( → configura un circuit breaker.
-- **Línea 4:** exceptionsAllowedBeforeBreaking: 3, → tres errores antes de abrir el circuito.
-- **Línea 5:** durationOfBreak: TimeSpan.FromSeconds(30)); → el circuito permanece abierto .
 
-La aplicación del principio tiene una consecuencia práctica: cada llamada a otro servicio se envuelve en una política de tolerancia. Sin esta política, un fallo en un servicio se propaga en cascada y bloquea todo el sistema. Con la política, el fallo se contiene y el sistema sigue operando con funcionalidad degradada. Para evaluar principio de tolerancia al fallo conviene registrar el resultado observable y la restricción de negocio que motiva el cambio, antes de introducir infraestructura adicional. La decisión sobre principio de tolerancia al fallo debe diferenciar lo que el ejemplo ilustra de lo que la aplicación implementa realmente en esta etapa.
+La aplicación del principio tiene una consecuencia práctica: cada llamada a otro servicio se envuelve en una política de tolerancia. Sin esta política, un fallo en un servicio se propaga en cascada y bloquea todo el sistema. Con la política, el fallo se contiene y el sistema sigue operando con funcionalidad degradada.  
 
 La tolerancia al fallo debe distinguir los errores transitorios de los definitivos. Un 400 por validación de la solicitud no se soluciona repitiendo la llamada; un timeout puede indicar sobrecarga temporal, pero un reintento sin límite agrava esa condición. El circuit breaker reduce la presión sobre un destino que presenta fallos repetidos y debe configurarse junto con presupuestos de tiempo y un mecanismo para observar su estado. También es necesario definir qué funcionalidad degradada es aceptable: ofrecer la última disponibilidad conocida puede ser útil para una pantalla informativa, pero peligroso para confirmar una reserva física. En el ejemplo de Polly, el umbral de tres excepciones y la ventana de treinta segundos son valores ilustrativos, no universales. Las pruebas de resiliencia tienen que provocar fallos controlados y confirmar que el sistema no pierde datos ni promete resultados que no puede garantizar.
 
 ---
 
-### Bloque 9 — Principio de evolución independiente
+### Principio de evolución independiente
 
-El principio de evolución independiente establece que un servicio debe poder evolucionar sin obligar a los demás a cambiar al mismo ritmo. La evolución se manifiesta en tres dimensiones: evolución del modelo de datos, evolución de la lógica interna y evolución del contrato público. La evolución del modelo de datos es libre porque cada servicio tiene su propia base de datos. La evolución de la lógica interna es libre porque la implementación está oculta. La evolución del contrato público se gestiona con versionado. La violación del principio produce acoplamiento temporal, donde todos los servicios deben desplegarse a la vez. La decisión sobre principio de evolución independiente debe diferenciar lo que el ejemplo ilustra de lo que la aplicación implementa realmente en esta etapa.
+La evolución independiente implica que una capacidad pueda modificar su modelo interno sin exigir una actualización simultánea de todos sus consumidores. Para ello los contratos tienen que mantener significado estable, y los cambios incompatibles necesitan una estrategia de transición. Introducir una versión nueva de una ruta no resuelve por sí solo la compatibilidad: hay que mantener durante el periodo acordado la anterior, probar clientes relevantes y controlar qué datos pueden desconocer. Algunas ampliaciones aditivas son compatibles, otras afectan a las reglas de validación aun cuando conservan el formato. El principio también depende de la organización del trabajo: los equipos deben conocer quién puede modificar el contrato y cómo se comunica una deprecación. En el curso aprenderemos a registrar esas decisiones antes de cambiar una ruta pública que ya tenga consumidores.
 
 ```text
 Versionado de contratos:
@@ -1035,20 +980,18 @@ Versionado de contratos:
 /api/v2/ordenes  → contrato nuevo, con campos adicionales.
 ```
 
-**Lectura guiada del ejemplo**
+Las rutas `/api/v1/ordenes` y `/api/v2/ordenes` representan una transición explícita entre contratos. Mantener dos rutas permite migrar consumidores gradualmente, pero exige documentar qué comportamiento conserva cada versión y durante cuánto tiempo permanecerá disponible la anterior.
 
-- **Línea 1:** /api/v1/ordenes → primera versión del contrato, permanece activa.
-- **Línea 2:** /api/v2/ordenes → segunda versión del contrato, con campos nuevos.
 
-La aplicación del principio tiene una consecuencia práctica: los contratos públicos se versionan en la URL y las versiones antiguas se mantienen durante un periodo de transición. Los consumidores migran a la nueva versión cuando pueden. El productor retira la versión antigua cuando ningún consumidor la usa. Este ciclo permite la evolución independiente sin romper a los consumidores. Para evaluar principio de evolución independiente conviene registrar el resultado observable y la restricción de negocio que motiva el cambio, antes de introducir infraestructura adicional. La decisión sobre principio de evolución independiente debe diferenciar lo que el ejemplo ilustra de lo que la aplicación implementa realmente en esta etapa.
+La aplicación del principio tiene una consecuencia práctica: los contratos públicos se versionan en la URL y las versiones antiguas se mantienen durante un periodo de transición. Los consumidores migran a la nueva versión cuando pueden. El productor retira la versión antigua cuando ningún consumidor la usa. Este ciclo permite la evolución independiente sin romper a los consumidores.  
 
 Un contrato versionado permite coexistencia temporal, pero mantener versiones antiguas indefinidamente introduce costes y riesgos de seguridad. Para retirar una versión, el productor necesita saber qué consumidores la utilizan, comunicar una fecha de eliminación y comprobar el tráfico residual. No todos los cambios requieren crear /v2: añadir un campo opcional puede ser compatible, mientras cambiar la semántica de una propiedad existente suele exigir contrato nuevo. El versionado por URL es una opción clara para formación, aunque existen alternativas basadas en cabeceras o tipos de contenido. La evolución de la base de datos debe coordinarse también con despliegues graduales, siguiendo cambios expansivos antes de retirar columnas antiguas. En AceriaApp, los ejemplos /api/v1 y /api/v2 son propuestas de contrato; las prácticas de este punto validan límites, no implementan todavía una segunda versión HTTP.
 
 ---
 
-### Bloque 10 — Aplicación de los principios al proyecto del curso
+### Aplicación de los principios al proyecto del curso
 
-El proyecto del curso aplica los principios de diseño en cada decisión arquitectónica. El principio de responsabilidad única justifica que el monolito modular se organice por capacidades de negocio. El principio de ocultación justifica que cada módulo tenga su propia carpeta y su propia interfaz. El principio de acoplamiento débil justifica que las dependencias entre módulos se gestionen con interfaces. El principio de límite del contexto justifica que el monolito se organice en torno a contextos delimitados. El principio de autonomía justifica la evolución hacia microservicios cuando el contexto lo permite. El principio de contrato explícito justifica la creación de DTOs. El principio de tolerancia al fallo justifica la introducción de Polly. El principio de evolución independiente justifica el versionado de contratos.
+Los principios anteriores deben poder comprobarse en la solución y no quedarse en una declaración general de buenas intenciones. La responsabilidad se observa cuando una regla de producción permanece localizada; la ocultación, cuando un consumidor no necesita tipos de infraestructura ajena; la autonomía, cuando el despliegue y los datos pertenecen a un propietario identificable; y la tolerancia a fallos, cuando la aplicación responde conforme a un contrato aun si una dependencia falla. El punto 1.3 incorpora un pequeño validador y documentación de límites como herramienta de aprendizaje. Esos tests muestran que los datos de entrada cumplen determinados criterios, pero no pueden certificar automáticamente que la descomposición del negocio sea correcta. Para afirmar esto último hay que analizar casos reales y comprobar si las decisiones reducen o multiplican la coordinación del equipo.
 
 ```text
 Aplicación de los principios al proyecto:
@@ -1063,18 +1006,10 @@ Tolerancia al fallo         → Polly.
 Evolución independiente     → versionado de contratos.
 ```
 
-**Lectura guiada del ejemplo**
+La correspondencia final vincula cada principio con una decisión de la evolución del curso. El mapa sirve para localizar qué deberíamos poder observar o probar cuando lleguen los módulos siguientes: contratos DTO, límites entre capacidades, políticas de resiliencia y versiones públicas. No convierte por sí solo esas características en funcionalidades ya implementadas en M01.
 
-- **Línea 1:** Responsabilidad única → módulos por capacidad de negocio.
-- **Línea 2:** Ocultación → cada módulo con su propia carpeta.
-- **Línea 3:** Acoplamiento débil → interfaces entre módulos.
-- **Línea 4:** Límite del contexto → contextos delimitados.
-- **Línea 5:** Autonomía → evolución hacia microservicios.
-- **Línea 6:** Contrato explícito → DTOs públicos.
-- **Línea 7:** Tolerancia al fallo → Polly.
-- **Línea 8:** Evolución independiente → versionado de contratos.
 
-La aplicación de los principios no es un ejercicio teórico: cada principio se materializa en una decisión concreta del proyecto. El alumno puede rastrear cada decisión hasta el principio que la justifica. Esta trazabilidad es lo que distingue una arquitectura razonada de una arquitectura por acumulación. El punto 1.3 cierra el bloque de fundamentos y prepara el terreno para el punto 1.4, donde se estudiará la organización concreta de una solución basada en microservicios. Para evaluar aplicación de los principios al proyecto del curso conviene registrar el resultado observable y la restricción de negocio que motiva el cambio, antes de introducir infraestructura adicional.
+La aplicación de los principios no es un ejercicio teórico: cada principio se materializa en una decisión concreta del proyecto. El alumno puede rastrear cada decisión hasta el principio que la justifica. Esta trazabilidad es lo que distingue una arquitectura razonada de una arquitectura por acumulación. El punto 1.3 cierra el bloque de fundamentos y prepara el terreno para el punto 1.4, donde se estudiará la organización concreta de una solución basada en microservicios. 
 
 La aplicación de los principios se beneficia de una matriz explícita entre decisión, evidencia y riesgo. Para responsabilidad única se registra la capacidad de negocio; para ocultación, los contratos visibles; para acoplamiento, la lista de dependencias; para autonomía, la propiedad de los datos; para tolerancia, la respuesta ante fallos. En el código del punto 1.3, LimiteServicio es una descripción declarada, ValidadorLimiteServicio examina atributos de esa descripción y CatalogoLimites filtra resultados. Una prueba que marque ComparteBaseDeDatos como verdadero demuestra que el validador emite un error; no demuestra que la aplicación carezca de accesos compartidos. Esta distinción evita confundir pruebas del algoritmo educativo con auditorías automáticas de arquitectura real. En módulos posteriores pueden añadirse pruebas estructurales que analicen referencias, contratos y rutas de persistencia con evidencias directas.
 
@@ -1103,14 +1038,11 @@ La evidencia que enlaza teoría y práctica es doble. Los tests verifican que el
 
 ---
 
-## Resumen rápido de la teoría
 
-- Los principios de diseño se organizan en tres categorías: responsabilidad, ocultación y acoplamiento.
-- El principio de responsabilidad única establece que un servicio debe tener una sola razón para cambiar, identificada con una capacidad de negocio.
-- El principio de ocultación establece que un servicio debe exponer solo lo necesario y ocultar el modelo de datos, la lógica interna y la topología.
-- El principio de acoplamiento débil y cohesión fuerte establece que los elementos de un servicio deben estar fuertemente relacionados entre sí y débilmente con otros.
-- El principio de límite del contexto establece que cada servicio debe corresponder a un contexto delimitado del dominio.
-- Los principios de autonomía, contrato explícito, tolerancia al fallo y evolución independiente completan el marco de diseño.
+
+## Síntesis: el límite que podemos justificar
+
+Un buen límite se reconoce menos por su nombre que por los cambios que permite contener. En AceriaApp es razonable pensar en Producción e Inventario como capacidades diferenciadas, pero habrá que comprobar sus reglas, propietarios de datos y necesidades de comunicación antes de dar por concluida la división. Las abstracciones, los DTO, la tolerancia a fallos y el versionado son mecanismos que ayudan a preservar esas fronteras; ninguno sustituye el análisis del negocio. Las comprobaciones del laboratorio inicial enseñan a formular criterios y detectar dependencias evidentes, no a demostrar de forma automática una arquitectura distribuida completa.
 
 # Punto 1.4 — Organización de una solución basada en microservicios
 
