@@ -40,7 +40,7 @@ Un PASS de PDF, una compilación de referencia o la existencia de un marcador no
 | M06 | Corregido, aprobación pendiente | 2 transiciones: 50 archivos + 2 soluciones | E2E reconstruido Windows/SQL/RabbitMQ: consultar la última ejecución |
 | M07 | Corregido, aprobación pendiente | 3 transiciones: 50 archivos + 3 soluciones | E2E reconstruido Windows/SQL/RabbitMQ: consultar la última ejecución |
 | M08 | Corregido, aprobación pendiente | 3 transiciones: 38 archivos + 3 soluciones | E2E reconstruido Windows/SQL/RabbitMQ: consultar la última ejecución |
-| M09 | Prácticas corregidas, aprobación pendiente | Comandos PowerShell y seis servicios Compose validados | **PASS Docker real en Linux CI** con SQL/RabbitMQ/YARP/eventos/persistencia; **Docker Desktop Windows pendiente** |
+| M09 | Prácticas corregidas, aprobación pendiente | Seis contenedores y scripts PowerShell validados | **PASS Docker Linux CI integral + caída/recuperación Inventario 2/RabbitMQ**; **Docker Desktop Windows pendiente** |
 
 **Alcance:** M02–M08 son 29 puntos construidos acumulativamente desde M02.1 vacío. El resultado está contrastado con el código entregado y la solución .sln por membresía. Esta prueba de reconstrucción de archivos no ejecuta necesariamente cada una de las acciones gráficas del alumno ni equivale por sí sola al E2E integrado de todos los servicios.
 
@@ -57,6 +57,7 @@ Los `README.md` descriptivos quedan excluidos de esta comparación automática y
 - [M02 creado desde cero 4/4](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43519740684).
 - [M02 Windows SQL/HTTP sobre reconstrucción real, PASS](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43520054081).
 - [M09 Docker integral Linux CI, PASS (no certifica Windows)](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43520238826).
+- [M09 Docker Linux CI con caída y recuperación de Inventario 2 y RabbitMQ, PASS](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43521475426).
 - [Cadena íntegra M02.1–M08.4, 29/29](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43519922250).
 - [Reconstrucción 19/19 interna de M03–M08](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43515823932).
 - [Reconstrucción 6/6 de los límites M02→M03 hasta M07→M08](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43517914444).
@@ -70,7 +71,7 @@ Los `README.md` descriptivos quedan excluidos de esta comparación automática y
 ## 6. Pendientes para publicación definitiva
 
 1. Finalizar la regresión Windows de los primeros puntos M03–M08 reconstruidos a partir del módulo precedente; las pruebas anteriores de las etapas internas ya fueron satisfactorias. La cadena acumulativa **29/29** y las cuatro etapas Windows de M02 ya pasaron.
-2. Certificar M09 físicamente en **Windows con Docker Desktop**, diferenciando la evidencia ya obtenida mediante Docker Linux CI. Los escenarios adicionales de caída de Inventario 2 y RabbitMQ tienen pruebas suplementarias en preparación.
+2. Certificar M09 físicamente en **Windows con Docker Desktop**, diferenciándolo de los E2E Linux ya superados, incluida la caída y recuperación real de Inventario 2 y RabbitMQ. No hay evidencia del entorno físico Windows ni de mensajes creados durante la caída del broker.
 3. Completar la inspección editorial de los pasos de alumno y los `README.md` descriptivos.
 4. Revisión humana de los PDF, especialmente la presentación de código y las muestras de las 1.219 páginas.
 5. Aprobación editorial del autor y decisión de publicación/fusión a `main`.
