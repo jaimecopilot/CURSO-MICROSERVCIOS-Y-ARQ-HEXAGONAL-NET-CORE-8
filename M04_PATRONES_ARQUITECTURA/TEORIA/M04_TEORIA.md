@@ -793,11 +793,15 @@ También hay que situar la frontera: dos repositorios comparten atomicidad cuand
 
 ---
 
-## Desarrollo teórico
+## El mensaje expresa la intención; el handler ejecuta el caso de uso
 
-### Bloque 1 — Definición del patrón Mediator
 
-El patrón Mediator es un patrón de comportamiento que reduce el acoplamiento entre los componentes de un sistema al centralizar la comunicación en un objeto mediador. En lugar de que los componentes se conozcan entre sí, cada componente envía mensajes al mediador y el mediador los distribuye al componente adecuado. El patrón se aplica en sistemas donde varios componentes necesitan comunicarse sin conocerse. El mediador actúa como intermediario único. Los componentes solo conocen al mediador, no a los demás componentes.
+
+Recorreremos la creación de una orden desde HTTP hasta el handler, los puertos y SQL Server. Esa trayectoria permite valorar qué dependencias desaparecen al introducir el mediador y cuáles siguen siendo necesarias.
+
+### Definición del patrón Mediator
+
+Mediator permite que un componente solicite una operación sin conocer la clase concreta que la ejecutará. En una API con varios casos de uso, este intermediario evita que cada endpoint deba construir o localizar sus propios manejadores. La ventaja es mantener la coordinación cerca de la aplicación y facilitar comportamientos transversales como validación y registro de eventos. Pero no sustituye los límites del dominio: los mensajes necesitan significado, los handlers deben respetar las reglas y el acceso a SQL sigue realizándose a través de puertos. MediatR actúa dentro del proceso, no proporciona por sí mismo comunicación fiable entre microservicios. En AceriaApp estudiaremos el recorrido que comienza en una ruta HTTP, atraviesa el mediador y termina en el caso de uso y su repositorio.
 
 ```text
 Patrón Mediator:
@@ -809,34 +813,26 @@ Componente B ──┼──► Mediator ──► Componente destino
 Componente C ──┘
 ```
 
-- **Línea 1:** `Componente A ──┐` → primer componente que envía mensajes.
-- **Línea 2:** `│` → línea de conexión al mediador.
-- **Línea 3:** `Componente B ──┼──► Mediator` → segundo componente conectado al mediador.
-- **Línea 4:** `│` → línea de conexión al mediador.
-- **Línea 5:** `Componente C ──┘` → tercer componente conectado al mediador.
-- **Línea 6:** `Mediator ──► Componente destino` → el mediador distribuye al destino.
+
+El diagrama presenta al mediador como punto de entrega de solicitudes entre componentes internos. Esa mediación reduce dependencias directas, pero sigue funcionando dentro del proceso y necesita contratos de mensajes bien definidos.
+
 
 El patrón Mediator se caracteriza por tres propiedades. La primera es que reduce el acoplamiento: los componentes no se conocen entre sí. La segunda es que centraliza la comunicación: el mediador conoce todos los componentes. La tercera es que facilita la evolución: añadir un componente nuevo solo requiere registrarlo en el mediador. Las tres propiedades permiten que el sistema evolucione sin modificar los componentes existentes.
 
 La aplicación del patrón Mediator tiene dos consecuencias prácticas. La primera es que los componentes se vuelven más simples: solo envían mensajes y no conocen a los receptores. La segunda es que el mediador se convierte en el punto central de la comunicación. La combinación de ambas permite que el sistema tenga un acoplamiento bajo entre los componentes. El mediador se usa en sistemas con muchos componentes que necesitan comunicarse de forma flexible.
 
----
 
+El mediador sustituye dependencias directas entre emisores y receptores por contratos de mensajes. El acoplamiento al contrato sigue existiendo y debe diseñarse.
 
+Un endpoint conoce CrearOrdenCommand e ISender. El contenedor resuelve CrearOrdenHandler, que conoce los puertos necesarios para coordinar la orden.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Desacoplar no equivale a ejecutar en otro proceso. MediatR despacha en memoria dentro de la aplicación y una llamada esperada con await sigue formando parte del flujo.
 
-**La decisión arquitectónica.** El mediador sustituye dependencias directas entre emisores y receptores por contratos de mensajes. El acoplamiento al contrato sigue existiendo y debe diseñarse.
+Sigue un comando desde el endpoint hasta su manejador. Debe encontrarse una respuesta tipada y un único manejador apropiado para esa solicitud.
 
-**Ejemplo concreto en AceriaApp.** Un endpoint conoce CrearOrdenCommand e ISender. El contenedor resuelve CrearOrdenHandler, que conoce los puertos necesarios para coordinar la orden.
+### Mediator en la capa de aplicación
 
-**Riesgo, alternativa y límite.** Desacoplar no equivale a ejecutar en otro proceso. MediatR despacha en memoria dentro de la aplicación y una llamada esperada con await sigue formando parte del flujo.
-
-**Comprobación técnica y aprendizaje.** Sigue un comando desde el endpoint hasta su manejador. Debe encontrarse una respuesta tipada y un único manejador apropiado para esa solicitud.
-
-### Bloque 2 — Mediator en la capa de aplicación
-
-En una arquitectura hexagonal, el patrón Mediator se aplica en la capa de aplicación para desacoplar los adaptadores de entrada de los casos de uso. Los adaptadores de entrada envían comandos y consultas al mediador. El mediador los distribuye al manejador correspondiente. Los manejadores implementan los casos de uso y coordinan el dominio. La separación entre adaptador y manejador permite que un mismo caso de uso se invoque desde distintos adaptadores sin modificar el manejador.
+Un handler recibe un mensaje que expresa la intención del consumidor y coordina lo necesario para ejecutarla. En la creación de una orden, el manejador puede construir el agregado mediante sus reglas, pedir al repositorio que lo registre y confirmar la unidad de trabajo. Esta secuencia es una capacidad de aplicación, no un detalle del endpoint. Por eso el handler puede probarse con dobles de repositorio y de confirmación, mientras las pruebas SQL verifican el adaptador concreto. Utilizar MediatR no elimina la necesidad de un diseño claro: si una sola clase atiende todos los comandos y contiene reglas y SQL, el patrón solo añade indirección superficial. El objetivo es localizar las responsabilidades sin fragmentarlas arbitrariamente.
 
 ```csharp
 public record CrearOrdenCommand(string Cliente, string Material, int Cantidad) : IRequest<Guid>;
@@ -854,43 +850,28 @@ public sealed class CrearOrdenHandler(
 }
 ```
 
-- **Línea 1:** `public record CrearOrdenCommand(string Cliente, string Material, int Cantidad) : IRequest<Guid>;` → define la solicitud y el tipo exacto de respuesta.
-- **Línea 2:** `public sealed class CrearOrdenHandler(` → declara el manejador del caso de uso.
-- **Línea 3:** `IOrdenTrabajoRepositorio repositorio, IUnitOfWork unidad)` → recibe el repositorio y la unidad del mismo ámbito.
-- **Línea 4:** `: IRequestHandler<CrearOrdenCommand, Guid>` → vincula el manejador al contrato del comando.
-- **Línea 5:** `{` → abre el cuerpo de la clase.
-- **Línea 6:** `public async Task<Guid> Handle(CrearOrdenCommand request, CancellationToken ct)` → implementa la operación asíncrona con cancelación.
-- **Línea 7:** `{` → abre el caso de uso.
-- **Línea 8:** `var orden = new OrdenHexagonal(request.Cliente, request.Material, request.Cantidad);` → construye la entidad con sus invariantes.
-- **Línea 9:** `await repositorio.AgregarAsync(orden, ct);` → deja la entidad pendiente en el repositorio de M4.
-- **Línea 10:** `await unidad.CommitAsync(ct);` → confirma la operación antes de responder.
-- **Línea 11:** `return orden.Id;` → devuelve la identidad creada.
-- **Línea 12:** `}` → cierra el método.
-- **Línea 13:** `}` → cierra la clase.
+
+El comando de creación llega a un handler que coordina el dominio, el repositorio y la unidad de trabajo. El mediador solo selecciona la clase de destino; las reglas de órdenes y la confirmación SQL pertenecen a otros componentes.
+
 
 La aplicación del patrón en la capa de aplicación tiene dos consecuencias prácticas. La primera es que los adaptadores de entrada no conocen los manejadores: solo conocen el mediador. La segunda es que un mismo manejador puede invocarse desde distintos adaptadores. La combinación de ambas permite que el sistema se exponga en varios protocolos sin duplicar la lógica de los casos de uso.
 
----
 
+El manejador puede implementar el caso de uso o delegar en uno existente. Ambas alternativas son válidas si evitan duplicar decisiones de negocio.
 
+El ejemplo muestra coordinación directa de entidad, repositorio de trabajo y unidad. La práctica puede delegar en OrdenesTransaccionales para reutilizar la operación del punto anterior.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Usar MediatR desde el dominio acoplaría sus reglas a una biblioteca de aplicación. Reserva los mensajes de transporte interno y sus manejadores para el nivel adecuado.
 
-**La decisión arquitectónica.** El manejador puede implementar el caso de uso o delegar en uno existente. Ambas alternativas son válidas si evitan duplicar decisiones de negocio.
-
-**Ejemplo concreto en AceriaApp.** El ejemplo muestra coordinación directa de entidad, repositorio de trabajo y unidad. La práctica puede delegar en OrdenesTransaccionales para reutilizar la operación del punto anterior.
-
-**Riesgo, alternativa y límite.** Usar MediatR desde el dominio acoplaría sus reglas a una biblioteca de aplicación. Reserva los mensajes de transporte interno y sus manejadores para el nivel adecuado.
-
-**Comprobación técnica y aprendizaje.** Prueba el manejador directamente para su lógica y mediante ISender para comprobar registro y pipeline. Son pruebas distintas con fallos distintos.
+Prueba el manejador directamente para su lógica y mediante ISender para comprobar registro y pipeline. Son pruebas distintas con fallos distintos.
 
 ![Diagrama explicativo del punto 4.3, bloque 2](IMAGENES/4-3-solicitud.svg)
 
-*Interpretación del gráfico:* El emisor conoce el mensaje y el mediador; el manejador conoce los puertos. El proceso continúa siendo local. La figura se distribuye en SVG vectorial y PNG.
+El emisor conoce el mensaje y el mediador; el manejador conoce los puertos. El proceso continúa siendo local. La figura se distribuye en SVG vectorial y PNG.
 
-### Bloque 3 — Comandos
+### Comandos
 
-Un comando es un mensaje que solicita una acción que modifica el estado del sistema. Los comandos se nombran con un verbo en imperativo: `CrearOrden`, `CancelarOrden`, `ActualizarMaterial`. Un comando contiene los datos necesarios para ejecutar la acción. Un comando devuelve un resultado cuando la acción produce un valor: por ejemplo, el identificador de la entidad creada. Un comando devuelve un resultado vacío cuando la acción no produce un valor. `Send` dirige cada solicitud a un manejador. MediatR no ofrece deduplicación ni entrega exactamente una vez: reintentos del cliente pueden volver a ejecutar un comando. La idempotencia debe diseñarse cuando sea necesaria.
+Un comando representa una intención de modificar el estado. Crear, cancelar o actualizar una orden son operaciones distintas, aunque todas compartan la identidad del agregado. El comando contiene los datos necesarios para solicitar la acción, pero no es la entidad de dominio y no debería asumir su comportamiento. La validación de entrada puede detectar propiedades incorrectas; el agregado y el caso de uso deben proteger además las invariantes del negocio, como prohibir cancelar una orden ya finalizada. En AceriaApp cada comando tendrá un manejador reconocible, y su respuesta expresará qué ocurrió para que el adaptador HTTP devuelva el estado correcto. El nombre del mensaje debería comunicar la intención, no simplemente reproducir un verbo CRUD sin significado funcional.
 
 ```csharp
 public record CrearOrdenCommand(string Cliente, string Material, int Cantidad) : IRequest<Guid>;
@@ -898,29 +879,24 @@ public record CancelarOrdenCommand(Guid Id) : IRequest;
 public record ActualizarMaterialCommand(Guid Id, int Cantidad) : IRequest;
 ```
 
-- **Línea 1:** `public record CrearOrdenCommand(string Cliente, string Material, int Cantidad) : IRequest<Guid>;` → comando de creación con retorno.
-- **Línea 2:** `public record CancelarOrdenCommand(Guid Id) : IRequest;` → comando de cancelación sin retorno.
-- **Línea 3:** `public record ActualizarMaterialCommand(Guid Id, int Cantidad) : IRequest;` → comando de actualización sin retorno.
+
+Los records representan intenciones de crear, cancelar o actualizar. Cada uno contiene datos de entrada y necesita un manejador que aplique las invariantes correspondientes, en lugar de comportarse como una entidad directamente editable.
+
 
 Los comandos se caracterizan por tres propiedades. La primera es que expresan una intención de cambio: el nombre describe la acción. La segunda es que no son idempotentes por defecto: ejecutarlos varias veces puede producir efectos distintos. La tercera es que cada envío se resuelve con un manejador; esto no impide repetir el envío. Las tres propiedades permiten que los comandos sean la unidad de trabajo de las operaciones de escritura.
 
----
 
+Un comando expresa intención: crear o finalizar son acciones. Una respuesta con identificador no lo convierte en consulta, porque el criterio es su efecto sobre el estado.
 
+CrearOrdenCommand contiene cliente, material y cantidad. Generar un nuevo GUID en cada ejecución hará dos órdenes si el cliente reintenta sin una estrategia de idempotencia.
 
-#### Ampliación didáctica aplicada a AceriaApp
+MediatR no almacena mensajes ni identifica duplicados. Garantizar repetición segura puede requerir una clave de idempotencia y una restricción persistente sobre esa clave.
 
-**La decisión arquitectónica.** Un comando expresa intención: crear o finalizar son acciones. Una respuesta con identificador no lo convierte en consulta, porque el criterio es su efecto sobre el estado.
+Envía dos veces el mismo comando en una prueba de exploración y observa el efecto. Decide después si el contrato de negocio admite duplicados o exige prevención.
 
-**Ejemplo concreto en AceriaApp.** CrearOrdenCommand contiene cliente, material y cantidad. Generar un nuevo GUID en cada ejecución hará dos órdenes si el cliente reintenta sin una estrategia de idempotencia.
+### Consultas
 
-**Riesgo, alternativa y límite.** MediatR no almacena mensajes ni identifica duplicados. Garantizar repetición segura puede requerir una clave de idempotencia y una restricción persistente sobre esa clave.
-
-**Comprobación técnica y aprendizaje.** Envía dos veces el mismo comando en una prueba de exploración y observa el efecto. Decide después si el contrato de negocio admite duplicados o exige prevención.
-
-### Bloque 4 — Consultas
-
-Una consulta es un mensaje que solicita información sin modificar el estado del sistema. Las consultas se nombran con un sustantivo o con un verbo en forma interrogativa: `ObtenerOrden`, `ListarOrdenes`, `BuscarMaterial`. Una consulta contiene los criterios de búsqueda. Una consulta devuelve un resultado con los datos solicitados. Una consulta no debe modificar el estado de negocio. Repetirla puede devolver datos distintos si cambió la base de datos; la ausencia de efectos no equivale a una respuesta idéntica. Las consultas no modifican el estado del sistema.
+Una consulta solicita información sin pretender modificar el estado del sistema. `ObtenerOrdenQuery` puede devolver un DTO individual, mientras `ListarOrdenesQuery` incorpora paginación para responder a un conjunto más grande. El handler de lectura no necesita forzosamente reconstruir todos los agregados de escritura; puede utilizar proyecciones que respondan mejor a la pregunta del consumidor. Separar comandos y consultas ayuda a mantener sus pruebas y responsabilidades, pero no exige crear dos bases de datos ni desplegar servicios distintos. En AceriaApp observaremos que una consulta se limita a leer y que su contrato no expone indiscriminadamente entidades de persistencia. Esta distinción preparará CQRS, que se desarrollará más adelante con ejemplos ejecutables.
 
 ```csharp
 public record ObtenerOrdenQuery(Guid Id) : IRequest<OrdenDto?>;
@@ -928,29 +904,24 @@ public record ListarOrdenesQuery(int Page, int PageSize) : IRequest<List<OrdenDt
 public record BuscarMaterialQuery(string Nombre) : IRequest<List<MaterialDto>>;
 ```
 
-- **Línea 1:** `public record ObtenerOrdenQuery(Guid Id) : IRequest<OrdenDto?>;` → consulta de detalle.
-- **Línea 2:** `public record ListarOrdenesQuery(int Page, int PageSize) : IRequest<List<OrdenDto>>;` → consulta de lista paginada.
-- **Línea 3:** `public record BuscarMaterialQuery(string Nombre) : IRequest<List<MaterialDto>>;` → consulta de búsqueda.
+
+Las queries describen información que desea obtener el consumidor y pueden devolver DTOs de lectura. No deben introducir efectos ocultos ni confirmaciones SQL solo porque utilicen el mismo mecanismo de envío que un comando.
+
 
 Las consultas se caracterizan por tres propiedades. La primera es que expresan una solicitud de información: el nombre describe qué se busca. La segunda es que repetirlas no debe añadir efectos de negocio, aunque el valor leído pueda variar. La tercera es que no modifican el estado del sistema. Las tres propiedades permiten que las consultas sean la unidad de trabajo de las operaciones de lectura.
 
----
 
+Una consulta describe qué información necesita el consumidor. Separarla de comandos ayuda a revisar efectos, validación y optimización sin imponer bases de datos separadas.
 
+ObtenerOrdenQuery busca por identificador; una lista puede incorporar página y tamaño. La respuesta del manejador puede ser una proyección de aplicación adecuada para lectura.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Dos consultas iguales pueden devolver estados distintos porque otra petición finalizó una orden. No confundas seguridad de lectura con inmutabilidad del mundo observado.
 
-**La decisión arquitectónica.** Una consulta describe qué información necesita el consumidor. Separarla de comandos ayuda a revisar efectos, validación y optimización sin imponer bases de datos separadas.
+Comprueba que una consulta no crea ni modifica órdenes. Si incorpora caché, explica su caducidad y consistencia sin esconder esas decisiones bajo el nombre Query.
 
-**Ejemplo concreto en AceriaApp.** ObtenerOrdenQuery busca por identificador; una lista puede incorporar página y tamaño. La respuesta del manejador puede ser una proyección de aplicación adecuada para lectura.
+### Notificaciones
 
-**Riesgo, alternativa y límite.** Dos consultas iguales pueden devolver estados distintos porque otra petición finalizó una orden. No confundas seguridad de lectura con inmutabilidad del mundo observado.
-
-**Comprobación técnica y aprendizaje.** Comprueba que una consulta no crea ni modifica órdenes. Si incorpora caché, explica su caducidad y consistencia sin esconder esas decisiones bajo el nombre Query.
-
-### Bloque 5 — Notificaciones
-
-Una notificación es un mensaje que informa de un evento ocurrido en el sistema. Las notificaciones se nombran con un sustantivo en pasado: `OrdenCreada`, `MaterialActualizado`, `ClienteRegistrado`. Una notificación contiene los datos del evento. Una notificación no devuelve un resultado. Una notificación puede tener varios manejadores: cada manejador reacciona al evento de forma independiente. Las notificaciones se procesan después de que el evento haya ocurrido.
+Una notificación comunica un hecho o una señal que varios componentes internos pueden necesitar conocer. MediatR permite que un emisor publique `OrdenCreadaNotification` sin invocar directamente a cada observador de correo o auditoría. La idea es útil para reducir acoplamiento local, pero tiene límites importantes: publicar dentro del proceso no garantiza persistencia de la notificación ni recuperación automática cuando el host se interrumpe. Debemos decidir también si la publicación ocurre antes o después de confirmar la base y cómo se tratan los fallos de los observadores. En AceriaApp esto se estudiará como coordinación de componentes internos; RabbitMQ y el patrón outbox resolverán posteriormente necesidades diferentes de mensajería entre procesos.
 
 ```csharp
 public record OrdenCreadaNotification(Guid Id, string Cliente) : INotification;
@@ -976,51 +947,28 @@ public sealed class RegistrarAuditoriaOrdenCreadaHandler(IAuditoriaOrdenes audit
 }
 ```
 
-- **Línea 1:** `public record OrdenCreadaNotification(Guid Id, string Cliente) : INotification;` → modela un hecho local sin tipo de respuesta.
-- **Línea 2:** `public interface ICorreoOrdenes` → declara el puerto de correo del ejemplo.
-- **Línea 3:** `{` → abre el contrato.
-- **Línea 4:** `Task EnviarConfirmacionAsync(Guid id, string cliente, CancellationToken ct);` → define el efecto externo y la cancelación.
-- **Línea 5:** `}` → cierra el contrato.
-- **Línea 6:** `public interface IAuditoriaOrdenes` → declara el puerto de auditoría.
-- **Línea 7:** `{` → abre el contrato.
-- **Línea 8:** `Task RegistrarCreacionAsync(Guid id, CancellationToken ct);` → define la operación de registro.
-- **Línea 9:** `}` → cierra el contrato.
-- **Línea 10:** `public sealed class EnviarEmailOrdenCreadaHandler(ICorreoOrdenes correo)` → recibe el adaptador de correo por constructor.
-- **Línea 11:** `: INotificationHandler<OrdenCreadaNotification>` → suscribe el manejador al tipo de notificación.
-- **Línea 12:** `{` → abre la clase.
-- **Línea 13:** `public Task Handle(OrdenCreadaNotification notification, CancellationToken ct) =>` → implementa el contrato de MediatR.
-- **Línea 14:** `correo.EnviarConfirmacionAsync(notification.Id, notification.Cliente, ct);` → delegación completa al puerto, sin HTTP ni SMTP en el manejador.
-- **Línea 15:** `}` → cierra el primer manejador.
-- **Línea 16:** `public sealed class RegistrarAuditoriaOrdenCreadaHandler(IAuditoriaOrdenes auditoria)` → recibe el adaptador de auditoría por constructor.
-- **Línea 17:** `: INotificationHandler<OrdenCreadaNotification>` → suscribe un segundo manejador al mismo hecho.
-- **Línea 18:** `{` → abre la clase.
-- **Línea 19:** `public Task Handle(OrdenCreadaNotification notification, CancellationToken ct) =>` → implementa el mismo contrato de manejo.
-- **Línea 20:** `auditoria.RegistrarCreacionAsync(notification.Id, ct);` → registra el hecho mediante su propio puerto.
-- **Línea 21:** `}` → cierra el segundo manejador.
+
+Los handlers de la notificación reciben el hecho de creación y pueden actuar sobre correo o auditoría. Esa publicación local no ofrece por sí sola almacenamiento duradero del evento ni coordinación transaccional de los efectos externos.
+
 
 Las notificaciones se caracterizan por tres propiedades. La primera es que informan de un evento ocurrido: el nombre describe el hecho. La segunda es que tienen varios manejadores: cada manejador reacciona de forma independiente. La tercera es que no devuelven resultado. Las tres propiedades permiten que las notificaciones sean el mecanismo de comunicación entre componentes desacoplados.
 
----
 
+Una notificación comunica un hecho y admite cero o más receptores. Los efectos de los receptores no deben depender de un orden implícito de registro.
 
+La creación puede originar auditoría y confirmación por correo mediante puertos separados. Los manejadores completos del ejemplo delegan esos efectos sin conocer SMTP ni almacenamiento concreto.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Cada receptor puede fallar y la publicación puede quedar a medias. Para efectos imprescindibles después de commit, la fiabilidad necesita diseño adicional y pruebas de fallo.
 
-**La decisión arquitectónica.** Una notificación comunica un hecho y admite cero o más receptores. Los efectos de los receptores no deben depender de un orden implícito de registro.
-
-**Ejemplo concreto en AceriaApp.** La creación puede originar auditoría y confirmación por correo mediante puertos separados. Los manejadores completos del ejemplo delegan esos efectos sin conocer SMTP ni almacenamiento concreto.
-
-**Riesgo, alternativa y límite.** Cada receptor puede fallar y la publicación puede quedar a medias. Para efectos imprescindibles después de commit, la fiabilidad necesita diseño adicional y pruebas de fallo.
-
-**Comprobación técnica y aprendizaje.** Prueba cada receptor con un doble de su puerto y prueba la publicación completa por separado. No llames a un efecto finalizado antes de conocer cuándo se confirma su dato.
+Prueba cada receptor con un doble de su puerto y prueba la publicación completa por separado. No llames a un efecto finalizado antes de conocer cuándo se confirma su dato.
 
 ![Diagrama explicativo del punto 4.3, bloque 5](IMAGENES/4-3-mensajes.svg)
 
-*Interpretación del gráfico:* Solicitud y notificación tienen distinta cardinalidad de receptores y distinta forma de respuesta. La figura se distribuye en SVG vectorial y PNG.
+Solicitud y notificación tienen distinta cardinalidad de receptores y distinta forma de respuesta. La figura se distribuye en SVG vectorial y PNG.
 
-### Bloque 6 — MediatR como implementación del patrón
+### MediatR como implementación del patrón
 
-MediatR es una biblioteca de .NET que implementa el patrón Mediator. La biblioteca ofrece tres abstracciones principales: `IRequest<TResponse>` para comandos y consultas con retorno, `IRequest` para solicitudes sin valor de retorno, e `INotification` para notificaciones. La biblioteca ofrece `IRequestHandler<TRequest>` para solicitudes sin retorno y, además, `IRequestHandler<TRequest, TResponse>` para manejadores de comandos y consultas, e `INotificationHandler<TNotification>` para manejadores de notificaciones. La biblioteca se registra en el contenedor de dependencias con el método `AddMediatR`.
+MediatR utiliza contratos como `IRequest<T>` y `IRequestHandler<,>` para asociar solicitudes con sus manejadores. El registro de la biblioteca en el contenedor de ASP.NET Core permite encontrar los handlers disponibles, pero no prueba que una ruta concreta los utilice. Conviene verificar el ensamblado que se analiza, el ciclo de vida de los colaboradores y el resultado de un envío real. En AceriaApp un comando necesita acceso a repositorio y Unit of Work; esos servicios deben poder resolverse con el ámbito correcto. El mediador facilita la construcción del recorrido, pero la arquitectura se demuestra comprobando dependencias y comportamiento, no simplemente detectando la llamada `AddMediatR`.
 
 ```csharp
 builder.Services.AddMediatR(cfg =>
@@ -1029,30 +977,24 @@ builder.Services.AddMediatR(cfg =>
 });
 ```
 
-- **Línea 1:** `builder.Services.AddMediatR(cfg =>` → registra MediatR en el contenedor.
-- **Línea 2:** `{` → abre el bloque de configuración.
-- **Línea 3:** `cfg.RegisterServicesFromAssemblyContaining<CrearOrdenHandler>();` → registra los manejadores del ensamblado.
-- **Línea 4:** `});` → cierra el bloque.
+
+El registro por ensamblado permite descubrir handlers y componer sus dependencias. Debemos comprobar la resolución de un mensaje concreto, no limitar la evaluación a que el código de arranque contenga AddMediatR.
+
 
 MediatR se caracteriza por tres propiedades. La primera es que ofrece abstracciones para comandos, consultas y notificaciones. La segunda es que registra los manejadores en el contenedor de dependencias. La tercera es que ofrece `ISender` para solicitudes, `IPublisher` para notificaciones e `IMediator` como interfaz que reúne ambas capacidades. Las tres propiedades permiten que los adaptadores de entrada invoquen los casos de uso con una sola línea de código.
 
----
 
+El módulo fija MediatR 12.4.1 para que código, paquetes y API sean reproducibles. Esa versión es una elección del curso, no una afirmación sobre la versión más reciente.
 
+Registra el ensamblado que contiene CrearOrdenHandler. Escanear Program solo encuentra manejadores de la API y dejaría sin descubrir los ubicados en aplicación.
 
-#### Ampliación didáctica aplicada a AceriaApp
+AddMediatR registra manejadores, pero no inventa adaptadores ni configura automáticamente todos los validadores. Cada dependencia usada por un manejador también necesita registro.
 
-**La decisión arquitectónica.** El módulo fija MediatR 12.4.1 para que código, paquetes y API sean reproducibles. Esa versión es una elección del curso, no una afirmación sobre la versión más reciente.
+Resuelve ISender dentro de un ámbito y ejecuta una solicitud real. Eso detecta ensamblados incorrectos y dependencias ausentes que una compilación no descubre.
 
-**Ejemplo concreto en AceriaApp.** Registra el ensamblado que contiene CrearOrdenHandler. Escanear Program solo encuentra manejadores de la API y dejaría sin descubrir los ubicados en aplicación.
+### Envío de comandos y consultas
 
-**Riesgo, alternativa y límite.** AddMediatR registra manejadores, pero no inventa adaptadores ni configura automáticamente todos los validadores. Cada dependencia usada por un manejador también necesita registro.
-
-**Comprobación técnica y aprendizaje.** Resuelve ISender dentro de un ámbito y ejecuta una solicitud real. Eso detecta ensamblados incorrectos y dependencias ausentes que una compilación no descubre.
-
-### Bloque 7 — Envío de comandos y consultas
-
-El envío de comandos y consultas se realiza con el método asíncrono `Send` de la interfaz `IMediator`. El método recibe el comando o la consulta y devuelve el resultado del manejador. El mediador localiza el manejador adecuado según el tipo del mensaje. La localización se realiza en tiempo de ejecución. El adaptador de entrada no conoce el manejador: solo conoce el mediador. Esta separación permite que el adaptador se mantenga simple.
+El endpoint de órdenes puede recibir un comando y entregarlo a `ISender`, sin conocer `CrearOrdenHandler` ni su implementación de persistencia. Cuando el handler devuelve un identificador, el adaptador HTTP traduce ese resultado a `201 Created` con la ubicación del nuevo recurso. Una consulta seguirá un camino análogo, aunque su semántica no incluya escritura. Esto permite mantener handlers alejados de los tipos HTTP y centralizar el contrato público en el borde. También requiere nombres y flujos claros: abusar de mensajes genéricos puede ocultar quién ejecuta una operación. En AceriaApp queremos que la ruta pueda seguirse sin dificultad hasta el caso de uso y la confirmación SQL.
 
 ```csharp
 public static class OrdenesEndpoints
@@ -1070,65 +1012,47 @@ public static class OrdenesEndpoints
 }
 ```
 
-- **Línea 1:** `public static class OrdenesEndpoints` → clase de endpoints.
-- **Línea 2:** `{` → abre el cuerpo.
-- **Línea 3:** `public static void MapOrdenesEndpoints(this WebApplication app)` → método de extensión.
-- **Línea 4:** `{` → abre el cuerpo del método.
-- **Línea 5:** `app.MapPost("/api/v1/ordenes", async (` → declara el endpoint POST.
-- **Línea 6:** `CrearOrdenCommand command,` → recibe el comando.
-- **Línea 7:** `ISender mediator, CancellationToken ct) =>` → inyecta el mediador.
-- **Línea 8:** `{` → abre el cuerpo del lambda.
-- **Línea 9:** `var id = await mediator.Send(command, ct);` → envía el comando al mediador.
-- **Línea 10:** `return Results.Created($"/api/v1/ordenes/{id}", new { id });` → devuelve 201 con la ubicación.
-- **Línea 11:** `});` → cierra el lambda.
-- **Línea 12:** `}` → cierra el método.
-- **Línea 13:** `}` → cierra la clase.
+
+El endpoint envía el comando mediante ISender y construye una respuesta Created con el identificador devuelto. Así el adaptador conserva decisiones HTTP y el handler conserva la operación de aplicación.
+
 
 El envío de comandos y consultas tiene dos consecuencias prácticas. La primera es que el adaptador de entrada se mantiene simple: solo conoce el mediador. La segunda es que el manejador se mantiene independiente: no conoce al adaptador. La combinación de ambas permite que el sistema se exponga en varios protocolos sin modificar los manejadores.
 
----
 
+El endpoint transforma protocolo y envía un mensaje. ISender limita su dependencia a Send cuando no necesita publicar notificaciones.
 
+La firma incluye CancellationToken y lo transmite a Send. El manejador recibe el mismo propósito de cancelación y lo transmite a EF Core mediante los puertos.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Un método de extensión debe estar dentro de una clase estática. Send devuelve Task; añadir Async al nombre por costumbre no crea un método existente.
 
-**La decisión arquitectónica.** El endpoint transforma protocolo y envía un mensaje. ISender limita su dependencia a Send cuando no necesita publicar notificaciones.
+Comprueba la respuesta HTTP y consulta la ubicación devuelta por una creación. El URI de Location debe corresponder a una ruta de consulta realmente expuesta por la API.
 
-**Ejemplo concreto en AceriaApp.** La firma incluye CancellationToken y lo transmite a Send. El manejador recibe el mismo propósito de cancelación y lo transmite a EF Core mediante los puertos.
+### Publicación de notificaciones
 
-**Riesgo, alternativa y límite.** Un método de extensión debe estar dentro de una clase estática. Send devuelve Task; añadir Async al nombre por costumbre no crea un método existente.
-
-**Comprobación técnica y aprendizaje.** Comprueba la respuesta HTTP y consulta la ubicación devuelta por una creación. El URI de Location debe corresponder a una ruta de consulta realmente expuesta por la API.
-
-### Bloque 8 — Publicación de notificaciones
-
-La publicación de notificaciones se realiza con el método asíncrono `Publish` de la interfaz `IMediator`. El método recibe la notificación y la distribuye a todos los manejadores registrados. La estrategia de publicación decide la ejecución: la predeterminada espera secuencialmente a los manejadores. No debe dependerse de un orden implícito para reglas de negocio; una excepción puede interrumpir la publicación. La publicación no devuelve un resultado. La publicación se usa para comunicar eventos entre componentes desacoplados.
+La publicación de notificaciones locales puede activar observadores independientes tras crear una orden, pero su momento de ejecución tiene efectos reales. Si se publican antes de confirmar SQL, un observador puede reaccionar a un hecho que finalmente se revierte. Si se publican después, un fallo del proceso puede impedir que el observador llegue a verlo. Por eso `Publish` no debe confundirse con una cola duradera ni con garantía de entrega exactamente una vez. El ejemplo sirve para mostrar cómo se separa el emisor de los handlers internos; en módulos posteriores se estudiará cómo persistir eventos y recuperarlos tras fallos. La decisión sobre notificar debe vincularse a los requisitos del negocio y a la consistencia que necesitamos.
 
 ```csharp
 await mediator.Publish(new OrdenCreadaNotification(id, command.Cliente));
 ```
 
-- **Línea 1:** `await mediator.Publish(new OrdenCreadaNotification(id, command.Cliente));` → publica la notificación.
+
+Publish entrega la notificación a los handlers internos registrados. La decisión de publicar antes o después de guardar es importante y no queda resuelta por el nombre de la llamada al mediador.
+
 
 La publicación de notificaciones tiene dos consecuencias prácticas. La primera es que los componentes se comunican sin conocerse entre sí. La segunda es que añadir un manejador nuevo no requiere modificar los manejadores existentes. La combinación de ambas permite que el sistema evolucione sin modificar el código existente. Las notificaciones de MediatR viven dentro del proceso y no son una cola persistente. La comunicación entre servicios del módulo 6 requiere un transporte y garantías adicionales.
 
----
 
+Publish espera el trabajo de la estrategia de publicación configurada. Asíncrono describe cómo se espera; no implica una cola duradera ni un proceso separado.
 
+La estrategia predeterminada de esta versión recorre receptores secuencialmente. El diseño no debería usar su orden para ejecutar pasos de una operación de negocio obligatoria.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Si se necesita enviar a otro servicio, una notificación local puede iniciar un adaptador de mensajería, pero sus garantías pertenecen al transporte y al diseño de entrega.
 
-**La decisión arquitectónica.** Publish espera el trabajo de la estrategia de publicación configurada. Asíncrono describe cómo se espera; no implica una cola duradera ni un proceso separado.
+Provoca un fallo en un receptor y observa cuáles llegaron a ejecutarse. Esa evidencia evita asumir aislamiento, ejecución completa o reintento automático que no se configuró.
 
-**Ejemplo concreto en AceriaApp.** La estrategia predeterminada de esta versión recorre receptores secuencialmente. El diseño no debería usar su orden para ejecutar pasos de una operación de negocio obligatoria.
+### MediatR y validación
 
-**Riesgo, alternativa y límite.** Si se necesita enviar a otro servicio, una notificación local puede iniciar un adaptador de mensajería, pero sus garantías pertenecen al transporte y al diseño de entrega.
-
-**Comprobación técnica y aprendizaje.** Provoca un fallo en un receptor y observa cuáles llegaron a ejecutarse. Esa evidencia evita asumir aislamiento, ejecución completa o reintento automático que no se configuró.
-
-### Bloque 9 — MediatR y validación
-
-MediatR se integra con FluentValidation mediante un comportamiento de pipeline. El comportamiento se ejecuta antes del manejador y valida el comando o la consulta. Si la validación falla, el comportamiento lanza una excepción que el adaptador de entrada traduce en una respuesta problem details. La integración aplica validación a las solicitudes que atraviesan el comportamiento registrado y para las que existen validadores. Un comportamiento genérico abierto se registra con `AddOpenBehavior`; `AddBehavior` también permite registrar comportamientos con tipos cerrados.
+Los comportamientos de pipeline permiten ejecutar validación, diagnóstico o registro alrededor de un handler sin repetir esas tareas en cada caso de uso. Un `ValidationBehavior` puede localizar validadores de la solicitud y detener la ejecución si la entrada incumple las condiciones acordadas. Su utilidad depende de que la validación se aplique al tipo correcto, se ejecute antes del efecto y traduzca los errores de manera consistente. Registrar un comportamiento no sustituye las invariantes del dominio y tampoco asegura que todas las rutas pasen por el mediador. En AceriaApp comprobaremos que una solicitud inválida no provoca escritura, mientras una válida llega al handler con sus colaboradores correctamente resueltos.
 
 ```csharp
 public sealed class ValidationBehavior<TRequest, TResponse>(
@@ -1151,44 +1075,24 @@ public sealed class ValidationBehavior<TRequest, TResponse>(
 }
 ```
 
-- **Línea 1:** `public sealed class ValidationBehavior<TRequest, TResponse>(` → declara el comportamiento abierto.
-- **Línea 2:** `IEnumerable<IValidator<TRequest>> validators)` → recibe todos los validadores registrados para la solicitud.
-- **Línea 3:** `: IPipelineBehavior<TRequest, TResponse> where TRequest : notnull` → implementa el pipeline con la restricción de MediatR 12.4.1.
-- **Línea 4:** `{` → abre la clase.
-- **Línea 5:** `public async Task<TResponse> Handle(TRequest request,` → declara el método de la tubería.
-- **Línea 6:** `RequestHandlerDelegate<TResponse> next, CancellationToken ct)` → recibe la continuación y la cancelación de la solicitud.
-- **Línea 7:** `{` → abre el método.
-- **Línea 8:** `var failures = new List<FluentValidation.Results.ValidationFailure>();` → prepara una colección de errores tipados.
-- **Línea 9:** `foreach (var validator in validators)` → recorre los validadores uno a uno.
-- **Línea 10:** `{` → abre la iteración.
-- **Línea 11:** `var result = await validator.ValidateAsync(request, ct);` → ejecuta reglas síncronas y asíncronas sin concurrencia sobre recursos scoped.
-- **Línea 12:** `failures.AddRange(result.Errors);` → acumula los errores del validador.
-- **Línea 13:** `}` → cierra la iteración.
-- **Línea 14:** `if (failures.Count > 0)` → detecta si debe detenerse la solicitud.
-- **Línea 15:** `throw new ValidationException(failures);` → propaga errores esperados de validación al traductor configurado.
-- **Línea 16:** `return await next();` → continúa con el siguiente comportamiento o manejador.
-- **Línea 17:** `}` → cierra el método.
-- **Línea 18:** `}` → cierra la clase.
+
+El comportamiento genérico valida la solicitud antes de invocar next; si encuentra errores, la operación de escritura debe quedar detenida. La prueba debe comprobar precisamente que no se ejecutó el handler rechazado.
+
 
 La integración con FluentValidation tiene dos consecuencias prácticas. La primera es que la validación se realiza de forma automática. La segunda es que el manejador no contiene código de validación. La combinación de ambas permite que los manejadores se centren en la lógica del caso de uso.
 
----
 
+Un pipeline aplica comportamiento transversal alrededor de la solicitud. Logging, validación y medición son ejemplos; el orden de registro decide cómo se anidan.
 
+La práctica conecta LoggingBehavior y los ejemplos desarrollan además una variante con FluentValidation. Los validadores se ejecutan secuencialmente para no compartir DbContext de forma concurrente.
 
-#### Ampliación didáctica aplicada a AceriaApp
+La variante que lanza ValidationException necesita traducción HTTP explícita. En 4.4 se estudia otra variante que devuelve Result; no registres ambas para el mismo propósito sin diseñar su interacción.
 
-**La decisión arquitectónica.** Un pipeline aplica comportamiento transversal alrededor de la solicitud. Logging, validación y medición son ejemplos; el orden de registro decide cómo se anidan.
-
-**Ejemplo concreto en AceriaApp.** La práctica conecta LoggingBehavior y los ejemplos desarrollan además una variante con FluentValidation. Los validadores se ejecutan secuencialmente para no compartir DbContext de forma concurrente.
-
-**Riesgo, alternativa y límite.** La variante que lanza ValidationException necesita traducción HTTP explícita. En 4.4 se estudia otra variante que devuelve Result; no registres ambas para el mismo propósito sin diseñar su interacción.
-
-**Comprobación técnica y aprendizaje.** Registra el comportamiento abierto con AddOpenBehavior y registra `IValidator<T>` para los mensajes que lo necesiten. Un pipeline sin validadores no valida por el solo hecho de existir.
+Registra el comportamiento abierto con AddOpenBehavior y registra `IValidator<T>` para los mensajes que lo necesiten. Un pipeline sin validadores no valida por el solo hecho de existir.
 
 ![Diagrama explicativo del punto 4.3, bloque 9](IMAGENES/4-3-pipeline.svg)
 
-*Interpretación del gráfico:* Los comportamientos se anidan; una validación fallida corta el recorrido antes del manejador. La figura se distribuye en SVG vectorial y PNG.
+Los comportamientos se anidan; una validación fallida corta el recorrido antes del manejador. La figura se distribuye en SVG vectorial y PNG.
 
 **Registro del comportamiento de validación del ejemplo.** En la raíz de composición, después de registrar los validadores concretos como `IValidator<TRequest>`, el comportamiento abierto se incorpora a MediatR así:
 
@@ -1200,17 +1104,15 @@ builder.Services.AddMediatR(cfg =>
 });
 ```
 
-- **Línea 1:** `builder.Services.AddMediatR(cfg =>` → configura la biblioteca fijada para el módulo.
-- **Línea 2:** `{` → abre la configuración.
-- **Línea 3:** `cfg.RegisterServicesFromAssemblyContaining<CrearOrdenHandler>();` → descubre manejadores en el ensamblado de aplicación.
-- **Línea 4:** `cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));` → incorpora el comportamiento para las solicitudes compatibles.
-- **Línea 5:** `});` → cierra el registro.
+
+La configuración del pipeline determina qué comportamientos participan alrededor del handler. La existencia de AddOpenBehavior no acredita por sí sola el orden de ejecución, que debe observarse con una prueba adecuada.
+
 
 Este es el registro de la variante con excepciones de validación. La práctica usa su comportamiento de logging; añadir validación exige registrar validadores y traducir `ValidationException` en el adaptador HTTP.
 
-### Bloque 10 — Aplicación al proyecto del curso
+### Aplicación al proyecto del curso
 
-El proyecto del curso conecta `CrearOrdenCommand` y `ObtenerOrdenQuery` con sus manejadores mediante MediatR 12.4.1. `LoggingBehavior` registra el recorrido de la solicitud, y los casos de uso conservan la validación que les corresponde. Los comandos y consultas implementan `IRequest<TResponse>`; sus manejadores implementan `IRequestHandler<TRequest, TResponse>`. El registro descubre el ensamblado de aplicación. Las notificaciones `INotification` y el pipeline de FluentValidation desarrollados en los bloques anteriores son variantes didácticas adicionales: no se presentan como componentes conectados de este snapshot. Las pruebas del catálogo se complementan con pruebas de resolución y ejecución del mediador.
+El punto 4.3 conecta la API del curso con comandos, consultas y handlers de aplicación, sin alterar el modelo del dominio ni convertir el mediador en un repositorio. La creación de órdenes permitirá seguir HTTP, mensaje, manejador, puertos y confirmación SQL. Los comportamientos transversales completan ese recorrido cuando son comprobables mediante tests específicos. También distinguiremos una notificación local de la mensajería duradera que aparecerá en la parte distribuida. Un diseño que añade numerosas clases pero obliga a todos los handlers a conocerse directamente no logra el desacoplamiento buscado. La evidencia final debe mostrar qué pieza decide cada aspecto y cómo responde el sistema cuando una condición se incumple.
 
 ```text
 Aplicación al proyecto del curso:
@@ -1223,30 +1125,22 @@ MediatR             → registrado con AddMediatR.
 Validación          → reglas de entidad y caso de uso.
 ```
 
-- **Línea 1:** `Comando conectado` → solicitud de creación realmente registrada.
-- **Línea 2:** `Consulta conectada` → solicitud de detalle realmente registrada.
-- **Línea 3:** `Pipeline conectado` → logging transversal de solicitudes.
-- **Línea 4:** `Manejadores` → implementan los contratos tipados de MediatR.
-- **Línea 5:** `MediatR` → registrado en el contenedor con el ensamblado correcto.
-- **Línea 6:** `Validación` → permanece en entidad y caso de uso en el recorrido ejecutable.
+
+El resumen final conecta comandos, consultas y pipeline de logging. La evidencia relevante consiste en seguir una petición HTTP hasta su handler y el resultado de negocio, no en contabilizar mensajes definidos en un catálogo.
+
 
 La aplicación del patrón Mediator prepara el proyecto para los puntos 4.4 y 4.5. El punto 4.4 estudiará el Result Pattern. El punto 4.5 estudiará la inyección de dependencias. El punto 4.3 establece la base que se aplicará en los dos puntos siguientes.
 
----
 
+El catálogo conserva comandos, consultas y notificaciones como conceptos diferentes. La aplicación funcional debe indicar cuáles están realmente conectados al mediador.
 
+El punto introduce CrearOrdenCommand, ObtenerOrdenQuery y LoggingBehavior sobre los puertos de persistencia existentes. Las notificaciones amplían la teoría sin convertir el sistema en mensajería distribuida.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Registrar un manejador no prueba automáticamente que el endpoint use Send. Mantén una prueba de resolución y otra del recorrido HTTP cuando ese recorrido esté expuesto.
 
-**La decisión arquitectónica.** El catálogo conserva comandos, consultas y notificaciones como conceptos diferentes. La aplicación funcional debe indicar cuáles están realmente conectados al mediador.
+Comprueba que se conservan los casos anteriores y que una solicitud llega al manejador con su respuesta correcta. Después estudia cómo representar fallos esperados con Result.
 
-**Ejemplo concreto en AceriaApp.** El punto introduce CrearOrdenCommand, ObtenerOrdenQuery y LoggingBehavior sobre los puertos de persistencia existentes. Las notificaciones amplían la teoría sin convertir el sistema en mensajería distribuida.
-
-**Riesgo, alternativa y límite.** Registrar un manejador no prueba automáticamente que el endpoint use Send. Mantén una prueba de resolución y otra del recorrido HTTP cuando ese recorrido esté expuesto.
-
-**Comprobación técnica y aprendizaje.** Comprueba que se conservan los casos anteriores y que una solicitud llega al manejador con su respuesta correcta. Después estudia cómo representar fallos esperados con Result.
-
-### Resumen rápido de la teoría
+### El alcance de MediatR en esta aplicación
 
 - El patrón Mediator reduce el acoplamiento entre los componentes al centralizar la comunicación en un objeto mediador.
 - En una arquitectura hexagonal, el patrón Mediator se aplica en la capa de aplicación para desacoplar los adaptadores de entrada de los casos de uso.
