@@ -4,8 +4,8 @@ on:
   push:
     branches: [version-corregida]
     paths:
-      - 'M04_PATRONES_ARQUITECTURA/PRACTICAS/M02_PRACTICAS.md'
-      - 'M05_DDD_CQRS/PRACTICAS/M03_PRACTICAS.md'
+      - 'M04_PATRONES_ARQUITECTURA/PRACTICAS/M04_PRACTICAS.md'
+      - 'M05_DDD_CQRS/PRACTICAS/M05_PRACTICAS.md'
       - 'M04_PATRONES_ARQUITECTURA/PROYECTO/**'
       - 'M05_DDD_CQRS/PROYECTO/**'
       - 'tools/validar_practicas_m04_m05.py'
