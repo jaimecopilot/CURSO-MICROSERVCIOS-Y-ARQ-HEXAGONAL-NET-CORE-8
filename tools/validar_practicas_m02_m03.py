@@ -87,7 +87,10 @@ def tests(num, stages, env, reconstruir_incremental=False):
     counts=[]
     for index,slug in enumerate(stages,1):
         stage=workroot/slug
-        if reconstruir_incremental and index >= 2:
+        if reconstruir_incremental and index == 1 and num >= 3:
+            from auditar_continuidad_modular import materializar_limite
+            materializar_limite(num,stage)
+        elif reconstruir_incremental and index >= 2:
             from auditar_reconstruccion_practicas import materializar_etapa
             materializar_etapa(num,index,stage)
         else:
@@ -202,7 +205,7 @@ def main():
         lines.extend(["","**E2E SQL/HTTP:** "+json.dumps(result,ensure_ascii=False),
             "","Se han ejecutado los snapshots de referencia y no todas las "
             "acciones gráficas de Visual Studio.",
-            "Reconstrucción incremental desde el manual en las etapas 2..N: "
+            "Reconstrucción desde las prácticas de los puntos 1..N: "
             + str(bool(args.reconstruir_incremental))])
     if args.report:
         destination=Path(args.report);destination.parent.mkdir(parents=True,exist_ok=True)
