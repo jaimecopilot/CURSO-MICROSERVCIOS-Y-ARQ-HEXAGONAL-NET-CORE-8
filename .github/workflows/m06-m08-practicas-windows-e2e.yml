@@ -1,0 +1,241 @@
+name: M06-M08 - Prácticas Windows SQL RabbitMQ
+
+on:
+  push:
+    branches: [version-corregida]
+    paths:
+      - 'M06_COMUNICACION_MICROSERVICIOS/PRACTICAS/M06_PRACTICAS.md'
+      - 'M07_OBSERVABILIDAD_RESILIENCIA/PRACTICAS/M07_PRACTICAS.md'
+      - 'M08_API_GATEWAY/PRACTICAS/M08_PRACTICAS.md'
+      - 'tools/validar_practicas_m06_m08_windows.py'
+      - '.github/workflows/m06-m08-practicas-windows-e2e.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  m06-windows:
+    name: Prácticas M06 - Windows, SQL y RabbitMQ reales
+    runs-on: windows-2022
+    timeout-minutes: 100
+    env:
+      ACERIA_TEST_SQLSERVER: 'Server=.\SQLEXPRESS;Database=master;Trusted_Connection=True;TrustServerCertificate=True;Encrypt=False'
+      ACERIA_TEST_RABBITMQ: 'amqp://guest:guest@127.0.0.1:5672/'
+      ACERIA_SQL_ORIGIN: 'WindowsSQLExpress'
+    steps:
+      - name: Habilitar rutas largas de Git
+        shell: pwsh
+        run: git config --global core.longpaths true
+      - uses: actions/checkout@v4
+        with:
+          ref: version-corregida
+          sparse-checkout: |
+            M06_COMUNICACION_MICROSERVICIOS
+            tools
+          sparse-checkout-cone-mode: true
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Preparar SQL Server Express 2022
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $service = Get-Service -Name 'MSSQL$SQLEXPRESS' -ErrorAction SilentlyContinue
+          if ($null -eq $service) {
+            choco install sql-server-express --version=2022.16.0.20260305 -y --no-progress
+            if ($LASTEXITCODE -notin @(0,3010,1641)) { throw "Instalación SQL Express fallida" }
+            $service = Get-Service -Name 'MSSQL$SQLEXPRESS' -ErrorAction Stop
+          }
+          if ($service.Status -ne 'Running') { Start-Service -Name 'MSSQL$SQLEXPRESS' }
+          if ((Get-Service -Name 'MSSQL$SQLEXPRESS').Status -ne 'Running') { throw "SQL Express no disponible" }
+          Write-Host 'SQL Server Express activo'
+      - name: Instalar y arrancar RabbitMQ para Windows
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $service = Get-Service -Name 'RabbitMQ' -ErrorAction SilentlyContinue
+          if ($null -eq $service) {
+            choco install rabbitmq --version=4.3.5 -y --no-progress
+            if ($LASTEXITCODE -notin @(0,3010,1641)) { throw "Instalación RabbitMQ fallida" }
+            $service = Get-Service -Name 'RabbitMQ' -ErrorAction Stop
+          }
+          if ($service.Status -ne 'Running') { Start-Service -Name 'RabbitMQ' }
+          $ready = $false
+          foreach ($attempt in 1..90) {
+            try {
+              $client = [System.Net.Sockets.TcpClient]::new()
+              $client.Connect('127.0.0.1',5672)
+              $client.Dispose()
+              $ready = $true
+              break
+            } catch {
+              Start-Sleep -Seconds 2
+            }
+          }
+          if (-not $ready) { throw 'RabbitMQ no escuchó en localhost:5672' }
+          Write-Host 'RabbitMQ nativo de Windows escucha en 5672'
+      - name: Auditar y ejecutar todas las etapas de M06
+        shell: pwsh
+        run: |
+          $env:ACERIA_SQL_EVIDENCE_DIR = Join-Path $env:RUNNER_TEMP 'evidencia-sql-m06'
+          python tools/validar_practicas_m06_m08_windows.py --module 6 --report M06_WINDOWS_VALIDACION.md
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: m06-windows-sql-rabbitmq
+          path: M06_WINDOWS_VALIDACION.md
+          retention-days: 30
+
+  m07-windows:
+    name: Prácticas M07 - Windows, SQL y RabbitMQ reales
+    runs-on: windows-2022
+    timeout-minutes: 100
+    env:
+      ACERIA_TEST_SQLSERVER: 'Server=.\SQLEXPRESS;Database=master;Trusted_Connection=True;TrustServerCertificate=True;Encrypt=False'
+      ACERIA_TEST_RABBITMQ: 'amqp://guest:guest@127.0.0.1:5672/'
+      ACERIA_SQL_ORIGIN: 'WindowsSQLExpress'
+    steps:
+      - name: Habilitar rutas largas de Git
+        shell: pwsh
+        run: git config --global core.longpaths true
+      - uses: actions/checkout@v4
+        with:
+          ref: version-corregida
+          sparse-checkout: |
+            M07_OBSERVABILIDAD_RESILIENCIA
+            tools
+          sparse-checkout-cone-mode: true
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Preparar SQL Server Express 2022
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $service = Get-Service -Name 'MSSQL$SQLEXPRESS' -ErrorAction SilentlyContinue
+          if ($null -eq $service) {
+            choco install sql-server-express --version=2022.16.0.20260305 -y --no-progress
+            if ($LASTEXITCODE -notin @(0,3010,1641)) { throw "Instalación SQL Express fallida" }
+            $service = Get-Service -Name 'MSSQL$SQLEXPRESS' -ErrorAction Stop
+          }
+          if ($service.Status -ne 'Running') { Start-Service -Name 'MSSQL$SQLEXPRESS' }
+          if ((Get-Service -Name 'MSSQL$SQLEXPRESS').Status -ne 'Running') { throw "SQL Express no disponible" }
+          Write-Host 'SQL Server Express activo'
+      - name: Instalar y arrancar RabbitMQ para Windows
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $service = Get-Service -Name 'RabbitMQ' -ErrorAction SilentlyContinue
+          if ($null -eq $service) {
+            choco install rabbitmq --version=4.3.5 -y --no-progress
+            if ($LASTEXITCODE -notin @(0,3010,1641)) { throw "Instalación RabbitMQ fallida" }
+            $service = Get-Service -Name 'RabbitMQ' -ErrorAction Stop
+          }
+          if ($service.Status -ne 'Running') { Start-Service -Name 'RabbitMQ' }
+          $ready = $false
+          foreach ($attempt in 1..90) {
+            try {
+              $client = [System.Net.Sockets.TcpClient]::new()
+              $client.Connect('127.0.0.1',5672)
+              $client.Dispose()
+              $ready = $true
+              break
+            } catch {
+              Start-Sleep -Seconds 2
+            }
+          }
+          if (-not $ready) { throw 'RabbitMQ no escuchó en localhost:5672' }
+          Write-Host 'RabbitMQ nativo de Windows escucha en 5672'
+      - name: Auditar y ejecutar todas las etapas de M07
+        shell: pwsh
+        run: |
+          $env:ACERIA_SQL_EVIDENCE_DIR = Join-Path $env:RUNNER_TEMP 'evidencia-sql-m07'
+          python tools/validar_practicas_m06_m08_windows.py --module 7 --report M07_WINDOWS_VALIDACION.md
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: m07-windows-sql-rabbitmq
+          path: M07_WINDOWS_VALIDACION.md
+          retention-days: 30
+
+  m08-windows:
+    name: Prácticas M08 - Windows, SQL y RabbitMQ reales
+    runs-on: windows-2022
+    timeout-minutes: 100
+    env:
+      ACERIA_TEST_SQLSERVER: 'Server=.\SQLEXPRESS;Database=master;Trusted_Connection=True;TrustServerCertificate=True;Encrypt=False'
+      ACERIA_TEST_RABBITMQ: 'amqp://guest:guest@127.0.0.1:5672/'
+      ACERIA_SQL_ORIGIN: 'WindowsSQLExpress'
+    steps:
+      - name: Habilitar rutas largas de Git
+        shell: pwsh
+        run: git config --global core.longpaths true
+      - uses: actions/checkout@v4
+        with:
+          ref: version-corregida
+          sparse-checkout: |
+            M08_API_GATEWAY
+            tools
+          sparse-checkout-cone-mode: true
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Preparar SQL Server Express 2022
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $service = Get-Service -Name 'MSSQL$SQLEXPRESS' -ErrorAction SilentlyContinue
+          if ($null -eq $service) {
+            choco install sql-server-express --version=2022.16.0.20260305 -y --no-progress
+            if ($LASTEXITCODE -notin @(0,3010,1641)) { throw "Instalación SQL Express fallida" }
+            $service = Get-Service -Name 'MSSQL$SQLEXPRESS' -ErrorAction Stop
+          }
+          if ($service.Status -ne 'Running') { Start-Service -Name 'MSSQL$SQLEXPRESS' }
+          if ((Get-Service -Name 'MSSQL$SQLEXPRESS').Status -ne 'Running') { throw "SQL Express no disponible" }
+          Write-Host 'SQL Server Express activo'
+      - name: Instalar y arrancar RabbitMQ para Windows
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $service = Get-Service -Name 'RabbitMQ' -ErrorAction SilentlyContinue
+          if ($null -eq $service) {
+            choco install rabbitmq --version=4.3.5 -y --no-progress
+            if ($LASTEXITCODE -notin @(0,3010,1641)) { throw "Instalación RabbitMQ fallida" }
+            $service = Get-Service -Name 'RabbitMQ' -ErrorAction Stop
+          }
+          if ($service.Status -ne 'Running') { Start-Service -Name 'RabbitMQ' }
+          $ready = $false
+          foreach ($attempt in 1..90) {
+            try {
+              $client = [System.Net.Sockets.TcpClient]::new()
+              $client.Connect('127.0.0.1',5672)
+              $client.Dispose()
+              $ready = $true
+              break
+            } catch {
+              Start-Sleep -Seconds 2
+            }
+          }
+          if (-not $ready) { throw 'RabbitMQ no escuchó en localhost:5672' }
+          Write-Host 'RabbitMQ nativo de Windows escucha en 5672'
+      - name: Auditar y ejecutar todas las etapas de M08
+        shell: pwsh
+        run: |
+          $env:ACERIA_SQL_EVIDENCE_DIR = Join-Path $env:RUNNER_TEMP 'evidencia-sql-m08'
+          python tools/validar_practicas_m06_m08_windows.py --module 8 --report M08_WINDOWS_VALIDACION.md
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: m08-windows-sql-rabbitmq
+          path: M08_WINDOWS_VALIDACION.md
+          retention-days: 30
