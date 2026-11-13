@@ -146,7 +146,8 @@ def test_counts(folder: Path) -> dict:
             "failed": count["failed"], "projects": len(files)}
 
 
-def run_stages(module: int, env: dict[str, str]) -> list[dict]:
+def run_stages(module: int, env: dict[str, str],
+               reconstruir_incremental: bool = False) -> list[dict]:
     cfg = MODULES[module]
     base = Path(os.getenv("RUNNER_TEMP", tempfile.gettempdir())) / (
         f"mx{module}_" + uuid.uuid4().hex[:6]
@@ -158,7 +159,11 @@ def run_stages(module: int, env: dict[str, str]) -> list[dict]:
               "copia aislada, restore, build, xUnit ===", flush=True)
         src = ROOT / cfg["folder"] / "PROYECTO" / stage
         dest = base / f"p{point}"
-        shutil.copytree(src, dest)
+        if reconstruir_incremental and point >= 2:
+            from auditar_reconstruccion_practicas import materializar_etapa
+            materializar_etapa(module,point,dest)
+        else:
+            shutil.copytree(src, dest)
         # El archivo global.json heredado mantiene la selección de .NET 8.
         solution = "AceriaApp.sln"
         command(["dotnet", "restore", solution, "--nologo"], dest, env)
@@ -190,6 +195,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--module", type=int, choices=(6, 7, 8), required=True)
     parser.add_argument("--audit-only", action="store_true")
+    parser.add_argument("--reconstruir-incremental", action="store_true")
     parser.add_argument("--report", type=Path)
     args = parser.parse_args()
     cfg = MODULES[args.module]
@@ -203,7 +209,7 @@ def main() -> None:
         env["DOTNET_NOLOGO"] = "1"
         wait_tcp(1433, timeout=2) if env.get("ACERIA_SQL_REQUIRE_TCP") else None
         wait_tcp(5672, timeout=45)
-        rows = run_stages(args.module, env)
+        rows = run_stages(args.module, env, args.reconstruir_incremental)
     if args.report:
         report = [
             f"# M{args.module:02} — Informe automático Windows, SQL y RabbitMQ",
@@ -234,6 +240,8 @@ def main() -> None:
                 "El total suma varias ejecuciones acumuladas, no tests distintos.",
                 "",
                 "Límites: la compilación y los E2E de los proyectos de referencia",
+                "Reconstrucción incremental desde el manual en las etapas 2..N: "
+                + str(bool(args.reconstruir_incremental)),
                 "no equivalen a reproducir manualmente todos los clics de",
                 "Visual Studio ni a ejecutar los retos optativos.",
             ]
