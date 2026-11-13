@@ -145,7 +145,7 @@ def materializar_limite(module: int, target: Path,
     report={"module":module,"transition":f"M{module-1:02} final → M{module:02}.1",
             "files":len(built),"updated":len(changed),"new_projects":
             sorted(current_projects-previous_projects),"state":"PASS"}
-    print("LIMITE RECONSTRUIDO "+json.dumps(report,ensure_ascii=False),flush=True)
+    print("LIMITE RECONSTRUIDO "+json.dumps(report,ensure_ascii=True),flush=True)
     return report
 
 
