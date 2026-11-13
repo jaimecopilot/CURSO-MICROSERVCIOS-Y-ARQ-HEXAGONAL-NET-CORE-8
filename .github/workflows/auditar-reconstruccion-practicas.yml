@@ -20,6 +20,7 @@ on:
       - 'M08_API_GATEWAY/PROYECTO/**'
       - 'tools/auditar_reconstruccion_practicas.py'
       - 'tools/auditar_continuidad_modular.py'
+      - 'tools/validar_cadena_m03_m08.py'
       - '.github/workflows/auditar-reconstruccion-practicas.yml'
   workflow_dispatch:
 
@@ -69,6 +70,9 @@ jobs:
           assert total == 19, f"Se esperaban 19 transiciones, se reconstruyeron {total}"
           print(f"PASS: {total}/19 etapas materializadas y comparadas sin copiar destino")
           PY
+      - name: Reconstruir cadena acumulativa M03.1 a M08.4
+        run: |
+          python tools/validar_cadena_m03_m08.py --report AUDITORIA_CADENA_M03_M08.md
       - name: Reconstruccion incremental diagnostica
         run: |
           python tools/auditar_reconstruccion_practicas.py --report AUDITORIA_RECONSTRUCCION_PRACTICAS.md
@@ -85,4 +89,5 @@ jobs:
           path: |
             AUDITORIA_RECONSTRUCCION_PRACTICAS.md
             AUDITORIA_CONTINUIDAD_MODULAR.md
+            AUDITORIA_CADENA_M03_M08.md
           retention-days: 30
