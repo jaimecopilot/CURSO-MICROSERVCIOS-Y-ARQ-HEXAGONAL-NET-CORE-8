@@ -774,11 +774,15 @@ Revisa el proyecto de dominio y sus pruebas de comportamiento. Identifica constr
 
 ---
 
-## Desarrollo teórico
+## Del mensaje de entrada al cambio confirmado
 
-### Bloque 1 — Definición de caso de uso
 
-Un caso de uso es una operación del sistema que expresa una intención del negocio. El caso de uso describe el flujo de acciones que se ejecutan para completar una operación desde el punto de vista del actor. En una arquitectura hexagonal, el caso de uso se materializa como un método del puerto de entrada. Cada caso de uso expresa una operación del actor; puede necesitar una transacción local o coordinar un proceso de varias etapas con garantías distintas. El caso de uso coordina las entidades, los value objects, los repositorios y la unidad de trabajo. El caso de uso contiene políticas de aplicación y orquestación; las invariantes y reglas propias del modelo residen en el dominio.
+
+Seguiremos la solicitud de creación de una orden para ver dónde se comprueban datos, dónde se protegen reglas, cómo se coordina el caso de uso y cuándo SQL Server permite observar el resultado.
+
+### Definición de caso de uso
+
+Un caso de uso expresa una acción que el sistema ofrece a un actor y coordina los pasos necesarios para completar su intención. Crear una orden de producción no es simplemente insertar una fila: puede requerir validar entradas, construir un agregado válido, comprobar condiciones del negocio y confirmar el resultado. La capa de aplicación sitúa esa coordinación sin apropiarse de las invariantes de la entidad ni de los detalles tecnológicos de EF Core. Su contrato debería describir lo que el consumidor puede solicitar y qué resultado recibirá, no el endpoint que la expone. En AceriaApp los casos de uso se podrán invocar desde HTTP y probar con colaboradores controlados, mientras la persistencia real queda en adaptadores. Esa separación será especialmente importante cuando aparezcan otros canales y comunicación entre servicios.
 
 ```csharp
 public interface IOrdenServicio
@@ -788,35 +792,25 @@ public interface IOrdenServicio
 }
 ```
 
-- **Línea 1:** `public interface IOrdenServicio` → puerto de entrada con casos de uso.
-
-- **Línea 2:** `{` → abre el bloque actual.
-
-- **Línea 3:** `Task<Result<Guid>> CrearOrdenAsync(CrearOrdenCommand command);` → caso de uso de creación.
-
-- **Línea 4:** `Task<Result<OrdenDto>> ObtenerOrdenAsync(Guid id);` → caso de uso de consulta.
-
-- **Línea 5:** `}` → cierra el bloque actual.
+El contrato IOrdenServicio expresa operaciones de aplicación y devuelve resultados que diferencian éxito de rechazo. No contiene tipos HTTP ni consultas SQL, de modo que un test puede invocarlo sin arrancar el host de ASP.NET Core.
 
 El caso de uso se caracteriza por tres propiedades. La primera es que expresa una intención del negocio: el nombre describe la operación. La segunda es que coordina los elementos del dominio: entidades, value objects, repositorios y unidad de trabajo. La tercera es que delega las invariantes en entidades, value objects o servicios de dominio, sin duplicarlas en la orquestación. Las tres propiedades permiten que el caso de uso sea la unidad de trabajo de la capa de aplicación.
 
 La aplicación del caso de uso tiene dos consecuencias prácticas. La primera es que la lógica de orquestación se separa de las reglas de negocio. La segunda es que cada caso de uso se prueba de forma aislada. La combinación de ambas permite que la capa de aplicación sea mantenible y testeable.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Un caso de uso debe describir lo que el actor quiere conseguir y coordinar los colaboradores mínimos para lograrlo.
 
-**La decisión arquitectónica.** Un caso de uso debe describir lo que el actor quiere conseguir y coordinar los colaboradores mínimos para lograrlo.
+Crear una orden reúne entrada, construcción del agregado, preparación del alta y confirmación. Planificar y finalizar son operaciones distintas porque tienen precondiciones y consecuencias diferentes.
 
-**Ejemplo concreto en AceriaApp.** Crear una orden reúne entrada, construcción del agregado, preparación del alta y confirmación. Planificar y finalizar son operaciones distintas porque tienen precondiciones y consecuencias diferentes.
+Un método `GuardarTodo` que acepta un grafo externo permite saltar intenciones del negocio. Una operación larga que cruza servicios tampoco se vuelve atómica por llamarse caso de uso.
 
-**Riesgo, alternativa y límite.** Un método `GuardarTodo` que acepta un grafo externo permite saltar intenciones del negocio. Una operación larga que cruza servicios tampoco se vuelve atómica por llamarse caso de uso.
-
-**Comprobación técnica y aprendizaje.** Comprueba el caso de uso sin HTTP y con puertos controlados. Su resultado debe distinguir éxito, ausencia, entrada inválida y conflicto sin depender de números de estado HTTP.
+Comprueba el caso de uso sin HTTP y con puertos controlados. Su resultado debe distinguir éxito, ausencia, entrada inválida y conflicto sin depender de números de estado HTTP.
 
 ---
 
-### Bloque 2 — Relación entre caso de uso y comando
+### Relación entre caso de uso y comando
 
-Un caso de uso se invoca con un comando o con una consulta. El comando contiene los datos necesarios para ejecutar la operación. El comando es inmutable y se construye con los valores del adaptador de entrada. El manejador del comando ejecuta el caso de uso. La separación entre comando y manejador permite que el caso de uso se invoque desde distintos adaptadores sin modificar el manejador.
+Los comandos describen qué desea cambiar un actor, pero la solicitud no constituye por sí misma un cambio válido del modelo. Un `CrearOrdenCommand` contiene cliente, material y cantidad; el handler interpreta esos datos, hace cumplir las reglas mediante el agregado y coordina su almacenamiento. Esta distinción evita que un record de entrada se convierta en una entidad editable o que el endpoint reproduzca toda la lógica de creación. Utilizar MediatR permite entregar el mensaje al handler correspondiente, aunque no impone automáticamente una arquitectura correcta. En AceriaApp el test de aplicación comprobará que una petición válida produce una orden y que una inválida devuelve un resultado de rechazo sin confirmar cambios. La validez no procede del patrón de mensajería, sino de las invariantes del negocio.
 
 ```csharp
 public record CrearOrdenCommand(string Cliente, string Material, int Cantidad) : IRequest<Result<Guid>>;
@@ -842,63 +836,27 @@ public class CrearOrdenHandler : IRequestHandler<CrearOrdenCommand, Result<Guid>
 }
 ```
 
-- **Línea 1:** `public record CrearOrdenCommand(string Cliente, string Material, int Cantidad) : IRequest<Result<Guid>>;` → comando con retorno.
-
-- **Línea 3:** `public class CrearOrdenHandler : IRequestHandler<CrearOrdenCommand, Result<Guid>>` → manejador del comando.
-
-- **Línea 4:** `{` → abre el bloque actual.
-
-- **Línea 5:** `private readonly IOrdenRepositorio _repositorio;` → dependencia del repositorio.
-
-- **Línea 6:** `private readonly IUnitOfWork _unitOfWork;` → dependencia de la unidad de trabajo.
-
-- **Línea 8:** `public CrearOrdenHandler(IOrdenRepositorio repositorio, IUnitOfWork unitOfWork)` → constructor.
-
-- **Línea 9:** `{` → abre el bloque actual.
-
-- **Línea 10:** `_repositorio = repositorio;` → asigna el repositorio.
-
-- **Línea 11:** `_unitOfWork = unitOfWork;` → asigna la unidad de trabajo.
-
-- **Línea 12:** `}` → cierra el bloque actual.
-
-- **Línea 14:** `public async Task<Result<Guid>> Handle(CrearOrdenCommand request, CancellationToken ct)` → método de manejo.
-
-- **Línea 15:** `{` → abre el bloque actual.
-
-- **Línea 16:** `var orden = new Orden(Guid.NewGuid(), request.Cliente, request.Material, request.Cantidad);` → crea la entidad.
-
-- **Línea 17:** `await _repositorio.AddAsync(orden, ct);` → prepara el alta; la unidad de trabajo confirma después.
-
-- **Línea 18:** `await _unitOfWork.CommitAsync(ct);` → confirma la transacción.
-
-- **Línea 19:** `return Result<Guid>.Success(orden.Id);` → devuelve el resultado.
-
-- **Línea 20:** `}` → cierra el bloque actual.
-
-- **Línea 21:** `}` → cierra el bloque actual.
+El comando de creación llega a un handler que coordina repositorio y unidad de trabajo. El mensaje no es una entidad persistida: sus datos deben atravesar reglas y producir un agregado válido antes de confirmar.
 
 La relación entre caso de uso y comando tiene dos consecuencias prácticas. La primera es que el caso de uso se invoca con un comando inmutable. La segunda es que el manejador coordina los elementos del dominio. La combinación de ambas permite que el caso de uso sea la unidad de trabajo de la capa de aplicación.
 
-#### Ampliación didáctica aplicada a AceriaApp
+El command transporta intención y datos; el handler coordina la ejecución. No coloques acceso a la base de datos en el constructor del mensaje.
 
-**La decisión arquitectónica.** El command transporta intención y datos; el handler coordina la ejecución. No coloques acceso a la base de datos en el constructor del mensaje.
+El ejemplo de creación prepara la orden y espera `CommitAsync(ct)` antes de devolver su identificador como éxito. El token llega a los puertos para que el trabajo pendiente pueda cancelarse.
 
-**Ejemplo concreto en AceriaApp.** El ejemplo de creación prepara la orden y espera `CommitAsync(ct)` antes de devolver su identificador como éxito. El token llega a los puertos para que el trabajo pendiente pueda cancelarse.
+La repetición del mismo mensaje puede crear dos órdenes si no hay deduplicación. MediatR 12.4.1 resuelve un handler dentro del proceso, pero no ofrece entrega persistente ni procesamiento exactamente una vez.
 
-**Riesgo, alternativa y límite.** La repetición del mismo mensaje puede crear dos órdenes si no hay deduplicación. MediatR 12.4.1 resuelve un handler dentro del proceso, pero no ofrece entrega persistente ni procesamiento exactamente una vez.
-
-**Comprobación técnica y aprendizaje.** Verifica que un fallo de commit no produzca un resultado exitoso y que una cancelación no se traduzca a validación de negocio. La política de idempotencia se diseña por separado cuando sea necesaria.
+Verifica que un fallo de commit no produzca un resultado exitoso y que una cancelación no se traduzca a validación de negocio. La política de idempotencia se diseña por separado cuando sea necesaria.
 
 ![Diagrama explicativo del punto 5.3, bloque 2](IMAGENES/5-3-orquestacion.svg)
 
-*Interpretación del gráfico:* Aplicación prepara el agregado y espera la confirmación; solo después devuelve un resultado de éxito. La figura se distribuye en SVG vectorial y PNG.
+Aplicación prepara el agregado y espera la confirmación; solo después devuelve un resultado de éxito. La figura se distribuye en SVG vectorial y PNG.
 
 ---
 
-### Bloque 3 — Orquestación de entidades y value objects
+### Orquestación de entidades y value objects
 
-El caso de uso orquesta las entidades y los value objects para completar la operación. La orquestación incluye crear entidades y value objects, invocar métodos que protegen invariantes y coordinar las operaciones; no modifica arbitrariamente atributos para eludir el dominio. La orquestación no contiene reglas de negocio: las reglas residen en las entidades y en los value objects. La orquestación se limita a invocar los métodos del dominio en el orden correcto.
+Un caso de uso puede necesitar información de varias entidades para realizar una decisión. Antes de crear una orden, por ejemplo, puede tener que comprobar que el cliente existe y que el material solicitado pertenece al catálogo permitido; después construirá un agregado cuyo comportamiento protege cantidad y estado. Es importante decidir qué información debe conocer el caso de uso y qué debe permanecer dentro de cada agregado. Si la aplicación modifica directamente todas las propiedades de las entidades, se debilitan sus invariantes. La coordinación debe realizarse mediante puertos que expresen necesidades del negocio, sin filtrar consultas SQL ni clases de transporte. En AceriaApp la orquestación combinará colaboradores, pero las reglas sobre una orden seguirán alojadas en su modelo.
 
 ```csharp
 public async Task<Result<Guid>> Handle(CrearOrdenCommand request, CancellationToken ct)
@@ -922,57 +880,23 @@ public async Task<Result<Guid>> Handle(CrearOrdenCommand request, CancellationTo
 }
 ```
 
-- **Línea 1:** `public async Task<Result<Guid>> Handle(CrearOrdenCommand request, CancellationToken ct)` → método de manejo.
-
-- **Línea 2:** `{` → abre el bloque actual.
-
-- **Línea 3:** `var cliente = await _clienteRepositorio.GetByIdAsync(request.ClienteId, ct);` → recupera el cliente.
-
-- **Línea 4:** `if (cliente is null)` → valida que el cliente existe.
-
-- **Línea 5:** `{` → abre el bloque actual.
-
-- **Línea 6:** `return Result<Guid>.Failure("El cliente no existe.");` → devuelve el fallo.
-
-- **Línea 7:** `}` → cierra el bloque actual.
-
-- **Línea 9:** `var material = await _materialRepositorio.GetByIdAsync(request.MaterialId, ct);` → recupera el material.
-
-- **Línea 10:** `if (material is null)` → valida que el material existe.
-
-- **Línea 11:** `{` → abre el bloque actual.
-
-- **Línea 12:** `return Result<Guid>.Failure("El material no existe.");` → devuelve el fallo.
-
-- **Línea 13:** `}` → cierra el bloque actual.
-
-- **Línea 15:** `var orden = new Orden(Guid.NewGuid(), cliente, material, request.Cantidad);` → crea la entidad.
-
-- **Línea 16:** `await _ordenRepositorio.AddAsync(orden, ct);` → prepara el alta; la unidad de trabajo confirma después.
-
-- **Línea 17:** `await _unitOfWork.CommitAsync(ct);` → confirma la transacción.
-
-- **Línea 18:** `return Result<Guid>.Success(orden.Id);` → devuelve el resultado.
-
-- **Línea 19:** `}` → cierra el bloque actual.
+La orquestación consulta cliente y material, aplica precondiciones y construye la orden. Cada puerto debe expresar la necesidad del negocio sin convertir el caso de uso en dueño de las tablas de varios contextos.
 
 La orquestación tiene dos consecuencias prácticas. La primera es que los errores esperados se representan con el patrón Result. La segunda es que las reglas de negocio residen en las entidades. La combinación de ambas permite que el caso de uso sea legible y que las reglas sean testeables de forma aislada.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Carga solo el estado necesario y deja al dominio decidir las reglas que dependen de ese estado. Aplicación coordina el orden de las llamadas.
 
-**La decisión arquitectónica.** Carga solo el estado necesario y deja al dominio decidir las reglas que dependen de ese estado. Aplicación coordina el orden de las llamadas.
+El ejemplo de cliente y material supone colaboradores dentro de un límite local conocido. En el contexto implementado, Producción usa sus propios valores y no carga agregados de Clientes o Compras que todavía no existen.
 
-**Ejemplo concreto en AceriaApp.** El ejemplo de cliente y material supone colaboradores dentro de un límite local conocido. En el contexto implementado, Producción usa sus propios valores y no carga agregados de Clientes o Compras que todavía no existen.
+Consultar que un cliente existe y después escribir no elimina una carrera concurrente. Si se integran otros contextos, el contrato debe aclarar si se usa referencia, copia histórica o consulta remota.
 
-**Riesgo, alternativa y límite.** Consultar que un cliente existe y después escribir no elimina una carrera concurrente. Si se integran otros contextos, el contrato debe aclarar si se usa referencia, copia histórica o consulta remota.
-
-**Comprobación técnica y aprendizaje.** Prueba ausencia del colaborador y confirma que no se añade la orden ni se llama al commit. Al fallar una precondición, la operación no debe continuar con un objeto parcialmente construido.
+Prueba ausencia del colaborador y confirma que no se añade la orden ni se llama al commit. Al fallar una precondición, la operación no debe continuar con un objeto parcialmente construido.
 
 ---
 
-### Bloque 4 — Coordinación de repositorios y unidad de trabajo
+### Coordinación de repositorios y unidad de trabajo
 
-El caso de uso coordina varios repositorios a través de la unidad de trabajo. La coordinación incluye la recuperación de entidades, la persistencia de cambios y la confirmación de la transacción. La unidad de trabajo solicita la confirmación de cambios que comparten una transacción; la garantía de atomicidad depende del adaptador y del proveedor, no del nombre de la interfaz. El caso de uso no gestiona transacciones directamente: delega en la unidad de trabajo. La separación entre caso de uso y unidad de trabajo permite que la transacción se gestione en un único punto.
+Cuando una operación requiere varias escrituras dentro de una misma frontera SQL, el caso de uso debe controlar su confirmación conjunta. Los repositorios preparan los cambios sobre los agregados y Unit of Work determina cuándo se guardan realmente. Esta separación evita que un primer repositorio confirme antes de que un segundo haya terminado una operación relacionada. Sin embargo, el contrato debe corresponder a la transacción que el proveedor puede garantizar: una unidad de trabajo local no convierte varias bases de servicios diferentes en una operación atómica. En AceriaApp la prueba con SQL Server debe demostrar qué filas quedan después de una operación completa y qué sucede ante un fallo. Un mock de `CommitAsync` ayuda a verificar coordinación, pero no certifica rollback real.
 
 ```text
 Coordinación en el caso de uso:
@@ -984,35 +908,23 @@ Coordinación en el caso de uso:
 5. Devolver el resultado.
 ```
 
-- **Línea 1:** `Coordinación en el caso de uso:` → identifica el tema de las líneas siguientes.
-
-- **Línea 3:** `1. Recuperar entidades con repositorios.` → primera fase.
-
-- **Línea 4:** `2. Modificar entidades del dominio.` → segunda fase.
-
-- **Línea 5:** `3. Preparar cambios con repositorios sin confirmar.` → tercera fase.
-
-- **Línea 6:** `4. Confirmar transacción con la unidad de trabajo.` → cuarta fase.
-
-- **Línea 7:** `5. Devolver el resultado.` → quinta fase.
+La secuencia de repositorios y confirmación demuestra que agregar al contexto y ejecutar CommitAsync son momentos distintos. La atomicidad real debe verificarse en SQL Server, especialmente ante fallos intermedios.
 
 La coordinación tiene dos consecuencias prácticas. La primera es que la transacción se gestiona en un único punto. La segunda es que los repositorios no confirman cambios: los dejan pendientes. La combinación de ambas permite que el caso de uso controle la atomicidad de la operación.
 
-#### Ampliación didáctica aplicada a AceriaApp
+El repositorio de escritura prepara cambios y la unidad de trabajo confirma el conjunto en el mismo ámbito. Aclara esta semántica en el contrato.
 
-**La decisión arquitectónica.** El repositorio de escritura prepara cambios y la unidad de trabajo confirma el conjunto en el mismo ámbito. Aclara esta semántica en el contrato.
+En Producción, el repositorio y la unidad de trabajo comparten una instancia de `ProduccionDbContext`. Esto permite guardar raíz y líneas de la orden en una única confirmación local.
 
-**Ejemplo concreto en AceriaApp.** En Producción, el repositorio y la unidad de trabajo comparten una instancia de `ProduccionDbContext`. Esto permite guardar raíz y líneas de la orden en una única confirmación local.
+Dos contextos registrados como scoped no son una transacción común si son instancias o bases distintas. El repositorio inmediato de M3 sigue teniendo otro contrato y no se mezcla accidentalmente con este flujo.
 
-**Riesgo, alternativa y límite.** Dos contextos registrados como scoped no son una transacción común si son instancias o bases distintas. El repositorio inmediato de M3 sigue teniendo otro contrato y no se mezcla accidentalmente con este flujo.
-
-**Comprobación técnica y aprendizaje.** Verifica que preparar un alta no la haga visible desde un contexto nuevo antes del commit. Después de confirmar, vuelve a consultar para comprobar que se guardó el agregado completo.
+Verifica que preparar un alta no la haga visible desde un contexto nuevo antes del commit. Después de confirmar, vuelve a consultar para comprobar que se guardó el agregado completo.
 
 ---
 
-### Bloque 5 — Casos de uso de escritura y de lectura
+### Casos de uso de escritura y de lectura
 
-Los casos de uso se clasifican en dos tipos: de escritura y de lectura. Los casos de uso de escritura modifican el estado del sistema. Los casos de uso de lectura no modifican el estado del sistema. Los casos de uso de escritura suelen requerir la unidad de trabajo y la coordinación de varios repositorios. Los casos de uso de lectura pueden consultar un repositorio o un puerto especializado que devuelva proyecciones sin reconstruir el agregado. La separación entre escritura y lectura se profundiza en el punto 5.4 con CQRS.
+Un caso de uso de escritura persigue modificar el estado de negocio; uno de lectura responde una pregunta sobre ese estado. La distinción puede expresarse con métodos diferentes dentro de la aplicación antes de introducir CQRS formal. Listar órdenes, por ejemplo, puede devolver DTOs y aplicar filtros sin reconstruir cada agregado de fabricación; crear una orden necesita hacer cumplir invariantes y confirmar datos. Ambos recorridos pueden utilizar SQL Server y compartir infraestructura mientras sus contratos permanezcan claros. En AceriaApp esta separación permitirá comprender por qué no debemos llamar `SaveChangesAsync` desde una consulta y por qué una lectura puede optimizarse para los datos que realmente necesita el consumidor. No necesitamos dos bases para dar sentido a esas responsabilidades.
 
 ```csharp
 public async Task<Result<List<OrdenDto>>> ListarOrdenesAsync(ListarOrdenesQuery query, CancellationToken ct)
@@ -1023,35 +935,23 @@ public async Task<Result<List<OrdenDto>>> ListarOrdenesAsync(ListarOrdenesQuery 
 }
 ```
 
-- **Línea 1:** `public async Task<Result<List<OrdenDto>>> ListarOrdenesAsync(ListarOrdenesQuery query, CancellationToken ct)` → caso de uso de lectura.
-
-- **Línea 2:** `{` → abre el bloque actual.
-
-- **Línea 3:** `var ordenes = await _ordenRepositorio.ListarAsync(ct);` → consulta el repositorio.
-
-- **Línea 4:** `var dtos = ordenes.Select(o => new OrdenDto(o.Id, o.Cliente, o.Cantidad)).ToList();` → proyecta a DTOs.
-
-- **Línea 5:** `return Result<List<OrdenDto>>.Success(dtos);` → devuelve el resultado.
-
-- **Línea 6:** `}` → cierra el bloque actual.
+La lectura transforma órdenes almacenadas en DTOs destinados a un consumidor. El caso de uso no debería modificar entidades ni confirmar cambios solo para obtener una lista.
 
 La distinción entre escritura y lectura tiene dos consecuencias prácticas. La primera es que los casos de uso de escritura requieren coordinación transaccional. La segunda es que los casos de uso de lectura pueden optimizarse con proyecciones. La combinación de ambas permite que el sistema sea eficiente y coherente.
 
-#### Ampliación didáctica aplicada a AceriaApp
+El modelo de lectura debe responder a la pantalla o al consumidor, sin obligarlo a conocer métodos e invariantes de la entidad.
 
-**La decisión arquitectónica.** El modelo de lectura debe responder a la pantalla o al consumidor, sin obligarlo a conocer métodos e invariantes de la entidad.
+La lista puede devolver identificador, estado y total mediante DTOs. La escritura necesita reconstruir las líneas porque una nueva línea debe respetar el total del agregado.
 
-**Ejemplo concreto en AceriaApp.** La lista puede devolver identificador, estado y total mediante DTOs. La escritura necesita reconstruir las líneas porque una nueva línea debe respetar el total del agregado.
+El ejemplo que proyecta tras cargar entidades es una primera variante didáctica. Para listas grandes, una proyección en la consulta evita cargar columnas y relaciones innecesarias; CQRS formaliza ese camino en 5.4.
 
-**Riesgo, alternativa y límite.** El ejemplo que proyecta tras cargar entidades es una primera variante didáctica. Para listas grandes, una proyección en la consulta evita cargar columnas y relaciones innecesarias; CQRS formaliza ese camino en 5.4.
-
-**Comprobación técnica y aprendizaje.** Comprueba lista vacía, detalle inexistente y orden estable de resultados. Limita el volumen con paginación cuando el caso de uso lo requiera; devolver una lista completa no escala por sí solo.
+Comprueba lista vacía, detalle inexistente y orden estable de resultados. Limita el volumen con paginación cuando el caso de uso lo requiera; devolver una lista completa no escala por sí solo.
 
 ---
 
-### Bloque 6 — Casos de uso y puertos de entrada
+### Casos de uso y puertos de entrada
 
-Los casos de uso se exponen como métodos de los puertos de entrada. Cada puerto de entrada agrupa los casos de uso de una misma capacidad de negocio. El puerto se define en la capa de aplicación. Los adaptadores de entrada invocan los métodos del puerto. La separación entre puerto y caso de uso permite que el caso de uso se invoque desde distintos adaptadores.
+Los puertos de entrada son los contratos mediante los que un actor puede solicitar capacidades de aplicación. `IOrdenServicio` puede exponer crear, consultar, listar o cancelar órdenes con parámetros ligados al negocio y respuestas explícitas. No debería aceptar `HttpContext` o tipos de EF Core como condición para ejecutar una operación, porque eso obligaría a todo consumidor a conocer el protocolo o el proveedor. El adaptador HTTP traduce entradas y salidas mientras el caso de uso mantiene su significado. En AceriaApp los comandos de MediatR pueden funcionar como contratos de solicitud y los servicios como puntos de coordinación; lo importante no es la cantidad de interfaces, sino que las dependencias del núcleo tengan una dirección controlada.
 
 ```csharp
 public interface IOrdenServicio
@@ -1063,37 +963,23 @@ public interface IOrdenServicio
 }
 ```
 
-- **Línea 1:** `public interface IOrdenServicio` → puerto de entrada.
-
-- **Línea 2:** `{` → abre el bloque actual.
-
-- **Línea 3:** `Task<Result<Guid>> CrearOrdenAsync(CrearOrdenCommand command, CancellationToken ct);` → caso de uso de creación.
-
-- **Línea 4:** `Task<Result<OrdenDto>> ObtenerOrdenAsync(Guid id, CancellationToken ct);` → caso de uso de consulta.
-
-- **Línea 5:** `Task<Result<List<OrdenDto>>> ListarOrdenesAsync(ListarOrdenesQuery query, CancellationToken ct);` → caso de uso de lista.
-
-- **Línea 6:** `Task<Result> CancelarOrdenAsync(CancelarOrdenCommand command, CancellationToken ct);` → caso de uso de cancelación.
-
-- **Línea 7:** `}` → cierra el bloque actual.
+El puerto reúne capacidades que la aplicación ofrece a distintos adaptadores. Si una nueva entrada necesita crear una orden, podrá invocar la misma operación sin reimplementar sus invariantes.
 
 La separación entre puerto y caso de uso tiene dos consecuencias prácticas. La primera es que el puerto agrupa los casos de uso por capacidad. La segunda es que los casos de uso se invocan desde distintos adaptadores. La combinación de ambas permite que el sistema se exponga en varios protocolos sin duplicar la lógica.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Un puerto de entrada agrupa una capacidad; no tiene por qué contener todas las operaciones de la aplicación. MediatR es una alternativa para despachar solicitudes.
 
-**La decisión arquitectónica.** Un puerto de entrada agrupa una capacidad; no tiene por qué contener todas las operaciones de la aplicación. MediatR es una alternativa para despachar solicitudes.
+El caso de uso de Producción se puede invocar desde HTTP y desde pruebas sin cambiar su lógica. Los ejemplos con `IOrdenServicio` muestran la opción de interfaz explícita.
 
-**Ejemplo concreto en AceriaApp.** El caso de uso de Producción se puede invocar desde HTTP y desde pruebas sin cambiar su lógica. Los ejemplos con `IOrdenServicio` muestran la opción de interfaz explícita.
+No es obligatorio crear una interfaz de servicio y un handler que dupliquen todas las mismas reglas. Si ambos existen, uno debe delegar y la política debe permanecer en una sola implementación.
 
-**Riesgo, alternativa y límite.** No es obligatorio crear una interfaz de servicio y un handler que dupliquen todas las mismas reglas. Si ambos existen, uno debe delegar y la política debe permanecer en una sola implementación.
-
-**Comprobación técnica y aprendizaje.** Localiza el punto donde se ejecuta cada transición. Verifica que los adaptadores no dupliquen la validación de estado ni llamen directamente a `SaveChangesAsync`.
+Localiza el punto donde se ejecuta cada transición. Verifica que los adaptadores no dupliquen la validación de estado ni llamen directamente a `SaveChangesAsync`.
 
 ---
 
-### Bloque 7 — Casos de uso y adaptadores de entrada
+### Casos de uso y adaptadores de entrada
 
-Los adaptadores de entrada invocan los casos de uso a través del puerto o del mediador. El adaptador HTTP recibe la petición HTTP, construye el comando y lo envía al mediador. El mediador localiza el manejador y ejecuta el caso de uso. El adaptador traduce el resultado a una respuesta HTTP. La separación entre adaptador y caso de uso permite que el caso de uso sea independiente del protocolo.
+Un adaptador de entrada convierte el protocolo utilizado por un consumidor en una petición de aplicación y traduce la respuesta a su propio lenguaje. En ASP.NET Core eso implica enlazar rutas y cuerpos JSON, enviar un comando o invocar un caso de uso y construir códigos HTTP coherentes. El handler no debería decidir el estado de una orden con reglas copiadas del dominio ni ejecutar SQL directamente. Si mañana un trabajador recibiera una orden desde una cola, podría invocar la misma capacidad y obtener el mismo tratamiento de invariantes. En AceriaApp comprobaremos una petición real y su resultado de persistencia, no solo la presencia de `MapPost` o `ISender` en el código. La separación se demuestra mediante comportamiento equivalente desde los puntos de entrada adecuados.
 
 ```csharp
 app.MapPost("/api/v1/ordenes", async Task<IResult> (
@@ -1108,43 +994,23 @@ app.MapPost("/api/v1/ordenes", async Task<IResult> (
 });
 ```
 
-- **Línea 1:** `app.MapPost("/api/v1/ordenes", async Task<IResult> (` → declara un endpoint asíncrono con un tipo HTTP común para sus respuestas.
-
-- **Línea 2:** `CrearOrdenCommand command,` → recibe el comando.
-
-- **Línea 3:** `ISender sender,` → recibe el despachador de solicitudes sin acoplarse al handler concreto.
-
-- **Línea 4:** `CancellationToken ct) =>` → token de cancelación.
-
-- **Línea 5:** `{` → abre el bloque actual.
-
-- **Línea 6:** `var result = await sender.Send(command, ct);` → envía la solicitud y espera el resultado con propagación de cancelación.
-
-- **Línea 7:** `if (result.IsSuccess)` → evalúa una precondición antes de continuar.
-
-- **Línea 8:** `return Results.Created($"/api/v1/ordenes/{result.Value}", new { id = result.Value });` → devuelve HTTP 201 y la ubicación del recurso creado.
-
-- **Línea 9:** `return Results.BadRequest(new { error = result.Error });` → traduce el fallo de entrada del ejemplo a HTTP 400.
-
-- **Línea 10:** `});` → cierra el bloque actual.
+El endpoint traduce un comando HTTP a la aplicación y convierte el resultado en una respuesta. El error del caso de uso debe mapearse a un estado coherente; no todos los rechazos de negocio equivalen a un 400.
 
 La separación entre adaptador y caso de uso tiene dos consecuencias prácticas. La primera es que el adaptador se mantiene simple. La segunda es que el caso de uso se invoca desde distintos adaptadores. La combinación de ambas permite que el sistema se exponga en varios protocolos sin duplicar la lógica.
 
-#### Ampliación didáctica aplicada a AceriaApp
+El adaptador convierte transporte en una solicitud y resultado de aplicación en transporte. Mantén la semántica HTTP en ese borde.
 
-**La decisión arquitectónica.** El adaptador convierte transporte en una solicitud y resultado de aplicación en transporte. Mantén la semántica HTTP en ese borde.
+La ruta real de este módulo es `/api/v1/produccion/ordenes`. Una creación válida devuelve 201; una entrada inválida 400, una identidad ausente 404 y una transición incompatible 409.
 
-**Ejemplo concreto en AceriaApp.** La ruta real de este módulo es `/api/v1/produccion/ordenes`. Una creación válida devuelve 201; una entrada inválida 400, una identidad ausente 404 y una transición incompatible 409.
+El fragmento con `/api/v1/ordenes` es una variante abreviada que solo muestra creación y error de entrada. No es el mapa completo de resultados del proyecto ni sustituye su prefijo de ruta.
 
-**Riesgo, alternativa y límite.** El fragmento con `/api/v1/ordenes` es una variante abreviada que solo muestra creación y error de entrada. No es el mapa completo de resultados del proyecto ni sustituye su prefijo de ruta.
-
-**Comprobación técnica y aprendizaje.** Prueba `Location` después de crear y consulta esa identidad. En Minimal APIs, usa un tipo de retorno común como `IResult` cuando las ramas producen respuestas concretas diferentes.
+Prueba `Location` después de crear y consulta esa identidad. En Minimal APIs, usa un tipo de retorno común como `IResult` cuando las ramas producen respuestas concretas diferentes.
 
 ---
 
-### Bloque 8 — Casos de uso y validación
+### Casos de uso y validación
 
-La validación se distribuye por responsabilidad. El adaptador verifica sintaxis y conversión del transporte; aplicación valida la forma del mensaje y las precondiciones que necesita; el dominio protege sus invariantes al crear o modificar objetos. FluentValidation es una herramienta para reglas de entrada, no la definición de toda validación semántica. Algunas comprobaciones requieren consultar estado durante la orquestación y otras deben protegerse también frente a concurrencia.
+La validación protege distintas fronteras y no debe concentrarse indiscriminadamente en una sola clase. El adaptador HTTP comprueba que puede interpretar el cuerpo; una validación de mensaje puede rechazar cantidad negativa o campos vacíos; el agregado conserva invariantes que deben cumplirse con independencia del canal. Una regla que depende del estado persistido requiere coordinación de aplicación o dominio según el caso. AceriaApp utiliza FluentValidation y resultados explícitos para comunicar rechazos esperados, pero no presenta esos filtros como sustitutos de los métodos del modelo. La prueba completa debe mostrar que la solicitud inválida produce un estado HTTP adecuado y no genera datos nuevos. Así cada capa conserva una responsabilidad verificable.
 
 ```text
 Niveles de validación en el caso de uso:
@@ -1154,35 +1020,27 @@ Entrada     → reglas de mensaje, por ejemplo FluentValidation.
 Negocio     → invariantes del dominio.
 ```
 
-- **Línea 1:** `Niveles de validación en el caso de uso:` → identifica el tema de las líneas siguientes.
-
-- **Línea 3:** `Sintáctica  → deserialización y tipos en el adaptador.` → relaciona el concepto con su responsabilidad dentro del ejemplo.
-
-- **Línea 4:** `Entrada     → reglas de mensaje, por ejemplo FluentValidation.` → relaciona el concepto con su responsabilidad dentro del ejemplo.
-
-- **Línea 5:** `Negocio     → invariantes del dominio.` → relaciona el concepto con su responsabilidad dentro del ejemplo.
+La clasificación distingue errores de forma, datos de entrada y reglas del dominio. La protección esencial debe mantenerse aunque un nuevo canal no ejecute el mismo filtro HTTP.
 
 La validación tiene dos consecuencias prácticas. La primera es que los errores de entrada se detectan pronto sin prescindir de la defensa del dominio. La segunda es que los errores se representan con el patrón Result. La combinación de ambas permite que el caso de uso sea consistente con el resto del sistema.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Asigna cada comprobación a quien conoce su significado. El transporte valida formato, aplicación valida entrada y coordinación, y el dominio defiende estados válidos.
 
-**La decisión arquitectónica.** Asigna cada comprobación a quien conoce su significado. El transporte valida formato, aplicación valida entrada y coordinación, y el dominio defiende estados válidos.
+Una cantidad negativa se puede rechazar temprano con FluentValidation 11.11.0; la capacidad total se decide al combinar las líneas actuales en `OrdenProduccion`.
 
-**Ejemplo concreto en AceriaApp.** Una cantidad negativa se puede rechazar temprano con FluentValidation 11.11.0; la capacidad total se decide al combinar las líneas actuales en `OrdenProduccion`.
+Un validador no sustituye una restricción de unicidad ni una política de concurrencia. Tampoco una excepción inesperada de SQL debe convertirse automáticamente en un error del usuario.
 
-**Riesgo, alternativa y límite.** Un validador no sustituye una restricción de unicidad ni una política de concurrencia. Tampoco una excepción inesperada de SQL debe convertirse automáticamente en un error del usuario.
-
-**Comprobación técnica y aprendizaje.** Invoca la entidad directamente con una entrada inválida y verifica el rechazo. Después prueba el caso de uso para comprobar que traduce los fallos esperados sin ocultar cancelación ni errores técnicos.
+Invoca la entidad directamente con una entrada inválida y verifica el rechazo. Después prueba el caso de uso para comprobar que traduce los fallos esperados sin ocultar cancelación ni errores técnicos.
 
 ![Diagrama explicativo del punto 5.3, bloque 8](IMAGENES/5-3-validacion.svg)
 
-*Interpretación del gráfico:* Cada nivel valida lo que conoce. La defensa del dominio continúa siendo necesaria detrás de la validación de entrada. La figura se distribuye en SVG vectorial y PNG.
+Cada nivel valida lo que conoce. La defensa del dominio continúa siendo necesaria detrás de la validación de entrada. La figura se distribuye en SVG vectorial y PNG.
 
 ---
 
-### Bloque 9 — Casos de uso y transacciones
+### Casos de uso y transacciones
 
-Los casos de uso coordinan la confirmación a través de la unidad de trabajo. Con EF Core y un proveedor relacional, una llamada a `SaveChangesAsync` guarda de forma atómica los cambios pendientes. Cambiar una propiedad o añadir una entidad al seguimiento no abre por sí mismo una transacción SQL. Las lecturas previas no quedan automáticamente cubiertas por esa transacción; para cubrir varios guardados se necesita una transacción explícita y una política de concurrencia adecuada. Un fallo de guardado no debe convertirse en éxito.
+Las transacciones pertenecen a una frontera de almacenamiento y deben utilizarse para proteger operaciones que el negocio considera indivisibles dentro de ella. Un caso de uso puede cargar una orden, aplicar una transición válida y pedir a Unit of Work que confirme los cambios. El momento del commit determina cuándo otro contexto puede observarlos. Si la operación falla antes de confirmar, el resultado no debería anunciar éxito; si falla después, la aplicación necesita una estrategia coherente para informar del estado real. En AceriaApp los tests sobre SQL Server verifican que la implementación respeta estas garantías y que el dominio no necesita conocer su mecanismo. Más adelante la coordinación entre varios microservicios requerirá decisiones adicionales de mensajería y consistencia eventual.
 
 ```text
 Transacción en el caso de uso:
@@ -1194,39 +1052,27 @@ Transacción en el caso de uso:
 5. CommitAsync llama a SaveChangesAsync y espera su resultado.
 ```
 
-- **Línea 1:** `Transacción en el caso de uso:` → identifica el tema de las líneas siguientes.
-
-- **Línea 3:** `1. Cargar y seguir el agregado; todavía no se confirma SQL.` → primera fase.
-
-- **Línea 4:** `2. Comprobar precondiciones y concurrencia necesaria.` → segunda fase.
-
-- **Línea 5:** `3. Modificación de entidades.` → tercera fase.
-
-- **Línea 6:** `4. Preparar todos los cambios en el mismo contexto.` → cuarta fase.
-
-- **Línea 7:** `5. CommitAsync llama a SaveChangesAsync y espera su resultado.` → quinta fase.
+Los pasos de la transacción muestran que las escrituras preparadas no equivalen a cambios confirmados. Un test con un contexto independiente permite comprobar cuándo el estado se hizo persistente.
 
 La gestión de transacciones tiene dos consecuencias prácticas. La primera es que la atomicidad local se verifica en el adaptador relacional que implementa la unidad de trabajo. La segunda es que el caso de uso no gestiona la transacción directamente. La combinación de ambas permite que el caso de uso sea simple y que la transacción sea controlada.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Distingue cambios en memoria, guardado y confirmación SQL. La garantía transaccional debe describir qué recursos incluye y qué fallos cubre.
 
-**La decisión arquitectónica.** Distingue cambios en memoria, guardado y confirmación SQL. La garantía transaccional debe describir qué recursos incluye y qué fallos cubre.
+La orden y sus líneas se guardan mediante el mismo contexto de Producción. Las pruebas de persistencia usan `UseSqlServer` y una base SQL Server real aislada por caso, obtenida mediante `BaseSqlServer`. La lectura desde un contexto nuevo comprueba que tanto la raíz como sus líneas se han confirmado.
 
-**Ejemplo concreto en AceriaApp.** La orden y sus líneas se guardan mediante el mismo contexto de Producción. Las pruebas de persistencia usan `UseSqlServer` y una base SQL Server real aislada por caso, obtenida mediante `BaseSqlServer`. La lectura desde un contexto nuevo comprueba que tanto la raíz como sus líneas se han confirmado.
+Un doble del repositorio sirve para comprobar decisiones del caso de uso, pero no demuestra los mapeos ni la atomicidad del motor. Por eso las pruebas de integración conservan SQL Server. Revertir SQL no restaura automáticamente un objeto ya modificado en memoria; la comprobación debe utilizar otro contexto.
 
-**Riesgo, alternativa y límite.** Un doble del repositorio sirve para comprobar decisiones del caso de uso, pero no demuestra los mapeos ni la atomicidad del motor. Por eso las pruebas de integración conservan SQL Server. Revertir SQL no restaura automáticamente un objeto ya modificado en memoria; la comprobación debe utilizar otro contexto.
-
-**Comprobación técnica y aprendizaje.** Fuerza un fallo antes del commit y comprueba que no aparecen filas nuevas. Si necesitas evitar actualizaciones perdidas entre dos peticiones, añade y prueba una política de concurrencia explícita; este flujo no la obtiene solo por usar UoW.
+Fuerza un fallo antes del commit y comprueba que no aparecen filas nuevas. Si necesitas evitar actualizaciones perdidas entre dos peticiones, añade y prueba una política de concurrencia explícita; este flujo no la obtiene solo por usar UoW.
 
 ![Diagrama explicativo del punto 5.3, bloque 9](IMAGENES/5-3-transaccion.svg)
 
-*Interpretación del gráfico:* Preparar cambios no equivale a confirmar SQL. La transacción local no cubre por sí sola servicios externos ni lecturas previas. La figura se distribuye en SVG vectorial y PNG.
+Preparar cambios no equivale a confirmar SQL. La transacción local no cubre por sí sola servicios externos ni lecturas previas. La figura se distribuye en SVG vectorial y PNG.
 
 ---
 
-### Bloque 10 — Aplicación al proyecto del curso
+### Aplicación al proyecto del curso
 
-En el punto 5.3 se implementa el contexto de aplicación de Producción y sus puertos de repositorio y unidad de trabajo, con adaptadores EF Core propios. Los casos de uso coordinan el agregado y devuelven resultados explícitos. En 5.4 se añaden mensajes y manejadores MediatR sobre esas capacidades: no se adelanta su existencia a 5.3. `IOrdenServicio`, `IInventarioServicio` y los nombres breves de los ejemplos son alternativas conceptuales. La práctica y sus archivos establecen el contrato ejecutable exacto; los catálogos son documentación comprobable, no sustitutos del comportamiento.
+El punto 5.3 une el modelo DDD con la capa de aplicación que ya se había introducido mediante puertos y patrones. El caso de uso de Producción coordina entidades y repositorios, expresa éxito o rechazo mediante Result y utiliza Unit of Work para confirmar. Las lecturas se presentan como operaciones diferentes, adaptadas a los DTO que consumen otras partes del sistema. La implementación debe conservar las invariantes del agregado y demostrar persistencia real cuando anuncia que una orden fue creada. El alumno podrá ejecutar el caso de uso con un colaborador controlado para probar la coordinación y con SQL Server para verificar el recorrido completo. Esa distinción servirá de base para Commands y Queries en el punto siguiente.
 
 ```text
 Aplicación       → casos de uso de Producción.
@@ -1237,33 +1083,21 @@ MediatR          → separación de mensajes y handlers en el punto 5.4.
 Comprobación     → casos de uso aislados y persistencia relacional.
 ```
 
-- **Línea 1:** `Aplicación       → casos de uso de Producción.` → relaciona el concepto con su responsabilidad dentro del ejemplo.
-
-- **Línea 2:** `Escritura        → repositorio de agregados y unidad de trabajo.` → relaciona el concepto con su responsabilidad dentro del ejemplo.
-
-- **Línea 3:** `Resultados       → éxito o fallo esperado explícito.` → `Result<T>`.
-
-- **Línea 4:** `Persistencia     → adaptadores EF Core en Infraestructura.` → relaciona el concepto con su responsabilidad dentro del ejemplo.
-
-- **Línea 5:** `MediatR          → separación de mensajes y handlers en el punto 5.4.` → relaciona el concepto con su responsabilidad dentro del ejemplo.
-
-- **Línea 6:** `Comprobación     → casos de uso aislados y persistencia relacional.` → relaciona el concepto con su responsabilidad dentro del ejemplo.
+El mapa final relaciona casos de uso de Producción, puertos y resultados con el proveedor EF Core. El objetivo es comprender el recorrido ejecutable, no contabilizar clases que llevan nombres de patrones.
 
 La aplicación de los casos de uso prepara el proyecto para los puntos 5.4 y 5.5. El punto 5.4 estudiará la separación entre commands y queries. El punto 5.5 aplicará DDD al dominio de la acería. El punto 5.3 establece la base que se aplicará en los dos puntos siguientes.
 
-#### Ampliación didáctica aplicada a AceriaApp
+Enseña cada responsabilidad en el punto donde aparece, para que el alumno pueda verificar el incremento sobre el snapshot anterior.
 
-**La decisión arquitectónica.** Enseña cada responsabilidad en el punto donde aparece, para que el alumno pueda verificar el incremento sobre el snapshot anterior.
+5.3 incorpora aplicación e infraestructura propias de Producción. Los casos de uso ya funcionan sin exigir que MediatR esté presente en su dominio; la separación de mensajes se concreta después.
 
-**Ejemplo concreto en AceriaApp.** 5.3 incorpora aplicación e infraestructura propias de Producción. Los casos de uso ya funcionan sin exigir que MediatR esté presente en su dominio; la separación de mensajes se concreta después.
+Una entrada de catálogo que nombra `IInventarioServicio` no prueba la existencia de inventario ni de coordinación de reservas. El alcance ejecutable continúa limitado a las órdenes de Producción.
 
-**Riesgo, alternativa y límite.** Una entrada de catálogo que nombra `IInventarioServicio` no prueba la existencia de inventario ni de coordinación de reservas. El alcance ejecutable continúa limitado a las órdenes de Producción.
-
-**Comprobación técnica y aprendizaje.** Comprueba referencias, resolución de dependencias y una ejecución de crear, obtener, planificar y finalizar. Conserva las pruebas anteriores de M3/M4 para demostrar convivencia de ambos recorridos.
+Comprueba referencias, resolución de dependencias y una ejecución de crear, obtener, planificar y finalizar. Conserva las pruebas anteriores de M3/M4 para demostrar convivencia de ambos recorridos.
 
 ---
 
-### Resumen rápido de la teoría
+### Qué confirma un caso de uso ejecutado
 
 - Un caso de uso es una operación del sistema que expresa una intención del negocio.
 - El caso de uso se materializa como un método del puerto de entrada.
