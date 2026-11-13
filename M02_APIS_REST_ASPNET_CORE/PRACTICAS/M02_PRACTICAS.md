@@ -965,6 +965,7 @@ app.MapPost("/api/v1/ordenes",async (CrearOrdenRequest request,AceriaDbContext d
 })
 .WithName("CrearOrden").WithTags("Ordenes")
 
+
 ;
 ```
 
@@ -1074,6 +1075,7 @@ app.MapPut("/api/v1/ordenes/{id:guid}",async (Guid id,CrearOrdenRequest request,
 })
 .WithName("ReemplazarOrden").WithTags("Ordenes")
 
+
 ;
 ```
 
@@ -1170,6 +1172,7 @@ app.MapPatch("/api/v1/ordenes/{id:guid}/cantidad",
     return Results.Ok(OrdenDto.Desde(orden));
 })
 .WithName("CambiarCantidad").WithTags("Ordenes")
+
 
 ;
 ```
