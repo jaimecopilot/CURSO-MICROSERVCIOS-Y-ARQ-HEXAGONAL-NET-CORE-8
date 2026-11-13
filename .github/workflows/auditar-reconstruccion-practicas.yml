@@ -21,6 +21,7 @@ on:
       - 'tools/auditar_reconstruccion_practicas.py'
       - 'tools/auditar_continuidad_modular.py'
       - 'tools/validar_cadena_m03_m08.py'
+      - 'tools/reconstruir_m02_incremental.py'
       - '.github/workflows/auditar-reconstruccion-practicas.yml'
   workflow_dispatch:
 
@@ -79,7 +80,7 @@ jobs:
           PY
       - name: Reconstruir cadena acumulativa M03.1 a M08.4
         run: |
-          python tools/validar_cadena_m03_m08.py --report AUDITORIA_CADENA_M03_M08.md
+          python tools/validar_cadena_m03_m08.py --desde-m02-vacio --report AUDITORIA_CADENA_M03_M08.md
       - name: Reconstruccion incremental diagnostica
         run: |
           python tools/auditar_reconstruccion_practicas.py --report AUDITORIA_RECONSTRUCCION_PRACTICAS.md
