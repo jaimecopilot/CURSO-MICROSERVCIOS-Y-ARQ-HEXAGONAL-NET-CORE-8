@@ -4,6 +4,7 @@ on:
   push:
     branches: [version-corregida]
     paths:
+      - 'tools/auditar_reconstruccion_practicas.py'
       - 'M04_PATRONES_ARQUITECTURA/PRACTICAS/M04_PRACTICAS.md'
       - 'M05_DDD_CQRS/PRACTICAS/M05_PRACTICAS.md'
       - 'M04_PATRONES_ARQUITECTURA/PROYECTO/**'
@@ -58,7 +59,7 @@ jobs:
         shell: pwsh
         run: |
           $env:ACERIA_SQL_EVIDENCE_DIR = Join-Path $env:RUNNER_TEMP 'evidencia-sql-m04'
-          python tools/validar_practicas_m04_m05.py --module 4 --report M04_WINDOWS_VALIDACION.md
+          python tools/validar_practicas_m04_m05.py --module 4 --reconstruir-incremental --report M04_WINDOWS_VALIDACION.md
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -108,7 +109,7 @@ jobs:
         shell: pwsh
         run: |
           $env:ACERIA_SQL_EVIDENCE_DIR = Join-Path $env:RUNNER_TEMP 'evidencia-sql-m05'
-          python tools/validar_practicas_m04_m05.py --module 5 --report M05_WINDOWS_VALIDACION.md
+          python tools/validar_practicas_m04_m05.py --module 5 --reconstruir-incremental --report M05_WINDOWS_VALIDACION.md
       - uses: actions/upload-artifact@v4
         if: always()
         with:
