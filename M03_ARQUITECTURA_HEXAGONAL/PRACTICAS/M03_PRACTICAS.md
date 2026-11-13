@@ -12,7 +12,6 @@ El alumnado continúa el proyecto AceriaApp que culminó en **M02 2.4**. Cada ap
 
 **Convención de código:** cada bloque marcado con un archivo indica si se crea o se modifica. Si se trata de una modificación, localiza una sola vez el ancla indicada e inserta el código. No reemplaces un archivo heredado salvo cuando el bloque lo diga explícitamente.
 
-
 ## Preparar Docker Desktop en Windows para los tests SQL (opcional)
 
 La **API se ejecuta en Windows con SQL Server Express LocalDB**. Docker solo es necesario si eliges la variante de pruebas SQL Server Express mediante Testcontainers; **no se despliega aquí la aplicación entera**. Trabaja con PowerShell y realiza estas comprobaciones antes del primer test que necesite SQL Server:
@@ -39,6 +38,12 @@ La **API se ejecuta en Windows con SQL Server Express LocalDB**. Docker solo es 
 ---
 # Punto 3.1 — Capas de la aplicación
 
+## Comprender la regla de dependencia antes de crear más proyectos
+
+La etapa 3.1 conserva la API REST y su persistencia de M02. El objetivo ahora consiste en distinguir responsabilidades y explicar por qué el dominio no debería depender de ASP.NET Core o EF Core. La clasificación inicial de capas y el validador son herramientas docentes: prueban reglas declaradas, pero todavía no demuestran una separación física de ensamblados.
+
+Trabajaremos sobre una copia del estado 2.4, para no perder los endpoints y las pruebas anteriores. Cada clase nueva se incorporará en el punto indicado y se comprobará mediante compilación y tests. La documentación y el ADR permitirán comparar las reglas que describimos con el código que construiremos en las etapas posteriores.
+
 **Objetivos del punto.** el documento de capas de la aplicación es el artefacto de `docs` específico del punto 3.1. Se crea en este punto y conserva intactos los archivos heredados de M02 2.4.
 
 **Carpeta de trabajo:** `M03_ARQUITECTURA_HEXAGONAL/PROYECTO/3.1-capas-aplicacion`. Esta etapa continúa la anterior sin alterar su copia. El código de la referencia es un resultado final, no una solución que el alumno deba pegar al inicio.
@@ -47,15 +52,12 @@ La **API se ejecuta en Windows con SQL Server Express LocalDB**. Docker solo es 
 
 ### PASO 3.1.1 — Crear la estructura del módulo 3 y del punto 3.1
 
-**Resultado de aprendizaje.** Crear la estructura del módulo 3 y del punto 3.1. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+Separar una copia para cada etapa permite comparar cambios sin dañar M02. El nuevo `global.json` fija la referencia del SDK; no hay que trasladar binarios compilados ni credenciales a la carpeta del alumno.
 
 1. En el Explorador de archivos localiza `M02_APIS_REST_ASPNET_CORE/PROYECTO/2.4-documentacion-openapi`. Comprueba que es el estado anterior completo, con los endpoints y tests ya construidos.
 2. Crea una carpeta personal `3.1-capas-aplicacion` bajo `M03_ARQUITECTURA_HEXAGONAL/PROYECTO`. Copia en ella el contenido del punto anterior, sin cambiarlo en su origen.
 3. Desde la raíz de `3.1-capas-aplicacion` comprueba que tienes `src/AceriaApp.Api`, `tests/AceriaApp.Api.Tests`, `AceriaApp.http` y los archivos de configuración.
 4. No copies `bin/`, `obj/` ni credenciales. Para comparar puedes usar los proyectos de referencia; los nuevos archivos de este punto se introducirán solo cuando llegues a su paso.
-
 
 **Archivo que debe quedar tras este paso:** `global.json`
 
@@ -65,8 +67,6 @@ La **API se ejecuta en Windows con SQL Server Express LocalDB**. Docker solo es 
   "sdk": { "version": "8.0.400", "rollForward": "latestPatch" }
 }
 ```
-
-**Por qué funciona así.** cada punto del curso parte del contenido del punto anterior. El punto 3.1 es el primer punto del módulo 3 y parte del punto 2.4, que es el último punto del módulo 2. La copia se hace en la carpeta del módulo 3.
 
 **Verificación concreta.** Desde la raíz del repositorio, ejecuta `dir M03_ARQUITECTURA_HEXAGONAL\PROYECTO\3.1-capas-aplicacion`. Deben aparecer `README.md`, `src`, `tests`, `AceriaApp.http` y el nuevo `global.json`. La solución se crea en el paso 2 y la carpeta `docs` en el paso 3.
 
@@ -78,20 +78,14 @@ La **API se ejecuta en Windows con SQL Server Express LocalDB**. Docker solo es 
 - Olvidar el flag `/Y`: `xcopy` pide confirmación para sobrescribir.
 - Copiar desde el punto 2.3 en lugar del 2.4: se pierde el contenido del último punto del módulo 2.
 
-
 ### PASO 3.1.2 — Abrir la solución copiada en Visual Studio 2026
 
-**Resultado de aprendizaje.** Abrir la solución copiada en Visual Studio 2026. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+Abrir la solución copiada permite trabajar en el punto 3.1 sobre la base del punto 2.4. La compilación verifica que la copia es correcta.
 
 1. Abre en Visual Studio la solución `AceriaApp.sln` de `3.1-capas-aplicacion`; si la primera etapa aún no la tiene, crea una solución con `dotnet new sln -n AceriaApp`.
 2. Desde la raíz del punto ejecuta `dotnet sln AceriaApp.sln add src/AceriaApp.Api/AceriaApp.Api.csproj tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj` para la etapa inicial; en las siguientes etapas la solución viene heredada.
 3. Verifica con `dotnet sln AceriaApp.sln list` que todas las rutas corresponden a proyectos presentes en la carpeta de esta etapa.
 4. Ejecuta `dotnet build AceriaApp.sln -c Release` antes de tocar las clases y guarda su resultado como punto de comparación.
-
-
-**Por qué funciona así.** abrir la solución copiada permite trabajar en el punto 3.1 sobre la base del punto 2.4. La compilación verifica que la copia es correcta.
 
 **Verificación concreta.** La solución abierta contiene los proyectos existentes de la etapa anterior y compila antes de los nuevos archivos.
 
@@ -101,20 +95,14 @@ La **API se ejecuta en Windows con SQL Server Express LocalDB**. Docker solo es 
 - No compilar antes de empezar: si la copia tiene errores, los cambios posteriores fallan.
 - Tener la API en ejecución mientras Windows bloquea sus archivos de salida: detén la aplicación antes de recompilar.
 
-
 ### PASO 3.1.3 — Preparar la carpeta `docs` para la documentación de arquitectura
 
-**Resultado de aprendizaje.** Preparar la carpeta `docs` para la documentación de arquitectura. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+El punto 3.1 incorpora documentación específica de arquitectura a la API de M02. Crear `docs` en la copia mantiene intacto el punto anterior.
 
 1. Abre `docs` dentro de `3.1-capas-aplicacion`. Si es la primera etapa y no existe, créala: botón derecho sobre la raíz del punto y `Agregar > Nueva carpeta`.
 2. La base M02 2.4 conserva su documentación en `README.md`; no incorpora una carpeta `docs`. Comprueba que ese README sigue presente en la copia.
 3. Anota los dos documentos nuevos que crearás durante este punto: `capas-aplicacion.md` y `ADR-010-capas-aplicacion.md`.
 4. Deja `docs` preparada y vacía. El documento de diseño se añadirá en el paso 4 y el ADR en el paso 20; las etapas posteriores heredarán ambos.
-
-
-**Por qué funciona así.** el punto 3.1 incorpora documentación específica de arquitectura a la API de M02. Crear `docs` en la copia mantiene intacto el punto anterior.
 
 **Verificación concreta.** la carpeta `docs` existe dentro de `3.1-capas-aplicacion`, está vacía al terminar este paso y los archivos de M02 permanecen intactos.
 
@@ -124,18 +112,14 @@ La **API se ejecuta en Windows con SQL Server Express LocalDB**. Docker solo es 
 - Eliminar `README.md`: conserva ese archivo hasta su actualización guiada en el paso 19.
 - Repetir la creación si `docs` ya existe: abre la carpeta y revisa su contenido antes de continuar.
 
-
 ### PASO 3.1.4 — Crear el documento de capas de la aplicación en `docs`
 
-**Resultado de aprendizaje.** Crear el documento de capas de la aplicación en `docs`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+El documento de capas de la aplicación es el artefacto de `docs` específico del punto 3.1. Se crea en este punto y conserva intactos los archivos heredados de M02 2.4.
 
 1. En la carpeta `docs` de `3.1-capas-aplicacion` crea `capas-aplicacion.md` mediante `Agregar > Nuevo elemento` o el editor Markdown.
 2. Copia el documento de este paso y estudia sus apartados. Relaciónalo con los bloques de teoría del punto 3.1; no debe limitarse a una lista de nombres.
 3. Distingue los componentes del catálogo arquitectónico de las clases y los servicios implementados en el proyecto.
 4. Guarda el Markdown, abre su vista previa y anota dos decisiones observables que podrás verificar posteriormente con los tests.
-
 
 **Archivo que debe quedar tras este paso:** `docs/capas-aplicacion.md`
 
@@ -196,8 +180,6 @@ Núcleo central con dominio y aplicación, rodeado de puertos y adaptadores. Un 
 La implementación de partida no es `AceriaApp.Monolito.Api`, sino la Minimal API del proyecto `M02_APIS_REST_ASPNET_CORE/PROYECTO/2.4-documentacion-openapi`. Los ejemplos de esta ficha describen conceptos de diseño; su implementación real se incorpora al código en 3.3 y 3.4, con puertos de aplicación e infraestructura SQL Server. No se considera registrado un adaptador solo por mencionarlo en un catálogo.
 ```
 
-**Por qué funciona así.** el documento de capas de la aplicación es el artefacto de `docs` específico del punto 3.1. Se crea en este punto y conserva intactos los archivos heredados de M02 2.4.
-
 **Verificación concreta.** el archivo `docs\capas-aplicacion.md` existe con las nueve secciones.
 
 **Diagnóstico si falla.**
@@ -206,20 +188,14 @@ La implementación de partida no es `AceriaApp.Monolito.Api`, sino la Minimal AP
 - Modificar los ADR existentes: viola la regla de no modificar archivos del punto anterior.
 - Guardar el archivo en la raíz del punto en lugar de `docs`: rompe la estructura del repositorio.
 
-
 ### PASO 3.1.5 — Crear la carpeta `Capas` en el proyecto `AceriaApp.Api`
 
-**Resultado de aprendizaje.** Crear la carpeta `Capas` en el proyecto `AceriaApp.Api`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+La carpeta `Capas` albergará las clases de validación de la regla de dependencia. Se crea como carpeta nueva sin tocar las carpetas existentes.
 
 1. En el Explorador de soluciones, dentro del proyecto `AceriaApp.Api`, crea la carpeta `Capas` si no existe.
 2. Comprueba que el directorio físico es `src/AceriaApp.Api/Capas` y no está situado dentro del proyecto de tests.
 3. Prepara los tres archivos de este punto: `Capa.cs`, `ValidadorReglaDependencia.cs` y `CatalogoCapas.cs`, que añadirás en los siguientes pasos.
 4. No confundas estos modelos de catálogo arquitectónico con la implementación real del puerto de órdenes, que aparecerá más adelante.
-
-
-**Por qué funciona así.** la carpeta `Capas` albergará las clases de validación de la regla de dependencia. Se crea como carpeta nueva sin tocar las carpetas existentes.
 
 **Verificación concreta.** la carpeta `Capas` existe dentro de `AceriaApp.Api` y las carpetas existentes permanecen intactas.
 
@@ -229,18 +205,14 @@ La implementación de partida no es `AceriaApp.Monolito.Api`, sino la Minimal AP
 - Modificar las carpetas existentes: viola la regla de no modificar archivos del punto anterior.
 - Crear la carpeta con otro nombre: rompe la convención del curso.
 
-
 ### PASO 3.1.6 — Crear la clase `Capa`
 
-**Resultado de aprendizaje.** Crear la clase `Capa`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+La clase `Capa` describe dependencias permitidas dentro del ejercicio. No crea una biblioteca ni demuestra que el código compilado respete esa restricción: ofrece datos al validador.
 
 1. Crea `src/AceriaApp.Api/Capas/Capa.cs` y escribe el código íntegro mostrado en el bloque asociado al paso.
 2. Comprueba que el namespace es `AceriaApp.Api.Capas`, correspondiente a la carpeta de este punto.
 3. Lee cada propiedad y diferencia valores de configuración de objetos de dominio. No añadas dependencias SQL o ASP.NET Core a este modelo de catálogo.
 4. Guarda y compila con `dotnet build src/AceriaApp.Api/AceriaApp.Api.csproj -c Release`; si faltan tipos, revisa el namespace y los usings implícitos.
-
 
 **Archivo que debe quedar tras este paso:** `src/AceriaApp.Api/Capas/Capa.cs`
 
@@ -255,8 +227,6 @@ public class Capa
 }
 ```
 
-**Por qué funciona así.** la clase `Capa` modela una capa con su nombre y las capas de las que puede depender. Es la unidad de información del validador de la regla de dependencia.
-
 **Verificación concreta.** la clase `Capa` compila sin errores y expone dos propiedades.
 
 **Diagnóstico si falla.**
@@ -265,18 +235,14 @@ public class Capa
 - No inicializar `Nombre` con `string.Empty`: el compilador emite advertencia de nulabilidad.
 - No inicializar `DependenciasPermitidas` con `Array.Empty<string>()`: el compilador emite advertencia.
 
-
 ### PASO 3.1.7 — Crear la clase `ValidadorReglaDependencia`
 
-**Resultado de aprendizaje.** Crear la clase `ValidadorReglaDependencia`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+`ValidadorReglaDependencia` debe explicar por qué una relación entre capas se acepta o rechaza. Sus pruebas acreditan el comportamiento de la regla declarada, no la inspección automática de todos los proyectos.
 
 1. Abre o crea `src/AceriaApp.Api/Capas/ValidadorReglaDependencia.cs` según el bloque de C# de este paso.
 2. Escribe la clase pública `ValidadorReglaDependencia` y el record de resultado; comprueba sus tipos de entrada y las ramas de error.
 3. Recorre con el depurador un caso válido y otro inválido. Localiza dónde se agrega cada mensaje y qué condición determina el resultado final.
 4. Guarda, compila y evita añadir el mismo validador en otro fichero. Las pruebas de esta regla se crearán en el paso 14.
-
 
 **Archivo que debe quedar tras este paso:** `src/AceriaApp.Api/Capas/ValidadorReglaDependencia.cs`
 
@@ -315,8 +281,6 @@ public class ValidadorReglaDependencia
 public record ResultadoDependencia(bool EsValida, IReadOnlyList<string> Errores);
 ```
 
-**Por qué funciona así.** la clase `ValidadorReglaDependencia` comprueba que una dependencia entre capas cumple la regla. Recibe un diccionario de reglas y valida cada par origen-destino.
-
 **Verificación concreta.** la clase `ValidadorReglaDependencia` compila sin errores y expone un constructor, un método y un `record`.
 
 **Diagnóstico si falla.**
@@ -325,20 +289,14 @@ public record ResultadoDependencia(bool EsValida, IReadOnlyList<string> Errores)
 - Olvidar el `using System.Linq;`: `Contains` no se resuelve.
 - No comprobar si la capa origen existe: lanza `KeyNotFoundException`.
 
-
 ### PASO 3.1.8 — Añadir los `using` necesarios en `ValidadorReglaDependencia`
 
-**Resultado de aprendizaje.** Añadir los `using` necesarios en `ValidadorReglaDependencia`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+Los tipos `Dictionary` y `List<string>` pertenecen a `System.Collections.Generic`. El método `Contains` pertenece a `System.Linq`. En proyectos con `ImplicitUsings` desactivado, hay que añadir los usings explícitos.
 
 1. Abre `src/AceriaApp.Api/Capas/ValidadorReglaDependencia.cs` y localiza las directivas `using` de la parte superior.
 2. Verifica que `System.Collections.Generic`, `System.Linq` y `System` están disponibles según las colecciones o métodos usados; con ImplicitUsings activado algunos llegan automáticamente.
 3. Añade solo el import que realmente falte. No copies una segunda clase ni sustituyas la implementación del validador por un comentario.
 4. Guarda y compila. Deja registrado qué miembro concreto requería el namespace, como `List<string>`, `Where` o `Contains`.
-
-
-**Por qué funciona así.** los tipos `Dictionary` y `List<string>` pertenecen a `System.Collections.Generic`. El método `Contains` pertenece a `System.Linq`. En proyectos con `ImplicitUsings` desactivado, hay que añadir los usings explícitos.
 
 **Verificación concreta.** `ValidadorReglaDependencia.cs` compila sin errores y no muestra subrayados rojos.
 
@@ -348,18 +306,14 @@ public record ResultadoDependencia(bool EsValida, IReadOnlyList<string> Errores)
 - Añadir los usings después del namespace: el compilador no los reconoce.
 - Olvidar los usings y confiar en `ImplicitUsings`: el proyecto puede tenerlo desactivado.
 
-
 ### PASO 3.1.9 — Crear la clase `CatalogoCapas`
 
-**Resultado de aprendizaje.** Crear la clase `CatalogoCapas`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+`CatalogoCapas` reúne reglas conocidas para clasificarlas de forma consistente. Una lista bien formada no detecta por sí sola una referencia real a ASP.NET Core o EF Core dentro del dominio.
 
 1. Crea `src/AceriaApp.Api/Capas/CatalogoCapas.cs` con el catálogo y los valores de ejemplo indicados en el código del laboratorio.
 2. Identifica las reglas o registros que el catálogo declara y cuáles pertenecen únicamente al ejercicio conceptual; no los des por registrados en DI.
 3. Comprueba que el catálogo utiliza los nombres de capas, puertos o proyectos acordados y que no declara interfaces imposibles de resolver en tiempo de compilación.
 4. Guarda y compila la API. Relaciona cada ejemplo con una prueba del paso 15.
-
 
 **Archivo que debe quedar tras este paso:** `src/AceriaApp.Api/Capas/CatalogoCapas.cs`
 
@@ -382,8 +336,6 @@ public class CatalogoCapas
 }
 ```
 
-**Por qué funciona así.** la clase `CatalogoCapas` contiene las reglas de dependencia por defecto del proyecto. Se usan en los tests y en la validación automática.
-
 **Verificación concreta.** la clase `CatalogoCapas` compila sin errores y expone un método estático.
 
 **Diagnóstico si falla.**
@@ -392,20 +344,14 @@ public class CatalogoCapas
 - Olvidar el `using System;`: `Array.Empty` no se resuelve.
 - Devolver `Dictionary` en lugar de `IReadOnlyDictionary`: expone la implementación interna.
 
-
 ### PASO 3.1.10 — Añadir los `using` necesarios en `CatalogoCapas`
 
-**Resultado de aprendizaje.** Añadir los `using` necesarios en `CatalogoCapas`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+El tipo `Dictionary` pertenece a `System.Collections.Generic` y `Array.Empty` pertenece a `System`. En proyectos con `ImplicitUsings` desactivado, hay que añadir los usings explícitos.
 
 1. Abre `src/AceriaApp.Api/Capas/CatalogoCapas.cs` y observa las colecciones e importaciones utilizadas por el catálogo.
 2. Revisa `using System;`, `using System.Linq;` y `using System.Collections.Generic;` cuando corresponda; conserva solo lo que la compilación necesite.
 3. No añadas dependencias tecnológicas nuevas al dominio para resolver tipos básicos ni vuelvas a crear el archivo de catálogo.
 4. Compila y confirma que los métodos del catálogo pueden llamarse desde el proyecto de tests sin errores de namespace.
-
-
-**Por qué funciona así.** el tipo `Dictionary` pertenece a `System.Collections.Generic` y `Array.Empty` pertenece a `System`. En proyectos con `ImplicitUsings` desactivado, hay que añadir los usings explícitos.
 
 **Verificación concreta.** `CatalogoCapas.cs` compila sin errores y no muestra subrayados rojos.
 
@@ -415,18 +361,14 @@ public class CatalogoCapas
 - Añadir los usings después del namespace: el compilador no los reconoce.
 - Olvidar los usings y confiar en `ImplicitUsings`: el proyecto puede tenerlo desactivado.
 
-
 ### PASO 3.1.11 — Crear el proyecto de tests del punto 3.1
 
-**Resultado de aprendizaje.** Crear el proyecto de tests del punto 3.1. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+El punto 3.1 añade un proyecto de tests específico para las clases de capas. Se crea como proyecto nuevo sin modificar los proyectos de tests existentes.
 
 1. Dentro de `tests` crea el proyecto xUnit `AceriaApp.Capas.Tests` con destino `net8.0`. No modifiques ni sustituyas `AceriaApp.Api.Tests`, que contiene las pruebas HTTP heredadas de M02.
 2. Crea el archivo `tests/AceriaApp.Capas.Tests/AceriaApp.Capas.Tests.csproj` y escribe el XML completo del bloque del laboratorio, con xUnit y FluentAssertions 6.12.2.
 3. Comprueba que incluye un `ProjectReference` hacia `../../src/AceriaApp.Api/AceriaApp.Api.csproj`; agrega el nuevo proyecto con `dotnet sln AceriaApp.sln add tests/AceriaApp.Capas.Tests/AceriaApp.Capas.Tests.csproj`.
 4. Ejecuta `dotnet restore AceriaApp.sln` y comprueba que no se ha generado un test `UnitTest1` no previsto.
-
 
 **Archivo que debe quedar tras este paso:** `tests/AceriaApp.Capas.Tests/AceriaApp.Capas.Tests.csproj`
 
@@ -444,8 +386,6 @@ public class CatalogoCapas
 </Project>
 ```
 
-**Por qué funciona así.** el punto 3.1 añade un proyecto de tests específico para las clases de capas. Se crea como proyecto nuevo sin modificar los proyectos de tests existentes.
-
 **Verificación concreta.** El proyecto de tests `AceriaApp.Capas.Tests` restaura, referencia a `AceriaApp.Api` y no sustituye ninguna suite heredada.
 
 **Diagnóstico si falla.**
@@ -454,20 +394,14 @@ public class CatalogoCapas
 - Modificar los proyectos de tests del punto 2.4: viola la regla de no modificar archivos del punto anterior.
 - Usar `dotnet new mstest`: el curso usa xUnit.
 
-
 ### PASO 3.1.12 — Añadir la referencia del proyecto de tests a la API `AceriaApp.Api`
 
-**Resultado de aprendizaje.** Añadir la referencia del proyecto de tests a la API `AceriaApp.Api`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+La referencia permite que el proyecto de tests acceda a las clases de `Capas` del proyecto `AceriaApp.Api`.
 
 1. En `tests/AceriaApp.Capas.Tests/AceriaApp.Capas.Tests.csproj` localiza la referencia al proyecto `AceriaApp.Api`.
 2. Verifica la dirección de la dependencia: los tests referencian a la API, nunca la API al proyecto de tests.
 3. Ejecuta `dotnet sln AceriaApp.sln list` y verifica que el nuevo proyecto aparece junto a los heredados, con la ruta física correcta.
 4. No dupliques `ProjectReference` si la referencia ya está preparada en el XML del paso 11.
-
-
-**Por qué funciona así.** la referencia permite que el proyecto de tests acceda a las clases de `Capas` del proyecto `AceriaApp.Api`.
 
 **Verificación concreta.** El proyecto de tests `AceriaApp.Capas.Tests` restaura, referencia a `AceriaApp.Api` y no sustituye ninguna suite heredada.
 
@@ -477,20 +411,14 @@ public class CatalogoCapas
 - Olvidar el nombre completo del archivo `.csproj`: el comando falla.
 - Ejecutar el comando desde la carpeta equivocada: la ruta relativa no se resuelve.
 
-
 ### PASO 3.1.13 — Añadir el paquete `FluentAssertions` al proyecto de tests
 
-**Resultado de aprendizaje.** Añadir el paquete `FluentAssertions` al proyecto de tests. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+`FluentAssertions` proporciona la sintaxis de aserción usada en el curso. Se añade al nuevo proyecto de tests sin modificar los proyectos de tests existentes.
 
 1. Abre el `.csproj` de `AceriaApp.Capas.Tests` y localiza el `PackageReference` a `FluentAssertions` versión 6.12.2.
 2. Ejecuta `dotnet list tests/AceriaApp.Capas.Tests/AceriaApp.Capas.Tests.csproj package` y comprueba que el paquete consta en el proyecto correcto.
 3. Relaciona el método `Should()` de los ejemplos de tests con FluentAssertions, y `[Fact]` con xUnit.
 4. No instales una segunda versión del mismo paquete: basta con restaurar NuGet desde la solución.
-
-
-**Por qué funciona así.** `FluentAssertions` proporciona la sintaxis de aserción usada en el curso. Se añade al nuevo proyecto de tests sin modificar los proyectos de tests existentes.
 
 **Verificación concreta.** El proyecto de tests `AceriaApp.Capas.Tests` restaura, referencia a `AceriaApp.Api` y no sustituye ninguna suite heredada.
 
@@ -500,18 +428,14 @@ public class CatalogoCapas
 - Olvidar el paquete: `Should()` no se resuelve en los tests.
 - Añadir el paquete al proyecto equivocado: los tests no compilan.
 
-
 ### PASO 3.1.14 — Crear el archivo `ValidadorReglaDependenciaTests.cs`
 
-**Resultado de aprendizaje.** Crear el archivo `ValidadorReglaDependenciaTests.cs`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+Los tests verifican que el validador acepta las dependencias que cumplen la regla y rechaza las que la violan.
 
 1. Crea `tests/AceriaApp.Capas.Tests/ValidadorReglaDependenciaTests.cs` y escribe completo el primer bloque de pruebas de este punto.
 2. Revisa el `using AceriaApp.Api.Capas` para que coincida con el namespace actualizado y conserva `using Xunit;` y `using FluentAssertions;`.
 3. Localiza los casos correctos e incorrectos del validador y comprueba que las aserciones describen resultados de código ejecutable.
 4. Guarda, compila y ejecuta el test específico. No cambies las expectativas para ocultar una regla equivocada.
-
 
 **Archivo que debe quedar tras este paso:** `tests/AceriaApp.Capas.Tests/ValidadorReglaDependenciaTests.cs`
 
@@ -564,8 +488,6 @@ public class ValidadorReglaDependenciaTests
 }
 ```
 
-**Por qué funciona así.** los tests verifican que el validador acepta las dependencias que cumplen la regla y rechaza las que la violan.
-
 **Verificación concreta.** Los tests de `AceriaApp.Capas.Tests` compilan y ejecutan las aserciones propuestas para `Capas`.
 
 **Diagnóstico si falla.**
@@ -574,18 +496,14 @@ public class ValidadorReglaDependenciaTests
 - Usar `Assert.True` en lugar de `Should().BeTrue()`: el curso usa FluentAssertions.
 - No cubrir el caso de capa origen desconocida: el mensaje de error no se verifica.
 
-
 ### PASO 3.1.15 — Crear el archivo `CatalogoCapasTests.cs`
 
-**Resultado de aprendizaje.** Crear el archivo `CatalogoCapasTests.cs`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+Los tests verifican que el catálogo de capas contiene las cuatro capas esperadas y que las reglas de dependencia son las correctas.
 
 1. Crea `tests/AceriaApp.Capas.Tests/CatalogoCapasTests.cs` y escribe el segundo bloque de pruebas del catálogo.
 2. Comprueba que las llamadas a los métodos de ejemplo de `{catalog}` son compatibles con las propiedades que realmente expone el código.
 3. Guarda y ejecuta `dotnet test tests/AceriaApp.Capas.Tests/AceriaApp.Capas.Tests.csproj -c Release`, de forma que se ejecuten todas las pruebas nuevas.
 4. Verifica que las aserciones prueban los valores declarados, pero no confunde un catálogo didáctico con un registro en tiempo de ejecución.
-
 
 **Archivo que debe quedar tras este paso:** `tests/AceriaApp.Capas.Tests/CatalogoCapasTests.cs`
 
@@ -630,8 +548,6 @@ public class CatalogoCapasTests
 }
 ```
 
-**Por qué funciona así.** los tests verifican que el catálogo de capas contiene las cuatro capas esperadas y que las reglas de dependencia son las correctas.
-
 **Verificación concreta.** Los tests de `AceriaApp.Capas.Tests` compilan y ejecutan las aserciones propuestas para `Capas`.
 
 **Diagnóstico si falla.**
@@ -640,20 +556,14 @@ public class CatalogoCapasTests
 - Usar `Assert.Equal` en lugar de `Should().Be()`: el curso usa FluentAssertions.
 - No verificar la regla del dominio: la capa más interna no se comprueba.
 
-
 ### PASO 3.1.16 — Compilar la solución completa
 
-**Resultado de aprendizaje.** Compilar la solución completa. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+Compilar la solución completa verifica que todos los proyectos, incluidos los nuevos, se resuelven correctamente.
 
 1. Abre la terminal junto a `AceriaApp.sln` y ejecuta `dotnet build AceriaApp.sln -c Release` después de introducir todos los archivos del punto.
 2. Comprueba que compilan la API de M02, el proyecto nuevo de tests y todos los proyectos de etapas anteriores.
 3. Si aparece un error, identifica el primer archivo y la primera línea antes de tocar otra clase. Revisa referencias y namespaces.
 4. Registra la salida de la compilación y no avances hasta obtener cero errores.
-
-
-**Por qué funciona así.** compilar la solución completa verifica que todos los proyectos, incluidos los nuevos, se resuelven correctamente.
 
 **Verificación concreta.** La solución completa compila en Release con cero errores. La capa de dominio no referencia EF Core ni ASP.NET Core.
 
@@ -663,20 +573,14 @@ public class CatalogoCapasTests
 - No restaurar paquetes: `dotnet build` restaura por defecto, pero si hay un error de red, hay que ejecutar `dotnet restore` primero.
 - Usar una versión distinta del SDK: `dotnet --version` debe devolver `8.x.x`.
 
-
 ### PASO 3.1.17 — Ejecutar todos los tests del punto 3.1
 
-**Resultado de aprendizaje.** Ejecutar todos los tests del punto 3.1. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+Ejecutar los tests del punto 3.1 verifica que las clases de capas funcionan correctamente.
 
 1. Ejecuta `dotnet test tests/AceriaApp.Capas.Tests/AceriaApp.Capas.Tests.csproj -c Release` desde la raíz del punto.
 2. Comprueba que los métodos `[Fact]` de `ValidadorReglaDependenciaTests` y `CatalogoCapasTests` pasan; el resumen numérico exacto aparece en la tabla de resultados de este módulo.
 3. Ejecuta un caso inválido del validador en el depurador y relaciona el mensaje de error con la línea que lo produce.
 4. Conserva la salida de tests como evidencia y confirma que los resultados no dependen de SQL Server para evaluar reglas puras.
-
-
-**Por qué funciona así.** ejecutar los tests del punto 3.1 verifica que las clases de capas funcionan correctamente.
 
 **Verificación concreta.** La suite nueva de 3.1 supera 7 pruebas de catálogo; en 3.4 se añaden además 4 pruebas HTTP del adaptador real.
 
@@ -686,20 +590,14 @@ public class CatalogoCapasTests
 - No compilar antes: `dotnet test` compila por defecto, pero si hay errores, los tests no se ejecutan.
 - Tener la API en ejecución: el puerto puede estar ocupado.
 
-
 ### PASO 3.1.18 — Ejecutar todos los tests de la solución
 
-**Resultado de aprendizaje.** Ejecutar todos los tests de la solución. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+Ejecutar todos los tests de la solución verifica que los tests de los puntos anteriores y del punto 3.1 pasan conjuntamente.
 
 1. Ejecuta `dotnet test AceriaApp.sln -c Release --no-build` después de compilar toda la solución en Release.
 2. Comprueba que pasan los tests de M02 y todos los nuevos del módulo M03 acumulados hasta este punto.
 3. Si falla alguna suite previa, vuelve a comprobar si el último cambio alteró una dependencia o una configuración del servidor.
 4. Registra las pruebas totales, fallidas y omitidas y compáralas con el resultado previsto para esta etapa.
-
-
-**Por qué funciona así.** ejecutar todos los tests de la solución verifica que los tests de los puntos anteriores y del punto 3.1 pasan conjuntamente.
 
 **Verificación concreta.** Pruebas acumuladas previstas para 3.1: 23, 0 fallidas. Comprueba estos valores en la salida de `dotnet test`.
 
@@ -709,18 +607,14 @@ public class CatalogoCapasTests
 - Tener tests de otros módulos: la solución solo contiene los proyectos de este punto.
 - Modificar los tests de los puntos anteriores: viola la regla de no modificar archivos del punto anterior.
 
-
 ### PASO 3.1.19 — Crear el README del punto 3.1
 
-**Resultado de aprendizaje.** Crear el README del punto 3.1. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+El README del punto 3.1 explica el objetivo, el estado, la ejecución y los añadidos. No modifica el README del punto 2.4.
 
 1. Abre `README.md` en la raíz del punto `3.1-capas-aplicacion` y sustitúyelo por el README específico del bloque de este paso.
 2. Comprueba que los nombres de proyectos y las pruebas acumuladas coinciden con la solución y con la salida de `dotnet test` de esta etapa.
 3. Revisa la ubicación del documento `docs` y los comandos `dotnet build` y `dotnet test` que utilizará el alumno.
 4. Guarda la versión del punto actual sin sobrescribir el README de la etapa anterior.
-
 
 **Archivo que debe quedar tras este paso:** `README.md`
 
@@ -756,8 +650,6 @@ el documento de capas de la aplicación es el artefacto de `docs` específico de
 la clase `Capa` modela una capa con su nombre y las capas de las que puede depender. Es la unidad de información del validador de la regla de dependencia.
 ```
 
-**Por qué funciona así.** el README del punto 3.1 explica el objetivo, el estado, la ejecución y los añadidos. No modifica el README del punto 2.4.
-
 **Verificación concreta.** `README.md` describe correctamente los 3 proyectos y 23 pruebas acumuladas del curso vigente.
 
 **Diagnóstico si falla.**
@@ -766,18 +658,14 @@ la clase `Capa` modela una capa con su nombre y las capas de las que puede depen
 - Omitir la sección `Qué se ha añadido respecto al punto anterior`: pierde la trazabilidad.
 - Escribir el README en la carpeta del punto 2.4: rompe la separación.
 
-
 ### PASO 3.1.20 — Crear el ADR-010 del punto 3.1
 
-**Resultado de aprendizaje.** Crear el ADR-010 del punto 3.1. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+El ADR-010 documenta la decisión de adoptar la organización por capas y la regla de dependencia. Es un artefacto nuevo del punto 3.1 que no modifica los ADR existentes.
 
 1. En la carpeta `docs` crea `ADR-010-capas-aplicacion.md` y copia el documento de decisión del bloque del laboratorio.
 2. Lee Estado, Contexto, Decisión, Alternativas y Consecuencias y relaciona el ADR con el código nuevo de la etapa.
 3. Explica por qué no basta con declarar nombres de capas si el código puede saltarse la interfaz o registrar una dependencia incorrecta.
 4. Comprueba que los ADR anteriores están presentes y no han sido sobrescritos.
-
 
 **Archivo que debe quedar tras este paso:** `docs/ADR-010-capas-aplicacion.md`
 
@@ -809,8 +697,6 @@ Se adopta la organización por capas: presentación, aplicación, dominio e infr
 Se parte de la API real y probada de M02, se conservan sus endpoints y se añaden reglas de dependencia verificadas en código. Los proyectos de Dominio, Aplicación e Infraestructura deben obedecer la dirección de referencias; en 3.4 se expone un nuevo adaptador HTTP funcional. El catálogo describe las relaciones arquitectónicas; cada implementación se comprueba en su proyecto correspondiente.
 ```
 
-**Por qué funciona así.** el ADR-010 documenta la decisión de adoptar la organización por capas y la regla de dependencia. Es un artefacto nuevo del punto 3.1 que no modifica los ADR existentes.
-
 **Verificación concreta.** el archivo `docs\ADR-010-capas-aplicacion.md` existe con las cinco secciones.
 
 **Diagnóstico si falla.**
@@ -819,20 +705,14 @@ Se parte de la API real y probada de M02, se conservan sus endpoints y se añade
 - Omitir la sección `Alternativas consideradas`: el ADR pierde valor.
 - Nombrar el archivo sin el prefijo `ADR-010`: rompe la convención.
 
-
 ### PASO 3.1.21 — Verificar que no se ha modificado ningún archivo del punto 2.4
 
-**Resultado de aprendizaje.** Verificar que no se ha modificado ningún archivo del punto 2.4. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+La comparación con `fc` verifica que todos los documentos del punto 2.4 no se han modificado.
 
 1. Localiza el mismo documento heredado tanto en `M02_APIS_REST_ASPNET_CORE/PROYECTO/2.4-documentacion-openapi` como en `M03_ARQUITECTURA_HEXAGONAL/PROYECTO/3.1-capas-aplicacion`.
 2. Compara sus hashes SHA-256 o usa un diff y confirma que no se reescribió al introducir el nuevo punto.
 3. Distingue de él los archivos añadidos en este punto: catálogo, validador, pruebas y documentación nueva.
 4. Documenta cualquier diferencia inesperada; el nuevo código no exige alterar los archivos de etapas anteriores.
-
-
-**Por qué funciona así.** la comparación con `fc` verifica que todos los documentos del punto 2.4 no se han modificado.
 
 **Verificación concreta.** Los archivos heredados de `docs` y los endpoints M02 no han sido sobrescritos.
 
@@ -842,20 +722,14 @@ Se parte de la API real y probada de M02, se conservan sus endpoints y se añade
 - Olvidar el flag `/L`: `fc` compara en modo ASCII y muestra líneas largas sin ajuste.
 - Comparar archivos de carpetas equivocadas: la comparación no es válida.
 
-
 ### PASO 3.1.22 — Verificar la estructura del punto 3.1
 
-**Resultado de aprendizaje.** Verificar la estructura del punto 3.1. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+La verificación estructural confirma que el punto 3.1 añade archivos nuevos sin modificar los existentes.
 
 1. Desde la raíz de `M03_ARQUITECTURA_HEXAGONAL/PROYECTO` ejecuta `tree /F 3.1-capas-aplicacion` en Windows.
 2. Localiza `src/AceriaApp.Api/Capas`, `tests/AceriaApp.Capas.Tests`, `README.md` y `docs/capas-aplicacion.md`.
 3. Comprueba los proyectos adicionales de dominio, aplicación e infraestructura si ya fueron introducidos por el punto 3.3.
 4. Distingue los archivos del proyecto de los temporales `obj/` y `bin/`; ambos deben quedar excluidos de la entrega.
-
-
-**Por qué funciona así.** la verificación estructural confirma que el punto 3.1 añade archivos nuevos sin modificar los existentes.
 
 **Verificación concreta.** Los archivos que aparecen en el árbol corresponden a los fragmentos creados hasta este paso, y no hay código pendiente en carpetas fuera de la solución.
 
@@ -865,18 +739,14 @@ Se parte de la API real y probada de M02, se conservan sus endpoints y se añade
 - Modificar las carpetas del punto 2.4: viola la regla de no modificar.
 - Omitir la carpeta `Capas`: los tests no encuentran las clases.
 
-
 ### PASO 3.1.23 — Verificar el `.gitignore` del punto 3.1
 
-**Resultado de aprendizaje.** Verificar el `.gitignore` del punto 3.1. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+El `.gitignore` se hereda del punto 2.4 sin modificaciones. La verificación confirma que no se ha tocado.
 
 1. Abre el `.gitignore` de la etapa; si falta, crea uno que excluya `.vs/`, `bin/`, `obj/`, archivos personales y resultados de prueba.
 2. Ejecuta `git status --short` en tu copia de trabajo y comprueba que no aparecen archivos binarios ni credenciales.
 3. No ignores `src`, `tests`, `docs` ni las soluciones `.sln`, pues son parte del entregable reproducible.
 4. Conserva el `.gitignore` heredado sin borrarlo ni modificar el de etapas anteriores.
-
 
 **Archivo que debe quedar tras este paso:** `.gitignore`
 
@@ -890,8 +760,6 @@ TestResults/
 *.trx
 ```
 
-**Por qué funciona así.** el `.gitignore` se hereda del punto 2.4 sin modificaciones. La verificación confirma que no se ha tocado.
-
 **Verificación concreta.** No se incluyen `bin`, `obj`, contraseñas ni resultados de pruebas en el estado Git.
 
 **Diagnóstico si falla.**
@@ -900,20 +768,14 @@ TestResults/
 - Eliminar alguna línea: el repositorio se llena de artefactos.
 - Crear el `.gitignore` con otro nombre: el archivo no se reconoce.
 
-
 ### PASO 3.1.24 — Hacer el commit del punto 3.1 y verificar el estado final
 
-**Resultado de aprendizaje.** Hacer el commit del punto 3.1 y verificar el estado final. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+El commit del punto 3.1 registra el estado acumulado del proyecto. Los commits de cada punto permiten comparar el estado del proyecto entre puntos consecutivos y entre módulos completos.
 
 1. Antes de terminar 3.1, vuelve a ejecutar `dotnet build AceriaApp.sln -c Release` y `dotnet test AceriaApp.sln -c Release --no-build`.
 2. Lee el reto de ampliación incluido tras los pasos obligatorios; si lo realizas, utiliza una copia aparte y deja los tests base intactos.
 3. Si tu copia está bajo Git, ejecuta `git status`, añade solo lo trabajado y crea un commit descriptivo, sin modificar la rama canónica del profesor.
 4. Conserva el resumen de pruebas y compara el proyecto final con la carpeta de referencia del punto; ambas deben representar el mismo código.
-
-
-**Por qué funciona así.** el commit del punto 3.1 registra el estado acumulado del proyecto. Los commits de cada punto permiten comparar el estado del proyecto entre puntos consecutivos y entre módulos completos.
 
 **Verificación concreta.** El punto termina con compilación y suite de pruebas completa, sin modificar la referencia de la etapa anterior.
 
@@ -922,7 +784,6 @@ TestResults/
 - No tener configurado `user.name` y `user.email`: `git commit` falla.
 - Añadir la carpeta `bin/` y `obj/` al commit: el `.gitignore` lo evita.
 - Hacer commit antes de `git add .`: no hay cambios en el índice.
-
 
 ## Reto de ampliación (optativo)
 
@@ -997,7 +858,6 @@ public void Resumen_ConCatalogoPorDefecto_CuentaCorrectamente()
 
 ---
 
-
 ## Resultado verificable y cierre del punto 3.1
 
 **Código final de referencia:** `PROYECTO/3.1-capas-aplicacion/`. El contenido que debe crear el alumno está especificado por los bloques con su ruta exacta y el tipo de modificación. Comprueba el resultado compilando y ejecutando las pruebas de la etapa.
@@ -1008,6 +868,12 @@ public void Resumen_ConCatalogoPorDefecto_CuentaCorrectamente()
 
 # Punto 3.2 — Puertos y adaptadores
 
+## Razonar sobre puertos y adaptadores sin confundir su descripción con la implementación
+
+Un puerto expresa una operación que la aplicación necesita, mientras que un adaptador resuelve esa colaboración con una tecnología concreta. En 3.2 estudiaremos esa relación primero con clases y reglas de análisis, sin afirmar que un catálogo de nombres haya conectado ya el dominio con la infraestructura.
+
+Al avanzar desde 3.1, mantendremos los endpoints y el SQL Server de M02. Los nuevos tests mostrarán qué asociaciones acepta el validador y cuáles rechaza. Cuando necesitemos demostrar la inversión de dependencias en ejecución, verificaremos también las referencias de proyectos y el flujo real de un caso de uso.
+
 **Objetivos del punto.** el documento de puertos y adaptadores es el artefacto de `docs` específico del punto 3.2. No modifica los catorce documentos existentes del punto 3.1.
 
 **Carpeta de trabajo:** `M03_ARQUITECTURA_HEXAGONAL/PROYECTO/3.2-puertos-adaptadores`. Esta etapa continúa la anterior sin alterar su copia. El código de la referencia es un resultado final, no una solución que el alumno deba pegar al inicio.
@@ -1016,17 +882,12 @@ public void Resumen_ConCatalogoPorDefecto_CuentaCorrectamente()
 
 ### PASO 3.2.1 — Crear la carpeta del punto 3.2 a partir del punto 3.1
 
-**Resultado de aprendizaje.** Crear la carpeta del punto 3.2 a partir del punto 3.1. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+Cada punto del curso parte del contenido del punto anterior. El punto 3.2 se construye sobre el punto 3.1 copiando su contenido y añadiendo archivos nuevos sin modificar los existentes.
 
 1. En el Explorador de archivos localiza `M03_ARQUITECTURA_HEXAGONAL/PROYECTO/3.1-capas-aplicacion`. Comprueba que es el estado anterior completo, con los endpoints y tests ya construidos.
 2. Crea una carpeta personal `3.2-puertos-adaptadores` bajo `M03_ARQUITECTURA_HEXAGONAL/PROYECTO`. Copia en ella el contenido del punto anterior, sin cambiarlo en su origen.
 3. Desde la raíz de `3.2-puertos-adaptadores` comprueba que tienes `src/AceriaApp.Api`, `tests/AceriaApp.Api.Tests`, `AceriaApp.http` y los archivos de configuración.
 4. No copies `bin/`, `obj/` ni credenciales. Para comparar puedes usar los proyectos de referencia; los nuevos archivos de este punto se introducirán solo cuando llegues a su paso.
-
-
-**Por qué funciona así.** cada punto del curso parte del contenido del punto anterior. El punto 3.2 se construye sobre el punto 3.1 copiando su contenido y añadiendo archivos nuevos sin modificar los existentes.
 
 **Verificación concreta.** al ejecutar `dir 3.2-puertos-adaptadores`, deben aparecer `AceriaApp.sln`, `README.md`, `src`, `tests` y `docs`.
 
@@ -1037,20 +898,14 @@ public void Resumen_ConCatalogoPorDefecto_CuentaCorrectamente()
 - Olvidar el flag `/I`: `xcopy` pregunta si el destino es un directorio cuando no existe.
 - Olvidar el flag `/Y`: `xcopy` pide confirmación para sobrescribir.
 
-
 ### PASO 3.2.2 — Abrir la solución copiada en Visual Studio 2026
 
-**Resultado de aprendizaje.** Abrir la solución copiada en Visual Studio 2026. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+Abrir la solución copiada permite trabajar en el punto 3.2 sobre la base del punto 3.1. La compilación verifica que la copia es correcta.
 
 1. Abre en Visual Studio la solución `AceriaApp.sln` de `3.2-puertos-adaptadores`; si la primera etapa aún no la tiene, crea una solución con `dotnet new sln -n AceriaApp`.
 2. Desde la raíz del punto ejecuta `dotnet sln AceriaApp.sln add src/AceriaApp.Api/AceriaApp.Api.csproj tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj` para la etapa inicial; en las siguientes etapas la solución viene heredada.
 3. Verifica con `dotnet sln AceriaApp.sln list` que todas las rutas corresponden a proyectos presentes en la carpeta de esta etapa.
 4. Ejecuta `dotnet build AceriaApp.sln -c Release` antes de tocar las clases y guarda su resultado como punto de comparación.
-
-
-**Por qué funciona así.** abrir la solución copiada permite trabajar en el punto 3.2 sobre la base del punto 3.1. La compilación verifica que la copia es correcta.
 
 **Verificación concreta.** La solución abierta contiene los proyectos existentes de la etapa anterior y compila antes de los nuevos archivos.
 
@@ -1060,20 +915,14 @@ public void Resumen_ConCatalogoPorDefecto_CuentaCorrectamente()
 - No compilar antes de empezar: si la copia tiene errores, los cambios posteriores fallan.
 - Tener la API del punto 3.1 en ejecución: el puerto queda ocupado y la compilación falla.
 
-
 ### PASO 3.2.3 — Verificar que la carpeta `docs` contiene los documentos del punto 3.1
 
-**Resultado de aprendizaje.** Verificar que la carpeta `docs` contiene los documentos del punto 3.1. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+El punto 3.2 parte del contenido del punto 3.1, que ya incluye la carpeta `docs` con catorce documentos. No se modifica ningún documento existente.
 
 1. Abre `docs` dentro de `3.2-puertos-adaptadores`. Si es la primera etapa y no existe, créala: botón derecho sobre la raíz del punto y `Agregar > Nueva carpeta`.
 2. Comprueba que los documentos de la etapa anterior no se han modificado. A partir de aquí se añade una nueva decisión y un nuevo documento de diseño.
 3. Anota los nombres de los documentos que recibes y los que crearás: `puertos-adaptadores.md` y `ADR-011-puertos-adaptadores.md`.
 4. No reescribas un ADR anterior para explicar un diseño nuevo. Comprueba que los documentos heredados mantienen su contenido entre etapas.
-
-
-**Por qué funciona así.** el punto 3.2 parte del contenido del punto 3.1, que ya incluye la carpeta `docs` con catorce documentos. No se modifica ningún documento existente.
 
 **Verificación concreta.** la carpeta `docs` contiene los catorce documentos del punto 3.1 sin modificaciones.
 
@@ -1083,18 +932,14 @@ public void Resumen_ConCatalogoPorDefecto_CuentaCorrectamente()
 - Eliminar algún documento existente: pierde la trazabilidad del punto 3.1.
 - Crear la carpeta `docs` si ya existe: `mkdir` falla.
 
-
 ### PASO 3.2.4 — Crear el documento de puertos y adaptadores en `docs`
 
-**Resultado de aprendizaje.** Crear el documento de puertos y adaptadores en `docs`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+El documento de puertos y adaptadores es el artefacto de `docs` específico del punto 3.2. No modifica los catorce documentos existentes del punto 3.1.
 
 1. En la carpeta `docs` de `3.2-puertos-adaptadores` crea `puertos-adaptadores.md` mediante `Agregar > Nuevo elemento` o el editor Markdown.
 2. Copia el documento de este paso y estudia sus apartados. Relaciónalo con los bloques de teoría del punto 3.2; no debe limitarse a una lista de nombres.
 3. Distingue los componentes del catálogo arquitectónico de las clases y los servicios implementados en el proyecto.
 4. Guarda el Markdown, abre su vista previa y anota dos decisiones observables que podrás verificar posteriormente con los tests.
-
 
 **Archivo que debe quedar tras este paso:** `docs/puertos-adaptadores.md`
 
@@ -1158,8 +1003,6 @@ El núcleo depende del puerto. El adaptador implementa el puerto. El contenedor 
 La implementación de partida no es `AceriaApp.Monolito.Api`, sino la Minimal API del proyecto `M02_APIS_REST_ASPNET_CORE/PROYECTO/2.4-documentacion-openapi`. Los ejemplos de esta ficha describen conceptos de diseño; su implementación real se incorpora al código en 3.3 y 3.4, con puertos de aplicación e infraestructura SQL Server. No se considera registrado un adaptador solo por mencionarlo en un catálogo.
 ```
 
-**Por qué funciona así.** el documento de puertos y adaptadores es el artefacto de `docs` específico del punto 3.2. No modifica los catorce documentos existentes del punto 3.1.
-
 **Verificación concreta.** el archivo `docs\puertos-adaptadores.md` existe con las ocho secciones.
 
 **Diagnóstico si falla.**
@@ -1168,20 +1011,14 @@ La implementación de partida no es `AceriaApp.Monolito.Api`, sino la Minimal AP
 - Modificar los ADR existentes: viola la regla de no modificar archivos del punto anterior.
 - Guardar el archivo en la raíz del punto en lugar de `docs`: rompe la estructura del repositorio.
 
-
 ### PASO 3.2.5 — Crear la carpeta `PuertosAdaptadores` en el proyecto `AceriaApp.Api`
 
-**Resultado de aprendizaje.** Crear la carpeta `PuertosAdaptadores` en el proyecto `AceriaApp.Api`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+La carpeta `PuertosAdaptadores` albergará las clases de validación de puertos y adaptadores. Se crea como carpeta nueva sin tocar las carpetas existentes.
 
 1. En el Explorador de soluciones, dentro del proyecto `AceriaApp.Api`, crea la carpeta `PuertosAdaptadores` si no existe.
 2. Comprueba que el directorio físico es `src/AceriaApp.Api/PuertosAdaptadores` y no está situado dentro del proyecto de tests.
 3. Prepara los tres archivos de este punto: `Puerto.cs`, `ValidadorPuertosAdaptadores.cs` y `CatalogoPuertosAdaptadores.cs`, que añadirás en los siguientes pasos.
 4. No confundas estos modelos de catálogo arquitectónico con la implementación real del puerto de órdenes, que aparecerá más adelante.
-
-
-**Por qué funciona así.** la carpeta `PuertosAdaptadores` albergará las clases de validación de puertos y adaptadores. Se crea como carpeta nueva sin tocar las carpetas existentes.
 
 **Verificación concreta.** la carpeta `PuertosAdaptadores` existe dentro de `AceriaApp.Api` y las carpetas existentes permanecen intactas.
 
@@ -1191,18 +1028,14 @@ La implementación de partida no es `AceriaApp.Monolito.Api`, sino la Minimal AP
 - Modificar las carpetas existentes: viola la regla de no modificar archivos del punto anterior.
 - Crear la carpeta con otro nombre: rompe la convención del curso.
 
-
 ### PASO 3.2.6 — Crear la clase `Puerto`
 
-**Resultado de aprendizaje.** Crear la clase `Puerto`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+`Puerto` expresa un contrato desde el punto de vista del núcleo. Una instancia de esta clase es todavía una descripción, no una interfaz de aplicación registrada en DI.
 
 1. Crea `src/AceriaApp.Api/PuertosAdaptadores/Puerto.cs` y escribe el código íntegro mostrado en el bloque asociado al paso.
 2. Comprueba que el namespace es `AceriaApp.Api.PuertosAdaptadores`, correspondiente a la carpeta de este punto.
 3. Lee cada propiedad y diferencia valores de configuración de objetos de dominio. No añadas dependencias SQL o ASP.NET Core a este modelo de catálogo.
 4. Guarda y compila con `dotnet build src/AceriaApp.Api/AceriaApp.Api.csproj -c Release`; si faltan tipos, revisa el namespace y los usings implícitos.
-
 
 **Archivo que debe quedar tras este paso:** `src/AceriaApp.Api/PuertosAdaptadores/Puerto.cs`
 
@@ -1218,8 +1051,6 @@ public class Puerto
 }
 ```
 
-**Por qué funciona así.** la clase `Puerto` modela un puerto con su nombre, tipo y capa. Es la unidad de información del validador.
-
 **Verificación concreta.** la clase `Puerto` compila sin errores y expone tres propiedades.
 
 **Diagnóstico si falla.**
@@ -1228,18 +1059,14 @@ public class Puerto
 - No inicializar las propiedades de tipo `string` con `string.Empty`: el compilador emite advertencias.
 - Usar `set` en lugar de `init`: permite modificar la instancia después de crearla.
 
-
 ### PASO 3.2.7 — Crear la clase `Adaptador`
 
-**Resultado de aprendizaje.** Crear la clase `Adaptador`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+`Adaptador` describe quién puede satisfacer un puerto y de qué modo. La clase de catálogo permite estudiar la idea; la implementación ejecutable del adaptador llegará con la composición real.
 
 1. Crea `src/AceriaApp.Api/PuertosAdaptadores/Adaptador.cs` y copia la definición de la clase del bloque de este paso.
 2. Comprueba que identifica el adaptador, su tipo, el puerto implementado y la capa donde reside.
 3. Distingue adaptadores de entrada y salida y evita acoplar el núcleo a una clase HTTP concreta.
 4. Guarda y compila; el validador de correspondencia aparecerá en el paso 8.
-
 
 **Archivo que debe quedar tras este paso:** `src/AceriaApp.Api/PuertosAdaptadores/Adaptador.cs`
 
@@ -1256,8 +1083,6 @@ public class Adaptador
 }
 ```
 
-**Por qué funciona así.** la clase `Adaptador` modela un adaptador con su nombre, tipo, puerto implementado y capa. Es la unidad de información del validador.
-
 **Verificación concreta.** la clase `Adaptador` compila sin errores y expone cuatro propiedades.
 
 **Diagnóstico si falla.**
@@ -1266,18 +1091,14 @@ public class Adaptador
 - No inicializar las propiedades de tipo `string` con `string.Empty`: el compilador emite advertencias.
 - Usar `set` en lugar de `init`: permite modificar la instancia después de crearla.
 
-
 ### PASO 3.2.8 — Crear la clase `ValidadorPuertosAdaptadores`
 
-**Resultado de aprendizaje.** Crear la clase `ValidadorPuertosAdaptadores`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+El validador comprueba asociaciones de puertos y adaptadores según reglas explícitas. Debe ser posible relacionar cada rechazo con una regla y una prueba, sin deducir que el sistema ya está conectado.
 
 1. Crea `src/AceriaApp.Api/PuertosAdaptadores/ValidadorPuertosAdaptadores.cs` y copia el validador de los puertos y adaptadores.
 2. Sigue las ramas que comprueban tipo de puerto, capa de definición, existencia del puerto y ubicación del adaptador.
 3. Comprueba que las colecciones del catálogo se comparan por el nombre del puerto, no por identidad de objeto.
 4. Guarda y compila; prepara una prueba con adaptador vinculado a un puerto inexistente.
-
 
 **Archivo que debe quedar tras este paso:** `src/AceriaApp.Api/PuertosAdaptadores/ValidadorPuertosAdaptadores.cs`
 
@@ -1340,8 +1161,6 @@ public class ValidadorPuertosAdaptadores
 public record ResultadoValidacionHexagonal(bool EsValida, IReadOnlyList<string> Errores);
 ```
 
-**Por qué funciona así.** la clase `ValidadorPuertosAdaptadores` comprueba que los puertos están en la capa de aplicación y que los adaptadores están en la capa correcta según el tipo de puerto que implementan.
-
 **Verificación concreta.** la clase `ValidadorPuertosAdaptadores` compila sin errores y expone un constructor, un método y un `record`.
 
 **Diagnóstico si falla.**
@@ -1350,20 +1169,14 @@ public record ResultadoValidacionHexagonal(bool EsValida, IReadOnlyList<string> 
 - Olvidar el `using System.Linq;`: `FirstOrDefault` no se resuelve.
 - No comprobar si el puerto del adaptador existe: lanza `NullReferenceException`.
 
-
 ### PASO 3.2.9 — Añadir los `using` necesarios en `ValidadorPuertosAdaptadores`
 
-**Resultado de aprendizaje.** Añadir los `using` necesarios en `ValidadorPuertosAdaptadores`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+Los tipos `List<T>` y `IReadOnlyList<T>` pertenecen a `System.Collections.Generic`. El método `FirstOrDefault` pertenece a `System.Linq`. En proyectos con `ImplicitUsings` desactivado, hay que añadir los usings explícitos.
 
 1. Crea `src/AceriaApp.Api/PuertosAdaptadores/CatalogoPuertosAdaptadores.cs` con el catálogo y los valores de ejemplo indicados en el código del laboratorio.
 2. Identifica las reglas o registros que el catálogo declara y cuáles pertenecen únicamente al ejercicio conceptual; no los des por registrados en DI.
 3. Comprueba que el catálogo utiliza los nombres de capas, puertos o proyectos acordados y que no declara interfaces imposibles de resolver en tiempo de compilación.
 4. Guarda y compila la API. Relaciona cada ejemplo con una prueba del paso 15.
-
-
-**Por qué funciona así.** los tipos `List<T>` y `IReadOnlyList<T>` pertenecen a `System.Collections.Generic`. El método `FirstOrDefault` pertenece a `System.Linq`. En proyectos con `ImplicitUsings` desactivado, hay que añadir los usings explícitos.
 
 **Verificación concreta.** `ValidadorPuertosAdaptadores.cs` compila sin errores y no muestra subrayados rojos.
 
@@ -1373,18 +1186,14 @@ public record ResultadoValidacionHexagonal(bool EsValida, IReadOnlyList<string> 
 - Añadir los usings después del namespace: el compilador no los reconoce.
 - Olvidar los usings y confiar en `ImplicitUsings`: el proyecto puede tenerlo desactivado.
 
-
 ### PASO 3.2.10 — Crear la clase `CatalogoPuertosAdaptadores`
 
-**Resultado de aprendizaje.** Crear la clase `CatalogoPuertosAdaptadores`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+`CatalogoPuertosAdaptadores` ayuda a analizar distintas propuestas. Su resultado no añade servicios a ASP.NET Core ni cambia las referencias entre ensamblados.
 
 1. Abre `src/AceriaApp.Api/PuertosAdaptadores/CatalogoPuertosAdaptadores.cs` y observa las colecciones e importaciones utilizadas por el catálogo.
 2. Revisa `using System;`, `using System.Linq;` y `using System.Collections.Generic;` cuando corresponda; conserva solo lo que la compilación necesite.
 3. No añadas dependencias tecnológicas nuevas al dominio para resolver tipos básicos ni vuelvas a crear el archivo de catálogo.
 4. Compila y confirma que los métodos del catálogo pueden llamarse desde el proyecto de tests sin errores de namespace.
-
 
 **Archivo que debe quedar tras este paso:** `src/AceriaApp.Api/PuertosAdaptadores/CatalogoPuertosAdaptadores.cs`
 
@@ -1418,8 +1227,6 @@ public class CatalogoPuertosAdaptadores
 }
 ```
 
-**Por qué funciona así.** la clase `CatalogoPuertosAdaptadores` contiene los puertos y adaptadores por defecto del proyecto. Se usan en los tests y en la validación automática.
-
 **Verificación concreta.** la clase `CatalogoPuertosAdaptadores` compila sin errores y expone dos métodos estáticos.
 
 **Diagnóstico si falla.**
@@ -1428,18 +1235,14 @@ public class CatalogoPuertosAdaptadores
 - No inicializar las propiedades de los objetos: el compilador emite advertencias.
 - Devolver `List<T>` mutable: expone la implementación interna.
 
-
 ### PASO 3.2.11 — Crear el proyecto de tests del punto 3.2
 
-**Resultado de aprendizaje.** Crear el proyecto de tests del punto 3.2. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+El punto 3.2 añade un proyecto de tests específico para las clases de puertos y adaptadores. Se crea como proyecto nuevo sin modificar los proyectos de tests existentes.
 
 1. Dentro de `tests` crea el proyecto xUnit `AceriaApp.PuertosAdaptadores.Tests` con destino `net8.0`. No modifiques ni sustituyas `AceriaApp.Api.Tests`, que contiene las pruebas HTTP heredadas de M02.
 2. Crea el archivo `tests/AceriaApp.PuertosAdaptadores.Tests/AceriaApp.PuertosAdaptadores.Tests.csproj` y escribe el XML completo del bloque del laboratorio, con xUnit y FluentAssertions 6.12.2.
 3. Comprueba que incluye un `ProjectReference` hacia `../../src/AceriaApp.Api/AceriaApp.Api.csproj`; agrega el nuevo proyecto con `dotnet sln AceriaApp.sln add tests/AceriaApp.PuertosAdaptadores.Tests/AceriaApp.PuertosAdaptadores.Tests.csproj`.
 4. Ejecuta `dotnet restore AceriaApp.sln` y comprueba que no se ha generado un test `UnitTest1` no previsto.
-
 
 **Archivo que debe quedar tras este paso:** `tests/AceriaApp.PuertosAdaptadores.Tests/AceriaApp.PuertosAdaptadores.Tests.csproj`
 
@@ -1457,8 +1260,6 @@ public class CatalogoPuertosAdaptadores
 </Project>
 ```
 
-**Por qué funciona así.** el punto 3.2 añade un proyecto de tests específico para las clases de puertos y adaptadores. Se crea como proyecto nuevo sin modificar los proyectos de tests existentes.
-
 **Verificación concreta.** El proyecto de tests `AceriaApp.PuertosAdaptadores.Tests` restaura, referencia a `AceriaApp.Api` y no sustituye ninguna suite heredada.
 
 **Diagnóstico si falla.**
@@ -1467,20 +1268,14 @@ public class CatalogoPuertosAdaptadores
 - Modificar los proyectos de tests del punto 3.1: viola la regla de no modificar archivos del punto anterior.
 - Usar `dotnet new mstest`: el curso usa xUnit.
 
-
 ### PASO 3.2.12 — Añadir la referencia del proyecto de tests a la API `AceriaApp.Api`
 
-**Resultado de aprendizaje.** Añadir la referencia del proyecto de tests a la API `AceriaApp.Api`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+La referencia permite que el proyecto de tests acceda a las clases de `PuertosAdaptadores` del proyecto `AceriaApp.Api`.
 
 1. En `tests/AceriaApp.PuertosAdaptadores.Tests/AceriaApp.PuertosAdaptadores.Tests.csproj` localiza la referencia al proyecto `AceriaApp.Api`.
 2. Verifica la dirección de la dependencia: los tests referencian a la API, nunca la API al proyecto de tests.
 3. Ejecuta `dotnet sln AceriaApp.sln list` y verifica que el nuevo proyecto aparece junto a los heredados, con la ruta física correcta.
 4. No dupliques `ProjectReference` si la referencia ya está preparada en el XML del paso 11.
-
-
-**Por qué funciona así.** la referencia permite que el proyecto de tests acceda a las clases de `PuertosAdaptadores` del proyecto `AceriaApp.Api`.
 
 **Verificación concreta.** El proyecto de tests `AceriaApp.PuertosAdaptadores.Tests` restaura, referencia a `AceriaApp.Api` y no sustituye ninguna suite heredada.
 
@@ -1490,20 +1285,14 @@ public class CatalogoPuertosAdaptadores
 - Olvidar el nombre completo del archivo `.csproj`: el comando falla.
 - Ejecutar el comando desde la carpeta equivocada: la ruta relativa no se resuelve.
 
-
 ### PASO 3.2.13 — Añadir el paquete `FluentAssertions` al proyecto de tests
 
-**Resultado de aprendizaje.** Añadir el paquete `FluentAssertions` al proyecto de tests. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+`FluentAssertions` proporciona la sintaxis de aserción usada en el curso. Se añade al nuevo proyecto de tests sin modificar los proyectos de tests existentes.
 
 1. Abre el `.csproj` de `AceriaApp.PuertosAdaptadores.Tests` y localiza el `PackageReference` a `FluentAssertions` versión 6.12.2.
 2. Ejecuta `dotnet list tests/AceriaApp.PuertosAdaptadores.Tests/AceriaApp.PuertosAdaptadores.Tests.csproj package` y comprueba que el paquete consta en el proyecto correcto.
 3. Relaciona el método `Should()` de los ejemplos de tests con FluentAssertions, y `[Fact]` con xUnit.
 4. No instales una segunda versión del mismo paquete: basta con restaurar NuGet desde la solución.
-
-
-**Por qué funciona así.** `FluentAssertions` proporciona la sintaxis de aserción usada en el curso. Se añade al nuevo proyecto de tests sin modificar los proyectos de tests existentes.
 
 **Verificación concreta.** El proyecto de tests `AceriaApp.PuertosAdaptadores.Tests` restaura, referencia a `AceriaApp.Api` y no sustituye ninguna suite heredada.
 
@@ -1513,18 +1302,14 @@ public class CatalogoPuertosAdaptadores
 - Olvidar el paquete: `Should()` no se resuelve en los tests.
 - Añadir el paquete al proyecto equivocado: los tests no compilan.
 
-
 ### PASO 3.2.14 — Crear el archivo `ValidadorPuertosAdaptadoresTests.cs`
 
-**Resultado de aprendizaje.** Crear el archivo `ValidadorPuertosAdaptadoresTests.cs`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+Los tests verifican que el validador acepta el catálogo por defecto y rechaza puertos fuera de la capa de aplicación, adaptadores de puertos desconocidos y adaptadores mal ubicados.
 
 1. Crea `tests/AceriaApp.PuertosAdaptadores.Tests/ValidadorPuertosAdaptadoresTests.cs` y escribe completo el primer bloque de pruebas de este punto.
 2. Revisa el `using AceriaApp.Api.PuertosAdaptadores` para que coincida con el namespace actualizado y conserva `using Xunit;` y `using FluentAssertions;`.
 3. Localiza los casos correctos e incorrectos del validador y comprueba que las aserciones describen resultados de código ejecutable.
 4. Guarda, compila y ejecuta el test específico. No cambies las expectativas para ocultar una regla equivocada.
-
 
 **Archivo que debe quedar tras este paso:** `tests/AceriaApp.PuertosAdaptadores.Tests/ValidadorPuertosAdaptadoresTests.cs`
 
@@ -1621,8 +1406,6 @@ public class ValidadorPuertosAdaptadoresTests
 }
 ```
 
-**Por qué funciona así.** los tests verifican que el validador acepta el catálogo por defecto y rechaza puertos fuera de la capa de aplicación, adaptadores de puertos desconocidos y adaptadores mal ubicados.
-
 **Verificación concreta.** Los tests de `AceriaApp.PuertosAdaptadores.Tests` compilan y ejecutan las aserciones propuestas para `PuertosAdaptadores`.
 
 **Diagnóstico si falla.**
@@ -1631,18 +1414,14 @@ public class ValidadorPuertosAdaptadoresTests
 - Usar `Assert.True` en lugar de `Should().BeTrue()`: el curso usa FluentAssertions.
 - No cubrir el caso del catálogo por defecto: el validador no se prueba en el caso feliz.
 
-
 ### PASO 3.2.15 — Crear el archivo `CatalogoPuertosAdaptadoresTests.cs`
 
-**Resultado de aprendizaje.** Crear el archivo `CatalogoPuertosAdaptadoresTests.cs`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+Los tests verifican que el catálogo por defecto contiene los puertos y adaptadores esperados.
 
 1. Crea `tests/AceriaApp.PuertosAdaptadores.Tests/CatalogoPuertosAdaptadoresTests.cs` y escribe el segundo bloque de pruebas del catálogo.
 2. Comprueba que las llamadas a los métodos de ejemplo de `{catalog}` son compatibles con las propiedades que realmente expone el código.
 3. Guarda y ejecuta `dotnet test tests/AceriaApp.PuertosAdaptadores.Tests/AceriaApp.PuertosAdaptadores.Tests.csproj -c Release`, de forma que se ejecuten todas las pruebas nuevas.
 4. Verifica que las aserciones prueban los valores declarados, pero no confunde un catálogo didáctico con un registro en tiempo de ejecución.
-
 
 **Archivo que debe quedar tras este paso:** `tests/AceriaApp.PuertosAdaptadores.Tests/CatalogoPuertosAdaptadoresTests.cs`
 
@@ -1683,8 +1462,6 @@ public class CatalogoPuertosAdaptadoresTests
 }
 ```
 
-**Por qué funciona así.** los tests verifican que el catálogo por defecto contiene los puertos y adaptadores esperados.
-
 **Verificación concreta.** Los tests de `AceriaApp.PuertosAdaptadores.Tests` compilan y ejecutan las aserciones propuestas para `PuertosAdaptadores`.
 
 **Diagnóstico si falla.**
@@ -1693,20 +1470,14 @@ public class CatalogoPuertosAdaptadoresTests
 - Olvidar el `using System.Linq;`: `Count` no se resuelve.
 - No verificar la distribución de tipos: el catálogo podría estar mal balanceado.
 
-
 ### PASO 3.2.16 — Compilar la solución completa
 
-**Resultado de aprendizaje.** Compilar la solución completa. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+Compilar la solución completa verifica que todos los proyectos, incluidos los nuevos, se resuelven correctamente.
 
 1. Abre la terminal junto a `AceriaApp.sln` y ejecuta `dotnet build AceriaApp.sln -c Release` después de introducir todos los archivos del punto.
 2. Comprueba que compilan la API de M02, el proyecto nuevo de tests y todos los proyectos de etapas anteriores.
 3. Si aparece un error, identifica el primer archivo y la primera línea antes de tocar otra clase. Revisa referencias y namespaces.
 4. Registra la salida de la compilación y no avances hasta obtener cero errores.
-
-
-**Por qué funciona así.** compilar la solución completa verifica que todos los proyectos, incluidos los nuevos, se resuelven correctamente.
 
 **Verificación concreta.** La solución completa compila en Release con cero errores. La capa de dominio no referencia EF Core ni ASP.NET Core.
 
@@ -1716,20 +1487,14 @@ public class CatalogoPuertosAdaptadoresTests
 - No restaurar paquetes: `dotnet build` restaura por defecto, pero si hay un error de red, hay que ejecutar `dotnet restore` primero.
 - Usar una versión distinta del SDK: `dotnet --version` debe devolver `8.x.x`.
 
-
 ### PASO 3.2.17 — Ejecutar todos los tests del punto 3.2
 
-**Resultado de aprendizaje.** Ejecutar todos los tests del punto 3.2. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+Ejecutar los tests del punto 3.2 verifica que las clases de puertos y adaptadores funcionan correctamente.
 
 1. Ejecuta `dotnet test tests/AceriaApp.PuertosAdaptadores.Tests/AceriaApp.PuertosAdaptadores.Tests.csproj -c Release` desde la raíz del punto.
 2. Comprueba que los métodos `[Fact]` de `ValidadorPuertosAdaptadoresTests` y `CatalogoPuertosAdaptadoresTests` pasan; el resumen numérico exacto aparece en la tabla de resultados de este módulo.
 3. Ejecuta un caso inválido del validador en el depurador y relaciona el mensaje de error con la línea que lo produce.
 4. Conserva la salida de tests como evidencia y confirma que los resultados no dependen de SQL Server para evaluar reglas puras.
-
-
-**Por qué funciona así.** ejecutar los tests del punto 3.2 verifica que las clases de puertos y adaptadores funcionan correctamente.
 
 **Verificación concreta.** La suite nueva de 3.2 supera 8 pruebas de catálogo; en 3.4 se añaden además 4 pruebas HTTP del adaptador real.
 
@@ -1739,20 +1504,14 @@ public class CatalogoPuertosAdaptadoresTests
 - No compilar antes: `dotnet test` compila por defecto, pero si hay errores, los tests no se ejecutan.
 - Tener la API en ejecución: el puerto puede estar ocupado.
 
-
 ### PASO 3.2.18 — Ejecutar todos los tests de la solución
 
-**Resultado de aprendizaje.** Ejecutar todos los tests de la solución. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+Ejecutar todos los tests de la solución verifica que los tests de los puntos anteriores y del punto 3.2 pasan conjuntamente.
 
 1. Ejecuta `dotnet test AceriaApp.sln -c Release --no-build` después de compilar toda la solución en Release.
 2. Comprueba que pasan los tests de M02 y todos los nuevos del módulo M03 acumulados hasta este punto.
 3. Si falla alguna suite previa, vuelve a comprobar si el último cambio alteró una dependencia o una configuración del servidor.
 4. Registra las pruebas totales, fallidas y omitidas y compáralas con el resultado previsto para esta etapa.
-
-
-**Por qué funciona así.** ejecutar todos los tests de la solución verifica que los tests de los puntos anteriores y del punto 3.2 pasan conjuntamente.
 
 **Verificación concreta.** Pruebas acumuladas previstas para 3.2: 31, 0 fallidas. Comprueba estos valores en la salida de `dotnet test`.
 
@@ -1762,18 +1521,14 @@ public class CatalogoPuertosAdaptadoresTests
 - Tener tests de otros módulos: la solución solo contiene los proyectos de este punto.
 - Modificar los tests de los puntos anteriores: viola la regla de no modificar archivos del punto anterior.
 
-
 ### PASO 3.2.19 — Crear el README del punto 3.2
 
-**Resultado de aprendizaje.** Crear el README del punto 3.2. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+El README del punto 3.2 explica el objetivo, el estado, la ejecución y los añadidos. No modifica el README del punto 3.1.
 
 1. Abre `README.md` en la raíz del punto `3.2-puertos-adaptadores` y sustitúyelo por el README específico del bloque de este paso.
 2. Comprueba que los nombres de proyectos y las pruebas acumuladas coinciden con la solución y con la salida de `dotnet test` de esta etapa.
 3. Revisa la ubicación del documento `docs` y los comandos `dotnet build` y `dotnet test` que utilizará el alumno.
 4. Guarda la versión del punto actual sin sobrescribir el README de la etapa anterior.
-
 
 **Archivo que debe quedar tras este paso:** `README.md`
 
@@ -1809,8 +1564,6 @@ el documento de puertos y adaptadores es el artefacto de `docs` específico del 
 la clase `Puerto` modela un puerto con su nombre, tipo y capa. Es la unidad de información del validador.
 ```
 
-**Por qué funciona así.** el README del punto 3.2 explica el objetivo, el estado, la ejecución y los añadidos. No modifica el README del punto 3.1.
-
 **Verificación concreta.** `README.md` describe correctamente los 4 proyectos y 31 pruebas acumuladas del curso vigente.
 
 **Diagnóstico si falla.**
@@ -1819,18 +1572,14 @@ la clase `Puerto` modela un puerto con su nombre, tipo y capa. Es la unidad de i
 - Omitir la sección `Qué se ha añadido respecto al punto anterior`: pierde la trazabilidad.
 - Escribir el README en la carpeta del punto 3.1: rompe la separación.
 
-
 ### PASO 3.2.20 — Crear el ADR-011 del punto 3.2
 
-**Resultado de aprendizaje.** Crear el ADR-011 del punto 3.2. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+El ADR-011 documenta la decisión de adoptar puertos y adaptadores. Es un artefacto nuevo del punto 3.2 que no modifica los ADR existentes.
 
 1. En la carpeta `docs` crea `ADR-011-puertos-adaptadores.md` y copia el documento de decisión del bloque del laboratorio.
 2. Lee Estado, Contexto, Decisión, Alternativas y Consecuencias y relaciona el ADR con el código nuevo de la etapa.
 3. Explica por qué no basta con declarar nombres de capas si el código puede saltarse la interfaz o registrar una dependencia incorrecta.
 4. Comprueba que los ADR anteriores están presentes y no han sido sobrescritos.
-
 
 **Archivo que debe quedar tras este paso:** `docs/ADR-011-puertos-adaptadores.md`
 
@@ -1862,8 +1611,6 @@ Se adopta la arquitectura hexagonal con puertos de entrada y de salida. Los puer
 Se parte de la API real y probada de M02, se conservan sus endpoints y se añaden reglas de dependencia verificadas en código. Los proyectos de Dominio, Aplicación e Infraestructura deben obedecer la dirección de referencias; en 3.4 se expone un nuevo adaptador HTTP funcional. El catálogo describe las relaciones arquitectónicas; cada implementación se comprueba en su proyecto correspondiente.
 ```
 
-**Por qué funciona así.** el ADR-011 documenta la decisión de adoptar puertos y adaptadores. Es un artefacto nuevo del punto 3.2 que no modifica los ADR existentes.
-
 **Verificación concreta.** el archivo `docs\ADR-011-puertos-adaptadores.md` existe con las cinco secciones.
 
 **Diagnóstico si falla.**
@@ -1872,20 +1619,14 @@ Se parte de la API real y probada de M02, se conservan sus endpoints y se añade
 - Omitir la sección `Alternativas consideradas`: el ADR pierde valor.
 - Nombrar el archivo sin el prefijo `ADR-011`: rompe la convención.
 
-
 ### PASO 3.2.21 — Verificar que no se ha modificado ningún archivo del punto 3.1
 
-**Resultado de aprendizaje.** Verificar que no se ha modificado ningún archivo del punto 3.1. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+La comparación con `fc` verifica que todos los documentos del punto 3.1 no se han modificado.
 
 1. Localiza el mismo documento heredado tanto en `M03_ARQUITECTURA_HEXAGONAL/PROYECTO/3.1-capas-aplicacion` como en `M03_ARQUITECTURA_HEXAGONAL/PROYECTO/3.2-puertos-adaptadores`.
 2. Compara sus hashes SHA-256 o usa un diff y confirma que no se reescribió al introducir el nuevo punto.
 3. Distingue de él los archivos añadidos en este punto: catálogo, validador, pruebas y documentación nueva.
 4. Documenta cualquier diferencia inesperada; el nuevo código no exige alterar los archivos de etapas anteriores.
-
-
-**Por qué funciona así.** la comparación con `fc` verifica que todos los documentos del punto 3.1 no se han modificado.
 
 **Verificación concreta.** Los archivos heredados de `docs` y los endpoints M02 no han sido sobrescritos.
 
@@ -1895,20 +1636,14 @@ Se parte de la API real y probada de M02, se conservan sus endpoints y se añade
 - Olvidar el flag `/L`: `fc` compara en modo ASCII y muestra líneas largas sin ajuste.
 - Comparar archivos de carpetas equivocadas: la comparación no es válida.
 
-
 ### PASO 3.2.22 — Verificar la estructura del punto 3.2
 
-**Resultado de aprendizaje.** Verificar la estructura del punto 3.2. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+La verificación estructural confirma que el punto 3.2 añade archivos nuevos sin modificar los existentes.
 
 1. Desde la raíz de `M03_ARQUITECTURA_HEXAGONAL/PROYECTO` ejecuta `tree /F 3.2-puertos-adaptadores` en Windows.
 2. Localiza `src/AceriaApp.Api/PuertosAdaptadores`, `tests/AceriaApp.PuertosAdaptadores.Tests`, `README.md` y `docs/puertos-adaptadores.md`.
 3. Comprueba los proyectos adicionales de dominio, aplicación e infraestructura si ya fueron introducidos por el punto 3.3.
 4. Distingue los archivos del proyecto de los temporales `obj/` y `bin/`; ambos deben quedar excluidos de la entrega.
-
-
-**Por qué funciona así.** la verificación estructural confirma que el punto 3.2 añade archivos nuevos sin modificar los existentes.
 
 **Verificación concreta.** Los archivos que aparecen en el árbol corresponden a los fragmentos creados hasta este paso, y no hay código pendiente en carpetas fuera de la solución.
 
@@ -1918,20 +1653,14 @@ Se parte de la API real y probada de M02, se conservan sus endpoints y se añade
 - Modificar las carpetas del punto 3.1: viola la regla de no modificar.
 - Omitir la carpeta `PuertosAdaptadores`: los tests no encuentran las clases.
 
-
 ### PASO 3.2.23 — Verificar el `.gitignore` del punto 3.2
 
-**Resultado de aprendizaje.** Verificar el `.gitignore` del punto 3.2. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+El `.gitignore` se hereda del punto 3.1 sin modificaciones. La verificación confirma que no se ha tocado.
 
 1. Abre el `.gitignore` de la etapa; si falta, crea uno que excluya `.vs/`, `bin/`, `obj/`, archivos personales y resultados de prueba.
 2. Ejecuta `git status --short` en tu copia de trabajo y comprueba que no aparecen archivos binarios ni credenciales.
 3. No ignores `src`, `tests`, `docs` ni las soluciones `.sln`, pues son parte del entregable reproducible.
 4. Conserva el `.gitignore` heredado sin borrarlo ni modificar el de etapas anteriores.
-
-
-**Por qué funciona así.** el `.gitignore` se hereda del punto 3.1 sin modificaciones. La verificación confirma que no se ha tocado.
 
 **Verificación concreta.** No se incluyen `bin`, `obj`, contraseñas ni resultados de pruebas en el estado Git.
 
@@ -1941,20 +1670,14 @@ Se parte de la API real y probada de M02, se conservan sus endpoints y se añade
 - Eliminar alguna línea: el repositorio se llena de artefactos.
 - Crear el `.gitignore` con otro nombre: el archivo no se reconoce.
 
-
 ### PASO 3.2.24 — Hacer el commit del punto 3.2 y verificar el estado final
 
-**Resultado de aprendizaje.** Hacer el commit del punto 3.2 y verificar el estado final. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+El commit del punto 3.2 registra el estado acumulado del proyecto. Los commits de cada punto permiten comparar el estado del proyecto entre puntos consecutivos y entre módulos completos.
 
 1. Antes de terminar 3.2, vuelve a ejecutar `dotnet build AceriaApp.sln -c Release` y `dotnet test AceriaApp.sln -c Release --no-build`.
 2. Lee el reto de ampliación incluido tras los pasos obligatorios; si lo realizas, utiliza una copia aparte y deja los tests base intactos.
 3. Si tu copia está bajo Git, ejecuta `git status`, añade solo lo trabajado y crea un commit descriptivo, sin modificar la rama canónica del profesor.
 4. Conserva el resumen de pruebas y compara el proyecto final con la carpeta de referencia del punto; ambas deben representar el mismo código.
-
-
-**Por qué funciona así.** el commit del punto 3.2 registra el estado acumulado del proyecto. Los commits de cada punto permiten comparar el estado del proyecto entre puntos consecutivos y entre módulos completos.
 
 **Verificación concreta.** El punto termina con compilación y suite de pruebas completa, sin modificar la referencia de la etapa anterior.
 
@@ -1963,7 +1686,6 @@ Se parte de la API real y probada de M02, se conservan sus endpoints y se añade
 - No tener configurado `user.name` y `user.email`: `git commit` falla.
 - Añadir la carpeta `bin/` y `obj/` al commit: el `.gitignore` lo evita.
 - Hacer commit antes de `git add .`: no hay cambios en el índice.
-
 
 ## Reto de ampliación (optativo)
 
@@ -2050,7 +1772,6 @@ public void Resumen_ConCatalogoPorDefecto_CuentaCorrectamente()
 
 ---
 
-
 ## Resultado verificable y cierre del punto 3.2
 
 **Código final de referencia:** `PROYECTO/3.2-puertos-adaptadores/`. El contenido que debe crear el alumno está especificado por los bloques con su ruta exacta y el tipo de modificación. Comprueba el resultado compilando y ejecutando las pruebas de la etapa.
@@ -2061,6 +1782,12 @@ public void Resumen_ConCatalogoPorDefecto_CuentaCorrectamente()
 
 # Punto 3.3 — Separación entre dominio, aplicación e infraestructura
 
+## Hacer visibles las dependencias entre dominio, aplicación e infraestructura
+
+La etapa 3.3 convierte la reflexión arquitectónica en una separación que pueda observarse mediante proyectos y referencias .NET. El dominio contiene las reglas; la aplicación coordina casos de uso y define puertos; la infraestructura implementa colaboraciones externas sin hacer que las capas interiores dependan de EF Core.
+
+Comprobaremos las referencias reales y la compilación, no solo el resultado de los validadores de catálogo. Un proyecto con nombre «Dominio» no queda protegido de dependencias indebidas si importa paquetes de infraestructura. El alumno deberá distinguir las reglas modeladas por las clases docentes de las reglas que el compilador puede verificar mediante ProjectReference.
+
 **Objetivos del punto.** el documento de separación de capas es el artefacto de `docs` específico del punto 3.3. No modifica los quince documentos existentes del punto 3.2.
 
 **Carpeta de trabajo:** `M03_ARQUITECTURA_HEXAGONAL/PROYECTO/3.3-separacion-capas`. Esta etapa continúa la anterior sin alterar su copia. El código de la referencia es un resultado final, no una solución que el alumno deba pegar al inicio.
@@ -2069,17 +1796,12 @@ public void Resumen_ConCatalogoPorDefecto_CuentaCorrectamente()
 
 ### PASO 3.3.1 — Crear la carpeta del punto 3.3 a partir del punto 3.2
 
-**Resultado de aprendizaje.** Crear la carpeta del punto 3.3 a partir del punto 3.2. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+Cada punto del curso parte del contenido del punto anterior. El punto 3.3 se construye sobre el punto 3.2 copiando su contenido y añadiendo archivos nuevos sin modificar los existentes.
 
 1. En el Explorador de archivos localiza `M03_ARQUITECTURA_HEXAGONAL/PROYECTO/3.2-puertos-adaptadores`. Comprueba que es el estado anterior completo, con los endpoints y tests ya construidos.
 2. Crea una carpeta personal `3.3-separacion-capas` bajo `M03_ARQUITECTURA_HEXAGONAL/PROYECTO`. Copia en ella el contenido del punto anterior, sin cambiarlo en su origen.
 3. Desde la raíz de `3.3-separacion-capas` comprueba que tienes `src/AceriaApp.Api`, `tests/AceriaApp.Api.Tests`, `AceriaApp.http` y los archivos de configuración.
 4. No copies `bin/`, `obj/` ni credenciales. Para comparar puedes usar los proyectos de referencia; los nuevos archivos de este punto se introducirán solo cuando llegues a su paso.
-
-
-**Por qué funciona así.** cada punto del curso parte del contenido del punto anterior. El punto 3.3 se construye sobre el punto 3.2 copiando su contenido y añadiendo archivos nuevos sin modificar los existentes.
 
 **Verificación concreta.** al ejecutar `dir 3.3-separacion-capas`, deben aparecer `AceriaApp.sln`, `README.md`, `src`, `tests` y `docs`.
 
@@ -2090,20 +1812,14 @@ public void Resumen_ConCatalogoPorDefecto_CuentaCorrectamente()
 - Olvidar el flag `/I`: `xcopy` pregunta si el destino es un directorio cuando no existe.
 - Olvidar el flag `/Y`: `xcopy` pide confirmación para sobrescribir.
 
-
 ### PASO 3.3.2 — Abrir la solución copiada en Visual Studio 2026
 
-**Resultado de aprendizaje.** Abrir la solución copiada en Visual Studio 2026. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+Abrir la solución copiada permite trabajar en el punto 3.3 sobre la base del punto 3.2. La compilación verifica que la copia es correcta.
 
 1. Abre en Visual Studio la solución `AceriaApp.sln` de `3.3-separacion-capas`; si la primera etapa aún no la tiene, crea una solución con `dotnet new sln -n AceriaApp`.
 2. Desde la raíz del punto ejecuta `dotnet sln AceriaApp.sln add src/AceriaApp.Api/AceriaApp.Api.csproj tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj` para la etapa inicial; en las siguientes etapas la solución viene heredada.
 3. Verifica con `dotnet sln AceriaApp.sln list` que todas las rutas corresponden a proyectos presentes en la carpeta de esta etapa.
 4. Ejecuta `dotnet build AceriaApp.sln -c Release` antes de tocar las clases y guarda su resultado como punto de comparación.
-
-
-**Por qué funciona así.** abrir la solución copiada permite trabajar en el punto 3.3 sobre la base del punto 3.2. La compilación verifica que la copia es correcta.
 
 **Verificación concreta.** La solución abierta contiene los proyectos existentes de la etapa anterior y compila antes de los nuevos archivos.
 
@@ -2113,20 +1829,14 @@ public void Resumen_ConCatalogoPorDefecto_CuentaCorrectamente()
 - No compilar antes de empezar: si la copia tiene errores, los cambios posteriores fallan.
 - Tener la API del punto 3.2 en ejecución: el puerto queda ocupado y la compilación falla.
 
-
 ### PASO 3.3.3 — Verificar que la carpeta `docs` contiene los documentos del punto 3.2
 
-**Resultado de aprendizaje.** Verificar que la carpeta `docs` contiene los documentos del punto 3.2. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+El punto 3.3 parte del contenido del punto 3.2, que ya incluye la carpeta `docs` con quince documentos. No se modifica ningún documento existente.
 
 1. Abre `docs` dentro de `3.3-separacion-capas`. Si es la primera etapa y no existe, créala: botón derecho sobre la raíz del punto y `Agregar > Nueva carpeta`.
 2. Comprueba que los documentos de la etapa anterior no se han modificado. A partir de aquí se añade una nueva decisión y un nuevo documento de diseño.
 3. Anota los nombres de los documentos que recibes y los que crearás: `separacion-capas.md` y `ADR-012-separacion-capas.md`.
 4. No reescribas un ADR anterior para explicar un diseño nuevo. Comprueba que los documentos heredados mantienen su contenido entre etapas.
-
-
-**Por qué funciona así.** el punto 3.3 parte del contenido del punto 3.2, que ya incluye la carpeta `docs` con quince documentos. No se modifica ningún documento existente.
 
 **Verificación concreta.** la carpeta `docs` contiene los quince documentos del punto 3.2 sin modificaciones.
 
@@ -2136,18 +1846,14 @@ public void Resumen_ConCatalogoPorDefecto_CuentaCorrectamente()
 - Eliminar algún documento existente: pierde la trazabilidad del punto 3.2.
 - Crear la carpeta `docs` si ya existe: `mkdir` falla.
 
-
 ### PASO 3.3.4 — Crear el documento de separación de capas en `docs`
 
-**Resultado de aprendizaje.** Crear el documento de separación de capas en `docs`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+El documento de separación de capas es el artefacto de `docs` específico del punto 3.3. No modifica los quince documentos existentes del punto 3.2.
 
 1. En la carpeta `docs` de `3.3-separacion-capas` crea `separacion-capas.md` mediante `Agregar > Nuevo elemento` o el editor Markdown.
 2. Copia el documento de este paso y estudia sus apartados. Relaciónalo con los bloques de teoría del punto 3.3; no debe limitarse a una lista de nombres.
 3. Distingue los componentes del catálogo arquitectónico de las clases y los servicios implementados en el proyecto.
 4. Guarda el Markdown, abre su vista previa y anota dos decisiones observables que podrás verificar posteriormente con los tests.
-
 
 **Archivo que debe quedar tras este paso:** `docs/separacion-capas.md`
 
@@ -2201,8 +1907,6 @@ La presentación registra las implementaciones de los puertos. El contenedor res
 La implementación de partida no es `AceriaApp.Monolito.Api`, sino la Minimal API del proyecto `M02_APIS_REST_ASPNET_CORE/PROYECTO/2.4-documentacion-openapi`. Los ejemplos de esta ficha describen conceptos de diseño; su implementación real se incorpora al código en 3.3 y 3.4, con puertos de aplicación e infraestructura SQL Server. No se considera registrado un adaptador solo por mencionarlo en un catálogo.
 ```
 
-**Por qué funciona así.** el documento de separación de capas es el artefacto de `docs` específico del punto 3.3. No modifica los quince documentos existentes del punto 3.2.
-
 **Verificación concreta.** el archivo `docs\separacion-capas.md` existe con las siete secciones.
 
 **Diagnóstico si falla.**
@@ -2211,20 +1915,14 @@ La implementación de partida no es `AceriaApp.Monolito.Api`, sino la Minimal AP
 - Modificar los ADR existentes: viola la regla de no modificar archivos del punto anterior.
 - Guardar el archivo en la raíz del punto en lugar de `docs`: rompe la estructura del repositorio.
 
-
 ### PASO 3.3.5 — Crear la carpeta `SeparacionCapas` en el proyecto `AceriaApp.Api`
 
-**Resultado de aprendizaje.** Crear la carpeta `SeparacionCapas` en el proyecto `AceriaApp.Api`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+La carpeta `SeparacionCapas` albergará las clases de validación de la separación entre proyectos. Se crea como carpeta nueva sin tocar las carpetas existentes.
 
 1. En el Explorador de soluciones, dentro del proyecto `AceriaApp.Api`, crea la carpeta `SeparacionCapas` si no existe.
 2. Comprueba que el directorio físico es `src/AceriaApp.Api/SeparacionCapas` y no está situado dentro del proyecto de tests.
 3. Prepara los tres archivos de este punto: `Proyecto.cs`, `ValidadorSeparacionCapas.cs` y `CatalogoProyectos.cs`, que añadirás en los siguientes pasos.
 4. No confundas estos modelos de catálogo arquitectónico con la implementación real del puerto de órdenes, que aparecerá más adelante.
-
-
-**Por qué funciona así.** la carpeta `SeparacionCapas` albergará las clases de validación de la separación entre proyectos. Se crea como carpeta nueva sin tocar las carpetas existentes.
 
 **Verificación concreta.** la carpeta `SeparacionCapas` existe dentro de `AceriaApp.Api` y las carpetas existentes permanecen intactas.
 
@@ -2234,18 +1932,14 @@ La implementación de partida no es `AceriaApp.Monolito.Api`, sino la Minimal AP
 - Modificar las carpetas existentes: viola la regla de no modificar archivos del punto anterior.
 - Crear la carpeta con otro nombre: rompe la convención del curso.
 
-
 ### PASO 3.3.6 — Crear la clase `Proyecto`
 
-**Resultado de aprendizaje.** Crear la clase `Proyecto`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+La clase `Proyecto` representa información para analizar límites. Conviene distinguir ese objeto didáctico de los archivos `.csproj`, que son los que establecen dependencias físicas durante la compilación.
 
 1. Crea `src/AceriaApp.Api/SeparacionCapas/Proyecto.cs` y escribe el código íntegro mostrado en el bloque asociado al paso.
 2. Comprueba que el namespace es `AceriaApp.Api.SeparacionCapas`, correspondiente a la carpeta de este punto.
 3. En `src/AceriaApp.Hexagonal.Dominio` crea el proyecto de clase .NET 8 y la entidad `OrdenHexagonal` del segundo bloque. No añadas EF Core al proyecto de dominio.
 4. Compila el proyecto de dominio por separado y comprueba que no referencia ASP.NET Core, aplicación ni infraestructura.
-
 
 **Archivo que debe quedar tras este paso:** `src/AceriaApp.Api/SeparacionCapas/Proyecto.cs`
 
@@ -2303,8 +1997,6 @@ public sealed class OrdenHexagonal
 }
 ```
 
-**Por qué funciona así.** la clase `Proyecto` modela un proyecto con su nombre, capa y lista de referencias. Es la unidad de información del validador de separación.
-
 **Verificación concreta.** la clase `Proyecto` compila sin errores y expone tres propiedades.
 
 **Diagnóstico si falla.**
@@ -2313,18 +2005,14 @@ public sealed class OrdenHexagonal
 - No inicializar `Nombre` y `Capa` con `string.Empty`: el compilador emite advertencias.
 - No inicializar `Referencias` con `Array.Empty<string>()`: el compilador emite advertencia.
 
-
 ### PASO 3.3.7 — Crear la clase `ValidadorSeparacionCapas`
 
-**Resultado de aprendizaje.** Crear la clase `ValidadorSeparacionCapas`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+`ValidadorSeparacionCapas` contrasta relaciones declaradas. La revisión real de las referencias de proyectos debe acompañar al resultado de sus pruebas para no aceptar fronteras solo por su denominación.
 
 1. Abre o crea `src/AceriaApp.Api/SeparacionCapas/ValidadorSeparacionCapas.cs` según el bloque de C# de este paso.
 2. Escribe la clase pública `ValidadorSeparacionCapas` y el record de resultado; comprueba sus tipos de entrada y las ramas de error.
 3. Crea `AceriaApp.Hexagonal.Aplicacion` referenciando solo Dominio; añade `IOrdenRepositorio` como puerto y `OrdenesCasoUso` sin dependencias de SQL Server.
 4. Compila Aplicación y verifica que `IOrdenRepositorio` ofrece operaciones asíncronas mientras las reglas de creación permanecen en los casos de uso.
-
 
 **Archivo que debe quedar tras este paso:** `src/AceriaApp.Api/SeparacionCapas/ValidadorSeparacionCapas.cs`
 
@@ -2436,8 +2124,6 @@ public sealed class OrdenesCasoUso(IOrdenRepositorio repositorio)
 }
 ```
 
-**Por qué funciona así.** la clase `ValidadorSeparacionCapas` comprueba que las referencias de cada proyecto respetan la regla de dependencia. Las referencias permitidas están definidas en un diccionario estático.
-
 **Verificación concreta.** la clase `ValidadorSeparacionCapas` compila sin errores y expone un método y un `record`.
 
 **Diagnóstico si falla.**
@@ -2446,20 +2132,14 @@ public sealed class OrdenesCasoUso(IOrdenRepositorio repositorio)
 - Olvidar el `using System.Linq;`: `Contains` no se resuelve.
 - Olvidar el `using System;`: `Array.Empty` no se resuelve.
 
-
 ### PASO 3.3.8 — Añadir los `using` necesarios en `ValidadorSeparacionCapas`
 
-**Resultado de aprendizaje.** Añadir los `using` necesarios en `ValidadorSeparacionCapas`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+Los tipos `Dictionary` y `List<string>` pertenecen a `System.Collections.Generic`. El método `Contains` pertenece a `System.Linq`. El método `Array.Empty` pertenece a `System`. En proyectos con `ImplicitUsings` desactivado, hay que añadir los usings explícitos.
 
 1. Abre `src/AceriaApp.Api/SeparacionCapas/ValidadorSeparacionCapas.cs` y localiza las directivas `using` de la parte superior.
 2. Verifica que `System.Collections.Generic`, `System.Linq` y `System` están disponibles según las colecciones o métodos usados; con ImplicitUsings activado algunos llegan automáticamente.
 3. Añade solo el import que realmente falte. No copies una segunda clase ni sustituyas la implementación del validador por un comentario.
 4. Guarda y compila. Deja registrado qué miembro concreto requería el namespace, como `List<string>`, `Where` o `Contains`.
-
-
-**Por qué funciona así.** los tipos `Dictionary` y `List<string>` pertenecen a `System.Collections.Generic`. El método `Contains` pertenece a `System.Linq`. El método `Array.Empty` pertenece a `System`. En proyectos con `ImplicitUsings` desactivado, hay que añadir los usings explícitos.
 
 **Verificación concreta.** `ValidadorSeparacionCapas.cs` compila sin errores y no muestra subrayados rojos.
 
@@ -2469,18 +2149,14 @@ public sealed class OrdenesCasoUso(IOrdenRepositorio repositorio)
 - Añadir los usings después del namespace: el compilador no los reconoce.
 - Olvidar los usings y confiar en `ImplicitUsings`: el proyecto puede tenerlo desactivado.
 
-
 ### PASO 3.3.9 — Crear la clase `CatalogoProyectos`
 
-**Resultado de aprendizaje.** Crear la clase `CatalogoProyectos`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+`CatalogoProyectos` agrupa propuestas de separación y las clasifica, pero no modifica el ensamblado que puede referenciar a otro. La comprobación posterior debe recorrer también la solución .NET.
 
 1. Crea `src/AceriaApp.Api/SeparacionCapas/CatalogoProyectos.cs` con el catálogo y los valores de ejemplo indicados en el código del laboratorio.
 2. Identifica las reglas o registros que el catálogo declara y cuáles pertenecen únicamente al ejercicio conceptual; no los des por registrados en DI.
 3. Crea `AceriaApp.Hexagonal.Infraestructura` y sus dependencias EF Core SQL Server; implementa `HexagonalDbContext`, `OrdenRepositorioSqlServer` y el registro de servicios.
 4. Compila Infraestructura y comprueba que implementa `IOrdenRepositorio`, mientras Aplicación no importa namespaces EF Core.
-
 
 **Archivo que debe quedar tras este paso:** `src/AceriaApp.Api/SeparacionCapas/CatalogoProyectos.cs`
 
@@ -2622,8 +2298,6 @@ public static class ServiciosHexagonales
 }
 ```
 
-**Por qué funciona así.** la clase `CatalogoProyectos` contiene los proyectos del sistema con sus referencias. Se usan en los tests y en la validación automática.
-
 **Verificación concreta.** la clase `CatalogoProyectos` compila sin errores y expone un método estático.
 
 **Diagnóstico si falla.**
@@ -2632,20 +2306,14 @@ public static class ServiciosHexagonales
 - Olvidar el `using System.Collections.Generic;`: `List<T>` no se resuelve.
 - No inicializar las propiedades: el compilador emite advertencias.
 
-
 ### PASO 3.3.10 — Añadir los `using` necesarios en `CatalogoProyectos`
 
-**Resultado de aprendizaje.** Añadir los `using` necesarios en `CatalogoProyectos`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+El tipo `List<T>` pertenece a `System.Collections.Generic` y `Array.Empty` pertenece a `System`. En proyectos con `ImplicitUsings` desactivado, hay que añadir los usings explícitos.
 
 1. Abre `src/AceriaApp.Api/SeparacionCapas/CatalogoProyectos.cs` y observa las colecciones e importaciones utilizadas por el catálogo.
 2. Revisa `using System;`, `using System.Linq;` y `using System.Collections.Generic;` cuando corresponda; conserva solo lo que la compilación necesite.
 3. No añadas dependencias tecnológicas nuevas al dominio para resolver tipos básicos ni vuelvas a crear el archivo de catálogo.
 4. Compila y confirma que los métodos del catálogo pueden llamarse desde el proyecto de tests sin errores de namespace.
-
-
-**Por qué funciona así.** el tipo `List<T>` pertenece a `System.Collections.Generic` y `Array.Empty` pertenece a `System`. En proyectos con `ImplicitUsings` desactivado, hay que añadir los usings explícitos.
 
 **Verificación concreta.** `CatalogoProyectos.cs` compila sin errores y no muestra subrayados rojos.
 
@@ -2655,18 +2323,14 @@ public static class ServiciosHexagonales
 - Añadir los usings después del namespace: el compilador no los reconoce.
 - Olvidar los usings y confiar en `ImplicitUsings`: el proyecto puede tenerlo desactivado.
 
-
 ### PASO 3.3.11 — Crear el proyecto de tests del punto 3.3
 
-**Resultado de aprendizaje.** Crear el proyecto de tests del punto 3.3. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+El punto 3.3 añade un proyecto de tests específico para las clases de separación de capas. Se crea como proyecto nuevo sin modificar los proyectos de tests existentes.
 
 1. Dentro de `tests` crea el proyecto xUnit `AceriaApp.SeparacionCapas.Tests` con destino `net8.0`. No modifiques ni sustituyas `AceriaApp.Api.Tests`, que contiene las pruebas HTTP heredadas de M02.
 2. Crea el archivo `tests/AceriaApp.SeparacionCapas.Tests/AceriaApp.SeparacionCapas.Tests.csproj` y escribe el XML completo del bloque del laboratorio, con xUnit y FluentAssertions 6.12.2.
 3. Comprueba que incluye un `ProjectReference` hacia `../../src/AceriaApp.Api/AceriaApp.Api.csproj`; agrega el nuevo proyecto con `dotnet sln AceriaApp.sln add tests/AceriaApp.SeparacionCapas.Tests/AceriaApp.SeparacionCapas.Tests.csproj`.
 4. Ejecuta `dotnet restore AceriaApp.sln` y comprueba que no se ha generado un test `UnitTest1` no previsto.
-
 
 **Archivo que debe quedar tras este paso:** `tests/AceriaApp.SeparacionCapas.Tests/AceriaApp.SeparacionCapas.Tests.csproj`
 
@@ -2684,8 +2348,6 @@ public static class ServiciosHexagonales
 </Project>
 ```
 
-**Por qué funciona así.** el punto 3.3 añade un proyecto de tests específico para las clases de separación de capas. Se crea como proyecto nuevo sin modificar los proyectos de tests existentes.
-
 **Verificación concreta.** El proyecto de tests `AceriaApp.SeparacionCapas.Tests` restaura, referencia a `AceriaApp.Api` y no sustituye ninguna suite heredada.
 
 **Diagnóstico si falla.**
@@ -2694,18 +2356,14 @@ public static class ServiciosHexagonales
 - Modificar los proyectos de tests del punto 3.2: viola la regla de no modificar archivos del punto anterior.
 - Usar `dotnet new mstest`: el curso usa xUnit.
 
-
 ### PASO 3.3.12 — Añadir la referencia del proyecto de tests a la API `AceriaApp.Api`
 
-**Resultado de aprendizaje.** Añadir la referencia del proyecto de tests a la API `AceriaApp.Api`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+La referencia permite que el proyecto de tests acceda a las clases de `SeparacionCapas` del proyecto `AceriaApp.Api`.
 
 1. En `src/AceriaApp.Api/AceriaApp.Api.csproj`, localiza el cierre `</Project>` y añade las referencias a Aplicación e Infraestructura del fragmento XML.
 2. Agrega los tres proyectos de clase a `AceriaApp.sln` mediante `dotnet sln add`, junto con el proyecto de tests.
 3. Desde la raíz del punto ejecuta `dotnet build AceriaApp.sln` y revisa que el proyecto de Dominio no referencia ningún proyecto exterior.
 4. La API compila con esas referencias, aunque los endpoints nuevos se conectarán en 3.4 y los endpoints de M02 permanecen operativos.
-
 
 **Archivo que debe quedar tras este paso:** `src/AceriaApp.Api/AceriaApp.Api.csproj` (modificación; buscar `</Project>`)
 
@@ -2717,8 +2375,6 @@ public static class ServiciosHexagonales
   </ItemGroup>
 ```
 
-**Por qué funciona así.** la referencia permite que el proyecto de tests acceda a las clases de `SeparacionCapas` del proyecto `AceriaApp.Api`.
-
 **Verificación concreta.** El proyecto de tests `AceriaApp.SeparacionCapas.Tests` restaura, referencia a `AceriaApp.Api` y no sustituye ninguna suite heredada.
 
 **Diagnóstico si falla.**
@@ -2727,20 +2383,14 @@ public static class ServiciosHexagonales
 - Olvidar el nombre completo del archivo `.csproj`: el comando falla.
 - Ejecutar el comando desde la carpeta equivocada: la ruta relativa no se resuelve.
 
-
 ### PASO 3.3.13 — Añadir el paquete `FluentAssertions` al proyecto de tests
 
-**Resultado de aprendizaje.** Añadir el paquete `FluentAssertions` al proyecto de tests. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+`FluentAssertions` proporciona la sintaxis de aserción usada en el curso. Se añade al nuevo proyecto de tests sin modificar los proyectos de tests existentes.
 
 1. Abre el `.csproj` de `AceriaApp.SeparacionCapas.Tests` y localiza el `PackageReference` a `FluentAssertions` versión 6.12.2.
 2. Ejecuta `dotnet list tests/AceriaApp.SeparacionCapas.Tests/AceriaApp.SeparacionCapas.Tests.csproj package` y comprueba que el paquete consta en el proyecto correcto.
 3. Relaciona el método `Should()` de los ejemplos de tests con FluentAssertions, y `[Fact]` con xUnit.
 4. No instales una segunda versión del mismo paquete: basta con restaurar NuGet desde la solución.
-
-
-**Por qué funciona así.** `FluentAssertions` proporciona la sintaxis de aserción usada en el curso. Se añade al nuevo proyecto de tests sin modificar los proyectos de tests existentes.
 
 **Verificación concreta.** El proyecto de tests `AceriaApp.SeparacionCapas.Tests` restaura, referencia a `AceriaApp.Api` y no sustituye ninguna suite heredada.
 
@@ -2750,18 +2400,14 @@ public static class ServiciosHexagonales
 - Olvidar el paquete: `Should()` no se resuelve en los tests.
 - Añadir el paquete al proyecto equivocado: los tests no compilan.
 
-
 ### PASO 3.3.14 — Crear el archivo `ValidadorSeparacionCapasTests.cs`
 
-**Resultado de aprendizaje.** Crear el archivo `ValidadorSeparacionCapasTests.cs`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+Las pruebas del validador distinguen relaciones permitidas y prohibidas. Para asegurar una separación real, compara esas reglas con los ProjectReference que admite el compilador.
 
 1. Crea `tests/AceriaApp.SeparacionCapas.Tests/ValidadorSeparacionCapasTests.cs` y escribe completo el primer bloque de pruebas de este punto.
 2. Revisa el `using AceriaApp.Api.SeparacionCapas` para que coincida con el namespace actualizado y conserva `using Xunit;` y `using FluentAssertions;`.
 3. Localiza los casos correctos e incorrectos del validador y comprueba que las aserciones describen resultados de código ejecutable.
 4. Guarda, compila y ejecuta el test específico. No cambies las expectativas para ocultar una regla equivocada.
-
 
 **Archivo que debe quedar tras este paso:** `tests/AceriaApp.SeparacionCapas.Tests/ValidadorSeparacionCapasTests.cs`
 
@@ -2839,8 +2485,6 @@ public class ValidadorSeparacionCapasTests
 }
 ```
 
-**Por qué funciona así.** los tests verifican que el validador acepta el catálogo por defecto y rechaza las referencias que violan la regla de dependencia.
-
 **Verificación concreta.** Los tests de `AceriaApp.SeparacionCapas.Tests` compilan y ejecutan las aserciones propuestas para `SeparacionCapas`.
 
 **Diagnóstico si falla.**
@@ -2849,18 +2493,14 @@ public class ValidadorSeparacionCapasTests
 - Usar `Assert.True` en lugar de `Should().BeTrue()`: el curso usa FluentAssertions.
 - No cubrir el caso de capa desconocida: el mensaje de error no se verifica.
 
-
 ### PASO 3.3.15 — Crear el archivo `CatalogoProyectosTests.cs`
 
-**Resultado de aprendizaje.** Crear el archivo `CatalogoProyectosTests.cs`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+Los tests verifican que el catálogo por defecto contiene los proyectos esperados y que las referencias son las correctas.
 
 1. Crea `tests/AceriaApp.SeparacionCapas.Tests/CatalogoProyectosTests.cs` y escribe el segundo bloque de pruebas del catálogo.
 2. Comprueba que las llamadas a los métodos de ejemplo de `{catalog}` son compatibles con las propiedades que realmente expone el código.
 3. Guarda y ejecuta `dotnet test tests/AceriaApp.SeparacionCapas.Tests/AceriaApp.SeparacionCapas.Tests.csproj -c Release`, de forma que se ejecuten todas las pruebas nuevas.
 4. Verifica que las aserciones prueban los valores declarados, pero no confunde un catálogo didáctico con un registro en tiempo de ejecución.
-
 
 **Archivo que debe quedar tras este paso:** `tests/AceriaApp.SeparacionCapas.Tests/CatalogoProyectosTests.cs`
 
@@ -2903,8 +2543,6 @@ public class CatalogoProyectosTests
 }
 ```
 
-**Por qué funciona así.** los tests verifican que el catálogo por defecto contiene los proyectos esperados y que las referencias son las correctas.
-
 **Verificación concreta.** Los tests de `AceriaApp.SeparacionCapas.Tests` compilan y ejecutan las aserciones propuestas para `SeparacionCapas`.
 
 **Diagnóstico si falla.**
@@ -2913,20 +2551,14 @@ public class CatalogoProyectosTests
 - Olvidar el `using System.Linq;`: `First` no se resuelve.
 - No verificar las referencias del dominio: la capa más interna no se comprueba.
 
-
 ### PASO 3.3.16 — Compilar la solución completa
 
-**Resultado de aprendizaje.** Compilar la solución completa. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+Compilar la solución completa verifica que todos los proyectos, incluidos los nuevos, se resuelven correctamente.
 
 1. Abre la terminal junto a `AceriaApp.sln` y ejecuta `dotnet build AceriaApp.sln -c Release` después de introducir todos los archivos del punto.
 2. Comprueba que compilan la API de M02, el proyecto nuevo de tests y todos los proyectos de etapas anteriores.
 3. Si aparece un error, identifica el primer archivo y la primera línea antes de tocar otra clase. Revisa referencias y namespaces.
 4. Registra la salida de la compilación y no avances hasta obtener cero errores.
-
-
-**Por qué funciona así.** compilar la solución completa verifica que todos los proyectos, incluidos los nuevos, se resuelven correctamente.
 
 **Verificación concreta.** La solución completa compila en Release con cero errores. La capa de dominio no referencia EF Core ni ASP.NET Core.
 
@@ -2936,20 +2568,14 @@ public class CatalogoProyectosTests
 - No restaurar paquetes: `dotnet build` restaura por defecto, pero si hay un error de red, hay que ejecutar `dotnet restore` primero.
 - Usar una versión distinta del SDK: `dotnet --version` debe devolver `8.x.x`.
 
-
 ### PASO 3.3.17 — Ejecutar todos los tests del punto 3.3
 
-**Resultado de aprendizaje.** Ejecutar todos los tests del punto 3.3. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+Ejecutar los tests del punto 3.3 verifica que las clases de separación de capas funcionan correctamente.
 
 1. Ejecuta `dotnet test tests/AceriaApp.SeparacionCapas.Tests/AceriaApp.SeparacionCapas.Tests.csproj -c Release` desde la raíz del punto.
 2. Comprueba que los métodos `[Fact]` de `ValidadorSeparacionCapasTests` y `CatalogoProyectosTests` pasan; el resumen numérico exacto aparece en la tabla de resultados de este módulo.
 3. Ejecuta un caso inválido del validador en el depurador y relaciona el mensaje de error con la línea que lo produce.
 4. Conserva la salida de tests como evidencia y confirma que los resultados no dependen de SQL Server para evaluar reglas puras.
-
-
-**Por qué funciona así.** ejecutar los tests del punto 3.3 verifica que las clases de separación de capas funcionan correctamente.
 
 **Verificación concreta.** La suite nueva de 3.3 supera 7 pruebas de catálogo; en 3.4 se añaden además 4 pruebas HTTP del adaptador real.
 
@@ -2959,20 +2585,14 @@ public class CatalogoProyectosTests
 - No compilar antes: `dotnet test` compila por defecto, pero si hay errores, los tests no se ejecutan.
 - Tener la API en ejecución: el puerto puede estar ocupado.
 
-
 ### PASO 3.3.18 — Ejecutar todos los tests de la solución
 
-**Resultado de aprendizaje.** Ejecutar todos los tests de la solución. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+Ejecutar todos los tests de la solución verifica que los tests de los puntos anteriores y del punto 3.3 pasan conjuntamente.
 
 1. Ejecuta `dotnet test AceriaApp.sln -c Release --no-build` después de compilar toda la solución en Release.
 2. Comprueba que pasan los tests de M02 y todos los nuevos del módulo M03 acumulados hasta este punto.
 3. Si falla alguna suite previa, vuelve a comprobar si el último cambio alteró una dependencia o una configuración del servidor.
 4. Registra las pruebas totales, fallidas y omitidas y compáralas con el resultado previsto para esta etapa.
-
-
-**Por qué funciona así.** ejecutar todos los tests de la solución verifica que los tests de los puntos anteriores y del punto 3.3 pasan conjuntamente.
 
 **Verificación concreta.** Pruebas acumuladas previstas para 3.3: 38, 0 fallidas. Comprueba estos valores en la salida de `dotnet test`.
 
@@ -2982,18 +2602,14 @@ public class CatalogoProyectosTests
 - Tener tests de otros módulos: la solución solo contiene los proyectos de este punto.
 - Modificar los tests de los puntos anteriores: viola la regla de no modificar archivos del punto anterior.
 
-
 ### PASO 3.3.19 — Crear el README del punto 3.3
 
-**Resultado de aprendizaje.** Crear el README del punto 3.3. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+El README del punto 3.3 explica el objetivo, el estado, la ejecución y los añadidos. No modifica el README del punto 3.2.
 
 1. Abre `README.md` en la raíz del punto `3.3-separacion-capas` y sustitúyelo por el README específico del bloque de este paso.
 2. Comprueba que los nombres de proyectos y las pruebas acumuladas coinciden con la solución y con la salida de `dotnet test` de esta etapa.
 3. Revisa la ubicación del documento `docs` y los comandos `dotnet build` y `dotnet test` que utilizará el alumno.
 4. Guarda la versión del punto actual sin sobrescribir el README de la etapa anterior.
-
 
 **Archivo que debe quedar tras este paso:** `README.md`
 
@@ -3029,8 +2645,6 @@ el documento de separación de capas es el artefacto de `docs` específico del p
 la clase `Proyecto` modela un proyecto con su nombre, capa y lista de referencias. Es la unidad de información del validador de separación.
 ```
 
-**Por qué funciona así.** el README del punto 3.3 explica el objetivo, el estado, la ejecución y los añadidos. No modifica el README del punto 3.2.
-
 **Verificación concreta.** `README.md` describe correctamente los 8 proyectos y 38 pruebas acumuladas del curso vigente.
 
 **Diagnóstico si falla.**
@@ -3039,18 +2653,14 @@ la clase `Proyecto` modela un proyecto con su nombre, capa y lista de referencia
 - Omitir la sección `Qué se ha añadido respecto al punto anterior`: pierde la trazabilidad.
 - Escribir el README en la carpeta del punto 3.2: rompe la separación.
 
-
 ### PASO 3.3.20 — Crear el ADR-012 del punto 3.3
 
-**Resultado de aprendizaje.** Crear el ADR-012 del punto 3.3. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+El ADR-012 documenta la decisión de adoptar la separación física. Es un artefacto nuevo del punto 3.3 que no modifica los ADR existentes.
 
 1. En la carpeta `docs` crea `ADR-012-separacion-capas.md` y copia el documento de decisión del bloque del laboratorio.
 2. Lee Estado, Contexto, Decisión, Alternativas y Consecuencias y relaciona el ADR con el código nuevo de la etapa.
 3. Explica por qué no basta con declarar nombres de capas si el código puede saltarse la interfaz o registrar una dependencia incorrecta.
 4. Comprueba que los ADR anteriores están presentes y no han sido sobrescritos.
-
 
 **Archivo que debe quedar tras este paso:** `docs/ADR-012-separacion-capas.md`
 
@@ -3081,8 +2691,6 @@ Se adopta la separación física: cada capa se agrupa en un proyecto independien
 Se parte de la API real y probada de M02, se conservan sus endpoints y se añaden reglas de dependencia verificadas en código. Los proyectos de Dominio, Aplicación e Infraestructura deben obedecer la dirección de referencias; en 3.4 se expone un nuevo adaptador HTTP funcional. El catálogo describe las relaciones arquitectónicas; cada implementación se comprueba en su proyecto correspondiente.
 ```
 
-**Por qué funciona así.** el ADR-012 documenta la decisión de adoptar la separación física. Es un artefacto nuevo del punto 3.3 que no modifica los ADR existentes.
-
 **Verificación concreta.** el archivo `docs\ADR-012-separacion-capas.md` existe con las cinco secciones.
 
 **Diagnóstico si falla.**
@@ -3091,20 +2699,14 @@ Se parte de la API real y probada de M02, se conservan sus endpoints y se añade
 - Omitir la sección `Alternativas consideradas`: el ADR pierde valor.
 - Nombrar el archivo sin el prefijo `ADR-012`: rompe la convención.
 
-
 ### PASO 3.3.21 — Verificar que no se ha modificado ningún archivo del punto 3.2
 
-**Resultado de aprendizaje.** Verificar que no se ha modificado ningún archivo del punto 3.2. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+La comparación con `fc` verifica que todos los documentos del punto 3.2 no se han modificado.
 
 1. Localiza el mismo documento heredado tanto en `M03_ARQUITECTURA_HEXAGONAL/PROYECTO/3.2-puertos-adaptadores` como en `M03_ARQUITECTURA_HEXAGONAL/PROYECTO/3.3-separacion-capas`.
 2. Compara sus hashes SHA-256 o usa un diff y confirma que no se reescribió al introducir el nuevo punto.
 3. Distingue de él los archivos añadidos en este punto: catálogo, validador, pruebas y documentación nueva.
 4. Documenta cualquier diferencia inesperada; el nuevo código no exige alterar los archivos de etapas anteriores.
-
-
-**Por qué funciona así.** la comparación con `fc` verifica que todos los documentos del punto 3.2 no se han modificado.
 
 **Verificación concreta.** Los archivos heredados de `docs` y los endpoints M02 no han sido sobrescritos.
 
@@ -3114,20 +2716,14 @@ Se parte de la API real y probada de M02, se conservan sus endpoints y se añade
 - Olvidar el flag `/L`: `fc` compara en modo ASCII y muestra líneas largas sin ajuste.
 - Comparar archivos de carpetas equivocadas: la comparación no es válida.
 
-
 ### PASO 3.3.22 — Verificar la estructura del punto 3.3
 
-**Resultado de aprendizaje.** Verificar la estructura del punto 3.3. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+La verificación estructural confirma que el punto 3.3 añade archivos nuevos sin modificar los existentes.
 
 1. Desde la raíz de `M03_ARQUITECTURA_HEXAGONAL/PROYECTO` ejecuta `tree /F 3.3-separacion-capas` en Windows.
 2. Localiza `src/AceriaApp.Api/SeparacionCapas`, `tests/AceriaApp.SeparacionCapas.Tests`, `README.md` y `docs/separacion-capas.md`.
 3. Comprueba los proyectos adicionales de dominio, aplicación e infraestructura si ya fueron introducidos por el punto 3.3.
 4. Distingue los archivos del proyecto de los temporales `obj/` y `bin/`; ambos deben quedar excluidos de la entrega.
-
-
-**Por qué funciona así.** la verificación estructural confirma que el punto 3.3 añade archivos nuevos sin modificar los existentes.
 
 **Verificación concreta.** Los archivos que aparecen en el árbol corresponden a los fragmentos creados hasta este paso, y no hay código pendiente en carpetas fuera de la solución.
 
@@ -3137,20 +2733,14 @@ Se parte de la API real y probada de M02, se conservan sus endpoints y se añade
 - Modificar las carpetas del punto 3.2: viola la regla de no modificar.
 - Omitir la carpeta `SeparacionCapas`: los tests no encuentran las clases.
 
-
 ### PASO 3.3.23 — Verificar el `.gitignore` del punto 3.3
 
-**Resultado de aprendizaje.** Verificar el `.gitignore` del punto 3.3. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+El `.gitignore` se hereda del punto 3.2 sin modificaciones. La verificación confirma que no se ha tocado.
 
 1. Abre el `.gitignore` de la etapa; si falta, crea uno que excluya `.vs/`, `bin/`, `obj/`, archivos personales y resultados de prueba.
 2. Ejecuta `git status --short` en tu copia de trabajo y comprueba que no aparecen archivos binarios ni credenciales.
 3. No ignores `src`, `tests`, `docs` ni las soluciones `.sln`, pues son parte del entregable reproducible.
 4. Conserva el `.gitignore` heredado sin borrarlo ni modificar el de etapas anteriores.
-
-
-**Por qué funciona así.** el `.gitignore` se hereda del punto 3.2 sin modificaciones. La verificación confirma que no se ha tocado.
 
 **Verificación concreta.** No se incluyen `bin`, `obj`, contraseñas ni resultados de pruebas en el estado Git.
 
@@ -3160,20 +2750,14 @@ Se parte de la API real y probada de M02, se conservan sus endpoints y se añade
 - Eliminar alguna línea: el repositorio se llena de artefactos.
 - Crear el `.gitignore` con otro nombre: el archivo no se reconoce.
 
-
 ### PASO 3.3.24 — Hacer el commit del punto 3.3 y verificar el estado final
 
-**Resultado de aprendizaje.** Hacer el commit del punto 3.3 y verificar el estado final. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+El commit del punto 3.3 registra el estado acumulado del proyecto. Los commits de cada punto permiten comparar el estado del proyecto entre puntos consecutivos y entre módulos completos.
 
 1. Antes de terminar 3.3, vuelve a ejecutar `dotnet build AceriaApp.sln -c Release` y `dotnet test AceriaApp.sln -c Release --no-build`.
 2. Lee el reto de ampliación incluido tras los pasos obligatorios; si lo realizas, utiliza una copia aparte y deja los tests base intactos.
 3. Si tu copia está bajo Git, ejecuta `git status`, añade solo lo trabajado y crea un commit descriptivo, sin modificar la rama canónica del profesor.
 4. Conserva el resumen de pruebas y compara el proyecto final con la carpeta de referencia del punto; ambas deben representar el mismo código.
-
-
-**Por qué funciona así.** el commit del punto 3.3 registra el estado acumulado del proyecto. Los commits de cada punto permiten comparar el estado del proyecto entre puntos consecutivos y entre módulos completos.
 
 **Verificación concreta.** El punto termina con compilación y suite de pruebas completa, sin modificar la referencia de la etapa anterior.
 
@@ -3182,7 +2766,6 @@ Se parte de la API real y probada de M02, se conservan sus endpoints y se añade
 - No tener configurado `user.name` y `user.email`: `git commit` falla.
 - Añadir la carpeta `bin/` y `obj/` al commit: el `.gitignore` lo evita.
 - Hacer commit antes de `git add .`: no hay cambios en el índice.
-
 
 ## Reto de ampliación (optativo)
 
@@ -3257,7 +2840,6 @@ public void Resumen_ConCatalogoPorDefecto_CuentaCorrectamente()
 
 ---
 
-
 ## Resultado verificable y cierre del punto 3.3
 
 **Código final de referencia:** `PROYECTO/3.3-separacion-capas/`. El contenido que debe crear el alumno está especificado por los bloques con su ruta exacta y el tipo de modificación. Comprueba el resultado compilando y ejecutando las pruebas de la etapa.
@@ -3268,6 +2850,12 @@ public void Resumen_ConCatalogoPorDefecto_CuentaCorrectamente()
 
 # Punto 3.4 — Implementación en ASP.NET Core
 
+## Ejecutar la arquitectura hexagonal desde HTTP hasta SQL Server
+
+En 3.4 la API de ASP.NET Core debe actuar como adaptador de entrada: recibe una petición, invoca la aplicación y deja que infraestructura resuelva el acceso a SQL Server a través de los puertos establecidos. El registro de dependencias debe componer estas piezas sin trasladar EF Core al dominio.
+
+Continuaremos desde la solución de 3.3 y verificaremos tanto las reglas del catálogo de registro como las conexiones reales de la aplicación. Compilar y pasar tests de clasificación resulta necesario, pero la evidencia de una integración hexagonal funcional exige también peticiones HTTP y comprobaciones persistentes en SQL Server.
+
 **Objetivos del punto.** el documento de implementación en ASP.NET Core es el artefacto de `docs` específico del punto 3.4. Incluye el cierre del módulo 3 con el resumen del estado del proyecto. No modifica los dieciséis documentos existentes del punto 3.3.
 
 **Carpeta de trabajo:** `M03_ARQUITECTURA_HEXAGONAL/PROYECTO/3.4-implementacion-aspnet-core`. Esta etapa continúa la anterior sin alterar su copia. El código de la referencia es un resultado final, no una solución que el alumno deba pegar al inicio.
@@ -3276,17 +2864,12 @@ public void Resumen_ConCatalogoPorDefecto_CuentaCorrectamente()
 
 ### PASO 3.4.1 — Crear la carpeta del punto 3.4 a partir del punto 3.3
 
-**Resultado de aprendizaje.** Crear la carpeta del punto 3.4 a partir del punto 3.3. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+Cada punto del curso parte del contenido del punto anterior. El punto 3.4 se construye sobre el punto 3.3 copiando su contenido y añadiendo archivos nuevos sin modificar los existentes.
 
 1. En el Explorador de archivos localiza `M03_ARQUITECTURA_HEXAGONAL/PROYECTO/3.3-separacion-capas`. Comprueba que es el estado anterior completo, con los endpoints y tests ya construidos.
 2. Crea una carpeta personal `3.4-implementacion-aspnet-core` bajo `M03_ARQUITECTURA_HEXAGONAL/PROYECTO`. Copia en ella el contenido del punto anterior, sin cambiarlo en su origen.
 3. Desde la raíz de `3.4-implementacion-aspnet-core` comprueba que tienes `src/AceriaApp.Api`, `tests/AceriaApp.Api.Tests`, `AceriaApp.http` y los archivos de configuración.
 4. No copies `bin/`, `obj/` ni credenciales. Para comparar puedes usar los proyectos de referencia; los nuevos archivos de este punto se introducirán solo cuando llegues a su paso.
-
-
-**Por qué funciona así.** cada punto del curso parte del contenido del punto anterior. El punto 3.4 se construye sobre el punto 3.3 copiando su contenido y añadiendo archivos nuevos sin modificar los existentes.
 
 **Verificación concreta.** al ejecutar `dir 3.4-implementacion-aspnet-core`, deben aparecer `AceriaApp.sln`, `README.md`, `src`, `tests` y `docs`.
 
@@ -3297,20 +2880,14 @@ public void Resumen_ConCatalogoPorDefecto_CuentaCorrectamente()
 - Olvidar el flag `/I`: `xcopy` pregunta si el destino es un directorio cuando no existe.
 - Olvidar el flag `/Y`: `xcopy` pide confirmación para sobrescribir.
 
-
 ### PASO 3.4.2 — Abrir la solución copiada en Visual Studio 2026
 
-**Resultado de aprendizaje.** Abrir la solución copiada en Visual Studio 2026. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+Abrir la solución copiada permite trabajar en el punto 3.4 sobre la base del punto 3.3. La compilación verifica que la copia es correcta.
 
 1. Abre en Visual Studio la solución `AceriaApp.sln` de `3.4-implementacion-aspnet-core`; si la primera etapa aún no la tiene, crea una solución con `dotnet new sln -n AceriaApp`.
 2. Desde la raíz del punto ejecuta `dotnet sln AceriaApp.sln add src/AceriaApp.Api/AceriaApp.Api.csproj tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj` para la etapa inicial; en las siguientes etapas la solución viene heredada.
 3. Verifica con `dotnet sln AceriaApp.sln list` que todas las rutas corresponden a proyectos presentes en la carpeta de esta etapa.
 4. Ejecuta `dotnet build AceriaApp.sln -c Release` antes de tocar las clases y guarda su resultado como punto de comparación.
-
-
-**Por qué funciona así.** abrir la solución copiada permite trabajar en el punto 3.4 sobre la base del punto 3.3. La compilación verifica que la copia es correcta.
 
 **Verificación concreta.** La solución abierta contiene los proyectos existentes de la etapa anterior y compila antes de los nuevos archivos.
 
@@ -3320,20 +2897,14 @@ public void Resumen_ConCatalogoPorDefecto_CuentaCorrectamente()
 - No compilar antes de empezar: si la copia tiene errores, los cambios posteriores fallan.
 - Tener la API del punto 3.3 en ejecución: el puerto queda ocupado y la compilación falla.
 
-
 ### PASO 3.4.3 — Verificar que la carpeta `docs` contiene los documentos del punto 3.3
 
-**Resultado de aprendizaje.** Verificar que la carpeta `docs` contiene los documentos del punto 3.3. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+El punto 3.4 parte del contenido del punto 3.3, que ya incluye la carpeta `docs` con dieciséis documentos. No se modifica ningún documento existente.
 
 1. Abre `docs` dentro de `3.4-implementacion-aspnet-core`. Si es la primera etapa y no existe, créala: botón derecho sobre la raíz del punto y `Agregar > Nueva carpeta`.
 2. Comprueba que los documentos de la etapa anterior no se han modificado. A partir de aquí se añade una nueva decisión y un nuevo documento de diseño.
 3. Anota los nombres de los documentos que recibes y los que crearás: `implementacion-aspnet-core.md` y `ADR-013-implementacion-aspnet-core.md`.
 4. No reescribas un ADR anterior para explicar un diseño nuevo. Comprueba que los documentos heredados mantienen su contenido entre etapas.
-
-
-**Por qué funciona así.** el punto 3.4 parte del contenido del punto 3.3, que ya incluye la carpeta `docs` con dieciséis documentos. No se modifica ningún documento existente.
 
 **Verificación concreta.** la carpeta `docs` contiene los dieciséis documentos del punto 3.3 sin modificaciones.
 
@@ -3343,18 +2914,14 @@ public void Resumen_ConCatalogoPorDefecto_CuentaCorrectamente()
 - Eliminar algún documento existente: pierde la trazabilidad del punto 3.3.
 - Crear la carpeta `docs` si ya existe: `mkdir` falla.
 
-
 ### PASO 3.4.4 — Crear el documento de implementación en ASP.NET Core en `docs`
 
-**Resultado de aprendizaje.** Crear el documento de implementación en ASP.NET Core en `docs`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+El documento de implementación en ASP.NET Core es el artefacto de `docs` específico del punto 3.4. Incluye el cierre del módulo 3 con el resumen del estado del proyecto. No modifica los dieciséis documentos existentes del punto 3.3.
 
 1. En la carpeta `docs` de `3.4-implementacion-aspnet-core` crea `implementacion-aspnet-core.md` mediante `Agregar > Nuevo elemento` o el editor Markdown.
 2. Copia el documento de este paso y estudia sus apartados. Relaciónalo con los bloques de teoría del punto 3.4; no debe limitarse a una lista de nombres.
 3. Distingue los componentes del catálogo arquitectónico de las clases y los servicios implementados en el proyecto.
 4. Guarda el Markdown, abre su vista previa y anota dos decisiones observables que podrás verificar posteriormente con los tests.
-
 
 **Archivo que debe quedar tras este paso:** `docs/implementacion-aspnet-core.md`
 
@@ -3417,8 +2984,6 @@ El proyecto AceriaApp dispone de:
 La implementación de partida no es `AceriaApp.Monolito.Api`, sino la Minimal API del proyecto `M02_APIS_REST_ASPNET_CORE/PROYECTO/2.4-documentacion-openapi`. Los ejemplos de esta ficha describen conceptos de diseño; su implementación real se incorpora al código en 3.3 y 3.4, con puertos de aplicación e infraestructura SQL Server. No se considera registrado un adaptador solo por mencionarlo en un catálogo.
 ```
 
-**Por qué funciona así.** el documento de implementación en ASP.NET Core es el artefacto de `docs` específico del punto 3.4. Incluye el cierre del módulo 3 con el resumen del estado del proyecto. No modifica los dieciséis documentos existentes del punto 3.3.
-
 **Verificación concreta.** el archivo `docs\implementacion-aspnet-core.md` existe con las nueve secciones.
 
 **Diagnóstico si falla.**
@@ -3427,18 +2992,14 @@ La implementación de partida no es `AceriaApp.Monolito.Api`, sino la Minimal AP
 - Modificar los ADR existentes: viola la regla de no modificar archivos del punto anterior.
 - Guardar el archivo en la raíz del punto en lugar de `docs`: rompe la estructura del repositorio.
 
-
 ### PASO 3.4.5 — Crear la carpeta `Implementacion` en el proyecto `AceriaApp.Api`
 
-**Resultado de aprendizaje.** Crear la carpeta `Implementacion` en el proyecto `AceriaApp.Api`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+La carpeta `Implementacion` albergará las clases de validación de la configuración del contenedor. Se crea como carpeta nueva sin tocar las carpetas existentes.
 
 1. En `src/AceriaApp.Api` crea la carpeta `Implementacion` para las clases de validación de registros de servicios.
 2. Añade también la carpeta `Hexagonal` y crea `HexagonalOrdenesEndpoints.cs` copiando el bloque completo de este paso.
 3. Comprueba que los endpoints obtienen un `OrdenesCasoUso` por inyección y que no conocen `HexagonalDbContext` ni comandos EF Core.
 4. No registres aún el grupo de rutas: primero se conectará el contenedor y después el arranque.
-
 
 **Archivo que debe quedar tras este paso:** `src/AceriaApp.Api/Hexagonal/HexagonalOrdenesEndpoints.cs`
 
@@ -3505,8 +3066,6 @@ public static class HexagonalOrdenesEndpoints
 }
 ```
 
-**Por qué funciona así.** la carpeta `Implementacion` albergará las clases de validación de la configuración del contenedor. Se crea como carpeta nueva sin tocar las carpetas existentes.
-
 **Verificación concreta.** la carpeta `Implementacion` existe dentro de `AceriaApp.Api` y las carpetas existentes permanecen intactas.
 
 **Diagnóstico si falla.**
@@ -3515,18 +3074,14 @@ public static class HexagonalOrdenesEndpoints
 - Modificar las carpetas existentes: viola la regla de no modificar archivos del punto anterior.
 - Crear la carpeta con otro nombre: rompe la convención del curso.
 
-
 ### PASO 3.4.6 — Crear la clase `RegistroServicio`
 
-**Resultado de aprendizaje.** Crear la clase `RegistroServicio`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+`RegistroServicio` describe una entrada de composición y sus propiedades. Declararla en una lista no equivale a registrar la implementación mediante `AddScoped` ni a resolver una dependencia real.
 
 1. Crea `src/AceriaApp.Api/Implementacion/RegistroServicio.cs` y escribe el código íntegro mostrado en el bloque asociado al paso.
 2. Comprueba que el namespace es `AceriaApp.Api.Implementacion`, correspondiente a la carpeta de este punto.
 3. Lee cada propiedad y diferencia valores de configuración de objetos de dominio. No añadas dependencias SQL o ASP.NET Core a este modelo de catálogo.
 4. Guarda y compila con `dotnet build src/AceriaApp.Api/AceriaApp.Api.csproj -c Release`; si faltan tipos, revisa el namespace y los usings implícitos.
-
 
 **Archivo que debe quedar tras este paso:** `src/AceriaApp.Api/Implementacion/RegistroServicio.cs`
 
@@ -3543,8 +3098,6 @@ public class RegistroServicio
 }
 ```
 
-**Por qué funciona así.** la clase `RegistroServicio` modela un registro del contenedor de dependencias con el puerto, la implementación, el ciclo y si es adaptador de salida. Es la unidad de información del validador.
-
 **Verificación concreta.** la clase `RegistroServicio` compila sin errores y expone cuatro propiedades.
 
 **Diagnóstico si falla.**
@@ -3553,18 +3106,14 @@ public class RegistroServicio
 - No inicializar las propiedades de tipo `string` con `string.Empty`: el compilador emite advertencias.
 - Usar `set` en lugar de `init`: permite modificar la instancia después de crearla.
 
-
 ### PASO 3.4.7 — Crear la clase `ValidadorRegistroServicios`
 
-**Resultado de aprendizaje.** Crear la clase `ValidadorRegistroServicios`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+`ValidadorRegistroServicios` examina el catálogo docente. Debe comprobarse por separado que Program.cs registra el puerto, que el contenedor resuelve la implementación y que la petición HTTP la utiliza.
 
 1. Abre o crea `src/AceriaApp.Api/Implementacion/ValidadorRegistroServicios.cs` según el bloque de C# de este paso.
 2. Escribe la clase pública `ValidadorRegistroServicios` y el record de resultado; comprueba sus tipos de entrada y las ramas de error.
 3. Recorre con el depurador un caso válido y otro inválido. Localiza dónde se agrega cada mensaje y qué condición determina el resultado final.
 4. Guarda, compila y evita añadir el mismo validador en otro fichero. Las pruebas de esta regla se crearán en el paso 14.
-
 
 **Archivo que debe quedar tras este paso:** `src/AceriaApp.Api/Implementacion/ValidadorRegistroServicios.cs`
 
@@ -3616,8 +3165,6 @@ public class ValidadorRegistroServicios
 public record ResultadoRegistro(bool EsValido, IReadOnlyList<string> Errores);
 ```
 
-**Por qué funciona así.** la clase `ValidadorRegistroServicios` comprueba que cada registro declara el puerto, la implementación y un ciclo permitido, y que los adaptadores de salida no se registran como `Transient`.
-
 **Verificación concreta.** la clase `ValidadorRegistroServicios` compila sin errores y expone un método y un `record`.
 
 **Diagnóstico si falla.**
@@ -3626,18 +3173,14 @@ public record ResultadoRegistro(bool EsValido, IReadOnlyList<string> Errores);
 - Olvidar el `using System.Linq;`: `Contains` y `ToList` no se resuelven.
 - No comprobar el caso de lista vacía: el validador devuelve válido sin registros.
 
-
 ### PASO 3.4.8 — Añadir los `using` necesarios en `ValidadorRegistroServicios`
 
-**Resultado de aprendizaje.** Añadir los `using` necesarios en `ValidadorRegistroServicios`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+Los tipos `List<string>` y `IReadOnlyList<string>` pertenecen a `System.Collections.Generic`. Los métodos `Contains` y `ToList` pertenecen a `System.Linq`. En proyectos con `ImplicitUsings` desactivado, hay que añadir los usings explícitos.
 
 1. Abre `src/AceriaApp.Api/Program.cs` y localiza los `using` de la plantilla M02.
 2. Añade los tres imports de `AceriaApp.Api.Hexagonal`, `AceriaApp.Hexagonal.Infraestructura` y `AceriaApp.Hexagonal.Infraestructura.Datos` mostrados.
 3. Comprueba que se mantienen los registros FluentValidation y Swagger existentes y que no se ha duplicado `CreateBuilder`.
 4. Guarda y compila. Si un namespace no se reconoce, revisa los `ProjectReference` añadidos en 3.3.
-
 
 **Archivo que debe quedar tras este paso:** `src/AceriaApp.Api/Program.cs` (modificación; buscar `var builder=WebApplication.CreateBuilder(args);`)
 
@@ -3648,8 +3191,6 @@ using AceriaApp.Hexagonal.Infraestructura;
 using AceriaApp.Hexagonal.Infraestructura.Datos;
 ```
 
-**Por qué funciona así.** los tipos `List<string>` y `IReadOnlyList<string>` pertenecen a `System.Collections.Generic`. Los métodos `Contains` y `ToList` pertenecen a `System.Linq`. En proyectos con `ImplicitUsings` desactivado, hay que añadir los usings explícitos.
-
 **Verificación concreta.** `ValidadorRegistroServicios.cs` compila sin errores y no muestra subrayados rojos.
 
 **Diagnóstico si falla.**
@@ -3658,18 +3199,14 @@ using AceriaApp.Hexagonal.Infraestructura.Datos;
 - Añadir los usings después del namespace: el compilador no los reconoce.
 - Olvidar los usings y confiar en `ImplicitUsings`: el proyecto puede tenerlo desactivado.
 
-
 ### PASO 3.4.9 — Crear la clase `CatalogoRegistros`
 
-**Resultado de aprendizaje.** Crear la clase `CatalogoRegistros`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+`CatalogoRegistros` clasifica servicios según las reglas del ejercicio. El recorrido funcional se acredita únicamente cuando el host y sus adaptadores trabajan con la base real.
 
 1. En `Program.cs` localiza `var app=builder.Build();` y, justo antes, registra `builder.Services.AddServiciosHexagonales(builder.Configuration);`.
 2. Comprueba el constructor de `OrdenesCasoUso`, que solicita `IOrdenRepositorio`, y la clase concreta `OrdenRepositorioSqlServer` registrada como Scoped.
 3. No registres la interfaz directamente contra un nuevo objeto con `new`: deja que DI resuelva DbContext y repositorio por petición.
 4. Guarda y compila. En el paso de pruebas comprobarás que el host HTTP puede resolver el puerto de repositorio.
-
 
 **Archivo que debe quedar tras este paso:** `src/AceriaApp.Api/Implementacion/CatalogoRegistros.cs`
 
@@ -3700,8 +3237,6 @@ public class CatalogoRegistros
 builder.Services.AddServiciosHexagonales(builder.Configuration);
 ```
 
-**Por qué funciona así.** la clase `CatalogoRegistros` contiene los registros por defecto del proyecto. Se usan en los tests y en la validación automática.
-
 **Verificación concreta.** la clase `CatalogoRegistros` compila sin errores y expone un método estático.
 
 **Diagnóstico si falla.**
@@ -3710,18 +3245,14 @@ builder.Services.AddServiciosHexagonales(builder.Configuration);
 - No inicializar las propiedades de los objetos: el compilador emite advertencias.
 - Devolver `List<T>` mutable: expone la implementación interna.
 
-
 ### PASO 3.4.10 — Añadir el `using` necesario en `CatalogoRegistros`
 
-**Resultado de aprendizaje.** Añadir el `using` necesario en `CatalogoRegistros`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+El tipo `List<T>` pertenece a `System.Collections.Generic`. En proyectos con `ImplicitUsings` desactivado, hay que añadir el using explícito.
 
 1. En `Program.cs`, antes de `app.Run();`, añade el bloque de inicialización del contexto hexagonal mostrado.
 2. Esta inicialización se ejecuta solo en Development y cuando `SkipDatabaseInitialization` no está activo.
 3. Comprueba que `HexagonalDbContext` utiliza su propia conexión de base de datos, separada de la inicialización M02.
 4. Conserva la inicialización de EF Core heredada de M02 y el flujo de tests SQL Server con base exclusiva; no borres rutas existentes.
-
 
 **Archivo que debe quedar tras este paso:** `src/AceriaApp.Api/Program.cs` (modificación; buscar `app.Run();`)
 
@@ -3737,8 +3268,6 @@ if (app.Environment.IsDevelopment() && !app.Configuration.GetValue<bool>("SkipDa
 }
 ```
 
-**Por qué funciona así.** el tipo `List<T>` pertenece a `System.Collections.Generic`. En proyectos con `ImplicitUsings` desactivado, hay que añadir el using explícito.
-
 **Verificación concreta.** La inicialización del nuevo DbContext solo sucede en Development y no depende de la base M02.
 
 **Diagnóstico si falla.**
@@ -3747,18 +3276,14 @@ if (app.Environment.IsDevelopment() && !app.Configuration.GetValue<bool>("SkipDa
 - Añadir el using después del namespace: el compilador no lo reconoce.
 - Olvidar el using y confiar en `ImplicitUsings`: el proyecto puede tenerlo desactivado.
 
-
 ### PASO 3.4.11 — Crear el proyecto de tests del punto 3.4
 
-**Resultado de aprendizaje.** Crear el proyecto de tests del punto 3.4. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+El punto 3.4 añade un proyecto de tests específico para las clases de implementación. Se crea como proyecto nuevo sin modificar los proyectos de tests existentes.
 
 1. Dentro de `tests` crea el proyecto xUnit `AceriaApp.Implementacion.Tests` con destino `net8.0`. No modifiques ni sustituyas `AceriaApp.Api.Tests`, que contiene las pruebas HTTP heredadas de M02.
 2. Crea el archivo `tests/AceriaApp.Implementacion.Tests/AceriaApp.Implementacion.Tests.csproj` y escribe el XML completo del bloque del laboratorio, con xUnit y FluentAssertions 6.12.2.
 3. Comprueba que incluye un `ProjectReference` hacia `../../src/AceriaApp.Api/AceriaApp.Api.csproj`; agrega el nuevo proyecto con `dotnet sln AceriaApp.sln add tests/AceriaApp.Implementacion.Tests/AceriaApp.Implementacion.Tests.csproj`.
 4. Ejecuta `dotnet restore AceriaApp.sln` y comprueba que no se ha generado un test `UnitTest1` no previsto.
-
 
 **Archivo que debe quedar tras este paso:** `tests/AceriaApp.Implementacion.Tests/AceriaApp.Implementacion.Tests.csproj`
 
@@ -3776,8 +3301,6 @@ if (app.Environment.IsDevelopment() && !app.Configuration.GetValue<bool>("SkipDa
 </Project>
 ```
 
-**Por qué funciona así.** el punto 3.4 añade un proyecto de tests específico para las clases de implementación. Se crea como proyecto nuevo sin modificar los proyectos de tests existentes.
-
 **Verificación concreta.** El proyecto de tests `AceriaApp.Implementacion.Tests` restaura, referencia a `AceriaApp.Api` y no sustituye ninguna suite heredada.
 
 **Diagnóstico si falla.**
@@ -3786,18 +3309,14 @@ if (app.Environment.IsDevelopment() && !app.Configuration.GetValue<bool>("SkipDa
 - Modificar los proyectos de tests del punto 3.3: viola la regla de no modificar archivos del punto anterior.
 - Usar `dotnet new mstest`: el curso usa xUnit.
 
-
 ### PASO 3.4.12 — Añadir la referencia del proyecto de tests a la API `AceriaApp.Api`
 
-**Resultado de aprendizaje.** Añadir la referencia del proyecto de tests a la API `AceriaApp.Api`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+La referencia permite que el proyecto de tests acceda a las clases de `Implementacion` del proyecto `AceriaApp.Api`.
 
 1. Busca `app.Run();` en `Program.cs` e inserta `app.MapHexagonalOrdenes();` inmediatamente antes.
 2. Comprueba que el método está implementado como extensión de `IEndpointRouteBuilder` y que registra GET colección, GET detalle, POST y finalizar.
 3. No dupliques `/api/v1/ordenes`: el nuevo adaptador pedagógico usa `/api/v1/hexagonal/ordenes` para evitar romper el contrato ya aprobado de M02.
 4. Guarda, compila y verifica que Swagger descubre las operaciones nuevas cuando la API corre en Development.
-
 
 **Archivo que debe quedar tras este paso:** `src/AceriaApp.Api/Program.cs` (modificación; buscar `app.Run();`)
 
@@ -3805,8 +3324,6 @@ if (app.Environment.IsDevelopment() && !app.Configuration.GetValue<bool>("SkipDa
 ```csharp
 app.MapHexagonalOrdenes();
 ```
-
-**Por qué funciona así.** la referencia permite que el proyecto de tests acceda a las clases de `Implementacion` del proyecto `AceriaApp.Api`.
 
 **Verificación concreta.** GET/POST/finalizar están registrados por el adaptador HTTP y utilizan `OrdenesCasoUso`.
 
@@ -3816,18 +3333,14 @@ app.MapHexagonalOrdenes();
 - Olvidar el nombre completo del archivo `.csproj`: el comando falla.
 - Ejecutar el comando desde la carpeta equivocada: la ruta relativa no se resuelve.
 
-
 ### PASO 3.4.13 — Añadir el paquete `FluentAssertions` al proyecto de tests
 
-**Resultado de aprendizaje.** Añadir el paquete `FluentAssertions` al proyecto de tests. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+`FluentAssertions` proporciona la sintaxis de aserción usada en el curso. Se añade al nuevo proyecto de tests sin modificar los proyectos de tests existentes.
 
 1. Abre `src/AceriaApp.Api/appsettings.json` y conserva la conexión existente `AceriaApp` utilizada por la API de M02.
 2. Añade `ConnectionStrings:AceriaHexagonal` con LocalDB en la base `AceriaAppM03Hexagonal` como muestra el JSON completo del bloque.
 3. Valida la sintaxis del JSON, especialmente la doble barra invertida `\` en el nombre `(localdb)\MSSQLLocalDB`.
 4. Arranca en Development y comprueba que los dos contextos trabajan con bases independientes; los tests también usan SQL Server real para ambos, con dos bases exclusivas distintas.
-
 
 **Archivo que debe quedar tras este paso:** `src/AceriaApp.Api/appsettings.json`
 
@@ -3841,8 +3354,6 @@ app.MapHexagonalOrdenes();
 }
 ```
 
-**Por qué funciona así.** `FluentAssertions` proporciona la sintaxis de aserción usada en el curso. Se añade al nuevo proyecto de tests sin modificar los proyectos de tests existentes.
-
 **Verificación concreta.** Existen las dos cadenas de conexión de manera independiente: AceriaApp y AceriaHexagonal.
 
 **Diagnóstico si falla.**
@@ -3851,18 +3362,14 @@ app.MapHexagonalOrdenes();
 - Olvidar el paquete: `Should()` no se resuelve en los tests.
 - Añadir el paquete al proyecto equivocado: los tests no compilan.
 
-
 ### PASO 3.4.14 — Crear el archivo `ValidadorRegistroServiciosTests.cs`
 
-**Resultado de aprendizaje.** Crear el archivo `ValidadorRegistroServiciosTests.cs`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+Los tests de registro ejercitan condiciones del catálogo. No sustituyen los ensayos de integración que resuelven servicios en ASP.NET Core y recorren una operación con SQL Server.
 
 1. Crea `tests/AceriaApp.Implementacion.Tests/ValidadorRegistroServiciosTests.cs` y escribe completo el primer bloque de pruebas de este punto.
 2. Revisa el `using AceriaApp.Api.Implementacion` para que coincida con el namespace actualizado y conserva `using Xunit;` y `using FluentAssertions;`.
 3. Localiza los casos correctos e incorrectos del validador y comprueba que las aserciones describen resultados de código ejecutable.
 4. Guarda, compila y ejecuta el test específico. No cambies las expectativas para ocultar una regla equivocada.
-
 
 **Archivo que debe quedar tras este paso:** `tests/AceriaApp.Implementacion.Tests/ValidadorRegistroServiciosTests.cs`
 
@@ -3940,8 +3447,6 @@ public class ValidadorRegistroServiciosTests
 }
 ```
 
-**Por qué funciona así.** los tests verifican que el validador acepta el catálogo por defecto y rechaza los registros que violan las reglas de configuración.
-
 **Verificación concreta.** Los tests de `AceriaApp.Implementacion.Tests` compilan y ejecutan las aserciones propuestas para `Implementacion`.
 
 **Diagnóstico si falla.**
@@ -3950,18 +3455,14 @@ public class ValidadorRegistroServiciosTests
 - Usar `Assert.True` en lugar de `Should().BeTrue()`: el curso usa FluentAssertions.
 - No cubrir el caso de lista vacía: el mensaje de error no se verifica.
 
-
 ### PASO 3.4.15 — Crear el archivo `CatalogoRegistrosTests.cs`
 
-**Resultado de aprendizaje.** Crear el archivo `CatalogoRegistrosTests.cs`. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+`CatalogoRegistrosTests` confirma reglas de clasificación, no la existencia de una instancia de infraestructura activa. Es importante identificar qué problema demuestra cada prueba.
 
 1. Crea `tests/AceriaApp.Implementacion.Tests/CatalogoRegistrosTests.cs` y escribe el segundo bloque de pruebas del catálogo.
 2. Comprueba que las llamadas a los métodos de ejemplo de `{catalog}` son compatibles con las propiedades que realmente expone el código.
 3. Guarda y ejecuta `dotnet test tests/AceriaApp.Implementacion.Tests/AceriaApp.Implementacion.Tests.csproj -c Release`, de forma que se ejecuten todas las pruebas nuevas.
 4. Verifica que las aserciones prueban los valores declarados, pero no confunde un catálogo didáctico con un registro en tiempo de ejecución.
-
 
 **Archivo que debe quedar tras este paso:** `tests/AceriaApp.Implementacion.Tests/CatalogoRegistrosTests.cs`
 
@@ -4002,8 +3503,6 @@ public class CatalogoRegistrosTests
 }
 ```
 
-**Por qué funciona así.** los tests verifican que el catálogo por defecto contiene los registros esperados y que todos los puertos tienen implementación.
-
 **Verificación concreta.** Los tests de `AceriaApp.Implementacion.Tests` compilan y ejecutan las aserciones propuestas para `Implementacion`.
 
 **Diagnóstico si falla.**
@@ -4012,20 +3511,14 @@ public class CatalogoRegistrosTests
 - Olvidar el `using System.Linq;`: `Count` y `OnlyContain` no se resuelven.
 - No verificar la distribución de adaptadores: el catálogo podría estar mal balanceado.
 
-
 ### PASO 3.4.16 — Compilar la solución completa
 
-**Resultado de aprendizaje.** Compilar la solución completa. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+La compilación de la solución comprueba las referencias y los contratos de tipos. Sigue siendo necesario verificar el caso de uso en HTTP y persistencia para demostrar que las piezas están conectadas.
 
 1. Abre la terminal junto a `AceriaApp.sln` y ejecuta `dotnet build AceriaApp.sln -c Release` después de introducir todos los archivos del punto.
 2. Comprueba que compilan la API de M02, el proyecto nuevo de tests y todos los proyectos de etapas anteriores.
 3. Si aparece un error, identifica el primer archivo y la primera línea antes de tocar otra clase. Revisa referencias y namespaces.
 4. Registra la salida de la compilación y no avances hasta obtener cero errores.
-
-
-**Por qué funciona así.** compilar la solución completa verifica que todos los proyectos, incluidos los nuevos, se resuelven correctamente.
 
 **Verificación concreta.** La solución completa compila en Release con cero errores. La capa de dominio no referencia EF Core ni ASP.NET Core.
 
@@ -4035,18 +3528,14 @@ public class CatalogoRegistrosTests
 - No restaurar paquetes: `dotnet build` restaura por defecto, pero si hay un error de red, hay que ejecutar `dotnet restore` primero.
 - Usar una versión distinta del SDK: `dotnet --version` debe devolver `8.x.x`.
 
-
 ### PASO 3.4.17 — Ejecutar todos los tests del punto 3.4
 
-**Resultado de aprendizaje.** Ejecutar todos los tests del punto 3.4. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+Ejecutar los tests del punto 3.4 verifica que las clases de implementación funcionan correctamente.
 
 1. En `tests/AceriaApp.Api.Tests` crea `HexagonalFactory.cs` y `HexagonalHttpTests.cs` con los dos fragmentos de código.
 2. La factoría conserva SQL Server en los dos DbContext y asigna una base exclusiva a cada contexto. `CreateHost` crea ambos esquemas con `EnsureCreated`; la limpieza elimina únicamente esas dos bases.
 3. Ejecuta las cuatro pruebas HTTP: GET vacía, creación y consulta, errores 400/422, y finalización repetida 200/409.
 4. Comprueba que las pruebas de los catálogos siguen pasando junto a los tests nuevos: la validación ya no es solo nominal.
-
 
 **Archivo que debe quedar tras este paso:** `tests/AceriaApp.Api.Tests/HexagonalFactory.cs`
 
@@ -4197,8 +3686,6 @@ public class HexagonalHttpTests
 
 **Lectura del aislamiento.** `_legacy` y `_hexagonal` llaman por separado a `BaseSqlServer.Crear()`: sus GUID impiden compartir tablas aunque los contextos se ejecuten en el mismo servidor. `SkipDatabaseInitialization` evita tocar las bases habituales de la aplicación. La factoría inicializa expresamente ambos esquemas tras crear el host y cierra el host antes de eliminar las dos bases. La prueba `Post_CreaYGetConsultaPorPuerto` verifica `ProviderName` en ambos contextos y que los nombres de base son distintos antes de recorrer POST → GET por el puerto de aplicación. El helper, el paquete de Testcontainers y su enlace `Compile` ya existen desde M02 2.1.22; no crees una segunda copia del helper dentro del proyecto xUnit.
 
-**Por qué funciona así.** ejecutar los tests del punto 3.4 verifica que las clases de implementación funcionan correctamente.
-
 **Verificación concreta.** Las cuatro pruebas HTTP hexagonales superan GET, POST→GET, 400/422 y finalizar 200/409 usando SQL Server real con bases separadas y comprobaciones del proveedor.
 
 **Diagnóstico si falla.**
@@ -4207,20 +3694,14 @@ public class HexagonalHttpTests
 - No compilar antes: `dotnet test` compila por defecto, pero si hay errores, los tests no se ejecutan.
 - Tener la API en ejecución: el puerto puede estar ocupado.
 
-
 ### PASO 3.4.18 — Ejecutar todos los tests de la solución
 
-**Resultado de aprendizaje.** Ejecutar todos los tests de la solución. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+Ejecutar todos los tests de la solución verifica que los tests de los puntos anteriores y del punto 3.4 pasan conjuntamente.
 
 1. Ejecuta `dotnet test AceriaApp.sln -c Release --no-build` después de compilar toda la solución en Release.
 2. Comprueba que pasan los tests de M02 y todos los nuevos del módulo M03 acumulados hasta este punto.
 3. Si falla alguna suite previa, vuelve a comprobar si el último cambio alteró una dependencia o una configuración del servidor.
 4. Registra las pruebas totales, fallidas y omitidas y compáralas con el resultado previsto para esta etapa.
-
-
-**Por qué funciona así.** ejecutar todos los tests de la solución verifica que los tests de los puntos anteriores y del punto 3.4 pasan conjuntamente.
 
 **Verificación concreta.** Pruebas acumuladas previstas para 3.4: 50, 0 fallidas. Comprueba estos valores en la salida de `dotnet test`.
 
@@ -4230,18 +3711,14 @@ public class HexagonalHttpTests
 - Tener tests de otros módulos: la solución solo contiene los proyectos de este punto.
 - Modificar los tests de los puntos anteriores: viola la regla de no modificar archivos del punto anterior.
 
-
 ### PASO 3.4.19 — Crear el README del punto 3.4
 
-**Resultado de aprendizaje.** Crear el README del punto 3.4. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+El README del punto 3.4 explica el objetivo, el estado, la ejecución y los añadidos. No modifica el README del punto 3.3.
 
 1. Abre `README.md` en la raíz del punto `3.4-implementacion-aspnet-core` y sustitúyelo por el README específico del bloque de este paso.
 2. Comprueba que los nombres de proyectos y las pruebas acumuladas coinciden con la solución y con la salida de `dotnet test` de esta etapa.
 3. Revisa la ubicación del documento `docs` y los comandos `dotnet build` y `dotnet test` que utilizará el alumno.
 4. Guarda la versión del punto actual sin sobrescribir el README de la etapa anterior.
-
 
 **Archivo que debe quedar tras este paso:** `README.md`
 
@@ -4277,8 +3754,6 @@ el documento de implementación en ASP.NET Core es el artefacto de `docs` espec�
 la clase `RegistroServicio` modela un registro del contenedor de dependencias con el puerto, la implementación, el ciclo y si es adaptador de salida. Es la unidad de información del validador.
 ```
 
-**Por qué funciona así.** el README del punto 3.4 explica el objetivo, el estado, la ejecución y los añadidos. No modifica el README del punto 3.3.
-
 **Verificación concreta.** `README.md` describe correctamente los 9 proyectos y 50 pruebas acumuladas del curso vigente.
 
 **Diagnóstico si falla.**
@@ -4287,18 +3762,14 @@ la clase `RegistroServicio` modela un registro del contenedor de dependencias co
 - Omitir la sección `Qué se ha añadido respecto al punto anterior`: pierde la trazabilidad.
 - Escribir el README en la carpeta del punto 3.3: rompe la separación.
 
-
 ### PASO 3.4.20 — Crear el ADR-013 del punto 3.4
 
-**Resultado de aprendizaje.** Crear el ADR-013 del punto 3.4. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+El ADR-013 documenta la decisión de implementar la arquitectura hexagonal en ASP.NET Core y de cerrar el módulo 3. Es un artefacto nuevo del punto 3.4 que no modifica los ADR existentes.
 
 1. En la carpeta `docs` crea `ADR-013-implementacion-aspnet-core.md` y copia el documento de decisión del bloque del laboratorio.
 2. Lee Estado, Contexto, Decisión, Alternativas y Consecuencias y relaciona el ADR con el código nuevo de la etapa.
 3. Explica por qué no basta con declarar nombres de capas si el código puede saltarse la interfaz o registrar una dependencia incorrecta.
 4. Comprueba que los ADR anteriores están presentes y no han sido sobrescritos.
-
 
 **Archivo que debe quedar tras este paso:** `docs/ADR-013-implementacion-aspnet-core.md`
 
@@ -4330,8 +3801,6 @@ Los endpoints se agrupan por recurso en clases de extensión. Los repositorios s
 Se parte de la API real y probada de M02, se conservan sus endpoints y se añaden reglas de dependencia verificadas en código. Los proyectos de Dominio, Aplicación e Infraestructura deben obedecer la dirección de referencias; en 3.4 se expone un nuevo adaptador HTTP funcional. El catálogo describe las relaciones arquitectónicas; cada implementación se comprueba en su proyecto correspondiente.
 ```
 
-**Por qué funciona así.** el ADR-013 documenta la decisión de implementar la arquitectura hexagonal en ASP.NET Core y de cerrar el módulo 3. Es un artefacto nuevo del punto 3.4 que no modifica los ADR existentes.
-
 **Verificación concreta.** el archivo `docs\ADR-013-implementacion-aspnet-core.md` existe con las cinco secciones.
 
 **Diagnóstico si falla.**
@@ -4340,20 +3809,14 @@ Se parte de la API real y probada de M02, se conservan sus endpoints y se añade
 - Omitir la sección `Alternativas consideradas`: el ADR pierde valor.
 - Nombrar el archivo sin el prefijo `ADR-013`: rompe la convención.
 
-
 ### PASO 3.4.21 — Verificar que no se ha modificado ningún archivo del punto 3.3
 
-**Resultado de aprendizaje.** Verificar que no se ha modificado ningún archivo del punto 3.3. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+La comparación con `fc` verifica que todos los documentos del punto 3.3 no se han modificado.
 
 1. Localiza el mismo documento heredado tanto en `M03_ARQUITECTURA_HEXAGONAL/PROYECTO/3.3-separacion-capas` como en `M03_ARQUITECTURA_HEXAGONAL/PROYECTO/3.4-implementacion-aspnet-core`.
 2. Compara sus hashes SHA-256 o usa un diff y confirma que no se reescribió al introducir el nuevo punto.
 3. Distingue de él los archivos añadidos en este punto: catálogo, validador, pruebas y documentación nueva.
 4. Documenta cualquier diferencia inesperada; el nuevo código no exige alterar los archivos de etapas anteriores.
-
-
-**Por qué funciona así.** la comparación con `fc` verifica que todos los documentos del punto 3.3 no se han modificado.
 
 **Verificación concreta.** Los archivos heredados de `docs` y los endpoints M02 no han sido sobrescritos.
 
@@ -4363,20 +3826,14 @@ Se parte de la API real y probada de M02, se conservan sus endpoints y se añade
 - Olvidar el flag `/L`: `fc` compara en modo ASCII y muestra líneas largas sin ajuste.
 - Comparar archivos de carpetas equivocadas: la comparación no es válida.
 
-
 ### PASO 3.4.22 — Verificar la estructura del punto 3.4
 
-**Resultado de aprendizaje.** Verificar la estructura del punto 3.4. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+La verificación estructural confirma que el punto 3.4 añade archivos nuevos sin modificar los existentes.
 
 1. Desde la raíz de `M03_ARQUITECTURA_HEXAGONAL/PROYECTO` ejecuta `tree /F 3.4-implementacion-aspnet-core` en Windows.
 2. Localiza `src/AceriaApp.Api/Implementacion`, `tests/AceriaApp.Implementacion.Tests`, `README.md` y `docs/implementacion-aspnet-core.md`.
 3. Comprueba los proyectos adicionales de dominio, aplicación e infraestructura si ya fueron introducidos por el punto 3.3.
 4. Distingue los archivos del proyecto de los temporales `obj/` y `bin/`; ambos deben quedar excluidos de la entrega.
-
-
-**Por qué funciona así.** la verificación estructural confirma que el punto 3.4 añade archivos nuevos sin modificar los existentes.
 
 **Verificación concreta.** Los archivos que aparecen en el árbol corresponden a los fragmentos creados hasta este paso, y no hay código pendiente en carpetas fuera de la solución.
 
@@ -4386,20 +3843,14 @@ Se parte de la API real y probada de M02, se conservan sus endpoints y se añade
 - Modificar las carpetas del punto 3.3: viola la regla de no modificar.
 - Omitir la carpeta `Implementacion`: los tests no encuentran las clases.
 
-
 ### PASO 3.4.23 — Verificar el `.gitignore` del punto 3.4
 
-**Resultado de aprendizaje.** Verificar el `.gitignore` del punto 3.4. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+El `.gitignore` se hereda del punto 3.3 sin modificaciones. La verificación confirma que no se ha tocado.
 
 1. Abre el `.gitignore` de la etapa; si falta, crea uno que excluya `.vs/`, `bin/`, `obj/`, archivos personales y resultados de prueba.
 2. Ejecuta `git status --short` en tu copia de trabajo y comprueba que no aparecen archivos binarios ni credenciales.
 3. No ignores `src`, `tests`, `docs` ni las soluciones `.sln`, pues son parte del entregable reproducible.
 4. Conserva el `.gitignore` heredado sin borrarlo ni modificar el de etapas anteriores.
-
-
-**Por qué funciona así.** el `.gitignore` se hereda del punto 3.3 sin modificaciones. La verificación confirma que no se ha tocado.
 
 **Verificación concreta.** No se incluyen `bin`, `obj`, contraseñas ni resultados de pruebas en el estado Git.
 
@@ -4409,20 +3860,14 @@ Se parte de la API real y probada de M02, se conservan sus endpoints y se añade
 - Eliminar alguna línea: el repositorio se llena de artefactos.
 - Crear el `.gitignore` con otro nombre: el archivo no se reconoce.
 
-
 ### PASO 3.4.24 — Hacer el commit del punto 3.4 y verificar el estado final del módulo 3
 
-**Resultado de aprendizaje.** Hacer el commit del punto 3.4 y verificar el estado final del módulo 3. El alumno identifica el archivo y la responsabilidad que incorpora en la arquitectura.
-
-**Procedimiento guiado.**
+El commit del punto 3.4 cierra el módulo 3. Los commits de cada punto permiten comparar el estado del proyecto entre puntos consecutivos y entre módulos completos.
 
 1. Antes de terminar 3.4, vuelve a ejecutar `dotnet build AceriaApp.sln -c Release` y `dotnet test AceriaApp.sln -c Release --no-build`.
 2. Lee el reto de ampliación incluido tras los pasos obligatorios; si lo realizas, utiliza una copia aparte y deja los tests base intactos.
 3. Si tu copia está bajo Git, ejecuta `git status`, añade solo lo trabajado y crea un commit descriptivo, sin modificar la rama canónica del profesor.
 4. Conserva el resumen de pruebas y compara el proyecto final con la carpeta de referencia del punto; ambas deben representar el mismo código.
-
-
-**Por qué funciona así.** el commit del punto 3.4 cierra el módulo 3. Los commits de cada punto permiten comparar el estado del proyecto entre puntos consecutivos y entre módulos completos.
 
 **Verificación concreta.** El punto termina con compilación y suite de pruebas completa, sin modificar la referencia de la etapa anterior.
 
@@ -4431,7 +3876,6 @@ Se parte de la API real y probada de M02, se conservan sus endpoints y se añade
 - No tener configurado `user.name` y `user.email`: `git commit` falla.
 - Añadir la carpeta `bin/` y `obj/` al commit: el `.gitignore` lo evita.
 - Hacer commit antes de `git add .`: no hay cambios en el índice.
-
 
 ## Reto de ampliación (optativo)
 
@@ -4510,7 +3954,6 @@ public void Resumen_ConCatalogoPorDefecto_CuentaCorrectamente()
 **Verificación:** la salida de `dotnet test` muestra `Passed: 9`.
 
 ---
-
 
 ## Resultado verificable y cierre del punto 3.4
 
