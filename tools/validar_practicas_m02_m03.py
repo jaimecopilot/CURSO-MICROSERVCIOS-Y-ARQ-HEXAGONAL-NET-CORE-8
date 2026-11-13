@@ -6,6 +6,8 @@ import os
 from pathlib import Path
 import re
 import subprocess
+import shutil
+import tempfile
 import time
 import urllib.request
 import urllib.error
@@ -79,9 +81,13 @@ def count_trx(path):
 
 def tests(num, stages, env):
     root=ROOT/MODULES[num][0]/"PROYECTO"
+    workroot=Path(os.getenv("RUNNER_TEMP",tempfile.gettempdir())) / (
+        f"m0{num}_validacion_" + uuid.uuid4().hex[:8])
+    workroot.mkdir(parents=True,exist_ok=True)
     counts=[]
     for index,slug in enumerate(stages,1):
-        stage=root/slug
+        stage=workroot/slug
+        shutil.copytree(root/slug,stage)
         project=("tests/AceriaApp.Api.Tests/AceriaApp.Api.Tests.csproj"
                  if num==2 else "AceriaApp.sln")
         run(["dotnet","restore",project,"--nologo"],stage,env)
@@ -95,7 +101,7 @@ def tests(num, stages, env):
         counts.append({"point":f"{num}.{index}",**summary})
         print(f"M0{num} PUNTO {num}.{index}: "
               f"{summary['passed']}/{summary['total']} pruebas correctas",flush=True)
-    return counts
+    return counts,workroot/stages[-1]
 
 
 def http_call(url, payload=None):
@@ -111,8 +117,7 @@ def http_call(url, payload=None):
         return e.code,None,dict(e.headers)
 
 
-def smoke(num,stages,env):
-    stage=ROOT/MODULES[num][0]/"PROYECTO"/stages[-1]
+def smoke(num,stage,env):
     base="http://127.0.0.1:"+str(51180+num)
     endpoint=("/api/v1/ordenes" if num==2 else "/api/v1/hexagonal/ordenes")
     local=env.copy()
@@ -181,12 +186,12 @@ def main():
         env=os.environ.copy()
         assert env.get("ACERIA_TEST_SQLSERVER"),"Falta ACERIA_TEST_SQLSERVER"
         env["DOTNET_CLI_TELEMETRY_OPTOUT"]="1"
-        report=tests(args.module,stages,env)
+        report,final_stage=tests(args.module,stages,env)
         lines.extend(["| Punto | Correctas | Total | Fallidas |",
           "|---|---:|---:|---:|"]+
           [f"| {r['point']} | {r['passed']} | {r['total']} | {r['failed']} |"
            for r in report])
-        result=smoke(args.module,stages,env)
+        result=smoke(args.module,final_stage,env)
         lines.extend(["","**E2E SQL/HTTP:** "+json.dumps(result,ensure_ascii=False),
             "","Se han ejecutado los snapshots de referencia y no todas las "
             "acciones gráficas de Visual Studio."])
