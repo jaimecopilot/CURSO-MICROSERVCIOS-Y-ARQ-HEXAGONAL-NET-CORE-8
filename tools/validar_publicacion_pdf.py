@@ -129,6 +129,21 @@ def main():
             joined = " ".join(content).replace("\n", " ")
             if num == 9:
                 tokens = [f"Paso 9.{i}" for i in range(1,17)]
+                # Además de la presencia de pasos, verificar que el PDF M09
+                # contiene los nuevos procedimientos de certificación física.
+                md_text = md.read_text(encoding="utf-8-sig")
+                for required in (
+                    "CERTIFICAR_DOCKER_DESKTOP_WINDOWS.ps1",
+                    "VALIDAR_FALLOS_DOCKER_WINDOWS.ps1",
+                ):
+                    if required not in md_text:
+                        errors.append(f"{label}: falta en Markdown {required}")
+                    if re.sub(r"\s+", "", required).lower() not in re.sub(
+                        r"\s+", "", joined
+                    ).lower():
+                        errors.append(
+                            f"{label}: el PDF no refleja el procedimiento {required}"
+                        )
             else:
                 tokens = [f"Punto {num}.{i}" for i in range(1, EXPECTED_POINTS[num]+1)]
             missing = [t for t in tokens if t.casefold() not in joined.casefold()]
