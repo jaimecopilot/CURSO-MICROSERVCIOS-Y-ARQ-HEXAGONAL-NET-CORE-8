@@ -4,7 +4,7 @@
 **Módulo:** M09 — Despliegue integral Docker Desktop para Windows  
 **Autor:** JAIME GALLO  
 **Rama:** `version-corregida`  
-**Fecha:** 13 de noviembre de 2026  
+**Fecha:** 14 de noviembre de 2026  
 **Estado:** CORRECCIÓN EDITORIAL, VALIDACIÓN ESTÁTICA Y E2E INTEGRAL EN CI LINUX COMPLETADOS; **PRUEBA EN DOCKER DESKTOP PARA WINDOWS PENDIENTE**. Aprobación editorial final a cargo del autor.
 
 ## Alcance aplicado
@@ -25,9 +25,9 @@ Los archivos de Docker y PowerShell del proyecto se mantienen como referentes; e
 | Comprobación | Resultado | Fuente |
 |---|---|---|
 | PDF generado desde Markdown corregido | PASS | GitHub Actions, PDF M09 |
-| Páginas y cabeceras exigidas | 16/16 | «ARQUITECTURA HEXAGONAL Y MICROSERVICIOS», «PRÁCTICAS MÓDULO 9», «JAIME GALLO» |
+| Páginas y cabeceras exigidas | **17/17** | «ARQUITECTURA HEXAGONAL Y MICROSERVICIOS», «PRÁCTICAS MÓDULO 9», «JAIME GALLO» |
 | Conservación de pasos | 16/16 | Pasos 9.1 a 9.16 presentes en Markdown y PDF |
-| Bloques PowerShell del manual | 27/27 sin errores de sintaxis | Parseo con PowerShell 7 en runner Windows |
+| Bloques PowerShell del manual | **28/28** sin errores de sintaxis | Parseo con PowerShell 7 en runner Windows |
 | Servicios Compose | 6/6 localizados y explicados | sqlserver, rabbitmq, inventario-1, inventario-2, produccion, gateway |
 | Acciones del script | 6/6 localizadas | preparar, levantar, verificar, detener, bajar, limpiar |
 | Código fuente reutilizado | Ruta M08/8.4 presente | `M08_API_GATEWAY/PROYECTO/8.4-balanceo-carga` |
@@ -35,8 +35,9 @@ Los archivos de Docker y PowerShell del proyecto se mantienen como referentes; e
 | Despliegue real en CI Linux | **PASS: seis contenedores, SQL, RabbitMQ, YARP, orden, evento y persistencia** | GitHub Actions Linux, no certifica Docker Desktop Windows |
 | Fallo/recuperación en CI Linux | **PASS: Inventario 2, YARP, RabbitMQ y nueva proyección** | Ensayo de resiliencia adicional en Docker Linux |
 
-- [PDF M09 generado y validado](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43509870226).
-- [Validación Windows de sintaxis y correspondencia con infraestructura](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43510540166).
+- [PDF M09 actualizado y validado, 17 páginas y 16 pasos](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43574189683).
+- [Validación Windows de sintaxis y correspondencia con infraestructura, tres scripts](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43574189740).
+- [Auditoría de los 17 PDF actualizados, 1.220 páginas y sincronización del procedimiento Windows](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43574610999).
 
 ## E2E integral reproducido en contenedores Linux
 
@@ -46,17 +47,23 @@ Se ha comprobado el arranque y la salud de SQL Server Express, RabbitMQ, Inventa
 
 **Ampliación de resiliencia superada:** una ejecución posterior incorpora el script `VALIDAR_FALLOS_DOCKER_WINDOWS.ps1` y valida diez lecturas consecutivas por Inventario 1 tras detener Inventario 2, recuperación del balanceo al reactivarlo, degradación de readiness al detener RabbitMQ y retorno a salud después de recuperarlo. Después se repite el flujo integral de órdenes y eventos. [Ejecución Docker Linux completa con fallos y recuperación — PASS](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43521475426). Sus evidencias adicionales están en `.qa/docker-fallos-e2e.json` y `.qa/docker-windows-e2e.json`. No se afirma un ensayo de redelivery de mensajes creados *durante* la caída del broker ni una certificación física de Windows.
 
+## Preparación adicional del cierre Windows
+
+Los scripts del módulo son `EJECUTAR_DOCKER_WINDOWS.ps1`, `VALIDAR_FALLOS_DOCKER_WINDOWS.ps1` y `CERTIFICAR_DOCKER_DESKTOP_WINDOWS.ps1`. Se han sometido a un analizador sintáctico PowerShell en un runner Windows. Se ha añadido una prueba negativa que exige que el certificador **rechace Windows Server** de forma explícita y registre `resultado=FAIL`, sin falsos positivos.
+
+Esta verificación del preflight no equivale a ejecutar el laboratorio sobre Windows 10/11 con Docker Desktop.
+
 ## Alcance que **no** certifican estas evidencias
 
 La auditoría PowerShell sobre Windows **parsea** todos los bloques y comprueba la correspondencia con Compose; el nuevo E2E ejecuta realmente Docker sobre **Linux CI**, pero todavía no ejecuta Docker Desktop sobre Windows. La validación del PDF comprueba texto, cabeceras, paginación y renderización básica, pero no equivale a una inspección humana de cada página ni a una ejecución completa de laboratorio desde un proyecto vacío.
 
-Para afirmar que el despliegue integral funciona sobre un equipo Windows real se debe ejecutar en Docker Desktop + WSL 2:
+El laboratorio ya cuenta con `PROYECTO/CERTIFICAR_DOCKER_DESKTOP_WINDOWS.ps1`, que verifica Windows 10/11 compatible, PowerShell 7, WSL 2, Docker Desktop en modo Linux, Compose y SDK .NET 8. Ejecuta los tres procedimientos (`preparar`, `levantar`, `verificar`), comprueba caída y recuperación de Inventario 2 y RabbitMQ y repite la integración después de recuperarlos. El script no acepta el modo `-PermitirLinuxEnCI` y no certifica Windows Server. Se ejecuta en **PowerShell 7 de Windows 10/11, dentro de `M09_DESPLIEGUE_DOCKER/PROYECTO`**:
 
-1. `.\EJECUTAR_DOCKER_WINDOWS.ps1 -Accion preparar`
-2. `.\EJECUTAR_DOCKER_WINDOWS.ps1 -Accion levantar`
-3. `.\EJECUTAR_DOCKER_WINDOWS.ps1 -Accion verificar`
+```powershell
+.\CERTIFICAR_DOCKER_DESKTOP_WINDOWS.ps1
+```
 
-Hay que conservar el archivo `.qa/docker-windows-e2e.json` con `resultado=PASS`, las respuestas HTTP que acrediten orden y proyección, el balanceo mediante `X-Instancia` y la recuperación tras reinicio. Esta prueba **sigue pendiente**, sin atribuir un PASS de Linux o de sintaxis PowerShell al entorno físico Windows.
+También existe el workflow de disparo **manual** `.github/workflows/m09-certificacion-windows-desktop.yml`, que solo se puede ejecutar cuando haya un runner **self-hosted**, Windows 10/11 con Docker Desktop activo, etiquetado `docker-desktop-wsl2`. Los runners estándar `windows-2022` son Windows Server y no sirven para esa certificación. Se deben conservar los informes `.qa/certificacion-windows-docker-desktop.json`, `.qa/docker-windows-e2e.json` y `.qa/docker-fallos-e2e.json` con `resultado=PASS`. **Todavía no se dispone de esa evidencia física de Windows Desktop**. El PASS de Linux no se convierte en un PASS de Windows.
 
 ## Criterio de cierre
 
