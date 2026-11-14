@@ -65,3 +65,25 @@ La comprobación es **real**, pero no autoriza afirmaciones más amplias que las
 **Conclusión:** M01 puede considerarse **cerrado técnicamente para esta revisión** en la rama `version-corregida`. No se ha fusionado con `main`. El autor mantiene la aprobación editorial y la publicación definitiva.
 
 **Verificación editorial de paginación actual:** [auditoría de los 17 PDF y 1.219 páginas](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43516616292). La prueba automatizada comprueba cabeceras, contenido extraíble y márgenes; la aprobación visual final sigue correspondiendo al autor.
+
+## 6. Reconstrucción adicional desde un directorio vacío — 14 de noviembre de 2026
+
+Se ha añadido `tools/reconstruir_m01_desde_cero.py`. A diferencia de la batería anterior de activación de bloques comentados, esta comprobación **no copia ninguno de los cinco proyectos canónicos**. Crea una solución `AceriaApp.sln`, metadatos mínimos `.csproj`, configuración reproducible y los archivos C# y Markdown tomados de los fragmentos identificados de las prácticas corregidas. Cada punto hereda el resultado generado por el anterior. El SDK se fija en **.NET 8**, aunque el runner tenga instalado también un SDK más reciente.
+
+La migración inicial de EF Core se genera desde el modelo con `dotnet-ef` y se aplica a una nueva base SQL Server Express, en lugar de copiar los archivos de migración históricos. Por ello se comprueba el **comportamiento**, no la igualdad literal del nombre de la migración. También se contrastan los archivos C# de cada etapa y la lista de proyectos de la solución con los proyectos de referencia.
+
+| Etapa | C# reconstruidos | Proyectos de la solución | xUnit |
+|---|---:|---:|---:|
+| 1.1 | 4 | 2 | 1/1 |
+| 1.2 | 10 | 3 | 9/9 |
+| 1.3 | 15 | 4 | 13/13 |
+| 1.4 | 20 | 5 | 18/18 |
+| 1.5 | 25 | 6 | 23/23 |
+
+**Resultado: 5/5 etapas reconstruidas, compiladas y probadas, 64 ejecuciones acumuladas de xUnit sin fallos.** En el punto final se ejecutó un E2E Windows con SQL Server Express y migración real: GET 200, POST 201 con Location y persistencia verificable, y OpenAPI/Swagger 200.
+
+- [GitHub Actions: M01 reconstruido desde cero en Windows y SQL Express — SUCCESS](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43573679482).
+- Script: `tools/reconstruir_m01_desde_cero.py`.
+- Workflow: `.github/workflows/m01-desde-cero-windows-e2e.yml`.
+
+**Alcance:** El manual del alumno entrega expresamente una solución preparada, y esta reconstrucción desde vacío representa una comprobación **adicional**, no una modificación encubierta de ese itinerario. Los metadatos y la solución se generan de forma reproducible; los archivos fuente se obtienen del manual. No se simulan operaciones gráficas de Visual Studio ni se ejecutan los retos optativos. La aprobación de redacción y de presentación visual corresponde al autor.
