@@ -117,7 +117,12 @@ def run(args,cwd,env,timeout=850):
     return p.stdout
 
 
-def initial(root):
+def initial(root, sdk):
+    # Pin del SDK .NET 8: los runners incluyen SDK 10, cuyo dotnet new sln
+    # genera .slnx por defecto. El curso necesita AceriaApp.sln compatible.
+    write(root,"global.json",json.dumps({
+      "sdk":{"version":sdk,"rollForward":"latestPatch"}
+    },indent=2))
     write(root,".gitignore","bin/\nobj/\n*.user\n*.suo\n.vs/\nTestResults/")
     write(root,API+"/appsettings.json",json.dumps({
       "ConnectionStrings":{"AceriaDb":(
@@ -176,7 +181,7 @@ def solution_projects(root,env):
          for x in r.splitlines() if x.strip().lower().endswith(".csproj"))
 
 
-def make_all(base,env,ef):
+def make_all(base,env,ef,sdk):
     blocks=fragments()
     previous=None
     report=[]
@@ -184,7 +189,7 @@ def make_all(base,env,ef):
         dest=base/STAGES[point-1]
         if previous is None:
             dest.mkdir(parents=True)
-            initial(dest)
+            initial(dest,sdk)
             run(["dotnet","new","sln","-n","AceriaApp"],dest,env)
             run(["dotnet","sln","AceriaApp.sln","add",
                  API+"/AceriaApp.Monolito.Api.csproj"],dest,env)
@@ -255,8 +260,14 @@ def main():
     run(["dotnet","tool","install","dotnet-ef","--version","8.0.0",
          "--tool-path",str(tools)],ws,env)
     ef=str(tools/("dotnet-ef.exe" if os.name=="nt" else "dotnet-ef"))
+    sdk_list=run(["dotnet","--list-sdks"],ws,env)
+    sdk8=re.findall(r"(?m)^(8\.0\.\d+)\s+\[",sdk_list)
+    if not sdk8:
+        raise RuntimeError("No se ha instalado un SDK .NET 8")
+    sdk=sdk8[-1]
+    print("SDK fijado para todo M01: "+sdk,flush=True)
     base=ws/"etapas"
-    rows=make_all(base,env,ef)
+    rows=make_all(base,env,ef,sdk)
     for i,stage in enumerate(STAGES):
         folder=base/stage
         run(["dotnet","restore","AceriaApp.sln","--nologo"],folder,env)
