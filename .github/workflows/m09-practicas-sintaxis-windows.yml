@@ -98,13 +98,14 @@ jobs:
           }
           Write-Host 'PASS: los seis servicios, seis acciones, codigo M08, volumenes y secretos son coherentes'
 
-      - name: Validar sintaxis de ambos scripts de despliegue y fallos
+      - name: Validar sintaxis de los tres scripts Docker de M09
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
           foreach ($path in @(
             'M09_DESPLIEGUE_DOCKER/PROYECTO/EJECUTAR_DOCKER_WINDOWS.ps1',
-            'M09_DESPLIEGUE_DOCKER/PROYECTO/VALIDAR_FALLOS_DOCKER_WINDOWS.ps1'
+            'M09_DESPLIEGUE_DOCKER/PROYECTO/VALIDAR_FALLOS_DOCKER_WINDOWS.ps1',
+            'M09_DESPLIEGUE_DOCKER/PROYECTO/CERTIFICAR_DOCKER_DESKTOP_WINDOWS.ps1'
           )) {
             $code = Get-Content -Raw $path
             $tokens = $null
