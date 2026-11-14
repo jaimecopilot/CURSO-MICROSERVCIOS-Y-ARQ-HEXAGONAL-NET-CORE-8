@@ -49,7 +49,7 @@ Se ha comprobado el arranque y la salud de SQL Server Express, RabbitMQ, Inventa
 
 ## Preparación adicional del cierre Windows
 
-Los scripts del módulo son `EJECUTAR_DOCKER_WINDOWS.ps1`, `VALIDAR_FALLOS_DOCKER_WINDOWS.ps1` y `CERTIFICAR_DOCKER_DESKTOP_WINDOWS.ps1`. Se han sometido a un analizador sintáctico PowerShell en un runner Windows. Se ha añadido una prueba negativa que exige que el certificador **rechace Windows Server** de forma explícita y registre `resultado=FAIL`, sin falsos positivos.
+Los scripts del módulo son `EJECUTAR_DOCKER_WINDOWS.ps1`, `VALIDAR_FALLOS_DOCKER_WINDOWS.ps1` y `CERTIFICAR_DOCKER_DESKTOP_WINDOWS.ps1`. Se han sometido a un analizador sintáctico PowerShell en un runner Windows. Se ha añadido una prueba negativa que exige que el certificador **rechace Windows Server** de forma explícita y registre `resultado=FAIL`, sin falsos positivos. [GitHub Actions: verificación negativa Windows Server y sintaxis de los tres scripts — SUCCESS](https://github.com/jaimecopilot/CURSO-MICROSERVCIOS-Y-ARQ-HEXAGONAL-NET-CORE-8/actions/runs/43574842983).
 
 Esta verificación del preflight no equivale a ejecutar el laboratorio sobre Windows 10/11 con Docker Desktop.
 
