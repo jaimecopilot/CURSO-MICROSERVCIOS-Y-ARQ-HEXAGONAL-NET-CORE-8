@@ -562,6 +562,14 @@ Las acciones no deben copiarse y ejecutarse indiscriminadamente como una secuenc
 
 ## 5.6 Matriz de evidencias de la práctica integral
 
+Para comprobar el laboratorio completo en un **equipo Windows 10/11 real**, el proyecto incluye un certificador adicional. Debe ejecutarse desde PowerShell 7, con Docker Desktop iniciado y configurado para utilizar Linux sobre WSL 2; no es necesario modificar las APIs. Comprueba el anfitrión y la configuración, genera órdenes y eventos, fuerza la caída y recuperación de Inventario 2 y RabbitMQ, y vuelve a verificar el flujo integral.
+
+```powershell
+.\CERTIFICAR_DOCKER_DESKTOP_WINDOWS.ps1
+```
+
+La herramienta guarda los resultados en `.qa/certificacion-windows-docker-desktop.json` y los enlaza con `.qa/docker-windows-e2e.json` y `.qa/docker-fallos-e2e.json`. El estado `PASS` solamente es válido cuando se ejecuta sobre Windows compatible con Docker Desktop/WSL 2 y terminan todas las comprobaciones. El script no destruye los volúmenes de SQL Server ni de RabbitMQ. La tabla siguiente mantiene las evidencias que el alumno debe poder explicar, incluso si ha obtenido un resultado automatizado correcto.
+
 La entrega se evalúa por observaciones reproducibles. Para cada fila, incluye la operación efectuada, el resultado recibido y el nombre del servicio que la produjo. Una captura de `docker ps` puede complementar el informe, pero nunca sustituir una petición HTTP o una lectura de datos.
 
 | Capacidad que debe demostrarse | Evidencia concreta |
