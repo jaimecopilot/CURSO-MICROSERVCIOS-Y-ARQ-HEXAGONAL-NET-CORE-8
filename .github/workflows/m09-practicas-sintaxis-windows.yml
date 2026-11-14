@@ -116,3 +116,23 @@ jobs:
             }
             Write-Host "PASS: $path sin errores de sintaxis"
           }
+
+      - name: Certificador Windows no debe aprobar en Windows Server
+        shell: pwsh
+        run: |
+          # GitHub hosted windows-latest es Windows Server, no Windows 10/11.
+          # Esta prueba debe generar FAIL de forma explícita; no inicia Docker.
+          $programa = './M09_DESPLIEGUE_DOCKER/PROYECTO/CERTIFICAR_DOCKER_DESKTOP_WINDOWS.ps1'
+          & $programa
+          $exitCode = $LASTEXITCODE
+          if ($exitCode -ne 1) {
+            throw "Un host no compatible no fue rechazado: exit=$exitCode"
+          }
+          $file = 'M09_DESPLIEGUE_DOCKER/PROYECTO/.qa/certificacion-windows-docker-desktop.json'
+          if (-not (Test-Path $file)) { throw 'No se generó evidencia de rechazo del host.' }
+          $evidence = Get-Content -Raw $file | ConvertFrom-Json
+          if ($evidence.resultado -ne 'FAIL' -or
+              [string]$evidence.error -notmatch 'Windows Server') {
+            throw 'El certificador no distingue de forma correcta Windows Server de Windows Desktop.'
+          }
+          Write-Host 'PASS: certificador M09 rechaza Windows Server y registra FAIL, sin falsos positivos.'
