@@ -1,0 +1,50 @@
+name: M09 - Certificacion Docker Desktop Windows 11 WSL2
+
+# Deliberadamente manual: necesita un equipo Windows 10/11 real,
+# Docker Desktop abierto y un runner self-hosted bajo la sesión del usuario.
+# Windows Server 2022 de GitHub NO es un host admitido por Docker Desktop.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: m09-win-desktop-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  certificar-windows:
+    name: Windows 10/11 + Docker Desktop WSL2 real (no simulacion)
+    runs-on: [self-hosted, Windows, X64, docker-desktop-wsl2]
+    timeout-minutes: 110
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: version-corregida
+          sparse-checkout: |
+            M08_API_GATEWAY/PROYECTO/8.4-balanceo-carga
+            M09_DESPLIEGUE_DOCKER
+          sparse-checkout-cone-mode: true
+      - name: Comprobar PowerShell 7 y version Windows
+        shell: pwsh
+        run: |
+          if ($PSVersionTable.PSVersion.Major -lt 7) { throw 'Se requiere PowerShell 7' }
+          Write-Host "PowerShell $($PSVersionTable.PSVersion), $([Environment]::OSVersion)"
+      - name: Certificar Docker Desktop/WSL2 con SQL, RabbitMQ, Inventario y YARP
+        shell: pwsh
+        working-directory: M09_DESPLIEGUE_DOCKER/PROYECTO
+        env:
+          PYTHONIOENCODING: utf-8
+        run: |
+          ./CERTIFICAR_DOCKER_DESKTOP_WINDOWS.ps1
+          if ($LASTEXITCODE -ne 0) {
+            throw 'Certificacion Windows Docker Desktop/WSL2 no superada'
+          }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: m09-certificacion-windows-desktop
+          path: M09_DESPLIEGUE_DOCKER/PROYECTO/.qa/
+          include-hidden-files: true
+          retention-days: 30
