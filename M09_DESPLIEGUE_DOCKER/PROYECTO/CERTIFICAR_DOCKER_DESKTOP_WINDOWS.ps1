@@ -43,7 +43,7 @@ try {
   $status=(& wsl.exe --status 2>&1 | Out-String).Replace([char]0,'')
   if ($LASTEXITCODE -ne 0) { throw 'WSL informa un error.' }
   $distros=(& wsl.exe --list --verbose 2>&1 | Out-String).Replace([char]0,'')
-  if ($LASTEXITCODE -ne 0 -or $distros -notmatch '(?im)^\s*\*?\s*docker-desktop\b.*\s2\s*) {
+  if ($LASTEXITCODE -ne 0 -or $distros -notmatch '(?im)^\s*\*?\s*docker-desktop\b.*\s2\s*$') {
     throw 'Docker Desktop no aparece configurado sobre WSL2.'
   }
   $report.comprobaciones.wsl2='PASS'
